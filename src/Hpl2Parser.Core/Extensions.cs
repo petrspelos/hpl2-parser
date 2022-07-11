@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SampleLexer.Core
+namespace Hpl2Parser.Core
 {
     public static class Extensions
     {

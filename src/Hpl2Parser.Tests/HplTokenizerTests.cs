@@ -1,8 +1,8 @@
-﻿using SampleLexer.Core;
-using System;
+﻿using System;
+using Hpl2Parser.Core;
 using Xunit;
 
-namespace SampleLexer.Tests
+namespace Hpl2Parser.Tests
 {
     public class HplTokenizerTests
     {

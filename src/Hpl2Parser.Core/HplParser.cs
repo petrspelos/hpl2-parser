@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SampleLexer.Core
+namespace Hpl2Parser.Core
 {
     public class HplParser
     {

@@ -1,9 +1,9 @@
 using System;
-using SampleLexer.Core;
-using SampleLexer.Tests.Mocks;
+using Hpl2Parser.Core;
+using Hpl2Parser.Tests.Mocks;
 using Xunit;
 
-namespace SampleLexer.Tests
+namespace Hpl2Parser.Tests
 {
     public class HplParserTests
     {

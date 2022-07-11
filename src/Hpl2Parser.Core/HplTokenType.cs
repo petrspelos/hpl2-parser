@@ -1,4 +1,4 @@
-﻿namespace SampleLexer.Core
+﻿namespace Hpl2Parser.Core
 {
     public enum HplTokenType
     {

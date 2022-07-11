@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using SampleLexer.Core;
+using Hpl2Parser.Core;
 
-namespace SampleLexer.Tests.Mocks;
+namespace Hpl2Parser.Tests.Mocks;
 
 public class HplTokenizerMock : IHplTokenizer
 {
