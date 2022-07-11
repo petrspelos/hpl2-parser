@@ -351,4 +351,3 @@ public class HplTokenizer : IHplTokenizer
             spanWindow.MoveForwardBy(1);
     }
 }
-
