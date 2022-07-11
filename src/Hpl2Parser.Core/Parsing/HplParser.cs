@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Hpl2Parser.Core.Tokenizing;
 
-namespace Hpl2Parser.Core
+namespace Hpl2Parser.Core.Parsing
 {
     public class HplParser
     {

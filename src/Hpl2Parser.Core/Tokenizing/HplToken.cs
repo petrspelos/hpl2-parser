@@ -1,4 +1,4 @@
-namespace Hpl2Parser.Core;
+namespace Hpl2Parser.Core.Tokenizing;
 
 public struct HplToken
 {

@@ -1,5 +1,6 @@
 using System;
 using Hpl2Parser.Core;
+using Hpl2Parser.Core.Parsing;
 using Hpl2Parser.Tests.Mocks;
 using Xunit;
 

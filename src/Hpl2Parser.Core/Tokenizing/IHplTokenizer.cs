@@ -1,6 +1,6 @@
 using System;
 
-namespace Hpl2Parser.Core;
+namespace Hpl2Parser.Core.Tokenizing;
 
 public interface IHplTokenizer
 {
