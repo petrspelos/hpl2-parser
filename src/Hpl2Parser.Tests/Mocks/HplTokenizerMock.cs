@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Hpl2Parser.Core;
 using Hpl2Parser.Core.Tokenizing;
 
 namespace Hpl2Parser.Tests.Mocks;

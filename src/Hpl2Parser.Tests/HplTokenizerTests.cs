@@ -1,5 +1,4 @@
 ﻿using System;
-using Hpl2Parser.Core;
 using Hpl2Parser.Core.Tokenizing;
 using Xunit;
 
