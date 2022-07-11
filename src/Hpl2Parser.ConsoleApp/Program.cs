@@ -4,12 +4,24 @@ using Hpl2Parser.Core;
 
 namespace Hpl2Parser.ConsoleApp
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
+            if (args.Length != 1)
+            {
+                Console.WriteLine("USAGE: hpl2-parser path/to/script.hps");
+                return;
+            }
+
+            if (!File.Exists(args[0]))
+            {
+                Console.WriteLine($"Could not find the following script file: {args[0]}");
+                return;
+            }
+            
             var parser = new HplParser(new HplTokenizer());
-            var fileText = File.ReadAllText("/home/peter/source/repos/petrspelos/hpl2-parser/src/Hpl2Parser.ConsoleApp/sample.hps");
+            var fileText = File.ReadAllText(args[0]);
             parser.Tokenize(fileText);
             parser.Parse();
         }
