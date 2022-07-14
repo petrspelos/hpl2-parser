@@ -14,76 +14,36 @@ namespace Hpl2Parser.Tests
         }
 
         [Theory]
-        [InlineData("// my comment\n\rAAA", "\n\rAAA")]
-        [InlineData("   \t\t\r\n//my comment\n\rAAA", "\n\rAAA")]
-        [InlineData("//This is a pretty cool comment_!", "")]
-        [InlineData("// NOTE(Peter): Casual comment\n=)", "\n=)")]
-        [InlineData("// NOTE(Peter): Casual comment\n\r", "\n\r")]
-        [InlineData("////////////////////////////PlayMusic(\"*musicfile.ogg*\", false, 3, 1, 0, true);/////\n", "\n")]
-        public void GetToken_ShouldReturnComment(string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(HplTokenType.InlineComment, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+        [InlineData(HplTokenType.InlineComment, "// my comment\n\rAAA", "\n\rAAA")]
+        [InlineData(HplTokenType.InlineComment, "   \t\t\r\n//my comment\n\rAAA", "\n\rAAA")]
+        [InlineData(HplTokenType.InlineComment, "//This is a pretty cool comment_!", "")]
+        [InlineData(HplTokenType.InlineComment, "// NOTE(Peter): Casual comment\n=)", "\n=)")]
+        [InlineData(HplTokenType.InlineComment, "// NOTE(Peter): Casual comment\n\r", "\n\r")]
+        [InlineData(HplTokenType.InlineComment, "////////////////////////////PlayMusic(\"*musicfile.ogg*\", false, 3, 1, 0, true);/////\n", "\n")]
+        public void GetToken_ShouldReturnComment(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
-        [InlineData("/* void test const { } @ \n\r\n\nvoid \"sdofisdfio\"\n*\n/\\*\n/\n*/123", "123")]
-        public void GetToken_ShouldReturnMultilineComment(string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-            
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(HplTokenType.MultilineComment, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+        [InlineData(HplTokenType.MultilineComment, "/* void test const { } @ \n\r\n\nvoid \"sdofisdfio\"\n*\n/\\*\n/\n*/123", "123")]
+        public void GetToken_ShouldReturnMultilineComment(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
-        [InlineData("/* unfinished comment", "")]
-        public void GetToken_ShouldReturnInvalidToken_WhenUnfinishedMultilineComment(string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(HplTokenType.InvalidToken, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+        [InlineData(HplTokenType.InvalidToken, "/* unfinished comment", "")]
+        public void GetToken_ShouldReturnInvalidToken_WhenUnfinishedMultilineComment(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
-        [InlineData("\"Hello, I'm a string literal!\"123", "123")]
-        [InlineData("\"Hello, I escape \\\"  !\"123", "123")]
-        public void GetToken_ShouldReturnStringLiteral(string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(HplTokenType.StringLiteral, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+        [InlineData(HplTokenType.StringLiteral, "\"Hello, I'm a string literal!\"123", "123")]
+        [InlineData(HplTokenType.StringLiteral, "\"Hello, I escape \\\"  !\"123", "123")]
+        public void GetToken_ShouldReturnStringLiteral(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
         [InlineData(HplTokenType.InvalidToken, "\"Unfinished string literal\n...\"", "\n...\"")]
         [InlineData(HplTokenType.InvalidToken, "\"Unfinished string literal", "")]
         public void GetToken_ShouldReturnInvalidToken_ForUnfinishedString(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(expectedType, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
         [InlineData(HplTokenType.OpenParen, "(somecode", "somecode")]
@@ -100,15 +60,7 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.MoreThanSign, "> code", " code")]
         [InlineData(HplTokenType.PercentageSign, "% code", " code")]
         public void GetToken_ShouldRecognizeOneCharacterSymbols(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(expectedType, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
         [InlineData(HplTokenType.Identifier, "HelloIdentifier();", "();")]
@@ -117,15 +69,7 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.Identifier, "Foo bar();", " bar();")]
         [InlineData(HplTokenType.Identifier, "Foo\nbar();", "\nbar();")]
         public void GetToken_ShouldRecognizeAnIdentifier(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(expectedType, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
         [InlineData(HplTokenType.EqualSign, "== abc", " abc")]
@@ -136,15 +80,7 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.BooleanAndSign, "&&", "")]
         [InlineData(HplTokenType.BooleanOrSign, "||", "")]
         public void GetToken_ShouldRecognizeBooleanSigns(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(expectedType, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
         [InlineData(HplTokenType.Number, "12", "")]
@@ -154,29 +90,13 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.Number, "3.993f", "")]
         [InlineData(HplTokenType.Number, "-3.993f", "")]
         public void GetToken_ShouldRecognizeNumber(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(expectedType, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
         [InlineData(HplTokenType.EndOfFile, "", "")]
         [InlineData(HplTokenType.EndOfFile, "\n\n   \t \r\n", "")]
         public void GetToken_ShouldRecognizeEndOfFile(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
-        {
-            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
-
-            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
-
-            Assert.Equal(expectedType, actualTokenType);
-            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
-            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
-        }
+            => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
         [Theory]
         [InlineData(HplTokenType.Number, ".02CODE", ".02")]
@@ -191,6 +111,9 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.InlineComment, "// NOTE(Peter): Casual comment\n\r", "// NOTE(Peter): Casual comment")]
         [InlineData(HplTokenType.MultilineComment, "/* void test const { } @ \n\r\n\nvoid \"sdofisdfio\"\n*\n/\\*\n/\n*/123", "/* void test const { } @ \n\r\n\nvoid \"sdofisdfio\"\n*\n/\\*\n/\n*/")]
         public void GetToken_ShouldCaptureText(HplTokenType expectedType, string hplCode, string expectedText)
+            => AssertTokenizedValue(expectedType, hplCode, expectedText);
+
+        private void AssertTokenizedValue(HplTokenType expectedType, string hplCode, string expectedText)
         {
             var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
 
@@ -198,6 +121,17 @@ namespace Hpl2Parser.Tests
 
             Assert.Equal(expectedType, actualToken.Type);
             Assert.Equal(expectedText, actualToken.Text);
+        }
+
+        private void AssertTokenized(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
+        {
+            var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());
+
+            var actualTokenType = _tokenizer.GetToken(ref spanWindow).Type;
+
+            Assert.Equal(expectedType, actualTokenType);
+            Assert.Equal(expectedCodeLeft.Length, spanWindow.Length);
+            Assert.Equal(expectedCodeLeft, spanWindow.ToString());
         }
     }
 }
