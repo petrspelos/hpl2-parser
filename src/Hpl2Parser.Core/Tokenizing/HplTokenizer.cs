@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Hpl2Parser.Core.Tokenizing;
 
-public class HplTokenizer : IHplTokenizer
+public sealed class HplTokenizer : IHplTokenizer
 {
     public HplToken GetToken(ref ReadOnlySpan<char> spanWindow)
     {
@@ -11,12 +11,7 @@ public class HplTokenizer : IHplTokenizer
         EatAllWhiteSpace(ref spanWindow);
 
         if (spanWindow.IsEmpty)
-        {
-            return new()
-            {
-                Type = HplTokenType.EndOfFile
-            };
-        }
+            return new(HplTokenType.EndOfFile);
 
         if (spanWindow[0] == '/' && spanWindow[1] == '/')
         {
@@ -30,11 +25,7 @@ public class HplTokenizer : IHplTokenizer
                 spanWindow.MoveForwardBy(1);
             }
 
-            return new()
-            {
-                Type = HplTokenType.InlineComment,
-                Text = textBuilder.ToString()
-            };
+            return new(HplTokenType.InlineComment, textBuilder.ToString());
         }
 
         if (spanWindow[0] == '/' && spanWindow[1] == '*')
@@ -51,10 +42,7 @@ public class HplTokenizer : IHplTokenizer
                 if (spanWindow.IsEmpty)
                 {
                     // NOTE(Peter): Expected "/*" but found the end of file instead
-                    return new()
-                    {
-                        Type = HplTokenType.InvalidToken
-                    };
+                    return new(HplTokenType.InvalidToken);
                 }
             }
 
@@ -62,11 +50,7 @@ public class HplTokenizer : IHplTokenizer
             textBuilder.Append(spanWindow[1]);
             spanWindow.MoveForwardBy(2);
 
-            return new()
-            {
-                Type = HplTokenType.MultilineComment,
-                Text = textBuilder.ToString()
-            };
+            return new(HplTokenType.MultilineComment, textBuilder.ToString());
         }
 
         if (spanWindow[0] == '"')
@@ -79,10 +63,7 @@ public class HplTokenizer : IHplTokenizer
                 if (spanWindow[0].IsEndOfLine())
                 {
                     // NOTE(Peter): string literal's cannot contain unescaped newlines
-                    return new()
-                    {
-                        Type = HplTokenType.InvalidToken
-                    };
+                    return new(HplTokenType.InvalidToken);
                 }
 
                 if (spanWindow[0] == '\\' && spanWindow[1] == '"')
@@ -100,192 +81,128 @@ public class HplTokenizer : IHplTokenizer
                 if (spanWindow.IsEmpty)
                 {
                     // NOTE(Peter): Expected closing " but found the end of file instead
-                    return new()
-                    {
-                        Type = HplTokenType.InvalidToken
-                    };
+                    return new(HplTokenType.InvalidToken);
                 }
             }
 
             textBuilder.Append(spanWindow[0]);
             spanWindow.MoveForwardBy(1);
 
-            return new()
-            {
-                Type = HplTokenType.StringLiteral,
-                Text = textBuilder.ToString()
-            };
+            return new(HplTokenType.StringLiteral, textBuilder.ToString());
         }
 
         if (spanWindow.Length >= 2 && spanWindow[0] == '<' && spanWindow[1] == '=')
         {
             spanWindow.MoveForwardBy(2);
-            return new()
-            {
-                Type = HplTokenType.BooleanLessThan
-            };
+            return new(HplTokenType.BooleanLessThan);
         }
         
         if (spanWindow.Length >= 2 && spanWindow[0] == '>' && spanWindow[1] == '=')
         {
             spanWindow.MoveForwardBy(2);
-            return new()
-            {
-                Type = HplTokenType.BooleanMoreThan
-            };
+            return new(HplTokenType.BooleanMoreThan);
         }
         
         if (spanWindow.Length >= 2 && spanWindow[0] == '!' && spanWindow[1] == '=')
         {
             spanWindow.MoveForwardBy(2);
-            return new()
-            {
-                Type = HplTokenType.NotEqualSign
-            };
+            return new(HplTokenType.NotEqualSign);
         }
         
         if (spanWindow.Length >= 2 && spanWindow[0] == '|' && spanWindow[1] == '|')
         {
             spanWindow.MoveForwardBy(2);
-            return new()
-            {
-                Type = HplTokenType.BooleanOrSign
-            };
+            return new(HplTokenType.BooleanOrSign);
         }
         
         if (spanWindow.Length >= 2 && spanWindow[0] == '&' && spanWindow[1] == '&')
         {
             spanWindow.MoveForwardBy(2);
-            return new()
-            {
-                Type = HplTokenType.BooleanAndSign
-            };
+            return new(HplTokenType.BooleanAndSign);
         }
         
         if (spanWindow[0] == '(')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.OpenParen
-            };
+            return new(HplTokenType.OpenParen);
         }
 
         if (spanWindow[0] == ')')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.CloseParen
-            };
+            return new(HplTokenType.CloseParen);
         }
 
         if (spanWindow[0] == ',')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.Comma
-            };
+            return new(HplTokenType.Comma);
         }
 
         if (spanWindow[0] == '&')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.Ampersand
-            };
+            return new(HplTokenType.Ampersand);
         }
 
         if (spanWindow[0] == '{')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.OpenBracket
-            };
+            return new(HplTokenType.OpenBracket);
         }
 
         if (spanWindow[0] == '}')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.CloseBracket
-            };
+            return new(HplTokenType.CloseBracket);
         }
 
         if (spanWindow[0] == ';')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.Semicolon
-            };
+            return new(HplTokenType.Semicolon);
         }
         
         if (spanWindow[0] == ':')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.Colon
-            };
+            return new(HplTokenType.Colon);
         }
         
         if (spanWindow[0] == '!')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.ExclamationPoint
-            };
+            return new(HplTokenType.ExclamationPoint);
         }
         
         if (spanWindow[0] == '<')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.LessThanSign
-            };
+            return new(HplTokenType.LessThanSign);
         }
         
         if (spanWindow[0] == '>')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.MoreThanSign
-            };
+            return new(HplTokenType.MoreThanSign);
         }
         
         if (spanWindow[0] == '%')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.PercentageSign
-            };
+            return new(HplTokenType.PercentageSign);
         }
         
         if (spanWindow[0] == '=' && spanWindow[1] == '=')
         {
             spanWindow.MoveForwardBy(2);
-            return new()
-            {
-                Type = HplTokenType.EqualSign
-            };
+            return new(HplTokenType.EqualSign);
         }
 
         if (spanWindow[0] == '=')
         {
             spanWindow.MoveForwardBy(1);
-            return new()
-            {
-                Type = HplTokenType.Assignment
-            };
+            return new(HplTokenType.Assignment);
         }
         
         if (char.IsDigit(spanWindow[0]) || spanWindow[0] == '.' || spanWindow[0] == '-')
@@ -293,16 +210,10 @@ public class HplTokenizer : IHplTokenizer
             if (spanWindow[0] == '.')
             {
                 if (spanWindow.Length == 1)
-                    return new()
-                    {
-                        Type = HplTokenType.Unknown
-                    };
+                    return new(HplTokenType.Unknown);
 
                 if (!(spanWindow[1] == 'f') && !char.IsDigit(spanWindow[1]))
-                    return new()
-                    {
-                        Type = HplTokenType.Unknown
-                    };
+                    return new(HplTokenType.Unknown);
             }
 
             textBuilder.Append(spanWindow[0]);
@@ -314,11 +225,7 @@ public class HplTokenizer : IHplTokenizer
                 spanWindow.MoveForwardBy(1);
             }
 
-            return new()
-            {
-                Type = HplTokenType.Number,
-                Text = textBuilder.ToString()
-            };
+            return new(HplTokenType.Number, textBuilder.ToString());
         }
 
         if (spanWindow[0].IsIdentifierCharacter())
@@ -329,20 +236,12 @@ public class HplTokenizer : IHplTokenizer
                 spanWindow.MoveForwardBy(1);
             }
 
-            return new()
-            {
-                Type = HplTokenType.Identifier,
-                Text = textBuilder.ToString()
-            };
+            return new(HplTokenType.Identifier, textBuilder.ToString());
         }
 
         textBuilder.Append(spanWindow[0]);
         spanWindow.MoveForwardBy(1);
-        return new()
-        {
-            Type = HplTokenType.Unknown,
-            Text = textBuilder.ToString()
-        };
+        return new(HplTokenType.Unknown, textBuilder.ToString());
     }
 
     private void EatAllWhiteSpace(ref ReadOnlySpan<char> spanWindow)
