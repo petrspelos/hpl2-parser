@@ -117,5 +117,58 @@ namespace Hpl2Parser.Tests
 
             Assert.Empty(_parser.Diagnostics);
         }
+
+        [Fact]
+        public void ValidFunctionDeclaration_ShouldRecognizeMultipleParameters()
+        {
+            _parser.SetTokens(new HplToken[]
+            {
+                new(HplTokenType.Identifier, "void"),
+                new(HplTokenType.Identifier, "MyFunction"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.Identifier, "string"),
+                new(HplTokenType.Identifier, "myArg"),
+                new(HplTokenType.Comma),
+                new(HplTokenType.Identifier, "int"),
+                new(HplTokenType.Identifier, "myOtherArg"),
+                new(HplTokenType.Comma),
+                new(HplTokenType.Identifier, "bool"),
+                new(HplTokenType.Identifier, "lastArg"),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.OpenBracket),
+                new(HplTokenType.CloseBracket),
+                new(HplTokenType.EndOfFile)
+            });
+
+            HplSyntaxTree syntaxTree = _parser.Parse();
+
+            Assert.NotNull(syntaxTree);
+            Assert.Single(syntaxTree.RootElements);
+            Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+
+            var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
+            Assert.Equal("MyFunction", functionNode.Identifier);
+            Assert.Equal("void", functionNode.ReturnType.TextValue);
+
+            Assert.Equal(3, functionNode.ParameterList.Count);
+            Assert.Equal(HplSyntaxNodeType.FunctionParameter, functionNode.ParameterList.First().NodeType);
+            
+            var param1 = functionNode.ParameterList.ElementAt(0) as HplFunctionParameterNode;
+            Assert.NotNull(param1);
+            Assert.Equal("string", param1.Type);
+            Assert.Equal("myArg", param1.Identifier);
+
+            var param2 = functionNode.ParameterList.ElementAt(1) as HplFunctionParameterNode;
+            Assert.NotNull(param2);
+            Assert.Equal("int", param2.Type);
+            Assert.Equal("myOtherArg", param2.Identifier);
+
+            var param3 = functionNode.ParameterList.ElementAt(2) as HplFunctionParameterNode;
+            Assert.NotNull(param3);
+            Assert.Equal("bool", param3.Type);
+            Assert.Equal("lastArg", param3.Identifier);
+
+            Assert.Empty(_parser.Diagnostics);
+        }
     }
 }
