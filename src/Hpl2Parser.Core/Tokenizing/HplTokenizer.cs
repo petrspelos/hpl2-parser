@@ -139,7 +139,7 @@ public sealed class HplTokenizer : IHplTokenizer
             return new(HplTokenType.Comma);
         }
 
-        if (spanWindow[0] == '&')
+        if (spanWindow[0] == '&' && char.IsWhiteSpace(spanWindow[1]))
         {
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.Ampersand);
@@ -228,10 +228,13 @@ public sealed class HplTokenizer : IHplTokenizer
             return new(HplTokenType.Number, textBuilder.ToString());
         }
 
-        if (spanWindow[0].IsIdentifierCharacter())
+        if (spanWindow[0].IsIdentifierCharacter() || spanWindow[0] == '&')
         {
-            while (!spanWindow.IsEmpty && spanWindow[0].IsIdentifierCharacter())
+            while (!spanWindow.IsEmpty && (spanWindow[0].IsIdentifierCharacter() || spanWindow[0] == '&'))
             {
+                if (spanWindow[0] == '&' && textBuilder.Length != 0)
+                    throw new InvalidOperationException("& symbol is only allowed at a beginning of an identifier");
+
                 textBuilder.Append(spanWindow[0]);
                 spanWindow.MoveForwardBy(1);
             }

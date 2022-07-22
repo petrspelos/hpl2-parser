@@ -99,18 +99,34 @@ namespace Hpl2Parser.Core.Parsing
                 if (_tokenEnumerator.Peek().Type == HplTokenType.EndOfFile)
                     throw new InvalidOperationException("Expected a token of type CloseParen but found End of file");
 
-                System.Diagnostics.Debug.Assert(_tokenEnumerator.Peek().Type == HplTokenType.Identifier);
-                System.Diagnostics.Debug.Assert(_tokenEnumerator.Peek(1).Type == HplTokenType.Identifier);
+                var paramNode = new HplFunctionParameterNode();
 
-                var paramType = _tokenEnumerator.Peek().Text;
-                var paramIdentifier = _tokenEnumerator.Peek(1).Text;
-
-                _tokenEnumerator.Next(2);
-                funcNode.ParameterList.Add(new HplFunctionParameterNode
+                if (_tokenEnumerator.Peek().Type == HplTokenType.Identifier
+                    && _tokenEnumerator.Peek(1).Type == HplTokenType.Identifier
+                    && _tokenEnumerator.Peek(2).Type == HplTokenType.Identifier)
                 {
-                    Type = paramType,
-                    Identifier = paramIdentifier
-                });
+                    // NOTE(Peter): This argument specifies intention
+                    if (!_tokenEnumerator.Peek(1).Text.IsIntentionMark())
+                        throw new InvalidOperationException($"Expected an intention identifier but found {_tokenEnumerator.Peek(1).Text}");
+
+                    paramNode.Type = _tokenEnumerator.Peek().Text;
+                    paramNode.Intention = _tokenEnumerator.Peek(1).Text.ToIntention();
+                    paramNode.Identifier = _tokenEnumerator.Peek(2).Text;
+                    
+                    _tokenEnumerator.Next(3);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(_tokenEnumerator.Peek().Type == HplTokenType.Identifier);
+                    System.Diagnostics.Debug.Assert(_tokenEnumerator.Peek(1).Type == HplTokenType.Identifier);
+
+                    paramNode.Type = _tokenEnumerator.Peek().Text;
+                    paramNode.Identifier = _tokenEnumerator.Peek(1).Text;
+                    
+                    _tokenEnumerator.Next(2);
+                }
+
+                funcNode.ParameterList.Add(paramNode);
             }
 
             // for parameterless functions

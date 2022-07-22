@@ -65,6 +65,8 @@ namespace Hpl2Parser.Tests
         [Theory]
         [InlineData(HplTokenType.Identifier, "HelloIdentifier();", "();")]
         [InlineData(HplTokenType.Identifier, "string", "")]
+        [InlineData(HplTokenType.Identifier, "&in", "")]
+        [InlineData(HplTokenType.Identifier, "&out", "")]
         [InlineData(HplTokenType.Identifier, "Foo_bar();", "();")]
         [InlineData(HplTokenType.Identifier, "Foo bar();", " bar();")]
         [InlineData(HplTokenType.Identifier, "Foo\nbar();", "\nbar();")]
