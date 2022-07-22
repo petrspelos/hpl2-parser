@@ -15,7 +15,7 @@ namespace Hpl2Parser.Tests
         {
             _parser = new(null);
         }
-        
+
         [Fact]
         public void ValidFunctionDeclaration_ShouldBeRecognized()
         {
@@ -35,7 +35,7 @@ namespace Hpl2Parser.Tests
             Assert.NotNull(syntaxTree);
             Assert.Single(syntaxTree.RootElements);
             Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
-            
+
             var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
             Assert.Equal("MyFunction", functionNode.Identifier);
             Assert.Empty(functionNode.ParameterList);
@@ -86,7 +86,7 @@ namespace Hpl2Parser.Tests
         public void ValidFunctionDeclaration_ShouldRecognizeSingleParameter()
         {
             _parser.SetTokens(new HplToken[]
-{
+            {
                 new(HplTokenType.Identifier, "void"),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
@@ -96,7 +96,7 @@ namespace Hpl2Parser.Tests
                 new(HplTokenType.OpenBracket),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-});
+            });
 
             HplSyntaxTree syntaxTree = _parser.Parse();
 
