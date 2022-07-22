@@ -81,5 +81,41 @@ namespace Hpl2Parser.Tests
 
             Assert.Empty(_parser.Diagnostics);
         }
+
+        [Fact]
+        public void ValidFunctionDeclaration_ShouldRecognizeSingleParameter()
+        {
+            _parser.SetTokens(new HplToken[]
+{
+                new(HplTokenType.Identifier, "void"),
+                new(HplTokenType.Identifier, "MyFunction"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.Identifier, "string"),
+                new(HplTokenType.Identifier, "myArg"),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.OpenBracket),
+                new(HplTokenType.CloseBracket),
+                new(HplTokenType.EndOfFile)
+});
+
+            HplSyntaxTree syntaxTree = _parser.Parse();
+
+            Assert.NotNull(syntaxTree);
+            Assert.Single(syntaxTree.RootElements);
+            Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+
+            var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
+            Assert.Equal("MyFunction", functionNode.Identifier);
+            Assert.Equal("void", functionNode.ReturnType.TextValue);
+
+            Assert.Single(functionNode.ParameterList);
+            Assert.Equal(HplSyntaxNodeType.FunctionParameter, functionNode.ParameterList.First().NodeType);
+            var param1 = functionNode.ParameterList.First() as HplFunctionParameterNode;
+            Assert.NotNull(param1);
+            Assert.Equal("string", param1.Type);
+            Assert.Equal("myArg", param1.Identifier);
+
+            Assert.Empty(_parser.Diagnostics);
+        }
     }
 }

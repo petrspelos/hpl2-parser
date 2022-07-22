@@ -86,14 +86,36 @@ namespace Hpl2Parser.Core.Parsing
             _tokenEnumerator.Next();
 
             if (_tokenEnumerator.Peek().Type != HplTokenType.OpenParen)
-                throw new NotImplementedException("Complex functions are not yet implemented");
+                throw new InvalidOperationException($"Expected a token of type OpenParen but found {_tokenEnumerator.Peek().Type}");
             _tokenEnumerator.Next();
 
-            funcNode.ParameterList = Array.Empty<HplSyntaxNode>();
+            funcNode.ParameterList = new List<HplSyntaxNode>();
 
-            if (_tokenEnumerator.Peek().Type != HplTokenType.CloseParen)
-                throw new NotImplementedException("Complex functions are not yet implemented");
-            _tokenEnumerator.Next();
+            while (_tokenEnumerator.Peek().Type != HplTokenType.CloseParen)
+            {
+                if (_tokenEnumerator.Peek().Type == HplTokenType.Comma)
+                    _tokenEnumerator.Next();
+
+                if (_tokenEnumerator.Peek().Type == HplTokenType.EndOfFile)
+                    throw new InvalidOperationException("Expected a token of type CloseParen but found End of file");
+
+                System.Diagnostics.Debug.Assert(_tokenEnumerator.Peek().Type == HplTokenType.Identifier);
+                System.Diagnostics.Debug.Assert(_tokenEnumerator.Peek(1).Type == HplTokenType.Identifier);
+
+                var paramType = _tokenEnumerator.Peek().Text;
+                var paramIdentifier = _tokenEnumerator.Peek(1).Text;
+
+                _tokenEnumerator.Next(2);
+                funcNode.ParameterList.Add(new HplFunctionParameterNode
+                {
+                    Type = paramType,
+                    Identifier = paramIdentifier
+                });
+            }
+
+            // for parameterless functions
+            if (_tokenEnumerator.Peek().Type == HplTokenType.CloseParen)
+                _tokenEnumerator.Next();
 
             // '{' and '}'
             _tokenEnumerator.Next(2);
