@@ -4,5 +4,6 @@ public enum HplSyntaxNodeType
 {
     FunctionDeclaration,
     TypeReference,
-    FunctionParameter
+    FunctionParameter,
+    FunctionCall
 }

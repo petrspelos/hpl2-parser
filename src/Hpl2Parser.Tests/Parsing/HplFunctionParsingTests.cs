@@ -228,4 +228,39 @@ public class HplFunctionParsingTests
 
         Assert.Empty(_parser.Diagnostics);
     }
+
+    [Fact]
+    public void ValidFunctionDeclaration_ShouldRecognizeFunctionCall()
+    {
+        _parser.SetTokens(new HplToken[]
+        {
+                new(HplTokenType.Identifier, "void"),
+                new(HplTokenType.Identifier, "MyFunction"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.Identifier, "string"),
+                new(HplTokenType.Identifier, "&in"),
+                new(HplTokenType.Identifier, "myArg"),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.OpenBracket),
+                new(HplTokenType.Identifier, "FunctionToCall"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.CloseBracket),
+                new(HplTokenType.EndOfFile)
+        });
+
+        HplSyntaxTree syntaxTree = _parser.Parse();
+
+        Assert.NotNull(syntaxTree);
+        Assert.Single(syntaxTree.RootElements);
+        Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+
+        var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
+        Assert.Single(functionNode.BodyElements);
+        var functionCallNode = functionNode.BodyElements.First() as HplFunctionCallNode;
+        Assert.NotNull(functionCallNode);
+        Assert.Equal("FunctionToCall", functionCallNode.Identifier);
+
+        Assert.Empty(_parser.Diagnostics);
+    }
 }

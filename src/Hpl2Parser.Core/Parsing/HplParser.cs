@@ -41,7 +41,7 @@ namespace Hpl2Parser.Core.Parsing
                 tokens.Add(token);
             }
 
-            _tokens = tokens;
+            SetTokens(tokens);
         }
 
         public HplSyntaxTree Parse()
@@ -133,7 +133,33 @@ namespace Hpl2Parser.Core.Parsing
             if (_tokenEnumerator.Peek().Type == HplTokenType.CloseParen)
                 _tokenEnumerator.Next();
 
-            // '{' and '}'
+            if (_tokenEnumerator.Peek().Type != HplTokenType.OpenBracket)
+                throw new InvalidOperationException($"Expected {{ but found {_tokenEnumerator.Peek().Type}");
+
+            // '{'
+            _tokenEnumerator.Next();
+
+            funcNode.BodyElements = new List<HplSyntaxNode>();
+            while (_tokenEnumerator.Peek().Type != HplTokenType.CloseBracket)
+            {
+                // Function Call
+                if (_tokenEnumerator.Peek().Type == HplTokenType.Identifier && _tokenEnumerator.Peek(1).Type == HplTokenType.OpenParen)
+                {
+                    var functionCall = new HplFunctionCallNode()
+                    {
+                        Identifier = _tokenEnumerator.Peek().Text
+                    };
+                    _tokenEnumerator.Next(2);
+
+                    if (_tokenEnumerator.Peek().Type != HplTokenType.CloseParen)
+                        throw new NotImplementedException("Function calls with parameters are not yet implemented");
+
+                    _tokenEnumerator.Next();
+
+                    funcNode.BodyElements.Add(functionCall);
+                }
+            }
+
             _tokenEnumerator.Next(2);
 
             return funcNode;

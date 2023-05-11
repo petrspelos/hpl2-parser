@@ -8,6 +8,8 @@ public sealed class HplFunctionDeclarationNode : HplSyntaxNode
 
     public ICollection<HplSyntaxNode> ParameterList { get; set; }
 
+    public ICollection<HplSyntaxNode> BodyElements { get; set; }
+
     public HplTypeReferenceNode ReturnType { get; set; }
     
     public string Identifier { get; set; }
