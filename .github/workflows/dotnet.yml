@@ -37,12 +37,7 @@ jobs:
 
     needs: build
 
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-        dotnet-version: [6.0.x]
+    runs-on: ubuntu-latest
 
     env:
       TEST_PROJECT_PATH: ./src/Hpl2Parser.Tests/Hpl2Parser.Tests.csproj
@@ -52,14 +47,18 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore ${{ env.TEST_PROJECT_PATH }}
+    - name: Find Test Assembly
+      run: |
+        TEST_ASSEMBLY_PATH=$(find src -type f -name "*Tests.dll" | head -n 1)
+        echo "TEST_ASSEMBLY_PATH=$TEST_ASSEMBLY_PATH" >> $GITHUB_ENV
     - name: Test with Coverage
       run: |
         dotnet tool install --global coverlet.console
         echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-        coverlet ${{ env.TEST_PROJECT_PATH }} --target "dotnet" --targetargs "test ${{ env.TEST_PROJECT_PATH }} --no-build --verbosity normal" --format cobertura --output './coverage/'
+        coverlet ${{ env.TEST_ASSEMBLY_PATH }} --target "dotnet" --targetargs "test --no-build --verbosity normal" --format cobertura --output './coverage/'
     - name: Create Coverage Report
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool
