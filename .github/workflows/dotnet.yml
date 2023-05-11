@@ -25,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Restore dependencies
@@ -45,25 +45,25 @@ jobs:
         dotnet-version: [6.0.x]
 
     env:
-      SOLUTION_FILE_PATH: ./src/Hpl2Parser.sln
+      TEST_PROJECT_PATH: ./src/Hpl2Parser.Tests/Hpl2Parser.Tests.csproj
 
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_FILE_PATH }}
+      run: dotnet restore ${{ env.TEST_PROJECT_PATH }}
     - name: Test with Coverage
       run: |
         dotnet tool install --global coverlet.console
-        export PATH="$PATH:/home/runner/.dotnet/tools"
-        dotnet test ${{ env.SOLUTION_FILE_PATH }} --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput='./coverage/'
+        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+        coverlet ${{ env.TEST_PROJECT_PATH }} --target "dotnet" --targetargs "test ${{ env.TEST_PROJECT_PATH }} --no-build --verbosity normal" --format cobertura --output './coverage/'
     - name: Create Coverage Report
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool
-        export PATH="$PATH:/home/runner/.dotnet/tools"
+        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
         reportgenerator -reports:./coverage/coverage.cobertura.xml -targetdir:./coverage/reports/ -reporttypes:Html
     - name: Publish Coverage Report
       uses: actions/upload-artifact@v2
