@@ -245,6 +245,7 @@ public class HplFunctionParsingTests
                 new(HplTokenType.Identifier, "FunctionToCall"),
                 new(HplTokenType.OpenParen),
                 new(HplTokenType.CloseParen),
+                new(HplTokenType.Semicolon),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
         });
@@ -260,6 +261,48 @@ public class HplFunctionParsingTests
         var functionCallNode = functionNode.BodyElements.First() as HplFunctionCallNode;
         Assert.NotNull(functionCallNode);
         Assert.Equal("FunctionToCall", functionCallNode.Identifier);
+
+        Assert.Empty(_parser.Diagnostics);
+    }
+
+    // TODO: function calls without a semicolon ending must be reported as syntax errors!
+
+    [Fact]
+    public void ValidFunctionWithFunctionCallLiteralParameters_ShouldRecognizeFunctionCall()
+    {
+        _parser.SetTokens(new HplToken[]
+        {
+                new(HplTokenType.Identifier, "void"),
+                new(HplTokenType.Identifier, "MyFunction"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.OpenBracket),
+                new(HplTokenType.Identifier, "Print"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.StringLiteral, "Hello, World!"),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.Semicolon),
+                new(HplTokenType.CloseBracket),
+                new(HplTokenType.EndOfFile)
+        });
+
+        HplSyntaxTree syntaxTree = _parser.Parse();
+
+        Assert.NotNull(syntaxTree);
+        Assert.Single(syntaxTree.RootElements);
+        Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+
+        var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
+        Assert.Single(functionNode.BodyElements);
+        var functionCallNode = functionNode.BodyElements.First() as HplFunctionCallNode;
+        Assert.NotNull(functionCallNode);
+        Assert.Equal("Print", functionCallNode.Identifier);
+        Assert.NotNull(functionCallNode.Arguments);
+        Assert.Single(functionCallNode.Arguments);
+        var argumentNode = functionCallNode.Arguments.First();
+        Assert.Equal(HplSyntaxNodeType.FunctionCallArgument, argumentNode.NodeType);
+        Assert.Equal(HplFunctionCallArgumentType.StringLiteral, argumentNode.ArgumentType);
+        Assert.Equal("Hello, World!", argumentNode.ArgumentValue);
 
         Assert.Empty(_parser.Diagnostics);
     }
