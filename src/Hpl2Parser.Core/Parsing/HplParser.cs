@@ -151,16 +151,39 @@ namespace Hpl2Parser.Core.Parsing
                     };
                     _tokenEnumerator.Next(2);
 
-                    if (_tokenEnumerator.Peek().Type != HplTokenType.CloseParen)
-                        throw new NotImplementedException("Function calls with parameters are not yet implemented");
+                    if (_tokenEnumerator.Peek().Type == HplTokenType.CloseParen)
+                    {
+                        _tokenEnumerator.Next();
+                    }
+                    else
+                    {
+                        while (_tokenEnumerator.Peek().Type != HplTokenType.CloseParen)
+                        {
+                            if (_tokenEnumerator.Peek().Type != HplTokenType.StringLiteral)
+                                throw new NotImplementedException("Only string literal arguments are implemented at the moment...");
+                            
+                            var argument = new HplFunctionArgumentNode
+                            {
+                                ArgumentType = HplFunctionCallArgumentType.StringLiteral,
+                                ArgumentValue = _tokenEnumerator.Peek().Text
+                            };
 
-                    _tokenEnumerator.Next();
+                            functionCall.Arguments.Add(argument);
+                            _tokenEnumerator.Next();
+                        }
+                        _tokenEnumerator.Next(); // CloseParen - end of arguments
+                    }
+
+                    if (_tokenEnumerator.Peek().Type != HplTokenType.Semicolon)
+                        throw new NotImplementedException("Complex function calls are not supported at the moment... function calls must be followed by a semicolon");
+                    else
+                        _tokenEnumerator.Next();
 
                     funcNode.BodyElements.Add(functionCall);
                 }
             }
 
-            _tokenEnumerator.Next(2);
+            _tokenEnumerator.Next(1);
 
             return funcNode;
         }

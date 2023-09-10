@@ -1,6 +1,6 @@
 # hpl2-parser
 
-A parser for HPL2's scripting language
+A parser for HPL2's scripting language (AngelScript 2.19.2)
 
 ## Prototype Goal
 
