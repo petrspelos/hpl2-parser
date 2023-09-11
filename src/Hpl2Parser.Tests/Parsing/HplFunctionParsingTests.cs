@@ -266,7 +266,6 @@ public class HplFunctionParsingTests
     }
 
     // TODO: function calls without a semicolon ending must be reported as syntax errors!
-
     [Fact]
     public void ValidFunctionWithFunctionCallLiteralParameters_ShouldRecognizeFunctionCall()
     {
@@ -303,6 +302,65 @@ public class HplFunctionParsingTests
         Assert.Equal(HplSyntaxNodeType.FunctionCallArgument, argumentNode.NodeType);
         Assert.Equal(HplFunctionCallArgumentType.StringLiteral, argumentNode.ArgumentType);
         Assert.Equal("Hello, World!", argumentNode.ArgumentValue);
+
+        Assert.Empty(_parser.Diagnostics);
+    }
+
+    [Fact]
+    public void ValidFunctionWithFunctionCallMultipleLiteralParameters_ShouldRecognizeFunctionCall()
+    {
+        _parser.SetTokens(new HplToken[]
+        {
+                new(HplTokenType.Identifier, "void"),
+                new(HplTokenType.Identifier, "MyFunction"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.OpenBracket),
+                new(HplTokenType.Identifier, "CreateParticleSystemAtEntity"),
+                new(HplTokenType.OpenParen),
+                new(HplTokenType.StringLiteral, "confetti"),
+                new(HplTokenType.Comma),
+                new(HplTokenType.StringLiteral, "confetti.ps"),
+                new(HplTokenType.Comma),
+                new(HplTokenType.StringLiteral, "CeilingArea"),
+                new(HplTokenType.Comma),
+                new(HplTokenType.Identifier, "true"),
+                new(HplTokenType.CloseParen),
+                new(HplTokenType.Semicolon),
+                new(HplTokenType.CloseBracket),
+                new(HplTokenType.EndOfFile)
+        });
+
+        HplSyntaxTree syntaxTree = _parser.Parse();
+
+        Assert.NotNull(syntaxTree);
+        Assert.Single(syntaxTree.RootElements);
+        Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+
+        var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
+        Assert.Single(functionNode.BodyElements);
+        var functionCallNode = functionNode.BodyElements.First() as HplFunctionCallNode;
+        Assert.NotNull(functionCallNode);
+        Assert.Equal("CreateParticleSystemAtEntity", functionCallNode.Identifier);
+        Assert.NotNull(functionCallNode.Arguments);
+        Assert.Equal(4, functionCallNode.Arguments.Count);
+
+        var arg1 = functionCallNode.Arguments.ElementAt(0);
+        var arg2 = functionCallNode.Arguments.ElementAt(1);
+        var arg3 = functionCallNode.Arguments.ElementAt(2);
+        var arg4 = functionCallNode.Arguments.ElementAt(3);
+        
+        Assert.Equal(HplFunctionCallArgumentType.StringLiteral, arg1.ArgumentType);
+        Assert.Equal("confetti", arg1.ArgumentValue);
+
+        Assert.Equal(HplFunctionCallArgumentType.StringLiteral, arg2.ArgumentType);
+        Assert.Equal("confetti.ps", arg2.ArgumentValue);
+
+        Assert.Equal(HplFunctionCallArgumentType.StringLiteral, arg3.ArgumentType);
+        Assert.Equal("CeilingArea", arg3.ArgumentValue);
+
+        Assert.Equal(HplFunctionCallArgumentType.BooleanLiteral, arg4.ArgumentType);
+        Assert.Equal("true", arg4.ArgumentValue);
 
         Assert.Empty(_parser.Diagnostics);
     }

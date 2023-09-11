@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Hpl2Parser.Core.Parsing.Syntax;
 using Hpl2Parser.Core.Tokenizing;
@@ -159,17 +160,15 @@ namespace Hpl2Parser.Core.Parsing
                     {
                         while (_tokenEnumerator.Peek().Type != HplTokenType.CloseParen)
                         {
-                            if (_tokenEnumerator.Peek().Type != HplTokenType.StringLiteral)
-                                throw new NotImplementedException("Only string literal arguments are implemented at the moment...");
-                            
-                            var argument = new HplFunctionArgumentNode
-                            {
-                                ArgumentType = HplFunctionCallArgumentType.StringLiteral,
-                                ArgumentValue = _tokenEnumerator.Peek().Text
-                            };
+                            var argument = ParseFunctionCallArgument();
+
+                            if (argument is null)
+                                throw new NotImplementedException("There was no implementation for parsing the specified function call argument");
 
                             functionCall.Arguments.Add(argument);
-                            _tokenEnumerator.Next();
+
+                            if (_tokenEnumerator.Peek().Type == HplTokenType.Comma)
+                                _tokenEnumerator.Next(); // TODO: Missing commas should be reported in diagnostics
                         }
                         _tokenEnumerator.Next(); // CloseParen - end of arguments
                     }
@@ -186,6 +185,41 @@ namespace Hpl2Parser.Core.Parsing
             _tokenEnumerator.Next(1);
 
             return funcNode;
+        }
+
+        private HplFunctionArgumentNode ParseFunctionCallArgument()
+        {
+            if (_tokenEnumerator.Peek().Type == HplTokenType.StringLiteral) {
+                var arg = new HplFunctionArgumentNode
+                {
+                    ArgumentType = HplFunctionCallArgumentType.StringLiteral,
+                    ArgumentValue = _tokenEnumerator.Peek().Text
+                };
+
+                _tokenEnumerator.Next();
+                return arg;
+            }
+
+            if (_tokenEnumerator.Peek().Type == HplTokenType.Identifier) {
+                return ParseFunctionCallIdentifierArgument();
+            }
+
+            throw new NotImplementedException("Only string literals and certain identifiers are supported as function call arguments at this time...");
+        }
+
+        private HplFunctionArgumentNode ParseFunctionCallIdentifierArgument()
+        {
+            var identifier = _tokenEnumerator.Peek().Text;
+            if (identifier == "true" || identifier == "false") { // boolean literal
+                _tokenEnumerator.Next();
+                return new HplFunctionArgumentNode
+                {
+                    ArgumentType = HplFunctionCallArgumentType.BooleanLiteral,
+                    ArgumentValue = identifier
+                };
+            }
+
+            throw new NotImplementedException("Only boolean identifiers are currently supported for a function call identifier argument...");
         }
     }
 }
