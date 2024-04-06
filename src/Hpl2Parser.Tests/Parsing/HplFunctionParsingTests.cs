@@ -1,4 +1,5 @@
-﻿using Hpl2Parser.Core.Parsing;
+﻿using FluentAssertions;
+using Hpl2Parser.Core.Parsing;
 using Hpl2Parser.Core.Parsing.Syntax;
 using Hpl2Parser.Core.Tokenizing;
 using System.Linq;
@@ -15,12 +16,11 @@ public class HplFunctionParsingTests
         _parser = new(null);
     }
 
-
     [Fact]
     public void ValidFunctionDeclaration_ShouldBeRecognized()
     {
-        _parser.SetTokens(new HplToken[]
-        {
+        _parser.SetTokens(
+        [
                 new(HplTokenType.Identifier, "void"),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
@@ -28,19 +28,15 @@ public class HplFunctionParsingTests
                 new(HplTokenType.OpenBracket),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-        });
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
-        Assert.NotNull(syntaxTree);
-        Assert.Single(syntaxTree.RootElements);
-        Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+        var functionNode = syntaxTree.AssertRoot<HplFunctionDeclarationNode>();
 
-        var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
-        Assert.Equal("MyFunction", functionNode.Identifier);
-        Assert.Empty(functionNode.ParameterList);
-
-        Assert.Empty(_parser.Diagnostics);
+        functionNode.Identifier.Should().Be("MyFunction");
+        functionNode.ParameterList.Should().BeEmpty();
+        _parser.Diagnostics.Should().BeEmpty();
     }
 
     [Theory]
@@ -56,37 +52,33 @@ public class HplFunctionParsingTests
     [InlineData("uint")]
     [InlineData("uint64")]
     [InlineData("float")]
-    public void ValidFunctionDeclaration_ShouldRecognizeReturnType(string expectedIdentifier)
+    public void ValidFunctionDeclaration_ShouldRecognizeReturnType(string expectedReturnType)
     {
-        _parser.SetTokens(new HplToken[]
-        {
-                new(HplTokenType.Identifier, expectedIdentifier),
+        _parser.SetTokens(
+        [
+                new(HplTokenType.Identifier, expectedReturnType),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
                 new(HplTokenType.CloseParen),
                 new(HplTokenType.OpenBracket),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-        });
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
-        Assert.NotNull(syntaxTree);
-        Assert.Single(syntaxTree.RootElements);
-        Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+        var functionNode = syntaxTree.AssertRoot<HplFunctionDeclarationNode>();
 
-        var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
-        Assert.Equal("MyFunction", functionNode.Identifier);
-        Assert.Equal(expectedIdentifier, functionNode.ReturnType.TextValue);
-
-        Assert.Empty(_parser.Diagnostics);
+        functionNode.Identifier.Should().Be("MyFunction");
+        functionNode.AssertReturnType(expectedReturnType);
+        _parser.Diagnostics.Should().BeEmpty();
     }
 
     [Fact]
     public void ValidFunctionDeclaration_ShouldRecognizeSingleParameter()
     {
-        _parser.SetTokens(new HplToken[]
-        {
+        _parser.SetTokens(
+        [
                 new(HplTokenType.Identifier, "void"),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
@@ -96,33 +88,29 @@ public class HplFunctionParsingTests
                 new(HplTokenType.OpenBracket),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-        });
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
-        Assert.NotNull(syntaxTree);
-        Assert.Single(syntaxTree.RootElements);
-        Assert.Equal(HplSyntaxNodeType.FunctionDeclaration, syntaxTree.RootElements.First().NodeType);
+        var functionNode = syntaxTree.AssertRoot<HplFunctionDeclarationNode>();
+        functionNode.Identifier.Should().Be("MyFunction");
+        functionNode.AssertReturnType("void");
 
-        var functionNode = syntaxTree.RootElements.First() as HplFunctionDeclarationNode;
-        Assert.Equal("MyFunction", functionNode.Identifier);
-        Assert.Equal("void", functionNode.ReturnType.TextValue);
 
-        Assert.Single(functionNode.ParameterList);
-        Assert.Equal(HplSyntaxNodeType.FunctionParameter, functionNode.ParameterList.First().NodeType);
-        var param1 = functionNode.ParameterList.First() as HplFunctionParameterNode;
-        Assert.NotNull(param1);
-        Assert.Equal("string", param1.Type);
-        Assert.Equal("myArg", param1.Identifier);
+        var parameterNodes = functionNode.AssertParameterListCount(1);
+        var param1 = parameterNodes.First();
 
-        Assert.Empty(_parser.Diagnostics);
+        param1.Should().NotBeNull();
+        param1.Type.Should().Be("string");
+        param1.Identifier.Should().Be("myArg");
+        _parser.Diagnostics.Should().BeEmpty();
     }
 
     [Fact]
     public void ValidFunctionDeclaration_ShouldRecognizeMultipleParameters()
     {
-        _parser.SetTokens(new HplToken[]
-        {
+        _parser.SetTokens(
+        [
                 new(HplTokenType.Identifier, "void"),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
@@ -138,7 +126,7 @@ public class HplFunctionParsingTests
                 new(HplTokenType.OpenBracket),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-        });
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -174,8 +162,8 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionDeclaration_ShouldRecognizeMultipleParametersWithParameterIntention()
     {
-        _parser.SetTokens(new HplToken[]
-        {
+        _parser.SetTokens(
+        [
                 new(HplTokenType.Identifier, "void"),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
@@ -193,7 +181,7 @@ public class HplFunctionParsingTests
                 new(HplTokenType.OpenBracket),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-        });
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -232,23 +220,23 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionDeclaration_ShouldRecognizeFunctionCall()
     {
-        _parser.SetTokens(new HplToken[]
-        {
-                new(HplTokenType.Identifier, "void"),
-                new(HplTokenType.Identifier, "MyFunction"),
-                new(HplTokenType.OpenParen),
-                new(HplTokenType.Identifier, "string"),
-                new(HplTokenType.Identifier, "&in"),
-                new(HplTokenType.Identifier, "myArg"),
-                new(HplTokenType.CloseParen),
-                new(HplTokenType.OpenBracket),
-                new(HplTokenType.Identifier, "FunctionToCall"),
-                new(HplTokenType.OpenParen),
-                new(HplTokenType.CloseParen),
-                new(HplTokenType.Semicolon),
-                new(HplTokenType.CloseBracket),
-                new(HplTokenType.EndOfFile)
-        });
+        _parser.SetTokens(
+        [
+            new(HplTokenType.Identifier, "void"),
+            new(HplTokenType.Identifier, "MyFunction"),
+            new(HplTokenType.OpenParen),
+            new(HplTokenType.Identifier, "string"),
+            new(HplTokenType.Identifier, "&in"),
+            new(HplTokenType.Identifier, "myArg"),
+            new(HplTokenType.CloseParen),
+            new(HplTokenType.OpenBracket),
+            new(HplTokenType.Identifier, "FunctionToCall"),
+            new(HplTokenType.OpenParen),
+            new(HplTokenType.CloseParen),
+            new(HplTokenType.Semicolon),
+            new(HplTokenType.CloseBracket),
+            new(HplTokenType.EndOfFile)
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -269,8 +257,8 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionWithFunctionCallLiteralParameters_ShouldRecognizeFunctionCall()
     {
-        _parser.SetTokens(new HplToken[]
-        {
+        _parser.SetTokens(
+        [
                 new(HplTokenType.Identifier, "void"),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
@@ -283,7 +271,7 @@ public class HplFunctionParsingTests
                 new(HplTokenType.Semicolon),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-        });
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -309,8 +297,8 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionWithFunctionCallMultipleLiteralParameters_ShouldRecognizeFunctionCall()
     {
-        _parser.SetTokens(new HplToken[]
-        {
+        _parser.SetTokens(
+        [
                 new(HplTokenType.Identifier, "void"),
                 new(HplTokenType.Identifier, "MyFunction"),
                 new(HplTokenType.OpenParen),
@@ -329,7 +317,7 @@ public class HplFunctionParsingTests
                 new(HplTokenType.Semicolon),
                 new(HplTokenType.CloseBracket),
                 new(HplTokenType.EndOfFile)
-        });
+        ]);
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
