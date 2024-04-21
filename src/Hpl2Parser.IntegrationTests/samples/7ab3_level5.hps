@@ -1,0 +1,417 @@
+//  ___  _         _            _           _   _            ______ _ _ _       
+// / _ \| |       | |          | |         | | | |           | ___ (_) | |      
+/// /_\ \ |__   __| |_   _  ___| |_ ___  __| | | |__  _   _  | |_/ /_| | |_   _ 
+//|  _  |  _ \ / _  | | | |/ __| __/ _ \/ _  | |  _ \| | | | | ___ \ | | | | | |
+//| | | | |_) | (_| | |_| | (__| ||  __/ (_| | | |_) | |_| | | |_/ / | | | |_| |
+//\_| |_/____/ \__,_|\__,_|\___|\__\___|\__,_| |____/ \__, | \____/|_|_|_|\__, |
+//                                                     __/ |               __/ |
+//                                                    |___/               |___/   
+//													
+//													By: Nick Debergue
+//													
+//****IF YOU'RE READING: Good luck understanding this gibberish :)
+//****Contact: perceptionist420@ymail.com
+//****Or message me or comment at Mod/Indie DB! I'm always looking for collaborations!
+//****
+//****CHEATS: Search the code for "hax" (CAUTION: YOU MUST COMMENT/UNCOMMENT THESE SEGMENTS CORRECTLY FOR THE DESIRED EFFECT!)
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////---BEGINNING---//////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void startArea(string &in asEntity, int alState){
+	SetMapDisplayNameEntry("LVL5");
+	ClearSavedMaps();
+	//Make vars
+	AddLocalVarInt("leaveLevel", 0);
+	AddLocalVarInt("lightningInit", 0);
+	AddLocalVarInt("lStrikeOn", RandInt(1, 5));
+	AddLocalVarInt("lAreaOn", 2);
+	AddLocalVarInt("inside", 0);
+	AddLocalVarInt("insideInit", 0);
+	AddLocalVarInt("ate", 0);
+	AddLocalVarInt("drank", 0);
+	AddGlobalVarInt("tipsy", 0);
+	AddLocalVarInt("enemyActive", 0);
+	AddLocalVarInt("deletedMonster", 0);
+	
+	//Make listeners
+	SetEntityPlayerInteractCallback("dangerDoor", "dangerDoor", false);
+	AddEntityCollideCallback("Player", "leaveLevel", "leaveLevel", false, 1);
+	AddEntityCollideCallback("Player", "triggerScream", "triggerScream", true, 1);
+	AddEntityCollideCallback("Player", "triggerRain", "triggerRain", false, 0);
+	AddEntityCollideCallback("Player", "inside", "inside", false, 0);
+	AddEntityCollideCallback("Player", "triggerLightning", "triggerLightning", false, 0);
+	
+	//
+	PlaySoundAtEntity("music", "bottomWell.snt", "inside", 0, true);
+	
+	//
+	PlayMusic("crickets.ogg", true, 0.5, 2, 0, true);
+	PlayGuiSound("outside_enter.ogg", 1);
+	
+	//HAXE
+	GiveItem("lantern", "lantern", "", "lantern.tga", 1);
+	//TeleportPlayer("PlayerStartArea_2");
+	SetSanityDrainDisabled(true);
+	SetInDarknessEffectsActive(false);
+	
+	//
+	AutoSave();
+}
+
+
+void died(string &in asName, int alCount){
+	if(asName == "cabin"){
+		SetLocalVarInt("inside", 1);
+		AddEntityCollideCallback("Player", "leftCabin", "leftCabin", true, 1);
+		//
+		AutoSave();
+	}
+}
+
+void dangerDoor(string &in asEntity){
+	SetMessage("Messages", "dangerDoor", 5);
+}
+
+void leaveLevel(string &in asParent, string &in asChild, int alState){
+	if((GetLocalVarInt("ate") == 1)&&(GetLocalVarInt("drank") == 1)){
+		//leave level
+		AddTimer("leaveLevelT", 2, "leaveLevelT");
+		FadeOut(2);
+		//
+	}else{
+		SetMessage("Messages", "leaveLevel", 5);
+	}
+}
+
+void leaveLevelT(string &in asTimer){
+	ChangeMap("level6", "PlayerStartArea_1", "", "");
+}
+
+void triggerScream(string &in asParent, string &in asChild, int alState){
+	SetPlayerActive(false);
+	StartPlayerLookAt("corpse_pile", 6, 6, "releaseLook");
+	PlayGuiSound("react_pant.snt", 100.0f);
+	
+	StopSound("music", 0);
+	
+	AddTimer("scream", 2, "scream");
+	
+	/////////////////////////////////////////////////////////////////////////////////////////YOU STILL NEED TO RESPAWN IN CABIN WHEN YOU DIE AFTER THE MONSTER SPAWNS IN THE FEILD!!!!!!
+}
+
+void scream(string &in asTimer){
+	PlaySoundAtEntity("scream", "far_scream.snt", "leftCabin", 0.1, true);
+	//
+	AddTimer("lookScream", 0.7, "lookScream");
+}
+
+void lookScream(string &in asTimer){
+	StartPlayerLookAt("leftCabin", 6, 6, "releaseLook");
+	PlayGuiSound("react_scare.snt", 100.0f);
+	//
+	AddTimer("screamDone", 1.5, "screamDone");
+}
+
+void screamDone(string &in asTimer){
+	SetEntityActive("dangerDoor", false);
+	
+	//and open door
+	SetSwingDoorLocked("castle_1", false, false);
+	SetSwingDoorClosed("castle_1", false, false);
+	SetSwingDoorDisableAutoClose("castle_1", true);
+	AddPropImpulse("castle_1", -2, 0, -5, "world");
+	//
+	SetPlayerActive(true);
+}
+
+void inside(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		//in
+		SetLocalVarInt("inside", 1);
+		//StopMusic(2, 2);//stop rain sound
+		PlayMusic("rain.ogg", true, 0.1, 2, 2, true);//rain inside priority: 3
+		//
+		if(GetLocalVarInt("insideInit") == 0){
+			
+			//set up food+drinks
+			SetEntityPlayerInteractCallback("castle_1", "checkFood", false);//check only if still locked
+			SetEntityPlayerInteractCallback("eatFood", "eatFood", true);
+			SetEntityPlayerInteractCallback("drinkWater", "drinkWater", true);
+			SetEntityPlayerInteractCallback("drinkWine", "drinkWine", true);
+			
+			//close+lock door
+			SetSwingDoorLocked("castle_1", true, false);
+			SetSwingDoorClosed("castle_1", true, true);
+			//
+			SetLocalVarInt("insideInit", 1);
+			
+			//
+			AutoSave();
+			
+		}
+		if(GetLocalVarInt("enemyActive") == 1){
+			ClearEnemyPatrolNodes("noMusicBrute");
+			AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_5", 0.01, "");
+			AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_6", 0.01, "");
+			AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_7", 0.01, "");
+			AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_8", 0.01, "");
+			AddEntityCollideCallback("noMusicBrute", "inside", "monsterInside", false, 0);
+		}
+	}else{
+		//out
+		SetLocalVarInt("inside", 0);
+		//StopMusic(2, 3);//stop inside rain sound
+		PlayMusic("rain.ogg", true, 0.5, 2, 2, true);//rain priority: 2
+		//
+		if(GetLocalVarInt("enemyActive") == 1){
+			PlaySoundAtEntity("noMusicBrute", "enabled.snt", "noMusicBrute", 0.01, true);
+			ClearEnemyPatrolNodes("noMusicBrute");
+			SetEnemyDisableTriggers("noMusicBrute", true);
+			AddTimer("resetEnemy", 1, "resetEnemy");
+			RemoveTimer("resetEnemy1");
+		}
+	}
+	
+}
+
+void resetEnemy(string &in asTimer){
+	SetEnemyDisableTriggers("noMusicBrute", false);
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_6", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_1", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_2", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_3", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_4", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_5", 0.01, "");
+}
+
+void resetEnemy1(string &in asTimer){
+	ClearEnemyPatrolNodes("noMusicBrute");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_6", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_1", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_2", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_3", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_4", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_5", 0.01, "");
+}
+
+void monsterInside(string &in asParent, string &in asChild, int alState){
+	AddTimer("resetEnemy1", 4, "resetEnemy1");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//EAT+DRINK FUNTIONS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void eatFood(string &in asEntity){
+	PlayGuiSound("26_place_glass.ogg", 1.0f);
+	SetEntityActive("fresh_meat_1", false);
+	SetEntityActive("fresh_meat_2", false);
+	SetEntityActive("fresh_meat_3", false);
+	SetEntityActive("fresh_meat_4", false);
+	SetEntityActive("eatFoodSign", false);
+	
+	SetLocalVarInt("ate", 1);
+	//
+	if(GetLocalVarInt("drank") == 1){
+		leaveRoomInit();
+	}
+	
+	//
+	AutoSave();
+}
+
+void drinkWater(string &in asEntity){
+	PlayGuiSound("26_agrippa_drink.ogg", 1.0f);
+	SetEntityActive("drinkWine", false);
+	SetEntityActive("drinkWaterSign", false);
+	SetEntityActive("drinkWineSign", false);
+	SetEntityActive("amnesia_bottle_1", false);
+	
+	SetLocalVarInt("drank", 1);
+	SetGlobalVarInt("tipsy", 0);
+	//
+	if(GetLocalVarInt("ate") == 1){
+		leaveRoomInit();
+	}
+	
+	//
+	AutoSave();
+}
+
+void drinkWine(string &in asEntity){
+	PlayGuiSound("26_agrippa_drink.ogg", 1.0f);
+	SetEntityActive("drinkWater", false);
+	SetEntityActive("drinkWaterSign", false);
+	SetEntityActive("drinkWineSign", false);
+	SetEntityActive("wine01", false);
+	
+	SetLocalVarInt("drank", 1);
+	SetGlobalVarInt("tipsy", 0);
+	
+	AddTimer("tipsy", 20, "tipsy");
+	
+	//
+	if(GetLocalVarInt("ate") == 1){
+		leaveRoomInit();
+	}
+	
+	//
+	AutoSave();
+}
+
+void tipsy(string &in asTimer){
+	SetMessage("Messages", "youreTipsy", 5);
+	FadeRadialBlurTo(0.02, 0.5);
+	SetGlobalVarInt("tipsy", 1);
+}
+
+void leaveRoomInit(){
+	SetSwingDoorLocked("castle_1", false, false);
+	AddEntityCollideCallback("Player", "leftCabin", "leftCabin", true, 1);
+}
+
+void leftCabin(string &in asParent, string &in asChild, int alState){
+	SetLocalVarInt("enemyActive", 1);
+	PlaySoundAtEntity("noMusicBrute", "enabled.snt", "noMusicBrute", 0.01, true);
+	SetEntityActive("noMusicBrute", true);
+	SetEnemySanityDecreaseActive("noMusicBrute", false);
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_1", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_2", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_3", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_4", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute", "PathNodeArea_5", 0.01, "");
+	CheckPoint("cabin", "cabinS", "died", "deathHints", "sneaky");
+}
+
+void monsterScream(string &in asParent, string &in asChild, int alState){
+	PlaySoundAtEntity("monsterScreamArea", "monsterScream.snt", "monsterScreamArea", 0.1, true);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//RAIN+LIGHTNING EFFECTS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void triggerRain(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		//in
+		AddTimer("startRain", 2, "startRain");
+		AddTimer("rainSounds", 2, "rainSounds");
+	}else{
+		//out
+		AddTimer("stopRain", 2, "stopRain");
+		RemoveTimer("startRain");
+		RemoveTimer("rainSounds");
+		StopMusic(3, 2);//stop rain sound
+	}
+}
+
+void triggerLightning(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		//in
+		if(GetLocalVarInt("lightningInit") == 0){
+			AddTimer("startLightning", 0.001, "lightningTimer");
+			SetLocalVarInt("lightningInit", 1);
+		}else{
+			AddTimer("startLightning", 2, "lightningTimer");
+		}
+	}else{
+		//out
+		RemoveTimer("lightningTimer");
+		RemoveTimer("lightningTimer2");
+		RemoveTimer("lightningTimer3");
+		RemoveTimer("lightningTimer4");
+		RemoveTimer("startLightning");
+		
+		//DELETE MONSTER IF YOU'RE LEAVING LEVEL
+		if((GetLocalVarInt("ate") == 1)&&(GetLocalVarInt("drank") == 1)&&(GetLocalVarInt("deletedMonster") == 0)){
+			FadeEnemyToSmoke("noMusicBrute", true);
+			AddEntityCollideCallback("Player", "monsterScream", "monsterScream", true, 1);
+			SetLocalVarInt("deletedMonster", 1);
+		}
+	}
+}
+
+void startRain(string &in asTimer){
+	CreateParticleSystemAtEntity("rain1", "ps_water_rain.ps", "rain_1", true);
+	CreateParticleSystemAtEntity("rain2", "ps_water_rain.ps", "rain_2", true);
+	CreateParticleSystemAtEntity("rain3", "ps_water_rain.ps", "rain_3", true);
+	CreateParticleSystemAtEntity("rain4", "ps_water_rain.ps", "rain_4", true);
+	CreateParticleSystemAtEntity("rain5", "ps_water_rain.ps", "rain_5", true);
+}
+
+void stopRain(string &in asTimer){
+	DestroyParticleSystem("rain1");
+	DestroyParticleSystem("rain2");
+	DestroyParticleSystem("rain3");
+	DestroyParticleSystem("rain4");
+	DestroyParticleSystem("rain5");
+}
+
+void rainSounds(string &in asTimer){
+	StopMusic(2, 1);//stop music
+	PlayMusic("rain.ogg", true, 0.5, 2, 2, true);//rain priority: 2, music: 1
+}
+
+///////LIGHTNING
+
+void lightningTimer(string &in asTimer){
+	if(GetLocalVarInt("inside") == 1){
+		PlayGuiSound("thunder"+RandInt(1, 4)+".ogg", 0.1f);
+	}else{
+		PlayGuiSound("thunder"+RandInt(1, 4)+".ogg", 1.0f);
+	}
+	
+	SetEntityActive("lightning"+GetLocalVarInt("lAreaOn")+"_"+GetLocalVarInt("lStrikeOn"), true);
+	//
+	AddTimer("lightningTimer2", 0.05, "lightningTimer2");
+}
+
+void lightningTimer2(string &in asTimer){
+	SetEntityActive("lightning"+GetLocalVarInt("lAreaOn")+"_"+GetLocalVarInt("lStrikeOn"), false);
+	SetLocalVarInt("lStrikeOn", RandInt(1,5));
+	//
+	AddTimer("lightningTimer3", 0.05, "lightningTimer3");
+}
+
+void lightningTimer3(string &in asTimer){
+	SetEntityActive("lightning"+GetLocalVarInt("lAreaOn")+"_"+GetLocalVarInt("lStrikeOn"), true);
+	
+	//
+	AddTimer("lightningTimer4", 0.05, "lightningTimer4");
+}
+
+void lightningTimer4(string &in asTimer){
+	SetEntityActive("lightning"+GetLocalVarInt("lAreaOn")+"_"+GetLocalVarInt("lStrikeOn"), false);
+	SetLocalVarInt("lStrikeOn", RandInt(1,5));
+	
+	//
+	SetLocalVarInt("lAreaOn", RandInt(1, 4));
+	//
+	AddTimer("lightningTimer", RandFloat(5, 15), "lightningTimer");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//MISC FUNCTIONS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void checkFood(string &in asEntity){
+	if(GetSwingDoorLocked(asEntity)){
+		if((GetLocalVarInt("ate") == 0)&&(GetLocalVarInt("drank") == 0)){
+			SetMessage("Messages", "eatAndDrink", 2);
+		}else if(GetLocalVarInt("ate") == 0){
+			SetMessage("Messages", "eat", 2);
+		}else if(GetLocalVarInt("drank") == 0){
+			SetMessage("Messages", "drink", 2);
+		}
+	}
+}
+
+void releaseLook(){
+	StopPlayerLookAt();
+}
+
+//scared_dude.snt

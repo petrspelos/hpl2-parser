@@ -1,0 +1,90 @@
+void OnStart(){
+	intro();
+	AddEntityCollideCallback("sledge_1", "ScriptArea_2", "FirstImpact", false, 1);
+	AddUseItemCallback("", "key_study_1", "level_wood_1", "UnlockMansion2", true);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "NoComplexing", false, 1);
+	AddEntityCollideCallback("sledge_1", "ScriptArea_3", "BreakBox", true, 1);
+	SetEntityPlayerInteractCallback("mansion_2", "Mansion2Message", false);
+	SetEntityPlayerInteractCallback("lantern_1", "OilInLamp", false);
+	SetLocalVarInt("Mansion2Locked", 1);
+	SetDeathHint("Messages", "fightback");
+	SetLocalVarInt("impacts", 0);
+	SetPlayerLampOil(0);
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.25, 0, 0, true);
+}
+
+void OnLeave(){
+}
+
+void intro(){
+	FadeOut(0);
+	AddTimer("T1", 0.5f, "intro_2");
+	FadePlayerRollTo(75, 220, 220);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeImageTrailTo(2, 2);
+	FadeSepiaColorTo(100, 4);
+	FadeRadialBlurTo(0.15, 2);
+}
+
+void intro_2(string &in asTimer){
+	FadeIn(5);
+	AddTimer("T2", 2.0f, "intro_3");
+}
+
+void intro_3(string &in asTimer){
+	SetPlayerActive(true);
+	SetPlayerCrouching(false);
+	FadePlayerRollTo(0, 50, 50);
+	AddTimer("T3", 1.0f, "disableVision");
+}
+
+void disableVision(string &in asTimer){
+	FadeImageTrailTo(0, 2);
+	FadeSepiaColorTo(0, 2);
+	FadeRadialBlurTo(0, 2);
+}
+
+void UnlockMansion2(string &in item, string &in door){
+	SetLevelDoorLocked("level_wood_1", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}
+
+void Mansion2Message(string &in entity){
+	if (GetLocalVarInt("Mansion2Locked") == 1){
+		SetMessage("Messages", "doorlocked2", 0);
+	}
+}
+
+void FirstImpact(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("impacts") == 0){
+		PlayGuiSound("impact_wood_heavy_high.snt", 1000000);
+		SetMessage("Messages", "impact", 0);
+		SetLocalVarInt("impacts", 1);
+	}else if (GetLocalVarInt("impacts") == 1){
+		SetEntityActive("mansion_2", false);
+		SetEntityActive("mansion_2_broken", true);
+		PlayGuiSound("break_wood.snt", 1000000);
+		SetLocalVarInt("Mansion2Locked", 0);
+		SetLocalVarInt("impacts", 2);
+	}
+}
+
+void NoComplexing(string &in asParent, string &in asChild, int alState){
+	SetMessage("Messages", "complex", 0);
+}
+
+void OilInLamp(string &in entity){
+	SetPlayerLampOil(75);
+}
+
+void BreakBox(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("oil_box", false);
+	SetEntityActive("oil_box_broken", true);
+	PlayGuiSound("break_wood.snt", 100000);
+	SetEntityActive("oil", true);
+}

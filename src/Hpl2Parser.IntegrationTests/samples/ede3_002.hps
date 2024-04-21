@@ -1,0 +1,168 @@
+void OnStart()
+{
+}
+////
+void Restart_Level(string &in asEntity, int alCount)
+{
+	SetEntityPlayerInteractCallback("key_torture_chamber_fluke_1", "hurt", true);
+	SetEntityPlayerInteractCallback("level_engine_1", "door_fluke", true);
+	AddEntityCollideCallback("Player", "push", "push_player", true, 0);
+	AddEntityCollideCallback("Player", "AreaOne", "candleEvent", true, 0);
+	AddEntityCollideCallback("Player", "area_corpse_push", "push_corpse", true, 0);
+	AddEntityCollideCallback("Player", "scare_zone", "chair", true, 0);
+	AddEntityCollideCallback("corpse_male_1", "area_corpse_scare", "scare_corpse", true, 0);
+	SetEntityActive("push", true);
+	SetEntityActive("elevator_door_1", true);
+	SetEntityActive("elevator_door_2", false);	
+	SetEntityActive("key_torture_chamber_fluke_1", true);
+	SetEntityActive("level_engine_1", true);
+	SetEntityActive("level_engine_2", false);
+	/////
+	RemoveItem("key_tomb_1");
+	RemoveItem("key_torture_chamber_1");	
+	/////
+	for(int i=1; i<=21; ++i)
+	{
+		SetEntityActive("advancedCocain_"+i, true);
+		SetEntityActive("potion_oil_large_"+i, true);
+		ResetProp("chandelier_simple_short_"+i);
+		ResetProp("cellar_wood01_"+i);
+		ResetProp("bridge_torch_"+i);
+		ResetProp("mansion_"+i);
+		ResetProp("armchair_"+i);
+		ResetProp("chair_wood_"+i);
+	}
+	SetEntityActive("chandelier_simple_short_1", true);
+	SetEntityActive("chandelier_simple_short_2", false);
+	PlayMusic("amb_guardian.ogg", true, 1.0f, 0.0f, 2.0f, true);
+}
+
+void OnEnter()
+{
+	CheckPoint("no_name", "PlayerStartArea_1", "Restart_Level", "", "");
+	SetEntityPlayerInteractCallback("key_torture_chamber_fluke_1", "hurt", true);
+	SetEntityPlayerInteractCallback("level_engine_1", "door_fluke", true);
+	AddEntityCollideCallback("Player", "push", "push_player", true, 0);
+	AddEntityCollideCallback("Player", "AreaOne", "candleEvent", true, 0);
+	AddEntityCollideCallback("Player", "area_corpse_push", "push_corpse", true, 0);
+	AddEntityCollideCallback("Player", "scare_zone", "chair", true, 0);
+	AddEntityCollideCallback("corpse_male_1", "area_corpse_scare", "scare_corpse", true, 0);
+	SetEntityActive("elevator_door_1", true);
+	SetEntityActive("elevator_door_2", false);
+	SetEntityActive("push", true);
+	SetEntityActive("key_tomb_1", true);
+	SetEntityActive("scare_zone", true);
+	SetEntityActive("area_corpse_scare", true);
+	SetEntityActive("area_corpse_push", true);
+	SetEntityActive("AreaOne", true);
+	SetEntityActive("key_torture_chamber_fluke_1", true);
+	SetEntityActive("level_engine_1", true);
+	SetEntityActive("level_engine_2", false);
+	/////
+	RemoveItem("key_tomb_1");
+	RemoveItem("key_torture_chamber_1");	
+	/////
+	for(int i=1; i<=21; ++i)
+	{
+		RemoveItem("potion_oil_large_"+i);
+		RemoveItem("advancedCocain_"+i);
+		SetEntityActive("advancedCocain_"+i, true);
+		SetEntityActive("potion_oil_large_"+i, true);
+		ResetProp("chandelier_simple_short_"+i);
+		ResetProp("bridge_torch_"+i);
+		ResetProp("cellar_wood01_"+i);
+		ResetProp("mansion_"+i);
+		ResetProp("armchair_"+i);
+		ResetProp("chair_wood_"+i);
+	}
+	StopMusic(0.0f, 2.0f);
+	PlayMusic("amb_guardian.ogg", true, 1.0f, 0.0f, 2.0f, true);
+	SetEntityActive("chandelier_simple_short_1", true);
+	SetEntityActive("chandelier_simple_short_2", false);
+}
+////
+void hurt(string &in asEntity)
+{
+	RemoveItem(asEntity);
+	AddPlayerBodyForce(0.0f, 0.0f, 300000.0f, false);
+	GivePlayerDamage(100.0f, "BloodSplat", false, false);
+}
+
+void push_player(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(100.0f);
+	for(int i=1; i<=10; ++i)	
+	{
+		SetLampLit("torch_static_green_"+i, true, false);
+		if(i <= 4)
+		{
+			AddTimer("LightEvent_"+i, (i/4), "timer_events");
+		}		
+	}
+	AddPlayerBodyForce(500000.0f, 0.0f, 0.0f, false);
+	AddTimer("super_hurt", 0.8f, "timer_events");
+	AddTimer("activetorchlights", 0.8f, "timer_events");
+	AddTimer("slamDoor", 0.6f, "timer_events");
+	
+}
+
+void timer_events(string &in asTimer)
+{
+	if(asTimer == "super_hurt") GivePlayerDamage(100.0f, "BloodSplat", true, false);
+	else if(asTimer == "activetorchlights") 
+	{
+		SetEntityActive("bridge_torch_1", true);
+		SetEntityActive("bridge_torch_2", true);
+		SetEntityActive("bridge_torch_3", true);
+	}
+	else if(asTimer == "LightEvent_1") for (int i=1; i<=10; ++i)	SetEntityActive("torch_static_green_"+i, false);
+	else if(asTimer == "LightEvent_2")	for (int i=1; i<=10; ++i)	SetEntityActive("torch_static_green_"+i, true);
+	else if(asTimer == "LightEvent_3")	for (int i=1; i<=10; ++i)	SetEntityActive("torch_static_green_"+i, false);
+	else if(asTimer == "LightEvent_4")	for (int i=1; i<=10; ++i)	SetEntityActive("torch_static_green_"+i, true);
+	else if(asTimer == "slamDoor")	
+	{
+		SetSwingDoorClosed("elevator_door_1", true, true);
+		SetEntityActive("elevator_door_1", false);
+		SetEntityActive("elevator_door_2", true);
+		for(int i=1; i<=5; ++i)	PlayGuiSound("elevator_gate_close.snt", 1.0f);
+	}
+}
+
+void candleEvent(string &in aParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(100.0f);
+	SetEntityActive("candlestick_floor_red_1", true);
+	SetEntityActive("candlestick_floor_1", false);
+}
+
+void push_corpse(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("corpse_male_1", true);
+	SetEntityActive("corpse_male_2", true);
+	SetEntityActive("candlestick_floor_red_pure_1", true);
+	for (int i=1; i<=2; ++i) AddPropImpulse("corpse_male_"+i, -1000.0f, 0.0f, 0.0f, "world");
+}
+void scare_corpse(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=10; ++i)	PlayGuiSound("24_iron_maiden", 1.0f);
+}
+
+void chair(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=7; ++i)		AddPropImpulse("armchair_"+i, RandFloat(-1000.0f, 1000.0f), RandFloat(0.0f, 750.0f), 2000.0f, "world");
+	for(int i=9; i<=14; ++i)	AddPropImpulse("armchair_"+i, RandFloat(-1000.0f, 1000.0f), RandFloat(0.0f, 750.0f), 2000.0f, "world");
+	SetEntityActive("servant_brute_1", true);
+	SetEntityActive("chandelier_simple_short_1", false);
+	SetEntityActive("chandelier_simple_short_2", true);
+	SetNPCAwake("servant_brute_1", true, true);
+	ShowEnemyPlayerPosition("servant_brute_1");
+	SetLocalVarInt("isHallucination", RandInt(0, 1));
+	if (GetLocalVarInt("isHallucination") == 1)	SetEnemyIsHallucination("servant_brute_1", true);
+}
+
+void door_fluke(string &in asEntity)
+{
+	SetMessage("Messages", "fluke", -1);
+	SetEntityActive(asEntity, false);
+	SetEntityActive("level_engine_2", true);
+}

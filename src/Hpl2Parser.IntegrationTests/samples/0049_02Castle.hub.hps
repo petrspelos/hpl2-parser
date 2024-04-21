@@ -1,0 +1,143 @@
+void OnStart()
+{  
+	AutoSave();
+	AddUseItemCallback("", "key_cellar", "LockedDoor", "usekey", true);
+	AddEntityCollideCallback("Player", "AreaCollide_1", "PapersWind", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_2", "LightsOut", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_3", "FootStepsRoom", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_4", "FootStepsRoom2", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_5", "RockFalls", true, 1);
+	SetEntityPlayerInteractCallback("Potato", "PotatoSound", false);
+	
+}
+
+
+
+
+
+void OnEnter()
+{ 
+	PlayMusic("Hub1", true, 0.5, 0.1, 10, false);
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen1", 0, "game_loading_rose.jpg");
+}
+
+
+////////////////////////////////Cellar Unlocked/////////////////////////
+
+void usekey(string &in asItem, string &in asEntity)
+{	
+	SetLevelDoorLocked(asEntity, false);
+	SetMessage("Message", "CellarUnlock", 3);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	GiveSanityBoostSmall();
+	RemoveItem(asItem);
+}
+
+////////////////////////////////PlayerTalks/////////////////////////////
+
+void PlayerDialog(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "dialog1.snt", "Player", 0, false);
+}
+
+////////////////////////////////////Papers blow/////////////////////////
+
+void PapersWind(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("","ps_dust_paper_blow","AreaPapers", false);
+	PlaySoundAtEntity("", "general_wind_whirl.snt", "Player", 0, false);
+	AddQuest("Escape", "Escape");
+}
+
+//////////////////////////////////////Arm Reaction///////////////////////
+
+void ArmScare(string &in asEntity)
+{
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+}
+
+
+///////////////////////////////////Scare Reaction///////////////////////
+
+void TimerPlayerreact(string &in asTimer) 
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+}
+
+////////////////////////////////Lights out//////////////////////////////
+
+void LightsOut(string &in asParent, string &in asChild, int alState)
+{
+	AddPropImpulse("lampa", -1, 0, -1, "world");
+	AddTimer("upadek", 1, "TimerVase");
+	
+}
+
+void TimerVase(string &in asTimer)
+{
+	if(asTimer == "upadek") {
+		GiveSanityDamage(10.0f, true);
+		PlaySoundAtEntity("", "general_wind_whirl.snt", "Player", 0, false);
+		SetLampLit("pochodnia_1", false, true);
+		SetLampLit("pochodnia_2", false, true);
+		SetLampLit("pochodnia_3", false, true);
+		SetLampLit("pochodnia_4", false, true);
+		SetLampLit("pochodnia_5", false, true);
+		SetLampLit("pochodnia_6", false, true);
+		SetEntityActive("karaluch_1", true);
+		SetEntityActive("karaluch_2", true);
+		SetEntityActive("karaluch_3", true);
+		SetEntityActive("karaluch_4", true);
+		SetEntityActive("karaluch_5", true);
+		SetEntityActive("karaluch_6", true);
+		}
+			
+}
+
+///////////////////////////////RockFallsDown////////////////////////////
+
+void RockFalls(string &in asParent, string &in asChild, int alState)
+{
+	AddPropImpulse("kamien", 0, 0, -1, "world");
+}
+//////////////////////////SoundsMisc////////////////////////////////////
+
+void FootStepsRoom(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_wood_creak_walk", "Areafoorsteps", 0, false);
+	SetEntityActive("AreaCollide_4", true);
+}
+
+void FootStepsRoom2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_wood_creak_walk", "Areafoorsteps", 0, false);
+}
+
+void PotatoSound(string &in item)
+{
+	AddEffectVoice("Potato_Bring", "", "", "", true, "Player", 0, 15);
+}
+
+///////////////////////////////////End23////////////////////////////////
+
+void End23(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	
+}
+

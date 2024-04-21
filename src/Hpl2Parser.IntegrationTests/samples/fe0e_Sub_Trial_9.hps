@@ -1,0 +1,975 @@
+void OnStart()
+{
+	/*if(ScriptDebugOn()) //Debug stuff
+	{
+		//PlayMusic("trial_9.ogg", true, 2.5f, 10.0f, 0.0f, true);
+	
+		GiveItemFromFile("lantern", "lantern.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_health_"+i, "potion_health.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_sanity_"+i, "potion_sanity.ent");
+		GiveItemFromFile("Key", "key_study.ent");
+		GiveItemFromFile("Strang", "string_pile.ent");
+		
+		SetEntityPlayerLookAtCallback("WaterArea_Up", "Swimming", false);
+		SetEntityPlayerLookAtCallback("WaterArea_Mid", "Swimming", false);
+		SetEntityPlayerLookAtCallback("WaterArea_Down", "Swimming", false);
+		SetLocalVarFloat("HeadPos", 0);
+		
+		//AddTimer("Remove", 0.01, "Oxygen");
+	}*/
+	
+	SetupLoadScreen("Loading", "Load_9", 0, "load_avast.png");
+	
+	//Map Specific
+	SetSanityDrainDisabled(true);
+	SetEntityInteractionDisabled("AGBeam", true);
+	SetLocalVarInt("PlateNumber", 0);
+	SetLocalVarInt("BarrelVar", 0);
+	AddTimer("GravityPuzzle", 0.001, "GravityPuzzle");
+	SetEntityActive("Strang", false);
+	SetLocalVarInt("MirrorObjects", 0);
+	SetLocalVarInt("UWButton", 0);
+	SetLocalVarInt("AntiGrav", 0);
+	SetLocalVarInt("RockFallIntroDone", 0);
+	SetLocalVarInt("RockFallDone",0);
+	SetLocalVarInt("Oxy", 100);
+	SetLocalVarInt("PipeConnected",0);
+	SetLocalVarInt("AGOn", 0);
+	SetLocalVarInt("Scene4Done", 0);
+	SetEntityInteractionDisabled("level_1_hub", true);
+	SetEntityCustomFocusCrossHair("level_change", "LevelDoor");
+	
+	BeginTrial(); //NEW Intro Script
+	
+	//Collide Callbacks
+	for(int i=0;i<11;i++) AddEntityCollideCallback("AGSecondBox_1", "PPlate"+i, "PressurePlatesAndGate", false, 0);
+	for(int i=0;i<11;i++) AddEntityCollideCallback("Player", "PPlate"+i, "PressurePlatesAndGate", false, 0);
+	AddEntityCollideCallback("Player", "CandlePuzzleFallArea", "TPCandlePuzzle", false, 0);
+	AddEntityCollideCallback("Player", "ParkourFallArea", "TPParkour", false, 0);
+	AddEntityCollideCallback("Player", "SlamDoor", "SlamThatDoor", true, 0);
+	SetEntityCallbackFunc("displayB", "SwitchDisplays");
+	SetEntityCallbackFunc("Key", "BalancingTeams");
+	for(int i=0;i<11;i++) AddEntityCollideCallback("Player", "HealArea_"+i, "FallDamage", true, 0);
+	AddEntityCollideCallback("Player", "TeleportToWaterMaze", "TPMaze", true, 0);
+	AddEntityCollideCallback("Player", "FallDamageIsNotGood", "FallDamage", true, 0);
+	for(int i=0;i<11;i++) AddEntityCollideCallback("Player", "Oxygen_"+i, "OxygenArea", false, 0);
+	AddEntityCollideCallback("Player", "TPFromWater", "TPMaze", true, 0);
+	AddEntityCollideCallback("Player", "AfterWaterFall", "FallDamage", true, 0);
+	AddEntityCollideCallback("Player", "KillWaterEffects", "EndWaterArea", true, 0);
+	AddEntityCollideCallback("Player", "TPEndArea", "TPEndArea", false, 0);
+	
+	AddEntityCollideCallback("Player", "Scene2", "StartScene2", true, 0);
+	AddEntityCollideCallback("Player", "Scene3", "StartScene3", true, 0);
+	AddEntityCollideCallback("Player", "Scene4", "StartScene4", true, 0);
+	AddEntityCollideCallback("Player", "Scene5", "StartScene5", true, 0);
+	AddEntityCollideCallback("Player", "SceneSlow", "SlowThisBirdDown", true, 0);
+	//AddEntityCollideCallback("Player", "RockSceneTrigger", "RockScene", true, 0);
+	AddEntityCollideCallback("grav_pipe", "grav_pipe_fit", "PipeConnected", true, 1);
+	AddEntityCollideCallback("grav_pipe", "grav_pipe_fit", "PipeDisconnected", true, -1);
+	
+	AddEntityCollideCallback("Player", "Propel_Up", "Propelling", false, 0);
+	//AddEntityCollideCallback("Player", "Propel_Up", "Propelling2", false, -1);
+	
+	//Interact Callbacks
+	//SetEntityPlayerInteractCallback("AGButton1", "AntiGravSwitch", false);
+	SetEntityPlayerInteractCallback("AGButton1", "AGButton", false);
+	SetEntityPlayerInteractCallback("AGButton2", "AGButton", false);
+	SetEntityPlayerInteractCallback("AGButton3", "AGButton", false);
+	SetEntityPlayerInteractCallback("AGBeam_Wall", "AGBeam", false);
+	SetEntityPlayerInteractCallback("AGBeam", "AGBeam", false);
+	SetEntityPlayerInteractCallback("Gate", "InteractSafetyDoor", false);
+	SetEntityPlayerInteractCallback("BarrelButton", "BarrelGoRound", false);
+	for(int i=0;i<5;i++) SetEntityPlayerInteractCallback("WaterButton_"+i, "WaterDoorButtons", true);
+	SetEntityPlayerInteractCallback("level_change", "ChangeIt", false);
+	
+	SetEntityConnectionStateChangeCallback("elevator_lever_1", "Portcullis");
+	
+	//ItemCallbacks
+	AddUseItemCallback("", "Key", "PhysChest", "UnlockChest", true);
+	AddUseItemCallback("", "Strang", "PlaceString", "PlaceString", true);
+	AddUseItemCallback("", "Strang", "PlaceString_1", "PlaceString", true);
+
+}
+
+////////////////////////
+//Pretty General Stuff
+//Fallin'
+void TPCandlePuzzle(string &in asParent, string &in asChild, int alState)
+{	
+	TeleportPlayer("PlayerStart_CandlePuzzle");
+	SetPlayerHealth(100);
+}
+
+void TPParkour(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStart_Parkour");
+	SetPlayerHealth(100);
+}
+
+void TPEndArea(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStart_End");
+	SetPlayerHealth(100);
+}
+
+void EndWaterArea(string &in asParent, string &in asChild, int alState)
+{
+	StopSound("Underwater Amb", 0.2f);
+	MovePlayerHeadPos(0, 0, 0, 0.75, 0);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	FadeRadialBlurTo(0, 0.1f);
+	TeleportPlayer("PlayerStartArea_2");
+	for(int i=1;i<25;i++) SetEntityActive("WaterArea_Up_"+i,false);
+	for(int i=1;i<25;i++) SetEntityActive("WaterArea_Down_"+i,false);
+	AddTimer("", 0.5f, "LeaveMaze");
+	AddTimer("4", 0.5f, "WaterTimerEffects");
+}
+	
+void FallDamage(string &in asParent, string &in asChild, int alState)
+	{AddTimer("", 0.5f, "DelayedHeal");}
+void DelayedHeal(string &in asTimer)
+	{SetPlayerHealth(100);}
+
+//Locked Doors and Other Things
+void LockedDoors(string &in asEntity)
+{
+	if(asEntity == "PhysChest")
+	{
+		if(GetLocalVarInt("ChestLocked") == 0)
+		{
+			SetMessage("Examine", "Trial6_LockedChest", 0);
+			PlaySoundAtEntity("", "joint_large_wood_min_max.snt", asEntity, 0.0f, false);
+		}
+	}
+	else if(asEntity == "SlamDoor_Door" or asEntity == "SlamDoor_Door2")
+	{
+		SetMessage("Examine", "Trial9_SlamDoor", 0);
+		PlaySoundAtEntity("", "locked_door.snt", asEntity, 0.0f, true);
+	}
+	else
+	{
+		SetMessage("Examine", "General_LockedDoor", 0);
+		PlaySoundAtEntity("", "locked_door.snt", asEntity, 0.0f, true);
+	}
+}
+//End General Stuff
+//////////////////////
+
+
+///////////////////
+//AG Area
+//////////////
+//Anti-Grav Button(s)
+void AGButton(string &in asEntity)
+{
+	if(asEntity == "AGButton1")
+	{
+		PlaySoundAtEntity("", "sub_computer_on.snt", asEntity, 0.0f, false);
+		PlaySoundAtEntity("", "sub_anti_grav.snt", asEntity, 0.0f, false);
+		SetEntityInteractionDisabled("AGButton", true);
+		if(GetLocalVarInt("RockFallDone")==0)
+			{
+				RockScene();
+				AddLocalVarInt("RockFallDone",1);
+				AddTimer("", 16, "BeDestroy");
+			}
+			else
+			{
+				AddTimer("", 3.75f, "AGTimerPre");
+				AddTimer("StopAG", 13.1f, "StopAG");
+			}
+	}
+	else if(asEntity == "AGButton2")
+	{
+		RemoveTimer("AGBox");
+		SetEntityInteractionDisabled("AGBeam", false);
+		SetEntityPlayerInteractCallback("AGBeam", "", false);
+		AddTimer("AGBeam", 0.003f, "AGTimer");
+		SetLocalVarInt("Mass", 100);
+		AddTimer("StopAG", 13.1f, "StopAG");
+	}
+	else if(asEntity == "AGButton3")
+	{
+		PlaySoundAtEntity("", "sub_computer_on.snt", asEntity, 0.0f, false);
+		PlaySoundAtEntity("", "sub_anti_grav.snt", asEntity, 0.0f, false);
+		SetEntityInteractionDisabled("AGButton3", true);
+		//RemoveTimer("AGBox");
+		//AddTimer("PPlateBox", 0.003f, "AGTimer");
+		//SetLocalVarInt("Mass", 12);
+		AddTimer("StopAG", 13.1f, "StopAG");
+		AddTimer("", 3.75f, "AGTimerPre");
+	}
+
+}
+
+void RockScene()
+	{
+		PlaySoundAtEntity("", "sub_anti_grav.snt", "Player", 0.0f, false);
+		PlaySoundAtEntity("", "03_rock_move.snt", "Player", 0.0f, false);
+		StartPlayerLookAt("RockLook", 4, 7, "");
+		StartScreenShake(0.01f, 1, 1, 1);
+		AddTimer("", 2.0f, "StopLook");
+		//SetEntityInteractionDisabled("AGButton", true);
+		AddTimer("", 1.3f, "AGTimerPre");
+		AddTimer("StopAG", 13.1f, "StopAG");
+		for(int i=1;i<6;i++) SetEntityActive("gravrock_"+i, true);
+		//AddTimer("AGBox", 0.003f, "AGTimer");
+		//AddTimer("grav_pipe", 0.003f, "AGTimer");
+		/*SetPlayerJumpDisabled(true);
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);*/
+		AddTimer("", 14, "GetAQuest");
+	}
+
+void GetAQuest(string &in asTimer)
+	{
+		AddQuest("AG", "09_AG");
+	}
+
+void StopLook(string &in asTimer)
+	{
+		StopPlayerLookAt();
+	}
+
+void AGTimerPre(string &in asTimer)
+{
+	RemoveTimer("AGBox");
+	RemoveTimer("AGSecondBox_1");
+	RemoveTimer("grav_pipe");
+	RemoveTimer("AGBeam");
+	RemoveTimer("PPlateBox");
+	for(int i=0;i<7;i++) RemoveTimer("gravrock_"+i);
+		AddTimer("AGBox", 0.003f, "AGTimer");
+		AddTimer("grav_pipe", 0.003f, "AGTimer");
+		AddTimer("AGSecondBox_1", 0.003f, "AGTimer");
+		for(int i=1;i<7;i++) AddTimer("gravrock_"+i, 0.003f, "AGIntroTimer");
+		SetLocalVarInt("Mass", 10);
+		SetLocalVarInt("AGOn", 1);
+		SetEntityActive("grav_pipe_stick",true);
+}
+
+void AGTimer(string &in asTimer)
+{
+	AddPropForce(asTimer, 0, 9.81*GetLocalVarInt("Mass"), 0, "world");
+	AddTimer(asTimer, 0.003f, "AGTimer");
+	AddDebugMessage("AGTimer Active!", true);
+}
+
+void AGIntroTimer(string &in asTimer)
+{
+	if(GetLocalVarInt("RockFallIntroDone")<7)
+	{
+		AddPropForce(asTimer, 0, 187*GetLocalVarInt("Mass"), 0, "world");
+		AddLocalVarInt("RockFallIntroDone", 1);
+		AddTimer(asTimer, 0.003f, "AGIntroTimer2");
+		AddDebugMessage("AGIntroTimer Active, pre-rock fall!", true);
+	}
+	else
+	{
+		AddTimer(asTimer, 0.003f, "AGIntroTimer2");
+		AddDebugMessage("AGIntroTimer Active, post-rock fall!", true);
+	}
+}
+
+void AGIntroTimer2(string &in asTimer)
+{
+	AddPropForce(asTimer, 0, 2.95*GetLocalVarInt("Mass"), 0, "world");
+	AddTimer(asTimer, 0.003f, "AGIntroTimer2");
+	AddDebugMessage("AGIntroTimer2 Active!", true);
+}
+
+void BeDestroy(string &in asTimer)
+{
+	for(int i=1;i<7;i++) SetEntityActive("gravrock_"+i, false);
+}
+
+void StopAG(string &in asTimer)
+{
+	SetLocalVarInt("AGOn", 0);
+	SetEntityActive("grav_pipe_stick",false);
+	SetPlayerJumpDisabled(false);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	StopPlayerLookAt();
+	RemoveTimer("AGBox");
+	RemoveTimer("AGSecondBox_1");
+	RemoveTimer("grav_pipe");
+	RemoveTimer("AGBeam");
+	RemoveTimer("PPlateBox");
+	for(int i=0;i<7;i++) RemoveTimer("gravrock_"+i);
+	SetEntityInteractionDisabled("AGBeam", true);
+	SetEntityInteractionDisabled("AGButton", false);
+	SetEntityInteractionDisabled("AGButton3", false);
+	SetEntityPlayerInteractCallback("AGBeam", "AGBeam", false);
+	DetachFromStickyArea("grav_pipe_stick");
+	//SetMoveObjectStateExt("castle_portcullis", 0, 2, 5, 4, true);
+}
+
+void AGBeam(string &in asEntity) //Beam2Heavy4Me
+{
+	if(asEntity == "AGBeam_Wall"){
+		SetEntityActive(asEntity, false);
+		SetEntityActive("AGBeam", true);
+	}
+	else
+		{SetMessage("Interact", "Trial9_AGBeam", 0);}
+}
+
+void PipeConnected(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("PipeConnected",1);
+	if(GetLocalVarInt("AGOn") == 0)
+		{
+			SetMessage("Interact", "Trial9_Pipe", 0);
+		}
+}
+
+void PipeDisconnected(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("PipeConnected",0);
+}
+
+void Portcullis(string &in asEntity, int alState) 
+{
+	if(GetLocalVarInt("PipeConnected")==1)
+	{
+		SetMoveObjectStateExt("castle_portcullis", 1, 1, 5, 4, false);
+		CompleteQuest("AG", "09_AG");
+	}
+	else
+	{
+		SetMessage("Interact", "Trial9_Lever", 0);
+	}
+}
+
+//End AGButton(s)
+//////////////////
+////////////////////
+//Other Gravity Puzzle
+
+void AntiGravSwitch(string &in asEntity)
+{
+	if(GetGlobalVarInt("AntiGrav")==0)
+		{
+		PlaySoundAtEntity("", "sub_computer_on.snt", asEntity, 0.0f, false);
+		PlaySoundAtEntity("", "sub_anti_grav.snt", asEntity, 0.0f, false);
+		AddTimer("", 3.75f, "AntiGrav");
+		AddTimer("", 13.1f, "AntiGravEnd");
+		SetLocalVarInt("AntiGrav", 1);
+		}
+	else
+		{
+		PlaySoundAtEntity("", "sub_computer_on.snt", asEntity, 0.0f, false);
+		}
+}
+
+void AntiGrav(string &in asTimer)
+{
+
+}
+
+void AntiGravEnd(string &in asTimer)
+{
+
+	SetLocalVarInt("AntiGrav", 0);
+}
+
+//End Other Gravity Puzzle
+////////////////////
+/////////////////
+//PressurePlates
+void PressurePlatesAndGate(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1)
+	{
+		PlayGuiSound("13_rod_in", 0.5f);	
+		AddLocalVarInt("PlateNumber", 1);
+	}
+	if(alState==-1)
+		{AddLocalVarInt("PlateNumber", -1);}
+	AddDebugMessage("PlateNumber: "+GetLocalVarInt("PlateNumber"), false);
+	if(GetLocalVarInt("PlateNumber")==2)
+	{
+		SetMoveObjectState("Gate", 1);
+		PlaySoundAtEntity("working", "21_lever_success", "Gate", 2.0f, false);
+		AddTimer("working", 2.75f, "TimerStopSounds");
+		SetEntityInteractionDisabled("Gate", true);
+		RemoveEntityCollideCallback("Player", "PPlate1");
+		RemoveEntityCollideCallback("Player", "PPlate2");
+		SetLocalVarInt("PlateNumber", 0);
+	}
+}
+void TimerStopSounds(string &in asTimer)
+{
+	StopSound(asTimer, 2.75f);
+}
+
+void InteractSafetyDoor(string &in asEntity)
+{
+	SetMessage("Examine", "Trial9_Gate", 0);
+	PlayGuiSound("17_attach_crank", 0.5f);
+	SetMoveObjectState(asEntity, 0.05f);	
+	AddTimer(asEntity, 0.4f, "TimerCloseGate");
+	AddTimer("sound", 1.0f, "TimerCloseGate");
+}
+void TimerCloseGate(string &in asTimer)
+{
+	if(asTimer == "sound")
+		{PlayGuiSound("close_gate.ogg", 0.5f);}
+	else
+	{
+		SetMoveObjectState(asTimer, 0.00f);		
+		SetEntityPlayerInteractCallback(asTimer, "InteractSafetyDoor", true);	
+	}
+}
+//End PPlates
+/////////////////
+//End AG Area
+//////////////////////////
+
+
+//////////////////
+//BarrelGoRound
+void BarrelGoRound(string &in asEntity)
+{
+	SetEntityPlayerInteractCallback("BarrelButton", "", false);
+	SetLocalVarInt("BarrelVar", 0);
+	AddTimer("barrel", 0.01f, "BarrelSwitch");
+}
+void BarrelSwitch(string &in asTimer) 
+{
+	AddLocalVarInt("BarrelVar", 1);	//What step to play in the event
+	float fEventSpeedBarrel = 1.5f;	//The default time between steps in an event
+
+	switch(GetLocalVarInt("BarrelVar")) 
+	{
+		case 1:
+			PlaySoundAtEntity("", "13_press_fail.ogg", "BarrelGoRound_1", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_1", true, 0.5f);
+			fEventSpeedBarrel = 1.5f;
+		break;
+		case 2:
+			PlaySoundAtEntity("", "13_press_fail.ogg", "BarrelGoRound_2", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_2", true, 0.5f);
+		break;
+		case 3:
+			PlaySoundAtEntity("", "13_rod_out.ogg", "BarrelGoRound_1", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_1", false, 0.5f);
+			fEventSpeedBarrel = 0.5f;
+		break;
+		case 4:
+			PlaySoundAtEntity("", "13_press_fail.ogg", "BarrelGoRound_3", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_3", true, 0.5f);
+		break;
+		case 5:
+			PlaySoundAtEntity("", "13_rod_out.ogg", "BarrelGoRound_2", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_2", false, 0.5f);
+			fEventSpeedBarrel = 0.5f;
+		break;
+		case 6:
+			PlaySoundAtEntity("", "13_press_fail.ogg", "BarrelGoRound_4", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_4", true, 0.5f);
+		break;
+		case 7:
+			PlaySoundAtEntity("", "13_rod_out.ogg", "BarrelGoRound_3", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_3", false, 0.5f);
+			fEventSpeedBarrel = 1.5f;
+		break;
+		case 8:
+			PlaySoundAtEntity("", "13_rod_out.ogg", "BarrelGoRound_4", 0, true);
+			SetPropActiveAndFade("BarrelGoRound_4", false, 0.5f);
+		break;
+		case 9:
+			SetEntityPlayerInteractCallback("BarrelButton", "BarrelGoRound", false);
+		break;
+	}
+	
+	if(GetLocalVarInt("BarrelVar") < 9)  AddTimer("barrel", fEventSpeedBarrel, "BarrelSwitch");	
+}
+//End BarrelGoRound
+//////////////////////
+
+
+
+////////////////////
+//Gravity Puzzle
+void SlamThatDoor(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("SlamDoor","joint_door_move.snt", "SlamDoor_Door", 0.5f, false);
+	AddTimer("doorforce1", 0.2f, "TimerDoorForce");
+	AddTimer("doorforce2", 0.4f, "TimerDoorForce");
+	AddTimer("doorforce3", 0.6f, "TimerDoorForce");
+	AddTimer("doorforce4", 0.8f, "TimerDoorForce");
+}
+void TimerDoorForce(string &in asTimer)
+{
+	AddPropForce("SlamDoor_Door", 1000.0f, 0.0f, 1000.0f, "World");
+	if(asTimer == "doorforce4")
+	{
+		StopSound("SlamDoor", 1.0f);
+		SetSwingDoorLocked("SlamDoor_Door", true, true);
+		SetEntityPlayerInteractCallback("SlamDoor_Door", "LockedDoors", false);
+	}
+}
+void GravityPuzzle(string &in asTimer) //Sets reverse gravity in upsy-down room
+{
+	AddPropForce("PhysChair_1", 0, 196.2, 0, "world");
+	AddPropForce("PhysChair_2", 0, 196.2, 0, "world");
+	AddPropForce("PhysLights", 0, 196.2, 0, "world");
+	AddPropForce("RopeEndBody", 0, 1000, 0, "world");
+	AddTimer(asTimer, 0.001, "GravityPuzzle");
+}
+void GravValve(string &in EntityName, int alState)
+{
+	if(EntityName == "GravValveA")
+	{
+		if(alState == 1){GravPort("A");}
+	}
+	else if(EntityName == "GravValveB")
+	{
+		if(alState == -1){GravPort("B");}
+	}
+}
+void GravPort(string &in Side)
+{
+	SetPlayerActive(false);
+	FadeOut(2.0f);
+	StartScreenShake(0.01, 5, 1, 1);
+	AddTimer(Side, 2.5f, "GravTimer");
+}
+void GravTimer(string &in asTimer)
+{
+	if(asTimer == "A")
+	{
+		SetWheelStuckState("GravValveA", -1, false);
+		TeleportPlayer("GravSpawnB");
+		ResetProp("PhysChair_1");
+		ResetProp("PhysChair_2");
+		ResetProp("PhysLights");
+	}
+	else if(asTimer == "B")
+	{
+		SetWheelStuckState("GravValveB", 1, false);
+		TeleportPlayer("GravSpawnA");
+	}
+	FadeIn(2.0f);
+	SetPlayerActive(true);
+}
+//Displays
+void SwitchDisplays(string &in asEntity, string &in type)
+{
+	if(type == "Break")
+	{
+		SetEntityActive("displayA", false);
+		SetEntityActive("BlockBoxNiggs", false);
+		SetEntityActive("displayA_broken", true);
+	}
+}
+void BalancingTeams(string &in asEntity, string &in type)
+{
+	SetEntityActive("KeyReverseSide", false);
+}
+//Key&Chest
+void UnlockChest(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "impact_metal_chain_med.snt", asEntity, 0.0f, false);	
+	SetLeverStuckState("PhysChest", 0, true);
+	SetMessage("Interact", "UnlockChest", 0);
+	SetLocalVarInt("ChestLocked", 1);
+	SetEntityActive("Strang", true);
+}
+//String
+void PlaceString(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("RopeEndBody", true);
+	SetEntityActive("RopeyRope", true);
+	SetEntityActive("RopeArea", true);
+}
+//End Gravity Puzzle
+/////////////////////
+
+
+
+////////////////////////
+//MirrorRoom Puzzle
+void PlaceObject(string &in asStickyArea, string &in asBodyName)
+{
+	AddLocalVarInt("MirrorObjects", 1);
+	if(GetLocalVarInt("MirrorObjects") == 7)
+		{SetEntityActive("blockbox_mirror", false);
+		SetEntityActive("blockbox_mirror_1", false);
+		CreateParticleSystemAtEntity("breakmirror", "ps_break_glass_large", "ScriptArea_1", false);
+		CreateParticleSystemAtEntity("breakmirror2", "ps_break_glass_large", "ScriptArea_2", false);
+		PlaySoundAtEntity("", "break_glass_bottle.snt", "Player", 0.0f, false);
+		FadeLightTo("PointLight_210", 0, 0, 0, 0, -1, 0.1f);}
+}
+void RemoveObject(string &in asStickyArea, string &in asBodyName)
+{
+	AddLocalVarInt("MirrorObjects", -1);
+	if(GetLocalVarInt("MirrorObjects") < 7)
+		{SetEntityActive("blockbox_mirror", true);
+		SetEntityActive("blockbox_mirror_1", true);}
+}
+//End MirrorPuzzle
+/////////////////////
+
+
+
+////////////////
+//WaterMaze
+void TPMaze(string &in asParent, string &in asChild, int alState)
+{
+	if(asChild == "TeleportToWaterMaze")
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("LookAtWater_1", 0.5, 10, "");
+		FadeOut(0.25);
+		AddTimer("1", 0.25, "WaterTimerEffects");
+	}
+	else if(asChild == "TPFromWater")
+	{
+		FadeOut(0.25);
+		MovePlayerHeadPos(0,0,0,0,0);
+		AddTimer("", 0.25, "LeaveMaze");
+		RemoveTimer("Remove");
+		RemoveTimer("Add");
+	}
+}
+void WaterTimerEffects(string &in asTimer)
+{
+	if(asTimer == "1")
+	{
+		//TeleportPlayer("PlayerStart_WaterArea");
+		//StartPlayerLookAt("FallDamageIsNotGood", 0.5, 10, "");
+		//MovePlayerHeadPos(0, 12, 0, 10, 0);
+		PlaySoundAtEntity("Underwater Amb", "sub_ambwater.snt", "Player", 0, false);
+		FadeIn(1.5);
+		AddTimer("2", 1, "WaterTimerEffects");
+		FadeRadialBlurTo(0.01f, 2);
+	}
+	else if(asTimer == "2")
+	{
+		MovePlayerHeadPos(0, -0.7, 0, 1, 0);
+		StartPlayerLookAt("LookAtWater_3", 1, 10, "");
+		AddTimer("3", 1.5, "WaterTimerEffects");
+	}
+	else if(asTimer == "3")
+	{
+		StartPlayerLookAt("LookAtWater_2", 1, 10, "");
+		AddTimer("", 2, "WaterTimerEffects");
+	}
+	else if(asTimer == "4")
+	{
+		FadeRadialBlurTo(0.0f, 0.1f);
+		//AddTimer("", 2, "WaterTimerEffects");
+	}
+	else
+	{
+		SetLocalVarFloat("HeadPos", 1);
+		StopPlayerLookAt();
+		SetPlayerActive(true);
+		SetPlayerJumpDisabled(true);
+		SetPlayerCrouchDisabled(true);
+			for(int i=1;i<25;i++)
+			SetEntityPlayerLookAtCallback("WaterArea_Up_"+i, "Swimming", false);
+		SetEntityPlayerLookAtCallback("WaterArea_Mid", "Swimming", false);
+			for(int i=1;i<25;i++)
+			SetEntityPlayerLookAtCallback("WaterArea_Down_"+i, "Swimming", false);
+		//AddTimer("Remove", 0.01, "Oxygen");
+	}
+}
+void LeaveMaze(string &in asTimer)
+{
+	ChangePlayerStateToNormal();
+	MovePlayerHeadPos(0, 0, 0, 0.5f, 0.5f);
+	StopSound("Underwater Amb", 0.2f);
+	FadeRadialBlurTo(0.0f, 0.1f);
+	//TeleportPlayer("ByeWater");
+	FadeIn(0.25);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+////////////////////////////
+//Water Buttons & Door
+void WaterDoorButtons(string &in asEntity)
+{
+	AddLocalVarInt("UWButton", 1);
+	if(GetLocalVarInt("UWButton")==4)
+	{
+		PlayGuiSound("door_safety_open.ogg", 0.5f);
+		SetEntityActive("UWDoor_1", false);
+		SetEntityActive("UWDoor_2", true);
+	}
+}
+//End Water Buttons & Door
+////////////////////////////
+//////////////////
+//Swimming Start
+void Swimming(string &in asEntity, int alState)
+{
+	for(int i=1;i<25;i++)
+	{
+		if(asEntity == "WaterArea_Up_"+i)
+		{
+			if(alState==1)
+				{AddTimer("SwimUp", 0.01, "WaterTimer");}
+			else if(alState==-1)
+				{RemoveTimer("SwimUp");}
+		}
+		else if(asEntity == "WaterArea_Down_"+i)
+		{
+			if(alState==1)
+				{AddTimer("SwimDown", 0.01, "WaterTimer");}
+			else if(alState==-1)
+				{RemoveTimer("SwimDown");}
+		}
+	}
+}
+void WaterTimer(string &in asTimer)
+{
+	if(asTimer=="SwimDown")
+	{
+		if(GetLocalVarInt("HeadPos")>-0.7)
+		{
+			//AddPlayerBodyForce(0, 2000, 0, false);
+			MovePlayerHeadPos(0, GetLocalVarFloat("HeadPos"), 0, 0.75, 0);
+			SetLocalVarFloat("HeadPos", GetLocalVarFloat("HeadPos")-0.1);
+			AddTimer("SwimDown", 0.1, "WaterTimer");
+		}
+	}
+	else if(asTimer=="SwimUp")
+	{
+		if(GetLocalVarInt("HeadPos")<1.7)
+		{
+			//AddPlayerBodyForce(0, -2000, 0, false);
+			MovePlayerHeadPos(0, GetLocalVarFloat("HeadPos"), 0, 1, 0);
+			SetLocalVarFloat("HeadPos", GetLocalVarFloat("HeadPos")+0.1);
+			AddTimer("SwimUp", 0.1, "WaterTimer");
+		}
+	}
+}
+void Propelling(string &in asParent, string &in asChild, int alState)
+{
+	//AddTimer("Boost", 0.01, "PropellingTimer");
+	if(alState==1)
+		{
+		AddDebugMessage("GOT IN THE PLACE", true);
+		AddTimer("Boost", 0.01, "PropellingTimer");
+		}
+	else if(alState==-1)
+		{
+		AddDebugMessage("BEEN OUT", true);
+		RemoveTimer("Boost");
+		}
+}
+
+void Propelling2(string &in asParent, string &in asChild, int alState)
+{
+	RemoveTimer("Boost");
+	AddDebugMessage("BEEN OUT", true);
+}
+
+void PropellingTimer(string &in asTimer)
+{
+	AddDebugMessage("YEAAAAAHH", false);
+	MovePlayerHeadPos(0, 0, 0, 0.75, 0);
+	AddPlayerBodyForce(0, 2300, 0, false);
+	AddTimer("Boost", 0.01, "PropellingTimer");
+	//AddBodyForce("Player", 0, 5000, 0, "world");
+}
+//Swimming End
+////////////////
+//////////////
+//Oxy Start
+void OxygenArea(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1 && GetLocalVarInt("HeadPos")>=2.4)
+	{
+		RemoveTimer("Add");
+		RemoveTimer("Remove");
+		AddTimer("Add", 0.01, "Oxygen");
+	}
+	else if(alState==-1 || GetLocalVarInt("HeadPos")<2.4)
+	{
+		RemoveTimer("Add");
+		RemoveTimer("Remove");
+		AddTimer("Remove", 0.01, "Oxygen");
+	}
+}
+void Oxygen(string &in asTimer)
+{
+	if(asTimer=="Remove")
+	{
+		AddLocalVarInt("Oxy", -1);
+		AddTimer("Remove", 1, "Oxygen");
+		AddDebugMessage("Oxygen: "+GetLocalVarInt("Oxy"), false);
+		if(GetLocalVarInt("Oxy")<=0)
+		{
+			CheckPoint("WaterCP", "PlayerStart_WaterArea", "", "Death", "Trial9_WaterDeath");
+			SetLocalVarInt("Oxy", 115);
+			SetPlayerHealth(0);
+		}
+		SetPlayerHealth(GetLocalVarInt("Oxy"));
+	}
+	else if(asTimer=="Add")
+	{
+		if(GetLocalVarInt("Oxy")<100)
+		{
+			AddLocalVarInt("Oxy", 15);
+			AddTimer("Add", 1, "Oxygen");
+			SetPlayerHealth(GetLocalVarInt("Oxy"));
+			AddDebugMessage("Oxygen: "+GetLocalVarInt("Oxy"), false);
+		}
+		else if(GetLocalVarInt("Oxy")>100)
+		{
+			SetLocalVarInt("Oxy", 100);
+			SetPlayerHealth(100);
+			AddDebugMessage("Oxygen: "+GetLocalVarInt("Oxy"), false);
+		}
+	}
+}
+//End Oxy
+//////////
+//EndMaze
+//////////////
+
+///////////////
+//Intro Script
+void Intro()
+{
+	FadeOut(0);
+	SetPlayerActive(false);
+	StartPlayerLookAt("BurningBook", 10, 100, "");
+	AddTimer("", 2.0f, "IntroSwitch");
+}
+void IntroSwitch(string &in asTimer) 
+{
+	AddLocalVarInt("IntroVar", 1);	//What step to play in the event
+	float fEventSpeedIntro = 1.0f;	//The default time between steps in an event
+
+	switch(GetLocalVarInt("IntroVar")) 
+	{
+		case 1:
+			StartScreenShake(0.025, 5, 1.5, 1.5);
+		break;
+		case 2:
+			PlayMusic("trial_limbo.ogg", true, 0.7f, 10.0f, 0.0f, true);
+			FadeIn(5);
+			fEventSpeedIntro = 5.0f;
+		break;
+		case 3:
+			StopPlayerLookAt();
+			SetPlayerActive(true);
+		break;
+	}
+	
+	if(GetLocalVarInt("IntroVar") < 3)  AddTimer("intro", fEventSpeedIntro, "IntroSwitch");	
+}
+//End Intro Script
+//////////////////////////
+void BeginTrial(){
+	FadeOut(1.5);
+	FadeIn(2.0);
+	StartPlayerLookAt("LookAtMe", 10,10,"");
+	AddTimer("", 1.0f, "StopLookAtPls");
+	AddTimer("", 4.0f, "Voices");
+}
+void StopLookAtPls(string &in asTimer)
+	{StopPlayerLookAt();}
+void Voices(string &in asTimer){
+	AddEffectVoice("M9_S1_P1_01", "", "Voices", "09010101", false, "", 0, 0);
+	AddEffectVoice("M9_S1_P1_02", "", "Voices", "09010102", false, "", 0, 0);
+	AddEffectVoice("M9_S1_P1_03", "", "Voices", "09010103", false, "", 0, 0);
+	AddEffectVoice("M9_S1_P1_04", "", "Voices", "09010104", false, "", 0, 0);
+	AddEffectVoice("M9_S1_P1_05", "", "Voices", "09010105", false, "", 0, 0);
+	AddEffectVoice("M9_S1_P1_06", "", "Voices", "09010106", false, "", 0, 0);
+	AddEffectVoice("M9_S1_P1_07", "", "Voices", "09010107", false, "", 0, 0);
+	AddEffectVoice("M9_S1_P1_08", "", "Voices", "09010108", false, "", 0, 0);
+	SetEffectVoiceOverCallback("TeleportInTo");
+}
+void TeleportInTo(){
+	StartEffectFlash(1.5, 1, 1.5);
+	AddTimer("", 1.5, "Teleporting");
+}
+void Teleporting(string &in asTimer){
+	Intro();
+	PlayGuiSound("sub_warp.ogg", 1);
+	TeleportPlayer("PlayerStartArea_1");
+	//PlayMusic("trial_9.ogg", true, 2.0f, 1.5f, 0, true);
+}
+
+////////////////////////////////////////////////////////////
+//Scenes
+void StartScene2(string &in asParent, string &in asChild, int alState){
+	AddEffectVoice("M9_S2_P1_01", "", "Voices", "09020101", false, "", 0, 0);
+	AddEffectVoice("M9_S2_P1_02", "", "Voices", "09020102", false, "", 0, 0);
+	AddEffectVoice("M9_S2_P1_03", "", "Voices", "09020103", false, "", 0, 0);
+	AddEffectVoice("M9_S2_P1_04", "", "Voices", "09020104", false, "", 0, 0);
+	AddEffectVoice("M9_S2_P1_05", "", "Voices", "09020105", false, "", 0, 0);
+}
+void StartScene3(string &in asParent, string &in asChild, int alState){
+	for(int i=1;i<9;i++) AddEffectVoice("M9_S3_P1_0"+i, "", "Voices", "0903010"+i, false, "", 0, 0);
+	for(int i=10;i<31;i++) AddEffectVoice("M9_S3_P1_"+i, "", "Voices", "090301"+i, false, "", 0, 0);
+	if(GetGlobalVarInt("HasNote")==1)
+		{
+		AddQuest("F28Note", "09_F28Note");
+		}
+}
+void StartScene4(string &in asParent, string &in asChild, int alState){
+	AddEffectVoice("M9_S4_P1_01", "", "Voices", "09040101", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_02", "", "Voices", "09040102", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_03", "", "Voices", "09040103", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_04", "", "Voices", "09040104", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_05", "", "Voices", "09040105", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_06", "", "Voices", "09040106", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_07", "", "Voices", "09040107", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_08", "", "Voices", "09040108", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_09", "", "Voices", "09040109", false, "", 0, 0);
+	AddEffectVoice("M9_S4_P1_10", "", "Voices", "09040110", false, "", 0, 0);
+	SetEffectVoiceOverCallback("GetFast");
+}
+
+void GetFast()
+	{
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+		SetLocalVarInt("Scene4Done",1);
+		SetPlayerJumpDisabled(false);
+	}
+	
+void StartScene5(string &in asParent, string &in asChild, int alState)
+	{AddEffectVoice("M9_S5_P1_01", "", "Voices", "09050101", false, "", 0, 0);}
+
+void SlowThisBirdDown(string &in asParent, string &in asChild, int alState)
+	{
+		if (GetLocalVarInt("Scene4Done") == 0)
+		{
+			SetPlayerMoveSpeedMul(0.13);
+			SetPlayerRunSpeedMul(0.13);
+			SetPlayerJumpDisabled(true);
+			AddDebugMessage("tuched.",true);
+		}
+	}
+	
+void ChangeIt(string &in asEntity)
+{
+	ClearSavedMaps();
+	DestroyDataCache();
+	ChangeMap("Sub_Trial_10.map", "Trial10_TestRoom", "", "");
+}
+	
+void OnEnter(){
+	PlaySoundAtEntity("", "puzzle_boil.snt", "Sound_1", 0.0f, false);	
+	AutoSave();
+}
+void OnLeave(){
+	StopMusic(5,0);
+}
+	
+//WHAT'CHU KNOW ABOUT SCRIPTIN'??

@@ -1,0 +1,283 @@
+// Intro
+void StartIntro(string &in asTimer)
+{
+	StopMusic(0, 1);
+	PlayMusic("22_amb.ogg", true, 0.4, 3, 1, true);
+	AddTimer("", 1, "intro_message_1");
+}
+void intro_message_1(string &in asTimer)
+{
+	SetMessage("Message", "Message_intro_1", 3);
+	AddTimer("", 4.5, "intro_message_2");
+}
+void intro_message_2(string &in asTimer)
+{
+	SetMessage("Message", "Message_intro_2", 5);
+	AddTimer("", 6.5, "intro_message_3");
+}
+void intro_message_3(string &in asTimer)
+{
+	SetMessage("Message", "Message_intro_3", 5);
+	AddTimer("", 6.5, "intro_message_4");
+}
+void intro_message_4(string &in asTimer)
+{
+	SetMessage("Message", "Message_intro_4", 4);
+	AddTimer("", 5.5, "intro_message_5");
+}
+void intro_message_5(string &in asTimer)
+{
+	SetMessage("Message", "Message_intro_5", 4);
+	AddTimer("", 5.5, "intro_message_6");
+}
+void intro_message_6(string &in asTimer)
+{
+	SetMessage("Message", "Message_intro_6", 6);
+	AddTimer("", 7.5, "intro_message_7");
+}
+void intro_message_7(string &in asTimer)
+{
+	SetMessage("Message", "Message_intro_7", 4);
+	AddTimer("", 5.5, "intro_end");
+}
+void intro_end(string &in asTimer)
+{
+	StopMusic(0, 1);
+	PlayMusic("01_outside_amb.ogg", true, 0.4, 1, 1, true);
+	FadeIn(1);
+	SetPlayerActive(true);
+	AddLocalVarInt("IntroEnd", 1);
+	PlaySoundAtEntity("","ambience_wind_eerie.snt", "Sound_2", 0, true);
+	PlaySoundAtEntity("","ambience_wind_eerie.snt", "Sound_3", 0, true);
+	PlaySoundAtEntity("","ambience_wind_eerie.snt", "Sound_4", 0, true);
+	PlaySoundAtEntity("","ambience_wind_eerie.snt", "Sound_5", 0, true);
+}
+
+
+void OnStart()
+{
+	SetPlayerLampOil(0);
+	AddUseItemCallback("", "key_mansion", "door_mansion", "UnlockMansionDoor", true);
+	AddUseItemCallback("", "key_butler_house", "door_butler_house", "UnlockButlerDoor", true);
+	AddUseItemCallback("", "bucket_nowater", "water_pump", "FillBucket", true);
+	AddEntityCollideCallback("Player", "AreaForestThings", "CollideForestThings", false, 1);
+    AddEntityCollideCallback("Player", "area_scare", "Scare_Event_1", false, 1);
+	AddEntityCollideCallback("Player", "area_scare2", "Scare_Event_2", true, 1); 
+	AddEntityCollideCallback("stalker", "monster_area_disappear", "monster_disappear", true, 1); 
+	AddEntityCollideCallback("Player", "check_stalker2", "spawn_stalker", false, 1); 
+	SetEntityPlayerLookAtCallback("area_stalker2", "LookAtStalker", false);
+	SetEntityPlayerLookAtCallback("areascare_stalker3", "LookAtStalker2", false);
+	SetEntityPlayerInteractCallback("key_butler_house", "autosave1", true);
+	
+	// Intro
+	FadeOut(0);	
+	SetPlayerActive(false);
+	AddTimer("", 0.5, "StartIntro");
+	
+	BlockHint("DarknessDecrease");
+	BlockHint("EntityGrab");
+	BlockHint("EntityLever");
+	BlockHint("EntityPush");
+	BlockHint("EntitySlide");
+	BlockHint("EntitySwingDoor");
+	BlockHint("EntityWheel");
+	BlockHint("PickLantern");
+	BlockHint("PickOil");
+	BlockHint("PickTinderbox");
+	BlockHint("SanityHit");
+	BlockHint("SanityLow");
+}
+
+void OnEnter()
+{
+	if(GetLocalVarInt("IntroEnd") == 1){
+	AddTimer("", 1, "StartMusic");
+	}
+}
+
+void DKeyQuest(string &in asEntity)
+{
+	if(QuestIsAdded("q1quest") == false)
+	{
+	AddQuest("q1quest", "KeyMansionQuest");
+	}
+}
+
+void autosave1(string &in asEntity)
+{
+	AutoSave();
+}
+
+void StartMusic(string &in asTimer)
+{
+	PlayMusic("01_outside_amb.ogg", true, 0.4, 1, 1, true);
+}
+
+void OnLeave()
+{
+	StopMusic(0.1, 1);
+}
+
+void UnlockButlerDoor(string &in asItem, string &in asEntity)
+{
+          SetLevelDoorLocked("door_butler_house", false);
+          PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+          RemoveItem(asItem);
+}
+void UnlockMansionDoor(string &in asItem, string &in asEntity)
+{
+          SetLevelDoorLocked("door_mansion", false);
+          PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+          RemoveItem(asItem);
+		  CompleteQuest("q1quest", "KeyMansionQuest");
+}
+// sound file 20_water_stream_low.snt
+void FillBucket(string &in asItem, string &in asEntity)
+{
+		  AddTimer("", 0.5, "FillWater");
+		  SetEntityActive("bucket_fillwater", true);
+          PlaySoundAtEntity("", "puzzle_place_jar.snt", asEntity, 0, false);
+          RemoveItem(asItem);
+}
+
+void FillWater(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("water_part", "ps_bucket_pour_water.ps", "water_particle", true);
+	AddTimer("", 4, "Bucket_complete");
+	AddTimer("", 2, "Update_WPS");
+	PlaySoundAtEntity("water_stream","20_water_stream_low.snt", "bucket_fillwater", 0, false);
+}
+
+void Update_WPS(string &in asTimer)
+{
+	DestroyParticleSystem("water_part");
+	CreateParticleSystemAtEntity("water_part", "ps_bucket_pour_water.ps", "water_particle", true);
+}
+
+void Bucket_complete(string &in asTimer)
+{
+	DestroyParticleSystem("water_part");
+	SetEntityActive("bucket_fillwater", false);
+	SetEntityActive("bucket_water", true);
+	StopSound("water_stream", 0.1);
+	
+}
+
+//////////////////////
+//BEGIN FOREST THING//
+void CollideForestThings(string &in asParent, string &in asChild, int alState)
+{	
+	if(HasItem("key_mansion") == true)
+	{
+	if(GetLocalVarInt("ForestThing") == 0){
+		SetEntityActive("block_box_12", true);
+		PlaySoundAtEntity("uhoh1", "11_forest_minor.snt", "AreaFallDeath", 0, false);
+		StartScreenShake(0.01, 1.5f, 2,3);
+		
+		AddPropForce("falling_tree_1", 1000, 0, 0, "world");
+		
+		AddTimer("freeze", 10.0f, "TimerFreezeTree");
+		AddTimer("particle", 4.9f, "TimerParticle");
+		AddTimer("sanity1", 2, "TimerPlayerSanity");
+		AddTimer("scare", 2, "TimerPlayerReact02");
+		
+		AddLocalVarInt("ForestThing", 1);
+		
+		AddTimer("breath", 3.5f, "TimerPlayerReact02");
+		AddTimer("breath", 5.5f, "TimerPlayerReact02");
+	}
+	}
+}
+
+void TimerPlayerSanity(string &in asTimer)
+{
+	if(asTimer == "sanity1") GiveSanityDamage(5, true);
+}
+void TimerPlayerReact02(string &in asTimer)
+{
+	if(asTimer == "scare"){	
+		PlayGuiSound("react_scare", 0.7f);
+		SetMessage("Message", "Message_ohshit", 5);
+	}
+	else if(asTimer == "breath") 
+		PlayGuiSound("react_breath", 0.7f);
+}
+void TimerFreezeTree(string &in asTimer)
+{
+	SetPropStaticPhysics("falling_tree_1", true);
+}
+void TimerParticle(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("falling_tree_part", "ps_dust_break_25.ps", "ScriptArea_1", true);
+	PlaySoundAtEntity("", "lurker_hit_wood.snt", "ScriptArea_1", 0, false);
+	PlaySoundAtEntity("", "explosion_rock_large.snt", "ScriptArea_1", 0, false);
+	StartScreenShake(0.2, 0.7f, 0.5,1); 
+}
+
+// Scare Event 1
+void Scare_Event_1(string &in asParent, string &in asChild, int alState)
+{
+	if(HasItem("key_mansion") == true)
+	{
+	if(GetLocalVarInt("event_scare1") == 0)
+	{
+	AddLocalVarInt("event_scare1", 1);
+	AddLocalVarInt("event_scare4", 1);
+	AddLocalVarInt("event_scare_off",1);
+	SetEntityActive("stalker3", true);
+	SetEntityActive("stalker2", false);
+	PlaySoundAtEntity("", "psst.snt", "Player", 0, false);
+	}
+	}
+}
+
+// Scare Event 2
+void Scare_Event_2(string &in asParent, string &in asChild, int alState)
+{
+	AddEnemyPatrolNode("stalker", "PathNodeArea_5", 0.001, "");
+	SetEntityActive("stalker", true);
+	SetEnemySanityDecreaseActive("stalker", true);
+	AlertEnemyOfPlayerPresence("stalker");
+}
+void monster_disappear(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("stalker", false);
+}
+
+// Scare Event 3
+void spawn_stalker(string &in asParent, string &in asChild, int alState)
+{
+	if(HasItem("key_mansion") == true)
+	{
+	if(GetLocalVarInt("stalker_spawn") == 0)
+	{
+	AddLocalVarInt("stalker_spawn", 1);
+	SetEntityActive("stalker2", true);
+	}
+	}
+}
+void LookAtStalker(string &in asEntity, int alState)
+{
+	if(HasItem("key_mansion") == true)
+	{
+	if(GetLocalVarInt("event_scare3") == 0 && GetLocalVarInt("event_scare_off") == 0)
+	{
+	AddLocalVarInt("event_scare3", 1);
+	PlaySoundAtEntity("", "enemy_hallucination_disappear.snt", "soundarea", 0, false);
+	SetPropActiveAndFade("stalker2", false, 1);
+    }
+	}
+}
+
+// Scare Event 4
+void LookAtStalker2(string &in asEntity, int alState)
+{
+	if(HasItem("key_mansion") == true)
+	{
+	if(GetLocalVarInt("event_scare4") == 1)
+	{
+	AddLocalVarInt("event_scare4",-1);
+	SetPropActiveAndFade("stalker3", false, 0.7);
+    }
+	}
+}

@@ -1,0 +1,362 @@
+void OnStart()
+{
+	AddEntityCollideCallback("box", "area_killzone", "CollideKillzone", false, 1);
+	
+	AddEntityCollideCallback("Player", "area_trigger_A", "MagicTrigger", false, 0);
+	AddEntityCollideCallback("Player", "area_trigger_B_1", "MagicTrigger", false, 0);
+	AddEntityCollideCallback("Player", "area_trigger_B_2", "MagicTrigger", false, 0);
+	AddEntityCollideCallback("Player", "area_trigger_C", "MagicTrigger", false, 0);
+	AddEntityCollideCallback("Player", "area_trigger_D", "MagicTrigger", false, 0);
+	
+	SetEntityInteractionDisabled("tinderbox", true);
+	AddEntityCollideCallback("Player", "area_tinderbox", "CollideTinderbox", false, 0);
+	
+	//Magic door
+	AddEntityCollideCallback("door_close_1", "area_door_close_1", "CloseDoor_1", false, 1);
+	AddEntityCollideCallback("Player", "area_painting", "ColliderAreaPainting", false, 0);
+	
+	//Chest
+	AddUseItemCallback("", "key_painting", "chest", "UseKeyOnChest", true);
+	
+	//Loop
+	AddEntityCollideCallback("Player", "area_loop_A", "CollideLoop", false, 1);
+	AddEntityCollideCallback("Player", "area_loop_B", "CollideLoop", false, 1);
+	
+	//Darkness
+	for(int i = 0; i < 10; i++) AddEntityCollideCallback("Player", "area_darkness_"+i, "CollideDarkness", false, 0);
+}
+
+void OnEnter()
+{
+	
+}
+
+void OnLeave()
+{ 
+	
+}
+
+//Buttons
+void InteractButton(string &in asEntity)
+{
+	PlaySoundAtEntity("", "lock_door.snt", asEntity, 0.0f, true);
+	
+	string s = "string_button_seq";
+	int i = GetInt(s);
+	
+	if(i == 0)
+	{
+		if(asEntity == "button_1") AddLocalVarInt(s, 1);
+		else SetInt(s, 0);
+	}
+	else if(i == 1)
+	{
+		if(asEntity == "button_3") AddLocalVarInt(s, 1);
+		else SetInt(s, 0);
+	}
+	else if(i == 2)
+	{
+		if(asEntity == "button_2") AddLocalVarInt(s, 1);
+		else SetInt(s, 0);
+	}
+	else if(i == 3)
+	{
+		if(asEntity == "button_4") SetMagicWallEnabled("J", false);
+		else SetInt(s, 0);
+	}
+}
+
+//Darkness
+void CollideDarkness(string &in asParent, string &in asChild, int alState)
+{
+	string light = asChild + "_light";
+	float r = 0.4f;
+	float g = 0.4f;
+	float b = 0.4f;
+	
+	if(alState == 1)
+	{
+		FadeLightTo(light, r, g, b, 1.0f, -1, 1.0f);
+	}
+	else if(alState == -1)
+	{
+		FadeLightTo(light, 0.0f, 0.0f, 0.0f, 1.0f, -1, 1.0f);
+	}
+}
+
+//Loop
+void CollideLoop(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asChild, false);
+	
+	if(asChild == "area_loop_A")
+	{
+		SetEntityActive("area_loop_B", true);
+		
+		for(int i = 0; i < 10; i++) 
+		{
+			SetEntityActive("wall_loop_A_"+i, true);
+			SetEntityActive("wall_loop_B_"+i, false);
+		}
+	}
+	else if(asChild == "area_loop_B")
+	{
+		SetEntityActive("area_loop_A", true);
+		
+		for(int i = 0; i < 10; i++) 
+		{
+			SetEntityActive("wall_loop_A_"+i, false);
+			SetEntityActive("wall_loop_B_"+i, true);
+		}
+	}
+}
+
+//Painting room
+void UseKeyOnChest(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetLeverStuckState(asEntity, 0, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0.0f, true);
+}
+
+void LeverPainting(string &in asEntityName, int alState)
+{
+	string s = "int_painting_room_lever";
+	if(alState == 1)
+	{
+		SetLeverStuckState(asEntityName, alState, true);
+		AddLocalVarInt("int_painting_room_lever", 1);
+	}
+	
+	if(GetLocalVarInt("int_painting_room_lever") == 2)
+	{
+		SetInt("int_painting_room_door", 3);
+	}
+}
+
+void ColliderAreaPainting(string &in asParent, string &in asChild, int alState)
+{
+	SetInt("int_painting_room_player", alState);
+}
+
+void CloseDoor_1(string &in asParent, string &in asChild, int alState)
+{
+	if(GetInt("int_painting_room_player") == 1) return;
+	
+	string s = "int_painting_room_door";
+	int i = GetInt(s);
+	if(i == 1)
+	{
+		CloseDoor_1(i);
+		SetInt(s, 2);
+	}
+	else if(i == 2)
+	{
+		CloseDoor_1(i);
+		SetInt(s, 0);
+	}
+	else if(i == 3)
+	{
+		CloseDoor_1(i);
+	}
+	else
+	{
+		CloseDoor_1(i);
+		SetInt(s, 1);
+	}
+}
+
+void CloseDoor_1(int i)
+{
+	SetMagicWallEnabled("I", i != 3);
+	SetMagicWallEnabled("F", i == 0 || i == 1 || i == 3);
+	SetMagicWallEnabled("G", i == 0 || i == 2 || i == 3);
+	SetMagicWallEnabled("H", i == 0);
+}
+
+//Other
+void CollideTinderbox(string &in asParent, string &in asChild ,int alState)
+{
+	SetEntityInteractionDisabled("tinderbox", false);
+}
+
+void InteractTinderbox(string &in asEntity)
+{
+	SetLightVisible("PointLight_26", false);
+}
+
+void InteractArmor(string &in asEntity)
+{
+	PlaySoundAtEntity("", "impact_metal_low.snt", asEntity, 0.0f, true);
+}
+
+void CollideKillzone(string &in asParent, string &in asChild ,int alState)
+{
+	float x = GetEntityPosX("area_box");
+	float y = GetEntityPosY("area_box");
+	float z = GetEntityPosZ("area_box");
+	SetEntityPos(asParent, x, y, z);
+}
+
+//Magic walls
+void MagicTrigger_End(string &in asEntity, string &in asType)
+{
+	FadeOut(0.0f);
+	SetPlayerActive(false);
+	AddTimer("", 2.0f, "TimerEnd");
+}
+
+void TimerEnd(string &in asTimer)
+{
+	StartCredits("", false, "Ending", "Credits", 0);
+}
+
+void MagicTrigger(string &in asParent, string &in asChild ,int alState)
+{
+	if(asChild == "area_trigger_A") MagicTrigger("A", asChild);
+	else if(asChild == "area_trigger_B_1") MagicTrigger("B_1", asChild);
+	else if(asChild == "area_trigger_B_2") MagicTrigger("B_2", asChild);
+	else if(asChild == "area_trigger_C") MagicTrigger("C", asChild);
+	else if(asChild == "area_trigger_D") MagicTrigger("D", asChild);
+}
+
+void MagicTrigger(string x, string trigger)
+{
+	if(!IsMagicDoorClosed(x)) return;
+	
+	P("Magic trigger "+x);
+	
+	SetMagicWallEnabled("A", true);
+	SetMagicWallEnabled("B", true);
+	SetMagicWallEnabled("C", true);
+	SetMagicWallEnabled("D", true);
+	
+	if(x == "A")
+	{
+		SetMagicWallEnabled(x, false);
+		SetMagicWallEnabled("B", false);
+	}
+	else if(x == "B_1")
+	{
+		SetMagicWallEnabled("B", false);
+		SetMagicWallEnabled("C", false);
+	}
+	else if(x == "B_2")
+	{
+		SetMagicWallEnabled("B", false);
+		SetMagicWallEnabled("D", false);
+	}
+	else if(x == "C")
+	{
+		SetMagicWallEnabled(x, false);
+		SetMagicWallEnabled("B", false);
+	}
+	else if(x == "D")
+	{
+		SetMagicWallEnabled(x, false);
+		SetMagicWallEnabled("A", false);
+	}
+	
+	string prev = GetString("string_prev_magic_trigger");
+	if(prev == trigger) return;
+	SetString("string_prev_magic_trigger", trigger);
+	AddTimer("", RandFloat(1.0f, 3.0f), "TimerTriggerStart");
+}
+
+void SetMagicWallEnabled(string x, bool enabled)
+{
+	for(int i = 0; i < 20; i++)
+	{
+		SetEntityActive("wall_magic_"+x+"_"+i, enabled);
+	}
+}
+
+bool IsMagicDoorClosed(string x)
+{
+	if(x == "A" || x == "D") return GetSwingDoorClosed("door_magic_neg_"+x);
+	else 
+	{
+		if(StringContains(x, "B")) x = "B";
+		return GetSwingDoorClosed("door_magic_"+x);
+	}
+}
+
+void TimerTriggerStart(string &in asTimer)
+{
+	PlaySoundAtEntity("trigger", "ui_torture.snt", "Player", 7.0f, true);
+	FadeImageTrailTo(1.0f, 5.0f);
+	AddTimer("", 3.0f, "TimerTrigger");
+}
+
+void TimerTrigger(string &in asTimer)
+{
+	StopSound("trigger", 5.0f);
+	FadeImageTrailTo(0.0f, 0.1f);
+}
+
+//Autoclose door
+void InteractDoorAutoClose(string &in asEntity)
+{
+	SetTimerDoorAutoClose(asEntity);
+}
+
+void SetTimerDoorAutoClose(string &in door)
+{
+	AddTimer(door, 0.1f, "TimerDoorAutoClose");
+}
+
+void TimerDoorAutoClose(string &in asTimer)
+{
+	if(GetPropIsInteractedWith(asTimer))
+	{
+		SetTimerDoorAutoClose(asTimer);
+	}
+	else if(!GetSwingDoorClosed(asTimer))
+	{
+		if(StringContains(asTimer, "neg")) AddPropImpulse(asTimer, -0.4f, 0.0f, 0.0f, "");
+		else AddPropImpulse(asTimer, 0.4f, 0.0f, 0.0f, "");
+		SetTimerDoorAutoClose(asTimer);
+	}
+	else
+	{
+		return;
+	}
+}
+
+//Misc
+void P(string &in asMessage)
+{
+	AddDebugMessage(asMessage, false);
+}
+
+//Variables Local/Global
+void SetBool(string s, bool b)
+{
+	int i = b ? 1 : 0;
+	SetLocalVarInt(s, i);
+}
+
+bool GetBool(string s)
+{
+	return GetLocalVarInt(s) == 1;
+}
+
+void SetInt(string s, int i)
+{
+	SetLocalVarInt(s, i);
+}
+
+int GetInt(string s)
+{
+	return GetLocalVarInt(s);
+}
+
+void SetString(string s, string x)
+{
+	SetLocalVarString(s, x);
+}
+
+string GetString(string s)
+{
+	return GetLocalVarString(s);
+}

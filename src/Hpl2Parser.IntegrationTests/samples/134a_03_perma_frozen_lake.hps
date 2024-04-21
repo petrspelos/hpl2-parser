@@ -1,0 +1,275 @@
+void OnStart()
+{
+	AutoSave();
+	SetSanityDrainDisabled(true);
+	
+	AddUseItemCallback("Getcoldwater", "wooden_bucket_1", "use_Empty_bucket", "retrievecoldwater", false);
+	AddUseItemCallback("createarea_toheat", "tinderbox", "bonfire_1", "activate_area_toheat", false);
+	AddUseItemCallback("place_coldbucket", "coldwater_bucket", "placecoldwater_toheat", "placebuckettoheatup", false);
+	
+	SetEntityPlayerInteractCallback("warmed_up_bucket", "addareabackincase", false);
+	SetEntityPlayerInteractCallback("lever_simple01_1", "lever_frozen_stuck", false);
+	
+	AddEntityCollideCallback("Player", "start_music_mountainhym", "start_music_mountainhym", true, 0);
+	
+	AddUseItemCallback("warmed_up_bucket_onlever", "warmed_up_bucket", "lever_simple01_1", "fixlever_melticefrozen", false);
+	SetLocalVarInt("frozen_lever_stuckstill", 0);
+	
+	
+	AddEntityCollideCallback("Player", "crackarea_1", "crack_ice_Sounds", false, 0);
+	AddEntityCollideCallback("Player", "crackarea_2", "crack_ice_Sounds", false, 0);
+	AddEntityCollideCallback("Player", "crackarea_3", "crack_ice_Sounds", false, 0);
+	AddEntityCollideCallback("Player", "crackarea_4", "crack_ice_Sounds", false, 0);
+	AddEntityCollideCallback("Player", "crackarea_5", "crack_ice_Sounds", false, 0);
+	AddEntityCollideCallback("Player", "crackarea_6", "crack_ice_Sounds", false, 0);
+	AddEntityCollideCallback("Player", "crackarea_7", "crack_ice_Sounds", false, 0);
+	AddEntityCollideCallback("Player", "crackarea_8", "crack_ice_Sounds", false, 0);
+	
+	SetEntityPlayerInteractCallback("boards_int_messstcuck", "boards_int_messstcuck", false);
+
+	AddUseItemCallback("breakboards_arearemove", "itemhammer", "boards_int_messstcuck", "breakboards_actionremovearea", false);
+	
+	SetLightVisible("PointLight_4", false);
+	SetLightVisible("PointLight_5", false);
+	
+	AddEntityCollideCallback("Player", "toodark_messagearea", "toodark_messagearea", false, 1);
+
+	AddEntityCollideCallback("Player", "teleport_to_canyon_map", "teleport_to_canyon_map", false, 0);
+
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("snow_wind", "snow_wind_sfx.snt", "Player", 1.0f, false);
+}
+
+void OnLeave()
+{
+
+}
+
+/////////////////////////////////////////////
+////////////////LEVER/PUZZLE/////////////////
+/////////////////////////////////////////////
+
+void retrievecoldwater(string &in asItem, string &in asEntity)
+{
+	RemoveItem("wooden_bucket_1");
+	GiveItem("coldwater_bucket", "wooden_bucket_filled", "coldwater_bucket", "wooden_bucket_filled.tga", 1.0);
+	CreateParticleSystemAtEntity("ps_impact_water_med", "ps_impact_water_med.ps", "watersplash_region", false);
+	SetMessage("Messages", "thewaterbucketcoldwaterpicked", 0.0f);
+	PlaySoundAtEntity("", "step_walk_water.snt", "watersplash_region", 0.0f, false);
+}
+
+void activate_area_toheat(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("placecoldwater_toheat", true);
+}
+
+void placebuckettoheatup(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("cold_bucket_static", true);
+	RemoveItem("coldwater_bucket");
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", "placebucket_sfx", 0.0f, false);
+	AddTimer("slowlyheatup", 5.0f, "slowlyheatup");
+}
+
+void slowlyheatup(string &in AsTimer)
+{
+	SetEntityActive("warmed_up_bucket", true);
+	SetEntityActive("cold_bucket_static", false);
+	SetEntityActive("placecoldwater_toheat", false);
+}
+
+void addareabackincase(string &in asEntity)
+{
+	SetEntityActive("placecoldwater_toheat", true);
+}
+
+void lever_frozen_stuck(string &in asEntity)
+{
+		if(GetLocalVarInt("frozen_lever_stuckstill")==0)
+		{	
+			SetMessage("Messages", "lever_frozenstuck_mess", 0.0f);
+			AddQuest("leverfrozen_usewater", "leverfrozen_usewater");
+		}
+}
+
+
+void fixlever_melticefrozen(string &in asItem, string &in asEntity)
+{
+	SetLeverStuckState("lever_simple01_1", 0, true);
+	SetLocalVarInt("frozen_lever_stuckstill", 1);
+	RemoveItem("warmed_up_bucket");
+	PlaySoundAtEntity("", "puzzle_acid_success.snt", "Player", 0.0f, false);
+	CompleteQuest("leverfrozen_usewater", "leverfrozen_usewater");
+	AutoSave();
+}
+
+void lever_frozen_poscheck(string &in asEntity, int LeverState)
+{
+		if(LeverState == 1)
+		{
+		
+				SetLeverStuckState("lever_simple01_1", 1, true);	
+				SetMoveObjectState("safety_normal_vert_1", -2);
+				AddTimer("munshi_dead_revealsfx", 2.0f, "munshi_dead_revealsfx");
+				SetEntityActive("blockade_raiserdoor", false);
+		
+		}
+}
+
+void munshi_dead_revealsfx(string &in AsTimer)
+{
+	PlayMusic("dead_miner_reveal_lake", false, 1.0f, 3.0f, 1, false);
+}
+
+///////////////////////////////////////
+////////////////EVENTS/////////////////
+///////////////////////////////////////
+
+void start_music_mountainhym(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Mountaintop_whistle_tune", false, 1.0f, 3.0f, 1, false);
+}
+
+void boards_int_messstcuck(string &in asEntity)
+{
+	SetMessage("Messages", "boards_int_messstcuck", 0.0f);
+	AddQuest("boards_mem", "boards_mem");
+}
+
+void breakboards_actionremovearea(string &in asItem, string &in asEntity)
+{
+	SetPropHealth("wooden_boards_block_1", 0.0f);
+	SetEntityActive("boards_int_messstcuck", false);
+	SetEntityActive("block_box_6_caveent", false);
+	RemoveItem("itemhammer");
+	CompleteQuest("boards_mem", "boards_mem");
+}
+
+void toodark_messagearea(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "cavetoodark_noprogress", 0.0f);
+}
+
+void teleport_to_canyon_map(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("04_perma_canyon_den", "PlayerStartArea_1", "", "");
+}
+
+///////////////////////////////////////////
+////////////////ICE/SOUNDS/////////////////
+///////////////////////////////////////////
+
+void crack_ice_Sounds(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "icecracksfx.snt", "Player", 0.0f, false);
+}
+
+
+
+
+//////////////////////////////////////////////////
+////////////////BEAR/CAVERN/SCENE/////////////////
+//////////////////////////////////////////////////
+
+
+void activate_lights_scene(string &in asEntity, int LeverState)
+{
+		if(LeverState == 1)
+		{
+		
+				SetLeverStuckState("lever_small01_1", 1, true);	
+				AddTimer("lightsoncave", 0.7f, "lightflickeroncave");
+				SetEntityActive("Brown_Bear_Scene_1", true);
+				PlayPropAnimation("Brown_Bear_Scene_1", "Bear_Cavern_Scene", 1.0f, true, "");
+				PlaySoundAtEntity("", "Lightswitch_flicker1.snt", "playerlookatbear_scared", 0.0f, false);
+				PlaySoundAtEntity("", "Bear_scared_cavern_1.snt", "playerlookatbear_scared", 0.0f, false);
+				PlaySoundAtEntity("Bear_Cavern_Appear", "Bear_Cavern_Appear.snt", "Player", 0.0f, false);
+
+		
+		}
+}
+
+
+void lightflickeroncave(string &in AsTimer)
+{
+	SetLampLit("iron_mine_lamp_1", true, false);
+	SetLampLit("iron_mine_lamp_2", true, false);
+	
+	SetLightVisible("PointLight_4", true);
+	SetLightVisible("PointLight_5", true);
+	
+	AddTimer("lightflickeroffcave", 1.0f, "lightflickeroffcave");
+	StartPlayerLookAt("playerlookatbear_scared", 1.0f, 1.0f, "");
+	SetPlayerActive(false);
+	
+	FadeRadialBlurTo(0.01f, 0.5f);
+	FadePlayerFOVMulTo(1.1f, 1.0f);
+	
+	PlaySoundAtEntity("cavescareplayer", "react_scare.snt", "Player", 0.0f, false);
+
+
+}
+
+void lightflickeroffcave(string &in AsTimer)
+{
+	PlaySoundAtEntity("", "Lightswitch_flicker2.snt", "playerlookatbear_scared", 0.0f, false);
+	SetLampLit("iron_mine_lamp_1", false, false);
+	SetLampLit("iron_mine_lamp_2", false, false);
+	
+	SetLightVisible("PointLight_4", false);
+	SetLightVisible("PointLight_5", false);
+	
+	SetEntityActive("Brown_Bear_Scene_1", false);
+	AddTimer("lightbackon_bearrunoff", 1.5f, "lightbackon_bearrunoff");
+	SetEntityActive("Wild_Brown_Bear_run_only_1", true);
+	SetEnemySanityDecreaseActive("Wild_Brown_Bear_run_only_1", false);
+	
+	AddEnemyPatrolNode("Wild_Brown_Bear_run_only_1", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("Wild_Brown_Bear_run_only_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("Wild_Brown_Bear_run_only_1", "PathNodeArea_3", 0.001, "");
+	AddEnemyPatrolNode("Wild_Brown_Bear_run_only_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("Wild_Brown_Bear_run_only_1", "PathNodeArea_5", 0.001, "");
+	PlaySoundAtEntity("", "Bear_scared_cavern_2.snt", "lookatbear_runaway", 0.0f, false);
+	
+	PlaySoundAtEntity("cavescareplayer", "react_scare.snt", "Player", 0.0f, false);
+	SetEntityActive("toodark_messagearea", false);
+}
+
+void lightbackon_bearrunoff(string &in AsTimer)
+{
+	StopPlayerLookAt();
+	SetLampLit("iron_mine_lamp_1", true, false);
+	SetLampLit("iron_mine_lamp_2", true, false);
+	
+	SetLightVisible("PointLight_4", true);
+	SetLightVisible("PointLight_5", true);
+	
+	StartPlayerLookAt("lookatbear_runaway", 1.0f, 1.0f, "");
+	
+	AddTimer("bear_dissapear_gaincontrol", 3.0f, "bear_dissapear_gaincontrol");
+	PlaySoundAtEntity("", "Lightswitch_flicker1.snt", "playerlookatbear_scared", 0.0f, false);
+	FadeRadialBlurTo(0.0f, 0.009f);
+	FadePlayerFOVMulTo(1.0f, 3.0f);
+	PlaySoundAtEntity("cavescareplayer2", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void bear_dissapear_gaincontrol(string &in AsTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	SetEntityActive("Wild_Brown_Bear_run_only_1", false);
+	SetEntityActive("toodark_Blockade", false);
+	
+	PlayMusic("Bear_Witness_CavernScene", false, 1.0f, 3.0f, 1, false);
+	
+	AddEffectVoice("perma_protag_v_bear_no_attack.ogg", "", "Voice", "perma_protag_v_bear_no_attack", false, "", 1.0f, 2.0f);
+	AddTimer("protag_v_mustfollow_timer", 4.0f, "protag_v_mustfollow_timer");
+}
+
+void protag_v_mustfollow_timer(string &in AsTimer)
+{
+	AddEffectVoice("perma_protag_v_must_follow_bear.ogg", "", "Voice", "perma_protag_v_must_follow_bear", false, "", 1.0f, 2.0f);
+}

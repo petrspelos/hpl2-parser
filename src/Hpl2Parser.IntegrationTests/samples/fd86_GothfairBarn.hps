@@ -1,0 +1,144 @@
+void OnStart()
+{
+FadeOut(0.0f);
+AddTimer("start", 2, "start");
+SetPlayerActive(false);
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "rat_1", "rat1", true, 1);
+AddEntityCollideCallback("Player", "rat_2", "rat2", true, 1);
+AddEntityCollideCallback("Player", "rat_3", "rat3", true, 1);
+CheckPoint ("Checkpoint", "PlayerStartArea_1", "DeathSettings", "DeathHints", "Fall");
+AddTimer("pig", 6, "pig");
+SetMapDisplayNameEntry("Barn");
+AutoSave();
+}
+
+void pig(string &in asTimer)
+{
+PlaySoundAtEntity("","Pig.snt","pig", 0,false);
+AddTimer("pig", 13, "pig");
+}
+
+void rat1(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_1", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_1", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_1", false);	
+}
+
+void rat2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_2", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_2", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_2", false);	
+}
+
+void rat3(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_3", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_3", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_3", false);	
+}
+
+void start(string &in asTimer)
+{
+PlayGuiSound("player_climb.snt", 1.0f);
+CompleteQuest("Barnnight", "Barnnight");
+AddTimer("start2", 2, "start2");
+}
+
+void start2(string &in asTimer)
+{
+FadeIn(2.0f);
+SetPlayerActive(true);
+}
+
+void Quest(string &in asEntity)
+{
+AddQuest("Rods", "Rods");
+}
+
+void Doornegative(string &in asEntity)
+{
+SetMessage("Messages", "findfirst", 4);
+}
+
+void Rod1(string &in asEntity)
+{
+AddLocalVarInt("VarIntFindRods", 1);
+	Dooropen();
+}
+
+void Rod2(string &in asEntity)
+{
+AddLocalVarInt("VarIntFindRods", 1);
+	Dooropen();
+}
+
+void Rod3(string &in asEntity)
+{
+AddLocalVarInt("VarIntFindRods", 1);
+	Dooropen();
+}
+
+void Dooropen(){
+
+	if(GetLocalVarInt("VarIntFindRods") == 3){
+		SetLevelDoorLocked("entrance", false);
+		CompleteQuest("Rods", "Rods");
+                SetEntityPlayerInteractCallback("entrance", "", false);
+                AddGlobalVarInt("Guard", 1);
+	}
+}
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(30, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+}
+
+//----- Insight ----//
+
+void Insight(string &in asEntity)
+{
+SetPlayerActive(false);
+PlaySoundAtEntity("","Insight.snt", "Player", 0, true);
+SetMessage("Messages", "insight", 5);
+AddTimer("insight2", 5, "insight2");
+}
+
+void insight2(string &in asTimer)
+{
+StartEffectEmotionFlash("Flash", "InsightAlma", "");
+SetPropActiveAndFade("orb_6_of_7", false, 1);
+DestroyParticleSystem("ParticleSystem_1");
+SetPlayerActive(true);
+AddGlobalVarInt("Insight", 1);
+}
+
+void OnEnter()
+{	
+StopMusic(10, 0);
+SetSanityDrainDisabled(true);
+SetPlayerRunSpeedMul(1.0f);
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_barn.png");
+}

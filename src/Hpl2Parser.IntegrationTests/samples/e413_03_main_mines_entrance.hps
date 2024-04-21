@@ -1,0 +1,87 @@
+void OnStart(){
+	events();
+	PlayerFunctions();
+}
+
+void OnEnter(){
+	PlayMusic("grunt_amb.ogg", true, 1.5f, 0, 0, true);
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "03Explore", 1, "03MineEntrance.jpg");
+}
+
+void events(){
+	startCrashing();
+	AddEntityCollideCallback("Player", "AreaBoxScare", "boxScare", true, 1);
+}
+
+void PlayerFunctions(){
+	SetEntityPlayerInteractCallback("main_lever", "isStuck", false);
+	SetEntityPlayerInteractCallback("sewer", "checkIfGo", false);
+	AddEntityCollideCallback("Player", "AreaCompleteQuest", "completeQuest", true, 1);
+	AddEntityCollideCallback("Player", "AreaBackToSewer", "backToSewer", false, 1);
+	AddUseItemCallback("", "key", "ExplosiveMining", "unlockRegion", true);
+}
+
+void startCrashing(){
+	AddTimer("", 1.0f, "crashMoment");
+	PlayGuiSound("12_epoxy_blow.snt", 1000000);
+}
+
+void crashMoment(string &in asTimer){
+	StartScreenShake(0.01, 0, 0, 2.9f);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "AreaParticle_1", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "AreaParticle_2", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "AreaParticle_3", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "AreaParticle_4", false);
+	CreateParticleSystemAtEntity("", "ps_dust_elevator_crash", "AreaElevatorCrash", false);
+	AddQuest("investigate", "investigate");
+	AddPropImpulse("barrel_thrown_died", -5, 2, 0, "World");
+	AddTimer("", 0.4f, "barrelDie");
+}
+
+void barrelDie(string &in asTimer){
+	SetEntityActive("barrel_thrown_died", false);
+	SetEntityActive("dead_barrel", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+	AddPropImpulse("dead_barrel", -2.5f, 1.0f, 0.0f, "World");
+}
+
+void completeQuest(string &in asParent, string &in asChild, int alState){
+	CompleteQuest("investigate", "investigate");
+	SetLevelDoorLocked("ToolMining", false);
+	SetMessage("Messages", "anelevator", 0);
+}
+
+void isStuck(string &in entity){
+	SetMessage("Messages", "elevatorLeverStuck", 0);
+}
+
+void checkIfGo(string &in entity){
+	if (GetGlobalVarInt("hasDrainedSewers") == 0){
+		SetMessage("Messages", "noSewer", 0);
+	}else if (GetGlobalVarInt("hasDrainedSewers") == 1){
+		SetLeverStuckState("sewer", 2, true);
+		SetEntityActive("NoAccess", false);
+	}
+}
+
+void boxScare(string &in asParent, string &in asChild, int alState){
+	AddPropImpulse("scareMaker", 2, 1, 0, "World");
+	AddPropImpulse("CoOperator", 0, 0, -1, "World");
+	PlayGuiSound("impact_wood_high.snt", 1000);
+	GiveSanityDamage(26, true);
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaScareParticles", false);
+	PlayGuiSound("react_pant.snt", 100);
+}
+
+void backToSewer(string &in asParent, string &in asChild, int alState){
+	ChangeMap("05_secondary.map", "PlayerStartArea_1", "", "");
+}
+
+void unlockRegion(string &in item, string &in door){
+	SetLevelDoorLocked("ExplosiveMining", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}

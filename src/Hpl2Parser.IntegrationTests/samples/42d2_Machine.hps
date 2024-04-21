@@ -1,0 +1,334 @@
+void OnStart()
+{
+	SetWheelStuckState("crank", -1, true);
+	
+	SetGlobalVarInt("SanctumDoor", 0);
+	
+	SetLeverStuckState("p_lever_1", 1, false);
+	SetLeverStuckState("p_lever_2", -1, false);
+	SetLeverStuckState("p_lever_3", -1, false);
+	SetLeverStuckState("p_lever_4", 1, false);
+	
+	for(int i=1;i<5;i++)
+	{
+		AddEntityCollideCallback("p_lever_"+i, "L_Up_Area_"+i, "CollideLever", false, 1);
+		AddEntityCollideCallback("p_lever_"+i, "L_Down_Area_"+i, "CollideLever", false, 1);
+		
+		SetLocalVarInt("p_lever_"+i, 1);
+	}
+	AddUseItemCallback("", "handdrill", "Barricade", "UseDrill", true);
+	
+	SetLocalVarInt("RodPuzzle", 0);
+	SetLocalVarInt("FirstPuzzleSolved", 0);
+	SetGlobalVarInt("DrillParts", 0);
+	
+	FadeOut(0);
+	FadeIn(3.5f);
+	AddEntityCollideCallback("eventtesla", "AreaEndEventTesla", "EndEventTesla", true, 1);
+	AddEntityCollideCallback("wretch1", "AreaEndEventTesla", "EndEventTesla", true, 1);
+	AddEntityCollideCallback("Player", "AreaEventDoor", "EventDoor", true, 1);
+	
+	//GiveItemFromFile("handdrill", "hand_drill.ent");
+	//GiveItemFromFile("", "lantern.ent");
+}
+
+void UseDrill(string &in asItem, string &in asEntity)
+{
+	CompleteQuest("MementoBarricade", "MBarricade");
+	StartPlayerLookAt("AreaDrillCenter", 1.5f, 1.5f, "");
+	RemoveItem(asItem);
+	SetPropActiveAndFade("drill",true, 0.3);
+	CreateParticleSystemAtEntity("drilling", "ps_dust_drilling.ps", "AreaDrillCenter", false);
+	RotatePropToSpeed("drill", 8.0f, 8.0f,  0, 0, 1 ,  true, "AreaDrillCenter");
+	PlaySoundAtEntity("drilling", "19_drill.snt", "AreaDrillCenter", 0.9f, false);
+	AddTimer("", 1.5f, "TimerStopDrill");
+}
+
+void TimerStopDrill(string &asTimer)
+{
+	GiveSanityBoostSmall();
+	DestroyParticleSystem("drilling");
+	SetSwingDoorLocked("Barricade", false, true);
+	SetSwingDoorLocked("door", false, true);
+	StopPlayerLookAt();
+	StopPropMovement("drill");
+	SetPropActiveAndFade("drill",false, 0.3);
+}
+
+void PlaceRodSquare(string &in asItem, string &in asEntity)
+{
+	if(GetLocalVarInt("RodPuzzle") == 3)
+	{
+		GiveSanityBoostSmall();
+		PlayGuiSound("13_press_done", 1);
+	}
+	CreateParticleSystemAtEntity("", "ps_steam", asEntity, false);
+	SetEntityActive("Rod3", true);
+	RemoveItem(asItem);
+	AddLocalVarInt("FirstPuzzleSolved", 1);
+	AddLocalVarInt("RodPuzzle", 1);
+	PlayGuiSound("13_rod_in", 1);
+}
+
+void PlaceRodCircle(string &in asItem, string &in asEntity)
+{
+	if(GetLocalVarInt("RodPuzzle") == 3)
+	{
+		GiveSanityBoostSmall();
+		PlayGuiSound("13_press_done", 1);
+	}
+	CreateParticleSystemAtEntity("", "ps_steam", asEntity, false);
+	SetEntityActive("Rod1", true);
+	RemoveItem(asItem);
+	AddLocalVarInt("FirstPuzzleSolved", 1);
+	AddLocalVarInt("RodPuzzle", 1);
+	PlayGuiSound("13_rod_in", 1);
+}
+
+void PlaceRodTriangle(string &in asItem, string &in asEntity)
+{
+	if(GetLocalVarInt("RodPuzzle") == 3)
+	{
+		GiveSanityBoostSmall();
+		PlayGuiSound("13_press_done", 1);
+	}
+	CreateParticleSystemAtEntity("", "ps_steam", asEntity, false);
+	SetEntityActive("Rod2", true);	
+	RemoveItem(asItem);
+	AddLocalVarInt("FirstPuzzleSolved", 1);
+	AddLocalVarInt("RodPuzzle", 1);
+	PlayGuiSound("13_rod_in", 1);
+
+}
+
+void PickupDrill3(string &in asEntity, string &in OnPickup)
+{
+	AddGlobalVarInt("DrillParts", 1);
+	AddEntityCollideCallback("Player", "AreaEventTesla", "EventTesla", true, 1);
+}
+
+void PickupDrill2(string &in asEntity, string &in OnPickup)
+{
+	AddGlobalVarInt("DrillParts", 1);
+	AddEntityCollideCallback("Player", "AreaSpawnWretch1", "SpawnWretch1", true, 1);
+}
+
+void SpawnWretch1(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("W1", "W1Spawn", "", "DeathHint", "DMonster");
+	GiveSanityDamage(10, true);
+	StopMusic(1.5f, 0);
+	AddTimer("", 3.5f, "TimerWretch");
+	PlayGuiSound("react_scare", 0.9f);
+	PlaySoundAtEntity("", "break_wood", "wretch1", 1, false);
+	SetEntityActive("wretch1", true);
+	AddEnemyPatrolNode("wretch1", "w1node_1", 5, "");
+	AddEnemyPatrolNode("wretch1", "w1node_2", 1, "");
+	AddEnemyPatrolNode("wretch1", "w1node_3", 1, "");
+	AddEnemyPatrolNode("wretch1", "w1node_4", 1, "");
+}
+
+void EndPig(string &in asEntity, string &in OnAutoDisabled)
+{
+	PlayMusic("21_amb.ogg", true, 0.8f, 1.5f, 0, true);
+}
+
+void TimerWretch(string &in asTimer)
+{
+	SetPropHealth("wretchdoor", 0);
+	PlayMusic("26_event_brute.ogg", false, 0.9f, 0, 0, false);
+}
+
+void CrankTurn(string &in asEntity, int alState)
+{
+	if(GetLocalVarInt("FirstPuzzleSolved") == 4 && alState == 1)
+	{
+		FadeInSound("bilge_engine_on_3D.snt", 4.5f, true);
+		SetWheelStuckState("crank", 1, true);
+		AddGlobalVarInt("SanctumDoor", 1);
+		PlayGuiSound("afx_events_mansion_tremor_01", 1.25f);
+		CompleteQuest("MementoI", "MI");
+		CompleteQuest("MementoManual", "MManual");
+		StartScreenShake(0.1f, 9.5f, 3.5f, 3.5f);
+		GiveSanityBoostSmall();
+		PlayMusic("music_tesla02_transition_21.ogg", false, 0.4f, 3.5f, 0, false);
+	}
+	if(GetLocalVarInt("FirstPuzzleSolved") < 4 && alState == 1)
+	{
+		SetMessage("ScreenText", "crank", 4.5f);
+	}
+}
+
+void PickupManual(string &in asEntity, string &in OnPickup)
+{
+	SetWheelStuckState("crank", 0, true);
+
+	AddUseItemCallback("", "rodcircle", "AreaPlaceRodCircle", "PlaceRodCircle", true);
+	AddUseItemCallback("", "rodtriangle", "AreaPlaceRodTriangle", "PlaceRodTriangle", true);
+	AddUseItemCallback("", "rodsquare", "AreaPlaceRodSquare", "PlaceRodSquare", true);
+	
+	SetLeverStuckState("p_lever_1", 0, true);
+	SetLeverStuckState("p_lever_2", 0, true);
+	SetLeverStuckState("p_lever_3", 0, true);
+	SetLeverStuckState("p_lever_4", 0, true);
+	
+	AddQuest("MementoManual", "MManual");
+}
+
+void PickupDrill1(string &in asEntity, string &in OnPickup)
+{
+	AddGlobalVarInt("DrillParts", 1);
+}
+
+void InteractDoor(string &in asEntity)
+{
+	SetMessage("ScreenText", "textintrodoor", 4.5f);
+}
+
+void EventDoor(string &in asParent, string &in asChild, int alState)
+{	
+	PlayGuiSound("", 0.9f);
+	AddTimer("", 0.5f, "TimerDoorScare");
+	PlaySoundAtEntity("scaredoor", "scare_male_terrified5", "Player", 0, false);
+}
+
+void StateChangePistonLever(string &in asEntity, int alState)
+{	
+	SetLocalVarInt(asEntity, alState+1);
+	
+	/*Piston position values for the 4 levers on min/max*/
+	float[] aL1 = {-0.075f,0.0f,0.05f};
+	float[] aL2 = {0.025f,0.0f,-0.03f};
+	float[] aL3 = {0.025f,0.0f,-0.025f};
+	float[] aL4 = {-0.075f,0.0f,0.05f};
+
+	/*Value for piston movement base on the position of the 4 levers*/
+	float fMove = aL1[GetLocalVarInt("p_lever_1")] + aL2[GetLocalVarInt("p_lever_2")]
+				+ aL3[GetLocalVarInt("p_lever_3")] + aL4[GetLocalVarInt("p_lever_4")];
+
+	SetMoveObjectState("piston", fMove);
+	
+	if(alState != 0){
+		PlaySoundAtEntity("piston"+fMove, "17_piston_move", "piston", 1.0f, false);
+		CreateParticleSystemAtEntityExt("pistonp"+fMove, "ps_steam_piston_move", "Area_piston", false, 0.8, 0.4, 0.3, 1, true, 0.3f, 0.6f, 12.0f, 13.0f);
+	}
+	
+	/*Complete the puzzle if all 4 levers in the correct positions*/
+	if(GetLocalVarInt("p_lever_1") == 0 && GetLocalVarInt("p_lever_2") == 2 && 
+		GetLocalVarInt("p_lever_3") == 2 && GetLocalVarInt("p_lever_4") == 0){
+		
+		if(GetLocalVarInt("FirstPuzzleSolved")==2)
+		{
+			CompleteQuest("MementoManual", "MManual");
+		}
+		
+		AddLocalVarInt("FirstPuzzleSolved", 1);
+		
+		AddTimer("dprog1", 1.5f, "TimerDelayProg");
+		
+		PlaySoundAtEntity("PistonComp", "17_piston_correct", "PistonDone", 3.0f, true);
+		
+		PlaySoundAtEntity("pistondone", "17_piston_done", "piston", 0.0f, false);
+		
+		SetLeverStuckState("p_lever_1", -1, false);
+		SetLeverStuckState("p_lever_2", 1, false);
+		SetLeverStuckState("p_lever_3", 1, false);
+		SetLeverStuckState("p_lever_4", -1, false);
+		
+		for(int i=1;i<5;i++) 
+			SetEntityPlayerInteractCallback("p_lever_"+i, "InteractLockedWheel", false);
+	}
+	
+	AddDebugMessage("Entity: "+asEntity+"  State: "+alState+"  Value: "+fMove, false);
+}
+void TimerDelayProg(string &in asTimer)
+{
+	if(asTimer != "dprog1") return;
+	
+	PlaySoundAtEntity("piston", "17_piston_move", "piston", 1.0f, false);
+	CreateParticleSystemAtEntityExt("pistonp", "ps_steam_piston_move", "Area_piston", false, 0.8, 0.4, 0.3, 1, true, 0.3f, 0.6f, 12.0f, 13.0f);
+}
+
+/*Set the lever stuck at max/min briefly so it does not bounce around
+*/
+void CollideLever(string &in asParent, string &in asChild, int alState)
+{
+	if(StringContains(asChild,"Down")) //Because Down didn't work reliable.
+		SetLeverStuckState(asParent, -1, true);
+	else SetLeverStuckState(asParent, 1, true);
+	
+	AddTimer(asParent, 0.2f, "TimerReleaseLever");
+	
+	AddDebugMessage("Lever: "+asParent+"  Area: "+asChild, false);
+}
+
+void TimerReleaseLever(string &in asTimer)
+{
+	SetLeverStuckState(asTimer, 0, false);
+}
+void TimerDoorScare(string &in asTimer)
+{
+	AddTimer("", 3.5f, "TimerQuestBarricade");
+	GiveSanityDamage(10, true);
+	CreateParticleSystemAtEntity("effects", "ps_dust_falling_small", "AreaDoorEffect", false);
+	PlayGuiSound("react_pant", 0.7f);
+	PlaySoundAtEntity("scareslam", "afx_mansion_pig_slam_door_1", "door", 1.0f, false);
+}
+
+void TimerQuestBarricade(string &in asTimer)
+{
+	AddQuest("MementoBarricade", "MBarricade");
+}
+
+void StopLookEvent(string &in asTimer)
+{
+	PlayGuiSound("react_breath_slow", 0.8f);
+	StopPlayerLookAt();
+}
+
+void EventTesla(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1.25f, "TrackTesla");
+	SetPlayerActive(false);
+	AddTimer("", 4.75f, "StopLookEvent");
+	GiveSanityDamage(10, true);
+	StartPlayerLookAt("eventtesla", 5, 5, "");
+	StopMusic(1.5f, 0);
+	PlayGuiSound("react_scare", 0.7f);
+	PlaySoundAtEntity("", "afx_tesla_teslapigevent_02", "eventtesla", 0.8f, false);
+	SetEntityActive("eventtesla", true);
+	AddEnemyPatrolNode("eventtesla", "EventNode_1", 0, "");
+	AddEnemyPatrolNode("eventtesla", "EventNode_2", 0, "");
+}
+
+void TrackTesla(string &in asTimer)
+{
+	AddTimer("", 2, "TrackTesla2");
+	StartPlayerLookAt("eventtesla", 3, 3, "");
+}
+
+void TrackTesla2(string &in asTimer)
+{
+	StartPlayerLookAt("AreaEndEventTesla", 3, 3, "");
+}
+
+void EndEventTesla(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(true);
+	PlaySoundAtEntity("", "afx_tesla_teslapigevent_01", "AreaEndEventTesla", 0.7f, false);
+	PlayGuiSound("react_breath", 0.7f);
+	FadeEnemyToSmoke("eventtesla", true);
+	FadeEnemyToSmoke("wretch1", true);
+	PlayMusic("21_amb.ogg", true, 0.8f, 1.5f, 0, true);
+}
+
+void OnLeave()
+{
+	StopMusic(1.5f, 0);
+	SetupLoadScreen("LoadingScreen", "Load9", 0,"");
+}
+
+void OnEnter()
+{
+	PlayMusic("21_amb.ogg", true, 0.8f, 1.5f, 0, true);
+}

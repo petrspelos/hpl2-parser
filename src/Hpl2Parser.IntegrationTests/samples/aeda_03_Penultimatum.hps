@@ -1,0 +1,852 @@
+void OnStart()
+{
+	//SetPlayerLampOil(0);
+	//GiveItemFromFile("lantern", "lantern.ent");
+
+	PreloadSound("ScreechEvent.snt");
+	PreloadSound("yusef_idle.snt");
+	PreloadSound("afx_zither_6_s.snt");
+	PreloadSound("afx_zither_11_pt1.snt");
+	PreloadSound("afx_zither_11_pt2.snt");
+	PreloadSound("fuse_insert.snt");
+	PreloadSound("afx_enginerooms_metalpipe_smallhiss.snt");
+	PreloadSound("afx_engineroom_pipetremor.snt");
+	PreloadSound("afx_reactor_hearthit.snt");
+	PreloadSound("afx_spooky_eerie_wind_drone_s.snt");
+	PreloadSound("afx_spooky_hightone_whoosh_s.snt");
+	PreloadSound("general_chain_rattle_single.snt");
+	PreloadSound("rowboat_paddle_loop.snt");
+	PreloadSound("scare_cloth.snt");
+	
+	PreloadParticleSystem("ps_dust_push_09.ps");
+	PreloadParticleSystem("ps_portal_fx.ps");
+	
+	//PlaySoundAtEntity("Rowing", "rowboat_paddle_loop", "RowSource", 0, false);
+
+	AddEnemyPatrolNode("cloakedman_1", "CloakNode_2", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_1", "CloakNode_36", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_1", "CloakNode_3", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_1", "CloakNode_4", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_1", "CloakNode_5", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_1", "CloakNode_6", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_1", "CloakNode_7", 0.0, "");
+	
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_32", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_24", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_26", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_27", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_29", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_30", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_23", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_22", 4.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_21", 4.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_19", 4.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_25", 4.0, "");
+	
+	AddEnemyPatrolNode("cloakedman_s_1", "GhostNode_4", 0.0, "");
+	
+	SetLightVisible("DeadSpot_1", false);
+	SetLightVisible("TempleSpot", false);
+	SetLightVisible("TempleSpot_1", false);
+	SetLightVisible("TempleSpot_2", false);
+	
+	SetLightFlickerActive("TempleSpot", false);
+	SetLightFlickerActive("TempleSpot_1", false);
+	SetLightFlickerActive("TempleSpot_2", false);
+	
+	SetLightVisible("ActiveLight_1", false);
+	SetLightVisible("ActiveLight_2", false);
+	SetLightVisible("ActiveLight_3", false);
+	SetLightVisible("SelectLight_1", false);
+	SetLightVisible("SelectLight_2", false);
+	SetLightVisible("SelectLight_3", false);
+	
+	SetGlobalVarInt("RodsUnfused", 0);
+	SetGlobalVarInt("MusicPlaying",0);
+	SetGlobalVarInt("EngineMem", 0);
+	
+	SetLocalVarInt("Rod3Grabbed", 0);
+	SetLocalVarInt("YusefActive",0);
+	
+	SetGlobalVarInt("Rod1Fused", 0);
+	SetGlobalVarInt("Rod2Fused", 0);
+	SetGlobalVarInt("Rod3Fused", 0);
+	
+	AddEntityCollideCallback("Player", "PlayerDisableEffects", "PlayerDisableEffects", true, 1);
+	AddEntityCollideCallback("Player", "PlayerDisable", "PlayerDisable", true, 1);
+	AddEntityCollideCallback("Player", "ChainTrigger", "chains", true, 1);
+	AddEntityCollideCallback("Player", "ChainTrigger_1", "chains", true, 1);
+	AddEntityCollideCallback("Player", "CloakTrigger", "CloakSpawn1", true, 0);
+	AddEntityCollideCallback("Player", "MaskTrigger", "MaskDisappear", true, 0);
+	AddEntityCollideCallback("Player", "MusicTrigger1", "Music1", true, 0);
+	AddEntityCollideCallback("Player", "DouseTrigger", "TorchDouse", true, 0);
+	AddEntityCollideCallback("Player", "DouseTrigger_1", "TorchDouse", true, 0);
+	AddEntityCollideCallback("Player", "StudiumScareTrigger", "StudiumScare", true, 0);
+	AddEntityCollideCallback("Player", "StudiumScare2Trigger", "StudiumScare2", true, 0);
+	AddEntityCollideCallback("Player", "StudiumScare3Trigger", "StudiumScare3", true, 0);
+	AddEntityCollideCallback("Player", "AddScreechTrigger", "AddScreech", true, 0);
+	AddEntityCollideCallback("Player", "LubbScreechTrigger", "LubbScreech", true, 0);
+	AddEntityCollideCallback("Player", "UnstaticTrigger", "Unstatic", true, 0);
+	AddEntityCollideCallback("Player", "ConnectionScareTrigger", "ConnectionScare", true, 0);
+	AddEntityCollideCallback("Player", "CornerScareTrigger", "CornerScare", true, 0);
+	AddEntityCollideCallback("Player", "WellSave", "AutoSave", true, 0);
+	AddEntityCollideCallback("Player", "PortalSave", "AutoSave", true, 0);
+	for(int i=1;i<=4;i++)
+	{
+		AddEntityCollideCallback("Player", "TScareTrigger_"+i, "TScare", false, 0);
+	}
+	AddEntityCollideCallback("Player", "FinalTrigger", "FinalSpawn", true, 0);
+	
+	AddEntityCollideCallback("PortalCrank", "CrankAlignWater", "PortalAlignedWater", false, 0);
+	AddEntityCollideCallback("PortalCrank", "CrankAlignDead", "PortalAlignedDead", false, 0);
+	AddEntityCollideCallback("PortalCrank", "CrankAlignTemple", "PortalAlignedTemple", false, 0);
+	//AddEntityCollideCallback("PortalCrank", "CrankAlignWater", "PortalUnaligned", false, -1);
+	AddEntityCollideCallback("LargeBarry", "SmallHarry", "DoorSlowClink", false, 0);
+	
+	AddEntityCollideCallback("cloakedman_s_3", "Cloak3MoreNodesTrigger", "Cloak3MoreNodes", true, 0);
+	
+	//SetEntityInteractionDisabled("LargeBarry", true);
+	
+	SetEntityPlayerInteractCallback("PortalInteract", "PortalJump", false);
+	SetEntityPlayerInteractCallback("Portal2Interact", "Portal2Jump", false);
+	SetEntityPlayerInteractCallback("Portal3Interact", "Portal3Jump", false);
+	SetEntityPlayerInteractCallback("redrod_3", "Portal2Activate", false);
+	
+	SetEntityPlayerInteractCallback("redrod_2", "YusefFlashEnable", false);
+	
+	SetEntityPlayerInteractCallback("TouchBoaty", "BoatTouch", false);
+	
+	SetEntityPlayerInteractCallback("SymCrankWater", "CrankSmallMessage", false);
+	SetEntityPlayerInteractCallback("SymCrankTemple", "CrankSmallMessage2", false);
+	SetEntityPlayerInteractCallback("SymCrankDead", "CrankSmallMessage2", false);
+	
+	SetEntityConnectionStateChangeCallback("elevator_lever_s_1", "EngageCoords");
+	
+	//InteractConnectPropWithMoveObject("", "PortalCrank_1", "PortalCrank", true, false, -1);
+	
+	//GiveItemFromFile("redrod_1","guiding_rod03.ent");
+	//GiveItemFromFile("redrod_2","guiding_rod02.ent");
+	//GiveItemFromFile("redrod_3","guiding_rod01.ent");
+	
+	
+	// LIBRARY PORTAL
+	CreateParticleSystemAtEntity("Portal 2 Open", "ps_portal_fx","Portal2Graphics", false);
+	// LIBRARY PORTAL
+	
+	
+	for(int i=1;i<=3;i++)
+	{
+		AddUseItemCallback("", "redrod_"+i, "EnginePlace", "PlaceRod", false);
+		
+	}
+}
+
+void OnEnter()
+{
+	ClearSavedMaps();
+	SetMapDisplayNameEntry("Penultimatum");
+	PlayMusic("Blank.ogg", true, 1, 6, 0, true);
+	
+	if(GetGlobalVarInt("lantern_picked") == 1)
+	{
+		SetEntityActive("lantern_1", false);
+	}
+	
+	SetInDarknessEffectsActive(true);
+	SetSanityDrainDisabled(false);
+}
+
+void EngageCoords(string &in asEntity, int alState)
+{
+	if (alState == -1)
+	{
+		PlaySoundAtEntity("Engine Engage", "05_attach_ladder", "EngineNoise", 0, false);
+		AddTimer("EngageDelay",2,"FuseRods");
+		AddTimer("",2,"KillEngageFX");
+		if (GetGlobalVarInt("RodsUnfused") > 0)
+			{
+				PlaySoundAtEntity("Fuse Hiss", "afx_enginerooms_metalpipe_smallhiss", "EngineNoise", 0, false);
+				PlaySoundAtEntity("Fuse Rattle", "afx_engineroom_pipetremor", "EngineNoise", 0, false);
+				AddTimer("",2,"FuseFXTimer");
+			}
+	}
+}
+
+void KillEngageFX(string &in asTimer)
+{
+	StopSound("Fuse Hiss",0.6);
+	StopSound("Fuse Rattle",0.6);
+}
+
+void FuseRods(string &in asTimer)
+{
+	if ((GetGlobalVarInt("Rod1Connected") == 1) && (GetGlobalVarInt("Rod1Fused") != 1))
+		{
+			SetLightVisible("ActiveLight_1", true);
+			AddDebugMessage("ROD 1 FUSED", false);
+			SetGlobalVarInt("Rod1Fused", 1);
+			AddGlobalVarInt("RodsUnfused",-1);
+			PlaySoundAtEntity("Cloth", "scare_cloth.snt", "Player", 0, false);
+			
+			if (GetGlobalVarInt("EngineMem") < 1)
+			{
+				AddQuest("03_PenEngine", "03_PenEngine");
+				AddGlobalVarInt("EngineMem", 1);
+			}
+		}
+	if ((GetGlobalVarInt("Rod2Connected") == 1) && (GetGlobalVarInt("Rod2Fused") != 1))
+		{
+			SetLightVisible("ActiveLight_2", true);
+			AddDebugMessage("ROD 2 FUSED", false);
+			SetGlobalVarInt("Rod2Fused", 1);
+			AddGlobalVarInt("RodsUnfused",-1);
+			PlaySoundAtEntity("Cloth", "scare_cloth.snt", "Player", 0, false);
+			PlaySoundAtEntity("Creak", "scare_low_creak.snt", "Player", 0, false);
+			
+			if (GetGlobalVarInt("EngineMem") < 1)
+			{
+				AddQuest("03_PenEngine", "03_PenEngine");
+				AddGlobalVarInt("EngineMem", 1);
+			}
+		}
+	if ((GetGlobalVarInt("Rod3Connected") == 1) && (GetGlobalVarInt("Rod3Fused") != 1))
+		{
+			SetLightVisible("ActiveLight_3", true);
+			AddDebugMessage("ROD 3 FUSED", false);
+			SetGlobalVarInt("Rod3Fused", 1);
+			AddGlobalVarInt("RodsUnfused",-1);
+			AllRodsFused();
+		}
+		
+}
+
+void AllRodsFused()
+{
+	GiveSanityDamage(10, true);
+	ShowEnemyPlayerPosition("cloakedman_s_3");
+}
+
+void FuseFXTimer(string &in asTimer)
+{
+	FuseFX();
+}
+
+void FuseFX()
+{
+	PlaySoundAtEntity("Fuse Slam", "afx_reactor_hearthit", "EngineNoise", 0, false);
+	StartScreenShake(0.2, 0.2, 0.0, 1.0);
+}
+
+void PlaceRod(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("","fuse_insert","rodstatic_1",0,false);
+	AddGlobalVarInt("RodsUnfused",1);
+	if (asItem == "redrod_1")
+		{
+			RemoveItem("redrod_1");
+			SetEntityActive("rodstatic_1",true);
+			SetGlobalVarInt("Rod1Connected",1);
+			AddDebugMessage("ROD 1 PLACED", false);
+		}
+		
+		else if (asItem == "redrod_2")
+		{
+			RemoveItem("redrod_2");
+			SetEntityActive("rodstatic_2",true);
+			SetGlobalVarInt("Rod2Connected",1);
+			AddDebugMessage("ROD 2 PLACED", false);
+			CheckPoint("Rod 2 Checkpoint", "WellRoom_1", "", "", "");
+		}
+		else if (asItem == "redrod_3")
+		{
+			RemoveItem("redrod_3");
+			SetEntityActive("rodstatic_3",true);
+			SetGlobalVarInt("Rod3Connected",1);
+			AddDebugMessage("ROD 3 PLACED", false);
+		}
+	if ((GetGlobalVarInt("Rod1Connected") == 1) && (GetGlobalVarInt("Rod2Connected") == 1))
+	{
+		PlayMusic("SearchTest2.ogg", true, 0.28, 12, 1, true);
+		GiveSanityBoostSmall();
+		AddTimer("Cloth Scares",RandInt(30,70),"TimerClothScares");
+	}
+}
+
+void TimerClothScares(string &in asTimer)
+{
+	PlaySoundAtEntity("Cloth", "scare_cloth.snt", "Player", 0, false);
+	AddTimer("Cloth Scares",RandInt(30,70),"TimerClothScares");
+}
+
+void PortalAlignedWater(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1)
+	{
+		SetEntityActive("SymCrankWater",true);
+		SetEntityActive("SymCrankTemple",false);
+		SetEntityActive("SymCrankDead",false);
+		if (GetGlobalVarInt("Rod3Fused") == 1)
+		{
+			SetLightVisible("SelectLight_3", true);
+			SetGlobalVarInt("PortalDest", 3);
+			FadeLightTo("WaterSpot", 0.258, 0.397, 0.483, 0.569, -1, 0.65);
+			FadeLightTo("WaterPoint", 0.239, 0.324, 0.445, 1, -1, 0.65);
+			PlaySoundAtEntity("Portal Water", "p_water_loop", "CrankAlignWater", 1.0, false);
+			PlaySoundAtEntity("Portal Amb", "", "PortalGraphics", 1.0, false);
+			PlaySoundAtEntity("Well Main", "p_main_loop", "WellFX", 1.0, false);
+			CreateParticleSystemAtEntity("Portal Open", "ps_portal_fx","PortalGraphics", false);
+			SetEntityActive("PortalExamineClosed",false);
+			SetEntityActive("PortalInteract",true);
+			SetEntityActive("YusefChaseTrigger",true);
+			CreateParticleSystemAtEntity("Well FX", "ps_electro_bolt_small","WellFX", false);
+			
+		}
+	}
+	else if (alState == -1)
+	{
+		SetLightVisible("SelectLight_3", false);
+		SetGlobalVarInt("PortalDest", 0);
+		FadeLightTo("WaterSpot", 0, 0, 0, 0, -1, 0.65);
+		FadeLightTo("WaterPoint", 0, 0, 0, 0, -1, 0.65);
+		StopSound("Portal Water", 1.0);
+		StopSound("Portal Amb", 1.0);
+		StopSound("Well Main", 1.0);
+		DestroyParticleSystem("Portal Open");
+		DestroyParticleSystem("Well FX");
+		SetEntityActive("PortalExamineClosed",true);
+		SetEntityActive("PortalInteract",false);
+	}
+	
+}
+
+void PortalAlignedTemple(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1)
+	{
+		SetEntityActive("SymCrankWater",false);
+		SetEntityActive("SymCrankTemple",true);
+		SetEntityActive("SymCrankDead",false);
+		if (GetGlobalVarInt("Rod2Fused") == 1)
+		{
+			SetLightVisible("SelectLight_2", true);
+			SetGlobalVarInt("PortalDest", 2);
+			FadeLightTo("TempleSpot", 0.535, 0.249, 0.104, 1, -1, 0.65);
+			FadeLightTo("TempleSpot_2", 0.535, 0.249, 0.104, 1, -1, 0.65);
+			FadeLightTo("TempleSpot_1", 0.19, 0.368, 0.104, 1, -1, 0.65);
+			SetLightVisible("TempleSpot", true);
+			SetLightVisible("TempleSpot_1", true);
+			SetLightVisible("TempleSpot_2", true);
+			SetLightFlickerActive("TempleSpot", true);
+			SetLightFlickerActive("TempleSpot_1", true);
+			SetLightFlickerActive("TempleSpot_2", true);
+			PlaySoundAtEntity("Portal Temple", "p_library_loop", "CrankAlignTemple", 1.0, false);
+			PlaySoundAtEntity("Portal Amb", "", "PortalGraphics", 1.0, false);
+			PlaySoundAtEntity("Well Main", "p_main_loop", "WellFX", 1.0, false);
+			CreateParticleSystemAtEntity("Portal Open", "ps_portal_fx","PortalGraphics", false);
+			SetEntityActive("PortalExamineClosed",false);
+			SetEntityActive("PortalInteract",true);
+			CreateParticleSystemAtEntity("Well FX", "ps_electro_bolt_small","WellFX", false);
+			
+			/*if (GetGlobalVarInt("MusicPlaying") == 0)
+			{
+				PlayMusic("ort_descent_pt2.ogg", true, 1.15, 3, 1, true);
+				SetGlobalVarInt("MusicPlaying",1);
+			}*/
+			
+			
+		}
+	}
+	else if (alState == -1)
+	{
+		SetLightVisible("TempleSpot", false);
+		SetLightVisible("TempleSpot_1", false);
+		SetLightVisible("TempleSpot_2", false);
+		SetLightVisible("SelectLight_2", false);
+		SetGlobalVarInt("PortalDest", 0);
+		FadeLightTo("TempleSpot", 0, 0, 0, 0, -1, 0.65);
+		FadeLightTo("TempleSpot_1", 0, 0, 0, 0, -1, 0.65);
+		FadeLightTo("TempleSpot_2", 0, 0, 0, 0, -1, 0.65);
+		SetLightFlickerActive("TempleSpot", false);
+		SetLightFlickerActive("TempleSpot_1", false);
+		SetLightFlickerActive("TempleSpot_2", false);
+		StopSound("Portal Temple", 1.0);
+		StopSound("Portal Amb", 1.0);
+		StopSound("Well Main", 1.0);
+		DestroyParticleSystem("Portal Open");
+		SetEntityActive("PortalExamineClosed",true);
+		SetEntityActive("PortalInteract",false);
+		DestroyParticleSystem("Well FX");
+		
+		/*if (GetGlobalVarInt("MusicPlaying") == 1)
+			{
+				PlayMusic("SearchTest1.ogg", true, 0.28, 6, 1, true);
+				SetGlobalVarInt("MusicPlaying",0);
+			}*/
+	}
+	
+}
+
+void PortalAlignedDead(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1)
+	{
+		SetEntityActive("SymCrankWater",false);
+		SetEntityActive("SymCrankTemple",false);
+		SetEntityActive("SymCrankDead",true);
+	if (GetGlobalVarInt("Rod1Fused") == 1)
+		{
+			SetLightVisible("SelectLight_1", true);
+			SetLightVisible("DeadSpot_1", true);
+			
+			SetGlobalVarInt("PortalDest", 1);
+			
+			FadeLightTo("DeadPoint", 0.287, 0.072, 0.087, 1, -1, 0.65);
+			FadeLightTo("DeadSpot", 0.148, 0.19, 0.293, 1, -1, 0.65);
+			
+			PlaySoundAtEntity("Portal Static", "p_static_loop", "CrankAlignWater", 1.0, true);
+			PlaySoundAtEntity("Portal Amb", "", "PortalGraphics", 1.0, false);
+			PlaySoundAtEntity("Well Main", "p_main_loop", "WellFX", 1.0, false);
+			
+			CreateParticleSystemAtEntity("Portal Open", "ps_portal_fx","PortalGraphics", false);
+			SetEntityActive("PortalExamineClosed",false);
+			SetEntityActive("PortalInteract",true);
+			
+			CreateParticleSystemAtEntity("Well FX", "ps_electro_bolt_small","WellFX", false);
+			
+			//portal 3 fx
+			CreateParticleSystemAtEntity("Portal Open", "ps_portal_fx","Portal3Graphics", false);
+			SetEntityActive("Portal3Interact",true);
+			//portal 3 fx
+		}
+	}
+	else if (alState == -1)
+	{
+		SetLightVisible("DeadSpot_1", false);
+		SetLightVisible("SelectLight_1", false);
+		SetGlobalVarInt("PortalDest", 0);
+		FadeLightTo("DeadSpot", 0, 0, 0, 0, -1, 0.65);
+		FadeLightTo("DeadPoint", 0, 0, 0, 0, -1, 0.65);
+		StopSound("Portal Static", 1.0);
+		StopSound("Portal Amb", 1.0);
+		StopSound("Well Main", 1.0);
+		DestroyParticleSystem("Portal Open");
+		SetEntityActive("PortalExamineClosed",true);
+		SetEntityActive("PortalInteract",false);
+		DestroyParticleSystem("Well FX");
+	}
+	
+}
+
+void CrankSmallMessage(string &in asEntity)
+{
+	SetMessage("Message", "08smallcrank", 2);
+}
+
+void CrankSmallMessage2(string &in asEntity)
+{
+	SetMessage("Message", "08smallcrank2", 2);
+}
+
+void PortalJump(string &in asEntity)
+{
+	AddTimer("",0.45,"PortalWarp");
+	SetEntityActive("PortalInteract",false);
+	FadePlayerFOVMulTo(0.5, 4);
+	FadeRadialBlurTo(5, 0.4);
+	FadeSepiaColorTo(1, 0.4);
+}
+
+void PortalWarp(string &in asTimer)
+{
+	SetEntityActive("PortalInteract",true);
+	FadePlayerFOVMulTo(1, 2);
+	FadeRadialBlurTo(0, 1.6);
+	FadeSepiaColorTo(0, 1.6);
+	if (GetGlobalVarInt("PortalDest") == 1)
+		{
+			TeleportPlayer("studium");
+		}
+	if (GetGlobalVarInt("PortalDest") == 2)
+		{
+			TeleportPlayer("AltTemple");
+			StopSound("Silence", 1.0);
+			StopMusic(3,1);
+			RemoveTimer("Cloth Scares");
+			//PlayMusic("ort_descent_pt2.ogg", true, 1.0, 12, 1, true);
+			if (GetLocalVarInt("YusefActive") == 1)
+				{
+					SetEntityActive("cloakedman_s_3",true);
+				}
+		}
+	if (GetGlobalVarInt("PortalDest") == 3)
+		{
+			TeleportPlayer("End");
+			StopSound("Silence", 1.0);
+			PlayMusic("Blank.ogg", true, 1, 6, 10, true);
+			RemoveTimer("Cloth Scares");
+		}
+}
+
+void Portal2Jump(string &in asEntity)
+{
+	AddTimer("",0.45,"Portal2Warp");
+	//SetEntityActive("PortalInteract",false);
+	FadePlayerFOVMulTo(0.5, 4);
+	FadeRadialBlurTo(5, 0.4);
+	FadeSepiaColorTo(1, 0.4);
+}
+
+void Portal2Warp(string &in asTimer)
+{
+	FadeRadialBlurTo(0, 1.6);
+	FadeSepiaColorTo(0, 1.6);
+	FadePlayerFOVMulTo(1, 2);
+	TeleportPlayer("PortalRoom");
+	AddTimer("Cloth Scares",RandInt(30,70),"TimerClothScares");
+	PlaySoundAtEntity("Silence", "kb_basin_s", "Player", 4.0, true);
+	PlayMusic("SearchTest2.ogg", true, 0.55, 6, 1, true);
+	
+	if ((GetLocalVarInt("Rod3Grabbed") == 1) && (GetLocalVarInt("YusefActive") == 0))
+	{
+		AddEntityCollideCallback("Player", "StudiumEnemyTrigger", "StudiumEnemy", true, 0);
+		AddEntityCollideCallback("Player", "Cloak3SearchTrigger", "Cloak3Search", true, 0);
+		AddEntityCollideCallback("Player", "YusefChaseTrigger", "YusefChase", true, 0);
+		CheckPoint("Pen Final Checkpoint", "WellRoom_1", "", "", "");
+	}
+	
+	SetEntityActive("AddScreechTrigger",false);
+	
+	if (GetLocalVarInt("YusefActive") == 1)
+	{
+		SetEntityActive("cloakedman_s_3",true);
+		TeleportEnemyToNode("cloakedman_s_3", "GhostNode_9", false);
+	}
+}
+
+void Portal3Jump(string &in asEntity)
+{
+	AddTimer("",0.45,"Portal3Warp");
+	FadePlayerFOVMulTo(0.5, 4);
+	FadeRadialBlurTo(5, 0.4);
+	FadeSepiaColorTo(1, 0.4);
+}
+
+void Portal3Warp(string &in asTimer)
+{
+	FadeRadialBlurTo(0, 1.6);
+	FadeSepiaColorTo(0, 1.6);
+	FadePlayerFOVMulTo(1, 2);
+	TeleportPlayer("PortalRoom");
+}
+
+void BoatTouch(string &in asEntity)
+{
+	SetEntityActive("TouchBoaty",false);
+	SetInventoryDisabled(true);
+	FadeOut(3.5);
+	AddTimer("",4.0,"BoatSwitch");
+	SetPlayerMoveSpeedMul(0.3);
+	SetPlayerRunSpeedMul(0.3);
+	SetPlayerLookSpeedMul(0.3);
+	StopMusic(1, 1);
+	StopMusic(1, 12);
+}
+
+void BoatSwitch(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	TeleportPlayer("BoatSit");
+	FadeIn(5.0);
+	PlaySoundAtEntity("Rowing", "rowboat_paddle_loop", "RowSource", 0, false);
+	PlayMusic("pen_boat_ride.ogg", false, 2.5, 1, 10, false);
+	SetPlayerCrouching(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	AddTimer("",71.3,"MapSwitch");
+	AddTimer("",46.3,"BoatSwitchPost");
+}
+
+void BoatSwitchPost(string &in asTimer)
+{
+	PlaySoundAtEntity("Waterfall", "pen_boat_waterfall", "RowSource", 0, false);
+	FadeOut(12);
+}
+
+void MapSwitch(string &in asTimer)
+{
+	ChangeMap("03_Lichwater", "Start", "", "");
+	// Player stuff
+	SetPlayerCrouching(false);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+}
+
+void YusefChase(string &in asParent, string &in asChild, int alState)
+{
+	ShowEnemyPlayerPosition("cloakedman_s_3");
+	AddTimer("",6.0,"YusefChaseReenable");
+}
+
+void YusefChaseReenable(string &in asTimer)
+{
+	AddEntityCollideCallback("Player", "YusefChaseTrigger", "YusefChase", true, 0);
+}
+
+void YusefFlashEnable(string &in asEntity)
+{
+	AddEntityCollideCallback("Player", "CloakPassTrigger", "CloakSpawn2", true, 0);
+	AddEntityCollideCallback("Player", "CloakPassTrigger_1", "CloakSpawn2", true, 0);
+}
+
+void Portal2Activate(string &in asEntity)
+{
+	PlaySoundAtEntity("Portal 2 Amb", "", "Portal2Graphics", 4.0, false);
+	//SetEntityActive("Portal2Interact",true);
+	SetLocalVarInt("Rod3Grabbed",1);
+	AutoSave();
+}
+
+void StudiumEnemy(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("cloakedman_s_3",true);
+	PlaySoundAtEntity("", "ScreechEvent.snt", "cloakedman_s_3", 0, false);
+	TeleportEnemyToNode("cloakedman_s_3", "GhostNode_34", false);
+	AddTimer("",1.2,"BreatheSound");
+	AlertEnemyOfPlayerPresence("cloakedman_s_3");
+	SetLocalVarInt("YusefActive",1);
+	
+	RemoveTimer("AmbRandom");
+	RemoveTimer("AmbRandom2");
+}
+
+void Cloak3Search(string &in asParent, string &in asChild, int alState)
+{
+	TeleportEnemyToNode("cloakedman_s_3", "GhostNode_7", false);
+	AddTimer("",0.5,"Come");
+}
+
+void Come(string &in asTimer)
+{
+	AlertEnemyOfPlayerPresence("cloakedman_s_3");
+}
+
+void BreatheSound(string &in asTimer)
+{
+	PlaySoundAtEntity("", "run_breathing_s.snt", "OtherScreechSource", 0, false);
+	AddTimer("YusefIdle",RandInt(6,15),"YusefIdleSound");
+}
+
+void YusefIdleSound(string &in asTimer)
+{
+	PlaySoundAtEntity("", "yusef_idle.snt", "cloakedman_s_3", 0, false);
+	AddTimer("YusefIdle",RandInt(6,15),"YusefIdleSound");
+}
+
+void Cloak3MoreNodes(string &in asParent, string &in asChild, int alState)
+{
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_32", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_24", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_26", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_27", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_29", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_30", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_23", 0.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_22", 4.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_21", 4.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_19", 4.0, "");
+	AddEnemyPatrolNode("cloakedman_s_3", "GhostNode_25", 4.0, "");
+}
+
+void AddScreech(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityPlayerInteractCallback("prison_1", "CloakSpawn3", true);
+}
+
+void LubbScreech(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "ScreechEvent.snt", "OtherScreechSource_1", 0, true);
+}
+
+void Unstatic(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics("LargeBarry", false);
+}
+
+void ConnectionScare(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_zither_6_s.snt", "Player", 0.0, false);
+	//StartScreenShake(0.01, 2, 2, 3);
+}
+
+void DoorSlowClink(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "impact_wood_heavy_low.snt", "Player", 0.0, false);
+}
+
+void CornerScare(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_spooky_eerie_wind_drone_s.snt", "Player", 0.0, false);
+	//StartScreenShake(0.01, 2, 2, 3);
+}
+
+void TScare(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_spooky_hightone_whoosh_s.snt", "Player", 0.0, false);
+	//StartScreenShake(0.01, 2, 2, 3);
+	SetEntityActive(asChild,false);
+}
+
+void chains(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "general_chain_rattle_single.snt", "meat_hook_1", 4.2, true);
+}
+
+void AutoSave(string &in asParent, string &in asChild, int alState)
+{
+	AutoSave();
+}
+
+void CloakSpawn1(string &in asParent, string &in asChild, int alState)//HALL CRY
+{
+	//SetEntityActive("cloakedman_1",true);
+	AddTimer("",1.8,"HallCry");
+	AddTimer("AmbRandom",RandInt(40,100),"AmbRandomSound");
+}
+
+void AmbRandomSound(string &in asTimer)
+{
+	PlaySoundAtEntity("","afx_mansion_gallery_creak_s.snt", "Player", 0, false);
+	AddTimer("AmbRandom",RandInt(40,100),"AmbRandomSound");
+}
+
+void AmbRandomSound2(string &in asTimer)
+{
+	PlaySoundAtEntity("","afx_mansion_gallery_creak_s.snt", "Player", 0, false);
+	AddTimer("AmbRandom",RandInt(40,100),"AmbRandomSound");
+}
+
+void HallCry(string &in asTimer)
+{
+	PlaySoundAtEntity("", "ScreechEvent.snt", "ScreechSource", 0, true);
+}
+
+void CloakSpawn2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("cloakedman_s_1",true);
+	
+	SetEntityActive("CloakPassTrigger",false);
+	SetEntityActive("CloakPassTrigger_1",false);
+	
+	TeleportEnemyToNode("cloakedman_s_1", "GhostNode_2", false);
+	PlaySoundAtEntity("", "ScreechEvent.snt", "cloakedman_s_1", 0, false);
+	AddTimer("",6.7,"killem");
+	AddTimer("AmbRandom2",RandInt(40,100),"AmbRandomSound2");
+}
+
+void FinalSpawn(string &in asParent, string &in asChild, int alState)
+{
+if (GetGlobalVarInt("RodsConnected") == 6){
+	SetEntityActive("cloakedman_s_2",true);
+	ShowEnemyPlayerPosition("cloakedman_s_2");
+	}
+}
+
+void CloakSpawn3(string &in asEntity)
+{
+	PlaySoundAtEntity("", "ScreechEvent.snt", "OtherScreechSource", 0, false);
+}
+
+void Quest1Timer(string &in asTimer)
+{
+	AddQuest("cloaked","cloaked");
+}
+
+void killem(string &in asTimer)
+{
+	TeleportEnemyToNode("cloakedman_s_1", "GhostNode_1", false);
+	AddTimer("",1.0,"killem2");
+}
+
+void killem2(string &in asTimer)
+{
+	SetEntityActive("cloakedman_s_1",false);
+	AddTimer("",9,"EnableStudiumScare");
+}
+
+void EnableStudiumScare(string &in asTimer)
+{
+	SetEntityActive("StudiumScareTrigger",true);
+}
+
+void TorchDouse(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("bloweh", "ps_dust_push_09", "DouseSource", false);
+	PlaySoundAtEntity("", "general_wind_whirl_quiet.snt", "torch_static01_1", 3.6, false);
+	AddTimer("",1.9,"dousem");
+	PlayMusic("SearchTest1.ogg", true, 0.28, 6, 1, true);
+}
+
+void StudiumScare(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "door_prison_open.snt", "DoorSlamSource", 0, false);
+	PlayMusic("cloakedman_s_danger.ogg", true, 1, 6, 3, true);
+	AddTimer("",14,"StopFakeEnemyMusic");
+	SetEntityActive("corpse_male_leg_1",true);
+	SetEntityActive("blood_spatter01_1",true);
+	SetEntityActive("blood_spatter02_1",true);
+	SetEntityActive("blood_spatter03_1",true);
+	SetEntityActive("blood_spatter04_1",true);
+}
+
+void StudiumScare2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_zither_11_pt1.snt", "Player", 0, false);
+	PlayMusic("cloakedman_s_danger.ogg", true, 1, 6, 3, true);
+	AddTimer("",14,"StopFakeEnemyMusic");
+}
+
+void StudiumScare3(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_zither_11_pt2.snt", "Player", 0, false);
+}
+
+void StopFakeEnemyMusic(string &in asTimer)
+{
+	StopMusic(5,3);
+}
+
+void Music1(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("29_amb_end_daniel.ogg", false, 0.75, 5, 0, false);
+}
+
+void RemoveExamine(string &in asEntity)
+{
+	SetEntityActive(asEntity,false);
+	if (asEntity == "PortalExamine")
+		{
+			AddQuest("penportal","penportal");
+			SetMessage("Message","05bridge_out",0);
+		}
+	else if (asEntity == "Portal2Interact")
+		{
+			TeleportPlayer("PortalRoom");
+		}
+	else if (asEntity == "SnakeExamine")
+		{
+			AddDiary("Snake", "diary_snake"); 
+			SetMessage("Message", "CopyDrawing", 3);
+			GiveHint("maphint", "Hints", "HintDrawing", -1);
+			PlayGuiSound("ui_drawing_copy.ogg", 1);
+		}
+		
+}
+
+void NotLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}

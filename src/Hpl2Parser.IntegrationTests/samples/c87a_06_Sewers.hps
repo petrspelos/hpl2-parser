@@ -1,0 +1,290 @@
+void OnStart()
+	{
+		PlayMusic("18_amb.ogg", true, 1, 1, 1, true);
+		AddEntityCollideCallback("Player", "spawn_brute_area1", "spawn_brute1", false, 1);
+		AddEntityCollideCallback("Player", "spawn_brute_noattack", "spawn_brute_noattack", true, 1);
+		AddEntityCollideCallback("brute_noattack", "despawn_noattack", "despawn_brute_noattack", true, 1);
+		SetEntityPlayerLookAtCallback("script_notice_scratches", "scratches_notice", true);
+		AddUseItemCallback("break_grate_hammer", "stone_hammer_1", "break_grate", "break_grate_with_hammer", false);
+		AddEntityCollideCallback("Player", "script_activate_lurker1", "spawn_lurker1", true, 1);
+		AddUseItemCallback("", "escape_key", "escape_door", "UsedKeyOnDoor1", true);
+		AddQuest("escape_sewers_quest", "escapesewers");
+		AutoSave();
+		SetGlobalVarInt("Water_Flow_OK", 0);
+	}
+
+void escape_door_locked1(string &in asEntity)
+	{
+		if(GetSwingDoorLocked("escape_door") == true)
+			{
+				SetMessage("Messages", "escape_door", 5);
+			}
+	}
+
+void spawn_brute1(string &in asParent, string &in asChild, int alState)
+	{
+		if(HasItem("escape_key") == true)
+			{
+				SetEntityActive("brute1", true);
+				AddEnemyPatrolNode("brute1", "PathNodeArea_1", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_2", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_3", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_4", 1, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_5", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_6", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_7", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_8", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_9", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_10", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_11", 2, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_12", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_13", 1, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_14", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_15", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_16", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_17", 0.001, "");
+				AddEnemyPatrolNode("brute1", "PathNodeArea_18", 0.001, "");
+				RemoveEntityCollideCallback("Player", "spawn_brute_area1");
+				AddEntityCollideCallback("Player", "despawn1", "despawn_brute1", false, 1);
+			}
+	}
+
+void despawn_brute1(string &in asParent, string &in asChild, int alState)
+	{
+		if(GetEntityExists("brute1") == true)
+			{
+				FadeEnemyToSmoke("brute1", false);
+			}
+	}
+
+void spawn_brute_noattack(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("look_here_noattack", 5, 5, "");
+		SetEntityActive("brute_noattack", true);
+		AddEnemyPatrolNode("brute_noattack", "PathNodeArea_19", 0.001, "");
+		AddEnemyPatrolNode("brute_noattack", "PathNodeArea_20", 6, "");
+		AddEnemyPatrolNode("brute_noattack", "PathNodeArea_21", 0.001, "");
+		AddEnemyPatrolNode("brute_noattack", "PathNodeArea_22", 0.001, "");
+	}
+
+void despawn_brute_noattack(string &in asParent, string &in asChild, int alState)
+	{
+		FadeEnemyToSmoke("brute_noattack", false);
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+	}
+
+void spawn_lurker1(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("waterlurker_1", true);
+		AddEnemyPatrolNode("waterlurker_1", "PathNodeArea_23", 0.001, "");
+		AddEnemyPatrolNode("waterlurker_1", "PathNodeArea_24", 0.001, "");
+		AddEnemyPatrolNode("waterlurker_1", "PathNodeArea_25", 0.001, "");
+		AddEnemyPatrolNode("waterlurker_1", "PathNodeArea_26", 0.001, "");
+		ShowEnemyPlayerPosition("waterlurker_1");
+		AddEntityCollideCallback("Player", "despawn_lurker1_1", "despawn_lurker", true, 1);
+		AddEntityCollideCallback("Player", "despawn_lurker1_2", "despawn_lurker", true, 1);
+	}
+
+void despawn_lurker(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("waterlurker_1", false);
+	}
+
+void trapped(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("trapped_broken1", false);
+		SetEntityActive("trapped_grate", true);
+		AddEntityCollideCallback("Player", "trapped_notice_script", "trapped_notice", false, 1);
+		PlaySoundAtEntity("bars_repair1", "metal_walk.snt", "trapped_grate", 0, false);
+		AddTimer("trig1", 0.5f, "bars_repair_sound2");
+		AddTimer("trig1", 1.0f, "bars_repair_sound3");
+		AddTimer("trig1", 1.2f, "bars_repair_sound4");
+		AddTimer("trig1", 1.5f, "bars_repair_sound5");
+	}
+
+void bars_repair_sound2(string &in asTimer)
+	{
+		PlaySoundAtEntity("bars_repair2", "metal_walk.snt", "trapped_grate", 0, false);
+	}
+
+void bars_repair_sound3(string &in asTimer)
+	{
+		PlaySoundAtEntity("bars_repair3", "metal_walk.snt", "trapped_grate", 0, false);
+	}
+
+void bars_repair_sound4(string &in asTimer)
+	{
+		PlaySoundAtEntity("bars_repair4", "metal_walk.snt", "trapped_grate", 0, false);
+	}
+
+void bars_repair_sound5(string &in asTimer)
+	{
+		PlaySoundAtEntity("bars_repair5", "metal_walk.snt", "trapped_grate", 0, false);
+	}
+
+void trapped_notice(string &in asParent, string &in asChild, int alState)
+	{
+		if(GetEntityExists("trapped_grate") == true)
+			{
+				SetMessage("Messages", "trapped_txt", 5);
+				RemoveEntityCollideCallback("Player", "trapped_notice_script");
+			}
+	}
+
+void scratches_notice(string &in asEntity, int alState)
+	{
+		SetMessage("Messages", "scratches_notice_txt", 5);
+	}
+
+/////Flow Levers Puzzle/////
+
+void Flow_levers(string &in asEntity, int alState)
+	{
+		if(alState == -1){
+			if(asEntity == "flow_lever_1") SetLocalVarInt("up_"+asEntity, 1);
+			else if(asEntity == "flow_lever_2") SetLocalVarInt("up_"+asEntity, 5);
+			else if(asEntity == "flow_lever_3") SetLocalVarInt("up_"+asEntity, 6);
+			else if(asEntity == "flow_lever_4") SetLocalVarInt("up_"+asEntity, 5);
+			else if(asEntity == "flow_lever_5") SetLocalVarInt("up_"+asEntity, 2);
+			else if(asEntity == "flow_lever_6") SetLocalVarInt("up_"+asEntity, 2);
+
+			CheckValue(asEntity);
+		}
+		else if(alState == 1){
+			if(asEntity == "flow_lever_1") SetLocalVarInt("down_"+asEntity, 3);
+			else if(asEntity == "flow_lever_2") SetLocalVarInt("down_"+asEntity, 3);
+			else if(asEntity == "flow_lever_3") SetLocalVarInt("down_"+asEntity, 5);
+			else if(asEntity == "flow_lever_4") SetLocalVarInt("down_"+asEntity, 1);
+			else if(asEntity == "flow_lever_5") SetLocalVarInt("down_"+asEntity, 2);
+			else if(asEntity == "flow_lever_6") SetLocalVarInt("down_"+asEntity, 4);
+
+			CheckValue(asEntity);
+		}
+		else if(alState == 0){
+			SetLocalVarInt("up_"+asEntity, 0);
+			SetLocalVarInt("down_"+asEntity, 0);
+		}
+		if(GetLocalVarInt("up_value") == 5 && GetLocalVarInt("down_value") == 9){
+			SetGlobalVarInt("Water_Flow_OK", 1);
+			SetLocalVarInt("trapped_begin", 1);
+
+			for(int i=1;i<7;i++){
+				SetLeverStuckState("flow_lever_"+i, GetLeverState("flow_lever_"+i), true);
+			}
+			for(int i=1;i<=6;i++){
+				GiveSanityBoostSmall();
+				SetMessage("Messages", "Flow_OK", 5);
+				AddEntityCollideCallback("Player", "trapped_script", "trapped", true, 1);
+			}
+		}
+	}
+
+void CheckValue(string &in asEntity)
+	{
+		SetLocalVarInt("up_value", 0);
+		SetLocalVarInt("down_value", 0);
+
+		for(int i=1;i<=6;i++){
+			AddLocalVarInt("up_value", GetLocalVarInt("up_flow_lever_"+i));
+			AddLocalVarInt("down_value", GetLocalVarInt("down_flow_lever_"+i));
+		}
+	}
+
+/////End Flow Levers Puzzle/////
+
+void grate_breakable_touch(string &in asEntity)
+	{
+		SetMessage("Messages", "grate_breakable_touch_txt", 5);
+	}
+
+/////Break Grate/////
+
+void break_grate_with_hammer(string &in asItem, string &in asEntity)
+	{
+		SetPlayerActive(false);
+		FadeOut(1);
+		AddTimer("trig1", 3.0f, "TimerFirstHit");
+	}
+
+void TimerFirstHit(string &in asTimer)
+	{
+		PlaySoundAtEntity("gratehit1", "impact_metal_high.snt", "break_grate", 0.1f, false);
+		AddTimer("trig1", 1.5f, "TimerSecondHit");
+		AddTimer("trig1", 2.5f, "TimerThirdHit");
+		AddTimer("trig1", 3.0f, "TimerFourthHit");
+		AddTimer("trig1", 5.0f, "TimerFifthHit");
+		AddTimer("trig1", 6.5f, "TimerSixthHit");
+	}
+
+void TimerSecondHit(string &in asTimer)
+	{
+		PlaySoundAtEntity("gratehit2", "impact_metal_high.snt", "break_grate", 0.1f, false);
+	}
+
+void TimerThirdHit(string &in asTimer)
+	{
+		PlaySoundAtEntity("gratehit3", "impact_metal_high.snt", "break_grate", 0.1f, false);
+	}
+
+void TimerFourthHit(string &in asTimer)
+	{
+		PlaySoundAtEntity("gratehit4", "impact_metal_high.snt", "break_grate", 0.1f, false);
+	}
+
+void TimerFifthHit(string &in asTimer)
+	{
+		PlaySoundAtEntity("gratehit5", "impact_metal_high.snt", "break_grate", 0.1f, false);
+	}
+
+void TimerSixthHit(string &in asTimer)
+	{
+		PlaySoundAtEntity("gratehit6", "impact_metal_high.snt", "break_grate", 0.1f, false);
+		AddTimer("trig1", 1.5f, "TimerFadeIn");
+		SetEntityActive("grate_broken", true);
+		SetEntityActive("break_grate", false);
+	}
+
+void TimerFadeIn(string &in asTimer)
+	{
+		FadeIn(1);
+		SetPlayerActive(true);
+	}
+
+/////End Break Grate/////
+
+void UsedKeyOnDoor1(string &in asItem, string &in asEntity)
+	{
+		SetSwingDoorLocked("escape_door", false, false);
+		PlaySoundAtEntity("", "unlock_door", "escape_door", 0, false);
+		RemoveItem("escape_key");
+		CompleteQuest("escape_sewers_quest", "escapesewers");
+	}
+
+void stairwell_shortcut(string &in asEntity)
+	{
+		if(HasItem("mainhall_key") == true && GetGlobalVarInt("Water_Flow_OK") == 1)
+			{
+				FadeOut(2);
+				AddTimer("trig1", 3.0f, "TimerChangeStairwell");
+			}
+		if(HasItem("mainhall_key") == false && GetGlobalVarInt("Water_Flow_OK") == 1)
+			{
+				SetMessage("Messages", "no_key", 5);
+			}
+		if(HasItem("mainhall_key") == true && GetGlobalVarInt("Water_Flow_OK") == 0)
+			{
+				SetMessage("Messages", "fix_waterflow", 5);
+			}
+		if(HasItem("mainhall_key") == false && GetGlobalVarInt("Water_Flow_OK") == 0)
+			{
+				SetMessage("Messages", "no_key_fix_waterflow", 5);
+			}
+	}
+
+void TimerChangeStairwell(string &in asTimer)
+	{
+		ChangeMap("04_Stairwell.map", "PlayerStartArea_4", "", "");
+		StopMusic(1, 1);
+	}

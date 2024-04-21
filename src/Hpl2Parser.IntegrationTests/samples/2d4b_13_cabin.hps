@@ -1,0 +1,544 @@
+
+ void CreaksTimer(string &in asTimer2)
+ {
+	PlaySoundAtEntity("Creaks", "afx_mansion_attic_creak", "AreaCreaks_"+RandInt(6,9), 0.0, false);
+	
+	AddTimer("CreaksTimer", RandFloat(5.0f, 12.0f), "CreaksTimer");
+ }
+
+//===========================================
+     // This runs when the map first starts
+     void OnStart()
+
+    {
+        CreateDataCache();      
+StopMusic(2,0);
+StopMusic(2,1);
+StopMusic(2,2);
+StopMusic(2,3);
+StopMusic(2,4);
+StopMusic(2,5);
+StopMusic(2,6);
+StopMusic(2,7);
+StopMusic(2,8);
+StopMusic(2,9);
+StopMusic(2,10);
+StopMusic(2,11);
+StopMusic(2,12);
+StopMusic(2,13);
+StopMusic(2,14);
+			  
+			  SetMapDisplayNameEntry("Cabin");		  
+			  
+			  AddTimer("asTimer2", 5.0f, "CreaksTimer");
+			  
+			  SetLocalVarInt("BathState", 0);
+			  SetLocalVarInt("LeverState", 0);
+			  SetLocalVarInt("TarGun", 0);
+			  
+			  PreloadParticleSystem("ps_area_fog.ps");
+			  
+			  AddEntityCollideCallback("RightAltarCandle", "RightAltarCandleCollider", "ChurchAltarEvent", true, 1);
+			  AddEntityCollideCallback("lever_small01_1", "ScriptArea_2", "unlockdoor", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_13", "DoorSound", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_15", "BruteOn", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_22", "BruteOn2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_3", "BruteOff", true, 1);
+			  AddEntityCollideCallback("servant_grunt_2", "ScriptArea_17", "TriggersOn", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_18", "TriggersOn2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_19", "CreakTriggersOff", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_20", "CreakTriggersOn", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_21", "PicFall", true, 1);
+			  AddEntityCollideCallback("painting11_fall_1", "ScriptArea_23", "Scared", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_24", "Sound1", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_28", "Sound2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_30", "Sound3", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_32", "Sound4", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_34", "Sound5", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_36", "Sound6", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_38", "Sound7", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_40", "Sound8", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_42", "Sound9", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_44", "Sound10", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_46", "Sound11", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_48", "Sound12", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_26", "ChildScare", true, 1);
+			  AddEntityCollideCallback("child_skipping_silent_1", "ScriptArea_27", "ChildGo", true, 1);
+			  
+			  //SetLanternLitCallback("NoUse");
+			  //SetLanternLitCallback("DenyLantern");
+			  
+			  SetEntityPlayerInteractCallback("ExamineArea_1", "MansionMessage", true);
+			  SetEntityPlayerInteractCallback("potion_sanity_1", "AreaAct", true);
+			  SetEntityPlayerInteractCallback("enfield_rifle_pickup_2", "MonsterInteractArea", true);
+			  SetEntityPlayerInteractCallback("bucket_of_tar_1", "TarCheck", true);
+			  SetEntityPlayerInteractCallback("note_scroll_1", "MonsterNote", true);
+			  
+			  SetEntityConnectionStateChangeCallback("lever_small01_1", "OpenSecret2");
+					
+     }    
+	 
+	 void MansionMessage(string &in asEntity)
+	
+			{
+			
+					SetMessage("Messages", "ExploreCabin", 4);
+			
+			
+			}
+	 
+	void MonsterNote(string &in asEntity)
+		
+		{
+				PlayMusic("13_monster_note", true, 0.45, 1, 3, true);
+				AddTimer("", 0.3, "StopNoteMusic3");
+		}
+
+		void StopNoteMusic3(string &in asTimer)
+		
+		{
+				StopMusic(3, 3);
+		}
+	
+	void CreakTriggersOff(string &in asParent, string &in asChild, int alState)
+			
+            {
+                SetEntityActive("AreaCreaks_6", false);
+				SetEntityActive("AreaCreaks_7", false);
+				SetEntityActive("AreaCreaks_8", false);
+				SetEntityActive("AreaCreaks_9", false);
+				AddTimer("", 1, "TimerA");
+	        } 
+	
+	void CreakTriggersOn(string &in asParent, string &in asChild, int alState)
+			
+            {
+                SetEntityActive("AreaCreaks_6", true);
+				SetEntityActive("AreaCreaks_7", true);
+				SetEntityActive("AreaCreaks_8", true);
+				SetEntityActive("AreaCreaks_9", true);
+				AddTimer("", 1, "TimerB");
+	        } 
+	
+	void PicFall(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropStaticPhysics("painting11_fall_1", false);
+	}
+	
+	void Scared(string &in asParent, string &in asChild, int alState)
+	
+	{
+			GiveSanityDamage(10, true);
+	}
+	
+	void ChildScare(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("child_skipping_silent_1", true);
+			AddEnemyPatrolNode("child_skipping_silent_1", "PathNodeArea_47", 0.001, "");
+			PlaySoundAtEntity("", "afx_cellar_child_laughter.snt", "Player", 0, false);
+			SetPlayerMoveSpeedMul(0.4);
+			SetPlayerRunSpeedMul(0.4);
+			FadeImageTrailTo(1.2, 2);
+			FadeRadialBlurTo(0.02, 1);
+			
+	}
+	
+	void Sound1(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_cellar_pig_office_doorslam_1.snt", "ScriptArea_25", 0, false);
+	}
+	
+	void Sound2(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_stereo_whisper.snt", "ScriptArea_29", 0, false);
+	}
+	
+	void Sound3(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_stereo_whisper.snt", "ScriptArea_31", 0, false);
+			SetEntityActive("ScriptArea_32", true);
+	}
+	
+	void Sound4(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_mansion_backarea_abstract.snt", "Player", 0, false);
+	}
+	
+	void Sound5(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_footsteps_above_wooden.snt", "ScriptArea_35", 0, false);
+	}
+	
+	void Sound6(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_footsteps_above_wooden.snt", "ScriptArea_37", 0, false);
+	}
+	
+	void Sound7(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_door_close_quiet.snt", "ScriptArea_39", 0, false);
+	}
+	
+	void Sound8(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "03_crew_talk.snt", "ScriptArea_41", 0, false);
+	}
+	
+	void Sound9(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "flashback_flash.snt", "ScriptArea_43", 0, false);
+	}
+	
+	void Sound10(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "spooky_wind_whirl_quieter.snt", "ScriptArea_45", 0, false);
+	}
+	
+	void Sound11(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "scare_wood_creak_mix.snt", "ScriptArea_47", 0, false);
+			SetEntityActive("ScriptArea_48", true);
+	}
+	
+	void Sound12(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "scare_wood_creak_mix.snt", "ScriptArea_49", 0, false);
+	}
+	
+	void ChildGo(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("child_skipping_silent_1", false);
+			SetPlayerMoveSpeedMul(1);
+			SetPlayerRunSpeedMul(1);
+			FadeImageTrailTo(0, 3);
+			FadeRadialBlurTo(0, 3);
+	}
+	
+	void TimerA(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_20", true);
+				SetEntityActive("ScriptArea_19", false);
+		
+			}
+	
+	void TimerB(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_19", true);
+				SetEntityActive("ScriptArea_20", false);
+		
+			}
+	
+	void TriggersOn(string &in asParent, string &in asChild, int alState)
+			
+            {
+                SetEnemyDisableTriggers("servant_grunt_2", false);
+            } 
+		
+	void TriggersOn2(string &in asParent, string &in asChild, int alState)
+			
+            {
+                SetEnemyDisableTriggers("servant_grunt_2", false);
+            } 
+	
+	
+	void DenyLantern(bool bState)
+{
+    SetLanternActive(false, false);
+    SetMessage("Messages", "NoLantern", 5);
+} 
+	
+	void TarCheck(string &in asEntity)
+	
+	{
+			AddLocalVarInt("TarGun", 1);
+			SetGlobalVarInt("PickedBucketOfTar",1);
+			
+			CheckPoint("check01","PlayerStartArea_3", "","", "");
+			CheckTarGunCount();
+	}
+	
+		void AreaAct(string &in asEntity)
+{
+	SetEntityActive("ScriptArea_26", true);
+	SetEntityActive("wood_panneling_door_6", false);
+	SetEntityActive("wood_panneling_door_10", true);
+	
+}
+	
+	void MonsterInteractArea(string &in asEntity)
+{
+	SetEntityActive("ScriptArea_13", true);
+	
+	CheckPoint("check02","PlayerStartArea_4", "","", "");
+	AddLocalVarInt("TarGun", 1);
+	CheckTarGunCount();
+	
+}
+	
+	void CheckTarGunCount()
+{
+if(GetLocalVarInt("TarGun") == 2) 
+	{
+		SetMessage("Messages", "Leave", 5);
+		SetEntityActive("factory_corridor_01_door_level_1", false);
+		SetEntityActive("ExitDoor", true);
+		SetEntityActive("ScriptArea_22", true);
+		SetEntityActive("ScriptArea_15", true);
+		SetEntityActive("ExamineArea_1", false);
+		
+	}
+}
+	//void BruteOff(string &in asParent, string &in asChild, int alState)
+	
+	//{
+			//SetEntityActive("servant_grunt_2", false);
+	//}
+	
+	void BruteOn(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("servant_grunt_2", true);
+			SetEntityActive("ScriptArea_22", false);
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_1", 6, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_3", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_2", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_4", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_5", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_6", 5, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_7", 7, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_8", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_9", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_10", 5, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_11", 10, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_12", 10, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_13", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_14", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_15", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_16", 8, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_17", 4, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_18", 8, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_19", 10, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_20", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_21", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_22", 4, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_23", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_24", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_25", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_26", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_27", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_28", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_29", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_30", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_31", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_32", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_33", 0.001, "");
+	}
+	
+	void BruteOn2(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("servant_grunt_2", true);
+			SetEntityActive("ScriptArea_15", false);
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_87", 6, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_62", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_30", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_26", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_82", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_83", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_84", 5, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_27", 7, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_30", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_3", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_2", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_4", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_5", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_6", 5, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_7", 7, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_8", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_9", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_10", 5, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_11", 10, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_12", 10, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_13", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_14", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_15", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_16", 8, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_17", 4, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_18", 8, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_19", 10, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_20", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_21", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_22", 4, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_23", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_24", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_25", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_26", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_27", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_28", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_29", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_30", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_31", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_32", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_33", 0.001, "");
+	}
+	
+	void DoorSound(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "joint_factory_office_door_locked", "ScriptArea_14", 0, false);
+	}
+	
+	//void LanternOff(string &in asParent, string &in asChild, int alState)
+	
+	//{
+			//SetLanternDisabled(true);
+			
+	//}
+	
+	void unlockdoor(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetSwingDoorLocked("wood_panneling_door_9", false, false);
+			SetSwingDoorClosed("wood_panneling_door_9", false, false);
+			SetSwingDoorDisableAutoClose("wood_panneling_door_9", true);
+			SetLeverStuckState("lever_small01_1", 1, true);
+			AddTimer("", 0.5, "Unlock");
+			AddTimer("", 0.8, "Unstick");
+			
+	}
+	
+	
+	
+		
+		void Unlock(string &in asTimer)
+		
+		{
+				PlaySoundAtEntity("", "afx_mans_killroom_unlock", "wood_panneling_door_9", 0, false);
+				AddPropForce("wood_panneling_door_9", 0, 0, -3000, "world");
+		}
+		
+		void Unstick(string &in asTimer)
+		
+		{
+				SetLeverStuckState("lever_small01_1", 0, false);
+		}
+		
+void OpenSecret2(string &in asEntity, int alState)
+					
+						 {
+								if(GetLeverState("lever_small01_1")==-1)
+							 {
+								//AddBodyForce("wood_panneling_door_9", 1500.0f, 0.0f, 1100.0f, "world");
+								AddPropForce("wood_panneling_door_9", -5500, 0, 0, "world");
+								AddTimer("", 0.8, "DoorShut2");
+								AddTimer("", 1.5, "DoorShut");
+								
+							 }
+							 	
+						}
+						
+						void DoorShut2(string &in asTimer)
+						
+						{
+							AddPropForce("wood_panneling_door_9", -00, 0, 5500, "world");
+						}
+						
+		void DoorShut(string &in asTimer)
+		
+		{
+				SetSwingDoorLocked("wood_panneling_door_9", true, false);
+				//SetLeverStuckState("lever_small01_1", 1, true);
+				PlaySoundAtEntity("", "afx_mans_killroom_unlock", "wood_panneling_door_9", 0, false);
+		}
+		
+	
+	//ROTATING BATH//
+	
+	void ChurchAltarEvent (string &in asParent, string &in asChild, int alState)
+
+	
+	{
+		
+	//if (alState == -1 && GetLocalVarInt("BathState") == 0)
+	
+	{
+		SetEntityActive("BathTempBlockBox", false);
+		SetEntityActive("RotatingBath_1", false);
+		CreateEntityAtArea("RotatingBath", "revolving_bath.ent", "ScriptArea_1", false);
+		SetEntityInteractionDisabled("RightAltarCandle", true);
+		SetPropStaticPhysics("RightAltarCandle", true);
+		PlaySoundAtEntity("", "candle_church_close.snt", "RightAltarCandle", 0.0f, false);
+		SetMoveObjectState("RotatingBath", 1);
+		PlaySoundAtEntity("", "afx_event_mansion_bathturn_fwd_2D", "RotatingBath", 0, false);
+		PlaySoundAtEntity("", "afx_event_mansion_bathturn_fwd_3D", "RotatingBath", 0, false);
+		//PlayMusic("music_bath_spin_sting_24.ogg", false, 0.6f, 0.0f, 6, false);
+		
+		SetLocalVarInt("BathState", 1);
+		return;
+	}
+	
+}
+
+
+//END ROTATING BATH//
+			
+	
+			
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+  {
+			  //ReplaceEntity("RotatingBath", "", "RotatingBath", "revolving_bath.ent", false);
+			  PreloadSound("afx_mans_killroom_unlock.snt");
+			  PreloadSound("afx_events_leveltransition_cellar_exit.snt");
+			  PreloadSound("candle_church_close.snt");
+			  PreloadSound("afx_event_mansion_bathturn_fwd_2D.snt");
+			  PreloadSound("afx_event_mansion_bathturn_fwd_3D.snt");
+			  PreloadSound("joint_factory_office_door_locked.snt");	
+			  PreloadSound("afx_cellar_pig_office_doorslam_1.snt");
+			  PreloadSound("afx_cellar_child_laughter.snt");
+			  PreloadSound("afx_spooky_stereo_whisper.snt");
+			  PreloadSound("afx_spooky_mansion_backarea_abstract.snt");
+			  PreloadSound("afx_spooky_footsteps_above_wooden.snt");
+			  PreloadSound("afx_spooky_door_close_quiet.snt");
+			  PreloadSound("flashback_flash.snt");
+			  PreloadSound("03_crew_talk.snt");
+			  PreloadSound("spooky_wind_whirl_quieter.snt");
+			  PreloadSound("scare_wood_creak_mix.snt");
+			  
+			  PreloadParticleSystem("ps_area_fog.ps");
+			  SetupLoadScreen("LoadingText", "CabinB", 0, "13_loading.png");
+	      SetInDarknessEffectsActive(false);
+		  //PlaySoundAtEntity("", "afx_events_leveltransition_cellar_exit", "factory_corridor_01_door_level_1", 0, false);
+
+PlayMusic("13_cabin_creepy_music", true, 0.4, 1, 1, true);
+AutoSave();
+		       }
+
+
+ 
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+	 
+     }

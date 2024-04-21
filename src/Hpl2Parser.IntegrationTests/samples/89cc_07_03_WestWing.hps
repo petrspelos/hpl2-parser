@@ -1,0 +1,411 @@
+void OnStart()
+	{
+		AddUseItemCallback("", "crowbar_1", "blocked_door", "UsedCrowbarOnDoor", true);
+		AddEntityCollideCallback("crowbar_joint_1", "crowbar_break_area", "CollideAreaBreakDoor", true, 1);
+		SetEntityPlayerInteractCallback("backpassagesdoor_script", "tobackpassages", false);
+		SetEntityPlayerInteractCallback("hallucination_end_script", "hallucination_end", false);
+		AddEntityCollideCallback("Player", "door_slam_script", "slam_door", true, 1);
+		AddEntityCollideCallback("Player", "hallucination_area1", "hallucination1", true, 1);
+		AddEntityCollideCallback("Player", "hallucination_area2", "hallucination2", true, 1);
+		AddEntityCollideCallback("Player", "hallucination_area3", "hallucination3", true, 1);
+		AddEntityCollideCallback("Player", "script_spawn_brute1", "spawn_brute1", true, 1);
+		SetEntityPlayerInteractCallback("orbpiece_indigo_1", "indigo_effect", true);
+	}
+
+void OnEnter()
+	{
+		PlayMusic("10_amb.ogg", true, 1, 1, 1, true);
+	}
+
+/////Player Uses Crowbar to Break Blocked Door/////
+
+void UsedCrowbarOnDoor(string &in asItem, string &in asEntity)
+	{
+		AddTimer("", 0.2, "TimerSwitchShovel");
+		RemoveItem("crowbar_1");
+	}
+
+void TimerSwitchShovel(string &in asTimer)
+	{
+		PlaySoundAtEntity("", "puzzle_place_jar.snt", "", 0, false);
+		SetEntityActive("crowbar_joint_1", true);
+	}
+
+void CollideAreaBreakDoor(string &in asParent, string &in asChild, int alState)
+	{
+		SetPropHealth("blocked_door", 0);
+		PlaySoundAtEntity("", "break_wood_metal", "AreaBreakEffect_1", 0, false);
+		CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaBreakEffect_1", false);
+		CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaBreakEffect_2", false);
+		CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaBreakEffect_3", false);
+		SetEntityActive("crowbar_joint_1", false);
+		SetEntityActive("crowbar_broken_1", true);
+		CompleteQuest("westwing_door_blocked_quest", "westwingdoorblocked");
+	}
+
+/////End Crowbar Interaction/////
+
+/////1st Hallucination/////
+
+void hallucination1(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		FadeOut(0.3);
+
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+		PlaySoundAtEntity("", "guardian_activated3.ogg", "Player", 0, false);
+
+		AddTimer("trig1", 3.5f, "continue_hallucination1");
+
+		SetMessage("Messages", "indigo_hal1", 3);
+
+		StartEffectFlash(0.2, 0.1, 0.3);
+
+		StopMusic(0.01, 1);
+		StartScreenShake(0.1, 10, 0.05, 0.5);
+
+		FadeImageTrailTo(1, 1);
+		FadeSepiaColorTo(1, 1);
+		FadeRadialBlurTo(0.01, 1);
+		FadePlayerRollTo(10, 20, 20);
+		SetPlayerMoveSpeedMul(0.3);
+		SetPlayerRunSpeedMul(0.3);
+		SetPlayerLookSpeedMul(0.5);
+		SetSanityDrainDisabled(true);
+		GiveSanityDamage(300, true);
+	}
+
+void continue_hallucination1(string &in asTimer)
+	{
+		TeleportPlayer("PlayerStartArea_2");
+		SetPlayerActive(true);
+		FadeIn(0.5);
+		PlayMusic("05_event_falling", false, 1, 0.01, 1, false);
+		AddTimer("trig1", 6.5f, "end_hallucination1");
+	}
+
+void end_hallucination1(string &in asTimer)
+	{
+		FadeOut(0.3);
+
+		StartEffectFlash(0.2, 0.1, 0.3);
+		FadeImageTrailTo(0, 1);
+		FadeSepiaColorTo(0, 1);
+		FadeRadialBlurTo(0, 1);
+		FadePlayerRollTo(0, 10, 10);
+		SetPlayerActive(false);
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+		SetPlayerLookSpeedMul(1);
+		SetSanityDrainDisabled(false);
+
+		AddTimer("trig1", 2.0f, "open_eyes_hallucination1");
+		TeleportPlayer("PlayerStartArea_3");
+	}
+
+void open_eyes_hallucination1(string &in asTimer)
+	{
+		FadeIn(0.5);
+		PlayMusic("amb_extra02.ogg", true, 1, 1, 1, true);
+		SetPlayerActive(true);
+	}
+
+/////End 1st Hallucination/////
+
+/////2nd Hallucination/////
+
+void hallucination2(string &in asParent, string &in asChild, int alState)
+	{
+		FadeOut(0.3);
+
+		StopMusic(0.01, 1);
+
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+
+		AddTimer("trig1", 1.0f, "continue_hallucination2");
+		AddTimer("trig1", 0.5f, "spawn_slime");
+
+		StartEffectFlash(0.2, 0.1, 0.3);
+
+		FadeImageTrailTo(400, 1);
+		FadeSepiaColorTo(1000, 1);
+	}
+
+void spawn_slime(string &in asTimer)
+	{
+		SetEntityActive("hal_slime_floor1", true);
+		SetEntityActive("hal_slime_floor2", true);
+		SetEntityActive("hal_slime_floor3", true);
+		SetEntityActive("hal_slime_floor4", true);
+		SetEntityActive("hal_slime_floor5", true);
+		SetEntityActive("hal_slime_floor6", true);
+		SetEntityActive("hal_slime_floor7", true);
+		SetEntityActive("hal_slime_floor8", true);
+		SetEntityActive("hal_slime_floor9", true);
+		SetEntityActive("hal_slime_wall1", true);
+		SetEntityActive("hal_slime_wall2", true);
+		SetEntityActive("hal_slime_ceiling1", true);
+		SetEntityActive("hal_slime_ceiling2", true);
+		SetEntityActive("hal_slime_ceiling3", true);
+		SetEntityActive("hal_slime_ceiling4", true);
+		SetEntityActive("hal_slime_ceiling5", true);
+		SetEntityActive("hal_candles1", true);
+	}
+
+void continue_hallucination2(string &in asTimer)
+	{
+		FadeIn(0.3);
+		PlayMusic("15_event_prisoner.ogg", false, 1, 0.01, 1, false);
+		AddTimer("trig1", 5.0f, "end_hallucination2");
+		AddTimer("trig1", 5.5f, "end_hallucination2_cont");
+		AddTimer("trig1", 5.3f, "despawn_slime");
+		GiveSanityDamage(0, true);
+	}
+
+void end_hallucination2(string &in asTimer)
+	{
+		FadeOut(0.3);
+		StopMusic(1, 1);
+		FadeImageTrailTo(0, 1);
+		FadeSepiaColorTo(0, 1);
+	}
+
+void despawn_slime(string &in asTimer)
+	{
+		SetEntityActive("hal_slime_floor1", false);
+		SetEntityActive("hal_slime_floor2", false);
+		SetEntityActive("hal_slime_floor3", false);
+		SetEntityActive("hal_slime_floor4", false);
+		SetEntityActive("hal_slime_floor5", false);
+		SetEntityActive("hal_slime_floor6", false);
+		SetEntityActive("hal_slime_floor7", false);
+		SetEntityActive("hal_slime_floor8", false);
+		SetEntityActive("hal_slime_floor9", false);
+		SetEntityActive("hal_slime_wall1", false);
+		SetEntityActive("hal_slime_wall2", false);
+		SetEntityActive("hal_slime_ceiling1", false);
+		SetEntityActive("hal_slime_ceiling2", false);
+		SetEntityActive("hal_slime_ceiling3", false);
+		SetEntityActive("hal_slime_ceiling4", false);
+		SetEntityActive("hal_slime_ceiling5", false);
+		SetEntityActive("hal_candles1", false);
+	}
+
+void end_hallucination2_cont(string &in asTimer)
+	{
+		FadeIn(0.3);
+		PlayMusic("amb_extra02.ogg", true, 1, 1, 1, true);
+		FadeImageTrailTo(0, 1);
+		FadeSepiaColorTo(0, 1);
+	}
+
+/////End 2nd Hallucination/////
+
+/////Spawn Brute in Small Library Section/////
+
+void spawn_brute1(string &in asParent, string &in asChild, int alState)
+	{
+		AddTimer("trig1", 15.0f, "spawn_brute1_timer");
+	}
+
+void spawn_brute1_timer(string &in asTimer)
+	{
+		SetEntityActive("brute1", true);
+		AddEnemyPatrolNode("brute1", "PathNodeArea_30", 2, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_47", 0.001, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_43", 0.001, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_39", 0.001, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_36", 4, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_45", 2, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_56", 0.001, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_58", 3, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_111", 0.001, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_83", 0.001, "");
+		AddEnemyPatrolNode("brute1", "PathNodeArea_112", 4, "");
+	}
+
+/////End Spawn Brute/////
+
+/////3rd Hallucination/////
+
+void hallucination3(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		FadeOut(0.3);
+
+		AddTimer("trig1", 0.5f, "begin_hallucination3");
+
+		StopMusic(0.01, 1);
+		StartScreenShake(0.1, 2, 0.05, 0.5);
+	}
+
+void begin_hallucination3(string &in asTimer)
+	{
+		FadeIn(0.3);
+		TeleportPlayer("PlayerStartArea_5");
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+		PlayMusic("search_grunt.ogg", true, 1, 1, 1, true);
+		SetPlayerActive(true);
+		AddEntityCollideCallback("Player", "spawn_grunt1_area", "spawn_grunt1", true, 1);
+		AddEntityCollideCallback("Player", "spawn_grunt2_area", "spawn_grunt2", true, 1);
+		AddEntityCollideCallback("Player", "spawn_grunt3_area", "spawn_grunt3", true, 1);
+		AddEntityCollideCallback("Player", "spawn_grunt4_area", "spawn_grunt4", true, 1);
+		AddEntityCollideCallback("Player", "spawn_grunt5_area", "spawn_grunt5", true, 1);
+		AddEntityCollideCallback("Player", "spawn_grunt6_area", "spawn_grunt6", true, 1);
+	}
+
+void spawn_grunt1(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("grunt1", true);
+		ShowEnemyPlayerPosition("grunt1");
+	}
+
+void spawn_grunt2(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("grunt2", true);
+		ShowEnemyPlayerPosition("grunt2");
+	}
+
+void spawn_grunt3(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("grunt3", true);
+		ShowEnemyPlayerPosition("grunt3");
+	}
+
+void spawn_grunt4(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("grunt4", true);
+		ShowEnemyPlayerPosition("grunt4");
+	}
+
+void spawn_grunt5(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("grunt5", true);
+		ShowEnemyPlayerPosition("grunt5");
+	}
+
+void spawn_grunt6(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("grunt6", true);
+		ShowEnemyPlayerPosition("grunt6");
+	}
+
+void hallucination_end(string &in asEntity)
+	{
+		FadeEnemyToSmoke("grunt6", true);
+		FadeOut(0.3);
+		SetPlayerActive(false);
+		AddTimer("trig1", 0.5f, "end_hallucination3");
+	}
+
+void end_hallucination3(string &in asTimer)
+	{
+		FadeIn(0.3);
+		TeleportPlayer("PlayerStartArea_6");
+		SetPlayerActive(true);
+		AddTimer("trig1", 3.0f, "resume_music_hal3");
+		GiveSanityDamage(200, true);
+	}
+
+void resume_music_hal3(string &in asTimer)
+	{
+		PlayMusic("amb_extra02.ogg", true, 1, 1, 1, true);
+	}
+
+/////End 3rd Hallucination/////
+
+/////Slam Door Event/////
+
+void slam_door(string &in asParent, string &in asChild, int alState)
+	{
+		SetSwingDoorClosed("door_slam", true, true);
+		PlaySoundAtEntity("", "react_breath_slow.snt", "Plaer", 0, false);
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+		PlaySoundAtEntity("", "close_door.snt", "Player", 0, false);
+		PlaySoundAtEntity("", "lurker_hit_wood.snt", "Player", 0, false);
+
+		StopMusic(0.01, 1);
+		PlayMusic("20_event_darkness.ogg", false, 1, 0.01, 0.5, false);
+
+		AddTimer("trig1", 6.0f, "stop_scare_music");
+		GiveSanityDamage(10, true);
+		SetSwingDoorLocked("door_slam", true, true);
+		StartScreenShake(0.1, 4, 0.05, 0.5);
+		PlaySoundAtEntity("", "guardian_activated.snt", "Player", 0, false);
+
+		FadeOut(1);
+		AddTimer("trig1", 1.0f, "FadeInTimer1");
+	}
+
+void FadeInTimer1(string &in asTimer)
+	{
+		FadeIn(1);
+		SetEntityActive("slime_floor_appear1", true);
+		SetEntityActive("slime_floor_appear2", true);
+		SetEntityActive("slime_floor_appear3", true);
+		SetEntityActive("slime_wall_appear1", true);
+		SetEntityActive("slime_wall_appear2", true);
+		SetEntityActive("slime_wall_appear3", true);
+		SetEntityActive("slime_roof_appear1", true);
+		SetEntityActive("slime_door_appear1", true);
+	}
+
+void stop_scare_music(string &in asTimer)
+	{
+		StopMusic(1, 0.5);
+		AddTimer("trig1", 5.0f, "resume_music");
+	}
+
+void resume_music(string &in asTimer)
+	{
+		PlayMusic("amb_extra02.ogg", true, 1, 1, 1, true);
+	}
+
+/////End Slam Door Event/////
+
+void locked_door1(string &in asEntity)
+	{
+		SetMessage("Messages", "door_lockedw1", 2);
+	}
+
+void locked_door2(string &in asEntity)
+	{
+		SetMessage("Messages", "door_lockedw2", 3);
+	}
+
+void locked_door3(string &in asEntity)
+	{
+		SetMessage("Messages", "door_lockedw3", 2);
+	}
+
+void locked_door4(string &in asEntity)
+	{
+		SetMessage("Messages", "door_lockedw4", 2);
+	}
+
+void locked_door5(string &in asEntity)
+	{
+		SetMessage("Messages", "door_lockedw5", 3);
+	}
+
+void tobackpassages(string &in asEntity)
+	{
+		ChangeMap("07_BackPassages.map", "PlayerStartArea_3", "door_prison_open.snt", "door_prison_close.snt");
+	}
+
+void blocked_door_westwing(string &in asEntity)
+	{
+		SetMessage("Messages", "door_blocked_westwing", 6);
+		AddQuest("westwing_door_blocked_quest", "westwingdoorblocked");
+	}
+
+void indigo_effect(string &in asEntity)
+	{
+		SetMessage("Messages", "indigo_interact1", 6);
+		GiveItem("copper_tube", "copper_tube", "copper_tube", "copper_tube.tga", 1);
+	}
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

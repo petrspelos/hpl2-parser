@@ -1,0 +1,164 @@
+void OnStart(){
+	PlayerFunctions();
+	variables();
+	events();
+	enemy();
+}
+
+void OnEnter(){
+	PlayMusic("brute_amb.ogg", true, 1.0f, 0, 0, true);
+	SetDeathHint("Messages", "death_1");
+	if (GetGlobalVarInt("hasDigged") == 1){
+		TeleportPlayer("PlayerStartArea_3");
+	}
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "08Storage", 1, "09Containers.jpg");
+}
+
+void PlayerFunctions(){
+	AddEntityCollideCallback("Digger", "AreaDig", "diggingStarts", true, 1);
+	AddEntityCollideCallback("Player", "AreaDigQuest", "digQuest", true, 1);
+	SetEntityPlayerInteractCallback("SanityPot", "changeVarSanity", true);
+	SetEntityPlayerInteractCallback("OilPot", "changeVarOil", true);
+	SetEntityPlayerInteractCallback("Discovered_Containment", "changeGlobalVar", true);
+}
+
+void variables(){
+	SetLocalVarInt("hasPickedSanity", 0);
+	SetLocalVarInt("hasPickedOil", 0);
+	SetLocalVarInt("suitorHealth", 1);
+}
+
+void events(){
+	AddEntityCollideCallback("Player", "AreaSound_1", "playScareSoundScary", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_2", "playScareSoundEasy", true, 1);
+}
+
+void enemy(){
+	SetEntityPlayerInteractCallback("Digger", "startBadThings", true);
+	AddEnemyPatrolNode("suitor", "PathNodeArea_1", 0, "");
+	AddEntityCollideCallback("suitor", "AreaEnableTriggers", "enableTriggers", true, 1);
+	AddEntityCollideCallback("short", "suitor", "hitSuitorShort", false, 1);
+	AddEntityCollideCallback("long_1", "suitor", "hitSuitorLong_1", false, 1);
+	AddEntityCollideCallback("long_2", "suitor", "hitSuitorLong_2", false, 1);
+	AddEntityCollideCallback("Player", "AreaChase", "startChase", true, 1);
+	AddEnemyPatrolNode("suitor_chaser", "PathNodeArea_2", 0.001f, "");
+	AddEnemyPatrolNode("suitor_chaser", "PathNodeArea_3", 0.001f, "");
+	AddEnemyPatrolNode("suitor_chaser", "PathNodeArea_4", 0.0f, "");
+}
+
+void diggingStarts(string &in asParent, string &in asChild, int alState){
+	FadeOut(0);
+	PlayGuiSound("dig_soil.ogg", 100);
+	CompleteQuest("buried", "buried");
+	AddTimer("", 2.5f, "diggingContinues");
+	SetPlayerActive(false);
+}
+
+void diggingContinues(string &in asTimer){
+	PlayGuiSound("dig_soil.ogg", 100);
+	AddTimer("", 2.5f, "diggingEnds");
+	TeleportPlayer("PlayerStartArea_2");
+	SetGlobalVarInt("hasDigged", 1);
+	if (GetLocalVarInt("hasPickedSanity") == 1){
+		SetEntityActive("SanityIf", false);
+	}
+	if (GetLocalVarInt("hasPickedOil") == 1){
+		SetEntityActive("OilIf", false);
+	}
+}
+
+void diggingEnds(string &in asTimer){
+	FadeIn(0.5);
+	SetPlayerActive(true);
+}
+
+void changeVarOil(string &in entity){
+	SetLocalVarInt("hasPickedOil", 1);
+}
+
+void changeVarSanity(string &in entity){
+	SetLocalVarInt("hasPickedSanity", 1);
+}
+
+void playScareSoundScary(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_suitor_scary.ogg", 100);
+}
+
+void playScareSoundEasy(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_suitor_easy.ogg", 100);
+}
+
+void changeGlobalVar(string &in entity){
+	SetGlobalVarInt("hasGotEvidence", 1);
+	AddTimer("", 0.1f, "getAnotherQuest");
+}
+
+void digQuest(string &in asParent, string &in asChild, int alState){
+	AddQuest("buried", "buried");
+}
+
+void getAnotherQuest(string &in asTimer){
+	AddQuest("secretpass", "secretpass");
+}
+
+void startBadThings(string &in entity){
+	SetEntityActive("suitor", true);
+	SetMessage("Messages", "defend", 0);
+	GiveSanityDamage(25, true);
+}
+
+void enableTriggers(string &in asParent, string &in asChild, int alState){
+	SetEnemyDisableTriggers("suitor", false);
+}
+
+void hitSuitorShort(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("suitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+		SetLocalVarInt("suitorHealth", 0);
+	}else if (GetLocalVarInt("suitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+		SetEnemyIsHallucination("suitor", true);
+	}
+}
+
+void hitSuitorLong_1(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("suitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		ChangePlayerStateToNormal();
+		SetLocalVarInt("suitorHealth", 0);
+	}else if (GetLocalVarInt("suitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		ChangePlayerStateToNormal();
+		SetEntityActive("suitor", false);
+	}
+}
+
+void hitSuitorLong_2(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("suitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		ChangePlayerStateToNormal();
+		SetLocalVarInt("suitorHealth", 0);
+	}else if (GetLocalVarInt("suitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		ChangePlayerStateToNormal();
+		SetEntityActive("suitor", false);
+	}
+}
+
+void startChase(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("suitor_chaser", true);
+	GiveSanityDamage(25, true);
+	SetMessage("Messages", "run", 0);
+	SetDeathHint("Messages", "death_4");
+}

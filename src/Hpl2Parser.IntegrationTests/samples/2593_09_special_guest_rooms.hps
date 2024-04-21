@@ -1,0 +1,103 @@
+void OnStart(){
+	AddEntityCollideCallback("Player", "ScriptArea_1", "girlScare", true, 1);
+	AddUseItemCallback("", "small_key", "deskDoor", "unlockDeskDoor", false);
+	AddEntityCollideCallback("rampage", "enemy_suitor_1", "HitSuitor", false, 1);
+	AddEntityCollideCallback("enemy_suitor_1", "ScriptArea_2", "suitorVsHero", true, 1);
+	AddUseItemCallback("", "pickLock", "north_catacombs", "unlockCatacomb", true);
+	SetEntityPlayerInteractCallback("pickLock", "activatePain", true);
+	SetEntityPlayerInteractCallback("mansion_1", "girlMessage", false);
+	SetEntityPlayerInteractCallback("paper", "pickPaperUp", true);
+	SetEntityPlayerInteractCallback("deskDoor", "lockedDoor", false);
+	SetEntityPlayerInteractCallback("small_key", "getQuest", true);
+	SetLocalVarInt("SuitorHealth", 1);
+	SetLocalVarInt("deskDoorLocked", 1);
+	SetLocalVarInt("notePicked", 0);
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.25f, 0, 0, true);
+}
+
+void OnLeave(){
+
+}
+
+void girlScare(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("12_girl_cry.snt", 100);
+	AddTimer("T1", 0.7f, "shutDoor");
+}
+
+void shutDoor(string &in asTimer){
+	AddPropImpulse("mansion_1", 0, 0, -1, "World");
+	AddTimer("T2", 0.3, "lockDoor");
+	SetSwingDoorLocked("mansion_1", true, true);
+	SetSwingDoorClosed("mansion_1", true, true);
+	SetMoveObjectState("mansion_1", 0);
+}
+
+void lockDoor(string &in asTimer){
+	PlayGuiSound("lock_door.snt", 100);
+}
+
+void girlMessage(string &in entity){
+	SetMessage("Messages", "oneIn", 0);
+}
+
+void pickPaperUp(string &in entity){
+	SetLocalVarInt("notePicked", 1);
+}
+
+void getQuest(string &in entity){
+	AddQuest("skfits", "skfits");
+}
+
+void lockedDoor(string &in entity){
+	if (GetLocalVarInt("deskDoorLocked") == 1){
+		SetMessage("Messages", "skMessage", 0);
+	}
+}
+
+void unlockDeskDoor(string &in item, string &in door){
+	if (GetLocalVarInt("notePicked") == 1){
+		SetSwingDoorLocked("deskDoor", false, true);
+		SetEntityActive("oil_pot", true);
+		SetEntityActive("pickLock", true);
+		PlayGuiSound("unlock_door.snt", 100);
+		SetLocalVarInt("deskDoorLocked", 0);
+		CompleteQuest("skfits", "skfits");
+		RemoveItem(item);
+	}else{
+		SetMessage("Messages", "mustPickNote", 0);
+	}
+}
+
+void activatePain(string &in entity){
+	SetEntityActive("enemy_suitor_1", true);
+	AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_3", 0, "");
+	GiveSanityDamage(25, true);
+	SetMessage("Messages", "defense_repeated", 0);
+}
+
+void HitSuitor(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("SuitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetLocalVarInt("SuitorHealth", 0);
+	}else if (GetLocalVarInt("SuitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetEnemyIsHallucination("enemy_suitor_1", true);
+	}
+}
+
+void suitorVsHero(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("hero", false);
+	SetEntityActive("broken_hero", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+}
+
+void unlockCatacomb(string &in item, string &in door){
+	SetLevelDoorLocked("north_catacombs", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}

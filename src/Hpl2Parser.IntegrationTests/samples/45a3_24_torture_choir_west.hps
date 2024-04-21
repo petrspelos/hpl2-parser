@@ -1,0 +1,2361 @@
+
+//-------------------------------------------------
+
+//////////////////////////////
+// EXTRAMODES AND CUSTOM CODE
+//////////////////////////////
+
+//-------------------------------------------------
+
+string gsCurrentMapName = "24_torture_choir_west";
+
+string gsFunnyEasierEntry = "FunnyEasier";
+string gsFunnyEasierSuffix = "_funny_easier";
+string gsFunnyEasyEntry = "FunnyEasy";
+string gsFunnyEasySuffix = "_funny_easy";
+string gsFunnyTougherEntry = "FunnyTougher";
+string gsFunnyTougherSuffix = "_funny_tougher";
+string gsFunnyToughEntry = "FunnyTough";
+string gsFunnyToughSuffix = "_funny_tough";
+string gsFunnyEntry = "Funny";
+string gsFunnySuffix = "_funny";
+string gsStandardEasierEntry = "StandardEasier";
+string gsStandardEasierSuffix = "_easier";
+string gsStandardEasyEntry = "StandardEasy";
+string gsStandardEasySuffix = "_easy";
+string gsStandardTougherEntry = "StandardTougher";
+string gsStandardTougherSuffix = "_tougher";
+string gsStandardToughEntry = "StandardTough";
+string gsStandardToughSuffix = "_tough";
+string gsStandardEntry = "Standard";
+string gsStandardSuffix = "";
+
+string gsHealthPotion = "potion_health";
+string gsLargeOilPotion = "potion_oil_large";
+string gsOilPotion = "potion_oil";
+string gsSanityPotion = "potion_sanity";
+string gsTinderbox = "tinderbox";
+
+int[] gviEasierTinderboxesCodesArray = {1, 2, 3, 4};
+int[] gviEasierOilPotionsCodesArray = {1};
+int[] gviEasierHealthPotionsCodesArray = {1};
+int[] gviEasierSanityPotionsCodesArray = {0};
+int[] gviEasierLargeOilPotionsCodesArray = {0};
+
+int[] gviEasyTinderboxesCodesArray = gviEasierTinderboxesCodesArray;
+int[] gviEasyOilPotionsCodesArray = gviEasierOilPotionsCodesArray;
+int[] gviEasyHealthPotionsCodesArray = gviEasierHealthPotionsCodesArray;
+int[] gviEasySanityPotionsCodesArray = gviEasierSanityPotionsCodesArray;
+int[] gviEasyLargeOilPotionsCodesArray = gviEasierLargeOilPotionsCodesArray;
+
+int[] gviNormalTinderboxesCodesArray = {1, 2};
+int[] gviNormalOilPotionsCodesArray = {0};
+int[] gviNormalHealthPotionsCodesArray = {0};
+int[] gviNormalSanityPotionsCodesArray = {0};
+int[] gviNormalLargeOilPotionsCodesArray = {0};
+
+int[] gviToughTinderboxesCodesArray = {3};
+int[] gviToughOilPotionsCodesArray = {0};
+int[] gviToughHealthPotionsCodesArray = {0};
+int[] gviToughSanityPotionsCodesArray = {0};
+int[] gviToughLargeOilPotionsCodesArray = {0};
+
+int[] gviTougherTinderboxesCodesArray = {0};
+int[] gviTougherOilPotionsCodesArray = {0};
+int[] gviTougherHealthPotionsCodesArray = {0};
+int[] gviTougherSanityPotionsCodesArray = {0};
+int[] gviTougherLargeOilPotionsCodesArray = {0};
+
+int giMaxGlobalDeathCount = 9;
+
+void PlayEnemySoundAtEntity(string asSound, string asEntity, string asType) //HELPER FUNCTION.
+{
+	PlaySoundAtEntity(asEntity + "_" + asSound, GetStringWithReplacedFunnySubString(asType + "_" + asSound, asType), asEntity, 0.0f, false);
+}
+
+//START STRING MANAGEMENT FUNCTIONS
+int GetSubStringIndex(string asString, string asSubString, int aiOffset) //RETURNS THE STARTING POINT/INDEX OF A DEFINED SUBSTRING CONTAINED IN A STRING, IF THE DEFINED SUBSTRING COULD NOT BE FOUND IT RETURNS THE NEGATIVE VALUE -1. THE THIRD ARGUMENT DEFINES THE STARTING POINT/INDEX OF THE STRING TO START THE SEARCH.
+{
+	if(aiOffset >= asString.length() || aiOffset < 0)
+	{
+		return -1;
+	}
+	
+	string sExaminedString = StringSub(asString, aiOffset, asString.length() - aiOffset);
+	int iStringLength = sExaminedString.length();
+	int iSubStringLength = asSubString.length();
+	
+	if(iStringLength == iSubStringLength)
+	{
+		if(sExaminedString == asSubString)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else
+	if(iSubStringLength > iStringLength)
+	{
+		return -1;
+	}
+	else
+	{
+		int iFirstMatchIndex = 0;
+		int iLastMatchIndex = 0;
+		int iMatchCount = 0;
+		
+		for(int i=0; i<iStringLength; i++)
+		{
+			if(sExaminedString[i] == asSubString[iMatchCount])
+			{
+				iLastMatchIndex = i;
+				
+				if(iMatchCount < iSubStringLength)
+				{
+					iMatchCount = iMatchCount + 1;
+					
+					if(iMatchCount == 1)
+					{
+						iFirstMatchIndex = i;
+					}
+					
+					if(iMatchCount == iSubStringLength)
+					{
+						break;
+					}
+				}
+			}
+			else
+			if(iMatchCount > 0)
+			{
+				iMatchCount = 0;
+				
+				if(asString[i] == asSubString[iMatchCount])
+				{
+					iLastMatchIndex = i;
+					iMatchCount = iMatchCount + 1;
+					iFirstMatchIndex = i;
+				}
+			}
+		}
+		
+		if(iMatchCount == iSubStringLength)
+		{
+			return iFirstMatchIndex;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+}
+
+string GetStringWithReplacedSubString(string asString, string asSearchedSubString, string asReplacedSubString) //RETURNS THE ORIGINAL STRING BUT IT HAS DEFINED SUBSTRINGS REPLACED, IF NO DEFINED SUBSTRINGS ARE FOUND THEN IT RETURNS JUST THE ORIGINAL STRING. FIRST ARGUMENT: ORIGINAL STRING, SECOND ARGUMENT: SUBSTRING THAT MUST BE CONTAINED INSIDE THE ORIGINAL STRING, THIRD ARGUMENT: STRING THAT WILL REPLACE ALL THE SECOND ARGUMENT SUBSTRINGS INSIDE THE ORIGINAL STRING.
+{
+	string sUnchangedFirstMatchSection = "";
+	string sOriginalFirstMatchSection = "";
+	string sReplacedFirstMatchSection = "";
+	int iFirstMatchIndex = GetSubStringIndex(asString, asSearchedSubString, 0);
+	
+	if(iFirstMatchIndex == -1)
+	{
+		return asString;
+	}
+	else
+	if(iFirstMatchIndex > 0)
+	{
+		sUnchangedFirstMatchSection = StringSub(asString, 0, iFirstMatchIndex);
+	}
+	
+	sOriginalFirstMatchSection = sUnchangedFirstMatchSection + asSearchedSubString;
+	sReplacedFirstMatchSection = sUnchangedFirstMatchSection + asReplacedSubString;
+	
+	if(sOriginalFirstMatchSection.length() < asString.length())
+	{
+		return sReplacedFirstMatchSection + GetStringWithReplacedSubString(StringSub(asString, sOriginalFirstMatchSection.length(), asString.length() - sOriginalFirstMatchSection.length()), asSearchedSubString, asReplacedSubString);
+	}
+	else
+	{
+		return sReplacedFirstMatchSection;
+	}
+}
+
+string GetStringWithoutSubString(string asString, string asSubString) //RETURNS THE REMAINING STRING WITHOUT THE SUBSTRING DEFINED AS THE SECOND ARGUMENT.
+{
+	return GetStringWithReplacedSubString(asString, asSubString, "");
+}
+
+string GetSubString(string asString, int aiOffset) //RETURNS THE REMAINING SUBSTRING STARTING FROM THE OFFSET DEFINED AS THE SECOND ARGUMENT.
+{
+	int iLength = asString.length() - aiOffset;
+	
+	if(iLength <= 0)
+	{
+		return asString;
+	}
+	else
+	{
+		return StringSub(asString, aiOffset, iLength);
+	}
+}
+//END STRING MANAGEMENT FUNCTIONS
+
+void TimerTunePlayerLanternOil(string asTimer) //USED AS A TIMER TO CHECK AND ADJUST PLAYER LANTERN OIL VALUE.
+{
+	AddTimer(asTimer, 2.0f, "TimerTunePlayerLanternOil");
+	
+	if(asTimer == "oilspeedslow")
+	{
+		if(GetPlayerLampOil() < 99.0f)
+		{
+			AddPlayerLampOil(0.2f);
+		}
+	}
+	else
+	if(asTimer == "oilspeedquick")
+	{
+		if(GetPlayerLampOil() > 1.0f)
+		{
+			AddPlayerLampOil(-0.2f);
+		}
+	}
+	else
+	if(asTimer == "oilspeedoff")
+	{
+		SetPlayerLampOil(100.0f);
+	}
+}
+
+void LanternLitOilSpeedSlow(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SLOWS DOWN PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeedslow", 2.0f, "TimerTunePlayerLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeedslow");
+	}
+}
+
+void LanternLitOilSpeedQuick(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SPEEDS UP PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeedquick", 2.0f, "TimerTunePlayerLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeedquick");
+	}
+}
+
+float GetDifficultyDirectFactor() //RETURNS THE VALUE OF THE DIRECT DIFFICULTY FACTOR.
+{
+	return GetGlobalVarFloat("DifficultyDirectFactor");
+}
+
+float GetDifficultyInverseFactor() //RETURNS THE VALUE OF THE INVERSE DIFFICULTY FACTOR.
+{
+	return GetGlobalVarFloat("DifficultyInverseFactor");
+}
+
+int GetEasyModeOn() //RETURNS 1 IF THE EASY MODE IS ENABLED, 2 IF THE EASIER MODE IS ENABLED, 0 ELSE.
+{
+	return GetGlobalVarInt("EasyModeOn");
+}
+
+string GetExtraModesSuffix() //RETURNS THE SUFFIX OF THE EXTRAMODES.
+{
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 6);
+	
+	switch(iChecker)
+	{
+		case 1:
+			return gsFunnySuffix;
+		case 2:
+			return gsStandardEasySuffix;
+		case 3:
+			return gsFunnyEasySuffix;
+		case 4:
+			return gsStandardEasierSuffix;
+		case 5:
+			return gsFunnyEasierSuffix;
+		case 6:
+			return gsStandardToughSuffix;
+		case 7:
+			return gsFunnyToughSuffix;
+		case 12:
+			return gsStandardTougherSuffix;
+		case 13:
+			return gsFunnyTougherSuffix;
+		default:
+			return gsStandardSuffix;
+	}
+	
+	return "";
+}
+
+bool GetFunnyModeOn() //RETURNS TRUE IF THE FUNNY MODE IS ENABLED.
+{
+	return (GetGlobalVarInt("FunnyModeOn") >= 1);
+}
+
+string GetStringWithExtraModesSuffix(string asString) //RETURNS THE NAME + THE EXTRAMODES SUFFIX IF SOME EXTRAMODES ARE ACTIVE.
+{
+	return asString + GetExtraModesSuffix();
+}
+
+string GetStringWithReplacedFunnySubString(string asString, string asSearchedSubString) //RETURNS A MODIFIED VERSION OF THE STRING GIVEN AS THE FIRST ARGUMENT IF FUNNY MODE IS ACTIVE.
+{
+	if(GetFunnyModeOn())
+	{
+		if(StringContains(asString, asSearchedSubString))
+		{
+			return GetStringWithReplacedSubString(asString, asSearchedSubString, asSearchedSubString + gsFunnySuffix);
+		}
+		else
+		{
+			AddDebugMessage("ERROR: Could not find " + asSearchedSubString + " in " + asString + "! Could not replace it with " + asSearchedSubString + gsFunnySuffix + "!", false);
+			return asString;
+		}
+	}
+	else
+	{
+		return asString;
+	}
+}
+
+int GetToughModeOn() //RETURNS 1 IF THE TOUGH MODE IS ENABLED, 2 IF THE TOUGHER MODE IS ENABLED, 0 ELSE.
+{
+	return GetGlobalVarInt("ToughModeOn");
+}
+
+void SetDifficultyDirectFactor(float afAmount) //CHANGES THE VALUE OF THE DIRECT DIFFICULTY FACTOR.
+{
+	SetGlobalVarFloat("DifficultyDirectFactor", afAmount);
+}
+
+void SetDifficultyInverseFactor(float afAmount) //CHANGES THE VALUE OF THE INVERSE DIFFICULTY FACTOR.
+{
+	SetGlobalVarFloat("DifficultyInverseFactor", afAmount);
+}
+
+void SetEasyModeOn(int aiState) //CHANGES THE VALUE OF THE EASY DIFFICULTY MODE. 0 -> off, 1 -> on, 2 -> easier mode on.
+{
+	if(aiState < 0)
+	{
+		aiState = 0;
+	}
+	else
+	if(aiState > 2)
+	{
+		aiState = 2;
+	}
+	
+	if(aiState > 0)
+	{
+		SetGlobalVarInt("ToughModeOn", 0);
+	}
+	
+	SetGlobalVarInt("EasyModeOn", aiState);
+}
+
+void SetFunnyModeOn(bool abState) //CHANGES THE VALUE OF THE FUNNY MODE. false -> off, true -> on.
+{
+	if(abState)
+	{
+		SetGlobalVarInt("FunnyModeOn", 1);
+	}
+	else
+	{
+		SetGlobalVarInt("FunnyModeOn", 0);
+	}
+}
+
+void SetToughModeOn(int aiState) //CHANGES THE VALUE OF THE TOUGH DIFFICULTY MODE. 0 -> off, 1 -> on, 2 -> tougher mode on.
+{
+	if(aiState < 0)
+	{
+		aiState = 0;
+	}
+	else
+	if(aiState > 2)
+	{
+		aiState = 2;
+	}
+	
+	if(aiState > 0)
+	{
+		SetGlobalVarInt("EasyModeOn", 0);
+	}
+	
+	SetGlobalVarInt("ToughModeOn", aiState);
+}
+
+void GiveItemFromFile(string asItem) //GIVES AN ITEM THAT CAN BE EITHER USED AS A DEBUG ITEM OR AS A GOODY.
+{
+	string sItem = GetStringWithoutSubString(asItem, ".ent");
+	int i = 0;
+	
+	do
+	{
+		i = i + 1;
+	}
+	while(HasItem(sItem + "_" + i));
+	
+	GiveItemFromFile(sItem + "_" + i, sItem + ".ent");
+}
+
+void TimerTunePlayerState(string asTimer)
+{
+	float fCooldown = 10.0f;
+	float fHealth = GetPlayerHealth();
+	float fOil = GetPlayerLampOil();
+	float fSanity = GetPlayerSanity();
+	int iRand = RandInt(0, 4);
+	
+	if(StringContains(asTimer, "Blessing"))
+	{
+		if(asTimer == "BlessingRegainHealth")
+		{
+			if(fHealth <= 99.0f)
+			{
+				SetPlayerHealth(fHealth + 1.0f);
+			}
+			else
+			if(fHealth < 100.0f)
+			{
+				SetPlayerHealth(100.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "BlessingRegainSanity")
+		{
+			if(fSanity <= 99.0f)
+			{
+				SetPlayerSanity(fSanity + 1.0f);
+			}
+			else
+			if(fSanity < 100.0f)
+			{
+				SetPlayerSanity(100.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "BlessingRegainLanternOil")
+		{
+			if(fOil <= 95.0f)
+			{
+				SetPlayerLampOil(fOil + 5.0f);
+			}
+			else
+			if(fOil < 100.0f)
+			{
+				SetPlayerLampOil(100.0f);
+			}
+			
+			fCooldown = 90.0f;
+		}
+		else
+		if(asTimer == "BlessingRandomGoodies")
+		{
+			fCooldown = RandFloat(240.0f, 480.0f);
+			
+			if(iRand == 0)
+			{
+				GiveItemFromFile(gsTinderbox + ".ent");
+				PlayGuiSound("pick_generic.snt", 0.5f);
+			}
+			else
+			if(iRand == 1)
+			{
+				GiveItemFromFile(gsOilPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+			else
+			if(iRand == 2)
+			{
+				GiveItemFromFile(gsHealthPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+			else
+			if(iRand == 3)
+			{
+				GiveItemFromFile(gsSanityPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+		}
+	}
+	else
+	if(StringContains(asTimer, "Curse"))
+	{
+		if(asTimer == "CurseRegainHealth")
+		{
+			if(fHealth < 50.0f && fHealth > 5.0f)
+			{
+				SetPlayerHealth(fHealth - 1.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "CurseRegainSanity")
+		{
+			if(fSanity < 50.0f && fSanity > 5.0f)
+			{
+				SetPlayerSanity(fSanity - 0.4f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "CurseRegainLanternOil")
+		{
+			if(fOil < 50.0f && fOil > 5.0f)
+			{
+				SetPlayerLampOil(fOil - 5.0f);
+			}
+			
+			fCooldown = 90.0f;
+		}
+		else
+		if(asTimer == "CurseRandomGoodies")
+		{
+			fCooldown = RandFloat(240.0f, 480.0f);
+			int i = 0;
+			
+			if(iRand == 0)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsTinderbox + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsTinderbox + "_" + i))
+				{
+					RemoveItem(gsTinderbox + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 1)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsOilPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsOilPotion + "_" + i))
+				{
+					RemoveItem(gsOilPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 2)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsHealthPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsHealthPotion + "_" + i))
+				{
+					RemoveItem(gsHealthPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 3)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsSanityPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsSanityPotion + "_" + i))
+				{
+					RemoveItem(gsSanityPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+		}
+	}
+	
+	AddTimer(asTimer, fCooldown, "TimerTunePlayerState");
+}
+
+void SetupCurrentMapBasedOnExtraModes()
+{
+	string sPrefix = "";
+	float fDifficultyDirectFactor = 0.0f;
+	float fDifficultyInverseFactor = 0.0f;
+	int[] viTinderboxesCodesArray;
+	int[] viOilPotionsCodesArray;
+	int[] viHealthPotionsCodesArray;
+	int[] viSanityPotionsCodesArray;
+	int[] viLargeOilPotionsCodesArray;
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 6);
+	bool bFunnyModeOn = (iChecker == 1 || iChecker == 3 || iChecker == 5 || iChecker == 7 || iChecker == 13);
+	bool bEasierModeOn = (iChecker == 4 || iChecker == 5);
+	bool bEasyModeOn = (iChecker == 2 || iChecker == 3);
+	bool bToughModeOn = (iChecker == 6 || iChecker == 7);
+	bool bTougherModeOn = (iChecker == 12 || iChecker == 13);
+	RemoveTimer("oilspeedquick");
+	RemoveTimer("oilspeedslow");
+	RemoveTimer("BlessingRandomGoodies");
+	RemoveTimer("BlessingRegainHealth");
+	RemoveTimer("BlessingRegainLanternOil");
+	RemoveTimer("BlessingRegainSanity");
+	RemoveTimer("CurseRandomGoodies");
+	RemoveTimer("CurseRegainHealth");
+	RemoveTimer("CurseRegainLanternOil");
+	RemoveTimer("CurseRegainSanity");
+	
+	if(bEasierModeOn)
+	{
+		sPrefix = "Blessing";
+		fDifficultyDirectFactor = 0.25f;
+		fDifficultyInverseFactor = 1.75f;
+		viTinderboxesCodesArray = gviEasierTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviEasierOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviEasierHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviEasierSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviEasierLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedSlow");
+		LanternLitOilSpeedSlow(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(true);
+		SetSanityDrainDisabled(true);
+		AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bEasyModeOn)
+	{
+		sPrefix = "Blessing";
+		fDifficultyDirectFactor = 0.5f;
+		fDifficultyInverseFactor = 1.5f;
+		viTinderboxesCodesArray = gviEasyTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviEasyOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviEasyHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviEasySanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviEasyLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedSlow");
+		LanternLitOilSpeedSlow(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(true);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bToughModeOn)
+	{
+		sPrefix = "Curse";
+		fDifficultyDirectFactor = 1.5f;
+		fDifficultyInverseFactor = 0.5f;
+		viTinderboxesCodesArray = gviToughTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviToughOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviToughHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviToughSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviToughLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedQuick");
+		LanternLitOilSpeedQuick(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bTougherModeOn)
+	{
+		sPrefix = "Curse";
+		fDifficultyDirectFactor = 1.75f;
+		fDifficultyInverseFactor = 0.25f;
+		viTinderboxesCodesArray = gviTougherTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviTougherOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviTougherHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviTougherSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviTougherLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedQuick");
+		LanternLitOilSpeedQuick(GetLanternActive());
+		SetEntityActive("oil_barrel_*", false);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	{
+		sPrefix = "";
+		fDifficultyDirectFactor = 1.0f;
+		fDifficultyInverseFactor = 1.0f;
+		viTinderboxesCodesArray = gviNormalTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviNormalOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviNormalHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviNormalSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviNormalLargeOilPotionsCodesArray;
+		SetLanternLitCallback("");
+		//LanternLitOilSpeedNormal(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	
+	SetDifficultyDirectFactor(fDifficultyDirectFactor);
+	SetDifficultyInverseFactor(fDifficultyInverseFactor);
+	//SetEnemyMinIdleTime(2.0f * fDifficultyDirectFactor);
+	//DISABLES ALL GOODIES.
+	if(gviEasierTinderboxesCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierTinderboxesCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsTinderbox + "_" + gviEasierTinderboxesCodesArray[i]))
+			{
+				SetEntityActive(gsTinderbox + "_" + gviEasierTinderboxesCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsOilPotion + "_" + gviEasierOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsOilPotion + "_" + gviEasierOilPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierHealthPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierHealthPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsHealthPotion + "_" + gviEasierHealthPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsHealthPotion + "_" + gviEasierHealthPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierSanityPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierSanityPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsSanityPotion + "_" + gviEasierSanityPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsSanityPotion + "_" + gviEasierSanityPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierLargeOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierLargeOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsLargeOilPotion + "_" + gviEasierLargeOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsLargeOilPotion + "_" + gviEasierLargeOilPotionsCodesArray[i], false);
+			}
+		}
+	}
+	//ENABLES SPECIFIC GOODIES BASED ON EXTRAMODES.
+	if(viTinderboxesCodesArray[0] != 0)
+	{
+		for(int i=0; i<viTinderboxesCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsTinderbox + "_" + viTinderboxesCodesArray[i]))
+			{
+				SetEntityActive(gsTinderbox + "_" + viTinderboxesCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsOilPotion + "_" + viOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsOilPotion + "_" + viOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viHealthPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viHealthPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsHealthPotion + "_" + viHealthPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsHealthPotion + "_" + viHealthPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viSanityPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viSanityPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsSanityPotion + "_" + viSanityPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsSanityPotion + "_" + viSanityPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viLargeOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viLargeOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsLargeOilPotion + "_" + viLargeOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsLargeOilPotion + "_" + viLargeOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(gsCurrentMapName == "00_rainy_hall")
+	{
+		AddEntityCollideCallback("Player", "AreaExtraModes", "OnAreaExtraModesCollide", true, 1);
+		SetLightVisible("ButtonBoxLight" + gsStandardSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardToughSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardTougherSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardEasySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardEasierSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyToughSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyTougherSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyEasySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyEasierSuffix, false);
+	}
+	else
+	if(gsCurrentMapName == "01_old_archives")
+	{
+		if(bEasierModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		{
+			SetEntityActive("AreaHintLean", false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "04_wine_cellar_lab")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.16f, 0.18f, 0.22f, 0.7f);
+			SetFogProperties(6.0f, 24.0f, 1.0f, false);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.14f, 0.16f, 0.2f, 0.7f);
+			SetFogProperties(5.0f, 20.0f, 1.0f, false);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.1f, 0.12f, 0.16f, 0.7f);
+			SetFogProperties(3.0f, 12.0f, 1.0f, false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.08f, 0.1f, 0.14f, 0.7f);
+			SetFogProperties(2.0f, 8.0f, 1.0f, false);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogColor(0.12f, 0.14f, 0.18f, 0.7f);
+			SetFogProperties(4.0f, 16.0f, 1.0f, false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "05_wine_cellar")
+	{
+		if(bEasierModeOn)
+		{
+			SetEntityActive("chest_small_2", true);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(10.0f, 30.0f, 1.0f, false);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetEntityActive("chest_small_2", true);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(8.0f, 26.0f, 1.0f, false);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(4.0f, 18.0f, 1.0f, false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(2.0f, 14.0f, 1.0f, false);
+		}
+		else
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(6.0f, 22.0f, 1.0f, false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "06_distillery")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.16f, 0.18f, 0.22f, 0.7f);
+			SetFogProperties(6.0f, 24.0f, 1.0f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.14f, 0.16f, 0.2f, 0.7f);
+			SetFogProperties(5.0f, 20.0f, 1.0f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.1f, 0.12f, 0.16f, 0.7f);
+			SetFogProperties(3.0f, 12.0f, 1.0f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.08f, 0.1f, 0.14f, 0.7f);
+			SetFogProperties(2.0f, 8.0f, 1.0f, true);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogColor(0.12f, 0.14f, 0.18f, 0.7f);
+			SetFogProperties(4.0f, 16.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "07_archives_cellar")
+	{
+		if(bEasierModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 0);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 0);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 2);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 3);
+		}
+		else
+		{
+			SetLocalVarInt("MeatReducer", 1);
+		}
+	}
+	else
+	if(gsCurrentMapName == "12_storage")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(false);
+			SetSkyBoxActive(false);
+			SetLocalVarInt("GruntDoorMaxBangs", 3);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(4.0f, 35.0f, 1.2f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 3);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(2.0f, 29.0f, 0.8f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 1);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(1.0f, 26.0f, 0.6f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 1);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogProperties(3.0f, 32.0f, 1.0f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 2);
+		}
+	}
+	else
+	if(gsCurrentMapName == "15_prison_north")
+	{
+		if(bEasierModeOn)
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+		else
+		if(bEasyModeOn)
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("tinderbox_13", false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("tinderbox_13", false);
+		}
+		else
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+	}
+	else
+	if(gsCurrentMapName == "20_sewer")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(9.0f, 28.0f, 1.2f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(7.0f, 24.0f, 1.1f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(3.0f, 16.0f, 0.9f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(1.0f, 12.0f, 0.8f, true);
+		}
+		else
+		{
+			SetFogProperties(5.0f, 20.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "23_torture_transept")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(5.0f, 20.0f, 1.2f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(4.0f, 17.5f, 1.1f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(2.0f, 12.5f, 0.9f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(1.0f, 10.0f, 0.8f, true);
+		}
+		else
+		{
+			SetFogProperties(3.0f, 15.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "24_torture_choir_east")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(6.0f, 45.0f, 0.4f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 47.0f);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(4.5f, 37.5f, 0.35f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 39.0f);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(1.5f, 22.5f, 0.25f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 23.0f);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(0.0f, 15.0f, 0.2f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 15.0f);
+		}
+		else
+		{
+			SetFogProperties(3.0f, 30.0f, 0.3f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 31.0f);
+		}
+	}
+}
+
+void SetExtraModesOn(string asInput) //HELPER FUNCTION TO ENABLE THE CORRECT EXTRAMODES, ITS BASED ON THE EXTRAMODES SUFFIX CONTAINED INSIDE THE ARGUMENT.
+{
+	string sSuffix = "ModeChosen";
+	
+	if(StringContains(asInput, gsFunnyEasierSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(2);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEasierEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyEasySuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(1);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEasyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyTougherSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(2);
+		SetMessage("MainMenu", gsFunnyTougherEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyToughSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(1);
+		SetMessage("MainMenu", gsFunnyToughEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnySuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardEasierSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(2);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEasierEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardEasySuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(1);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEasyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardTougherSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(2);
+		SetMessage("MainMenu", gsStandardTougherEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardToughSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(1);
+		SetMessage("MainMenu", gsStandardToughEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEntry + sSuffix, 8.0f);
+	}
+	
+	SetupCurrentMapBasedOnExtraModes();
+}
+
+////////////////
+////////////////
+
+float GetEnemyIdleTime(float afTime)
+{
+	if(GetEasyModeOn() >= 2)
+	{
+		return afTime;
+	}
+	else
+	if(GetToughModeOn() >= 2)
+	{
+		return (RandFloat(((GetDifficultyDirectFactor() * afTime) * 1.0f), ((GetDifficultyDirectFactor() * afTime) * 2.0f)));
+	}
+	else
+	{
+		return (GetDifficultyDirectFactor() * afTime);
+	}
+}
+
+int GetPlayerGlobalDeathCount() //RETURNS THE VALUE OF THE PLAYER GLOBAL DEATH COUNT.
+{
+	return GetGlobalVarInt("PlayerGlobalDeathCount");
+}
+
+void SetPlayerGlobalDeathCount(int aiCount) //CHANGES THE VALUE OF THE PLAYER GLOBAL DEATH COUNT.
+{
+	SetGlobalVarInt("PlayerGlobalDeathCount", aiCount);
+}
+
+bool GetHardModeEndingOn()
+{
+	return ((GetToughModeOn() == 1 && (GetPlayerGlobalDeathCount() + 1) > giMaxGlobalDeathCount) || (GetToughModeOn() == 2));
+}
+
+void StartHardModeEnding(string asInput)
+{
+	if(asInput == "HardModeDeath")
+	{
+		StartCredits("", false, "Hints", "HardModeDeath", 3);
+	}
+	else
+	{
+		ChangePlayerStateToNormal();
+		ExitInventory();
+		FadeGlobalSoundVolume(0.0f, 0.01f);
+		FadeOut(0.01f);
+		SetInDarknessEffectsActive(false);
+		SetInventoryDisabled(true);
+		SetLanternActive(false, false);
+		SetLanternDisabled(true);
+		SetPlayerActive(false);
+		SetPlayerHealth(999.999f);
+		SetPlayerLampOil(999.999f);
+		SetPlayerSanity(999.999f);
+		SetSanityDrainDisabled(true);
+		ShowPlayerCrossHairIcons(false);
+		StopMusic(0.01f, 0);
+		StopMusic(0.01f, 1);
+		StopMusic(0.01f, 2);
+		StopMusic(0.01f, 3);
+		StopMusic(0.01f, 4);
+		StopMusic(0.01f, 5);
+		StopMusic(0.01f, 6);
+		StopMusic(0.01f, 7);
+		StopMusic(0.01f, 8);
+		StopMusic(0.01f, 9);
+		StopMusic(0.01f, 10);
+		StopPlayerLookAt();
+		AddTimer("HardModeDeath", 6.0f, "StartHardModeEnding");
+	}
+}
+
+void OnPlayerDeath(string asName) //COUNTS HOW MANY TIMES THE PLAYER DIED THROUGH THE WHOLE STORY. CONTAINS THE HARD MODE GAME OVER ENDING LOGIC.
+{
+	if(GetHardModeEndingOn())
+	{
+		StartHardModeEnding("");
+		return;
+	}
+	
+	SetPlayerGlobalDeathCount(GetPlayerGlobalDeathCount() + 1);
+}
+
+void PreloadEnemySound(string asSound, string asType) //HELPER FUNCTION.
+{
+	PreloadSound(GetStringWithReplacedFunnySubString(asType + "_" + asSound, asType));
+}
+
+//-------------------------------------------------
+
+//////////////////////////////
+// CUSTOM CODE END
+//////////////////////////////
+
+//-------------------------------------------------
+
+// TODO: Maybe tweak the blur in the vision?
+// TODO: Add some background noise for the vision?
+
+//------------------------------------------
+
+////////////////////////////
+//GLOBAL HELPERS
+/////////////////////////////
+
+//------------------------------------------
+
+// Vars
+float gfVoiceDelay = 0.05f;
+string gsLanternVar = "lantern_active";
+
+/////////////////////////////
+// Door opener
+void OpenSwingDoor(bool abProp, string &in asDoorName, float afTimeBetweenSteps, int alSteps, float afX, float afY, float afZ, string &in asCoordSystem)
+{
+	SetLocalVarFloat(asDoorName+"X", afX);
+	SetLocalVarFloat(asDoorName+"Y", afX);
+	SetLocalVarFloat(asDoorName+"Z", afX);
+	SetLocalVarString(asDoorName+"CoordSystem", asCoordSystem);
+	
+	string sTimerName = "TimerSwingDoor" + (abProp ? "Prop" : "Body" );
+	
+	for(int i=0;i<alSteps;++i)
+	{
+		AddTimer(asDoorName, i*afTimeBetweenSteps, sTimerName);
+	}
+}
+
+//------------------------------------------
+
+//////////////////////////////
+// Door opener helper timers
+void TimerSwingDoorProp(string &in asTimer)
+{
+	AddPropForce(asTimer, GetLocalVarFloat(asTimer+"X"), 
+						  GetLocalVarFloat(asTimer+"X"), 
+						  GetLocalVarFloat(asTimer+"X"), 
+						  GetLocalVarString(asTimer+"CoordSystem"));
+}
+
+void TimerSwingDoorBody(string &in asTimer)
+{
+	AddBodyForce(asTimer, GetLocalVarFloat(asTimer+"X"), 
+						  GetLocalVarFloat(asTimer+"X"), 
+						  GetLocalVarFloat(asTimer+"X"), 
+						  GetLocalVarString(asTimer+"CoordSystem"));
+}
+/////////////////////////////
+
+//------------------------------------------
+
+void SaveLanternState()
+{
+	int lLanternActive = GetLanternActive() ? 1 : 0;
+	SetLocalVarInt(gsLanternVar, lLanternActive);	
+}
+
+void RestoreLanternState()
+{
+	SetLanternActive(GetLocalVarInt(gsLanternVar)==1, false);
+}
+
+//------------------------------------------
+
+
+void PlayEffectVoice(string &in asEntryBase, string &in asCat,int alStartIdx, int alEndIdx, string &in asCallback)
+{	
+	for(int i=alStartIdx; i<=alEndIdx; ++i)
+	{
+		string sEntry = asEntryBase;
+		if(i<10) sEntry += "0";
+		sEntry += i;
+		
+		AddEffectVoice(sEntry, "", asCat, sEntry, false, "", 0,0 );
+	}
+	SetEffectVoiceOverCallback(asCallback);
+}
+
+void RitualVoiceOver()
+{
+	ResumeEventTimer("TimerRitualVision", gfVoiceDelay);
+}
+
+//------------------------------------------
+
+//////////////////////////////////////////
+// Event Timer helpers
+
+//This starts an event timer, with the state set to 0 (just to be sure)
+void ResumeEventTimer(string &in asTimer)
+{
+	SetLocalVarInt(asTimer, 0);
+	ResumeEventTimer(asTimer, 0);
+}
+
+//Resumes an event timer after a step is over.
+void ResumeEventTimer(string &in asTimer, float afTime)
+{
+	AddTimer(asTimer, afTime, asTimer);
+}
+
+//------------------------------------------
+
+////////////////////////////
+//RITUAL VISION
+////////////////////////////////
+
+//------------------------------------------
+
+// Pick up diary (Start vision)
+void PickDiary(string &in asItem, int alEntryIdx)
+{
+	ReturnOpenJournal(false);
+	
+	PlayMusic("24_paper_daniel01.ogg", false, 0.7f, 1.0f, 10, false);
+	
+	SetLocalVarInt("VisionActive", 1);
+	
+	StopSound("AreaAmb", 4.0f);
+	for(int i=1;i<=4;i++) StopSound("AreaDrop_"+i, 0.0f); 
+	
+	PlayGuiSound("flashback_flash.snt", 0.8f);
+	PlayGuiSound("react_scare.snt", 0.5f);
+	
+	StartScreenShake(0.1f, 0.1f, 0.0f, 0.2f);
+	StartEffectFlash(0.05f, 0.0f, 0.05f);
+	FadeImageTrailTo(0.3f, 0.3f);
+	PlayGuiSound("sanity_flick.snt", 0.5f);
+	ResumeEventTimer("TimerRitualVision");
+}
+
+//------------------------------------------
+
+////////////////////////////
+// Diary voice helper
+// Note when callback != "" then it means that next event is when voice is over!
+void PlayVisionVoice(string &in asEntry, int alStartIdx, int alEndIdx, string &in asCallback)
+{
+	PlayEffectVoice(asEntry, "Flashbacks",alStartIdx, alEndIdx, asCallback);
+}
+
+////////////////////////////
+// Diary voice Callback
+void VisionVoiceOver()
+{
+	ResumeEventTimer("TimerRitualVision", gfVoiceDelay);
+}
+
+//------------------------------------------
+
+//Voice talking about using knife is over
+void VisionKnifeVoiceOver()
+{
+	AddLocalVarInt("KnifeVoiceCount",1);
+	if(GetLocalVarInt("KnifeVoiceCount")==2)
+		ResumeEventTimer("TimerRitualVision", 0);	
+}
+
+// Pick up knife
+void InteractWithKnife(string &in asEntity)
+{
+	AddDebugMessage("Picking up knife", false);
+	
+	SetEntityActive("ceremony_knife", false);
+	
+	//Fade out the the light used to illuminate it.
+	FadeLightTo("PointLight_knife", 0,0,0,0, -1, 1);
+	
+	AddLocalVarInt("KnifeVoiceCount",1);
+	if(GetLocalVarInt("KnifeVoiceCount")==2)
+		ResumeEventTimer("TimerRitualVision", 0);
+}
+
+//------------------------------------------
+
+// Use knife 
+void InteractWithPrisoner(string &in asEntity)
+{
+	AddDebugMessage("Using knife on prisoner", false);
+	
+	ResumeEventTimer("TimerRitualVision", 0);
+}
+
+//------------------------------------------
+
+void TimerLookAtOver(string &in asTimer)
+{
+	StopPlayerLookAt();	
+}
+
+//------------------------------------------
+
+////////////////////////////
+// Prisoner squirm effect helper
+void TimerPrisonerSquirm(string &in asTimer)
+{
+	if(GetLocalVarInt( "prisoner_anim_active" )==0)
+		return;
+		
+	StartPrisonerSquirm();	
+}
+
+void StartPrisonerSquirm()
+{
+	PlayPropAnimation("ritual_prisoner", "squirm", 0.2f, false, "PrisonerSquirmOver");
+}
+void PrisonerSquirmOver(string &in asName)
+{
+	PlayPropAnimation("ritual_prisoner", "Idle", 0.2f, true, "");
+	
+	AddTimer("TimerPrisonerSquirm", RandFloat(1.0f, 4.0f), "TimerPrisonerSquirm");
+}
+
+//------------------------------------------
+
+void SetToolsVisible(bool abX)
+{
+	SetEntityActive("dissect_knife_*", abX);
+	SetEntityActive("hammer_*", abX);
+	SetEntityActive("saw_*", abX);
+	SetEntityActive("pincers_*", abX);
+	SetEntityActive("dissect_scissors_*", abX);
+	SetEntityActive("chisel_*", abX);
+	SetEntityActive("cell_bucket_*", abX);
+}
+
+void SetLightsOutsideRitualRoomVisible(bool abX)
+{
+	SetLightVisible("PointLight_11", abX);
+	SetLightVisible("PointLight_10", abX);
+	SetLightVisible("PointLight_9", abX);
+	SetLightVisible("PointLight_8", abX);
+	SetLightVisible("PointLight_4", abX);
+	SetLightVisible("PointLight_5", abX);
+	SetLightVisible("PointLight_6", abX);
+	SetLightVisible("PointLight_7", abX);
+	SetLightVisible("PointLight_12", abX);
+			
+	//SetLampLit("candle_floor_no_light_53", abX, false);
+	SetLampLit("candle_floor_no_light_21", abX, false);
+	SetLampLit("candle_floor_no_light_22", abX, false);
+	SetLampLit("candle_floor_no_light_23", abX, false);
+	SetLampLit("candle_floor_no_light_24", abX, false);
+	SetLampLit("candle_floor_7", abX, false);
+	SetLampLit("candle_floor_no_light_25", abX, false);
+	SetLampLit("candle_floor_no_light_26", abX, false);
+	SetLampLit("candle_floor_no_light_27", abX, false);
+	SetLampLit("candle_floor_no_light_28", abX, false);
+	SetLampLit("candle_floor_no_light_32", abX, false);
+	SetLampLit("candle_floor_no_light_36", abX, false);
+	SetLampLit("candle_floor_no_light_29", abX, false);
+	SetLampLit("candle_floor_2", abX, false);
+	SetLampLit("candle_floor_no_light_31", abX, false);
+	SetLampLit("candle_floor_no_light_33", abX, false);
+	SetLampLit("candle_floor_no_light_34", abX, false);
+	SetLampLit("candle_floor_no_light_35", abX, false);
+	SetLampLit("candle_floor_no_light_51", abX, false);
+	SetLampLit("candle_floor_no_light_50", abX, false);
+	SetLampLit("candle_floor_no_light_49", abX, false);
+	SetLampLit("candle_floor_no_light_48", abX, false);
+	SetLampLit("candle_floor_no_light_47", abX, false);
+	SetLampLit("candle_floor_no_light_46", abX, false);
+	SetLampLit("candle_floor_8", abX, false);
+	SetLampLit("candle_floor_no_light_52", abX, false);
+	SetLampLit("candle_floor_no_light_45", abX, false);
+	SetLampLit("candle_floor_no_light_44", abX, false);
+	SetLampLit("candle_floor_no_light_43", abX, false);
+}
+
+
+//------------------------------------------
+
+
+////////////////////////////
+// Timed ritual event
+void TimerRitualVision(string &in asTimer)
+{	
+	/*Configurables
+	 */
+	int iMaxEventStep = 21;		//How many steps there are in the switch event
+	float fEventSpeed = 1.0f;	//The default time between steps in an event
+	
+	/*Helpers - Do not edit
+	 */
+	string sEvent = asTimer;	//Using first timer name for variable, timer name & callback for the timer that loops
+	AddLocalVarInt(sEvent, 1);	//What step to play in the event
+	bool bPauseAtEvent = false;	//Pauses after current step is done (a ResumeEventTimer would unpause)
+
+	AddDebugMessage(asTimer + " - current step : " + GetLocalVarInt(sEvent), false);
+	
+	/*Steps in the event
+	 */
+	switch(GetLocalVarInt(sEvent))
+	{
+		
+		////////////////////////
+		// Fade Out
+		case 1:
+			SetInventoryDisabled(true);
+			SetSanityDrainDisabled(true);
+			SetPlayerJumpDisabled(true);
+			SetPlayerCrouchDisabled(true);
+			
+			StartPlayerLookAt("AreaPrisonerMarks", 0.5f, 3, "");
+								
+			fEventSpeed = 1.0f;
+			FadeOut(fEventSpeed);
+			
+			SetPlayerLookSpeedMul(0.9f);
+			SetPlayerMoveSpeedMul(0.75f);
+			break;
+		
+		////////////////////////
+		// Narration: Background to the ritual
+		// 	Next event when: voice ends.
+		case 2:
+			FadeImageTrailTo(0.0f, 0.3f);
+			PlayGuiSound("react_breath", 0.5f);
+			//Turn off lights in corridor outside
+			SetLightsOutsideRitualRoomVisible(false);
+			SetToolsVisible(false);
+					
+			//Turn off lantern
+			SaveLanternState();
+			SetLanternActive(false, false);
+			SetLanternDisabled(true);
+			
+			SetPlayerActive(false);
+			
+			SetPlayerRunSpeedMul(0.0f);
+			SetPlayerMoveSpeedMul(0.4f);
+			SetPlayerLookSpeedMul(0.7f);
+			
+			TeleportPlayer("PlayerStartArea_VisionEnd");
+			
+			// Set up blurry visuals
+			SetRadialBlurStartDist(0.2f);
+			FadeRadialBlurTo(0.1f, 1);
+			FadeSepiaColorTo(0.5f, 0.025f);
+			
+			SetSwingDoorLocked("cellar_wood01_cellar_wood01_1", true, false);
+			SetPropActiveAndFade("ritual_prisoner", true, 0);
+			SetPropEffectActive("ritual_prisoner", false, false);
+			
+			SetEntityActive("blood_spatter*", false);
+			SetEntityActive("tinderbox_4", false);
+			
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",1, 1, "VisionVoiceOver");
+			bPauseAtEvent = true;
+			break;
+		
+		////////////////////////
+		// Fade in
+		case 3:
+			PlayMusic("24_event_vision.ogg", true, 0.6f, 4.0f, 10, true);
+			
+			StopPlayerLookAt();
+			SetPlayerActive(true);
+			SetPlayerCrouching(false);
+			SetLocalVarInt( "prisoner_anim_active", 1);
+			//StartPrisonerSquirm();
+			
+			fEventSpeed = 2.0f;
+			FadeIn(fEventSpeed);
+			
+			PlaySoundAtEntity("amb_noise", "24_amb_noise.snt", "AreaPrisonerMarks", 4.0f, false);
+			PlaySoundAtEntity("sound1", "24_mb_01.snt", "AreaPrisonerSounds", 0.0f, false);
+			break;
+		
+		////////////////////////
+		// Narration: Alexander begins describing what to do. 
+		case 4:
+			PlaySoundAtEntity("knife", "24_knife.snt", "AreaDrop_2", 2.0f, true);
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",2,2, "VisionVoiceOver");
+			bPauseAtEvent = true;
+			break;
+		
+		////////////////////////
+		// More narration on knife and act. Next event when voice is over and knife is picked.
+		case 5:
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",3,3, "VisionVoiceOver");
+			
+			bPauseAtEvent = true;
+			break;
+		
+		////////////////////////
+		// Show knife a bit after instead, or else a long wait with nothign happening.
+		case 6:
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",4,5, "VisionKnifeVoiceOver");
+			
+			//Look at knife
+			StartPlayerLookAt("ceremony_knife", 0.8f, 3, "");
+			AddTimer("TimerLookAtOver", 1.5 ,"TimerLookAtOver");
+			
+			FadeLightTo("PointLight_knife", 0.8,0.1,0.1,0.7, -1, 1);
+					
+			//Show knife	
+			SetPropActiveAndFade("ceremony_knife", true, 1);
+			PlaySoundAtEntity("ceremony_knifeplace", "24_put_knife.snt", "ceremony_knife", 0.0f, false);
+			StopSound("knife", 0.0f);
+			bPauseAtEvent = true;
+			break;
+			
+		////////////////////////
+		// Player picks up knife and narration. Narration: Daniel about doubts and description of what is to be done
+		case 7:
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",6,6, "VisionVoiceOver");
+			bPauseAtEvent = true;
+			break;
+		
+		////////////////////////
+		// Player picks up knife and narration. Narration: Daniel about doubts and description of what is to be done
+		case 8:
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",7,7, "VisionVoiceOver");
+			
+			PlayMusic("24_event_vision02.ogg", true, 0.6f, 4.0f, 10, true);
+			
+			PlayPropAnimation("ritual_prisoner", "squirm", 0.2f, true, "PrisonerSquirmOver");
+		
+			StopSound("sound1", 0.0f);
+			PlaySoundAtEntity("sound2", "24_mb_02.snt", "AreaPrisonerSounds", 0.0f, false);
+		
+			bPauseAtEvent = true;
+			break;
+			
+		////////////////////////
+		// Pattern appear on body, 
+		case 9:
+
+			//Look at body
+			StartPlayerLookAt("AreaPrisonerMarks", 0.8f, 3, "");
+			AddTimer("TimerLookAtOver", 1.5 ,"TimerLookAtOver");
+			
+			//light up chest
+			FadeLightTo("PointLight_chest", 0.2,0.8,0.2,0.7, -1, 1);
+			
+			PlaySoundAtEntity("paint", "24_paint.snt", "AreaPrisonerMarks", 0.0f, false);
+			
+			//Fade in the markings on prisoner
+			SetPropEffectActive("ritual_prisoner", true, true);
+			
+			//Make the interact area active.			
+			SetEntityActive("AreaPrisonerMarks", true);
+			
+			bPauseAtEvent = true;			
+			break;
+		
+		////////////////////////
+		// player interacts with prisoner, prisoner starts saying "please"-> Fade to black.
+		case 10:
+			FadeOut(2);
+			PlayMusic("24_event_vision03.ogg", true, 0.6f, 4.0f, 10, true);
+			
+			FadeLightTo("PointLight_chest", 0,0,0,0, -1, 1);
+			
+			//Freeze player and look at prisoner
+			SetPlayerActive(false);
+			StartPlayerLookAt("AreaPrisonerMarks", 0.5f, 3, "");
+			
+			fEventSpeed = 2; //Next event after fade is done.	
+			
+			StopSound("amb_noise", 4.0f);
+			break;
+		
+		////////////////////////
+		// Voice starts after fade out, Voice Line 8. (Lines area sepperate below to easily time additional effects.
+		case 11:
+			StopSound("sound2", 0.0f);
+			PlaySoundAtEntity("sound3", "24_mb_03.snt", "AreaPrisonerSounds", 0.0f, false);
+		
+			PlaySoundAtEntity("cut", "24_cut.snt", "AreaPrisonerMarks", 0.0f, false);
+		
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",8,8, "VisionVoiceOver");
+			
+			// Set up scene: remove prisoner and add blood trail
+			SetLocalVarInt("prisoner_active", 0);
+					
+			SetEntityActive("ritual_prisoner", false);
+			//SetEntityActive("ceremony_knife_dropped", true); //Do not drop knife...
+			
+			bPauseAtEvent = true;
+			break;
+		
+		///////////////////////	
+		// Voice Line 9
+		case 12:
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",9,9, "VisionVoiceOver");
+			bPauseAtEvent = true;
+			break;
+		
+		///////////////////////	
+		// Voice Line 10
+		case 13:
+			StopSound("sound3", 0.0f);
+			PlaySoundAtEntity("sound4", "24_mb_04.snt", "AreaPrisonerSounds", 0.0f, false);
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",10,10, "VisionVoiceOver");
+			bPauseAtEvent = true;
+			StopMusic(4.0f, 10);
+			break;
+				
+		///////////////////////	
+		// Voice Line 11
+		case 14:
+			PlayMusic("24_event_vision04.ogg", true, 1.0f, 4.0f, 10, true);
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",11,11, "VisionVoiceOver");
+			StopSound("cut", 0.5f);
+			PlaySoundAtEntity("pick", "24_pick_body.snt", "AreaPrisonerMarks", 0.0f, false);
+			bPauseAtEvent = true;
+			break;
+			
+		////////////////////////
+		// Fade in. Prisoner is gone and blood trail instead.
+		case 15:
+			fEventSpeed = 2;
+			FadeIn(fEventSpeed);
+			
+			SetPlayerActive(true);
+			StopPlayerLookAt();
+			
+			//Show blood + fadein lamp to make it more visible
+			SetEntityActive("blood_spatter*", true);
+			
+			FadeLightTo("PointLight_Blood", 0.8,0.1,0.1,0.7, -1, 1);
+		
+			PlaySoundAtEntity("amb_noise", "24_amb_noise.snt", "Player", 4.0f, false);
+			AddTimer("heart", 2.0f, "TimerHeartSound");
+			StopMusic(6.0f, 10);
+			FadeGlobalSoundVolume(0.0f, 4.0f);
+			break;
+			
+		////////////////////////
+		// Narration: Daniel reflects on act
+		case 16:
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",12,12, "VisionVoiceOver");
+			bPauseAtEvent = true;
+			break;
+			
+		////////////////////////
+		// Door opens,
+		case 17:
+			// open door slowly
+			SetSwingDoorLocked("cellar_wood01_cellar_wood01_1", false, false);
+			SetSwingDoorClosed("cellar_wood01_cellar_wood01_1", false, false);
+			SetSwingDoorDisableAutoClose("cellar_wood01_cellar_wood01_1", true);
+			OpenSwingDoor(true, "cellar_wood01_cellar_wood01_1", 0.1f, 15, -100, 0, -100, "world");
+			PlaySoundAtEntity("creak", "24_joint.snt", "Player", 2.0f, false);
+				
+			SetEntityActive("AreaLeaveVision", true);
+			bPauseAtEvent = true;
+			break;
+		////////////////////////
+		// Player leaves, fade to black
+		case 18:
+			fEventSpeed = 3;
+			SetEntityActive("AreaLeaveVision", false);
+			
+			RemoveItem("ceremony_knife");
+			
+			PlayGuiSound("general_wind_whirl", 0.5f);
+			StartEffectFlash(2, 8, 2);
+			FadePlayerFOVMulTo(3,0.1f);
+			SetPlayerLookSpeedMul(0.3f);
+			SetPlayerMoveSpeedMul(0.3f);
+			FadeOut(fEventSpeed);
+			StopMusic(8.0f, 10);
+			
+			//Fade out blood light.
+			FadeLightTo("PointLight_Blood", 0,0,0,0, -1, 1);
+			RemoveTimer("heart");
+			StopSound("amb_noise", 6.0f);
+			break;
+		////////////////////////
+		// 12. Narration: Epilogue
+		case 19:
+			////////////////////////
+			// Restore previous state
+			SetEntityActive("ceremony_knife_dropped", false);
+			
+			SetLightsOutsideRitualRoomVisible(true);
+			SetToolsVisible(true);
+			
+			SetPlayerJumpDisabled(false);
+			SetPlayerCrouchDisabled(false);
+			
+			SetInventoryDisabled(false);
+			SetLanternDisabled(false);
+			if(GetEasyModeOn() <= 1) SetSanityDrainDisabled(false);
+			
+			RestoreLanternState();
+			
+			FadeRadialBlurTo(0,1);
+			FadeSepiaColorTo(0, 0.1f);
+			
+			FadePlayerFOVMulTo(1,1);
+			SetPlayerLookSpeedMul(1);
+			SetPlayerMoveSpeedMul(1);
+			SetPlayerRunSpeedMul(1.0f);
+			
+			SetPlayerActive(false);
+			
+			PlayVisionVoice("CH02L24_DanielDiary07_03_",13,13,"VisionVoiceOver");
+			bPauseAtEvent = true;
+			break;
+		////////////////////////
+		// 13. Fade in and normal gameplay continue
+		case 20:
+			SetLocalVarInt("VisionActive", 0);
+			SetLocalVarInt("VisionSeen", 1);
+			AddTimer("AreaRock_", RandFloat(1.0f, 5.0f), "TimerRandRockAmb");
+			
+			PlaySoundAtEntity("AreaAmb", "24_amb.snt", "AreaAmb", 4.0f, true);
+			PlaySoundAtEntity("AreaDrop_1", "general_cave_drip.snt", "AreaDrop_1", 0.0f, true);
+			PlaySoundAtEntity("AreaDrop_2", "general_cave_drip.snt", "AreaDrop_2", 0.0f, true);
+			PlaySoundAtEntity("AreaDrop_3", "general_cave_drip.snt", "AreaDrop_3", 0.0f, true);
+			PlaySoundAtEntity("AreaDrop_4", "general_cave_drip.snt", "AreaDrop_4", 0.0f, true);
+			PlayMusic("amb_extra01.ogg", true, 0.8f, 4.0f, 0, true);
+			PlayGuiSound("flashback_flash.snt", 1.0f);
+			FadeGlobalSoundVolume(1.0f, 2.0f);
+			
+			AddTimer("AreaPedals_1", 0.1, "TimerShowPetals");
+			AddTimer("AreaPedals_1", 0.8, "TimerShowPetals");
+			AddTimer("AreaPedals_1", 1.5, "TimerShowPetals");
+			AddTimer("AreaPedals_1", 2.5, "TimerShowPetals");
+			
+			GiveSanityDamage(35, false);
+			
+			TeleportPlayer("PlayerStartArea_VisionEnd");
+			
+			SetPlayerActive(true);
+						
+			fEventSpeed = 2;
+			FadeIn(fEventSpeed);
+			
+			if(GetEasyModeOn() >= 1)
+				SetEntityActive("tinderbox_4", true);
+			
+			break;
+	}
+	
+	if(GetLocalVarInt(sEvent) <= iMaxEventStep && bPauseAtEvent==false)
+	{
+		ResumeEventTimer(sEvent, fEventSpeed);
+	}
+}
+
+
+//----
+void TimerHeartSound(string &in asTimer)
+{
+	PlayGuiSound("sanity_heartbeat.snt", 0.5f);
+	
+	AddTimer("heart", 3.0f, "TimerHeartSound");
+}
+//------------------------------------------
+
+void TimerShowPetals(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("petals1", "ps_rose_petals.ps", asTimer, false);
+	
+	if(GetLocalVarInt("VisionEnd") == 2)
+		PlayGuiSound("general_wind_whirl.snt", 0.5f);
+	
+	AddLocalVarInt("VisionEnd", 1);
+}
+
+//------------------------------------------
+
+
+////////////////////////////////////////////
+// Player exits room
+void PlayerExitVision(string &in asParent, string &in asChild, int alState)
+{
+	ResumeEventTimer("TimerRitualVision", 0);
+}
+
+//------------------------------------------
+
+/////////////////////////
+//ALEXANDER VOICE
+/////////////////////////
+
+//------------------------------------------
+
+float GetEntityPlayerDistance(string asEntity)
+{
+	float fPlayerPosX = GetPlayerPosX();
+	float fPlayerPosY = GetPlayerPosY();
+	float fPlayerPosZ = GetPlayerPosZ();
+	float fEntityPosX = GetEntityPosX(asEntity);
+	float fEntityPosY = GetEntityPosY(asEntity);
+	float fEntityPosZ = GetEntityPosZ(asEntity);
+	float fDistance = MathSqrt(MathPow((fEntityPosX - fPlayerPosX), 2.0f) + MathPow((fEntityPosY - fPlayerPosY), 2.0f) + MathPow((fEntityPosZ - fPlayerPosZ), 2.0f));
+	return fDistance;
+}
+
+void CollideWithVoiceArea(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("ScaryDoorSeen", 1);
+	AddTimer("scarydoor", RandFloat(1.0f, 1.6f), "TimerEnemyEvent");
+	AddEntityCollideCallback("Player", "AreaEnemyEvent", "CollideWithEnemyEventArea", true, 1);
+	SetEntityPlayerInteractCallback("cellar_wood01_cellar_wood01_2", "InteractWithScaryDoor", true);
+	return;
+	
+	//PlayEffectVoice("CH02L24_Alexander_", "Voice",1, 4, ""); //Moved to 24 east beginning instead.
+}
+
+void TimerEnemyEvent(string asTimer)
+{
+	if(asTimer == "scarydoor")
+	{
+		AddPropImpulse("cellar_wood01_cellar_wood01_2", -4.0f, 0.0f, 0.0f, "World");
+		
+		CreateParticleSystemAtEntity("psdoor", "ps_hit_wood.ps", "cellar_wood01_cellar_wood01_2", false);
+		PlaySoundAtEntity("sdoor", "impact_wood_heavy_high.snt", "cellar_wood01_cellar_wood01_2", 0.0f, false);
+		PlaySoundAtEntity("sdoorscary", "lurker_hit_wood.snt", "cellar_wood01_cellar_wood01_2", 0.0f, false);
+		PlayEnemySoundAtEntity("notice_long.snt", "cellar_wood01_cellar_wood01_2", "suitor");
+		
+		StartScreenShake(0.3f, 0.05f, 0.25f, 0.0f);
+		
+		AddTimer("bang1", 0.8f, "TimerScaryDoorEffects");
+		AddTimer("bang2", 1.2f, "TimerScaryDoorEffects");
+		
+		AddTimer("scare", 0.5f, "TimerPlayerReact");
+		AddTimer("breath", 2.5f, "TimerPlayerReact");
+		AddTimer("breathl", 4.5f, "TimerPlayerReact");
+		
+		return;
+	}
+	else if(asTimer == "enemyslapsound")
+	{
+		PlayEnemySoundAtEntity("attack_launch.snt", "Player", "suitor");
+		SetPlayerMoveSpeedMul(0.5f);
+		SetPlayerRunSpeedMul(0.0f);
+		
+		AddTimer("enemyslap", 0.5f, "TimerEnemyEvent");
+		
+		return;
+	}
+	else if(asTimer == "enemyslap")
+	{
+		GivePlayerDamage(20.0f, "Slash", true, false);
+		
+		PlayGuiSound("sounds/ptest/enemy/suitor/attack_claw_hit.snt", 1.0f);
+		
+		AddTimer("scare1", 0.5f, "TimerPlayerReact");
+		AddTimer("breath", 2.0f, "TimerPlayerReact");
+		AddTimer("breathl", 4.0f, "TimerPlayerReact");
+		
+		AddTimer("stoplookat", 0.4f, "TimerEnemyEvent");
+		
+		return;
+	}
+	else if(asTimer == "stoplookat")
+	{
+		StopPlayerLookAt();
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		
+		GiveSanityDamage(5.0f, false);
+		
+		AddTimer("restore1", 3.0f, "TimerEnemyEvent");
+		
+		return;
+	}
+	else if(asTimer == "restore1")
+	{
+		ResetProp("cellar_wood01_cellar_wood01_2");
+		
+		AddTimer("restore2", 0.001f, "TimerEnemyEvent");
+		
+		return;
+	}
+	else if(asTimer == "restore2")
+	{
+		SetEntityActive("cellar_wood01_cellar_wood01_2", false);
+		
+		AddTimer("restore3", 0.001f, "TimerEnemyEvent");
+		
+		return;
+	}
+	else if(asTimer == "restore3")
+	{
+		if(GetEntityPlayerDistance("cellar_wood01_cellar_wood01_2") >= 3.0f)
+		{
+			SetPropActiveAndFade("cellar_wood01_cellar_wood01_2", true, 2.0f);
+			AddDebugMessage("DEBUG: door2 restored!", false);
+		}
+		
+		if(GetEntityPlayerDistance("cellar_wood01_cellar_wood01_1") >= 3.0f)
+		{
+			SetPropActiveAndFade("cellar_wood01_cellar_wood01_1", true, 2.0f);
+			AddDebugMessage("DEBUG: door1 restored!", false);
+		}
+		
+		return;
+	}
+}
+
+void TimerScaryDoorEffects(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("psdoor", "ps_hit_wood.ps", "cellar_wood01_cellar_wood01_2", false);
+	PlaySoundAtEntity("sdoor", "impact_wood_heavy_high.snt", "cellar_wood01_cellar_wood01_2", 0.0f, false);
+}
+
+void TimerPlayerReact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_breath", 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare1")
+		PlayGuiSound("react_scare", 1.0f);
+	else if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+}
+
+void CollideWithEnemyEventArea(string &in asParent, string &in asChild, int alState)
+{
+	if(asParent == "touch")
+	{
+		GivePlayerDamage(10.0f, "BloodSplat", false, false);
+		AddPlayerBodyForce(36000, 0, -36000, true);
+		SetEntityActive("cellar_wood01_cellar_wood01_1", false);
+	}
+	
+	StartPlayerLookAt("ScriptArea_1", 0.8f, 3, "");
+	
+	PlayMusic("01_event_dust.ogg", false, 1, 1, 10, false);
+	
+	PlayGuiSound("player_react_guardian3.snt", 0.6f);
+	PlayGuiSound("sanity_drain_high.snt", 1.5f);
+	
+	SetPropHealth("cellar_wood01_cellar_wood01_2", 0);
+	
+	StartScreenShake(0.3f, 0.1f, 0.5f, 0.0f);
+	
+	TimerPlayerReact("scare");
+	
+	AddTimer("enemyslapsound", RandFloat(0.25f, 0.5f), "TimerEnemyEvent");
+}
+
+void InteractWithScaryDoor(string &in asEntity)
+{
+	RemoveEntityCollideCallback("Player", "AreaEnemyEvent");
+	SetEntityActive("AreaEnemyEvent", false);
+	CollideWithEnemyEventArea("touch", "AreaEnemyEvent", 1);
+}
+
+//------------------------------------------
+
+
+void TimerRandRockAmb(string &in asTimer)
+{
+	if(GetLocalVarInt("VisionActive") == 1) return;
+	
+	int iRand = RandInt(1, 4);
+	int iSound = RandInt(1, 2);
+	
+	if(iSound == 1)
+		PlaySoundAtEntity("AreaRock_"+iRand, "24_rock_move.snt", "AreaRock_"+iRand, RandFloat(0.0f, 2.0f), false);
+	else
+		PlaySoundAtEntity("AreaRock_"+iRand, "24_chain_rattle.snt", "AreaRock_"+iRand, RandFloat(0.0f, 2.0f), false);
+		
+	AddTimer(asTimer, RandFloat(8.0f, 16.0f), "TimerRandRockAmb");
+}
+
+void InteractTableDesc(string &in asEntity)
+{
+	GiveSanityDamage(2.0f, false);
+	PlaySoundAtEntity(asEntity, "general_chain_rattle_single.snt", asEntity, 0.0f, false);
+	SetMessage("Ch02Level24", "DescTable", 0);
+	AddTimer(asEntity, 1.0f, "TimerInteractBackOn");
+}
+void TimerInteractBackOn(string &in asTimer)
+{
+	SetEntityPlayerInteractCallback(asTimer, "InteractTableDesc", true);
+	StopSound(asTimer, 0.5f);
+}
+////////////////////////////
+// Run first time starting map
+void OnStart()
+{
+	AddTimer("AreaRock_", RandFloat(1.0f, 5.0f), "TimerRandRockAmb");
+	
+	SetMapDisplayNameEntry("ChoirWest");
+	
+	if(ScriptDebugOn())
+	{
+		//SetPlayerSanity(20.0f);
+		if(HasItem("lantern") == false) GiveItemFromFile("lantern", "lantern.ent");
+	}
+	
+	//SOUNDS
+	PlaySoundAtEntity("AreaAmb", "24_amb.snt", "AreaAmb", 0.1f, true);
+	PlaySoundAtEntity("AreaDrop_1", "general_cave_drip.snt", "AreaDrop_1", 0.0f, true);
+	PlaySoundAtEntity("AreaDrop_2", "general_cave_drip.snt", "AreaDrop_2", 0.0f, true);
+	PlaySoundAtEntity("AreaDrop_3", "general_cave_drip.snt", "AreaDrop_3", 0.0f, true);
+	PlaySoundAtEntity("AreaDrop_4", "general_cave_drip.snt", "AreaDrop_4", 0.0f, true);
+
+	// COLLIDE CALLBACKS
+	AddEntityCollideCallback("Player", "AreaLeaveVision", "PlayerExitVision", true, 1);
+	
+	SetEntityPlayerInteractCallback("AreaPrisonerMarks", "InteractWithPrisoner", true);
+}
+
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{	
+	PreloadSound("24_amb_noise"); PreloadSound("24_mb_01"); PreloadSound("24_paint"); PreloadSound("24_mb_02"); 
+	PreloadSound("24_mb_03"); PreloadSound("24_cut"); PreloadSound("24_pick_body"); PreloadSound("flashback_flash"); 
+	PreloadSound("24_rock_move"); PreloadSound("24_chain_rattle"); PreloadSound("general_chain_rattle_single"); PreloadSound("general_cave_drip"); 
+	PreloadSound("24_mb_04"); PreloadSound("react_breath"); PreloadSound("sanity_heartbeat"); PreloadSound("general_wind_whirl");
+	PreloadSound("react_scare"); PreloadSound("impact_wood_heavy_high.snt");
+	PreloadSound("sounds/ptest/enemy/suitor/attack_claw_hit.snt"); PreloadSound("break_wood.snt"); PreloadSound("break_wood_metal.snt");
+	PreloadSound("player_react_guardian3.snt"); PreloadSound("sanity_drain_high.snt"); PreloadSound("lurker_hit_wood.snt");
+	
+	PreloadParticleSystem("ps_hit_wood.ps");
+	
+	if(GetGlobalVarInt("ChoirOrbCount") == 3 && GetLocalVarInt("VisionSeen") == 1)
+	{
+		if(GetLocalVarInt("ScaryDoorSeen") == 0)
+		{
+			AddEntityCollideCallback("Player", "AreaAlexanderVoice", "CollideWithVoiceArea", true, 1);
+			ResetProp("cellar_wood01_cellar_wood01_2");
+		}
+		
+		PlayMusic("12_amb.ogg", true, 1.0f, 4.0f, 0, true);
+		
+		SetLightVisible("SpotLight_1", false);
+		SetLightVisible("SpotLight_2", false);
+		SetLightVisible("SpotLight_3", false);
+		SetLampLit("candlestick_floor_2", false, false);
+		SetLampLit("candlestick_floor_3", false, false);
+		
+		for(int i=3; i<=16; i++)
+			SetLightVisible("PointLight_" + i, false);
+		
+		for(int j=2; j<=80; j++)
+			SetLampLit("candle_floor_no_light_" + j, false, false);
+		
+		for(int k=2; k<=21; k++)
+			SetLampLit("candle_floor_" + k, false, false);
+	}
+	else
+	{
+		PlayMusic("23_amb02.ogg", true, 0.7f, 4.0f, 0, true);
+	}
+	
+	//AutoSave();
+	
+	SetupCurrentMapBasedOnExtraModes();
+	
+	string sEnemyName = "";
+	
+	sEnemyName = "suitor";
+	PreloadEnemySound("attack_launch.snt", sEnemyName);
+	PreloadEnemySound("notice_long.snt", sEnemyName);
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

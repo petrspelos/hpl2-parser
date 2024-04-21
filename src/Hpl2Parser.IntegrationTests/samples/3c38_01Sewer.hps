@@ -1,0 +1,515 @@
+void OnStart()
+{  
+	AutoSave();
+	PlayMusic("Nightmare", true, 1, 0.1, 10, false);
+	FadeOut(0);
+	SetSanityDrainDisabled(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	
+	AddTimer("fadein", 3, "TimerIntro");
+	
+	
+	SetEntityPlayerInteractCallback("notka", "End", true);
+	AddEntityCollideCallback("Player", "AreaCollide_1", "A", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_2", "MonsterSound", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_3", "Torch_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_4", "Torch_2", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_5", "DoorOpens", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_6", "DoorCloses", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_7", "CloseCabinet", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_8", "OutsideCabinet", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_9", "OutsideCabinet", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_10", "FadeOutFall", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_11", "TP", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_12", "ArmLook", true, 1);
+
+}
+
+
+
+
+
+void OnEnter()
+{ 
+
+}
+
+
+
+
+void OnLeave()
+{ 
+
+}
+
+///////////////////////////////////////Intro////////////////////////////
+
+void TimerIntro(string &in asTimer)
+{
+	if(asTimer == "fadein") {
+        FadeIn(1);
+		PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 0, false);
+		
+   
+   }
+}
+
+void Torch_1(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("torch_1", true, true);
+}
+
+void Torch_2(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("torch_2", true, true);
+	PlaySoundAtEntity("", "insanity_whisper.snt", "Player", 0, false);
+}
+
+void DoorOpens(string &in asParent, string &in asChild, int alState)
+{
+	
+	
+	SetSwingDoorClosed("dooropen", false, false);
+	SetSwingDoorDisableAutoClose("dooropen", true);
+	
+	PlaySoundAtEntity("creak", "joint_door_move_special.snt", "dooropen", 1, false);
+	
+	AddTimer("opendoor", 2, "TimerStopsound");
+	AddTimer("dooropen", 0, "TimerMoveDoor");
+	
+}
+
+void TimerMoveDoor(string &in asTimer)
+{
+	if(GetLocalVarInt("VarDoor") == 5) return;
+	AddLocalVarInt("VarDoor", 1);
+	
+	AddTimer(asTimer, 0.03, "TimerMoveDoor");
+	
+	AddPropForce(asTimer,0, 0, -130, "world");
+}
+
+
+void TimerStopsound(string &in asTimer)
+{
+	StopSound("creak", 0.4);
+}
+
+void DoorCloses(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("dooropen", true, true);
+	SetSwingDoorLocked("dooropen", true, true);
+}
+
+void End(string &in item)
+{
+	AddTimer("Arrival", 5, "EndIntro");
+	AddTimer("React", 6, "EndIntro");
+	AddTimer("Hit_1", 7, "EndIntro");
+	AddTimer("Hit_2", 10, "EndIntro");
+	AddTimer("Hit_3", 13, "EndIntro");
+	AddTimer("DoorDestoryed", 13.5f, "EndIntro");
+	CheckPoint("INTRO", "PlayerStartArea_8", "Intro", "", "");
+	
+}
+
+void EndIntro(string &in asTimer)
+{
+	if(asTimer == "Arrival") {
+		
+		PlaySoundAtEntity("", "enabled.snt", "MonsterSound", 1, false);
+		StartPlayerLookAt("dooropen", 3, 3, "");
+		PlayMusic("03_event_books.ogg", false, 0.7, 0.1, 10, false);
+	}
+	
+		else if(asTimer == "React") {
+			PlaySoundAtEntity("", "react_pant.snt", "Player", 1, false);
+		}
+		
+		else if(asTimer == "Hit_1") {
+			PlaySoundAtEntity("", "break_wood.snt", "dooropen", 0, false);
+			AddPropImpulse("dooropen", 0,0,2,"World");
+			CreateParticleSystemAtEntity("","ps_hit_wood","ParticleAreaDoor_1", false);
+			StopPlayerLookAt();
+		}
+		
+		else if(asTimer == "Hit_2") {
+			PlaySoundAtEntity("", "break_wood.snt", "dooropen", 0, false);
+			AddPropImpulse("dooropen", 0,0,2,"World");
+			CreateParticleSystemAtEntity("","ps_hit_wood","ParticleAreaDoor_2", false);
+			AddPropForce("cabinet_simple_1",-80, 0, -80, "world");
+			StartPlayerLookAt("AreaPlayerLook_1", 3, 3, "");
+			SetEntityActive("AreaCollide_7", true);
+			
+		}
+		
+		else if(asTimer == "Hit_3") {
+			PlaySoundAtEntity("", "break_wood.snt", "dooropen", 0, false);
+			AddPropImpulse("dooropen", 0,0,2,"World");
+			CreateParticleSystemAtEntity("","ps_hit_wood","ParticleAreaDoor_3", false);
+		}
+		
+		else if(asTimer == "DoorDestoryed") {
+			SetPropHealth("dooropen", 0);
+			SetEntityActive("AreaCollide_8", true);
+			SetEntityActive("AreaCollide_9", true);
+			SetEntityActive("brute_1", true);
+			
+			AddEnemyPatrolNode("brute_1", "PathNodeArea_1", 0.001, "");
+			AddEnemyPatrolNode("brute_1", "PathNodeArea_2", 0.001, "");
+			AddEnemyPatrolNode("brute_1", "PathNodeArea_3", 0.001, "");
+			AddEnemyPatrolNode("brute_1", "PathNodeArea_4", 0.001, "");
+			
+			
+		}
+		
+}
+
+void CloseCabinet(string &in asParent, string &in asChild, int alState)
+{
+	
+	SetSwingDoorClosed("cabinet_simple_1", true, true);
+	SetSwingDoorLocked("cabinet_simple_1", true, true);
+	StopPlayerLookAt();
+	
+	AddTimer("React_1", 2, "Wakeup");
+	AddTimer("React_2", 4, "Wakeup");
+	AddTimer("React_3", 8, "Wakeup");
+	AddTimer("React_4", 9, "Wakeup");
+	AddTimer("Tp_1", 13, "Wakeup");
+	AddTimer("Ringingstops", 18, "Wakeup");
+	AddTimer("PlayerAwake", 20, "Wakeup");
+	AddTimer("Cough_1", 20.4f, "Wakeup");
+	AddTimer("Speech_1", 22.5f, "Wakeup");
+	AddTimer("fadeout_1", 22.7f, "Wakeup");
+	AddTimer("Speech_2", 25, "Wakeup");
+	AddTimer("fadein_1", 28, "Wakeup");
+	AddTimer("PlayerLook_1", 34, "Wakeup");
+	AddTimer("Speech_3", 30, "Wakeup");
+	AddTimer("fadeout_2", 33, "Wakeup");
+	AddTimer("fadein_4", 36, "Wakeup");
+	AddTimer("fadeout_4", 40, "Wakeup");
+	AddTimer("Tp_2", 42, "Wakeup");
+	AddTimer("fadein_2", 45, "Wakeup");
+	AddTimer("Speech_4", 46, "Wakeup");
+	AddTimer("Speech_5", 47.5f, "Wakeup");
+	AddTimer("PlayerLook_2", 47, "Wakeup");
+	AddTimer("fadeout_3", 48, "Wakeup");
+	AddTimer("Speech_6", 50, "Wakeup");
+	AddTimer("Speech_7", 51.f, "Wakeup");
+	AddTimer("fadein_3", 52, "Wakeup");
+	AddTimer("Speech_8", 53, "Wakeup");
+	AddTimer("PlayerThrow", 69, "Wakeup");
+	AddTimer("PlayerLook_3", 70, "Wakeup");
+	
+	
+}
+
+void Wakeup(string &in asTimer)
+{
+	if(asTimer == "React_1") {
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 1, false);
+		GiveSanityDamage(25, true);
+		
+	}
+
+	else if(asTimer == "React_2") {
+		PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 1, false);
+		GiveSanityDamage(30, true);
+		
+	}
+	
+	else if(asTimer == "React_3") {
+		PlaySoundAtEntity("", "player_bodyfall.snt", "Player", 1, true);
+		PlaySoundAtEntity("ring", "insanity_ear_ring.snt", "Player", 1, true);
+		SetPlayerCrouching(true);
+		StartPlayerLookAt("AreaPlayerLook_2", 0.5, 0.5, "");
+		GiveSanityDamage(35, true);
+	}
+
+	else if(asTimer == "React_4") {
+		FadeOut(3);
+		SetEntityActive("brute_1", false);
+	}
+	
+	else if(asTimer == "Tp_1") {
+		SetPlayerJumpDisabled(false);
+		SetPlayerCrouchDisabled(false);
+		SetPlayerActive(false);
+		TeleportPlayer("PlayerStartArea_2");
+		StartPlayerLookAt("AreaPlayerLook_3", 0.5, 0.5, "");
+		
+		}
+		
+	else if(asTimer == "Ringingstops") {
+		StopSound("ring", 0.4);
+		}
+		
+	else if(asTimer == "PlayerAwake") {
+		AddEffectVoice("Intro_1", "", "Dialogue", "Intro_1", false, "Criminal_2", 0, 15);
+		
+		
+		
+		}
+		
+	else if(asTimer == "Cough_1") {
+			PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 1, false);
+		}
+		
+	else if(asTimer == "Speech_1") {
+			AddEffectVoice("Intro_2", "", "Dialogue", "Intro_2", true, "Criminal_1", 0, 15);
+		}
+		
+		else if(asTimer == "fadeout_1") {
+		StartPlayerLookAt("AreaPlayerLook_3", 3, 3, "");
+			
+		}
+		
+		else if(asTimer == "Speech_2") {
+			AddEffectVoice("Intro_3", "", "Dialogue", "Intro_3", false, "Criminal_2", 0, 15);
+			
+		}
+		
+		else if(asTimer == "fadein_1") {
+			FadeIn(1);
+		
+		}
+		
+		else if(asTimer == "PlayerLook_1") {
+			StartPlayerLookAt("AreaPlayerLook_4", 3, 3, "");
+			PlaySoundAtEntity("", "player_cough.snt", "Player", 1, false);
+		
+		}
+		
+		else if(asTimer == "Speech_3") {
+			AddEffectVoice("Intro_4", "", "Dialogue", "Intro_4", false, "Criminal_1", 0, 15);
+			
+		}
+		
+		else if(asTimer == "fadeout_2") {
+			FadeOut(2);
+			PlaySoundAtEntity("", "react_sigh.snt", "Player", 1, false);
+		}
+		
+		else if(asTimer == "fadein_4") {
+			TeleportPlayer("PlayerStartArea_7");
+			StartPlayerLookAt("AreaPlayerLook_3", 3, 3, "");
+			FadeIn(1);
+			PlaySoundAtEntity("", "player_cough.snt", "Player", 1, false);
+			}
+			
+		else if(asTimer == "fadeout_4") {
+			FadeOut(2);
+			PlaySoundAtEntity("", "react_sigh.snt", "Player", 1, false);
+			}
+		
+		else if(asTimer == "Tp_2") {
+			TeleportPlayer("PlayerStartArea_3");
+			StartPlayerLookAt("AreaPlayerLook_5", 0.1, 0.1, "");
+		}
+		
+		else if(asTimer == "fadein_2") {
+			FadeIn(1);
+			PlaySoundAtEntity("", "player_cough.snt", "Player", 1, false);
+		}
+		
+		else if(asTimer == "Speech_4") {
+			AddEffectVoice("Intro_5", "", "Dialogue", "Intro_5", false, "Criminal_3", 0, 15);
+		}
+		
+		else if(asTimer == "Speech_5") {
+			AddEffectVoice("Intro_6", "", "Dialogue", "Intro_6", false, "Criminal_4", 0, 15);
+		}
+		
+		else if(asTimer == "PlayerLook_2") {
+			StartPlayerLookAt("AreaPlayerLook_6", 0.1, 0.1, "");
+			PlaySoundAtEntity("", "react_sigh.snt", "Player", 1, false);
+		
+		}
+		
+		else if(asTimer == "fadeout_3") {
+			FadeOut(2);
+			PlaySoundAtEntity("", "react_sigh.snt", "Player", 1, false);
+		}
+		
+		else if(asTimer == "Speech_6") {
+			AddEffectVoice("Intro_7", "", "Dialogue", "Intro_7", false, "Criminal_6", 0, 15);
+			StartPlayerLookAt("AreaPlayerLook_7", 0.1, 0.1, "");
+			TeleportPlayer("PlayerStartArea_4");
+		}
+		
+		else if(asTimer == "Speech_7") {
+			AddEffectVoice("Intro_8", "", "Dialogue", "Intro_8", false, "Criminal_6", 0, 15);
+		}
+		
+		else if(asTimer == "fadein_3") {
+			FadeIn(1);
+			PlaySoundAtEntity("", "player_cough.snt", "Player", 1, false);
+		}
+		
+		else if(asTimer == "Speech_8") {
+			AddEffectVoice("Intro_9", "", "Dialogue", "Intro_9", false, "Criminal_5", 0, 15);
+			
+		}
+		
+		else if(asTimer == "PlayerThrow") {
+			PlaySoundAtEntity("", "player_bodyfall.snt", "Player", 1, false);
+			AddPlayerBodyForce(-10000, 30000, 0, false);
+			SetPlayerFallDamageDisabled(true);
+		}
+		
+		else if(asTimer == "PlayerLook_3") {
+			StartPlayerLookAt("AreaPlayerLook_8", 0.1, 0.1, "");
+		}
+
+}
+
+void FadeOutFall(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(0.1f);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 1, false);
+}
+
+void TP(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStartArea_6");
+	PlaySoundAtEntity("", "player_bodyfall.snt", "Player", 1, false);
+	
+	AddTimer("FadeInFinal", 5, "Start");
+	AddTimer("PlayerLook_final_1", 7, "Start");
+	AddTimer("VoicesFromAbove_1", 8, "Start");
+	AddTimer("PlayerLook_final_2", 9, "Start");
+	AddTimer("VoicesFromAbove_2", 13, "Start");
+	AddTimer("VoicesFromAbove_3", 16, "Start");
+	AddTimer("StartGame", 22, "Start");
+	
+	
+}
+
+void Start(string &in asTimer)
+{
+	if(asTimer == "FadeInFinal") {
+		FadeIn(1);	
+	}
+	
+	else if(asTimer == "PlayerLook_final_1") {
+		StartPlayerLookAt("AreaPlayerLook_10", 0.1, 0.1, "");
+	}
+	
+	else if(asTimer == "VoicesFromAbove_1") {
+		AddEffectVoice("Intro_11", "", "Dialogue", "Intro_11", false, "Voices", 0, 15);
+	}
+	
+	else if(asTimer == "PlayerLook_final_2") {
+		StartPlayerLookAt("potion_health_1", 1, 1, "");
+	}
+	
+	else if(asTimer == "VoicesFromAbove_2") {
+		AddEffectVoice("Intro_12", "", "Dialogue", "Intro_12", false, "Voices", 0, 15);
+	}
+	
+	
+	else if(asTimer == "VoicesFromAbove_3") {
+		AddEffectVoice("Intro_14", "", "Dialogue", "Intro_14", false, "Voices", 0, 15);
+	}
+	
+	else if(asTimer == "StartGame") {
+		SetPlayerJumpDisabled(false);
+		SetPlayerCrouchDisabled(false);
+		SetPlayerActive(true);
+		SetSanityDrainDisabled(false);
+		GiveSanityBoostSmall();
+		StopPlayerLookAt();
+		SetPlayerFallDamageDisabled(false);
+		
+	}
+	
+}
+
+
+void OutsideCabinet(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(100, "BloodSplat", false, true);
+}
+
+void Intro(string &in asName, int alCount)
+{
+	
+	AddTimer("Hit_3", 1, "EndIntro");
+	StopMusic(6.0f, 10);
+	AddTimer("DoorDestoryed", 2, "EndIntro");
+} 
+	
+
+//////////////////////////////////////Changes Map///////////////////////
+
+void A(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("02Castle.hub.map", "PlayerStartArea_1", "react_sigh", "react_sigh");
+}
+
+//////////////////////////////////////SewerMan//////////////////////////
+void DialogueSewer(string &in asEntity)
+{
+	AddTimer("DialoguesSewer", 5, "TimerArm");
+	AddTimer("FadeInSewer", 25, "TimerArm");
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("", "flashback_flash", "Player", 0, false);
+	
+}
+
+void TimerArm(string &in asTimer)
+{
+	if(asTimer == "DialoguesSewer") {
+		AddEffectVoice("SewerMan_1", "", "Dialogue", "SewerMan_1", false, "Player", 0, 15);
+		AddEffectVoice("SewerMan_2", "", "Dialogue", "SewerMan_2", false, "Player", 0, 15);
+		AddEffectVoice("SewerMan_3", "", "Dialogue", "SewerMan_3", false, "Player", 0, 15);
+	}
+	
+	else if(asTimer == "FadeInSewer") {
+		FadeIn(3);
+		SetEntityActive("corpse_male_arm_1", false);
+		SetEntityActive("blood_spatter03_1", false);
+		SetPlayerActive(true);
+	}
+}
+
+void ArmLook(string &in asParent, string &in asChild, int alState)
+{
+	StartPlayerLookAt("corpse_male_arm_1", 2, 2, "armlook");
+}
+
+void armlook()
+{
+	StopPlayerLookAt();
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+}
+
+	
+
+
+
+///////////////////////////////////Scare Reaction///////////////////////
+
+void TimerPlayerreact(string &in asTimer) 
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+}
+//////////////////////////////////////Sounds Misc///////////////////////
+
+void MonsterSound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "water_lurker_idle", "MonsterSoundArea", 0, false);
+}
+
+

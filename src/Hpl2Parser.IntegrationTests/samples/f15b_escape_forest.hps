@@ -1,0 +1,192 @@
+void OnStart()
+{
+	StopMusic(1, 2);
+	AddEntityCollideCallback("Player", "area", "FUNCTION", true, 1);
+	AddEntityCollideCallback("Player", "areamusiikki", "musicplay", true, 1);
+	AddEntityCollideCallback("Player", "avaa", "FUNCTION2", true, 1);
+	AutoSave();
+	PlayMusic("12_amb.ogg", true, 0.8f, 0.9f, 1, true);
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerLookSpeedMul(1.0f);
+	AddEntityCollideCallback("Player", "fade1", "exit", true, 1);
+	AddEntityCollideCallback("Player", "fade2", "exit", true, 1);
+	AddEntityCollideCallback("Player", "fade3", "exit", true, 1);
+	AddEntityCollideCallback("Player", "fade4", "exit", true, 1);
+	SetEntityInteractionDisabled("st", true);
+	SetLightVisible("valo", false);
+	SetEntityPlayerInteractCallback("lappu", "TavaraSpawni", true);
+}
+
+void TavaraSpawni(string &in asEntity)
+{
+	AddTimer("", 3.0f, "goodhelp");
+}
+
+void goodhelp(string &in asTimer)
+{
+	SetMessage("Messages", "salomonhelp", 5);
+}
+
+void paina(string &in asEntity)
+{
+	SetMoveObjectState("door", 0.0f);
+	SetEntityActive("block", true);
+	CheckPoint ("", "point", "", "", "");
+}
+
+void musicplay(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("27_event_bang.ogg", false, 0.8f, 3.0f, 3, false);
+}
+
+void koske(string &in asEntity)
+{
+	SetLampLit("f1", true, true);
+	SetLampLit("f2", true, true);
+	SetLampLit("f3", true, true);
+	SetLampLit("f4", true, true);
+	SetLampLit("f5", true, true);
+	SetLampLit("f6", true, true);
+	SetLampLit("f7", true, true);
+	SetLampLit("f8", true, true);
+	AddEntityCollideCallback("risti", "place", "exo", true, 1);
+}
+
+void exo(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ristiuusi", true);
+	SetEntityActive("risti", false);
+	SetEntityInteractionDisabled("ristiuusi", true);
+	AddTimer("", 0.5f, "start");
+}
+
+void start(string &in asTimer)
+{
+	AddTimer("", 1.0f, "PushObjects");
+	AddTimer("", 4.5f, "music");
+	AddTimer("", 4.3f, "rotate");
+	AddTimer("", 17.0f, "end");
+	StopMusic(2, 1);
+}
+
+void music(string &in asTimer)
+{
+	PlayMusic("01_event_dust.ogg", true, 0.9f, 1.5f, 55, true);
+}
+
+void PushObjects(string &in asTimer)
+{
+	AddPropImpulse("st", 0.0f, 0.17f, 0.0f, "");
+	AddTimer("", 0.01, "PushObjects");
+}
+
+void rotate(string &in asTimer)
+{
+	SetPropStaticPhysics("st", true);
+	RotatePropToSpeed("st", 2.5f, 55.0f, 0.0f, 1.0f, 0.0f, false, "");
+	AddTimer("", 2.0f, "dustrepeat");
+}
+
+void dustrepeat(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "dust", true);
+	AddTimer("mytimer", 2.0f, "dustrepeat");
+}
+
+void end(string &in asTimer)
+{
+	PlaySoundAtEntity("amb", "amb_guardian.snt", "vision", 0, false);
+	CreateParticleSystemAtEntity("visionst", "ps_ritual_vision_glow.ps", "vision", true);
+	AddTimer("", 6.0f, "endritual");
+	SetLightVisible("valo", true);
+}
+
+void endritual(string &in asTimer)
+{
+	StopSound("amb", 0.0f);
+	PlayGuiSound("29_elec_burst.ogg", 1.0f);
+	DestroyParticleSystem("visionst");
+	RemoveTimer("mytimer");
+	StopMusic(0, 55);
+	SetLightVisible("valo", false);
+	SetEntityActive("st2", true);
+	SetEntityActive("st", false);
+	SetLampLit("f1", false, false);
+	SetLampLit("f2", false, false);
+	SetLampLit("f3", false, false);
+	SetLampLit("f4", false, false);
+	SetLampLit("f5", false, false);
+	SetLampLit("f6", false, false);
+	SetLampLit("f7", false, false);
+	SetLampLit("f8", false, false);
+	SetEntityActive("b1", false);
+	SetEntityActive("b2", false);
+	SetEntityActive("b3", false);
+	SetEntityActive("b4", false);
+	AddPropImpulse("st2", 0.7f, 0.0f, 0.4f, "");
+	AddTimer("", 6.0f, "dooropen");
+	AddTimer("", 0.8f, "salomongone");
+}
+
+void salomongone(string &in asTimer)
+{
+	PlayMusic("end_of_salomon.ogg", false, 0.9f, 0.0f, 90, false);
+}
+
+void dooropen(string &in asTimer)
+{
+	SetMoveObjectState("door", 1.0f);
+	AddTimer("", 0.8f, "puzzledoor");
+}
+
+void puzzledoor(string &in asTimer)
+{
+	PlayMusic("01_puzzle_passage.ogg", false, 0.9f, 0.2f, 90, false);
+}
+
+void Func_wall(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        SetMoveObjectState("Secret", 1.0f);
+	return;
+} 
+	if (alState == -1) 
+	
+        SetMoveObjectState("Secret", 0.0f);
+}
+
+void FUNCTION(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("12_puzzle_cavein.ogg", false, 1.0f, 1.0f, 5, false);
+	SetEntityActive("blo", true);
+	PlayMusic("forest.ogg", true, 1.0f, 1.0f, 2, true);
+	SetPlayerMoveSpeedMul(0.8f);
+	SetPlayerRunSpeedMul(0.8f);
+	SetPlayerLookSpeedMul(1.0f);
+}
+
+void FUNCTION2(string &in asParent, string &in asChild, int alState)
+{
+	AddPropImpulse("hat", 0.0f, 7.0f, 0.0f, "world");
+}
+
+void exit(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(3.0f);
+	AddTimer("", 3.2f, "mapch");
+}
+
+void mapch(string &in asTimer)
+{
+	ChangeMap("small_village.map", "PlayerStartArea_1", "", "");
+}
+
+
+
+
+
+
+
+

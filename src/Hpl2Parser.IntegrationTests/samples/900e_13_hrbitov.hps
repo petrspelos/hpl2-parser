@@ -1,0 +1,129 @@
+void OnStart()
+{
+  SetLocalVarInt("pocet_zvuku_blesku", 5);
+
+  //==========================================
+  // debug bullshit
+  //==========================================
+  //GiveItemFromFile("lantern_1", "lantern.ent");
+
+  AddTimer("svetlo", RandInt(5,15), "blesk");
+
+}
+
+void blesk(string &in asTimer)
+{
+  AddDebugMessage("blesk", false);
+  SetLightVisible(asTimer, true);
+  SetLightVisible(asTimer+"_2", true);
+  AddTimer(asTimer, 0.2, asTimer);
+  SetLocalVarInt("dalsi_zvuk", RandInt(1, GetLocalVarInt("pocet_zvuku_blesku")));
+  AddDebugMessage("dalsi:" + GetLocalVarInt("dalsi_zvuk"), false);
+  PlayGuiSound("blesk" + GetLocalVarInt("dalsi_zvuk") + ".ogg", 0.743);
+  AddTimer("svetlo", RandInt(10,25), "blesk");
+  SetEntityVisible("hungry_sabatu_on_his_way_to_mcdonald", true);
+}
+
+void svetlo(string &in asTimer)
+{
+  SetEntityVisible("hungry_sabatu_on_his_way_to_mcdonald", false);
+  SetLightVisible(asTimer, false);
+  SetLightVisible(asTimer+"_2", false);
+}
+
+void dosklepa(string &in asEntity)
+{
+  if(GetGlobalVarInt("zabil_inge") == 1)
+  {
+    PlayGuiSound("door_large_castle_open.snt", 1.0);
+    ChangeMap("07_cellar.map", "playerstart_zehrbitova", "", "");
+  }
+  else
+  {
+    SetMessage("TheVoice", "bezzabittumrchuvole", 3.0);
+  }
+}
+
+void doklastera(string &in asEntity)
+{
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+  ChangeMap("14_klaster.map", "playerstart_0", "", "");
+}
+
+void tajnycallback(string &in asEntity)
+{
+  //GiveSanityBoostSmall();
+  SetGlobalVarInt("nalezenych_tajnych_poznamek", GetGlobalVarInt("nalezenych_tajnych_poznamek")+1);
+  SetMessage("TheVoice", "tajemstvinalezeno", 3.0);
+  PlayGuiSound("puzzle.ogg", 1.0);
+}
+
+void OnEnter()
+{
+  SetMapDisplayNameEntry("hrbitov");
+
+  PlayMusic("hrbitov.ogg", true, 1.0, 0.1, 1000, false);
+  SetLightVisible("svetlo", false);
+  SetLightVisible("svetlo_2", false);
+  SetEntityActive("hungry_sabatu_on_his_way_to_mcdonald", true);
+  SetEntityVisible("hungry_sabatu_on_his_way_to_mcdonald", false);
+  SetEnemySanityDecreaseActive("hungry_sabatu_on_his_way_to_mcdonald", false);
+  for(int i=1;i<=56;i++){
+    AddEnemyPatrolNode("hungry_sabatu_on_his_way_to_mcdonald", "PathNodeArea_"+i, 0.001, "");
+  }
+  AutoSave();
+}
+
+void OnLeave()
+{
+
+  StopMusic(1.0, 1000);
+  SetGlobalVarInt("dalsi_nacitaci_obrazovka", RandInt(1,5));
+  if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 1)
+  {
+    if(GetGlobalVarInt("potkal_helene") == 0)
+    {
+      if(GetPlayerSanity() < 100 && GetPlayerSanity() > 80)
+      {
+        SetupLoadScreen("loading", "helene", 0, "nacitani_helene.jpg");
+      }
+      else if(GetPlayerSanity() < 80 && GetPlayerSanity() > 60)
+      {
+        SetupLoadScreen("loading", "helene2", 0, "nacitani_helene_horsi.jpg");
+      }
+      else if(GetPlayerSanity() < 60 && GetPlayerSanity() > 40)
+      {
+        SetupLoadScreen("loading", "helene3", 0, "nacitani_helene_horsi_horsi.jpg");
+      }
+      else if(GetPlayerSanity() < 40 && GetPlayerSanity() > 20)
+      {
+        SetupLoadScreen("loading", "helene4", 0, "nacitani_helene_horsi_horsi_horsi.jpg");
+      }
+      else if(GetPlayerSanity() < 20)
+      {
+        SetupLoadScreen("loading", "helene5", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+      }
+    }
+    else
+    {
+      SetupLoadScreen("loading", "helene5", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+    }
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 2)
+  {
+    SetupLoadScreen("loading", "niklas", 0, "nacitani_niklas.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 3)
+  {
+    SetupLoadScreen("loading", "adolf", 0, "nacitani_adolf.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 4)
+  {
+    SetupLoadScreen("loading", "gotfried", 0, "nacitani_gotfried.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 5)
+  {
+    SetupLoadScreen("loading", "hedwig", 0, "nacitani_hedwig.jpg");
+  }
+  AutoSave();
+}

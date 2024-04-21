@@ -1,0 +1,474 @@
+void OnEnter()
+{
+	if(ScriptDebugOn())
+	{
+		SetGlobalVarInt("FastSeekerAchievement", 1);
+		SetGlobalVarInt("HealthAchievement", 1);
+		SetGlobalVarInt("ItemsAchievement", 1);
+		SetGlobalVarInt("NoDeathAchievement", 1);
+		//SetGlobalVarInt("StatuesAchievement", 1);
+		SetGlobalVarInt("WardrobeAchievement", 1);
+		SetGlobalVarInt("EnemiesAchievement", 1);
+		SetGlobalVarInt("PuzzleAchievement", 1);
+		//SetGlobalVarInt("NoPuzzleAchievement", 1);
+		SetGlobalVarInt("NoStatuesAchievement", 1);
+		SetGlobalVarInt("SanityAchievement", 1);
+		SetGlobalVarInt("SlimesAchievement", 1);
+		SetGlobalVarInt("LightsAchievement", 1);
+	}
+	
+	PreloadParticleSystem("ps_orb_room_agrippa_end_effect.ps");
+	
+	PreloadSound("03_in_a_bottle.snt");
+	PreloadSound("01_scare_wings_loop.snt");
+	PreloadSound("02_insanity_whisper_rand.snt");
+	PreloadSound("02_insanity_whisper_loop.snt");
+	PreloadSound("08_ambience_forest.snt");
+
+	SetMapDisplayNameEntry("Wood5");
+	
+	CheckPoint ("OutOfMap", "PlayerStartArea_1", "CPOutOfMap", "DeathHints", "DoNotFall");
+	
+	if(GetGlobalVarInt("HealthAchievement") == 1)
+		AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+}
+
+void OnLeave()
+{
+	RemoveTimer("addhealth");
+	RemoveTimer("checkhealth");
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+}
+
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaBackToMaze_1", "CollideAreaBackToMaze", true, 1);
+	AddEntityCollideCallback("Player", "AreaBackToMaze_2", "CollideAreaBackToMaze", true, 1);
+	AddEntityCollideCallback("Player", "AreaHeaven_1", "CollideAreaHeaven", true, 1);
+	AddEntityCollideCallback("Player", "AreaHeaven_2", "CollideAreaHeaven", true, 1);
+	AddEntityCollideCallback("Player", "AreaHeaven_3", "CollideAreaHeaven", true, 1);
+	AddEntityCollideCallback("Player", "AreaDiscoverCrossroad", "CollideAreaDiscoverCrossroad", true, 1);
+	
+	SetPlayerJumpDisabled(true);
+	SetInventoryDisabled(true);
+	SetPlayerHealth(100.0f);
+	SetPlayerSanity(100.0f);
+	
+	SetupLoadScreen("LoadingHints", "ToLimbo", 0, "menu_loading_rose.jpg");
+}
+
+void TimerHealthAchievement(string &in asTimer)
+{
+	if(asTimer == "addhealth")
+	{
+		if(GetPlayerHealth() <= 98.0f)
+		{
+			AddPlayerHealth(2.0f);
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "checkhealth")
+	{
+		if(GetPlayerHealth() > 98.0f)
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "pausehealth")
+	{
+		RemoveTimer("addhealth");
+		RemoveTimer("checkhealth");
+	}
+}
+
+void CPOutOfMap(string &in asName, int alCount)
+{
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	if(GetGlobalVarInt("NoDeathAchievement") == 1)
+		SetPlayerHealth(100.1f);
+	if(GetGlobalVarInt("SanityAchievement") == 1)
+		SetPlayerSanity(100.1f);
+	PlayMusic("08_wood_theme", true, 1.0f, 5.0f, 0, false);
+}
+
+void CollideAreaBackToMaze(string &in asParent, string &in asChild, int alState)
+{
+	if(asChild == "AreaBackToMaze_1")
+	{
+		SetPlayerActive(false);
+	
+		PlayerLook("bonfire_1", "", 2.0f, 3.0f);
+		
+		FadeOut(3.0f);
+		FadeGlobalSoundVolume(0.0f, 4.0f);
+		
+		AddTimer("backtomaze1", 5.0f, "TimerEvents");
+		
+		StopMusic(5.0f, 10);
+		StopMusic(5.0f, 0);
+	}
+	if(asChild == "AreaBackToMaze_2")
+	{
+		PlayerLook("angel_statue_1", "", 1.0f, 5.0f);
+		
+		SetPlayerActive(false);
+		
+		SetMessage("Jack", "76", 6.0f);
+		
+		FadeOut(6.0f);
+		FadeGlobalSoundVolume(0.0f, 6.0f);
+		
+		AddTimer("backtomaze3", 9.0f, "TimerEvents");
+		
+		StopMusic(6.0f, 10);
+		StopMusic(6.0f, 0);
+	}
+}
+
+void CollideAreaHeaven(string &in asParent, string &in asChild, int alState)
+{
+	if(asChild == "AreaHeaven_1")
+	{
+		SetEntityActive("block_box_55", true);
+		
+		PlayMusic("29_amb_end_soft.ogg", true, 1.0f, 0.0f, 10, false);
+		
+		StartPlayerLookAt("AreaLookAt_1", 1.0f, 1.0f, "");
+		AddTimer("", 3.0f, "TimerStopLook");
+		
+		SetPlayerMoveSpeedMul(0.3f);
+		SetPlayerRunSpeedMul(0.3f);
+		SetPlayerLookSpeedMul(0.5f);
+		
+		SetMessage("Jack", "71", 8.0f);
+	}
+	if(asChild == "AreaHeaven_2")
+	{
+		SetMessage("Jack", "72", 10.0f);
+		
+		StartPlayerLookAt("AreaLookAt_2", 1.0f, 1.0f, "");
+		AddTimer("", 3.0f, "TimerStopLook");
+	}
+	if(asChild == "AreaHeaven_3")
+	{
+		SetGlobalVarInt("FreeEnding", 1);
+	
+		SetPlayerActive(false);
+		
+		StartPlayerLookAt("AreaLookAt_3", 2.0f, 2.0f, "");
+		
+		FadePlayerFOVMulTo(0.5, 0.25);
+		
+		StartEffectFlash(3,5,3);
+		
+		PlayGuiSound("03_in_a_bottle", 1.0f);
+		
+		AddTimer("fadeoutend", 5.0f, "TimerFadeScreen");
+		AddTimer("globalsoundoff", 3.5f, "TimerFadeGlobalSound");
+	}
+}
+
+void CollideAreaDiscoverCrossroad(string &in asParent, string &in asChild, int alState)
+{
+	PlayerLook("castle_gate_arched01_1", "lookspeed", 2.0f, 5.0f);
+	
+	SetMessage("Jack", "69", 5.0f);
+	
+	AddTimer("discovercross", 5.5f, "TimerEvents");
+}
+
+void TimerEvents(string &in asTimer)
+{
+	if(asTimer == "discovercross")
+	{
+		PlayerReact("scare", 5.0f, true, true);		
+		
+		PlayerLook("AreaBackToMaze_1", "lookspeed", 3.0f, 5.0f);
+		
+		PlayMusic("12_event_blood.ogg", false, 1.0f, 0.0f, 10, false);
+		
+		SetMessage("Woman", "08", 7.0f);
+		
+		SetEntityActive("block_box_51", false);
+		SetPropActiveAndFade("angel_statue_3", true, 2.0f);
+		
+		AddTimer("breatheffect", 2.0f, "TimerPlayerReactions");
+		AddTimer("10", 5.0f, "TimerStopMusic");
+		AddTimer("08_wood_theme", 5.1f, "TimerPlayMusic");
+		AddTimer("70", 8.5f, "TimerTalking");
+	}
+	if(asTimer == "backtomaze1")
+	{
+		TeleportPlayer("PlayerStartArea_2");
+		
+		SetMessage("Jack", "73", 4.0f);
+	
+		PlayMusic("06_house_theme", false, 1.0f, 0, 0, false);
+		
+		AddTimer("74", 4.0f, "TimerTalking");
+	}
+	if(asTimer == "backtomaze2")
+	{
+		SetPlayerActive(true);
+		
+		FadeIn(4.0f);
+		FadeGlobalSoundVolume(1.0f, 4.0f);
+		
+		SetMessage("Jack", "75", 6.0f);
+		
+		SetPlayerMoveSpeedMul(0.35f);
+		SetPlayerRunSpeedMul(0.35f);
+		SetPlayerLookSpeedMul(0.75f);
+	}
+	if(asTimer == "backtomaze3")
+	{
+		TeleportPlayer("PlayerStartArea_3");
+		
+		//SetPlayerCrouching(true);
+		
+		StartPlayerLookAt("starterletter", 5.0f, 5.0f, "");
+		
+		SetGlobalVarInt("MazeEnding", 1);
+		
+		SetMessage("Woman", "SweetDreams", 6.5f);
+		
+		SetPlayerSanity(20.0f);
+		
+		AddTimer("fadeinquick", 3.0f, "TimerFadeScreen");
+		//AddTimer("globalsoundonquick", 2.5f, "TimerFadeGlobalSound");
+		AddTimer("pant", 3.0f, "TimerPlayerReactions");
+		AddTimer("07_maze_memory", 2.9f, "TimerPlayMusic");
+		AddTimer("fadeoutquick", 6.0f, "TimerFadeScreen");	
+		//AddTimer("globalsoundoffquick", 6.0f, "TimerFadeGlobalSound");
+		AddTimer("loadlimbo", 9.0f, "TimerLoadLimbo");
+	}
+}
+
+void TimerStopMusic(string &in asTimer)
+{
+	StopMusic(6.0f, StringToInt(asTimer));
+}
+
+void TimerPlayMusic(string &in asTimer)
+{
+	if(asTimer == "07_maze_memory") PlayMusic(asTimer, false, 1.0f, 0, 10, false);
+	else PlayMusic(asTimer, true, 1.0f, 3.0f, 0, true);
+	if(asTimer == "08_wood_theme") SetPropActiveAndFade("angel_statue_3", false, 2.0f);
+}
+
+void TimerTalking(string &in asTimer)
+{
+	SetMessage("Jack", asTimer, 7.0f);
+	if(asTimer == "74") AddTimer("backtomaze2", 7.0f, "TimerEvents");
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")	FadeIn(2.0f);
+	if(asTimer == "fadeinquick") FadeIn(0.0f);
+	if(asTimer == "fadeinslow")	FadeIn(5.0f);
+	if(asTimer == "fadeout") FadeOut(2.0f);
+	if(asTimer == "fadeoutquick") FadeOut(0.0f);
+	if(asTimer == "fadeoutslow") FadeOut(5.0f);
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeinslowactiveplayer")
+	{
+		FadeIn(5.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}
+	if(asTimer == "fadeoutslowactiveplayer")
+	{
+		FadeOut(5.0f);
+		SetPlayerActive(true);	
+	}
+	if(asTimer == "fadeoutend")
+	{
+		FadeOut(2.0f);
+		AddTimer("loadlimbo", 4.0f, "TimerLoadLimbo");
+	}
+}
+
+void TimerLoadLimbo(string &in asTimer)
+{
+	ChangeMap("00_limbo.map", "PlayerStartArea_1", "", "");
+}
+
+void TimerFadeGlobalSound(string &in asTimer)
+{
+	if(asTimer == "globalsoundon") FadeGlobalSoundVolume(1.0f, 4.0f);
+	if(asTimer == "globalsoundonquick") FadeGlobalSoundVolume(1.0f, 0.5f);
+	if(asTimer == "globalsoundoff") FadeGlobalSoundVolume(0.0f, 4.0f);
+	if(asTimer == "globalsoundoffquick") FadeGlobalSoundVolume(0.0f, 0.5f);
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}
+
+void PlayerLook(string &in asEntity, string &in asType, float afSpeed, float afTime)
+{
+	StartPlayerLookAt(asEntity, afSpeed, afSpeed, "");
+	if(asType == "lookspeed")
+	{
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);
+		AddTimer("resetspeedmul", afTime, "TimerStopLook");
+	}
+	else
+	if(asType == "lookactive")
+	{
+		SetPlayerActive(false);
+		AddTimer("activeplayer", afTime, "TimerStopLook");
+	}
+	else AddTimer("", afTime, "TimerStopLook");
+}
+
+void PlayerReact(string &in asType, float afCount, bool abUseDamageEffect, bool abUseBlurEffect)
+{
+	if(asType == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "breath_slow")
+	{
+		PlayGuiSound("react_breath_slow", 0.6f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "pant")
+	{
+		PlayGuiSound("react_pant", 0.8f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(abUseDamageEffect == true) GiveSanityDamage(afCount, true);
+	else GiveSanityDamage(afCount, false);
+} 

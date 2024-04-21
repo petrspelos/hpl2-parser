@@ -1,0 +1,299 @@
+void OnStart()
+{
+	AutoSave();
+	
+	SetLocalVarInt("AdhesiveSampleGotten", 0);
+	
+	SetMapDisplayNameEntry("LevelLab");
+	
+	AddUseItemCallback("", "SampleHold", "DoorAdhesive", "GetAdSample", true);
+//	AddUseItemCallback("", "HammerChipper", "DoorAdhesive", "GetAdSample", true);
+	//AddUseItemCallback("", "Chipper", "DoorAdhesive", "GetAdSample", true);
+	
+	
+	AddUseItemCallback("", "AdhesiveSample", "Burner", "PlaceAdBurner", true);
+	AddUseItemCallback("", "AdRem", "DoorAdhesive", "RemoveAdhesive", true);
+	AddUseItemCallback("", "LabKey", "LabDoor", "UnlockLabDoor", true);
+	
+	AddUseItemCallback("", "HammerChipper", "mansion_5", "BreakMansionDoor", false);
+	AddUseItemCallback("", "Hammer", "mansion_5", "BreakMansionDoor", false);
+	AddUseItemCallback("", "Chipper", "mansion_5", "BreakMansionDoorFalse", false);
+	
+	AddUseItemCallback("", "Chemical", "DoorAdhesive", "UseBad", false);
+	AddUseItemCallback("", "Substitute", "DoorAdhesive", "UseBad", false);
+	
+	AddUseItemCallback("", "HammerChipper", "DoorAdhesive", "GetAdSample", false);
+	AddUseItemCallback("", "Hammer", "DoorAdhesive", "AdWrong", false);
+	AddUseItemCallback("", "Chipper", "DoorAdhesive", "GetAdSample", false);
+	
+	AddUseItemCallback("", "AdhesiveSample", "DoorAdhesive", "AdTooMuch", false);
+	
+	AddEntityCollideCallback("Player", "AreaAdGoal", "AddAdhesiveGoal", true, 1);
+	AddEntityCollideCallback("Player", "AreaEnd", "EndToNext", true, 1);
+	
+	SetPlayerMoveSpeedMul(1);
+	FadeImageTrailTo(0, 1);
+	
+	
+	//Lol
+	AddPropForce("chem_scale_3", 1435, 1999, 8452, "world");
+	
+	if(ScriptDebugOn())
+	{
+		SetPlayerLampOil(100.0f);
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+		
+		GiveItem("HammerChipper", "Puzzle", "", "stone_hammer_chipper.tga", 1.0f);
+		GiveItem("Hammer", "Puzzle", "", "stone_hammer.tga", 1.0f);
+		GiveItem("Chipper", "Puzzle", "", "stone_chipper.tga", 1.0f);
+	}
+	
+	/*
+	
+	NOTE -- POSSIBLE ITEMS:
+	
+	HAMMER
+	CHIPPER
+	HAMMER AND CHIPPER 
+	CHEMICAL
+	SAMPLE
+	SUBSTITUTE
+	
+	*/
+	
+	
+	
+	
+	}
+void OnEnter()
+{
+	StopMusic(1.0f, 10);
+	StopMusic(1.0f, 0);
+	}
+///////////////////////////
+//WHEN YOU GET THE ADHESIVE SAMPLE
+void GetAdSample(string &in asItem, string &in asEntity)
+{
+	if(HasItem("SampleHold") == false)
+	{
+		SetMessage("TextOne", "17AdNoJar", 2.0f);
+	}
+	
+	if(HasItem("AdhesiveSample") == true && GetLocalVarInt("AdhesiveSampleGotten") == 2)
+	{
+		SetMessage("TextOne", "17AdhesiveSampleTooMuch", 2.0f);
+	}
+	
+	
+	if(HasItem("SampleHold") == true)
+	{
+	GiveItem("AdhesiveSample", "Puzzle", "AdSample", "glass_container_blood.tga", 1);
+	PlaySoundAtEntity("", "impact_organic_med", "DoorAdhesive", 0.0f, false);
+	SetMessage("TextOne", "AdhesiveText", 1.0f);
+	RemoveItem("SampleHold");
+	GiveSanityBoost();
+	
+	SetLocalVarInt("AdhesiveSampleGotten", 1);
+	}
+
+	if(GetLocalVarInt("AdhesiveSampleGotten") == 2)
+	{
+		SetMessage("TextOne", "17AdhesiveSampleTooMuch", 2.0f);
+	}
+
+	}
+//////////////////////////////////////
+/////////////////////////////////////
+//WHEN YOU PLACE THE SAMPLE ON THE BURNER
+void PlaceAdBurner(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("AdhesiveStat", true);
+	PlaySoundAtEntity("", "puzzle_place_jar", "BurnerEffects", 0.0f, false);
+	RemoveItem(asItem);
+	AddLocalVarInt("BurnerOK", 1);
+	}
+/////////////
+//NOW THAT THE JAR IS PLACED.....
+
+//////////////////////////////////////////////
+
+//THE SAMPLE SHOULD TURN TO SUBSTITUTE WHEN THE BURNER GOES ON
+//////////////////
+////////////////////////
+//BURNER WHEEL:
+void BeginBurn(string &in asEntity, int alState)
+{
+	//Variable so it doesnt happen twice
+	
+	if(alState == 1 && GetLocalVarInt("BurnerOK") == 1)
+	{
+	//EFFECTS
+	CreateParticleSystemAtEntity("fire", "ps_fire_lab_burner.ps", "FireParticle", true);
+	PlaySoundAtEntity("", "ui_use_tinderbox", "FireParticle", 0.0f, false);
+	//////////////////////////
+	
+	//ADHESIVE TO SUBSTITUTE
+	PlaySoundAtEntity("boil", "puzzle_boil", "BurnerEffects", 0.0f, false);
+	CreateParticleSystemAtEntity("bubbles", "ps_acid_container_bubbles.ps", "BurnerEffects", true);
+	AddTimer("", 3.5f, "TimerFinishConvert");
+	AddLocalVarInt("BurnerOK", 1);
+			}
+	//Just disabling effects
+	if(alState == -1)
+	{
+		DestroyParticleSystem("fire");
+	}
+	//Making sure no errors
+	if(alState == 1 && GetLocalVarInt("BurnerOK") == 2)
+	{
+		CreateParticleSystemAtEntity("fire", "ps_fire_lab_burner.ps", "FireParticle", true);
+		PlaySoundAtEntity("", "ui_use_tinderbox", "FireParticle", 0.0f, false);
+	}
+	
+	if(alState == 1 && GetLocalVarInt("BurnerOK") == 0)
+	{
+		CreateParticleSystemAtEntity("fire", "ps_fire_lab_burner.ps", "FireParticle", true);
+		PlaySoundAtEntity("", "ui_use_tinderbox", "FireParticle", 0.0f, false);
+	}
+		}
+////////////////////////////////
+//AFTER 1.5 SECONDS, THE ADHESIVE BECOMES THE SUBSTITUTE
+void TimerFinishConvert(string &in asTimer)
+{
+	//FUNCTION (SWITCHING PROPS)
+	SetEntityActive("Substitute", true);
+	SetEntityActive("AdhesiveStat", false);
+	
+	//EFFECTS
+	PlaySoundAtEntity("", "puzzle_acid", "BurnerEffects", 0.0f, false);
+	DestroyParticleSystem("bubbles");
+	GiveSanityBoost();
+	}
+//////////////////////////////////////
+///////End bubbles and sound
+void EndBubbles(string &in asEntity)
+{
+	DestroyParticleSystem("bubbles");
+	StopSound("boil", 1.0f);
+	}
+////////////////////////
+///////REMOVE THE ADHESIVE NOW
+void RemoveAdhesive(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetPropActiveAndFade("DoorAdhesive", false, 4);
+	CreateParticleSystemAtEntity("", "ps_acid_web_dissolve.ps", "ScriptArea_2", false);
+	PlaySoundAtEntity("", "gameplay_acid_web", "ScriptArea_2", 0.0f, false);
+	SetSwingDoorLocked("GoalDoor", false, false);
+	GiveSanityBoost();
+	
+	CompleteQuest("Adhesive", "Adhesive");
+	
+	//Music
+	PlayMusic("17_puppet02.ogg", false, 0.7f, 0.0f, 10, false);
+	}
+/////////////////////////////////////////
+////////////////Quest & lang stuff
+void AddAdhesiveGoal(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Adhesive", "Adhesive");
+	}
+////////////////////////////////////////////
+//
+//////////QUICK KEY SCRIPT
+
+void UnlockLabDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("LabDoor", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	}
+//BREAK MANSION DOOR
+void BreakMansionDoor(string &in asItem, string &in asEntity)
+{
+	SetPropHealth("mansion_5", 0);
+	PlayMusic("17_puppet.ogg", false, 0.7f, 0.0f, 10, false);
+	
+	GiveSanityBoostSmall();
+}
+
+//LOCK GENERAL 2
+void Lock2(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor2", 2);
+}
+
+
+//---------------------------------------------	
+
+/////////////////////////////
+// EXIT SICKNESS
+/////////////////////////////
+
+//---------------------------------------------	
+
+void EndToNext(string &in asParent, string &in asChild, int alState)
+{
+	
+	
+	AddTimer("timerend1", 4.5f, "TimerEnd");
+	AddTimer("timerend2", 19.5f, "TimerEnd");
+	
+	FadeImageTrailTo(1.7f,1.0f);
+	FadeOut(3);
+	
+	AutoSave();
+}
+
+void TimerEnd(string &in asTimer)
+{
+	if(asTimer == "timerend1")
+	{
+		SetPlayerActive(false);
+		SetPlayerMoveSpeedMul(0.7f);
+		PlaySoundAtEntity("", "17_exit_sickness.snt", "Player", 0, false);
+	}
+	
+	if(asTimer == "timerend2")
+	{
+		ChangeMap("18_head_dignitary_lounge.map", "PlayerStartArea_1", "door_level_cellar_open", "");
+	}
+}
+
+//Load screen
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load8", 1, "int_loading_dragon.jpg");
+}
+
+///////////////////////////
+///MEMOS TO HELP PLAYER
+void BreakMansionDoorFalse(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "17ChipperWrong", 2);
+}
+
+//////PLAYER USES WRONG THINGS ON DOOR
+void UseBad(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "17UseNo", 2);
+}
+
+//////PLAYER USES CHIPPER ON ADHESIVE
+void AdWrong(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "17AdhesiveChip", 2);
+}
+
+//////PLAYER USES ADHESIVE TOO MUCH ON DOOR
+void AdTooMuch(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "17AdhesiveSampleTooMuch", 2);
+}
+
+/*
+
+if anybody is reading this, hello
+
+*/
+

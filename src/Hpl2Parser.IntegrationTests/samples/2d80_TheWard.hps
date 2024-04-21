@@ -1,0 +1,374 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaHarry", "VentHarry", true, 1);
+AddEntityCollideCallback("Player", "boards", "VentBreak", true, 1);
+AddEntityCollideCallback("harry1", "AreaHarryStop", "VentHarryStop", true, 1);
+AddEntityCollideCallback("Player", "AreaEaster", "Easter", true, 1);
+AddEntityCollideCallback("Player", "AreaStorage", "LookVent", true, 1);
+AddEntityCollideCallback("Player", "AreaDeleteDoor", "DeleteDoor", false, 1);
+AddEntityCollideCallback("Player", "AreaPatrol", "ActivatePatrol", false, 1);
+AddEntityCollideCallback("Player", "AreaPatrol2", "ActivatePatrol2", false, 1);
+AddUseItemCallback("","keyelevator","AreaKey","ElevatorKey",false);
+AddUseItemCallback("", "waxharry2", "nowax", "UseWaxroll", true);
+AddUseItemCallback("","bucket2","AreaBucket","Bucket",false);
+SetMoveObjectState("Elevator", 1.0f);
+PlaySoundAtEntity("", "elevator_stop.snt", "Player", 0, false);
+PlayMusic("06_amb.ogg", true, 1, 5.0f, 0, true);
+RotatePropToSpeed("water_wheel_1", 1.0f, 1.0f, 0.0f, -2.0f, 0.0f, true, "");
+AddTimer("whispers", 15, "whispers");
+SetMapDisplayNameEntry("TheWard");
+AutoSave();
+}
+
+void LookVent(string &in asParent, string &in asChild, int alState)
+{	
+StartPlayerLookAt("AreaVent", 5, 50, "");
+SetMessage("Messages", "ch5vent", 4);
+AddTimer("lookvent2", 2, "lookvent2");
+}
+
+void lookvent2(string &in asTimer)
+{
+StopPlayerLookAt();
+}
+
+void vent(string &in asEntity)
+{
+FadeOut(2.0f);
+SetPlayerActive(false);
+AddTimer("vent2", 2, "vent2");
+}
+
+void vent2(string &in asTimer)
+{
+FadeIn(3.0f);
+TeleportPlayer("PlayerStartArea_2");
+SetPlayerActive(true);
+PlayGuiSound("player_climb.snt", 1.0f);
+}
+
+void vent3(string &in asEntity)
+{
+FadeOut(2.0f);
+SetPlayerActive(false);
+AddTimer("vent4", 2, "vent4");
+}
+
+void vent4(string &in asTimer)
+{
+FadeIn(3.0f);
+TeleportPlayer("PlayerStartArea_3");
+SetPlayerActive(true);
+PlayGuiSound("player_climb.snt", 1.0f);
+AddTimer("vent5", 5, "vent5");
+}
+
+void vent5(string &in asTimer)
+{
+SetPropHealth("dog", 0.0f);
+}
+
+void VentHarry(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("harry1", true);
+AddEnemyPatrolNode("harry1","node_2",0,"");
+AddEnemyPatrolNode("harry1","node_5",0,"");
+AddEnemyPatrolNode("harry1","node_6",0,"");
+}
+
+void VentHarryStop(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("harry1", false);
+SetEntityActive("castle_28", false);
+}
+
+void VentBreak(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("boards", false);
+PlaySoundAtEntity("","break_wood.snt","boards", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_wood_small", "boards", false);
+SetPlayerActive(false);
+SetPlayerCrouching(true);
+CheckPoint ("Checkpoint", "PlayerStartArea_4", "DeathSettings", "DeathHints", "Killed");
+AddTimer("ventbreak2", 0.5f, "ventbreak2");
+}
+
+void ventbreak2(string &in asTimer)
+{
+StartPlayerLookAt("Look1", 5, 50, "");
+AddTimer("ventbreak3", 2, "ventbreak3");
+}
+
+void ventbreak3(string &in asTimer)
+{
+StartPlayerLookAt("Look2", 5, 50, "");
+AddTimer("ventbreak4", 1, "ventbreak4");
+}
+
+void ventbreak4(string &in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerActive(true);
+SetPlayerCrouching(false);
+AddTimer("harry", 10, "harry");
+}
+
+void harry(string &in asTimer)
+{
+SetEntityActive("harry2", true);
+SetEntityActive("AreaDeleteDoor", true);
+AddEnemyPatrolNode("harry2","node_7",0,"");
+AddEnemyPatrolNode("harry2","node_8",2,"");
+AddEnemyPatrolNode("harry2","node_10",2,"");
+AddEnemyPatrolNode("harry2","node_9",0,"");
+AddEnemyPatrolNode("harry2","node_11",0,"");
+AddEnemyPatrolNode("harry2","node_12",2,"");
+AddEnemyPatrolNode("harry2","node_11",0,"");
+AddEnemyPatrolNode("harry2","node_9",0,"");
+AddEnemyPatrolNode("harry2","node_7",0,"");
+}
+
+void DeleteDoor(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("castle_29", false);
+}
+
+//Deactivates door castle_29 so it doesn't respawns when entering the map again
+
+void waterquest(string &in asEntity)
+{
+AddQuest("Ch5bucket", "Ch5bucket");
+}
+
+void Bucket(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+AddTimer("bucket2", 4, "bucket2");
+SetEntityActive("bucket2", true);
+CreateParticleSystemAtEntity("water", "ps_bucket_pour_water", "AreaWater", false);
+PlaySoundAtEntity("water","25_water_stream.snt", "AreaWater", 0, true);	
+SetPlayerActive(false);
+CompleteQuest("Ch5bucket", "Ch5bucket");
+}
+
+void bucket2(string &in asTimer)
+{
+SetEntityActive("bucket2", false);
+SetEntityActive("bucket3", true);
+StopSound("water", 0.5f);
+DestroyParticleSystem("water");
+SetPlayerActive(true);
+SetEntityConnectionStateChangeCallback("valve", "leverfunc2");
+}
+
+void leverfunc(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam", false);
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam2", false);
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam3", false);
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam4", false);
+        PlaySoundAtEntity("", "13_press_fail.snt", "valve", 0.0f, false);
+	return;
+} 
+	if (alState == -1) 
+	
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam", false);
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam2", false);
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam3", false);
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaSteam4", false);
+        PlaySoundAtEntity("", "13_press_fail.snt", "valve", 0.0f, false);
+}
+
+void leverfunc2(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        PlaySoundAtEntity("","13_rod_out.snt","valve", 0,false);
+        SetEntityConnectionStateChangeCallback("valve", "");
+        SetMoveObjectState("Gate", 1.0f);
+	return;
+} 
+	if (alState == -1) 
+	
+        PlaySoundAtEntity("","13_rod_out.snt","valve", 0,false);
+        SetEntityConnectionStateChangeCallback("valve", "");
+        SetMoveObjectState("Gate", 1.0f);
+}
+
+//---- Patrol event ----//
+
+void ActivatePatrol(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("bucket2"))
+	{
+SetEntityActive("harry3", true);
+AddEnemyPatrolNode("harry3","node_21",0,"");
+AddEnemyPatrolNode("harry3","node_23",0,"");
+AddEnemyPatrolNode("harry3","node_26",0,"");
+AddEnemyPatrolNode("harry3","node_27",0,"");
+AddEnemyPatrolNode("harry3","node_29",0,"");
+AddEnemyPatrolNode("harry3","node_30",0,"");
+AddEnemyPatrolNode("harry3","node_31",0,"");
+AddEnemyPatrolNode("harry3","node_32",0,"");
+CheckPoint ("Checkpoint2", "PlayerStartArea_1", "DeathSettings2", "DeathHints", "Ch5harry");
+	}
+	
+}
+
+void ActivatePatrol2(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("bucket2"))
+	{
+SetEntityActive("harry3", true);
+ClearEnemyPatrolNodes("harry3");
+AddEnemyPatrolNode("harry3","node_30",0,"");
+AddEnemyPatrolNode("harry3","node_34",0,"");
+AddEnemyPatrolNode("harry3","node_35",0,"");
+AddEnemyPatrolNode("harry3","node_36",0,"");
+AddEnemyPatrolNode("harry3","node_37",0,"");
+AddEnemyPatrolNode("harry3","node_38",0,"");
+AddEnemyPatrolNode("harry3","node_2",0,"");
+AddEnemyPatrolNode("harry3","node_5",0,"");
+AddEnemyPatrolNode("harry3","node_7",0,"");
+AddEnemyPatrolNode("harry3","node_9",0,"");
+CheckPoint ("Checkpoint3", "PlayerStartArea_5", "DeathSettings2", "DeathHints", "Ch5harry");
+	}
+	
+}
+
+//---- Etc ----//
+
+void whispers(string &in asTimer)
+{
+PlaySoundAtEntity("","HalluVoices.snt", "Player", 0, false);
+AddTimer("whisper", 250, "whispers");
+}
+
+void ElevatorKey(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("key1", true);
+AddTimer("elevatorkey2", 1, "elevatorkey2");
+}
+
+void elevatorkey2(string &in asTimer)
+{
+SetEntityActive("key1", false);
+SetEntityActive("key2", true);
+PlaySoundAtEntity("","unlock_door","key2", 0,false);
+AddTimer("elevatorkey3", 1, "elevatorkey3");
+}
+
+void elevatorkey3(string &in asTimer)
+{
+SetEntityActive("key2", false);
+SetMoveObjectState("Elevator", 1.0f);
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+}
+
+void phono(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+AddEffectVoice("harryphono2.ogg", "", "Voice", "00_Harryphono2", false, "", 0, 0 );
+SetPlayerActive(false);
+AddTimer("phono2", 15, "phono2");
+          return;
+     }
+}
+
+void phono2(string &in asTimer)
+{
+AddDiary("DiaryHarry2", "");
+SetMessage("Messages", "diaryharry2", 8);
+SetPlayerActive(true);
+}
+
+void Easter(string &in asParent, string &in asChild, int alState)
+{	
+SetMessage("Messages", "eastermessage4", 8);
+}
+
+void elevator(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+ChangeMap("Darkwarehouse.map", "PlayerStartArea_5", "","");
+          return;
+     }
+}
+
+void chapterend(string &in asEntity)
+{	
+SetMessage("Messages", "chapterend", 6);
+AddTimer("chapterend2", 10, "chapterend2");
+PlayMusic("08_amb_success.ogg", false, 1.0, 0, 0, true);
+SetPlayerActive(false);
+}
+
+void chapterend2(string &in asTimer)
+{	
+ChangeMap("LaMorgue.map", "PlayerStartArea_1", "","");
+}
+
+//---- Messages ----//
+
+void noreason(string &in asEntity)
+{
+SetMessage("Messages", "ch5leverfail", 4);
+}
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+void nowax(string &in asEntity)
+{
+SetMessage("Messages", "nowax", 4);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("06_amb.ogg", true, 1, 5.0f, 0, true);
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("06_amb.ogg", true, 1, 5.0f, 0, true);
+SetEntityActive("harry3", true);
+AddEnemyPatrolNode("harry3","node_21",0,"");
+AddEnemyPatrolNode("harry3","node_23",0,"");
+AddEnemyPatrolNode("harry3","node_26",0,"");
+AddEnemyPatrolNode("harry3","node_27",0,"");
+AddEnemyPatrolNode("harry3","node_29",0,"");
+AddEnemyPatrolNode("harry3","node_30",0,"");
+AddEnemyPatrolNode("harry3","node_31",0,"");
+AddEnemyPatrolNode("harry3","node_32",0,"");
+}
+
+void OnEnter()
+{	
+
+}
+
+void OnLeave()
+{
+SetupLoadScreen("loadscreentext", "...", 1, "load_ward.png");
+}

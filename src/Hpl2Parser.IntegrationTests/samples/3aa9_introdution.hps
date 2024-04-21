@@ -1,0 +1,99 @@
+void OnStart()
+{		PlayMusic("insomnia.ogg", false, 1, 0, 0, false);
+		FadeOut(0);		AddTimer("fadeIn", 6, "TimerList");		AddTimer("moveIn", 20, "TimerList");
+		SetPlayerLookSpeedMul(0);	SetPlayerRunSpeedMul(0); SetPlayerMoveSpeedMul(0); SetPlayerJumpDisabled(true); SetPlayerCrouchDisabled(true);	SetSanityDrainDisabled(true); 	FadeGlobalSoundVolume(0, 0);	MovePlayerHeadPos(0, -1.4, 0, 2.0f, 0.1f);	
+		for(int i=2; i<=5; i++)	{	AddEntityCollideCallback("Player", "ScriptArea_"+i, "intro"+i, false, 0);	}
+		
+		FadeLightTo("PointLight_12", 0.1, 0.1, 0.5, 0, -1, 0);
+		
+		AddEntityCollideCallback("Player", "ScriptArea_1", "enterGate", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_6", "amblight1", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_7", "amblight2", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_8", "amblight3", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_10", "introductionEvent", true, 1);
+		
+	SetFogActive(true);
+	SetFogColor(0, 0, 0, 1);
+	SetFogProperties(1, 34, 1, false);
+	int treasure = RandInt(1, 1);	SetGlobalVarInt("treasure", treasure);
+}
+
+void TimerList(string &in asTimer){
+	if(asTimer == "fadeIn"){	FadeIn(5);		MovePlayerHeadPos(0, 0, 0, 0.2f, 5);	SetPlayerActive(false);	}
+	
+	if(asTimer == "moveIn"){	for(int i=1; i<=40; i++)	{	AddTimer("movingS"+i, 0.4f * i, "TimerList");		}			SetPlayerActive(true);		}
+	if(asTimer == "moveOff"){	for(int i=1; i<=100; i++)	{	AddTimer("movingD"+i, 0.05f * i, "TimerList");		}			}
+	
+	for(int i=1; i<=40; i++)	{	if(asTimer == "movingS"+i)	{	SetPlayerMoveSpeedMul(0.007f * i);	}	}
+	for(int i=1; i<=100; i++)	{	if(asTimer == "movingD"+i)	{	SetPlayerMoveSpeedMul(0.28f / i);	}	}
+	
+	if(asTimer == "doormove")	{	for(int i=1; i<=50; i++)	AddTimer("castle_arched01_1", i * 0.05f, "force");	}
+	if(asTimer == "doorStats")	{	PlaySoundAtEntity("", "door_level_wood_open", "castle_arched01_1", 0, false);	PlaySoundAtEntity("", "29_exit_door", "castle_arched01_1", 1, false);	PlaySoundAtEntity("darkwind", "24_amb2", "Player", 1, true);	}
+	if(asTimer == "darkwind")	{	StopSound("darkwind", 8);	PlaySoundAtEntity("amb", "amb???", "Player", 5, true);	}
+	if(asTimer == "windblur1")	{	StartScreenShake(0.008, 2, 4, 4);		FadeRadialBlurTo(0.05, 0.07f);	}
+	if(asTimer == "windblur2")	{	FadeRadialBlurTo(0, 0.05f);}
+	if(asTimer == "logo1")	{	FadeLightTo("BoxLight_2", 0, 0.4, 0.5, 1, -1, 8);	}
+	if(asTimer == "logo2")	{	FadeLightTo("BoxLight_1", 1, 1, 0.2, 1, -1, 4);	FadeLightTo("BoxLight_3", 1, 1, 0.2, 1, -1, 4);	}
+	if(asTimer == "logo22")	{	FadeLightTo("BoxLight_1", 1, 1, 1, 1, -1, 8);	FadeLightTo("BoxLight_3", 1, 1, 1, 1, -1, 8);	}
+	if(asTimer == "logo3")	{	for(int i=1; i<=3; i++)	{	FadeLightTo("BoxLight_"+i, 0, 0, 0, 0, -1, 3);	}	for(int i=1; i<=2; i++)	{	SetLampLit("bridge_torch_"+i, true, true);	}		SetEntityActive("chemical_jar03_1", true);	SetPlayerMoveSpeedMul(0.6f);	SetPlayerLookSpeedMul(0.6f);	FadeLightTo("BoxLight_4", 0.2, 0.5, 0.5, 1, -1, 2);}
+	if(asTimer == "logo4")	{	PlayGuiSound("newgame.ogg", 1);	}
+	if(asTimer == "begin3")	{	FadeOut(8);	 FadePlayerFOVMulTo(1.3, 15);		FadePlayerAspectMulTo(1.3, 15);	}
+	if(asTimer == "begin4")	{	ChangeMap("old_archives.map", "StartPlayerArea_1", "", "");	}
+}
+
+void amnesia(string &in asEntity){
+	SetPropActiveAndFade("chemical_jar03_1", false, 0.7f);
+	SetEntityActive("water_plane", true);
+	SetEntityActive("LiquidArea_1", true);
+	FadeLightTo("SpotLight_1", 0.3, 0.5, 1, 0, -1, 4);
+	FadeLightTo("PointLight_13", 0.3, 0.4, 0.7, 0, -1, 4);
+	FadeLightTo("BoxLight_4", 0, 0, 0, 0, -1, 0.7f);
+	AddEntityCollideCallback("Player", "ScriptArea_11", "beginningEvent", true, 1);
+}
+
+void beginningEvent(string &in asParent, string &in asChild, int alState){
+	int TestTime=16;
+
+	//AddTimer("begin", , "TimerList");
+	//AddTimer("begin", , "TimerList");
+	AddTimer("begin3", 20-TestTime, "TimerList");
+	AddTimer("begin4", 28-TestTime, "TimerList");
+}
+
+void force(string &in door_name)	{	AddPropForce(door_name, 0, 0, -50, "world");		}
+
+void intro2(string &in asParent, string &in asChild, int alState)	{	if(alState == 1)	{	FadeLightTo("PointLight_5", 1, 1, 1, 1, -1, 2);	}	else	{	FadeLightTo("PointLight_5", 0, 0, 0, 0, -1, 2);	}		}
+void intro3(string &in asParent, string &in asChild, int alState)	{	if(alState == 1)	{	FadeLightTo("PointLight_6", 1, 1, 1, 1, -1, 2);	}	else	{	FadeLightTo("PointLight_6", 0, 0, 0, 0, -1, 2);	}		}
+void intro4(string &in asParent, string &in asChild, int alState)	{	if(alState == 1)	{	FadeLightTo("PointLight_7", 1, 1, 1, 1, -1, 2);	}	else	{	FadeLightTo("PointLight_7", 0, 0, 0, 0, -1, 2);	}		}
+void intro5(string &in asParent, string &in asChild, int alState)	{	if(alState == 1)	{	FadeLightTo("PointLight_8", 1, 1, 1, 1, -1, 2);	}	else	{	FadeLightTo("PointLight_8", 0, 0, 0, 0, -1, 2);	}		}
+void amblight1(string &in asParent, string &in asChild, int alState){	FadeLightTo("PointLight_11", 1, 0.8, 0.6, 0, -1, 6);	}
+void amblight2(string &in asParent, string &in asChild, int alState){	FadeLightTo("PointLight_10", 1, 0.8, 0.6, 0, -1, 6);	}
+void amblight3(string &in asParent, string &in asChild, int alState){	FadeLightTo("PointLight_9", 1, 0.8, 0.6, 0, -1, 3);	}
+
+
+void enterGate(string &in asParent, string &in asChild, int alState){
+	AddTimer("doormove", 8, "TimerList");
+	AddTimer("doorStats", 8, "TimerList");
+	AddTimer("windblur1", 10, "TimerList");
+	AddTimer("windblur2", 14, "TimerList");
+	AddTimer("darkwind", 14, "TimerList");
+	FadeGlobalSoundVolume(1, 12);	SetSwingDoorDisableAutoClose("castle_arched01_1", true);			SetSwingDoorClosed("castle_arched01_1", false, false);
+}
+
+void introductionEvent(string &in asParent, string &in asChild, int alState){
+	StopMusic(3, 0);
+	PlayMusic("glacier.ogg", false, 1, 0, 0, false);
+	for(int i=1; i<=2; i++)	{	SetEntityActive("block_box_"+i, false);	}
+	SetEntityActive("castle_gate_arched01_1", false);
+	AddTimer("moveOff", 0, "TimerList");
+	AddTimer("logo1", 4, "TimerList");
+	AddTimer("logo2", 8, "TimerList");
+	AddTimer("logo22", 9, "TimerList");
+	AddTimer("logo3", 15, "TimerList");
+	AddTimer("logo4", 20, "TimerList");
+}
+
+
+void OnLeave(){
+		StopMusic(1, 0);
+}

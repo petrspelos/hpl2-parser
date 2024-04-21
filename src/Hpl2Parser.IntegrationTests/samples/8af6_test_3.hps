@@ -1,0 +1,784 @@
+void OnStart()
+{
+	/*if(ScriptDebugOn()) {
+		GiveItemFromFile("lantern", "lantern.ent");
+		GiveItem("bucket_filled_rope", "Puzzle", "test3bucket_filled_rope", "wooden_bucket_filled.tga", 0);
+	}*/
+	for(int i=1; i<65; i++) AddEntityCollideCallback("Player", "SpikeArea_"+i, "SpikeDamage", false, 1);
+	for(int i=1; i<6; i++) for(int j=1; j<5; j++) AddEntityCollideCallback("stone_small_"+i, "cobweb_break_"+j, "BreakCobweb", false, 0);
+	for(int i=1; i<7; i++) for(int j=1; j<8; j++) AddEntityCollideCallback("stone_small_"+i, "Area_SpiderKill_"+j, "KillSpider", true, 0);
+	for(int i=1; i<4; i++) AddEntityCollideCallback("grunt_"+i, "Area_TP_Grunts", "TP_Grunts", false, 1);
+	
+	AddEntityCollideCallback("Player", "Area_RocksSound", "RocksSound", true, 1);
+	AddEntityCollideCallback("Player", "Area_RockFall", "RockFall", true, 1);
+	AddEntityCollideCallback("Player", "Area_SpiderScare", "SpiderScare", true, 1);
+	AddEntityCollideCallback("Player", "Area_QuestCobweb", "AddQuestCobweb", true, 1);
+	AddEntityCollideCallback("Player", "Autosave_1", "Autosave_1", true, 1);
+	AddEntityCollideCallback("Player", "Area_FadeInLight", "FadeInLight", false, 1);
+	AddEntityCollideCallback("Player", "Area_FadeOutLight", "FadeOutLight", false, 1);
+	AddEntityCollideCallback("Player", "Area_BruteSound", "BruteSound", true, 1);
+	AddEntityCollideCallback("Player", "Area_BeginChase", "BeginChase", false, 1);
+	AddEntityCollideCallback("Player", "Area_StopChase", "StopChase", true, 1);
+	AddEntityCollideCallback("Player", "Area_FadeInLight2", "FadeInLight2", false, 1);
+	AddEntityCollideCallback("Player", "Area_FadeOutLight2", "FadeOutLight2", false, 1);
+	AddEntityCollideCallback("Player", "Area_NoReturn", "NoReturn", false, 1);
+	AddEntityCollideCallback("Player", "Area_EnterSewer", "EnterSewer", false, 1);
+	AddEntityCollideCallback("Player", "Area_LeaveSewer", "LeaveSewer", false, 1);
+	AddEntityCollideCallback("Player", "Autosave_3", "Autosave_3", true, 1);
+	AddEntityCollideCallback("Player", "Area_QuestHatch", "AddQuestHatch", true, 1);
+	AddEntityCollideCallback("Player", "Area_SpawnGrunts", "SpawnGrunts", true, 1);
+	AddEntityCollideCallback("Player", "Area_DisableGrunts", "DisableGrunts", false, 1);
+	AddEntityCollideCallback("Player", "Area_Floor", "Floor", false, 0);
+	AddEntityCollideCallback("Player", "Area_PlayerStand", "HatchInReach", false, 0);
+	
+	AddEntityCollideCallback("Player", "FireDamageArea", "FireDamage", false, 1);
+	AddEntityCollideCallback("Player", "Water_1", "WaterState", false, 0);
+	AddEntityCollideCallback("Player", "Water_2", "WaterState", false, 0);
+	SetEntityCallbackFunc("bucket_empty", "PickUpBucket");
+	SetEntityCallbackFunc("rope_item", "PickUpRope");
+	AddUseItemCallback("", "bucket_empty", "Water_1", "GrabWater", true);
+	AddUseItemCallback("", "bucket_empty", "Water_2", "GrabWater", true);
+	AddUseItemCallback("", "bucket_empty_rope", "Water_1", "GrabWater", true);
+	AddUseItemCallback("", "bucket_empty_rope", "Water_2", "GrabWater", true);
+	AddUseItemCallback("", "bucket_filled_rope", "HatchSignArea", "HangBucket", true);
+	AddUseItemCallback("", "bucket_empty", "HatchSignArea", "ItemOnHatchFail", false);
+	AddUseItemCallback("", "bucket_filled", "HatchSignArea", "ItemOnHatchFail", false);
+	AddUseItemCallback("", "rope_item", "HatchSignArea", "ItemOnHatchFail", false);
+	AddUseItemCallback("", "bucket_empty_rope", "HatchSignArea", "ItemOnHatchFail", false);
+	SetEntityCallbackFunc("test_4_key", "UnlockExit");
+	
+	for(int i=1; i<3; i++) SetEntityActive("block_pathnodes_"+i, false);
+	SetLocalVarInt("PlayerInHatchArea", 0);
+	SetEntityActive("gate_block", true);
+	SetEntityInteractionDisabled("shelf_move", true);
+	AddPropImpulse("chest", 0, 0, 10, "world");
+	AddTimer("", 2, "ActivateChestBlock");
+	
+	for(int i=6; i<9; i++)
+	{
+		SetEntityCustomFocusCrossHair("easter_egg_"+i, "Pick");
+		SetEntityPlayerInteractCallback("easter_egg_"+i, "CollectEasterEgg", true);
+	}
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("test-3");
+	SetPlayerRunSpeedMul(2.2);
+	SetPlayerJumpForceMul(1.3);
+	SetPlayerFallDamageDisabled(true);
+	PlayMusic("04_amb.ogg", true, 1, 0.4, 1, true);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	SetPlayerRunSpeedMul(1);
+	SetPlayerJumpForceMul(1);
+	SetPlayerFallDamageDisabled(false);
+	StopMusic(1, 1);
+	StopMusic(1, 2);
+	StopMusic(1, 257);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+void ActivateChestBlock(string &in asTimer)
+{
+	SetEntityActive("chest_block", true);
+	SetPropStaticPhysics("chest", true);
+}
+
+void AddQuestCobweb(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("cobweb", "test3_cobweb");
+}
+
+void AddQuestHatch(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("hatch", "test3_hatch");
+}
+
+void BreakCobweb(string &in asParent, string &in asChild, int alState)
+{
+	if(GetPropIsInteractedWith(asParent)) return;
+	SetPropActiveAndFade(asChild, false, 0.2);
+	PlaySoundAtEntity("", "pick_meat.snt", asChild, 0, false);
+	if(asChild=="cobweb_break_4")
+	{
+		SetPropActiveAndFade("cobweb_break_1", false, 0.1);
+		SetPropActiveAndFade("cobweb_break_2", false, 0.1);
+		SetPropActiveAndFade("cobweb_break_3", false, 0.1);
+		SetEntityActive("block_cobweb", false);
+		SetEntityActive("SignArea_Cobweb", false);
+		SetEntityActive("Area_QuestCobweb", false);
+		SetPlayerSanity(GetPlayerSanity()-0.1);
+		GiveSanityBoostSmall();
+		PlayMusic("02_puzzle.ogg", false, 1, 0.2, 2, false);
+		CompleteQuest("cobweb", "test3_cobweb");
+	}
+}
+
+void KillSpider(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asChild, false);
+	AddTimer(asChild, 0.04, "KillSpiderEffect");
+}
+
+void KillSpiderEffect(string &in asTimer)
+{
+	string spider = "spider_"+StringSub(asTimer, 16, 1);
+	CreateParticleSystemAtEntityExt("", "ps_poison_fungi_break.ps", spider, false, 0.4, 1, 0.4, 1, false, 0, 0, 100, 120);
+	PlaySoundAtEntity("", "spider_attack.snt", spider, 0.01, false);
+	PlaySoundAtEntity("", "pick_meat.snt", spider, 0.01, false);
+	SetPropActiveAndFade(spider, false, 0.35);
+}
+
+void SpikeDamage(string &in asParent, string &in asChild, int alState)
+{
+	if(GetPlayerHealth()>0)
+	{
+		PlayGuiSound("19_inject.snt", 1);
+		GivePlayerDamage(24, "Slash", false, true);
+		AddTimer("", 0.3, "ReactScare");
+		AddTimer("", 1, "ReactBreath");
+	}
+}
+
+void FireDamage(string &in asParent, string &in asChild, int alState)
+{
+	if(GetPlayerHealth()>0)
+	{
+		GivePlayerDamage(20, "BloodSplat", true, false);
+		AddPlayerBodyForce(0, 10000, -18000, false);
+		PlayGuiSound("ui_fire_damage.ogg", 1);
+		AddTimer("", 0.3, "ReactScare");
+		AddTimer("", 1, "ReactBreath");
+	}
+}
+
+void ReactBreath(string &in asTimer)
+{
+	PlayGuiSound("react_breath.snt", 1);
+}
+
+void ReactScare(string &in asTimer)
+{
+	PlayGuiSound("react_scare.snt", 1);
+}
+
+void ReactSigh(string &in asTimer)
+{
+	PlayGuiSound("react_sigh.snt", 1);
+}
+
+void Autosave_1(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("tunnel", 0.05, "TunnelShake");
+	SetEntityActive("Autosave_1", false);
+	CheckPoint("chk0", "Respawn_1", "ResetChase", "Deaths", "test3spikes");
+	AutoSave();
+}
+
+void TunnelShake(string &in asTimer)
+{
+	PlayGuiSound("21_alex_low_freq_rumble.snt", 1);
+	CreateParticleSystemAtEntity("whirl", "ps_dust_ghost.ps", "Area_TunnelWhirl", false);
+	StartScreenShake(0.028, 3.5, 0.45, 5);
+	AddPropImpulse("hanging_lantern_wall_1", (RandInt(0, 1)*2-1)*RandFloat(1.5, 2.5), 0, (RandInt(0, 1)*2-1)*RandFloat(1.5, 2.5), "world");
+	AddPropImpulse("hanging_lantern_wall_2", (RandInt(0, 1)*2-1)*RandFloat(1.5, 2.5), 0, (RandInt(0, 1)*2-1)*RandFloat(1.5, 2.5), "world");
+	AddTimer("lampLoop", 0.1, "LampShake");
+	AddTimer("", 7, "LampShakeStop");
+}
+
+void LampShake(string &in asTimer)
+{
+	AddTimer("lampLoop", RandFloat(0.1, 0.3), "LampShake");
+	AddPropImpulse("hanging_lantern_wall_1", 0, RandFloat(-4, -1), 0, "world");
+	AddPropImpulse("hanging_lantern_wall_2", 0, RandFloat(-4, -1), 0, "world");
+}
+
+void LampShakeStop(string &in asTimer)
+{
+	RemoveTimer("lampLoop");
+}
+
+void RocksSound(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("03_rock_move3.ogg", 1);
+	StartScreenShake(0.017, 1, 0.2, 4.5);
+}
+
+void RockFall(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("stone_small_5", 200, 0, 100, "world");
+	PlayGuiSound("scare_wind.snt", 0.65);
+	AddTimer("", 0.9, "ReactScare");
+	AddTimer("", 2, "RockFall_Step2");
+}
+
+void RockFall_Step2(string &in asTimer)
+{
+	SetEntityActive("block_rock", false);
+	SetEntityActive("block_outside", true);
+}
+
+void SpiderScare(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("spooder", true, 0.3);
+	AddTimer("", 0.15, "SpiderScare_Step2");
+	SetPlayerActive(false);
+	ChangePlayerStateToNormal();
+}
+
+void SpiderScare_Step2(string &in asTimer)
+{
+	GiveSanityDamage(30, true);
+	StartPlayerLookAt("Area_SpiderScareLook", 8, 20, "");
+	AddTimer("", 0.2, "ReactScare");
+	AddTimer("", 0.8, "SpiderScare_Step3");
+}
+
+void SpiderScare_Step3(string &in asTimer)
+{
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+}
+
+void FadeInLight(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_FadeInLight", false);
+	SetEntityActive("Area_FadeOutLight", true);
+	FadeLightTo("BoxLight_Fade", 0.3, 0.2, 0.1, 1, 1, 1);
+}
+
+void FadeOutLight(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_FadeInLight", true);
+	SetEntityActive("Area_FadeOutLight", false);
+	FadeLightTo("BoxLight_Fade", 0, 0, 0, 0, 0, 1.5);
+}
+
+void BruteSound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "brute/amb_idle_whimp.snt", "Area_BruteSound_Play", 0, false);
+	AddEntityCollideCallback("Player", "Area_BruteSound2", "BruteSound2", true, 1);
+}
+
+void BruteSound2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "brute/amb_idle.snt", "Area_BruteSound_Play", 0, false);
+}
+
+void BeginChase(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerRunSpeedMul(1.5);
+	SetEntityActive("Area_BeginChase", false);
+	SetEntityActive("Area_BruteSound", false);
+	SetEntityActive("Area_BruteSound2", false);
+	SetEntityActive("block_back", true);
+	SetEntityActive("gate", false);
+	SetEntityActive("gate_broken", true);
+	SetEntityActive("gate_block", false);
+	AddTimer("", 0.1, "ReactScare");
+	GiveSanityDamage(20, true);
+	for(int i=1; i<4; i++)
+	{
+		SetEntityActive("brute_"+i, true);
+		ShowEnemyPlayerPosition("brute_"+i);
+	}
+	PlaySoundAtEntity("", "brute/enabled.snt", "brute_1", 0, false);
+	StartScreenShake(0.05, 1.2, 0.2, 1);
+	PlaySoundAtEntity("", "15_ripp_door.snt", "gate", 0, false);
+	CheckPoint("chk1", "Respawn_1", "ResetChase", "Deaths", "test3chase");
+	AddTimer("chase_loop", 1, "ChaseLoop");
+}
+
+void StopChase(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<4; i++) FadeEnemyToSmoke("brute_"+i, false);
+	CheckPoint("chk2", "Respawn_2", "RespawnSpikes", "Deaths", "test3spikes");
+	SetEntityActive("Area_NoReturn", true);
+	SetPlayerRunSpeedMul(2.2);
+	RemoveTimer("chase_loop");
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoostSmall();
+	StopMusic(0.6, 1);
+	PlayMusic("25_amb.ogg", true, 1, 0.6, 257, true);
+	for(int i=1; i<5; i++) PlaySoundAtEntity("sewer_"+i, "18_water_pour3.snt", "Area_SewerSound_"+i, 0.4, true);
+	AutoSave();
+}
+
+void ResetChase(string &in asName, int alCount)
+{
+	SetEntityActive("Area_BeginChase", true);
+	SetEntityActive("block_back", false);
+	SetEntityActive("gate_broken", false);
+	SetEntityActive("gate", true);
+	SetEntityActive("gate_block", true);
+	SetEntityActive("Area_FadeInLight", false);
+	SetEntityActive("Area_FadeOutLight", true);
+	FadeLightTo("BoxLight_Fade", 0.3, 0.2, 0.1, 1, 1, 0);
+	RemoveTimer("chase_loop");
+}
+
+void ChaseLoop(string &in asTimer)
+{
+	AddTimer("chase_loop", 1, "ChaseLoop");
+	for(int i=1; i<4; i++) ShowEnemyPlayerPosition("brute_"+i);
+}
+
+void FadeInLight2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_FadeInLight2", false);
+	SetEntityActive("Area_FadeOutLight2", true);
+	FadeLightTo("BoxLight_Fade2", 0, 0.3, 0.28, 1, 1, 0.7);
+}
+
+void FadeOutLight2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_FadeInLight2", true);
+	SetEntityActive("Area_FadeOutLight2", false);
+	FadeLightTo("BoxLight_Fade2", 0, 0, 0, 0, 0, 1.3);
+}
+
+void NoReturn(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_NoReturn", false);
+	SetEntityActive("brute_NoReturn", true);
+	ShowEnemyPlayerPosition("brute_NoReturn");
+	SetPropStaticPhysics("barrel_NoReturn", false);
+	SetPropHealth("barrel_NoReturn", 0);
+	if(GetPlayerHealth() > 50) SetPlayerHealth(50);
+	AddTimer("", 3, "NoReturn_Step2");
+	CheckPoint("chk2b", "Respawn_2", "RespawnNoReturn", "Deaths", "test3noreturn");
+}
+
+void NoReturn_Step2(string &in asTimer)
+{
+	if(GetPlayerHealth() > 0)
+	{
+		GivePlayerDamage(200, "Slash", true, true);
+		PlaySoundAtEntity("", "brute/attack_launch.snt", "brute_NoReturn", 0, false);
+		PlayGuiSound("brute/attack_claw_hit.snt", 0.85);
+	}
+}
+
+void RespawnNoReturn(string &in asName, int alCount)
+{
+	SetEntityActive("brute_NoReturn", false);
+	FadeLightTo("BoxLight_Fade2", 0, 0.3, 0.28, 1, 1, 0);
+	SetEntityActive("Area_FadeInLight2", false);
+	SetEntityActive("Area_FadeOutLight2", true);
+	SetEntityActive("Area_NoReturn", true);
+	CheckPoint("chk2", "Respawn_2", "RespawnSpikes", "Deaths", "test3spikes");
+}
+
+void WaterState(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1)
+	{
+		SetEntityActive("WaterLadder_1", false);
+		SetEntityActive("WaterLadder_2", false);
+		AddTimer("water_push_timer", 0.05, "WaterPush");
+	}
+	else
+	{
+		SetEntityActive("WaterLadder_1", true);
+		SetEntityActive("WaterLadder_2", true);
+		RemoveTimer("water_push_timer");
+	}
+}
+
+void WaterPush(string &in asTimer)
+{
+	AddTimer("water_push_timer", 0.15, "WaterPush");
+	if(GetPlayerSpeed() < 9) AddPlayerBodyForce(-4000, 1000, 0, false);
+}
+
+void PickUpBucket(string &in asEntity, string &in type)
+{
+	for(int i=1; i<6; i++) SetLightVisible("PointLight_"+i, false);
+}
+
+void PickUpRope(string &in asEntity, string &in type)
+{
+	for(int i=6; i<10; i++) SetLightVisible("PointLight_"+i, false);
+}
+
+void GrabWater(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	if(asItem == "bucket_empty") GiveItem("bucket_filled", "Puzzle", "test3bucket_filled", "wooden_bucket_filled.tga", 0);
+	else GiveItem("bucket_filled_rope", "Puzzle", "test3bucket_filled_rope", "wooden_bucket_filled.tga", 0);
+	PlayGuiSound("20_water_wheel_med2.ogg", 1);
+	SetPlayerSanity(GetPlayerSanity()-0.5);
+	GiveSanityBoostSmall();
+	AddEntityCollideCallback("Player", "Autosave_3", "BlockRope", true, 1);
+}
+
+void BlockRope(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("block_rope", true);
+	SetEntityActive("RopeSignArea", true);
+	SetEntityActive("Area_TP_Grunts", false);
+}
+
+void RespawnSpikes(string &in asName, int alCount)
+{
+	FadeLightTo("BoxLight_Fade2", 0, 0.3, 0.28, 1, 1, 0);
+	SetEntityActive("Area_FadeInLight2", false);
+	SetEntityActive("Area_FadeOutLight2", true);
+}
+
+void EnterSewer(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_LeaveSewer", true);
+	SetEntityActive("Area_EnterSewer", false);
+	for(int i=1; i<5; i++) PlaySoundAtEntity("sewer_"+i, "18_water_pour3.snt", "Area_SewerSound_"+i, 0.4, true);
+	CheckPoint("chk2", "Respawn_2", "RespawnSpikes", "Deaths", "test3spikes");
+}
+
+void LeaveSewer(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_LeaveSewer", false);
+	SetEntityActive("Area_EnterSewer", true);
+	for(int i=1; i<5; i++) StopSound("sewer_"+i, 0.2);
+	CheckPoint("chk3", "Respawn_3", "ResetGrunts", "Deaths", "test3room");
+}
+
+void Autosave_3(string &in asParent, string &in asChild, int alState)
+{
+	AutoSave();
+}
+
+void SpawnGrunts(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_SpawnGrunts", false);
+	CheckPoint("chk3", "Respawn_3", "ResetGrunts", "Deaths", "test3room");
+	SetPlayerActive(false);
+	ChangePlayerStateToNormal();
+	StartPlayerLookAt("Area_LookAtGrunts", 5, 7, "");
+	PlayGuiSound("grunt/enabled.snt", 1);
+	AddTimer("", 1.6, "SpawnGrunts_Step2");
+}
+
+void SpawnGrunts_Step2(string &in asTimer)
+{
+	SetEntityActive("block_deskdoor", false);
+	SetPropStaticPhysics("work_desk_door", false);
+	SetSwingDoorClosed("work_desk_door", false, false);
+	SetSwingDoorDisableAutoClose("work_desk_door", true);
+	AddPropImpulse("work_desk_door", -20, 0, 0, "world");
+	PlayGuiSound("break_wood.snt", 1);
+	for(int i=1; i<4; i++) 
+	{
+		SetEntityActive("grunt_"+i, true);
+		ShowEnemyPlayerPosition("grunt_"+i);
+	}
+	GiveSanityDamage(30, true);
+	AddEntityCollideCallback("Player", "Area_SpawnGrunts", "SpawnGrunts2", false, 1);
+	SetEntityActive("Area_DisableGrunts", true);
+	SetEntityActive("Area_Floor", true);
+	AddTimer("", 0.5, "SpawnGrunts_Step3");
+	AddTimer("grunt_timer", 1, "GruntTimer");
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+}
+
+void SpawnGrunts_Step3(string &in asTimer)
+{
+	SetPropStaticPhysics("work_desk_door", true);
+	SetEntityActive("block_deskdoor_open", true);
+}
+
+void TP_Grunts(string &in asParent, string &in asChild, int alState)
+{
+	TeleportEnemyToNode(asParent, "PathNodeArea_328", true);
+}
+
+void ResetGrunts(string &in asName, int alCount)
+{
+	ResetProp("work_desk_door");
+	SetPropStaticPhysics("work_desk_door", true);
+	SetEntityActive("block_deskdoor_open", false);
+	SetEntityActive("block_deskdoor", true);
+	SetEntityActive("Area_SpawnGrunts", true);
+	SetEntityActive("Area_DisableGrunts", false);
+	SetEntityActive("Area_Floor", false);
+	RemoveTimer("grunt_timer");
+}
+
+void SpawnGrunts2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_SpawnGrunts", false);
+	SetEntityActive("Area_DisableGrunts", true);
+	SetEntityActive("Area_Floor", true);
+	PlayGuiSound("grunt/enabled.snt", 1);
+	PlayGuiSound("break_wood.snt", 1);
+	SetEntityActive("block_deskdoor", false);
+	SetPropStaticPhysics("work_desk_door", false);
+	SetSwingDoorClosed("work_desk_door", false, false);
+	SetSwingDoorDisableAutoClose("work_desk_door", true);
+	AddPropImpulse("work_desk_door", -20, 0, 0, "world");
+	for(int i=1; i<4; i++) 
+	{
+		SetEntityActive("grunt_"+i, true);
+		ShowEnemyPlayerPosition("grunt_"+i);
+	}
+	AddTimer("", 0.5, "SpawnGrunts2_Step2");
+	AddTimer("grunt_timer", 0.3, "GruntTimer");
+}
+
+void SpawnGrunts2_Step2(string &in asTimer)
+{
+	SetPropStaticPhysics("work_desk_door", true);
+	SetEntityActive("block_deskdoor_open", true);
+}
+
+void DisableGrunts(string &in asParent, string &in asChild, int alState)
+{
+	ResetProp("work_desk_door");
+	SetPropStaticPhysics("work_desk_door", true);
+	SetEntityActive("block_deskdoor_open", false);
+	SetEntityActive("block_deskdoor", true);
+	SetEntityActive("Area_SpawnGrunts", true);
+	SetEntityActive("Area_DisableGrunts", false);
+	SetEntityActive("Area_Floor", false);
+	for(int i=1; i<4; i++) 
+	{
+		TeleportEnemyToNode("grunt_"+i, "GruntHome_"+i, true);
+		SetEntityActive("grunt_"+i, false);
+	}
+	RemoveTimer("grunt_timer");
+}
+
+void GruntTimer(string &in asTimer)
+{
+	AddTimer("grunt_timer", 1, "GruntTimer");
+	for(int i=1; i<4; i++) ShowEnemyPlayerPosition("grunt_"+i);
+}
+
+void Floor(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1)
+	{
+		for(int i=1; i<4; i++) 
+		{
+			SetEnemyDisableTriggers("grunt_"+i, false);
+		}
+		AddTimer("grunt_timer", 0.1, "GruntTimer");
+	}
+	else
+	{
+		for(int i=1; i<4; i++) 
+		{
+			SetEnemyDisableTriggers("grunt_"+i, true);
+			SetEntityActive("grunt_"+i, false);
+			SetEntityActive("grunt_"+i, true);
+		}
+		RemoveTimer("grunt_timer");
+	}
+}
+
+void HatchInReach(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1) SetLocalVarInt("PlayerInHatchArea", 1);
+	else SetLocalVarInt("PlayerInHatchArea", 0);
+}
+
+void ItemOnHatchFail(string &in asItem, string &in asEntity)
+{
+	if(asItem=="rope_item") SetMessage("Messages", "test3_hatch_rope", 0);
+	else if(asItem=="bucket_empty_rope") SetMessage("Messages", "test3_hatch_empty", 0);
+	else SetMessage("Messages", "test3_hatch_bucket", 0);
+}
+
+void HangBucket(string &in asItem, string &in asEntity)
+{
+	RemoveTimer("grunt_timer");
+	CompleteQuest("hatch", "test3_hatch");
+	for(int i=1; i<4; i++) FadeEnemyToSmoke("grunt_"+i, false);
+	SetEntityActive("Area_Floor", false);
+	SetEntityActive("Area_DisableGrunts", false);
+	SetEntityActive("Area_SpawnGrunts", false);
+	RemoveItem("bucket_filled_rope");
+	SetEntityActive("bucket_hanging", true);
+	SetEntityActive("HatchSignArea", false);
+	SetEntityActive("block_player_stand", true);
+	PlaySoundAtEntity("", "25_pick_bucket_water.snt", "bucket_hanging", 0, false);
+	SetPlayerCrouching(false);
+	ChangePlayerStateToNormal();
+	SetPlayerActive(false);
+	StartPlayerLookAt("HatchSignArea", 3, 5, "");
+	AddTimer("", 0.3, "HangBucket_Step1b");
+	AddTimer("", 2.4, "HangBucket_Step2");
+	AddTimer("", 0.9, "HangBucket_CheckPlayer");
+}
+
+void HangBucket_Step1b(string &in asTimer)
+{
+	PlayGuiSound("06_rope_loose.snt", 1);
+}
+
+void HangBucket_CheckPlayer(string &in asTimer)
+{
+	if(GetLocalVarInt("PlayerInHatchArea")==0) TeleportPlayer("PlayerStand");
+	PlayGuiSound("06_pull_wood.snt", 1);
+}
+
+void HangBucket_Step2(string &in asTimer)
+{
+	SetEntityActive("Area_PlayerStand", false);
+	CreateParticleSystemAtEntity("hatch_break_ps", "break/ps_break_wood_small.ps", "Area_BreakHatch", false);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoost();
+	SetPropStaticPhysics("bucket_hanging", false);
+	SetPropStaticPhysics("hatch", false);
+	PlaySoundAtEntity("", "break_wood.snt", "Area_BreakHatch", 0, false);
+	AddPropForce("falling_rock", -3500, -800, 0, "world");
+	AddPropForce("bucket_hanging", 0, -100, 0, "world");
+	AddTimer("", 0.3, "HangBucket_Step3");
+}
+
+void HangBucket_Step3(string &in asTimer)
+{
+	StartPlayerLookAt("block_plank_1", 3, 5, "");
+	AddPlayerBodyForce(20000, 0, 0, false);
+	AddTimer("", 1.3, "HangBucket_Step4");
+	AddTimer("", 1, "HangBucket_SpillBucket");
+}
+
+void HangBucket_SpillBucket(string &in asTimer)
+{
+	//PlaySoundAtEntity("", "20_waterwheel_impact_high.snt", "bucket_hanging", 0, false);
+	//PlaySoundAtEntity("", "hit_wood.snt", "bucket_hanging", 0, false); //both too quiet
+	PlayGuiSound("20_waterwheel_impact_high", 1);
+	SetPropHealth("bucket_hanging", 0);
+	SetPropActiveAndFade("spilled_water", true, 1.2);
+}
+
+void HangBucket_Step4(string &in asTimer)
+{
+	SetEntityInteractionDisabled("bucket_hanging_broken", true);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "block_plank_1", 0, false);
+	SetEntityActive("block_player_stand", false);
+	CreateParticleSystemAtEntity("planks_break_ps", "break/ps_break_wood.ps", "Area_BreakParticles", false);
+	for(int i=1; i<4; i++) SetEntityActive("nail_"+i, false);
+	SetEntityActive("plank_2", false);
+	SetEntityActive("block_plank_1", false);
+	SetEntityActive("block_plank_2", false);
+	SetEntityActive("plank_broken", true);
+	SetEntityActive("block_planks", false);
+	SetPropStaticPhysics("plank_1", false);
+	AddPropForce("plank_1", 0, -1000, 0, "world");
+	AddTimer("", 1.5, "HangBucket_Step5");
+	SetMoveObjectStateExt("shelf_move", 0.8, 0.5, 4, 0, true);
+	StopPlayerLookAt();
+	AddEntityCollideCallback("Player", "Area_FallFromShelf", "HangBucket_Step5", true, 1);
+	AddTimer("", 0.5, "ReactScare");
+	PlaySoundAtEntity("falling_shelf_sound", "24_wheel.snt", "shelf_move", 0, false);
+}
+
+void HangBucket_Step5(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("react_pant.snt", 1);
+	StopMusic(0.4, 257);
+	FadeOut(0.28);
+	SetLanternActive(false, true);
+	AddTimer("", 0.33, "HangBucket_Step6");
+	AddPlayerBodyForce(20000, 0, 0, false);
+	StopSound("falling_shelf_sound", 0.18);
+	PlayGuiSound("25_break_wood.snt", 1);
+	AddPropForce("hatch", -2750, 0, 0, "world");
+}
+
+void HangBucket_Step6(string &in asTimer)
+{
+	SetEntityActive("falling_rock", false);
+	SetEntityActive("falling_rock_static", true);
+	SetEntityActive("bucket_hanging_broken", false);
+	SetEntityActive("bucket_fallen", true);
+	SetPropStaticPhysics("plank_1", true);
+	SetPropStaticPhysics("plank_broken", true);
+	SetEntityActive("block_exit", false);//			-----
+	SetEntityActive("potion_oil_large_2", true);
+	SetEntityActive("note_test3end", true);//		No sequence skipping! :P
+	SetEntityActive("test_4_key", true);
+	SetEntityActive("stool_wood_1", true);//		-----
+	PlayGuiSound("player_bodyfall.snt", 1);
+	AddTimer("", 3.8, "HangBucket_Step7");
+	AddTimer("", 3, "Autosave_4");
+	FadePlayerRollTo(-40, 50, 50);
+	SetPlayerCrouching(true);
+	SetPropStaticPhysics("hatch", true);
+}
+
+void Autosave_4(string &in asTimer)
+{
+	AutoSave();
+}
+
+void HangBucket_Step7(string &in asTimer)
+{
+	SetPropStaticPhysics("hatch", false);
+	
+	PlayGuiSound("player_cough.snt", 1);
+	FadeIn(4.5);
+	SetPlayerSanity(10);
+	SetPlayerHealth(10);
+	AddTimer("", 1.8, "HangBucket_Step7b");
+	AddTimer("", 0.8, "HangBucket_Step7c");
+	AddTimer("", 2.5, "HangBucket_Step8");
+}
+
+void HangBucket_Step7c(string &in asTimer)
+{
+	PlayMusic("25_amb.ogg", true, 1, 3.5, 257, true);
+}
+
+void HangBucket_Step7b(string &in asTimer)
+{
+	StartPlayerLookAt("Area_LookAtGrunts", 0.8, 2.5, "");
+	PlayGuiSound("player_cough.snt", 0.6);
+}
+
+void HangBucket_Step8(string &in asTimer)
+{
+	FadePlayerRollTo(0, 5.5, 28);
+	AddTimer("", 1.4, "HangBucket_Step9");
+	AddTimer("", 0.35, "ReactSigh");
+}
+
+void HangBucket_Step9(string &in asTimer)
+{
+	SetPlayerCrouching(false);
+	SetPlayerHealth(20);
+	AddTimer("", 0.9, "HangBucket_Step10");
+}
+
+void HangBucket_Step10(string &in asTimer)
+{
+	PlayGuiSound("react_breath.snt", 1);
+	SetPlayerSanity(70);
+	SetPlayerHealth(50);
+	AddTimer("", 0.5, "HangBucket_Step11");
+}
+
+void HangBucket_Step11(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+
+void UnlockExit(string &in asEntity, string &in type)
+{
+	SetLevelDoorLocked("level_celler_2", false);
+	SetGlobalVarInt("test", 3);
+}

@@ -1,0 +1,180 @@
+void OnStart()
+{
+    FadePlayerRollTo( 40, 100, 100);
+	SetPlayerActive(false);
+	FadeOut(0.0f);
+	SetPlayerCrouching(true);
+	
+	AddTimer("fadeingamestart", 4.0f, "fadeingamestart");
+	
+	
+	SetLanternLitCallback("lanternColor");
+	AddTimer("lanternTimer", 0.1f, "changeLanternColor");
+	
+	SetLocalVarInt("red_lantern", 1);	
+	AddTimer("RainbowLantern_Red", 1.5f, "RainbowLantern_Red");
+	
+	SetEntityPlayerInteractCallback("key_tomb_1", "begin_monster_countdown", true);
+	
+	AddUseItemCallback("unlockfirstdoor", "key_tomb_1", "mansion_1", "unlockfirstdoor", false);	
+	
+	
+	SetEntityPlayerLookAtCallback("lookatkeyarea_1", "lookatkeyarea_1", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("02_amb_safe", true, 1.0f, 3.0f, 2, false);
+}
+
+void OnLeave()
+{
+
+}
+
+////////////////////////////////////
+////////////////START///////////////
+////////////////////////////////////
+
+void fadeingamestart(string &in AsTimer)
+{
+	SetPlayerActive(true);
+	FadeIn(5.0f);
+	FadePlayerRollTo( 0, 10, 10);
+	PlaySoundAtEntity("wakeup_breath", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void begin_monster_countdown(string &in asEntity)
+{
+	SetEntityActive("servant_brute_1", true);
+}
+
+void unlockfirstdoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("mansion_1", false, false);
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "unlock_door", "mansion_1", 0, false);
+	ShowEnemyPlayerPosition("servant_brute_1");
+}
+
+
+
+
+void lookatkeyarea_1(string &in asEntity, int alState)
+{
+	AddPropImpulse("key_tomb_1", 10.0f, 0.0f, 0.0f, "world");
+}
+
+
+
+
+////////////////////////////////////////////
+////////////////LANTERN/COLOR///////////////
+////////////////////////////////////////////
+
+void lanternColor(bool abLit)
+{
+	AddTimer("lanternTimer", 0.001f, "changeLanternColor");
+	
+	if(GetLocalVarInt("red_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 1, 0, 0, 0.7, 6.5, 0.3f);
+		FadeLightTo("PlayerHands_PointLight_2", 0.25, 0, 0, 0, 0.5, 0.3f);
+	}
+}
+
+void changeLanternColor(string &in asTimer)
+{
+
+	AddTimer("lanternTimer", 0.1f, "changeLanternColor");
+	
+	///////RED
+	if(GetLocalVarInt("red_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 1, 0, 0, 0.7, 6.5, 1.0f);
+		FadeLightTo("PlayerHands_PointLight_2", 0.25, 0, 0, 0, 0.5, 1.0f);
+	}
+	
+	///////ORANGE
+	if(GetLocalVarInt("orange_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 1, 1, 0.5, 0.7, 6.5, 1.0f);
+		FadeLightTo("PlayerHands_PointLight_2", 0.25, 0.25, 0.1, 0, 0.5, 1.0f);
+	}
+	
+	///////YELLOW
+	if(GetLocalVarInt("yellow_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 1, 1, 0, 0.7, 6.5, 1.0f);
+		FadeLightTo("PlayerHands_PointLight_2", 0.25, 0.25, 0, 0, 0.5, 1.0f);
+	}
+	
+	///////GREEN
+	if(GetLocalVarInt("green_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 0, 1, 0, 0.7, 6.5, 1.0f);
+		FadeLightTo("PlayerHands_PointLight_2", 0, 0.25, 0, 0, 0.5, 1.0f);
+	}
+	
+	///////BLUE
+	if(GetLocalVarInt("blue_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 0, 0, 1, 0.7, 6.5, 1.0f);
+		FadeLightTo("PlayerHands_PointLight_2", 0, 0, 0.25, 0, 0.5, 1.0f);
+	}
+	
+	///////PURPLE
+	if(GetLocalVarInt("purple_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 0.50, 0, 0.50, 0.7, 6.5, 1.0f);
+		FadeLightTo("PlayerHands_PointLight_2", 0.13, 0, 0.12, 0, 0.5, 1.0f);
+	}
+	
+}
+
+//////////////////////////////////////////////////
+////////////////LANTERN/COLOR/TIMER///////////////
+//////////////////////////////////////////////////
+
+void RainbowLantern_Red(string &in asTimer)
+{
+	SetLocalVarInt("purple_lantern", 0);
+	SetLocalVarInt("red_lantern", 1);
+	AddTimer("RainbowLantern_Orange", 1.0f, "RainbowLantern_Orange");
+}
+
+void RainbowLantern_Orange(string &in asTimer)
+{
+	SetLocalVarInt("red_lantern", 0);
+	SetLocalVarInt("orange_lantern", 1);
+	AddTimer("RainbowLantern_Yellow", 1.0f, "RainbowLantern_Yellow");
+}
+
+
+void RainbowLantern_Yellow(string &in asTimer)
+{
+	SetLocalVarInt("orange_lantern", 0);
+	SetLocalVarInt("yellow_lantern", 1);
+	AddTimer("RainbowLantern_Green", 1.0f, "RainbowLantern_Green");
+}
+
+void RainbowLantern_Green(string &in asTimer)
+{
+	SetLocalVarInt("yellow_lantern", 0);
+	SetLocalVarInt("green_lantern", 1);
+	AddTimer("RainbowLantern_Blue", 1.0f, "RainbowLantern_Blue");
+}
+
+void RainbowLantern_Blue(string &in asTimer)
+{
+	SetLocalVarInt("green_lantern", 0);
+	SetLocalVarInt("blue_lantern", 1);
+	AddTimer("RainbowLantern_Purple", 1.0f, "RainbowLantern_Purple");
+}
+
+void RainbowLantern_Purple(string &in asTimer)
+{
+	SetLocalVarInt("blue_lantern", 0);
+	SetLocalVarInt("purple_lantern", 1);
+	AddTimer("RainbowLantern_Red", 1.0f, "RainbowLantern_Red");
+}

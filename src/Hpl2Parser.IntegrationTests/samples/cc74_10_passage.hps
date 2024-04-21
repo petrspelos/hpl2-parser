@@ -1,0 +1,95 @@
+void OnStart(){
+	PlayerFunctions();
+	PropFunctions();
+	variables();
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.5f, 0, 0, true);
+	SetDeathHint("Messages", "caution");
+}
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "09Access", 1, "10Corridor.jpg");
+}
+
+void PlayerFunctions(){
+	AddEntityCollideCallback("Player", "LookingBack", "dontLookBack", false, 1);
+	AddEntityCollideCallback("Player", "AreaDie", "die", false, 1);
+	AddEntityCollideCallback("Player", "AreaCheckPoint", "checkPoint", true, 1);
+	AddEntityCollideCallback("breaker", "AreaCollide", "breakPlanks", true, 1);
+	AddEntityCollideCallback("Player", "AreaPotionQuest", "addPotionQuest", false, 1);
+	AddUseItemCallback("", "lab_key", "lab", "finallyUnlockLab", true);
+	AddUseItemCallback("", "complete_potion", "AreaUsePotion", "usePotionOnRock", true);
+}
+
+void PropFunctions(){
+	AddEntityCollideCallback("box01", "AreaThrowBox", "notEffective", false, 1);
+	AddEntityCollideCallback("box02", "AreaThrowBox", "notEffective", false, 1);
+	AddEntityCollideCallback("box03", "AreaThrowBox", "notEffective", false, 1);
+	AddEntityCollideCallback("breaker", "AreaThrowBox", "notEffective", false, 1);
+}
+
+void variables(){
+	SetGlobalVarInt("ifGetQuest", 1);
+}
+
+void dontLookBack(string &in asParent, string &in asChild, int alState){
+	SetMessage("Messages", "lockedNeedElseUseless", 0);
+}
+
+void breakPlanks(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("planks_intact", false);
+	SetEntityActive("planks_broken", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+	CreateParticleSystemAtEntity("", "ps_break_wood_small", "AreaParticle_1", false);
+	CreateParticleSystemAtEntity("", "ps_break_wood_small", "AreaParticle_2", false);
+	CreateParticleSystemAtEntity("", "ps_break_wood_small", "AreaParticle_3", false);
+	SetSwingDoorLocked("mansion_1", false, true);
+}
+
+void die(string &in asParent, string &in asChild, int alState){
+	GivePlayerDamage(101, "BloodSplat", false, true);
+}
+
+void checkPoint(string &in asParent, string &in asChild, int alState){
+	CheckPoint("CheckPoint", "CheckPoint", "", "Messages", "caution");
+}
+
+void notEffective(string &in asParent, string &in asChild, int alState){
+	SetMessage("Messages", "effectiveness", 0);
+}
+
+void chainResists(string &in asParent, string &in asChild, int alState){
+	SetMessage("Messages", "resistant", 0);
+}
+
+void addPotionQuest(string &in asParent, string &in asChild, int alState){
+	if (GetGlobalVarInt("ifGetQuest") == 1){
+		AddQuest("bridgedown", "bridgedown");
+		SetLevelDoorLocked("labequipment", false);
+	}
+}
+
+void finallyUnlockLab(string &in item, string &in door){
+	SetLevelDoorLocked("lab", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}
+
+void usePotionOnRock(string &in item, string &in entity){
+	StartScreenShake(0.1, 0, 0, 2.9f);
+	AddTimer("", 2.9f, "startBridgeCollapse");
+	SetMessage("Messages", "potionPut", 0);
+	RemoveItem("complete_potion");
+}
+
+void startBridgeCollapse(string &in asTimer){
+	SetEntityActive("bridge_rock_static", false);
+	SetEntityActive("bridge_rock_falling", true);
+	AddPropImpulse("bridge_rock_falling", 2, 2, 0, "World");
+	BreakJoint("bridge_chained_BallJoint_1");
+	AddBodyImpulse("bridge_chained_chain", 1,0.5,-2, "World");
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaEffect_1", false);
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaEffect_2", false);
+	PlayGuiSound("break_wood.snt", 1000000);
+}

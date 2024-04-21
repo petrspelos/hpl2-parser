@@ -1,0 +1,547 @@
+ void BangsTimer(string &in asTimer2)
+ {
+	PlaySoundAtEntity("Creaks", "afx_enginerooms_bang", "AreaBangs_"+RandInt(1,6), 0.0, false);
+	
+	AddTimer("BangsTimer", RandFloat(25.0f, 38.0f), "BangsTimer");
+ }
+
+//===========================================
+     // This runs when the map first starts
+     void OnStart()
+
+    {
+             
+			  CheckPoint ("BaseCheck1", "PlayerStartArea_1", "", "", "");
+			  CompleteQuest("EagleKeyQuest", "EagleKeyQuest");
+			  CompleteQuest("GoToBasement", "GoToBasement");
+			  SetMapDisplayNameEntry("Basement");  
+			  AddTimer("asTimer2", 5.0f, "BangsTimer");
+			  SetGlobalVarInt("BasementOrb", 0);
+			  AddEntityCollideCallback("Player", "ScriptArea_1", "DroneChange", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_2", "DroneChange2", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_3", "Squeal", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_5", "Squeal2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_7", "Bangs", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_9", "Echo", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_11", "Bangs2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_13", "Check1", true, 1);
+			  
+			  AddEntityCollideCallback("Player", "ScriptArea_15", "Children", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_18", "Enemy1", true, 1);
+			  AddEntityCollideCallback("servant_grunt_pig_1", "ScriptArea_17", "EnemyGo", true, 1);
+			  AddEntityCollideCallback("servant_grunt_pig_1", "ScriptArea_43", "EnemyAreaGo", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_19", "Enemy2", true, 1);
+			  AddEntityCollideCallback("servant_grunt_pig_2", "ScriptArea_20", "EnemyGo2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_21", "Enemy3", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_23", "Enemy5", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_24", "Bangs3", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_26", "Scream1", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_28", "Bangs4", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_30", "Bangs5", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_32", "Scream2", true, 1);
+			  AddEntityCollideCallback("servant_grunt_pig_nospawnsound_1", "ScriptArea_22", "EnemyGo3", true, 1);
+			  AddEntityCollideCallback("crowbar_joint_1", "Break_Wood", "CollideAreaBreakDoor", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_34", "Scream3", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_36", "Scream4", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_39", "Enemy4", true, 1);
+			  AddEntityCollideCallback("wretch_nospawnsound_1", "ScriptArea_38", "Enemy4Go", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_41", "Barrels", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_44", "SecondVisit", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_45", "PigAttack", true, 1);
+			  
+			  AddUseItemCallback("crowbarondoor", "crowbar_1", "factory_corridor_01_door_2", "UseCrowbarOnDoor", true);
+			  AddUseItemCallback("crowbaronframe", "crowbar_1", "Area_Use_Crowbar", "UseCrowbarOnDoor", true);
+			  AddUseItemCallback("", "key_dove", "prison_section_1", "UnlockDoor", true);
+			  
+			  SetEntityPlayerInteractCallback("prison_section_1", "KeyQuest", true);
+			  SetEntityPlayerInteractCallback("Lantern_1", "PickLant", true);
+			  SetEntityPlayerInteractCallback("factory_corridor_01_door_2", "CrowbarQuest", true);
+			  SetEntityPlayerInteractCallback("OrbPiece_4", "OrbCheck", true);
+			  SetEntityPlayerInteractCallback("note_manual_1", "BaxterNoteMusic", true);
+					
+     }      
+	
+	void BaxterNoteMusic(string &in asEntity)
+		
+		{
+				PlayMusic("06_amb", true, 0.45, 1, 3, true);
+				AddTimer("", 0.3, "StopNoteMusic3");
+		}
+
+		void StopNoteMusic3(string &in asTimer)
+		
+		{
+				StopMusic(3, 3);
+		}
+	
+	void OrbCheck(string &in asEntity)
+	
+	{
+			AddGlobalVarInt("OrbCollect", 1);
+			AddGlobalVarInt("BasementOrb", 1);
+			
+			CheckPoint("check01","PlayerStartArea_4", "","", "");
+	}
+	
+	void PickLant(string &in asEntity)
+		
+		{
+				PlayMusic("music_mansion_lanternpickup", false, 0.3, 1, 10, false);
+				SetGlobalVarInt("SecVisit", 0);
+				SetEntityActive("web_3", true);
+		}
+	
+	void KeyQuest(string &in asEntity)
+		
+		{
+				AddQuest("DoveKeyQuest", "DoveKeyQuest");
+		}
+		
+		void CrowbarQuest(string &in asEntity)
+		
+		{
+				AddQuest("CrowbarQuest2", "CrowbarQuest2");
+		}
+	
+	void UnlockDoor(string &in asItem, string &in asEntity)
+					 
+			{
+				 SetSwingDoorLocked("prison_section_1", false, true);
+				 PlaySoundAtEntity("", "lock_door", "prison_section_1", 0, false);
+				 CompleteQuest("DoveKeyQuest", "DoveKeyQuest");
+				 											 
+			}
+	
+	void UseCrowbarOnDoor(string &in asItem, string &in asEntity)
+						 
+						{
+							 AddTimer(asEntity, 0.2, "TimerAttachCrowbar");
+							 PlaySoundAtEntity("pickupcrow","player_crouch.snt", "Player", 0.05, false);
+							 
+						}
+	
+	void TimerAttachCrowbar(string &in asTimer)
+						 
+						 {
+							 PlaySoundAtEntity("attachcrowbar","puzzle_place_jar.snt", "Player", 0, false);
+							 SetEntityActive("crowbar_joint_1", true);
+							 
+						 }
+	
+	void Scream1(string &in asParent, string &in asChild, int alState)
+						 
+						 {
+						 
+								PlaySoundAtEntity("","afx_event_church_female_scream", "ScriptArea_27", 0, false);
+						 
+						 }
+	
+	void Scream2(string &in asParent, string &in asChild, int alState)
+						 
+						 {
+						 
+								PlaySoundAtEntity("","afx_church_pens_vo_shake_1", "ScriptArea_33", 0, false);
+						 
+						 }
+	
+	void Scream3(string &in asParent, string &in asChild, int alState)
+						 
+						 {
+						 
+								PlaySoundAtEntity("","afx_factory_event_wretch_vocalisations", "ScriptArea_35", 0, false);
+						 
+						 }
+	
+	void Scream4(string &in asParent, string &in asChild, int alState)
+						 
+						 {
+						 
+								PlaySoundAtEntity("","afx_factory_event_wretch_vocalisations", "ScriptArea_37", 0, false);
+						 
+						 }
+	
+	void CollideAreaBreakDoor(string &in asParent, string &in asChild, int alState)
+						 
+						 {
+							 //GiveSanityBoostSmall();
+							 PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 15, false);
+							 SetSwingDoorLocked("factory_corridor_01_door_2", false, false);
+							 SetSwingDoorDisableAutoClose("factory_corridor_01_door_2", true);
+							 SetSwingDoorClosed("factory_corridor_01_door_2", false,false);
+							 PlaySoundAtEntity("break","break_wood_metal", "Area_Break_Effect", 0, false);
+							 CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "Area_Break_Effect", false);
+							 AddPropImpulse("factory_corridor_01_door_2", -3, 0, 0, "world");
+							 SetEntityActive("crowbar_joint_1", false);
+							 SetEntityActive("crowbar_dyn_1", true);
+							 AddTimer("pushdoor", 0.1, "TimerPushDoor");
+							 AddDebugMessage("Break door!", false); 
+							 CompleteQuest("CrowbarQuest2", "CrowbarQuest2");
+							 RemoveItem("crowbar_1");
+							 
+						 }
+	
+	void TimerPushDoor(string &in asTimer)
+						 
+						 {
+							 AddPropImpulse("factory_corridor_01_door_2", -5, 2, -3, "world");
+							 AddTimer("doorclose", 1.1, "TimerDoorCanClose");
+						 }
+	
+	void TimerDoorCanClose(string &in asTimer)
+						 
+						 {
+							 SetSwingDoorDisableAutoClose("factory_corridor_01_door_2", false);
+						 }
+	
+	void Enemy1(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("web_1", true);
+			SetEntityActive("web_2", true);
+			SetEntityActive("slime_pile_1", true);
+			SetEntityActive("slime_anim_ceiling_1", true);
+			FadeInSound("Sound_1", 3, false);
+			SetEntityActive("servant_grunt_pig_1", true);
+			RemoveTimer("BangsTimer");
+			PlayMusic("engineer_danger", true, 1, 1, 3, true);
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_1", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_2", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_3", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_4", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_5", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_6", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_7", 5, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_8", 3, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_9", 9, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_10", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_11", 5, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_12", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_13", 9, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_14", 4, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_15", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_16", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_17", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_26", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_27", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_28", 0.001, "");
+	
+	}	
+	
+	void Enemy2(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("servant_grunt_pig_2", true);
+			AddEnemyPatrolNode("servant_grunt_pig_2", "PathNodeArea_18", 0.001, "");
+			PlayMusic("wretch_search", true, 1, 1, 10, true);
+			StopMusic(3, 3);
+	
+	}	
+	
+	void Enemy5(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("ScriptArea_21", true);
+			SetEntityActive("ScriptArea_9", true);
+			SetEntityActive("ScriptArea_18", true);	
+			
+	
+	}	
+	
+	void Enemy3(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("servant_grunt_pig_nospawnsound_1", true);
+			AddEnemyPatrolNode("servant_grunt_pig_nospawnsound_1", "PathNodeArea_19", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_nospawnsound_1", "PathNodeArea_20", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_nospawnsound_1", "PathNodeArea_21", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_nospawnsound_1", "PathNodeArea_22", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_nospawnsound_1", "PathNodeArea_23", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_nospawnsound_1", "PathNodeArea_24", 0.001, "");
+			
+	
+	}	
+	
+	void Barrels(string &in asParent, string &in asChild, int alState)
+
+		{
+			SetPropStaticPhysics("barrel01_46", false);
+			SetPropStaticPhysics("barrel01_47", false);
+			SetEntityActive("ScriptArea_42", false);
+		}
+	
+	void SecondVisit(string &in asParent, string &in asChild, int alState)
+
+		{
+			
+			if(GetGlobalVarInt("SecVisit") == 1)
+			{
+					SetEntityActive("wretch_nospawnsound_2", true);
+					
+					CheckPoint ("BaseCheck3", "PlayerStartArea_2", "", "", "");
+			}
+		}
+	
+	void PigAttack(string &in asParent, string &in asChild, int alState)
+
+		{
+			
+			SetEnemySanityDecreaseActive("Pig_1", false);
+			SetEntityActive("Pig_1", true);
+			AddEnemyPatrolNode("Pig_1", "PathNodeArea_14", 0.001, "");
+			AddEnemyPatrolNode("Pig_1", "PathNodeArea_17", 0.001, "");
+			AddEnemyPatrolNode("Pig_1", "PathNodeArea_92", 0.001, "");
+			PlaySoundAtEntity("", "afx_bilge_stinger.snt", "Player", 0.0f, false);
+			PlaySoundAtEntity("", "afx_bilge_pig_howl.snt", "ScriptArea_46", 0.0f, false);
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_7", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_10", 3, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_9", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_102", 7, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_9", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_8", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_16", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_17", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_4", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_72", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_3", 0.001, "");
+			//AddEnemyPatrolNode("Pig_1", "PathNodeArea_28", 0.001, "");
+			
+		}
+	
+	void Enemy4(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("wretch_nospawnsound_1", true);
+			AddEnemyPatrolNode("wretch_nospawnsound_1", "PathNodeArea_25", 0.001, "");
+			PlaySoundAtEntity("", "afx_event_mansion_weird.snt", "ScriptArea_40", 0.0f, false);
+	
+	}
+	
+	void EnemyAreaGo(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("ScriptArea_17", true);
+	
+	}	
+	
+	void EnemyGo(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("servant_grunt_pig_1", false);
+			
+	
+	}	
+	
+	void EnemyGo2(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("servant_grunt_pig_2", false);
+	
+	}	
+	
+	void Enemy4Go(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("wretch_nospawnsound_1", false);
+	
+	}	
+	
+	void Children(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_spooky_child_laugh_semi_distant.snt", "ScriptArea_16", 0.0f, false);
+	
+	}	
+	
+	void Check1(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			
+			CheckPoint ("BaseCheck3", "PlayerStartArea_5", "", "", "");
+	}	
+	
+	void Bangs2(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_event_factory_pigstory_02.snt", "ScriptArea_12", 0.0f, false);
+			
+	}	
+	
+	void Bangs3(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_enginerooms_bang", "ScriptArea_25", 0.0f, false);
+			SetEntityActive("servant_grunt_pig_1", false);
+			SetEntityActive("servant_grunt_pig_3", true);
+	
+	}	
+	
+	void Bangs4(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_church_pens_dyn_11_2D", "ScriptArea_29", 0.0f, false);
+	
+	}	
+	
+	void Bangs5(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_church_pens_dyn_01_2D.snt", "ScriptArea_31", 0.0f, false);
+	
+	}	
+	
+	void Echo(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "Echo1.snt", "ScriptArea_10", 0.0f, false);
+	
+	}	
+	
+	void Squeal(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_event_factory_pigstory_05.snt", "ScriptArea_3", 0.0f, false);
+	
+	}	
+	
+	void Squeal2(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_factory_quake_creaks.snt", "ScriptArea_6", 0.0f, false);
+	
+	}	
+	
+	void Bangs(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlaySoundAtEntity("", "afx_church_pens_dyn_08_2D.snt", "ScriptArea_8", 0.0f, false);
+	
+	}	
+	
+	void DroneChange(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			//PlayMusic("amb_factory_office_tight", true, 5, 1, 2, true);
+			FadeInSound("Sound_5", 3, false);
+			StopSound("Sound_2", 3);
+			//StopMusic(1.5, 3);
+			AddTimer("DRONE", 1, "DRONE");
+	
+	}
+	
+	void DroneChange2(string &in asParent, string &in asChild, int alState)	
+	
+	{
+			FadeInSound("Sound_2", 3, false);
+			//PlayMusic("amb_church_pens_entrance", true, 10, 1, 3, true);
+			//StopMusic(3, 2);
+			StopSound("Sound_5", 3);
+			AddTimer("DRONE2", 1, "DRONE2");
+	
+	}
+	
+	void DRONE(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_2", true);
+				SetEntityActive("ScriptArea_1", false);
+		
+			}
+	
+	void DRONE2(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_1", true);
+				SetEntityActive("ScriptArea_2", false);	
+		
+			}
+	
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+  {
+			  PreloadSound("amb_church_pens_entrance.snt");
+			  PreloadSound("amb_factory_office_tight.snt");
+			  PreloadSound("children_laugh.snt");
+			  PreloadSound("afx_event_factory_pigstory_05.snt");
+			  PreloadSound("events_factory_pigattack_01.snt");
+			  PreloadSound("afx_factory_quake_creaks.snt");
+			  PreloadSound("Echo1.snt");
+			  PreloadSound("afx_factory_quake_piston.snt");
+			  PreloadSound("afx_factory_engine_bell_3D.snt");
+			  PreloadSound("afx_spooky_child_laugh_semi_distant.snt");
+			  PreloadSound("afx_event_factory_pigstory_02.snt");
+			  PreloadSound("afx_event_church_female_scream.snt");
+			  PreloadSound("afx_church_pens_dyn_11_2D.snt");
+			  PreloadSound("afx_church_pens_dyn_01_2D.snt");
+			  PreloadSound("afx_church_pens_vo_shake_1.snt");  
+			  PreloadSound("afx_factory_event_wretch_vocalisations.snt");
+			  PreloadSound("afx_enginerooms_bang.snt");
+			  PreloadSound("afx_church_pens_dyn_08_2D.snt");
+			  
+			  SetupLoadScreen("LoadingText", "Basement", 0, "03_loading.png");
+			  
+			  PreloadParticleSystem("ps_dust_whirl.ps");
+			  PreloadParticleSystem("ps_area_fog.ps");
+			  
+			  
+		  
+		  SetInDarknessEffectsActive(false);
+		  SetPlayerRunSpeedMul(0.8);
+		  StopSound("Sound_5", 0.2);
+		  //AddTimer("LEVELMUSIC", 0.3, "LEVELMUSIC");
+		  StopSound("Sound_1", 0.2);
+		  StopMusic(3, 1);
+		  StopMusic(3, 2);
+		  StopMusic(3, 3);
+		  StopMusic(3, 4);
+		  StopMusic(3, 5);
+		  StopMusic(3, 6);
+		  StopMusic(3, 7);
+		  StopMusic(3, 8);
+		  StopMusic(3, 9);
+		  StopMusic(3, 10);
+		  StopMusic(3, 11);
+		  StopMusic(3, 12);
+		  StopMusic(3, 13);
+		  StopMusic(3, 14);
+		  StopMusic(3, 15);
+		  AutoSave();
+     }
+ 
+ //void LEVELMUSIC(string &in asTimer)
+			
+			//{
+			
+					
+					//PlayMusic("amb_church_pens_entrance", true, 10, 1, 3, true);
+		
+			//}
+ 
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+		SetLanternActive(false, false);
+     }

@@ -1,0 +1,692 @@
+void OnEnter()
+{
+
+}
+
+void OnLeave()
+{
+
+}
+
+void ChooseDificulty()
+{
+	StartPlayerLookAt("easy", 0.5, 0.6, "");
+	SetInDarknessEffectsActive(false);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	SetEntityPlayerLookAtCallback("easy", "DifficLook", false);
+	SetEntityPlayerLookAtCallback("norm", "DifficLook", false);
+	SetEntityPlayerLookAtCallback("hard", "DifficLook", false);
+	SetEntityPlayerInteractCallback("easy", "ChooseDiff", true);
+	SetEntityPlayerInteractCallback("norm", "ChooseDiff", true);
+	SetEntityPlayerInteractCallback("hard", "ChooseDiff", true);
+}
+
+void ResetPlayer()
+{
+	StopPlayerLookAt();
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+
+void ChooseDiff(string &in asEntity)
+{
+	int n = 0;
+	if(asEntity == "easy")
+		n = 1;
+	else if(asEntity == "norm")
+		n = 2;
+	else if(asEntity == "hard")
+		n = 3;
+	
+	AddDebugMessage ("difficulty: " + n, true);
+	SetDifficulty(n);
+	InitLevel();
+}
+
+void DifficLook(string &in asEntity, int alState)
+{
+	StopPlayerLookAt();
+	StartPlayerLookAt(asEntity, 0.5, 0.6, "");
+}	
+
+void StandMessageLook(string &in asEntity, int alState)
+{
+	if(asEntity == "ice_sphere_arm_3")
+		SetMessage ("MessagesScreen", "Stand_Text", 5);
+	else if(asEntity == "ice_sphere_arm_1")
+		SetMessage ("MessagesScreen", "Stand_Alive", 5);
+}
+
+void InitLevel()
+{
+	ResetPlayer();
+	int count = 4;
+	for(int i = 1;i <= count;i++)
+	{
+		SetEntityActive("ice_crystal_easy_" + i, false);
+		SetEntityActive("ice_crystal_norm_" + i, false);
+		SetEntityActive("ice_crystal_hard_" + i, false);
+		SetLightVisible ("ice_crystal_easy_" + i + "_light", false);
+		SetLightVisible ("ice_crystal_norm_" + i + "_light", false);
+		SetLightVisible ("ice_crystal_hard_" + i + "_light", false);
+	}
+	
+	if(GetLocalVarInt("difficulty") == 1)
+	{
+		for(int i = 1;i <= count;i++)
+		{
+			SetEntityActive("ice_crystal_easy_" + i, true);
+			SetLightVisible ("ice_crystal_easy_" + i + "_light", true);
+		}
+	}
+	else if(GetLocalVarInt("difficulty") == 2)
+	{
+		for(int i = 1;i <= count;i++)
+		{
+			SetEntityActive("ice_crystal_norm_" + i, true);
+			SetLightVisible ("ice_crystal_norm_" + i + "_light", true);
+		}
+	}
+	else if(GetLocalVarInt("difficulty") == 3)
+	{
+		for(int i = 1;i <= count;i++)
+		{
+			SetEntityActive("ice_crystal_hard_" + i, true);
+			SetLightVisible ("ice_crystal_hard_" + i + "_light", true);
+		}
+	}
+	AddQuest ("AppQuest", "Appearance");
+	PlayPropAnimation ("ice_sphere_arm_3", "close", 0.1, false, "");
+	SetEntityPlayerLookAtCallback ("ice_sphere_arm_3", "StandMessageLook", true);
+	SetEntityPlayerLookAtCallback ("ice_sphere_arm_1", "StandMessageLook", true);
+	SetEntityActive ("ice_crystal_easy", false);
+	SetEntityActive ("ice_crystal_norm", false);
+	SetEntityActive ("ice_crystal_hard", false);
+	SetLightVisible ("easy_light" , false);
+	SetLightVisible ("norm_light" , false);
+	SetLightVisible ("hard_light" , false);
+	SetEntityActive ("easy", false);
+	SetEntityActive ("norm", false);
+	SetEntityActive ("hard", false);
+	AddEntityCollideCallback ("Player", "portal", "PortalEnd", false, 0);
+	AddEntityCollideCallback ("Player", "area_huge_arrival", "HugeSuitorEvent", false, 0);
+	AddEntityCollideCallback ("Player", "sanct_area_appear", "SanctEvent1", false, 0);
+	AddEntityCollideCallback ("Player", "blood", "BloodHealArea", false, 0);
+	AddEntityCollideCallback ("Player", "ghost_breath_area_1", "GhostBreathArea", true, 0);
+	AddEntityCollideCallback ("Player", "canyon_music_area", "CanyonMusic", true, 0);
+	SetEntityPlayerLookAtCallback("look_area_1", "LookAreaEvents", true);
+	for(int i = 1;i <=29;i++)
+	{
+		AddEntityCollideCallback ("Player", "ice_piece_large_" + i, "IceDump", false, 0);
+	}
+	//PlayPropAnimation ("cave_resident_cinematic_1", "Idle", 0, true, "");
+	AddEntityCollideCallback ("Player", "cave_water_river", "CaveRiverWater", false, 0);
+	
+	//GiveItem("lantern", "lantern", "", "lantern.tga", 1);
+	PlayMusic ("ice_prison_music.ogg", true, 0.7, 0.1, 1, true);
+	
+	AddEntityCollideCallback ("Player", "ghost_area_appear", "IceGhostArrival", true, 0);
+	SetEntityCallbackFunc("ice_ghost_head_1", "OnHeadPickup");
+	SetEntityCallbackFunc("ice_sphere_1", "OnSpherePickup");
+	SetLocalVarInt("torches_lit", 0);
+	
+	for(int i = 1;i <= 6;i++)
+		SetLocalVarInt("torch_lit_" + i, 0);
+	AddUseItemCallback ("sphere_set", "ice_sphere_1", "ice_sphere_arm_1", "SetIceSphere", true);
+	int n = GetLocalVarInt("difficulty");
+	SetLightVisible ("ice_ghost_" + n + "_light", false);
+	AddEntityCollideCallback ("ice_ghost_" + n, "ghost_path_remove", "IceGhostPathRemove", true, 0);
+}
+
+void OnStart()
+{
+	ChooseDificulty();
+}
+
+void PortalEnd(string &in asParent, string &in asChild, int alState)
+{
+	StartCredits ("", true, "Credits", "CreditsGood", 3);
+}
+
+void SetDifficulty(int d)
+{
+	SetLocalVarInt("difficulty", d);
+	SetLocalVarInt ("catch_to_death_current", 0);
+	switch(d)
+	{
+		case 1:
+		SetLocalVarInt ("lives", 10);
+		SetLocalVarInt ("catch_to_death", 2);
+		break;
+		
+		case 2:
+		SetLocalVarInt ("lives", 3);
+		SetLocalVarInt ("catch_to_death", 2);
+		break;
+		
+		case 3:
+		SetLocalVarInt ("lives", 2);
+		SetLocalVarInt ("catch_to_death", 1);
+		break;
+	}
+		
+	SetLocalVarInt ("lives_current", GetLocalVarInt("lives"));
+}
+
+void SetIceSphere(string &in asItem, string &in asEntity)
+{
+	SetEntityActive ("ice_sphere_static_1", true);
+	SetEntityActive ("ice_picks_ladder", true);
+	RemoveItem (asItem);
+	SetEntityActive ("block_up", false);
+	for(int i = 1;i <= 6;i++)
+		SetEntityActive ("ladder_pike_" + i, true);
+	for(int i = 1;i <= 4;i++)
+		SetEntityActive ("ladder_block_" + i, true);
+	PlayPropAnimation (asEntity, "close", 0.1, false, "");
+	PlaySoundAtEntity ("event_sanct", "event_sanct", "Player", 1, true);
+}
+
+void OnSpherePickup(string &in asEntity, string &in type)
+{
+	SetLightVisible ("sphere_light", false);
+	CheckPoint ("canyon_save_2", "sphere_cave", "CanyonSave2", "IceDeathHints", "Death1");
+	PlayPropAnimation ("ice_sphere_arm_3", "Idle", 0.1, true, "");
+	AddPlayerSanity (50);
+	AddPlayerHealth(100);
+	SetMessage ("MessagesScreen", "OrbPickup_Text", 5);
+}	
+
+void CanyonSave2(string &in asName, int alCount)
+{
+	AddLocalVarInt("lives_current", -1);
+	AddDebugMessage ("current_lives: " + GetLocalVarInt("lives_current"), true);
+	if(checkLives())
+	{
+		AddDebugMessage ("lives_current" + GetLocalVarInt("lives_current"), true);
+		PlayMusic ("ice_ghost_ev_1.ogg", false, 1, 0.1, 20, true);
+		StartCredits ("", true, "Credits", "CreditsBad", 3);
+		return;
+	}
+}
+
+void OnHeadPickup(string &in asEntity, string &in type)
+{
+	for(int i = 1;i <= 6;i++)
+	{
+		AddUseItemCallback ("head_torch_lit_" + i, asEntity, "bridge_torch_" + i, "LitSanctumTorch", false);
+	}
+}
+
+void LitSanctumTorch(string &in asItem, string &in asEntity)
+{
+	AddLocalVarInt("torches_lit", 1);
+	SetLampLit(asEntity, true, true);
+	AddTimer ("ice_ghost_fog_torches", 0.1, "IceGhostFogTorches");
+	PlaySoundAtEntity ("ice_ghost_torch", "ice_ghost_torch", "Player", 1, true);
+	AddDebugMessage ("torches_lit: " + GetLocalVarInt("torches_lit"), true);
+	SetLocalVarInt(asEntity, 1);
+	if(GetLocalVarInt("torches_lit") == 6)
+	{
+		SetMoveObjectState("portal_gate", 1);
+		PlaySoundAtEntity ("event_sanct", "event_sanct", "Player", 1, true);
+	}
+}
+
+void IceGhostPathRemove(string &in asParent, string &in asChild, int alState)
+{
+	int n = GetLocalVarInt("difficulty");
+	SetEntityActive ("ghost_path", false);
+	SetEnemyDisableTriggers(asParent, false);
+	SetMoveObjectState("portal_gate", 1);
+	AddEntityCollideCallback ("ice_ghost_" + n, "ghost_door_close", "IceGhostDoorClose", true, 0);
+}
+
+void IceGhostDoorClose(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("portal_gate", 0);
+}
+
+void LookAreaEvents(string &in asEntity, int alState)
+{
+	if(asEntity == "look_area_1")
+	{
+		PlaySoundAtEntity ("ice_ghost_amb", "ice_ghost_amb", "look_area_spot_1", 1, true);
+	}
+	
+}
+
+void SanctEvent1(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic ("damned_ice_city.ogg", true, 1, 0.1, 2, true);
+	PlaySoundAtEntity ("event_sanct", "event_sanct", "Player", 1, true);
+	SetFogProperties (0, 120, 0.4, true);
+	//SetFogColor(0.375f, 0.427f, 0.669f, 1);
+}
+
+void IceGhostArrival(string &in asParent, string &in asChild, int alState)
+{
+	int n = GetLocalVarInt("difficulty");
+	AddEntityCollideCallback ("Player", "ghost_chase", "GhostLastChase", true, 0);
+	SetEntityActive ("ice_ghost_" + n, true);
+	SetLightVisible ("ice_ghost_" + n + "_light", true);
+	for(int i = 1;i <= 4;i++)
+		SetEntityActive ("ice_wall_block_" + i, true);
+	SetEntityActive ("ice_wall_block_5", false);
+	SetEntityActive ("ice_wall_block_6", false);
+	CheckPoint ("ice_ghost_save", "sanct", "IceGhostSave", "IceDeathHints", "Death1");
+	AddEntityCollideCallback ("Player", "cold_water_1", "CaveRiverWater", false, 0);
+	AddEntityCollideCallback ("Player", "cold_water_2", "CaveRiverWater", false, 0);
+	PathNodesSpawn_Start(n);
+	AddTimer ("ice_ghost_fog", 0.1, "IceGhostFog");
+	AddTimer ("ice_ghost_" + n, 0.1, "IceGhostCheckDist");
+}	
+
+void GhostLastChase(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState ("portal_gate", 1);
+	int n = GetLocalVarInt("difficulty");
+	PlaySoundAtEntity ("ice_ghost_chase", "ice_ghost_chase", "Player", 1, true);
+	TeleportEnemyToNode ("ice_ghost_" + n, "ghost_pn_3", true);
+	ShowEnemyPlayerPosition("ice_ghost_" + n);
+	for(int j = 1;j <= 5;j++)
+	{
+		SetEntityActive ("ghost_path_area_" + j + "_b", false);
+		AddEntityCollideCallback ("ice_ghost_" + n, "ghost_path_area_" + j, "GhostPathSetup", false, 0);	
+	}
+}
+
+void GhostPathSetup(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive (asChild + "_b", true);
+}
+
+void IceGhostSave(string &in asName, int alCount)
+{
+	int n = GetLocalVarInt("difficulty");
+	AddLocalVarInt("lives_current", -1);
+	AddDebugMessage ("lives_current: " + GetLocalVarInt("lives_current"), true);
+	if(checkLives())
+	{
+		AddDebugMessage ("lives_current" + GetLocalVarInt("lives_current"), true);
+		PlayMusic ("ice_ghost_ev_1.ogg", false, 1, 0.1, 20, true);
+		StartCredits ("", true, "Credits", "CreditsBad", 3);
+		return;
+	}
+	
+	fogalpha = 1;
+	SetFogColor(0.204, 0.254f, 0.324f, fogalpha);
+	AddEntityCollideCallback ("Player", "ghost_area_appear", "IceGhostArrival", true, 0);
+	AddEntityCollideCallback ("ice_ghost_" + n, "ghost_path_remove", "IceGhostPathRemove", true, 0);
+	ClearEnemyPatrolNodes("ice_ghost_" + n);
+	if(HasItem("ice_ghost_head_1"))
+	{
+		RemoveItem ("ice_ghost_head_1");
+		CreateEntityAtArea("ice_ghost_head_1", "ice_ghost_head.ent", "head_spawn", false);
+	}
+	
+	if(GetEntityExists("ice_ghost_head_1"))
+		AddDebugMessage ("ice head exists", true);
+	else
+		AddDebugMessage ("ice head not exists", true);
+	
+	SetPropStaticPhysics("ice_ghost_head_1", true);
+	SetEntityCallbackFunc("ice_ghost_head_1", "OnHeadPickup");
+	SetLocalVarInt("torches_lit", 0);
+	for(int i = 1;i <= 4;i++)
+		SetEntityActive ("ice_wall_block_" + i, false);
+	SetEntityActive ("ice_wall_block_5", true);
+	SetEntityActive ("ice_wall_block_6", true);
+	SetMoveObjectState("portal_gate", 0);
+	SetEnemyDisableTriggers("ice_ghost_" + n, true);
+	SetEntityActive ("ghost_path", true);
+	AddEntityCollideCallback ("ice_ghost_" + n, "ghost_door_close", "IceGhostDoorClose", true, 0);
+	for(int i = 1;i <= 6;i++)
+	{
+		SetLampLit ("bridge_torch_" + i, false, true);
+		SetLocalVarInt("torch_lit_" + i, 0);
+	}
+	PathNodesSpawn_Start(n);
+}
+
+float fogalpha = 1;
+
+void IceGhostFog(string &in asTimer)
+{
+	fogalpha -= 0.01f;
+	if(fogalpha <= 0)
+	{
+		//SetFogActive (false);
+		RemoveTimer ("ice_ghost_fog");
+		return;
+	}
+	SetFogColor(0.204, 0.254f, 0.324f, fogalpha);
+	AddTimer ("ice_ghost_fog", 0.1, "IceGhostFog");
+}
+
+float GetDistance(string& enemy, string& entity)
+{
+	if(entity == "Player")
+		return MathSqrt( MathPow( GetPlayerPosX() - GetEntityPosX(enemy), 2 ) + MathPow( GetPlayerPosZ() - GetEntityPosZ(enemy), 2) );
+	else{
+		return MathSqrt( MathPow( GetEntityPosX(entity) - GetEntityPosX(enemy), 2 ) + MathPow( GetEntityPosZ(entity) - GetEntityPosZ(enemy), 2) );
+	}
+}
+
+void IceGhostCheckDist(string &in asTimer)
+{
+	float dist = GetDistance(asTimer, "Player");
+	//AddDebugMessage ("dist: " + dist, true);
+	if (dist <= 5 && GetEnemyStateName(asTimer) == "Hunt")
+	{
+		FadeOut (0.4);
+		FadeEnemyToSmoke (asTimer, false);
+		AddLocalVarInt ("catch_to_death_current", 1);
+		if(GetLocalVarInt("catch_to_death_current") == GetLocalVarInt("catch_to_death"))
+		{
+			AddLocalVarInt("lives_current", -1);
+			SetLocalVarInt("catch_to_death_current", 0);
+			AddDebugMessage ("current_lives: " + GetLocalVarInt("lives_current"), true);
+			AddDebugMessage ("catch_to_death_current: " + GetLocalVarInt("catch_to_death_current"), true);
+			if(checkLives())
+			{
+				AddDebugMessage ("lives_current" + GetLocalVarInt("lives_current"), true);
+				PlayMusic ("ice_ghost_ev_1.ogg", false, 1, 0.1, 20, true);
+				StartCredits ("", true, "Credits", "CreditsBad", 3);
+				return;
+			}
+		}
+		for(int i = 1;i <= 6;i++)
+		{
+			SetLampLit ("bridge_torch_" + i, false, true);
+			SetLocalVarInt("torch_lit_" + i, 0);
+		}
+		RemoveEntityCollideCallback ("Player", "cold_water_1");
+		RemoveEntityCollideCallback ("Player", "cold_water_2");
+		SetLocalVarInt("torches_lit", 0);
+		PlayMusic ("ice_ghost_ev_1.ogg", false, 1, 0.1, 20, true);
+		RemoveTimer (asTimer);
+		AddTimer ("caught_reset", 5, "CaughtReset");
+		return;
+	}
+	
+	for(int i = 1;i <= 6;i++)
+	{//mark
+		if(GetLocalVarInt("torch_lit_" + i) == 1){
+			float dist_torch = GetDistance(asTimer, "bridge_torch_" + i);
+			if(dist_torch <= 3 && GetEnemyStateName(asTimer) != "Hunt")
+			{
+				SetLampLit ("bridge_torch_" + i, false, true);
+				SetLocalVarInt("torch_lit_" + i, 0);
+				PlaySoundAtEntity ("ice_ghost_torch", "ice_ghost_torch", "Player", 1, true);
+				if(GetLocalVarInt("torches_lit") == 6)
+					SetMoveObjectState("portal_gate", 0);
+				AddLocalVarInt("torches_lit", -1);
+				AddDebugMessage ("torches_lit: " + GetLocalVarInt("torches_lit"), true);
+				AddDebugMessage ("torch" + i + ": " + GetLocalVarInt("bridge_torch_" + i), true);
+			}
+		}
+		
+	}
+	AddTimer (asTimer, 0.1, "IceGhostCheckDist");
+}
+
+bool checkLives()
+{
+	if(GetLocalVarInt("lives_current") == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+void CaughtReset(string &in asTimer)
+{
+	SetPlayerHealth(40);
+	SetPlayerSanity(60);
+	int n = GetLocalVarInt("difficulty");
+	TeleportPlayer("caught_start");
+	int n1 = RandInt(1, 3);
+	FadeIn (6);
+	SetEntityActive ("ice_ghost_" + n, true);
+	TeleportEnemyToNode ("ice_ghost_" + n, "ghost_spawn_" + n1, true);
+	ClearEnemyPatrolNodes("ice_ghost_" + n);
+	SetMoveObjectState("portal_gate", 0);
+	n1 = 2;
+	if(n1 == 1)
+	{
+		PathNodesSpawn_1(n);
+	}
+	else if(n1 == 2)
+	{
+		PathNodesSpawn_2(n);
+	}
+	else if(n1 == 3)
+	{
+		PathNodesSpawn_3(n);
+	}
+	AddEntityCollideCallback ("Player", "cold_water_1", "CaveRiverWater", false, 0);
+	AddEntityCollideCallback ("Player", "cold_water_2", "CaveRiverWater", false, 0);
+	RemoveTimer ("cave_water_river");
+	AddDebugMessage ("random: " + n1, true);
+	fogalpha = 0;
+	SetFogColor(0.204, 0.254f, 0.324f, fogalpha);
+	RemoveTimer ("ice_ghost_fog");
+	RemoveTimer ("ice_ghost_" + n);
+	AddEntityCollideCallback ("Player", "ghost_chase", "GhostLastChase", true, 0);
+	AddTimer ("ice_ghost_fog", 0.1, "IceGhostFog");
+	AddTimer ("ice_ghost_" + n, 0.1, "IceGhostCheckDist");
+}
+
+
+
+void IceGhostFogTorches(string &in asTimer)
+{
+	fogalpha += 0.01f;
+	if(fogalpha >= (1.0 / 6.0 * GetLocalVarInt("torches_lit")))
+	{
+		AddDebugMessage ("fog_alpha: " + fogalpha, true);
+		RemoveTimer ("ice_ghost_fog_torches");
+		return;
+	}
+	SetFogColor(0.204, 0.254f, 0.324f, fogalpha);
+	AddTimer ("ice_ghost_fog_torches", 0.1, "IceGhostFogTorches");
+}
+
+void BloodHealArea(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1)
+		AddTimer ("blood_heal", 0.1, "BloodHealTimer");
+	else if(alState == -1)
+		RemoveTimer ("blood_heal");
+}
+
+void BloodHealTimer(string &in asTimer)
+{
+	AddPlayerHealth(0.5);
+	AddTimer ("blood_heal", 0.1, "BloodHealTimer");
+}
+
+void GhostBreathArea(string &in asParent, string &in asChild, int alState)
+{
+	string s;
+	if(asChild == "ghost_breath_area_1")
+		s = "ghost_breath_spot_1";
+	PlaySoundAtEntity ("ice_ghost_breath", "ice_ghost_breath", s, 1, true);
+}
+
+void CanyonMusic(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic ("ice_canyon_music.ogg", false, 1, 1, 2, true);
+	CheckPoint ("canyon_save", "canyon_start", "CanyonSave", "IceDeathHints", "Death1");
+}	
+
+void CanyonSave(string &in asName, int alCount)
+{
+	AddLocalVarInt("lives_current", -1);
+	PlayMusic ("ice_prison_music.ogg", true, 0.7, 0.1, 1, true);
+	AddDebugMessage ("current_lives: " + GetLocalVarInt("lives_current"), true);
+	if(checkLives())
+	{
+		AddDebugMessage ("lives_current" + GetLocalVarInt("lives_current"), true);
+		PlayMusic ("ice_ghost_ev_1.ogg", false, 1, 0.1, 20, true);
+		StartCredits ("", true, "Credits", "CreditsBad", 3);
+		return;
+	}
+}
+
+void HugeSuitorEvent(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive ("suitor_cinematic_1", true);
+	AddTimer ("suitor_ev1", 0.1, "HugeSuitorEventTimer");
+}
+
+void HugeSuitorEventTimer(string &in asTimer)
+{
+	PlayPropAnimation ("suitor_cinematic_1", "Walk", 0, true, "");
+	AddTimer ("suitor_move", 0.1, "HugeSuitorMove");
+	AddTimer ("suitor_move_end", 20, "HugeSuitorMoveEnd");
+}
+
+void HugeSuitorMove(string &in asTimer)
+{
+	SetEntityPos("suitor_cinematic_1", GetEntityPosX("suitor_cinematic_1"), GetEntityPosY("suitor_cinematic_1"), GetEntityPosZ("suitor_cinematic_1") + 0.005);
+	AddTimer ("suitor_move", 0.01, "HugeSuitorMove");
+}
+
+void HugeSuitorMoveEnd(string &in asTimer)
+{
+	SetEntityActive ("suitor_cinematic_1", false);
+	RemoveTimer ("suitor_move");
+}
+
+void IceDump(string &in asParent, string &in asChild, int alState)
+{
+	// AddPropImpulse(asParent, 0.5, 0, 0, "local");
+	if(alState == 1)
+		AddTimer ("ice_move", 0.1, "IcePlayerMove");
+	else if(alState == -1)
+		RemoveTimer ("ice_move");
+}
+
+void IcePlayerMove(string &in asTimer)
+{
+	float f = RandFloat(3000, 3200) * GetPlayerSpeed();
+	if(f > 4000)
+		f = 4000;
+	AddPlayerBodyForce(0, 0, f, true);
+	AddTimer("ice_move", 0.1, "IcePlayerMove");
+}
+
+void CaveRiverWater(string &in asParent, string &in asChild, int alState)
+{
+	// AddPropImpulse(asParent, 0.5, 0, 0, "local");
+	if(alState == 1)
+		AddTimer ("cave_water_river", 0.1, "CaveRiverWaterDamage");
+	else if(alState == -1)
+		RemoveTimer ("cave_water_river");
+}
+
+void CaveRiverWaterDamage(string &in asTimer)
+{
+	AddPlayerHealth(-1);
+	AddTimer ("cave_water_river", 0.1, "CaveRiverWaterDamage");
+}
+
+void PathNodesSpawn_Start(int n)
+{
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_1", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_2", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_3", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_6", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_8", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_9", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_10", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_12", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_14", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_15", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_spawn_1", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_25", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_26", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_16", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_12", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_23", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_spawn_2", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_5", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_38", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_36", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_3", 0, "");
+}
+
+void PathNodesSpawn_1(int n)
+{
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_24", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_23", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_19", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_7", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_8", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_9", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_10", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_11", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_16", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_26", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_25", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_14", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_21", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_6", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_37", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_36", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_spawn_2", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_23", 0, "");
+}
+
+void PathNodesSpawn_2(int n)
+{
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_3", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_5", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_7", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_8", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_9", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_10", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_11", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_16", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_26", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_25", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_14", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_21", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_6", 0, "");
+}
+
+void PathNodesSpawn_3(int n)
+{
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_27", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_25", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_14", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_30", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_spawn_1", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_12", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_10", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_12", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_13", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_21", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_spawn_2", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_8", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_6", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_3", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_38", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_4", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_spawn_2", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_23", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_24", 0, "");
+		AddEnemyPatrolNode("ice_ghost_" + n, "ghost_pn_25", 0, "");
+}

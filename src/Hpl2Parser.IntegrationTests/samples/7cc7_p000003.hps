@@ -1,0 +1,54 @@
+void OnStart()
+{
+	if(ScriptDebugOn() == true)
+		GiveItem("lantern_1", "Lantern", "lantern", "lantern.tga", 100.0f);
+		SetMessage("Journal", "Quest_52_Text", -1.0f);
+	//Complete Quests//
+	//CompleteQuest("p52_unlock", "52");
+	
+	//Look At Callbacks//
+	SetEntityPlayerLookAtCallback("GruntChase_2", "hurtplayer", false);
+	
+	//Entity Collide Callbacks//
+	AddEntityCollideCallback("Player", "AreaStartChase", "StartChase", true, 1);
+}
+
+//Look At Callback//
+void hurtplayer(string &in asEntity, int alState)
+{
+	AddTimer("hurt", 0.1f, "LookAtHurt");
+}
+
+//Look At Callbacks and look at timers//
+void LookAtHurt(string &in asTimer)
+{
+	if(GetPlayerHealth() == 75)
+	{
+		GivePlayerDamage(10.0f, "BloodSplat", false, false);
+		PlayGuiSound("pain", 1.0f);
+	}
+	AddTimer("hurt", 0.1f, "LookAtHurt");
+}
+
+//Entity Collide Callbacks//
+void StartChase(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=3; ++i) 
+		AddTimer("chase_start", 0.33f+(i/3.0), "TimerEvents");
+	for(int i=1; i<=2; ++i)
+	{
+		SetEntityActive("GruntChase_"+i, true);
+		ShowEnemyPlayerPosition("GruntChase_"+i);
+	}
+}
+
+//Timers//
+void TimerEvents(string &in asTimer)
+{
+	if(asTimer == "chase_start")
+	{
+		CreateParticleSystemAtEntity("ps_scare_dust", "ps_dust_impact.ps", "AreaDoorDustImpact", false);
+		
+		PlayGuiSound("lurker_hit_wood", 1.0f);
+	}
+}

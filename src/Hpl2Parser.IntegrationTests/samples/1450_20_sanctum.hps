@@ -1,0 +1,1242 @@
+//------------------------------------------
+
+
+///////////////////////////////////////////
+// BUILD ORB
+////////////////////////////////////////////
+
+
+//------------------------------------------
+
+void UseOrbPieceOnPedestal(string &in asItem, string &in asEntity)
+{
+	////////////////////
+	//Check if tar has been added
+	if(GetGlobalVarInt("TarOnPedestal")==0 && GetGlobalVarInt("OrbsAddedCount")==1) 
+	{
+		SetMessage("Ch02Level22", "UseOrbPieceAndNoTar", 0);
+		AddQuest("22NeedTar", "22NeedTar");
+		PlaySoundAtEntity("prbd", "22_orb_loose.snt", asEntity, 1.0f, false);
+		return;
+	}
+			
+	////////////////////
+	//Increase count and remove item
+	AddGlobalVarInt("OrbsAddedCount",1);
+	int lCurrentCount = GetGlobalVarInt("OrbsAddedCount");
+	RemoveItem(asItem);
+	
+	////////////////////
+	//Make the orb piece visible
+	
+	//All orbs after first forge.
+	if(lCurrentCount > 1)
+	{
+		SetPropActiveAndFade("orb_assembly_"+lCurrentCount, true, 1.0f);
+		AddTimer("orb_assembly_"+(lCurrentCount-1), 0.8f, "TimerFadeProp");
+	}
+	//First should just pop up.
+	else
+	{
+		SetEntityActive("orb_assembly_"+lCurrentCount, true);
+	}
+		
+	////////////////////
+	//Play sound
+	PlaySoundAtEntity("orbd", "22_orb_loose.snt", asEntity, 0.5f, false);
+	
+	////////////////////
+	//Forge Effect
+	if(lCurrentCount>1)
+	{
+		PlaySoundAtEntity("forges", "22_orb_forge.snt", asEntity, 0.5f, false);
+		CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "AreaOrbEffect", false);
+	}
+	
+	////////////////////
+	//Add Piece Number spefics
+	if(lCurrentCount ==1)
+	{
+		//Remove interact callback on pedestal
+		SetEntityPlayerInteractCallback("AreaOrbEffect","", false);
+		
+	}
+	else if(lCurrentCount <=5)
+	{
+		
+	}
+	else if(lCurrentCount ==6)
+	{
+		SetLampLit("orb_pedestal_1", true, true);
+		CompleteQuest("22FoundPedestal", "22FoundPedestal");
+		CompleteQuest("21FindOrb", "21FindOrb");
+		
+		PlaySoundAtEntity("orbdonesound", "27_orb_done.snt", "AreaOrbEffect", 0.0f, false);
+		
+		//If machine is not jammed yet, add a message and memento.
+		if(GetLocalVarInt("MachineJammed")==0)
+		{
+	StartScreenShake(0.04, 1.5, 5, 1);
+	
+	StartEffectFlash(0.4, 0.1, 2);
+	CreateParticleSystemAtEntity("OrbLight", "ps_orb_light.ps", "ScriptArea_1", true);
+	PlaySoundAtEntity("Rumble", "general_rock_rumble", "Player", 0.0f, false);
+	PlaySoundAtEntity("", "27_orb_implode", "ScriptArea_1", 0.0f, false);
+	AddTimer("", 2, "TELEPORT");
+	AddTimer("", 6, "STOPRUMBLE");
+		}
+				
+		for(int i=1;i<=3; ++i)
+		{
+			SetEntityActive("barrier_ring03_weakened_"+i, true);
+			SetEntityActive("barrier_ring03_"+i, false);
+		}
+		
+		
+	}
+}
+
+//------------------------------------------
+
+void TELEPORT(string &in asTimer)
+			
+			{
+					TeleportPlayer("PlayerStartArea_3");
+					SetPlayerRunSpeedMul(0);
+					SetPlayerMoveSpeedMul(0);
+					SetPlayerLookSpeedMul(1);
+					SetPlayerJumpDisabled(true);
+					SetEnemySanityDecreaseActive("Grunt_1", false);
+					SetEnemySanityDecreaseActive("Grunt_2", false);
+					//SetEnemySanityDecreaseActive("Brute_1", false);
+					SetEntityActive("engineer_1", false);
+					SetEntityActive("Grunt_1", true);
+					SetEntityActive("Grunt_2", true);
+					SetEntityActive("Brute_1", true);
+					SetEntityActive("block_box_27", true);
+					SetEntityActive("block_box_28", true);
+					SetEntityActive("safety_large_vert_1", false);
+					SetEntityActive("safety_large_vert_2", true);
+					AddEnemyPatrolNode("Grunt_1", "PathNodeArea_3", 150, "");
+					AddEnemyPatrolNode("Grunt_2", "PathNodeArea_2", 150, "");
+					AddEnemyPatrolNode("Brute_1", "PathNodeArea_1", 150, "");
+					AddTimer("", 2.2f, "TurnAround");
+					AddTimer("", 1.0f, "PlaySound");
+			}
+
+	void PlaySound(string &in asTimer)
+			
+			{
+					PlaySoundAtEntity("", "20_Confrontations.snt", "Player", 0.0f, false);
+			}
+			
+			void TurnAround(string &in asTimer)
+			
+			{
+					StartPlayerLookAt("ScriptArea_3", 3.0f, 3.0f, "");
+					SetPlayerActive(false);
+			}
+			
+void STOPRUMBLE(string &in asTimer)
+			
+			{
+					StopSound("Rumble", 2.5);
+			}
+//------------------------------------------
+
+//Used to fade prop with a small delay!
+void TimerFadeProp(string &in asTimer)
+{
+	SetPropActiveAndFade(asTimer, false, 1.0f);	
+}
+
+//------------------------------------------
+
+//Grease up the pedestal
+void UseTarOnPedestal(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	
+	//Tar has been added!
+	SetGlobalVarInt("TarOnPedestal",1);
+	CompleteQuest("22NeedTar", "22NeedTar");
+		
+	PlaySoundAtEntity("tars", "22_use_tar.snt", asEntity, 1.0f, false);
+		
+	SetEntityActive("orb_pedistal_tar_1", true);
+}
+
+//------------------------------------------
+
+void InteractOrbPedestal(string &in asEntity)
+{
+	SetMessage("Ch02Level22", "InteractOrbPedestal", 0);
+	AddQuest("22FoundPedestal", "22FoundPedestal");
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// This is used to display the energy stream
+void CreateBarrierEnergyStream()
+{
+	////////////////////////////////////////////////////////////////////////////////////////////
+	// The stream starts showing 6 secs after the event is triggered to sync with the gather PS.
+	// Next ones will spawn every next second.
+	float fTimeStep = 1;
+	float fTime = 6;
+	CreateParticleSystemAtEntity("PSOrbGather", "ps_orb_stream_gather.ps", "Orb_Stream_Gather", true);
+	PlaySoundAtEntity("orbstart1", "29_hole_open.snt", "Orb_Stream_Gather", 0.0f, false);
+	PlaySoundAtEntity("orbstart2", "29_hole_blue.snt", "Orb_Stream_Gather", 0.0f, false);
+	PlaySoundAtEntity("Eloop", "27_energy_loop.snt", "Orb_Stream_Gather", 1.0f, false);
+		
+	for(int i=1;i<=6;++i)
+	{
+		string sIndex = i;
+		AddTimer(sIndex, fTime, "TimerCreateStreamPS");
+		fTime += fTimeStep;
+	}
+	
+	
+	/////////////////////////////////////////////////////
+	// Sounds
+	//Did in timer instead
+	
+	/////////////////////////////////////////////////////
+	// Create orb absorbing effect
+	AddTimer("TimerCreateOrbEffectPS", fTime, "TimerCreateOrbEffectPS");
+}
+
+void TimerCreateStreamPS(string &asTimer)
+{
+	CreateParticleSystemAtEntity("PSOrbStream_" + asTimer, "ps_orb_absorb_stream.ps", "Orb_Stream_" + asTimer, true);
+	PlaySoundAtEntity("SOrbStream_" + asTimer, "27_energy_loop.snt", "Orb_Stream_" + asTimer, 0.0f, false);
+}
+
+void TimerCreateOrbEffectPS(string &asTimer)
+{
+	CreateParticleSystemAtEntity("PSOrbEffect", "ps_orb_absorb.ps", "AreaOrbEffect", true);
+	StopSound("SOrbStream_1", 1.0f); StopSound("SOrbStream_2", 1.0f); StopSound("SOrbStream_3", 1.0f);
+	StopSound("SOrbStream_4", 1.0f); StopSound("SOrbStream_5", 1.0f); StopSound("SOrbStream_6", 1.0f);
+	StopSound("Eloop", 1.0f);
+
+	SetLocalVarInt("OrbAbsorbing", 1);
+	UpdateBarrierState();
+}
+
+
+
+//------------------------------------------
+
+
+void UpdateBarrierState()
+{
+	int lKeyPuzzlesCompleted = 0;
+	
+	// Check if machine is jammed
+	if(GetLocalVarInt("MachineJammed")==1)
+		lKeyPuzzlesCompleted++;
+		
+	// Check if orb is built
+	if(GetGlobalVarInt("OrbsAddedCount")==6)
+	{
+		lKeyPuzzlesCompleted++;
+	}
+		
+	AddDebugMessage("MachineJammed==" + GetLocalVarInt("MachineJammed") + " - OrbsAddedCount==" + GetGlobalVarInt("OrbsAddedCount") + " - KeyPuzzlesCompleted==" + lKeyPuzzlesCompleted, false);
+	
+	////////////////////////////
+	//Either orb is completed or machine is jammed
+	if(lKeyPuzzlesCompleted==1)
+	{
+		for(int i=1;i<=3;++i)
+		{
+			// Replace electro rings by weakened versions
+			SetEntityActive("barrier_ring03_"+i, false);
+			SetPropActiveAndFade("barrier_ring03_weakened_" + i, true, 0.25f);
+			
+			// Make lights weaker
+			for(int i=1; i<=3; ++i)
+			{
+				FadeLightTo("barrier_pointlight_"+i, 0, 0, 0, 0, 0, 0.5f); 
+				SetLightFlickerActive("barrier_pointlight_"+i,false);
+				
+				//FadeLightTo("barrier_pointlight_weak"+i, 0, 0, 0, 0, 0, 0.5f); 
+				//SetLightFlickerActive("barrier_pointlight_"+i,false);
+			}
+			for(int i=1; i<=2; ++i)
+			{
+				FadeLightTo("barrier_spotlight_"+i, 0.4f, 0.4f, 0.6f, -1, 8, 0.5f); 
+				SetLightFlickerActive("barrier_spotlight_"+i,false);
+			}
+		}
+	}
+	////////////////////////////
+	//Both orb is completed and machine is jammed
+	else if(lKeyPuzzlesCompleted==2)
+	{
+		PlaySoundAtEntity("thump_end", "27_thump", "PSOrbStream_1", 0.0f, false);
+		
+		//The barrier can be walked through
+		CompleteQuest("22BarrierTunnel", "22BarrierTunnel");
+		
+		if(GetLocalVarInt("OrbAbsorbing")==1)
+		{
+			// Turn electric effects off
+			for(int i=1; i<=3; ++i)
+			{	
+				SetPropEffectActive("barrier_ring03_weakened_" + i, false, true);
+			}
+			// Turn lights off
+			for(int i=1; i<=3; ++i)
+			{
+				FadeLightTo("barrier_pointlight_weak_"+i, 0, 0, 0, 0, 0, 0.5f); 
+				SetLightFlickerActive("barrier_pointlight_weak_"+i,false);
+			}
+			for(int i=1; i<=2; ++i)
+			{
+				FadeLightTo("barrier_spotlight_weak_"+i, 0, 0, 0, 0, 0, 0.5f);
+				SetLightFlickerActive("barrier_spotlight_weak_"+i,false);
+			}
+			
+			//Stop the ambient track!
+			StopMusic(2.5f, 0);
+			
+			//TODO: Remove looping energy sound here!
+			//Did in timer instead
+			
+			// Remove Energy Stream
+			DestroyParticleSystem("PSOrbGather");
+			for(int i=1;i<=6; ++i)
+			{
+				DestroyParticleSystem("PSOrbStream_"+i);
+			}
+			DestroyParticleSystem("PSOrbEffect");
+			AddTimer("TimerOrbExplode", 1.0, "TimerOrbExplode"); 
+		}
+	}
+}
+
+//----------------------------------------------------
+
+void TimerOrbExplode(string &in asTimer)
+{
+	StartScreenShake(0.2f, 6, 0.5f, 3);
+	CreateParticleSystemAtEntity("PSOrbShockwave", "ps_orb_shockwave.ps", "AreaOrbEffect", false);
+
+	PlaySoundAtEntity("implodoelexplodo", "27_orb_implode.snt", "AreaOrbEffect", 0.0f, false);
+	StopSound("Sound_18", 0.0f);
+	StopSound("Sound_17", 4.0f);
+	
+	//Blow out candles
+	SetLampLit("candlestick_floor*", false, false);
+	SetLampLit("candle_floor_*", false, false);
+	
+	//Fade in blur light
+	FadeLightTo("OrbLight", 0.3,0.6,1.0,1, 12, 0.2);
+	AddTimer("TimerFadeOutExplodeLight", 5, "TimerFadeOutExplodeLight");
+	
+	// Disable tunnel damage, so player can walk through
+	SetEntityActive("AreaTunnelDamage", false);
+	// Remove blocker
+	SetEntityActive("block_box_block_box_1", false);
+	//RemoveEntityCollideCallback("Player", "AreaTunnelDamage");
+	//SetEntityPlayerInteractCallback("AreaTunnelDamage", "", false);
+	
+	// Make Orb disappear
+	SetPropActiveAndFade("orb_assembly_6", false, 1);
+	SetLampLit("orb_pedestal_1", false, false);
+	
+	// Play puzzle completed music and give sanity boost
+	AddTimer("TimerBarrierGone",6.5f, "TimerBarrierGone");
+	AddTimer("stopsparks", 29.0f, "TimerStopSparks");
+}
+
+void TimerFadeOutExplodeLight(string &in asTimer)
+{
+	FadeLightTo("OrbLight", 0,0,0,0, -1, 2);
+	
+	PlaySoundAtEntity("orbend", "29_hole_blue.snt", "AreaOrbEffect", 4.0f, false);
+}
+
+//------------------------------------------
+
+void TimerBarrierGone(string &in asTimer)
+{
+	GiveSanityBoost();
+	
+	PlayMusic("27_puzzle_passage.ogg", false, 0.8f, 0.5f, 9, false);
+	PlaySoundAtEntity("sparks", "27_spark", "AreaOrbEffect", 0.0f, true);
+}
+
+void TimerStopSparks(string &in asTimer)
+{
+	StopSound("sparks", 0.0f);
+}
+
+
+///////////////////////////////////////////
+// PICK BUCKET OF TAR
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void PickBucketOfTar(string &in asEntity, string &in asType)
+{
+	SetGlobalVarInt("PickedBucketOfTar",1);	
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// MISC INTERACTIONS
+////////////////////////////////////////////
+
+//------------------------------------------
+
+
+//Player Reactions
+void PlayerReact(bool bDamage, float fTime)
+{
+	if(bDamage)
+		AddTimer("sanity", fTime, "TimerPlayerReactions");
+	else
+		AddTimer("scare", fTime, "TimerPlayerReactions");
+	
+	AddTimer("breath", fTime+2, "TimerPlayerReactions");
+	AddTimer("breathl", fTime+4, "TimerPlayerReactions");
+	
+}
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "sanity"){
+		GiveSanityDamage(10.0f, true);
+		PlayGuiSound("react_scare", 0.9f);
+	}
+	if(asTimer == "scare"){
+		GiveSanityDamage(10.0f, false);
+		PlayGuiSound("react_scare", 0.9f);
+	}
+	if(asTimer == "breath")
+		PlayGuiSound("react_breath", 0.7f);
+		
+	if(asTimer == "breathl")
+		PlayGuiSound("react_breath", 0.5f);
+}
+
+
+
+
+
+//BRUTE after breaking machine, if orb already broken
+void EventGrunt02()
+{
+	if(GetGlobalVarInt("OrbsAddedCount") != 6) return;
+	
+	SetEntityActive("servant_brute_2", true);
+	
+	SetSwingDoorDisableAutoClose("sewer_arched_2", true);
+	SetSwingDoorClosed("sewer_arched_2", false, false);
+	AddPropImpulse("sewer_arched_2", -3.0f, 0.0f, 0.0f, "World");
+	
+	SetSwingDoorDisableAutoClose("sewer_arched_2", true);
+	SetSwingDoorClosed("sewer_arched_2", false, false);
+	AddPropImpulse("sewer_arched_4", 0, 0.0f, -3.0f, "World");
+}
+
+
+
+
+////////////////////
+
+void FadeOutFinal(string &in asParent, string &in asChild, int alState)
+
+{
+		FadeOut(5);
+		AddTimer("", 5.5f, "Credits");
+}
+
+void Credits(string &in asTimer)
+
+{
+		SetPlayerActive(false);
+		StartCredits("", false, "Ending", "MainCreds", 4);
+}
+
+void ActivateArea(string &in asParent, string &in asChild, int alState)
+
+{
+		SetEntityActive("ScriptArea_9", true);
+		SetEntityActive("ScriptArea_11", true);
+		
+		CheckPoint("checkSan01","PlayerStartArea_5", "","", "");
+}
+
+void PigNoise1(string &in asParent, string &in asChild, int alState)
+
+{
+		PlaySoundAtEntity("", "tesla_threatloop_vo1.snt", "ScriptArea_10", 0.0f, false);
+}
+
+void PigSpawn(string &in asParent, string &in asChild, int alState)
+
+{
+			SetEntityActive("engineer_1", true);
+			SetEnemySanityDecreaseActive("engineer_1", false);
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_4", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_5", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_6", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_7", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_8", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_9", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_10", 0.001, "");
+}
+
+void OrbHint(string &in asParent, string &in asChild, int alState)
+
+{
+		SetMessage("Messages", "OrbHints", 0);
+}
+
+void ShutDoors(string &in asParent, string &in asChild, int alState)
+
+	{
+		AddDebugMessage("Elevator Moving", false);
+		SetEntityActive("ElevatorDoorBlocker", true);
+		//AddAttachedPropToProp("elevator_pod_2", "ElevatorSwitchStatic", "elevator_switch_static.ent", 0.06f, -1.842f, -0.068f, 0.0f, 0.0f, 0.0f);
+		PlaySoundAtEntity("", "church_draw_lever_open.snt", "ElevatorSwitchSource", 0.0f, false);
+		//SetEntityActive("ElevatorSwitch", false);
+		SetPlayerMoveSpeedMul(0);
+		SetPlayerLookSpeedMul(0);
+		SetPlayerRunSpeedMul(0);
+		StartPlayerLookAt("LookAtArea", 3.0f, 3.5f, "");
+		SetMoveObjectState("elevator_door_right_1", 0);
+		SetMoveObjectState("elevator_door_left_1", 0);
+		PlaySoundAtEntity("", "reactor_elevator_door_close_3D.snt", "ElevatorDoorSource", 0.0f, false);
+		PlaySoundAtEntity("", "reactor_elevator_door_close_2D.snt", "ElevatorDoorSource", 0.0f, false);
+		AddTimer("", 1.5f, "StopLooking");
+		AddTimer("ElevatorMoves2", 3.5f, "ElevatorMoves2");
+	}
+
+
+void StopLooking(string &in asTimer)
+
+{
+			StopPlayerLookAt();
+			SetPlayerMoveSpeedMul(1);
+			SetPlayerLookSpeedMul(1);
+			SetPlayerRunSpeedMul(1);
+}
+
+void ElevatorMoves2(string &in asTimer)
+
+{
+	SetMoveObjectState("elevator_pod_2", 1);
+	PlaySoundAtEntity("", "reactor_elevator_start.snt", "Player", 0.0f, false);
+	PlaySoundAtEntity("LiftLoop", "reactor_elevator_loop.snt", "Player", 1.0f, true);
+	//PlayMusic("music_transition_11engine_12streets.ogg", false, 0.85f, 0.0f, 45, false);
+	
+	
+}
+
+void MaryVoice(string &in asParent, string &in asChild, int alState)
+
+{
+		SetPlayerRunSpeedMul(0.0);
+		SetPlayerMoveSpeedMul(0.3);
+		FadeRadialBlurTo(0.04, 2);
+		StopMusic(3, 1);
+		StopMusic(3, 2);
+		StopMusic(3, 3);
+		StopMusic(3, 4);
+		StopMusic(3, 5);
+		PlayGuiSound("20_Mary.snt", 3.3f);
+		AddTimer("", 25.0f, "FadeFinal");
+}
+
+void FadeFinal(string &in asTimer)
+
+{
+		FadeOut(5);
+		AddTimer("", 5.6f, "FinalCredits");
+}
+
+void FinalCredits(string &in asTimer)
+
+{
+		SetPlayerActive(false);
+		StartCredits("", false, "Ending", "MainCreds", 4);
+}
+
+void CollideAreaExitGuardian(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("guardian_ontop.snt", 0.8f);
+	PlayMusic("10_event_coming.ogg", false, 0.7f, 2.0f, 10, false);
+	StartScreenShake(0.1f, 1.0f, 1.5f, 2.5f);
+	PlayerReact(false, 1.0f);
+	SetRadialBlurStartDist(0.3f);
+	FadeRadialBlurTo(0.3f, 0.3f);
+	
+	SetPropActiveAndFade("end_slime_*", true, 3.0f);
+	PlaySoundAtEntity("slime1", "slime_loop.snt", "end_slime_1", 1.0f, false);
+	PlaySoundAtEntity("slime2", "slime_loop.snt", "end_slime_2", 1.0f, false);
+	PlayGuiSound("guardian_idle6.ogg", 0.6f);
+	
+	SetEntityActive("SlimeDamageArea_9", true);
+
+	AddTimer("3", 0.1f, "TimerSounds");
+	AddTimer("5", 0.3f, "TimerSounds");
+	AddTimer("6", 0.6f, "TimerSounds");
+	AddTimer("7", 0.8f, "TimerSounds");
+	
+	AddTimer("stop", 4.0f, "TimerSounds");
+}
+void TimerSounds(string &in asTimer)
+{
+	if(asTimer == "stop")
+		FadeRadialBlurTo(0.0f, 0.1f);
+	else
+		PlaySoundAtEntity("slafs", "slime_create.snt", "end_slime_"+asTimer, 0.0f, false);
+}
+
+////////////////////////////
+// Run first time starting map
+void OnStart()
+{
+	SetMapDisplayNameEntry("Sanctum");
+	SetPlayerSanity(100);
+	
+	//SETUP CONNECTIONS//
+		InteractConnectPropWithMoveObject("barrelcranktoslope", "crankwheel_1", "castle_portcullis_4", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktopulley", "crankwheel_1", "crank_wheel_pulley_1", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes1", "crankwheel_1", "slope_ropes_1", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes1", "crankwheel_1", "slope_ropes_3", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktowheel2", "crankwheel_1", "slope_wheel_2", false, false, 0);
+		
+		
+		InteractConnectPropWithMoveObject("barrelcranktoslope3", "CrankWheel_2", "castle_portcullis_3", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktopulley3", "CrankWheel_2", "CrankPulley_2", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes3", "CrankWheel_2", "slope_ropes_2", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes3", "CrankWheel_2", "slope_ropes_4", false, true, 0);
+		
+		
+		InteractConnectPropWithMoveObject("barrelcranktoslope2", "CrankWheel", "castle_portcullis_1", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoslope2", "CrankWheel", "castle_portcullis_5", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktopulley2", "CrankWheel", "CrankPulley", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes3", "CrankWheel", "slope_ropes", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes3", "CrankWheel", "slope_ropes_7", false, true, 0);
+		
+		InteractConnectPropWithMoveObject("barrelcranktoslope2", "CrankWheel_3", "castle_portcullis_6", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoslope2", "CrankWheel_3", "castle_portcullis_2", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktopulley2", "CrankWheel_3", "CrankPulley_3", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes3", "CrankWheel_3", "slope_ropes_5", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes3", "CrankWheel_3", "slope_ropes_6", false, true, 0);
+	
+	///////////////////////////
+	
+	
+	FadeOut(0);
+	
+	AddTimer("", 0.3, "Fade1");
+	
+	AddEntityCollideCallback("Player", "ElevatorDoorTrigger", "ElevatorHandler", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_19", "EdwinOrb", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_20", "CheckBaseOrbCollect", true, 1);
+	AddEntityCollideCallback("Player", "TeleportArea", "TeleportToEnd", true, 1);
+	AddEntityCollideCallback("Player", "AreaTunnelDamage", "CollideTunnelDamage", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_2", "CollideAreaExitGuardian", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_4", "FadeOutFinal", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_5", "MaryVoice", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_6", "ShutDoors", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_8", "ActivateArea", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_9", "PigNoise1", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_11", "PigSpawn", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_12", "OrbHint", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_13", "Scare1", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_15", "Scare2", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_17", "Scare3", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_22", "Scare4", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_24", "Scare5", true, 0);
+	
+	SetLanternLitCallback("DenyLantern");
+	
+	CheckPoint ("SanctumCheck1", "PlayerStartArea_1", "", "", "");
+	
+	SetEntityPlayerLookAtCallback("Brute_1", "StartVoices", true);
+	
+	SetMultiSliderCallback("ElevatorSwitch", "ElevatorDescent");
+	
+	for(int i=1; i<=14; ++i)
+	{
+		if(i==7 || i==8) continue; //Not available any more.
+		
+		AddEntityCollideCallback("Player", "AreaWindBreeze_"+i, "CollideWindBreeze", false, 1);
+	}
+	
+	AddEntityCollideCallback("servant_brute_1", "AreaBruteInside", "CollideAreaBruteInside", true, 1);
+	
+	SetEntityPlayerInteractCallback("ExamineArea_1", "Destruction", true);
+	
+	
+	
+	
+	////////////////////
+	// Use Item Callbacks
+		
+	// Remove tar on pedestal interaction if already done
+	if(GetGlobalVarInt("TarOnPedestal")==0){
+		AddUseItemCallback("TarOnPedestal","bucket_of_tar_1", "AreaOrbEffect", "UseTarOnPedestal", true);
+		AddUseItemCallback("TarOnPedestal","bucket_of_tar_1", "orb_pedestal_1", "UseTarOnPedestal", true);
+	}	
+	
+	for(int i=1; i<=6; ++i)
+	{
+		AddUseItemCallback("AddOrb"+i,"OrbPiece_"+i, "AreaOrbEffect", "UseOrbPieceOnPedestal",false); 
+		AddUseItemCallback("AddOrb"+i,"OrbPiece_"+i, "orb_pedestal_1", "UseOrbPieceOnPedestal",false); 
+		
+		//Be able to use on orb pieces aswell
+		for(int j=1; j<=5; ++j)
+			AddUseItemCallback("AddOrb"+i,"OrbPiece_"+i, "orb_assembly_"+j, "UseOrbPieceOnPedestal",false); 
+	}
+	
+
+		
+	//How many orb pieces have been placed so far? 
+	int lNumOfOrbPieces = GetGlobalVarInt("OrbsAddedCount");
+	if(lNumOfOrbPieces > 0)
+	{
+		SetEntityActive("orb_assembly_"+lNumOfOrbPieces, true);	
+		
+		//Remove interact callback on pedestal
+		SetEntityPlayerInteractCallback("AreaOrbEffect","", false);
+	}
+	
+	//Tar on pedestal?
+	if(GetGlobalVarInt("TarOnPedestal")==1)
+	{
+		SetEntityActive("orb_pedistal_tar_1", true);		
+	}
+}
+
+		void DenyLantern(bool bState)
+{
+    SetLanternActive(false, false);
+    SetMessage("Messages", "NoLantern3", 6);
+} 
+
+void Scare1(string &in asParent, string &in asChild, int alState)
+
+{
+		PlaySoundAtEntity("", "15_man01_whimp", "ScriptArea_14", 0, false);
+}
+
+void Scare2(string &in asParent, string &in asChild, int alState)
+
+{
+		PlaySoundAtEntity("", "15_man01_whimp", "ScriptArea_16", 0, false);
+}
+
+void Scare3(string &in asParent, string &in asChild, int alState)
+
+{
+		PlaySoundAtEntity("", "sound_weird_2", "ScriptArea_18", 0, false);
+}
+
+void Scare4(string &in asParent, string &in asChild, int alState)
+
+{
+		PlaySoundAtEntity("", "sound_weird_5", "ScriptArea_23", 0, false);
+}
+
+void Scare5(string &in asParent, string &in asChild, int alState)
+
+{
+		PlaySoundAtEntity("", "15_man01_whimp", "ScriptArea_25", 0, false);
+}
+
+void Fade1(string &in asTimer)
+
+{
+		FadeIn(5);
+}
+
+void TeleportToEnd (string &in asParent, string &in asChild, int alState)
+
+{
+		FadeOut(5);
+		StopSound("Sound_3", 3);
+		StopMusic(5, 10);
+		StartScreenShake(0.01, 2, 1, 1);
+		AddTimer("", 6.5, "JumpPos");
+}
+
+void JumpPos(string &in asTimer)
+	
+	{
+	
+		
+		StartScreenShake(0.03f, 3.0f, 1.0f, 1.0f);
+		
+
+		RemoveTimer("ShakeTimer");
+		StopSound("Rumble", 5);
+		StopSound("LiftLoop", 5);
+		PlaySoundAtEntity("", "explosion_rock_large", "Player", 0.5f, false);
+		SetPlayerActive(false);  
+		SetFogActive(false);
+		TeleportPlayer("PlayerStartArea_4");
+		SetLanternDisabled(true);
+		PlayMusic("09_amb_safe", true, 0.6, 3, 5, true);
+		AddTimer("", 5.0, "FadeBack");
+		SetPlayerMoveSpeedMul(0.0);
+		SetPlayerRunSpeedMul(0);
+		SetPlayerLookSpeedMul(0);
+		SetPlayerJumpDisabled(true);
+		SetPlayerCrouching(true);
+	}
+
+	void FadeBack(string &in asTimer)
+	
+	{
+			FadeIn(5);
+			PlaySoundAtEntity("", "react_sigh", "Player", 0.5f, false);
+			SetPlayerActive(true); 
+			MovePlayerHeadPos(0.0f, -0.8f, 0.5f, 0.8f, 0.8f);
+			FadePlayerRollTo(-30.0f, 2.0f, 2.0f);
+			StartPlayerLookAt("AreaLook_8", 1.2f, 1.2f, "");
+			AddTimer("", 1.7, "lookaround1");
+	}
+	
+	
+	void lookaround1(string &in asTimer)
+	
+	{
+			StopPlayerLookAt();
+			StartPlayerLookAt("AreaLook_7", 1.2f, 1.2f, "");
+			FadePlayerRollTo(-30.0f, 10.0f, 10.0f);
+			
+			AddTimer("", 1.7, "lookaround2");
+	}
+	
+	void lookaround2(string &in asTimer)
+	
+	{
+			StopPlayerLookAt();
+			MovePlayerHeadPos(0.0f, -0.5f, -0.25f, 0.5f, 0.5f);
+			StartPlayerLookAt("AreaLook_3", 1.2f, 1.2f, "");
+			AddTimer("", 2, "lookaround3");
+			FadeOut(5);
+	}
+	
+	void lookaround3(string &in asTimer)
+	
+	{
+			SetPlayerCrouching(false);
+			StopPlayerLookAt();
+			StartPlayerLookAt("AreaLook_2", 1.2f, 1.2f, "");
+			FadePlayerRollTo(30.0f, 8.0f, 8.0f);
+			MovePlayerHeadPos(0.0f, -0.8f, -0.5f, 0.7f, 0.5f);
+			AddTimer("", 1.7, "lookaround4");
+			FadeIn(3);
+			//PlaySoundAtEntity("", "20_Edwin", "EdwinVoice", 0.0f, false);
+	}
+	
+	void lookaround4(string &in asTimer)
+	
+	{
+			StopPlayerLookAt();
+			StartPlayerLookAt("AreaLook_4", 2.2f, 2.2f, "");
+			MovePlayerHeadPos(0.0f, 0.0f, 0.0f, 0.8f, 0.8f);
+			FadePlayerRollTo(0, 8.0f, 8.0f);
+			
+			SetMessage("Messages", "Edwin09", 3);
+			PlaySoundAtEntity("sight1", "react_sigh", "Player", 0.5f, false);
+			AddTimer("", 1.5f, "begin");
+			AddTimer("", 1.0f, "begin2");
+			
+			
+	}
+	
+	void begin2(string &in asTimer)
+	
+	{
+			SetPropActiveAndFade("alexander_1", true, 4);
+			
+			
+	}
+	
+	void begin(string &in asTimer)
+	
+	{
+			
+			AddTimer("", 4.0f, "Voice0");
+			
+	}
+	
+
+
+void Voice0(string &in asTimer)
+
+{
+		
+		SetMessage("Messages", "Edwin10", 3);
+		AddTimer("", 3.5f, "Voice3");
+}
+
+void Voice3(string &in asTimer)
+
+{
+		
+		SetMessage("Messages", "Edwin11", 8);
+		AddTimer("", 8.5f, "Voice4");
+}
+
+void Voice4(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin12", 8);
+		AddTimer("", 8.5f, "Voice5");
+}
+
+void Voice5(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin13", 8);
+		AddTimer("", 8.5f, "Voice7");
+}
+
+
+void Voice7(string &in asTimer)
+
+{
+		SetPropActiveAndFade("alexander_1", false, 4);
+		SetPlayerRunSpeedMul(0.5);
+		SetPlayerMoveSpeedMul(0.7);
+		SetPlayerLookSpeedMul(0.5);
+		StopPlayerLookAt();
+		
+}
+	
+	
+	
+	
+	
+void Voice14(string &in asTimer)
+
+{
+		SetPropActiveAndFade("alexander_1", false, 4);
+		SetPlayerRunSpeedMul(0.5);
+		SetPlayerMoveSpeedMul(0.7);
+		SetPlayerLookSpeedMul(0.5);
+		StopPlayerLookAt();
+}
+	
+	
+	
+	void CheckBaseOrbCollect (string &in asParent, string &in asChild, int alState)
+	
+	{	if(GetGlobalVarInt("BasementOrb") == 0)
+	
+			{
+					SetEntityActive("ScriptArea_19", true);
+			}
+	}
+	
+	void EdwinOrb (string &in asParent, string &in asChild, int alState)
+	
+	{	
+	
+		StartEffectFlash(0.4, 0.1, 1);
+		SetPlayerMoveSpeedMul(0.0f);		
+		SetPlayerRunSpeedMul(0.0f);
+		SetPlayerJumpDisabled(true);
+		SetPlayerCrouchDisabled(true);
+		PlaySoundAtEntity("", "29_hole_blue.snt", "Player", 0, false);
+		AddTimer("", 1.3f, "Spawn");
+		AddTimer("", 2.5f, "Scared");
+		AddTimer("", 4.0f, "Voice50");
+		SetPropActiveAndFade("alexander_2", true, 4);
+		SetPropActiveAndFade("OrbPiece_4", true, 4);
+	}
+	
+	void Spawn(string &in asTimer)
+
+{
+		StartPlayerLookAt("ScriptArea_21", 2.0f, 2.0f, "");
+		FadeRadialBlurTo(0.02, 1.0f);
+		SetPlayerLookSpeedMul(0.0f);
+
+}
+
+void Scared(string &in asTimer)
+
+{
+		PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 0, false);
+		StopPlayerLookAt();
+		SetPlayerLookSpeedMul(0.5);
+}
+	
+	void Voice50(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin20", 5);
+		AddTimer("", 5.5f, "Voice51");
+}
+
+void Voice51(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin21", 6);
+		AddTimer("", 6.5f, "Voice52");
+}
+
+void Voice52(string &in asTimer)
+
+{
+		
+		SetMessage("Messages", "Edwin22", 6);
+		AddTimer("", 6.5f, "Voice53");
+}
+
+void Voice53(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin23", 6);
+		AddTimer("", 6.5f, "Voice54");
+}
+
+void Voice54(string &in asTimer)
+
+{
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerLookSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+		SetPlayerJumpDisabled(false);
+		SetPlayerCrouchDisabled(false);
+		StartEffectFlash(0.4, 0.1, 2);
+		PlaySoundAtEntity("", "29_hole_blue.snt", "Player", 0, false);
+		SetPropActiveAndFade("alexander_2", false, 2);
+		FadeRadialBlurTo(0.0, 3.0f);
+		
+}
+	
+//ELEVATOR HANDLER//
+void ElevatorHandler (string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("elevator_door_right_1", 1);
+	SetMoveObjectState("elevator_door_left_1", 1);
+	PlaySoundAtEntity("", "reactor_elevator_door_open_3D.snt", "ElevatorDoorSource", 0.0f, false);
+	PlaySoundAtEntity("", "reactor_elevator_door_open_2D.snt", "ElevatorDoorSource", 0.0f, false);
+}
+
+void CheckSwitchProximity (string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1)
+	{
+		AddDebugMessage("Switch CAN Be Interacted With", false);
+		SetEntityInteractionDisabled("ElevatorSwitch", false);
+		AddTimer("MovementPreventionTimer", 0.1f, "ElevatorSwitchMovementPreventionChecker");
+		return;
+	}
+	else if (alState == -1)
+	{
+		AddDebugMessage("Switch CANNOT Be Interacted With", false);
+		SetEntityInteractionDisabled("ElevatorSwitch", true);
+		RemoveTimer("MovementPreventionTimer");
+		return;
+	}
+}
+void ElevatorSwitchMovementPreventionChecker (string &in asTimer)
+{
+	if (GetPropIsInteractedWith("ElevatorSwitch") == true)
+	{
+		SetPlayerMoveSpeedMul(0.0f);
+		SetPlayerRunSpeedMul(0.0f);
+		AddTimer("MovementPreventionTimer", 0.1f, "ElevatorSwitchMovementPreventionChecker");
+		return;
+	}
+	else
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		AddTimer("MovementPreventionTimer", 0.1f, "ElevatorSwitchMovementPreventionChecker");
+		return;
+	}
+}
+
+void ElevatorDescent (string &in asEntity, int alState)
+{
+	if (alState == 1)
+	{
+		AddDebugMessage("Elevator Moving", false);
+		SetEntityActive("ElevatorDoorBlocker", true);
+		AddAttachedPropToProp("elevator_pod_2", "ElevatorSwitchStatic", "elevator_switch_static.ent", 0.06f, -1.842f, -0.068f, 0.0f, 0.0f, 0.0f);
+		PlaySoundAtEntity("", "church_draw_lever_open.snt", "ElevatorSwitchSource", 0.0f, false);
+		SetEntityActive("ElevatorSwitch", false);
+		SetMoveObjectState("elevator_door_right_1", 0);
+		SetMoveObjectState("elevator_door_left_1", 0);
+		PlaySoundAtEntity("", "reactor_elevator_door_close_3D.snt", "ElevatorDoorSource", 0.0f, false);
+		PlaySoundAtEntity("", "reactor_elevator_door_close_2D.snt", "ElevatorDoorSource", 0.0f, false);
+		AddTimer("ElevatorMoves", 3.5f, "ElevatorMoves");
+	}
+}
+
+void ElevatorMoves (string &in asTimer)
+{
+	SetMoveObjectState("elevator_pod_2", 1);
+	PlaySoundAtEntity("", "reactor_elevator_start.snt", "Player", 0.0f, false);
+	PlaySoundAtEntity("LiftLoop", "reactor_elevator_loop.snt", "Player", 1.0f, true);
+	RemoveTimer("RandQuakes");
+	RemoveTimer("NextQuakeTimer");
+	RemoveTimer("RandBangSounds");
+	//PlayMusic("music_transition_11engine_12streets.ogg", false, 0.85f, 0.0f, 45, false);
+	StopSound("EngineSoundSource1", 1.0f);
+	AddTimer("LevelTransitionStart", 8.5f, "LevelTransition");
+	AddTimer("LevelTransition", 13.0f, "LevelTransition");
+}
+//END ELEVATOR HANDLER//
+
+
+void StartVoices(string &in asEntity, int alState)
+
+{
+		PlaySoundAtEntity("", "react_quickscare.snt", "Player", 0.0f, false);
+		StopMusic(3.5f, 1);
+		AddTimer("", 2.0f, "Voice1");
+}
+
+
+void Voice1(string &in asTimer)
+
+{
+		
+		AddTimer("", 48, "PlayerChoice");
+}
+
+void PlayerChoice(string &in asTimer)
+
+{
+					SetPlayerRunSpeedMul(0.5);
+					SetPlayerMoveSpeedMul(1);
+					SetPlayerLookSpeedMul(1);
+					StopPlayerLookAt();
+					SetPlayerJumpDisabled(true);
+					SetPlayerActive(true);
+					SetEntityActive("ExamineArea_1", true);
+}
+
+void Destruction(string &in asEntity)
+
+{
+	
+	PlaySoundAtEntity("", "20_no", "ScriptArea_7", 0.0f, false);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerLookSpeedMul(0);
+	StartScreenShake(0.03f, 3.0f, 3.0f, 1.0f);
+	AddTimer("ShakeTimer", 1.2f, "ShakeTimer");
+	AddTimer("StopTimer", 1.0f, "StopTimer");
+	StartEffectFlash(1.0, 0.1, 4);
+	CreateParticleSystemAtEntity("OrbLight", "ps_orb_light.ps", "ScriptArea_1", true);
+	AddTimer("", 3.8, "EnemiesGone");
+	AddTimer("", 6.3, "Escape");
+	PlaySoundAtEntity("Rumble", "general_rock_rumble_custom", "Player", 0.0f, false);
+}
+
+
+
+ void ShakeTimer(string &in asTimer2)
+ {
+	StartScreenShake(0.03f, 3.0f, 1.0f, 1.0f);
+	
+	AddTimer("ShakeTimer", 2.0f, "ShakeTimer");
+ }
+
+  void StopTimer(string &in asTimer2)
+ 
+ {
+		StartScreenShake(0.00f, 0.0f, 0.0f, 0.0f);
+		
+		AddTimer("StopTimer", 1.2f, "StopTimer");
+ }
+ 
+void EnemiesGone(string &in asTimer)
+
+{
+					SetEntityActive("Grunt_1", false);
+					SetEntityActive("Grunt_2", false);
+					SetEntityActive("Brute_1", false);
+					SetEntityActive("brick02_1", true);
+					SetEntityActive("safety_normal_vert_2", false);
+					SetEntityActive("safety_large_vert_2", false);
+					SetEntityActive("safety_large_vert_3", true);
+					SetEntityActive("safety_normal_vert_4", true);
+					SetEntityActive("slime_pile_47", true);
+					SetEntityActive("web_1", true);
+					
+}
+
+void Escape(string &in asTimer)
+
+{
+					StopPlayerLookAt();
+					SetPlayerRunSpeedMul(1.2);
+					SetPlayerMoveSpeedMul(1);
+					SetPlayerLookSpeedMul(1);
+					SetMessage("Messages", "EscapeNow", 5);
+					SetEntityActive("brick02_3", true);
+					SetEntityActive("brick02_2", true);
+					SetEntityActive("dungeon_small01_1", true);
+					SetEntityActive("stone_med01_brown_2", true);
+					SetEntityActive("stone_med01_brown_1", true);
+					SetEntityActive("stone_med01_brown_3", true);
+					PlayMusic("08_amb", true, 1, 5, 10, true);
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{	                  
+	GiveItemFromFile("bucket_of_tar_1", "bucket_of_tar.ent");
+	PreloadSound("27_wind");
+	PreloadSound("impact_metal_high");
+	PreloadSound("break_wood_metal");
+	PreloadSound("break_glass_bottle");
+	PreloadSound("27_jam");
+	PreloadSound("27_break");
+	PreloadSound("22_orb_loose");
+	PreloadSound("29_hole_open");
+	PreloadSound("29_hole_blue");
+	PreloadSound("27_energy_loop");
+	PreloadSound("11_fall");
+	PreloadSound("player_bodyfall");
+	PreloadSound("player_falldamage_max");
+	PreloadSound("27_thump");
+	PreloadSound("27_orb_implode");
+	PreloadSound("27_spark");
+	PreloadSound("slime_loop");
+	PreloadSound("react_breath");
+	PreloadSound("react_scare");
+	PreloadSound("guardian_distant");
+	PreloadSound("guardian_ontop");
+	PreloadSound("guardian_idle6");
+	PreloadSound("general_rock_rumble_custom");
+	PreloadSound("20_Confrontations");
+	PreloadSound("general_rock_rumble");
+	PreloadSound("explosion_rock_large");
+	PreloadSound("sound_weird_5");
+	PreloadSound("20_Mary");
+	PreloadSound("sound_weird_2");
+	PreloadSound("15_man01_whimp");
+	
+	PlayMusic("18_amb.ogg", true, 0.8, 4, 1, true);
+	SetInDarknessEffectsActive(false);
+	AutoSave();
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	
+}

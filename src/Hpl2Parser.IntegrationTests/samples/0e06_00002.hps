@@ -1,0 +1,162 @@
+void OnStart()
+{
+	CompleteQuest("cellar_door_unlocked", "cd");
+	PlayMusic("06_amb.ogg", true, 1.0f, 0.0f, 1.0f, false);
+	SetLocalVarInt("s cares", 0);
+	SetLocalVarInt("ClosetActivate", 0);
+	AddEntityCollideCallback("Player", "ScareArea_1", "ScarePlayer_1", true, 0);
+	AddEntityCollideCallback("Player", "ScareArea_2", "ScarePlayer_2", true, 0);
+	AddEntityCollideCallback("Player", "CheckForScares", "CheckForScares", false, 0);
+	AddEntityCollideCallback("Player", "Spawn_1/Scare_3", "SpawnMonster_1", true, 0);
+	AddEntityCollideCallback("Player", "PlayerInCloset", "PlayerInCloset", false, 0);
+	CheckPoint ("CheckPoint_1", "PlayerStartArea_1", "CheckPointTrolls", "", "");
+}
+////////////// Scares
+
+void ScarePlayer_1(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=4; ++i) SetEntityActive("corpse_male_"+i, true);
+	for(int i=1; i<=4; ++i)	AddPropImpulse("corpse_male_"+i, 150.0f, 0.0f, 0.0f, "world");
+	for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	AddTimer("dissapear1", 2.5f, "TimerEvents");
+	AddLocalVarInt("s cares", 1);
+}
+
+void ScarePlayer_2(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=5; i<=7; ++i) SetEntityActive("corpse_male_"+i, true);
+	for(int i=5; i<=7; ++i)	AddPropImpulse("corpse_male_"+i, -150.0f, 0.0f, 0.0f, "world");
+	for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	AddTimer("dissapear2", 2.5f, "TimerEvents");
+	AddLocalVarInt("s cares", 1);
+}
+
+void ScarePlayer_3(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("PlayerInCloset") == 1)
+	{
+		for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+		for(int i=1; i<=10; ++i)  AddPropImpulse("cabinet_simple_3", 0.0f, 0.0f, -1.3f, "world");
+		CreateParticleSystemAtEntity("scare_smoke", "ps_iron_maiden_event_smoke.ps", "AreaMaidenSmoke", false);
+		GiveSanityDamage(1.0f, true);
+		ClearEnemyPatrolNodes("servant_brute_1");
+		AddLocalVarInt("s cares", 1);
+		for(int i=1; i<=3; ++i)	PlayGuiSound("10_event_coming.snt", 1.0f);
+		AddTimer("brute_dissapear", 0.5f, "TimerEvents");	
+		ShowEnemyPlayerPosition("servant_brute_1");
+		SetEntityActive("billboard_1", true);
+	}
+	else
+	{
+		GivePlayerDamage(1000.0f, "BloodSplat", false, true);
+		for (int i=1; i<=5; ++i) 
+			PlayGuiSound("Pain.snt", 1.0f);
+	}
+}
+
+void ScarePlayer_4(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=8; i<=11; ++i) SetEntityActive("corpse_male_"+i, true);
+	for(int i=8; i<=11; ++i)	AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, -100.0f, "world");
+	for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	AddTimer("dissapear3", 2.5f, "TimerEvents");
+	AddLocalVarInt("s cares", 1);
+}
+
+void ScarePlayer_5(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	for(int i=12; i<=15; ++i) SetEntityActive("corpse_male_"+i, true);
+	for(int i=12; i<=13; ++i)	AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, -150.0f, "world");
+	AddPropImpulse("corpse_male_14", 150.0f, 0.0f, 0.0f, "world");
+	AddPropImpulse("corpse_male_15", -150.0f, 0.0f, 0.0f, "world");
+	AddTimer("dissapear4", 2.5f, "TimerEvents");
+	AddLocalVarInt("s cares", 1);
+}
+
+////////////////
+//Timer Events//
+////////////////
+void TimerEvents(string &in asTimerName)
+{
+	if (asTimerName == "dissapear1") //1st dissapear
+		for(int i=1; i<=4; ++i) 
+			SetEntityActive("corpse_male_"+i, false);
+	else if(asTimerName == "dissapear2")//2nd dissapear
+		for(int i=5; i<=7; ++i) 
+			SetEntityActive("corpse_male_"+i, false);
+	else if(asTimerName == "dissapear3")//3rd dissapear
+		for(int i=8; i<=11; ++i) 
+			SetEntityActive("corpse_male_"+i, false);
+	else if(asTimerName == "dissapear4")//4th dissapear
+		for(int i=12; i<=15; ++i) 
+			SetEntityActive("corpse_male_"+i, false);
+	else if(asTimerName == "brute_dissapear") // brute dissapear
+		FadeEnemyToSmoke("servant_brute_1", false);
+	if (asTimerName == "ActivateBrute")
+	{
+		AlertEnemyOfPlayerPresence("servant_brute_1");
+		SetEnemyDisableTriggers("servant_brute_1", false);
+	}
+	if (GetLocalVarInt("s cares") == 1)
+	{
+		PlayGuiSound("00_laugh.snt", 1.0f);
+	}
+	else if(GetLocalVarInt("s cares") == 3)
+	{
+		if ((asTimerName == "brute_dissapear") == false)
+		{
+			SetEntityActive("cabinet_simple_3", false);
+			RemoveEntityCollideCallback("Player", "CheckForScares");
+			SetEntityActive("ScareArea_5", true);
+			AddEntityCollideCallback("Player", "ScareArea_5", "ScarePlayer_5", true, 0);
+		}
+	}
+}
+//////////////
+
+void SpawnMonster_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEnemyDisableTriggers("servant_brute_1", true);
+	AddTimer("ActivateBrute", 4.0f, "TimerEvents");
+	SetEntityActive("servant_brute_1", true);
+	for(int i=1; i<=7; ++i)	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_"+i, 0.01, "");
+	AddEntityCollideCallback("servant_brute_1", "Spawn_1/Scare_3", "ScarePlayer_3", true, 0);
+	SetLocalVarInt("ClosetActivate", 1);
+}
+//////////////
+//Technical///
+//////////////
+
+void CheckForScares(string &in asParent, string &in asChild, int alState)
+{
+	if (GetLocalVarInt("s cares") == 3)
+	{
+		SetEntityActive("cabinet_simple_3", false);
+		RemoveEntityCollideCallback("Player", "CheckForScares");
+		SetEntityActive("ScareArea_5", true);
+		AddEntityCollideCallback("Player", "ScareArea_5", "ScarePlayer_5", true, 0);
+	}
+}
+
+void PlayerInCloset(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("PlayerInCloset", alState);
+}
+
+//////////////
+//Checkpoint//
+/////////////
+void CheckPointTrolls(string &in asEntity, int alCount)
+{
+	if(alCount == 0)
+	{
+		if (GetLocalVarInt("ClosetActivate") == 1)
+		{
+			SetEntityActive("ScareArea_4CP1", true);
+			AddEntityCollideCallback("Player", "ScareArea_4CP1", "ScarePlayer_4", true, 0);
+		}
+	}
+	SetPlayerHealth(100.0f);
+}
+	

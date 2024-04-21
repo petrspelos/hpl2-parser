@@ -1,0 +1,162 @@
+void OnStart()
+{  
+    PreloadParticleSystem("ps_impact_dust_high.ps");
+    PreloadParticleSystem("ps_dust_elevator_crash.ps");
+    PreloadParticleSystem("ps_break_wood.ps");
+    PreloadSound("break_wood_metal.snt");
+    PreloadSound("13_machine_run");
+    PreloadSound("13_machine_extra");
+    PreloadSound("13_whomp");
+    PreloadSound("13_ignite");
+    PreloadSound("13_puzzle_machine.ogg");
+    PreloadSound("09_amb_safe.ogg");
+    
+    SetEntityConnectionStateChangeCallback("phonograph_sound", "interactWithPhono");
+    SetWheelStuckState("phonograph_sound", -1, false);
+    SetEnemyDisabled("basile_1", true);
+    SetLocalVarInt("coalInt", 1);
+    SetLocalVarInt("powerON", 0);
+
+    AddEntityCollideCallback("Player", "endTheDemo_:(", "creditsFunc", true, 1);
+
+    for (int i = 1; i < 17; i++)
+    {
+        AddEntityCollideCallback("coal_" + i, "coalStore", "coalFunc", false, 1);
+        if (i != 1) 
+            SetPropEffectActive("coal_" + i, false, false);
+    }
+
+    for (int i = 1; i < 38; i++)
+        AddEnemyPatrolNode("basile_1", "PathNodeArea_" + i, 0.01f, "");
+
+    
+    SetLeverStuckState("main_lever", 1, false);
+
+    PlayMusic("06_amb.ogg", true, 0.5f, 0.5f, 0, false);
+}
+
+void OnEnter()
+{ 
+    
+}
+
+void OnLeave()
+{ 
+
+}
+
+void coalFunc(string &in parent, string &in child, int state)
+{
+    SetEntityInteractionDisabled(parent, true);
+    SetPropEffectActive(parent, true, true);
+    AddTimer(parent, 0.5f, "coalFade");
+
+    if (GetLocalVarInt("coalInt") < 3)
+        AddLocalVarInt("coalInt", 1);
+    else if (GetLocalVarInt("coalInt") == 3)
+    {
+        SetLampLit("13_burner", true, true);
+        PlaySoundAtEntity("coalActivateSound", "13_ignite", "13_burner", 0, false);
+        SetEntityInteractionDisabled("elevator_machine_hatch_1", true);
+        ResetProp("elevator_machine_hatch_1");
+    }
+}
+
+void coalFade(string &in asTimer)
+{
+    SetPropActiveAndFade(asTimer, false, 1.5);
+}
+
+void CoalPull(string &in asEntity, int alState)
+{
+
+    if (GetLocalVarInt("coalInt") < 3)
+        SetMessage("Dialogue", "moreCoal", 1);
+    else if (GetLocalVarInt("coalInt") == 3)
+    {
+
+        SetLeverStuckState(asEntity, 1, true);
+        runWheels(1.0f,-1.0f);
+
+        StopMusic(0, 0);
+
+        PlaySoundAtEntity("machine_run", "13_machine_run", "elevator_machine_1", 2, true);
+		PlaySoundAtEntity("machine_extra", "13_machine_extra", "elevator_machine_1", 2, true);
+		PlaySoundAtEntity("machine_whomp", "13_whomp", "elevator_machine_1", 4, true);
+
+        PlayMusic("13_puzzle_machine.ogg", false, 1.0f, 0.5f, 10, false);
+        AddTimer("finishMusic", 7, "musicDone");
+    
+        SetSanityDrainDisabled(true);
+		GiveSanityBoost();
+
+        AutoSave();
+
+        CompleteQuest("questFuel", "fuelQuest");
+        SetLocalVarInt("powerON", 1);
+
+        for (int i = 1; i < 23; i++)
+            SetLampLit("hanging_lantern_ceiling_" + i, true, true);
+
+        for (int i = 1; i < 27; i++)
+            SetLampLit("torch_static01_" + i, false, true);
+
+        SetEntityPlayerInteractCallback("basile_1", "interactWithPhono", true);
+        SetWheelStuckState("phonograph_sound", 0, false);
+    }
+}
+
+void interactWithPhono(string &in entity, int alState)
+{
+    if (alState == 1)
+        AddTimer("finishSaying", 1, "finishTellingMeStuff");
+}
+
+void musicDone(string &in asTimer)
+{
+    StopMusic(1, 10);
+    PlayMusic("09_amb_safe.ogg", true, 0.5f, 0.5f, 0, false);
+}
+
+void runWheels(float fSpeed1, float fSpeed2)
+{
+    RotatePropToSpeed("cog_1", 1, fSpeed2, 1, 0, 0, false, "");
+	RotatePropToSpeed("cog_2", 1, fSpeed1, 1, 0, 0, false, "");
+	RotatePropToSpeed("cog_3", 1, fSpeed2, 1, 0, 0, false, "");
+}
+
+void finishTellingMeStuff(string &in asTimer)
+{
+    CreateParticleSystemAtEntity("impactEffect", "ps_impact_dust_high.ps", "DustImpactEffect", false);
+    PlaySoundAtEntity("impactSound", "break_wood_metal", "DustImpactEffect", 1, false);
+
+    SetEnemyDisabled("basile_1", false);
+    AlertEnemyOfPlayerPresence("basile_1");
+    StopMusic(0, 0);
+
+    AddTimer("youDead", 1, "youGonDie");
+}
+
+void youGonDie(string &in asTimer)
+{
+    CreateParticleSystemAtEntity("impactEffect2", "ps_dust_elevator_crash.ps", "DustImpactEffect", false);
+    CreateParticleSystemAtEntity("impactEffect3", "ps_break_wood.ps", "DustImpactEffect", false);
+    CreateParticleSystemAtEntity("breakChain", "ps_hit_metal.ps", "EndRopeDoorArea_2", false);
+    
+    PlaySoundAtEntity("impactSound2", "break_wood_metal", "DustImpactEffect", 1, false);
+    SetEntityActive("safety_normal_vert_valve_1", false);
+    SetPropStaticPhysics("pick_lock_dyn_1", false);
+
+    SetSanityDrainDisabled(false);
+}
+
+void creditsFunc(string &in parent, string &in child, int state)
+{
+    StartCredits("end_credits_song.ogg", false, "Credits", "creditText", 3);
+}
+
+void triedToUse(string &in entity)
+{
+    if (GetLocalVarInt("powerON") == 0)
+        AddQuest("questFuel", "fuelQuest");
+}

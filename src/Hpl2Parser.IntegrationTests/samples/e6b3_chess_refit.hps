@@ -1,0 +1,412 @@
+// Loading the map, first time
+void OnStart()
+{
+	SetupLoadScreen("LoadingText", "C01Level01", 1, "");
+
+	// DISABLE
+	int i;
+	SetEntityInteractionDisabled("CorridorNoteTable", true);
+
+	// INITIALIZATION
+	// GiveItemFromFile("lantern", "lantern.ent");
+	SetPlayerLampOil(0);
+	CheckPoint("start_point", "PlayerStartArea_Start", "MapCheckPoint", "DeathMessages", "C01Level02_CorridorChase");
+	SetFogColor(0, 0, 0, 1);
+	SetFogProperties(30, 37, 0.5f, true);
+	SetFogActive(false);
+	AddLocalVarString("near_lantern", "7");
+	AddLocalVarInt("corridor_over", 0);
+	AddLocalVarInt("corridor_off", 0);
+	AddLocalVarInt("corridor_position", 0);
+	AddLocalVarInt("chess_progress", 0);
+	AddLocalVarInt("chess_safe", 0);
+	AddLocalVarInt("chess_fallen", 0);
+	PreloadSound("hit_wood");
+	PreloadSound("door_level_wood_open");
+
+	InitRiddle("riddle_02_chess", "ChessNotePickup", 15.0f);
+
+	// INTERACTIONS
+	AddEntityCollideCallback("Player", "ScriptCorridorChasing_Start", "StartTheChasing", true, 0);
+	for(i=0; i<=13; i++) AddEntityCollideCallback("Player", "ScriptCorridorChasing_"+i, "ChasingUpdatePosition", false, 1);
+	for(i=0; i<=20; i++) AddEntityCollideCallback("Player", "OverTile_"+i, "StepOverTile", false, 0);
+	AddEntityCollideCallback("Player", "ScriptFail", "FailAndDie", false, 1);
+	
+	/*TeleportPlayer("ChessCheckPoint");
+	EnteredChessRoom("", "", 1);*/
+	
+	AutoSave();
+}
+
+// control the checkpoints in this map
+void MapCheckPoint(string &in asName, int alCount)
+{
+	// remember: alCount = 0 at first respawn!
+	// resets something when you die
+	SetLocalVarInt("chess_progress", 0);
+	ChangePlayerStateToNormal();
+	SetFogActive(false);
+	int i;
+	if(asName == "start_point")
+	{
+		SetLocalVarInt("corridor_over", 0);
+		SetLocalVarInt("corridor_position", 0);
+		SetLocalVarInt("corridor_off", 0);
+		SetEntityActive("Entrance_Entity_*", true);
+		SetEntityActive("Lantern_Entity_*", false);
+		AddEntityCollideCallback("Player", "ScriptCorridorChasing_Start", "StartTheChasing", true, 0);
+		for(i=1; i<=13; i++) OffTheCandle(i, true, false);
+	}
+	else if(asName == "middle_point")
+	{
+		SetPropStaticPhysics("Player", false);
+		SetEntityActive("lightblock_*", true);
+		ResetProp("lightblock_*");
+		SetLocalVarInt("chess_safe", 0);
+		SetLocalVarInt("chess_fallen", 0);
+		SetLocalVarInt("chess_progress", 0);
+		string msgTxt = "RetryChess_02";
+		if(alCount < 2) msgTxt = "RetryChess_01";
+		SetMessage("Ch01Level02_Chess", msgTxt, 10);
+	}
+}
+
+void StartTheChasing(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerCrouchDisabled(true);
+	SetPlayerCrouching(false);
+	SetEntityActive("Entrance_Entity_1", false);
+	SetEntityActive("Entrance_Entity_2", false);
+	ChasingTick("");
+}
+void OffTheCandle(int i, bool lit, bool fx)
+{
+	SetLampLit("candlestick_left_"+i, lit, fx);
+	SetLampLit("candlestick_right_"+i, lit, fx);
+	SetLightVisible("corridor_light_"+i, lit);
+}
+void ChasingUpdatePosition(string &in asParent, string &in asChild, int alState)
+{
+	int pos = 0;
+	int trim = 22;
+	int cnt = asChild.length() - trim;
+	string s_pos = StringSub(asChild, trim, cnt);
+	int i;
+	string check;
+	for(i=1; i<20; i++)
+	{
+		check = "" + i;
+		if(check == s_pos)
+		{
+			pos = i;
+			break;
+		}
+	}
+	if(pos == 0) return;
+	SetLocalVarInt("corridor_position", pos);
+	CheckTheChase(false);
+}
+void ChasingTick(string &in asTimer)
+{
+	int prev = GetLocalVarInt("corridor_off");
+	int candle = prev + 1;
+	float vol = 0.15f * candle;
+	StopMusic(0, 50);
+	PlayMusic("scare_walk_ghost1.ogg", false, vol, 0, 50, false);
+	OffTheCandle(candle, false, false);
+	SetLocalVarInt("corridor_off", candle);
+	CheckTheChase(true);
+}
+void CheckTheChase(bool tick)
+{
+	if(GetLocalVarInt("corridor_over") == 1) return;
+	int candle = GetLocalVarInt("corridor_off");
+	int next = candle + 1;
+	int pos = GetLocalVarInt("corridor_position");
+	float tick_int = 2 - (candle - 1) / 10.0f;
+	if(tick == true && !GetEntityExists("candlestick_left_"+next)) EndTheChasing(false);
+	else if(candle >= pos) EndTheChasing(true);
+	else if(tick == true) AddTimer("", tick_int, "ChasingTick");
+}
+void EndTheChasing(bool lost)
+{
+	SetLocalVarInt("corridor_over", 1);
+	if(lost == true)
+	{
+		PlaySoundAtEntity("", "03_in_a_bottle", "Player", 0, false);
+		GivePlayerDamage(1000, "Slash", true, true);
+		//SetPlayerActive(false);
+		//MovePlayerHeadPos(0, -1.5f, -1, 2, 0);
+		//FadeOut(2);
+		AddTimer("", 1.5f, "LostTheChasing");
+	} else {
+		AddTimer("", 3, "WonTheChasing");
+	}
+}
+void LostTheChasing(string &in asTimer)
+{
+	PlaySoundAtEntity("", "impact_dirt_high", "Player", 0, false);
+	//MovePlayerHeadPos(0, 0, 0, 2, 0);
+	//SetPlayerActive(true);
+	SetPlayerHealth(0);
+}
+void WonTheChasing(string &in asTimer)
+{
+	SetFogActive(true);
+	PlayMusic("02_puzzle.ogg", false, 0.70f, 0, 10, false);
+	int i;
+	for(i=1; i<=13; i++) OffTheCandle(i, true, true);
+	AddEntityCollideCallback("Player", "ScriptCorridorEnd", "EndOfTheCorridor", true, 0);
+}
+
+void EndOfTheCorridor(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Entrance_Entity_*", false);
+	SetEntityActive("Lantern_Entity_*", true);
+	SetLampLit("Lantern_Entity_3", true, false);
+	SetEntityActive("Lantern", true);
+	int i;
+	for(i=1; i<=16; i++) AddEntityCollideCallback("Player", "ScriptPosLantern_"+i, "PosNearTheLantern", false, 1);
+	SetEntityPlayerInteractCallback("Lantern", "PickedUpLantern", true);
+}
+
+void PosNearTheLantern(string &in asParent, string &in asChild, int alState)
+{
+	int trim = 17;
+	int cnt = asChild.length() - trim;
+	string n = StringSub(asChild, trim, cnt);
+	SetLocalVarString("near_lantern", n);
+}
+
+void PickedUpLantern(string &in asEntity)
+{
+	SetFogActive(false);
+	string pos_n = GetLocalVarString("near_lantern");
+	AddEffectVoice("Ch01Level02_01_CorridorLantern.ogg", "", "Voice", "Ch01Level02_01_CorridorLantern", false, "", 0, 0);
+	SetEntityActive("CorridorNoteTable", false);
+	SetEntityActive("Corridor_Entity_1", false);
+	SetEntityActive("candlestick_right_2", false);
+	SetEntityActive("candlestick_left_2", false);
+	SetLightVisible("corridor_light_2", false);
+	SetEntityActive("banner_short02_13", false);
+	SetEntityActive("banner_short02_39", false);
+	SetEntityActive("Warp_Entity_*", true);
+	SetLampLit("Warp_Entity_1", true, false);
+	SetSwingDoorLocked("CorridorDoor", false, false);
+	TeleportPlayer("PlayerWarpArea_"+pos_n);
+	SetPlayerCrouchDisabled(false);
+	AddEntityCollideCallback("Player", "ScriptChessEntering", "EnteredChessRoom", true, 0);
+	AddDisplayDiary("Ch01Level02_OilLantern", "bg_diaries");
+}
+
+void EnteredChessRoom(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("middle_point", "ChessCheckPoint", "MapCheckPoint", "DeathMessages", "C01Level02_Chess");
+}
+
+void ChessNotePickup(string &in asEntity)
+{
+	AddTimer("", 0.2f, "ChessNoteVoice");
+}
+void ChessNoteVoice(string &in asTimer)
+{
+	AddEffectVoice("Ch01Level02_02_ChessRiddle.ogg", "", "Voice", "Ch01Level02_02_ChessRiddle", false, "", 0, 0);
+}
+
+void StepOverTile(string &in asParent, string &in asTile, int alState)
+{
+	int step = GetLocalVarInt("chess_progress");
+	int safe = GetLocalVarInt("chess_safe");
+	int i, upd = 0, cur = 0;
+	int num = 14, tot = 20;
+	for(i=0; i<=tot; i++)
+	{
+		if(asTile == "OverTile_"+i)
+		{
+			cur = i;
+			break;
+		}
+	}
+	if(cur < 1) return;
+	if(alState > 0)
+	{
+		if(cur <= num && cur == step+1) upd = cur;
+		else return;
+	} else {
+		if(cur <= num && (cur == step-1 || cur == step)) return;
+	}
+	if(upd > 0) SetLocalVarInt("chess_progress", upd);
+	if(upd == num) AddTimer("", 0.6, "TheWinFall");
+	else if(upd < 1 && alState < 0) TheFailFall(cur);
+	return;
+}
+
+void TheFailFall(int index)
+{
+	if(GetLocalVarInt("chess_fallen") > 0) return;
+	SetLocalVarInt("chess_fallen", 1);
+	StopAllEffectVoices(0);
+	SetPlayerActive(false);
+	TeleportPlayer("FallArea_"+index);
+	SetEntityActive("lightblock_"+index, false);
+	StartPlayerLookAt("lightblock_"+index, 13.0, 13.0, "");
+	AddTimer("", 1.0f, "StopLook");
+	PlaySoundAtEntity("", "hit_wood", "Player", 0, false);
+	PlaySoundAtEntity("", "ui_insanity_touch", "Player", 0, false);
+}
+
+void TheWinFall(string &in asTimer)
+{
+	StopAllEffectVoices(0);
+	PlaySoundAtEntity("", "hit_wood", "Player", 0, false);
+	TeleportPlayer("WinArea");
+	// FadeGlobalSoundVolume(0, 0);
+	StartPlayerLookAt("hanging_lantern_wall_8", 13.0, 13.0, "");
+	AddEntityCollideCallback("Player", "EndLevelScript", "ExitAndWin", false, 0);
+	AddTimer("", 0.5f, "Start_GUS");
+	SetupLoadScreen("LoadingText", "C01Level03", 1, "");
+}
+
+void FailAndDie(string &in asParent, string &in asScript, int alState)
+{
+	SetPlayerActive(true);
+	GivePlayerDamage(1000, "BloodSplat", false, true);
+}
+
+// get up sequence
+void Start_GUS(string &in asTimer)
+{
+	SetPlayerActive(false);
+	FadeOut(0.75f);
+	AddTimer("", 1.2f, "Position_GUS");
+}
+void Position_GUS(string &in asTimer)
+{
+	PlaySoundAtEntity("", "impact_dirt_high", "Player", 0, false);
+	StopPlayerLookAt();
+	TeleportPlayer("FellArea");
+	SetPropStaticPhysics("Player", true);
+	// FadeGlobalSoundVolume(0.85f, 0);
+	FadePlayerRollTo(86, 50, 50);
+	MovePlayerHeadPos(-3, -1.75f, -2, 20, 1);
+	FadeImageTrailTo(3, 1);
+	AddTimer("0", 1, "FallSound_GUS");
+	AddTimer("0", 2, "Wakeup_GUS");
+}
+void FallSound_GUS(string &in asI)
+{
+	PlaySoundAtEntity("", "impact_dirt_high", "Player", 0, false);
+}
+void Wakeup_GUS(string &in asI)
+{
+	int i = asI[0] - 48;
+	// AddDebugMessage("Wakeup_GUS i="+i, false);
+	int max = 4;
+	float afTime = 1.25f;
+	if(i % 2 == 0)
+	{
+		if(i == max)
+		{
+			afTime = 3;
+			AddTimer("", 1, "Getup_GUS");
+		}
+		FadeIn(afTime);
+	}
+	else
+	{
+		afTime = 0.25f;
+		FadeOut(afTime);
+	}
+	if(i >= max) return;
+	AddTimer(""+(i+1), afTime, "Wakeup_GUS");
+}
+void Getup_GUS(string &in asTimer)
+{
+	AddEffectVoice("Ch01Level02_03_DownTheHole.ogg", "", "Voice", "Ch01Level02_03_DownTheHole", false, "", 0, 0);
+	FadeImageTrailTo(0, 1);
+	MovePlayerHeadPos(0, 0, 0, 2, 2);
+	FadePlayerRollTo(0, 1.7f, 500);
+	AddTimer("", 4, "Lookup_GUS");
+}
+void Lookup_GUS(string &in asTimer)
+{
+	StartPlayerLookAt("hanging_lantern_wall_8", 4, 4, "");
+	AddTimer("", 3, "End_GUS");
+}
+void End_GUS(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPropStaticPhysics("Player", false);
+	SetPlayerActive(true);
+}
+
+void ExitAndWin(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("catacombs_refit.map", "PlayerStartArea_1", "", "");
+}
+
+/************************
+ *
+ * SOME USEFUL FUNCTIONS!
+ *
+ ***********************/
+
+// shows a text on screen to notify a new diary
+void AddDisplayDiary(string &in asName, string &in asBkg)
+{
+	SetMessage("Hints", "DiaryAdded", 0.0f);
+	AddDiary(asName, asBkg);
+}
+
+// initiate a riddle
+void InitRiddle(string &in asRiddle, string& asCallback, float afCallbackTimer)
+{
+	HideRiddle(asRiddle);
+	AddLocalVarString(asRiddle + "_callback", "");
+	SetEntityInteractionDisabled(asRiddle + "_note", true);
+	if(asCallback != "")
+	{
+		SetLocalVarString(asRiddle + "_callback", asCallback);
+		SetLocalVarFloat(asRiddle + "_callbackTimer", afCallbackTimer);
+	}
+	SetEntityPlayerInteractCallback(asRiddle + "_click", "ShowRiddle", true);
+}
+// hides a riddle icon
+void HideRiddle(string &in asRiddle)
+{
+	SetEntityActive(asRiddle + "_area", false);
+	FadeLightTo(asRiddle + "_light", 0, 0, 0, 0, 0, 0.01);
+}
+// show a riddle icon
+void ShowRiddle(string &in asClick)
+{
+	SetEntityActive(asClick, false);
+	string trim = "_click";
+	int cnt = asClick.length() - trim.length();
+	string asRiddle = StringSub(asClick, 0, cnt);
+	string asCallback = GetLocalVarString(asRiddle + "_callback");
+	FadeLightTo(asRiddle + "_light", 0.75f, 0.75f, 0.75f, 1, 0.1f, 1.5f);
+	SetEntityActive(asRiddle + "_area", true);
+	SetEntityPlayerInteractCallback(asRiddle + "_area", "FlashRiddle", false);
+	FlashRiddle(asRiddle + "_area");
+	if(asCallback != "")
+	{
+		float afCallbackTimer = GetLocalVarFloat(asRiddle + "_callbackTimer");
+		AddTimer(asRiddle + "_note", afCallbackTimer, asCallback);
+	}
+}
+// flashes a riddle
+void FlashRiddle(string &in asArea)
+{
+	string trim = "_area";
+	int cnt = asArea.length() - trim.length();
+	string asRiddle = StringSub(asArea, 0, cnt);
+	StartEffectEmotionFlash("Riddles", asRiddle, "journal_open");
+}
+
+// stop force-looking at something
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}

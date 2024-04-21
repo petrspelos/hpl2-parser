@@ -1,0 +1,138 @@
+void OnStart()
+{
+
+intro();
+
+AddUseItemCallback("", "key_tomb_rusty_1", "level_dungeon_1", "used_key", true);
+AddEntityCollideCallback("stone_use", "my_favorite_ribcage_1", "BonesBreak", true, 1);
+AddEntityCollideCallback("stone_use_1", "my_favorite_ribcage_1", "BonesBreak", true, 1);
+AddEntityCollideCallback("stone_use", "bonesarea", "BonesBreak", true, 1);
+AddEntityCollideCallback("stone_use_1", "bonesarea", "BonesBreak", true, 1);
+for(int i=1;i<=20;i++){AddEntityCollideCallback("Player", "SandSound_"+i, "SandSound", true, 1);}
+SetEntityPlayerInteractCallback("KeyExamine", "ExaminedKey", true);
+SetEntityPlayerInteractCallback("BonesExamine", "ExaminedBones", true);
+AddTimer("TimerQuadMem", 9, "QuadMem");
+//AddTimer("tillfade", 11, "fade");
+
+SetPlayerLampOil(0);
+//SetupLoadScreen("Loading", "astory", 2, "load_5");
+SetGlobalVarInt("relics_found", 0);
+//AddQuest("globalquest", "globalquest");
+PlaySoundAtEntity("Desert Wind", "amb_desert.snt", "sound_source", 8, true);
+
+SetEntityPlayerInteractCallback("CampFire", "RemoveExamine", false);
+/*
+if (GetEntityExists("bottle_absinthe_1"))
+	{
+	TeleportPlayer("PlayerStartArea_1");
+	}
+	else
+	{
+	TeleportPlayer("nojustine");
+	SetMessage("Message", "NoPigs", 666);
+	AddTimer("tillfade", 0.1f, "fade");
+	}
+	
+	//Trailer();
+
+}*/
+}
+
+void intro()
+{
+	AddTimer("", 5, "fadein");
+	FadeOut(0);
+	SetPlayerActive(false);
+}
+
+void fadein(string &in asTimer)
+{
+	SetPlayerActive(true);
+	FadeIn(8);
+}
+
+void RemoveExamine(string &in asEntity)
+{
+	SetEntityActive(asEntity,false);
+}
+
+void Trailer()
+{
+SetPlayerLookSpeedMul(0.5);
+SetPlayerMoveSpeedMul(0.5);
+SetPlayerRunSpeedMul(0.5);
+ShowPlayerCrossHairIcons(false);
+}
+
+void OnEnter()
+{
+//FadeSepiaColorTo(0.2, 0.1);
+SetMapDisplayNameEntry("Outside");
+//SetPlayerLookSpeedMul(0.8);
+//SetPlayerMoveSpeedMul(0.8);
+//SetPlayerRunSpeedMul(0.8);
+PlayMusic("mp_singular.ogg", true, 0.8, 6, 0, true);
+SetSanityDrainDisabled(true);
+//PlayGuiSound("amb_desert.ogg", 1);
+//AddTimer("tilled", 42, "hrm");
+SetInDarknessEffectsActive(false);
+
+AddTimer("", RandInt(15,30), "TimerDebrisSound");
+
+PlaySoundAtEntity("Silence", "kb_des_s.snt", "Player", 5.0, true);
+
+}
+
+void TimerDebrisSound(string &in asTimer)
+{
+	PlaySoundAtEntity("","amb_cellar_debris.snt", "Player", 0, false);
+}
+
+void ExaminedKey(string &in asEntity)
+{
+SetEntityActive("KeyExamine", false);
+SetEntityActive("BonesExamine", true);
+}
+
+void ExaminedBones(string &in asEntity)
+{
+SetEntityActive("BonesExamine", false);
+}
+
+void SandSound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "15_sand_debris.snt", asChild, 0.0, false);
+}
+
+void BonesBreak(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("KeyExamine", false);
+SetEntityActive("BonesExamine", false);
+SetEntityActive("my_favorite_ribcage_1", false);
+SetEntityActive("my_favorite_ribcage_2", true);
+SetEntityActive("my_favorite_ribcage_3", true);
+CreateParticleSystemAtEntity("", "ps_break_pottery.ps", "PSBreakArea", true);
+PlaySoundAtEntity("","21_meat_snap.snt", "Player", 0, false);
+}
+
+void used_key(string &in asItem, string &in asEntity)
+{
+SetLevelDoorLocked("level_dungeon_1", false);
+RemoveItem("key_tomb_rusty_1");
+PlaySoundAtEntity("", "unlock_door", "level_dungeon_1", 0, false);
+}
+
+void fade(string &in asTimer)
+{
+PlayMusic("no_justine.ogg", true, 1.3, 0, 0, true);
+}
+
+void QuadMem(string &in asTimer)
+{
+	AddQuest("01_Quad", "01_Quad");
+}
+
+void OnLeave()
+{
+	StopSound("Silence",3.0);
+}

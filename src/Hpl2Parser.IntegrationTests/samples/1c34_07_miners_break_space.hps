@@ -1,0 +1,88 @@
+void OnStart(){
+	PlayerFunctions();
+	variables();
+	events();
+	//beg/debug//
+	// SetGlobalVarInt("hasGotEvidence", 1);
+	//end/debug//
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.5f, 0, 0, true);
+	if (GetGlobalVarInt("hasGotEvidence") == 1){
+		SetLevelDoorLocked("storage", true);
+		SetLocalVarInt("whatToDo", 1);
+		SetEntityActive("dynamic", true);
+		SetEntityActive("painting03_1", false);
+		SetEntityActive("stair_1", true);
+		SetEntityActive("stair_2", true);
+		SetEntityActive("stair_3", true);
+	}
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "07Determination", 1, "07Room.jpg");
+}
+
+void variables(){
+	SetLocalVarInt("whatToDo", 1);
+	SetLocalVarInt("executedScare", 0);
+}
+
+void PlayerFunctions(){
+	AddUseItemCallback("", "Needle", "storage", "unlockResourceStorage", true);
+	SetEntityPlayerInteractCallback("storage", "whatMessage", false);
+	AddEntityCollideCallback("Player", "AreaProcceed", "procceedToMap10", true, 1);
+}
+
+void events(){
+	SetEntityPlayerInteractCallback("dynamic", "breakScare", false);
+}
+
+void unlockResourceStorage(string &in item, string &in door){
+	SetLevelDoorLocked("storage", false);
+	PlayGuiSound("07_pick_lock.snt", 100);
+	SetLocalVarInt("whatToDo", 2);
+	RemoveItem(item);
+}
+
+void whatMessage(string &in entity){
+	if (GetLocalVarInt("whatToDo") == 1){
+		if (GetGlobalVarInt("hasGotEvidence") == 0){
+			SetMessage("Messages", "lockedPickQuest", 0);
+		}else if (GetGlobalVarInt("hasGotEvidence") == 1){
+			SetMessage("Messages", "lockedCannot", 0);
+		}
+	}
+}
+
+void breakScare(string &in entity){
+	if (GetGlobalVarInt("hasGotEvidence") == 1){
+		if (GetLocalVarInt("executedScare") == 0){
+			AddTimer("", 1.0f, "executeScare");
+			ChangePlayerStateToNormal();
+			AddPropImpulse("dynamic", 10, -5, -1, "World");
+			SetPlayerActive(false);
+			CompleteQuest("secretpass", "secretpass");
+		}
+	}
+}
+
+void executeScare(string &in asTimer){
+	SetEntityActive("secretpass", false);
+	SetEntityActive("secretpassbroken", true);
+	PlayGuiSound("03_break_wall.snt", 1000000);
+	SetEntityActive("scarer", true);
+	AddEnemyPatrolNode("scarer", "PathNodeArea_1", 0, "");
+	SetLocalVarInt("executedScare", 1);
+	AddTimer("", 5.0f, "reactivate");
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "HitWood", false);
+}
+
+void reactivate(string &in asTimer){
+	SetPlayerActive(true);
+}
+
+void procceedToMap10(string &in asParent, string &in asChild, int alState){
+	ChangeMap("10_passage.map", "PlayerStartArea_1", "", "");
+}

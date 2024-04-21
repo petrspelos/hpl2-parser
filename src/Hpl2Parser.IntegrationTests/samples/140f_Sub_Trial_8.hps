@@ -1,0 +1,841 @@
+void OnStart()
+{
+	/*if(ScriptDebugOn()) //Debug stuff
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_health_"+i, "potion_health.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_sanity_"+i, "potion_sanity.ent");
+		StarTrekDoors("FD_1", 1);
+	}*/
+	SetupLoadScreen("Loading", "Load_8", 0, "load_bed.png");
+	
+	Intro();
+	//BigAssCutscene();
+	//EndEndDialogue(); 
+	//AddTimer("", 0, "TPCellar");
+	SetLanternLitCallback("TestScript");
+	
+	SetLightVisible("POLICE_1", false);
+	SetLightVisible("POLICE_2", false);
+	SetSanityDrainDisabled(true);
+	
+	AddEntityCollideCallback("Player", "RockFall", "RockFallEvent", true, 1);
+	
+	SetEntityInteractionDisabled("Dagger", true);
+	
+	SetEntityInteractionDisabled("FD_1", true);
+	SetEntityInteractionDisabled("FD_2", true);
+	AddEntityCollideCallback("Player", "FD_Script_1", "CloseFD", true, 1);
+	AddEntityCollideCallback("Player", "FD_Script_2", "CloseFD", true, 1);
+}
+
+void TestScript(bool abLit){ //Turn on the lantern to test a certain script
+	if(abLit==true){
+		AddDebugMessage("Running script", false);
+		SetLanternActive(false, false);
+		BigAssCutscene(); //Put the test script in here
+	}
+}
+
+void moveforward(string &in asTimer){ //Makes player walk, stop with RemoveTimer("walk");
+	MovePlayerForward(3);
+	AddTimer("walk", 0.0f, "moveforward");
+}
+void movebackward(string &in asTimer){ //Makes player walk, stop with RemoveTimer("backup");
+	MovePlayerForward(-1);
+	AddTimer("backup", 0.0f, "movebackward");
+}
+
+////////////////////////////////////////////////
+//Intro and Stuff
+void Intro(){
+	TeleportPlayer("Trial8_TestRoom");
+	SetPlayerActive(false);
+	SetPlayerMoveSpeedMul(0.5);
+	FadeOut(0);
+	FadeIn(3);
+	AddTimer("walk", 0, "moveforward");
+	AddTimer("LeftLook", 1.65, "TurnIntro");
+	AddTimer("", 0.8f, "IntroMusic");
+}
+void IntroMusic(string &in asTimer)
+{
+	PlayMusic("trial_8_event_intro.ogg", false, 1, 1, 5, true);
+}
+
+void TurnIntro(string &in asTimer){
+	AddDebugMessage("Turning", false);
+	if(GetLocalVarInt("NumberAABA")>2){
+		RemoveTimer("walk");
+		StartPlayerLookAt("ThisFuckingSpeaker", 7, 7, "");
+		AddDebugMessage("SPEAKERSS!!!", false);
+		CutsceneUno();
+		return;
+	}
+	if(asTimer=="RightLook"){
+		AddLocalVarInt("NumberAABA", 1);
+		RemoveTimer("walk");
+		StartPlayerLookAt("IAmRight", 1, 1, "");
+		AddTimer("walk", 2.35, "moveforward");
+		AddTimer("LeftLook", 4, "TurnIntro");
+	}
+	else if(asTimer=="LeftLook"){
+		AddLocalVarInt("NumberAABA", 1);
+		RemoveTimer("walk");
+		StartPlayerLookAt("IAmLeft", 1, 1, "");
+		AddTimer("walk", 2.35, "moveforward");
+		AddTimer("RightLook", 4, "TurnIntro");
+	}
+}
+
+void CutsceneUno(){
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(0);
+	AddEffectVoice("M8_S1_P1_01", "", "Voices", "08010101", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_02", "", "Voices", "08010102", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_03", "", "Voices", "08010103", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_04", "", "Voices", "08010104", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_05", "", "Voices", "08010105", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_06", "", "Voices", "08010106", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_07", "", "Voices", "08010107", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_08", "", "Voices", "08010108", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_09", "", "Voices", "08010109", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_10", "", "Voices", "08010110", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_11", "", "Voices", "08010111", false, "", 0, 0);
+	SetEffectVoiceOverCallback("CutsceneDos");
+}
+void CutsceneDos(){
+	SetPlayerActive(false);
+	SetPlayerMoveSpeedMul(0.1);
+	AddTimer("walk", 0, "movebackward");
+	AddEffectVoice("M8_S1_P1_12", "", "Voices", "08010112", false, "", 0, 0);
+	AddEffectVoice("M8_S1_P1_13", "", "Voices", "08010113", false, "", 0, 0);
+	SetEffectVoiceOverCallback("CutsceneTres");
+}
+void CutsceneTres(){
+	StartEffectFlash(0.25, 1, 0.25);
+	RemoveTimer("backup");
+	AddTimer("", 0.25, "TeleportCSTres");
+	AddEffectVoice("M8_S1_P1_14", "", "Voices", "08010114", false, "", 0, 0);
+}
+void TeleportCSTres(string &in asTimer){
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(1.0);
+	StopPlayerLookAt();
+	PlayGuiSound("sub_warp.ogg", 1);
+	TeleportPlayer("1_Hallway");
+}
+
+void RockFallEvent(string &in asParent, string &in asChild, int alState){
+	SetPlayerActive(false);
+	FadeOut(0);
+	MovePlayerHeadPos(0,-1.2,0,10,0.1);
+	StartPlayerLookAt("RockFall", 10,10,"");
+	AddTimer("", 4, "FuckingRocks");
+}
+void FuckingRocks(string &in asTimer){
+	SetPlayerMoveSpeedMul(0.3);
+	TeleportPlayer("Ehehe");
+	SetEntityActive("FallingRocks", true);
+	AddTimer("Fades", 0, "FadeTimerAlpha");
+	DragCallback();
+}
+void DragCallback(){
+	AddTimer("backup", 0.0f, "movebackward");
+	AddTimer("little", 1, "DragTimer");
+}
+void DragTimer(string &in asTimer){
+	if(GetLocalVarInt("DragInt")==4){
+		RemoveTimer("backup");
+		RemoveTimer("Fades");
+		FadeOut(1.0);
+		AddTimer("", 1.25, "TPCellar");
+		StopPlayerLookAt();
+		return;
+	}
+	if(asTimer=="little"){
+		RemoveTimer("backup");
+		AddTimer("backup", 1.0f, "movebackward");
+		AddTimer("little", 3, "DragTimer");
+		AddLocalVarInt("DragInt", 1);
+	}
+}
+void TPCellar(string &in asTimer){
+	PlayMusic("trial_8_containment_1.ogg", true, 1, 0, 5, true);
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(1);
+	MovePlayerHeadPos(0,0,0,0.5,0.1);
+	TeleportPlayer("1_Torture");
+	FadeIn(1.25);
+}
+
+void FadeTimerAlpha(string &in asTimer){ //Player wakes up
+	AddLocalVarInt("FadesIntAlpha", 1);	//What step to play in the event
+	float fEventSpeed = 1.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("FadesIntAlpha")){
+		case 1:
+			FadeIn(1);
+		break;
+		case 2:
+			FadeOut(2);
+		break;
+		case 3:
+			FadeIn(2);
+		break;
+		case 4:
+			FadeOut(1);
+		break;
+		case 5:
+			FadeIn(3);
+		break;
+		case 6:
+			FadeOut(5);
+		break;
+		case 7:
+			FadeIn(2);
+		break;
+		case 8:
+			FadeOut(9);
+		break;
+		case 9:
+			FadeIn(3);
+		break;
+		case 10:
+			FadeOut(4);
+		break;
+	}
+	
+	if(GetLocalVarInt("FadesIntAlpha") < 10)  AddTimer("Fades", fEventSpeed, "FadeTimerAlpha");	
+}
+
+////////////////////////////////////////////////
+//Hurting Self in Cellar & White Area w/ B-22
+void CellarDMGCall(string &in asEntity){
+	PlayMusic("trial_8_containment_2.ogg", true, 1, 3, 5, true);
+	PlaySoundAtEntity("", "sub_boom.snt", "Player", 0.3, false);
+	PlaySoundAtEntity("Alarm", "sub_alarm.snt", "moar_spooks_5", 4, false);
+	PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+	GivePlayerDamage(10, "BloodSplat", true, false);
+	AddLocalVarInt("CellarDmg", 1);
+	if(GetLocalVarInt("CellarDmg")==2){
+		PlaySoundAtEntity("Boom", "sub_big_boom.snt", "Player", 0, false);
+		AddTimer("1", 0.5, "TPWhiteArea");
+		StartScreenShake(0.05, 3.0f, 1.5f, 1.2f);
+	}
+}
+void TPWhiteArea(string &in asTimer){
+	if(asTimer=="1"){
+		StopSound("Alarm", 6);
+		StartEffectFlash(2,1,2);
+		AddTimer("2", 2, "TPWhiteArea");
+	}
+	else if(asTimer=="2"){
+		StopSound("Alarm", 6);
+		TeleportPlayer("2_Cutscene");
+		AddTimer("3", 1, "TPWhiteArea");
+		PlayMusic("08_amb_F28.ogg", true, 1.2, 5, 5, true);
+	}
+	else if(asTimer=="3"){
+		StopSound("Alarm", 6);
+		for(int i=1;i<10;i++) AddEffectVoice("M8_S2_P1_0"+i, "", "Voices", "0802010"+i, false, "", 0, 0);
+		for(int i=10;i<27;i++) AddEffectVoice("M8_S2_P1_"+i, "", "Voices", "080201"+i, false, "", 0, 0);
+		SetEffectVoiceOverCallback("OpenDoorPlusVoice");
+	}
+}
+void OpenDoorPlusVoice(){
+	AddEffectVoice("M8_S2_P1_27", "", "Voices", "08020127", false, "", 0, 0);
+	SetLocalVarInt("OpenVar", 1);
+	AddTimer("FD_1", 5, "DoorOpen");
+	SetLocalVarInt("DOORVAR", 0);
+}
+
+void StarTrekDoors(string &in asDoor, int isOpen){ //HOLY FUCK SHIT I DID IT
+	AddDebugMessage(""+asDoor, false);
+	SetLocalVarInt("OpenVar", isOpen);
+	AddTimer(asDoor, 0, "DoorOpen");
+	SetLocalVarInt("DOORVAR", 0);
+	StopMusic(5,5);
+}
+void DoorOpen(string &in asTimer){
+	AddLocalVarInt("DOORVAR", 1);	//What step to play in the event
+
+	if(GetLocalVarInt("OpenVar")==1){ //Opens door
+		SetEntityActive(asTimer+"_Blocker", false);
+		AddBodyForce(asTimer+"_Body_1", 5000, 0, 0, "world");
+		AddBodyForce(asTimer+"_Body_2", -5000, 0, 0, "world");
+	}
+	else if(GetLocalVarInt("OpenVar")==-1){ //Closes door
+		SetEntityActive(asTimer+"_Blocker", true);
+		AddBodyForce(asTimer+"_Body_1", -5000, 0, 0, "world");
+		AddBodyForce(asTimer+"_Body_2", 5000, 0, 0, "world");
+	}
+	
+	if(GetLocalVarInt("DOORVAR") < 100)  AddTimer(asTimer, 0, "DoorOpen");
+}
+void CloseFD(string &in asParent, string &in asChild, int alState){
+	if(asChild=="FD_Script_1"){
+		StarTrekDoors("FD_1", -1);
+		StaticLight();
+	}
+	else if(asChild=="FD_Script_2"){
+		SetPlayerActive(false);
+		FadeOut(1);
+		AddTimer("", 2, "EndLevel");
+	}
+}
+void StaticLight(){
+	for(int i=1;i<6;i++) AddEffectVoice("M8_S2_P2_0"+i, "", "Voices", "0802020"+i, false, "", 0, 0);
+	SetEffectVoiceOverCallback("LookIntoStatic");
+}
+void LookIntoStatic(){
+	if(GetLocalVarInt("Looking?")==1){
+		BigAssCutscene();
+	}
+	else SetLocalVarInt("RdyToCut", 1);
+}
+void LookingAtTheStatic(string &in asEntity, int alState){
+	if(alState==1){
+		AddDebugMessage("Looking", false);
+		if(GetLocalVarInt("RdyToCut")==1){
+			BigAssCutscene();
+		}
+		else SetLocalVarInt("Looking?", 1);
+	}
+	else if(alState==-1){
+		AddDebugMessage("NOT Looking", false);
+		SetLocalVarInt("Looking?", 0);
+	}
+}
+
+///////////////////////////////////////////////////
+//BIG ASS CUTSCENE TIME
+void BigAssCutscene(){
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	SetLocalVarInt("RdyToCut", 0);
+	SetLocalVarInt("THEINT", 1); //SET TO 1
+	AddDebugMessage("STARTING CUTSCENE", false);
+	StartEffectFlash(3,1,3);
+	AddTimer("", 3, "THETIMER");
+	AddEffectVoice("M8_S3_P1_01", "", "Voices", "08030101", false, "", 0, 0);
+	AddEffectVoice("M8_S3_P1_02", "", "Voices", "08030102", false, "", 0, 0);
+}
+void THETIMER(string &in asTimer){
+	switch(GetLocalVarInt("THEINT")){
+		case 1:
+			TeleportPlayer("CSS1");
+			StartPlayerLookAt("CSLA1", 10, 10, "");
+			PlayMusic("trial_8_event_happerford.ogg", false, 1, 0, 5, true);
+			MovePlayerHeadPos(0, 0, 2, 0.05, 2);
+		break;
+		case 2:
+			for(int i=3;i<7;i++) AddEffectVoice("M8_S3_P1_0"+i, "", "Voices", "0803010"+i, false, "", 0, 0);
+		break;
+		case 3:
+			for(int i=7;i<9;i++) AddEffectVoice("M8_S3_P1_0"+i, "", "Voices", "0803010"+i, false, "", 0, 0);
+		break;
+		case 4:
+			AddEffectVoice("M8_S3_P1_09", "", "Voices", "08030109", false, "", 0, 0);
+		break;
+		case 5:
+			AddEffectVoice("M8_S3_P1_10", "", "Voices", "08030110", false, "", 0, 0);
+		break;
+		case 6:
+			AddEffectVoice("M8_S3_P1_11", "", "Voices", "08030111", false, "", 0, 0);
+		break;
+		case 7:
+			AddEffectVoice("M8_S3_P1_12", "", "Voices", "08030112", false, "", 0, 0);
+		break;
+		case 8:
+			for(int i=13;i<15;i++) AddEffectVoice("M8_S3_P1_"+i, "", "Voices", "080301"+i, false, "", 0, 0);
+		break;
+		case 9:
+			AddEffectVoice("M8_S3_P1_15", "", "Voices", "08030115", false, "", 0, 0);
+		break;
+		case 10:
+			AddEffectVoice("M8_S3_P1_16", "", "Voices", "08030116", false, "", 0, 0);
+		break;
+		case 11:
+			AddEffectVoice("M8_S3_P1_17", "", "Voices", "08030117", false, "", 0, 0);
+		break;
+		case 12:
+			AddEffectVoice("M8_S3_P1_18", "", "Voices", "08030118", false, "", 0, 0);
+		break;
+		case 13:
+			AddEffectVoice("M8_S3_P1_19", "", "Voices", "08030119", false, "", 0, 0);
+		break;
+		case 14:
+			AddEffectVoice("M8_S3_P1_20", "", "Voices", "08030120", false, "", 0, 0);
+		break;
+		case 15:
+			AddEffectVoice("M8_S3_P1_21", "", "Voices", "08030121", false, "", 0, 0);
+		break;
+		case 16:
+			AddEffectVoice("M8_S3_P1_22", "", "Voices", "08030122", false, "", 0, 0);
+		break;
+		case 17:
+			AddEffectVoice("M8_S3_P1_23", "", "Voices", "08030123", false, "", 0, 0);
+		break;
+		case 18:
+			AddEffectVoice("M8_S3_P1_24", "", "Voices", "08030124", false, "", 0, 0);
+		break;
+		case 19:
+			AddEffectVoice("M8_S3_P1_25", "", "Voices", "08030125", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_26", "", "Voices", "08030126", false, "", 0, 0);
+		break;
+		case 20:
+			AddEffectVoice("M8_S3_P1_27", "", "Voices", "08030127", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_28", "", "Voices", "08030128", false, "", 0, 0);
+		break;
+		case 21:
+			AddEffectVoice("M8_S3_P1_29", "", "Voices", "08030129", false, "", 0, 0);
+		break;
+		case 22:
+			AddEffectVoice("M8_S3_P1_30", "", "Voices", "08030130", false, "", 0, 0);
+		break;
+		case 23:
+			AddEffectVoice("M8_S3_P1_31", "", "Voices", "08030131", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_32", "", "Voices", "08030132", false, "", 0, 0);
+		break;
+		case 24:
+			AddEffectVoice("M8_S3_P1_33", "", "Voices", "08030133", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_34", "", "Voices", "08030134", false, "", 0, 0);
+		break;
+		case 25:
+			AddEffectVoice("M8_S3_P1_35", "", "Voices", "08030135", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_36", "", "Voices", "08030136", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_37", "", "Voices", "08030137", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_37_A", "", "Voices", "08030137A", false, "", 0, 0);
+		break;
+		case 26:
+			AddEffectVoice("M8_S3_P1_38", "", "Voices", "08030138", false, "", 0, 0);
+		break;
+		case 27:
+			AddEffectVoice("M8_S3_P1_39", "", "Voices", "08030139", false, "", 0, 0);
+		break;
+		case 28:
+			AddEffectVoice("M8_S3_P1_40", "", "Voices", "08030140", false, "", 0, 0);
+		break;
+		case 29:
+			AddEffectVoice("M8_S3_P1_41", "", "Voices", "08030141", false, "", 0, 0);
+		break;
+		case 30:
+			AddEffectVoice("M8_S3_P1_42", "", "Voices", "08030142", false, "", 0, 0);
+		break;
+		case 31:
+			AddEffectVoice("M8_S3_P1_43", "", "Voices", "08030143", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_44", "", "Voices", "08030144", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_45", "", "Voices", "08030145", false, "", 0, 0);
+		break;
+		case 32:
+			AddEffectVoice("M8_S3_P1_46", "", "Voices", "08030146", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_46_A", "", "Voices", "08030146A", false, "", 0, 0);
+		break;
+		case 33:
+			AddEffectVoice("M8_S3_P1_47", "", "Voices", "08030147", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_48", "", "Voices", "08030148", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_49", "", "Voices", "08030149", false, "", 0, 0);
+		break;
+		case 34:
+			AddEffectVoice("M8_S3_P1_50", "", "Voices", "08030150", false, "", 0, 0);
+			AddEffectVoice("M8_S3_P1_51", "", "Voices", "08030151", false, "", 0, 0);
+		break;
+		case 35:
+			AddEffectVoice("M8_S3_P1_52", "", "Voices", "08030152", false, "", 0, 0);
+		break;
+	}
+	
+	SetEffectVoiceOverCallback("THECALLBACK");	
+}
+void THECALLBACK(){
+	if(GetLocalVarInt("THEINT")==35){
+		LeaveCutscene();
+		return;
+	}
+	SetSanityDrainDisabled(true);
+	StopPlayerLookAt();
+	RemoveTimer("walk");
+	SetPlayerMoveSpeedMul(1);
+	AddLocalVarInt("THEINT", 1);
+	AddTimer("", 0, "THETIMER");
+	FadeOut(1);
+	AddTimer("", 1, "THEFADE");
+}
+void THEFADE(string &in asTimer){
+	FadeIn(2);
+	switch(GetLocalVarInt("THEINT")){
+		case 2:
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			TeleportPlayer("CSS2");
+			StartPlayerLookAt("CSLA2", 10, 1, "");
+			MovePlayerHeadPos(0, 0, 4, 0.35, 6);
+		break;
+		case 3:
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			SetPlayerCrouching(true);
+			TeleportPlayer("CSS3");
+			StartPlayerLookAt("CSS2_LA1", 1, 1, "");
+			AddTimer("CSS2-1", 6.5, "AfterEffects");
+		break;
+		case 4:
+			SetPlayerCrouching(false);
+			TeleportPlayer("CSS4");
+			
+			StartPlayerLookAt("CSLA4", 10, 1, "");
+			
+			//MovePlayerHeadPos(0, 2, 10, 0.5, 9);
+	SetPlayerMoveSpeedMul(0.25f);
+			AddTimer("walk", 0.0f, "moveforward");
+		break;
+		case 5:
+
+			RemoveTimer("walk");
+
+			MovePlayerHeadPos(0, 0, 0, 10, 0);
+			TeleportPlayer("CSS5");
+			AddTimer("CSS3-1", 2, "AfterEffects");
+			AddTimer("CSS3-2", 8, "AfterEffects");
+			//AddTimer("CSS3-3", 8, "AfterEffects");
+		break;
+		case 6:
+			TeleportPlayer("CSS14");
+			AddTimer("CSS4-2", 0.25, "AfterEffects");
+			AddTimer("CSS4-1", 6, "AfterEffects");
+		break;
+		case 7:
+			TeleportPlayer("CSS7");
+			//SetPlayerMoveSpeedMul(0.15f);
+			//AddTimer("walk", 0.0f, "moveforward");
+		break;
+		case 8:
+			TeleportPlayer("CSS8");
+			StartPlayerLookAt("CSLA8", 1, 1, "");
+			
+			MovePlayerHeadPos(0, -0.4f, 1.4, 0.05, 0.1f);
+		break;
+		case 9:
+			
+			MovePlayerHeadPos(0, 0, 0, 5, 0.1f);
+			TeleportPlayer("CSS9");
+			SetPlayerMoveSpeedMul(0.15f);
+			AddTimer("walk", 0.0f, "moveforward");
+		break;
+		case 10:
+			TeleportPlayer("CSS10");
+			AddTimer("Apple", 8, "AfterEffects");
+			SetPlayerMoveSpeedMul(0.25f);
+			AddTimer("walk", 0.0f, "moveforward");
+		break;
+		case 11:
+			SetEntityActive("SpookyScarySkeleton", false);
+			TeleportPlayer("CSS11");
+			AddTimer("Banana", 7, "AfterEffects");
+			SetPlayerMoveSpeedMul(0.25f);
+			AddTimer("walk", 0.0f, "moveforward");
+		break;
+		case 12:
+			SetEntityActive("SplishSplash", false);
+			TeleportPlayer("CSS12");
+			//MovePlayerHeadPos(1, -0.6, -0.5, 1, 0.1f);
+			StartPlayerLookAt("CSLA12-1", 10, 10, "");
+			AddTimer("CSS12-1", 2, "AfterEffects");
+			AddTimer("CSS12-2", 4, "AfterEffects");
+			//AddTimer("CSS12-3", 6, "AfterEffects");
+		break;
+		case 13:
+			TeleportPlayer("CSS14");
+			AddTimer("CSS4-1", 1, "AfterEffects");
+		break;
+		case 14:
+			SetPlayerCrouching(true);
+			TeleportPlayer("CSS13");
+		break;
+		case 15:
+			SetPlayerCrouching(false);
+			TeleportPlayer("CSS15");
+			AddTimer("CSS5-2", 1, "AfterEffects");
+			AddTimer("CSS5-1", 5, "AfterEffects");
+			AddTimer("CSS5-2", 10, "AfterEffects");
+		break;
+		case 16:
+			StartPlayerLookAt("CSLA509", 10, 1, "");
+			TeleportPlayer("CSS509");
+			MovePlayerHeadPos(0, 1, 2, 0.05, 0.1f);
+		break;
+		case 17:
+			TeleportPlayer("CSS14");
+			AddTimer("CSS4-2", 1, "AfterEffects");
+		break;
+		case 18:
+			TeleportPlayer("CSS15");
+			AddTimer("CSS5-2", 1, "AfterEffects");
+			AddTimer("CSS5-3", 2, "AfterEffects");
+		break;
+		case 19:
+			TeleportPlayer("CSS7");
+			MovePlayerHeadPos(0, 0, 2, 0.05, 0.1f);
+		break;
+		case 20:
+			TeleportPlayer("CSS4");
+			SetPlayerMoveSpeedMul(0.25f);
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			AddTimer("CSS6-1", 5, "AfterEffects");
+			AddTimer("walk", 7, "moveforward");
+		break;
+		case 21:
+			TeleportPlayer("CSS4");
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			SetPlayerMoveSpeedMul(0.4f);
+			AddTimer("walk", 1.0f, "moveforward");
+		break;
+		case 22:
+			TeleportPlayer("CSS16");
+			AddTimer("CSS7-1", 2, "AfterEffects");
+			AddTimer("CSS7-2", 6, "AfterEffects");
+		break;
+		case 23:
+			TeleportPlayer("CSS17");
+			BeginTrials(); //Wakeup Sequence - Test Chamber
+		break;
+		case 24:
+			RemoveTimer("BeginTrialTimer");
+			TeleportPlayer("CSS18");
+			SetPlayerMoveSpeedMul(0.25f);
+			AddTimer("walk", 0.0f, "moveforward");
+			AddTimer("CSS8-1", 1.25, "AfterEffects");
+			AddTimer("CSS8-2", 3.75, "AfterEffects");
+		break;
+		case 25:
+			//Fusing Mind - F28
+			TeleportPlayer("CSS19");
+			MovePlayerHeadPos(-2, 0, 0, 0.05, 0.1f);
+			AddTimer("Cherry", 8, "AfterEffects"); //Fusing Mind - Happerford
+		break;
+		case 26:
+			SetPlayerCrouching(false);
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			SetPlayerMoveSpeedMul(0.1f);
+			AddTimer("walk", 0.0f, "moveforward");
+			SetLightVisible("POLICE_1", true);
+			SetLightVisible("POLICE_2", true);
+			TeleportPlayer("CSS21");
+		break;
+		case 27:
+			SetLightVisible("POLICE_1", false);
+			SetLightVisible("POLICE_2", false);
+			TeleportPlayer("CSS16");
+		break;
+		case 28:
+			TeleportPlayer("CSS22");
+			MovePlayerHeadPos(0, 0, 2, 0.15, 6);
+		break;
+		case 29:
+			TeleportPlayer("CSS23");
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			StartPlayerLookAt("CSLA23", 1, 1, "");
+			MovePlayerHeadPos(0, 0, 2, 0.15, 6);
+		break;
+		case 30:
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			TeleportPlayer("CSS24");
+			MovePlayerHeadPos(0, 0, 2, 0.15, 6);
+			StartPlayerLookAt("ScriptArea_3", 10, 1, "");
+		break;
+		case 31:
+			StopPlayerLookAt();
+			TeleportPlayer("CSS25");
+			MovePlayerHeadPos(0, 0, 0, 10, 3);
+			SetPlayerMoveSpeedMul(0.1f);
+			AddTimer("walk", 0.0f, "moveforward");
+			SetPlayerSanity(100);
+			AddTimer("CSSnowalk", 12, "AfterEffects");
+		break;
+		case 32:
+			SetEntityActive("PDoor1", false);
+			SetEntityActive("PDoor2", true);
+			TeleportPlayer("CSS26");
+			AddTimer("CSS9-1", 6, "AfterEffects");
+		break;
+		case 33:
+			TeleportPlayer("CSS27");
+			SetPlayerSanity(100);
+			for(int i=58;i<=68;i++) FadeLightTo("PointLight_"+i, 0,0,0,0,-1,0);
+			for(int i=0;i<=8;i++) SetLampLit("Light_"+i, false, false);
+			SetPlayerMoveSpeedMul(0.2f);
+			AddTimer("walk", 0.0f, "moveforward");
+		break;
+		case 34:
+			TeleportPlayer("CSS28");
+		break;
+		case 35:
+			TeleportPlayer("CSS29");
+			ShowPlayerCrossHairIcons(true);
+		break;
+	}
+}
+void AfterEffects(string &in asTimer){
+	if(asTimer=="CSSnowalk"){
+		RemoveTimer("walk");
+	}
+	
+	if(asTimer=="CSS2-1"){
+		StartPlayerLookAt("CSLA3", 0.4f, 0.4f, "");
+	}
+	
+	if(asTimer=="CSS3-1"){
+		StartPlayerLookAt("CSS3_LA1", 0.25f, 0.5f, "");
+	}
+	if(asTimer=="CSS3-2"){
+		MovePlayerHeadPos(0, 0, 0, .6, 0);
+		StartPlayerLookAt("CSS3_LA2", 0.25f, 0.5f, "");
+	}
+	if(asTimer=="CSS3-3"){
+		StartPlayerLookAt("CSS3_LA2", 0.5f, 0.5f, "");
+	}
+	
+	if(asTimer=="CSS4-1"){
+		StartPlayerLookAt("CSS4_LA1", 0.5f, 0.5f, "");
+	}
+	if(asTimer=="CSS4-2"){
+		StartPlayerLookAt("CSS4_LA2", 0.5f, 0.5f, "");
+	}
+	
+	if(asTimer=="CSS5-1"){
+		StartPlayerLookAt("CSS5_LA1", 0.3f, 0.3f, "");
+	}
+	if(asTimer=="CSS5-2"){
+		StartPlayerLookAt("CSS5_LA2", 0.3f, 0.3f, "");
+	}
+	if(asTimer=="CSS5-3"){
+		StartPlayerLookAt("CSS5_LA3", 0.3f, 0.3f, "");
+	}
+	
+	if(asTimer=="CSS6-1"){
+		StartPlayerLookAt("CSS6_LA1", 0.75f, 0.75f, "");
+	}
+	
+	if(asTimer=="CSS7-1"){
+		StartPlayerLookAt("CSS7_LA1", 0.5f, 0.5f, "");
+	}
+	if(asTimer=="CSS7-2"){
+		StartPlayerLookAt("CSS7_LA2", 0.35f, 0.35f, "");
+	}
+	
+	if(asTimer=="CSS8-1"){
+		StartPlayerLookAt("CSS8_LA1", 0.5f, 0.5f, "");
+	}
+	if(asTimer=="CSS8-2"){
+		StartPlayerLookAt("CSS8_LA2", 0.5f, 0.5f, "");
+	}
+	
+	if(asTimer=="CSS9-1"){
+		StartPlayerLookAt("CSS9_LA1", 0.25f, 0.25f, "");
+	}
+	if(asTimer=="CSS12-1"){
+		//MovePlayerHeadPos(0, -0.3, 0, 1, 0);
+		StartPlayerLookAt("CSLA12-2", 0.25f, 0.25f, "");
+	}
+	if(asTimer=="CSS12-2"){
+		StartPlayerLookAt("CSLA12-3", 0.25f, 0.25f, "");
+	}
+
+	if(asTimer=="Apple"){
+		SetEntityActive("SpookyScarySkeleton", true);
+		SetEnemyDisableTriggers("SpookyScarySkeleton", true);
+		
+		RemoveTimer("walk");
+	}
+	if(asTimer=="Banana"){
+		SetEntityActive("SplishSplash", true);
+		ShowEnemyPlayerPosition("SplishSplash");
+		
+		RemoveTimer("walk");
+	}
+	if(asTimer=="Cherry"){
+		StartEffectFlash(1,1,1);
+		AddTimer("Donut", 1, "AfterEffects");
+	}
+	if(asTimer=="Donut"){
+		MovePlayerHeadPos(-2, 0, 0, 0.05, 0.1f);
+		SetPlayerCrouching(true);
+		TeleportPlayer("CSS20");
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////
+// COPY PASTE TRIAL 1 WAKE UP SCENE
+void BeginTrials(){
+	SetLocalVarInt("TheTrialsVar", 0);
+	FadeOut(0);
+	MovePlayerHeadPos(1, -0.6, -0.5, 1, 0.1f);
+	StartPlayerLookAt("TestArea_LA_1", 10, 100, "");
+	AddTimer("", 4.0f, "BeginTrialTimer");
+}
+void BeginTrialTimer(string &in asTimer){ //Player wakes up
+	AddLocalVarInt("TheTrialsVar", 1);	//What step to play in the event
+	float fEventSpeed = 4.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("TheTrialsVar")){
+		case 1:
+			FadeIn(3.0f);
+		break;
+		case 2:
+			fEventSpeed = 2.0f;
+		break;
+		case 3:
+			MovePlayerHeadPos(1, -0.1, -0.1, 0.4, 0.1f);
+			StartPlayerLookAt("TestArea_LA_3", 1.0, 1.0, "");
+		break;
+		case 4:
+			MovePlayerHeadPos(0, -0.1, 0, 0.4, 0.1f);
+			StartPlayerLookAt("TestArea_LA_2", 0.8, 0.8, "");
+		break;
+		case 5:
+			StartPlayerLookAt("TestArea_LA_4", 1.0, 1.0, "");
+			fEventSpeed = 18.0f;
+		break;
+		case 6:
+			//StartPlayerLookAt("TestArea_LA_2", 1.0, 1.0, "");
+		break;
+	}
+	if(GetLocalVarInt("TheTrialsVar") < 7)  AddTimer("", fEventSpeed, "BeginTrialTimer");	
+}
+// END COPYPASTA
+//////////////////////////////////////////////////////////////////////////////
+
+void LeaveCutscene(){
+	FadeOut(1);
+	AddTimer("", 4, "BackAtStatic");
+}
+
+void BackAtStatic(string &in asTimer){
+	SetPlayerActive(true);
+	TeleportPlayer("Statyk");
+	AddTimer("", 0.5, "EndDialogue"); 
+}
+void EndDialogue(string &in asTimer){
+	FadeIn(2);
+	for(int i=1;i<10;i++) AddEffectVoice("M8_S4_P1_0"+i, "", "Voices", "0804010"+i, false, "", 0, 0);
+	for(int i=10;i<19;i++) AddEffectVoice("M8_S4_P1_"+i, "", "Voices", "080401"+i, false, "", 0, 0);
+	SetEffectVoiceOverCallback("EndEndDialogue");
+}
+void EndEndDialogue(){
+	FadeOut(3);
+	StarTrekDoors("FD_2", -1);
+	AddTimer("", 4.0f, "EndLevel"); 
+}
+
+void EndLevel(string &in asTimer){
+	ChangeMap("Sub_Trial_9", "Trial9_TestRoom", "", "");
+}
+
+
+
+void OnEnter(){
+	AutoSave();
+}
+void OnLeave(){
+	StopMusic(0,0);
+}

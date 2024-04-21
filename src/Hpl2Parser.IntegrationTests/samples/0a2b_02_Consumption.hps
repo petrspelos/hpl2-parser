@@ -1,0 +1,1039 @@
+void OnStart()
+{
+ 	//GiveItemFromFile("lantern", "lantern.ent");
+	//FadeOut(0);
+	//AddTimer("", 0.01, "SnapChain4");
+	//GiveItemFromFile("chisel_item_1", "chisel_item.ent");
+	
+	PreloadSound("tunnel_cry.snt");
+	PreloadSound("roar_distant.snt");
+	PreloadSound("afx_spooky_metal_creak_s.snt");
+	PreloadSound("afx_spooky_footsteps_above_wooden_nocreak.snt");
+	PreloadSound("afx_spooky_eerie_monster_type2_s.snt");
+ 
+ 
+/*SetPlayerLookSpeedMul(0.5); // TRAILER STUFF
+SetPlayerMoveSpeedMul(0.5);
+SetPlayerRunSpeedMul(0.5);
+ShowPlayerCrossHairIcons(false); */
+ 
+	for(int i=1;i<=6;i++)
+        {
+		SetPropStaticPhysics("bad_"+i, true);
+		}
+ 
+	SetGlobalVarInt("Capturing", 0);
+	SetGlobalVarInt("ValvePrio", 1);
+	SetGlobalVarInt("ChaseEnabled",1);
+	
+	SetLocalVarInt("DoorBarredSeen",0);
+
+	ConnectEntities("", "valve_iron_rusty_1", "valve_iron_rusty_2", false, 0, "");
+	
+	//SetEntityActive("TunnelGrunt",true);
+ 
+	AddEnemyPatrolNode("PrisonGrunt", "stumbler_path_1", 0.0, "");
+	AddEnemyPatrolNode("PrisonGrunt", "stumbler_path_2", 0.0, "");
+	AddEnemyPatrolNode("PrisonGrunt", "stumbler_path_3", 6.0, "");
+	AddEnemyPatrolNode("PrisonGrunt", "stumbler_path_4", 0.0, "");
+	AddEnemyPatrolNode("PrisonGrunt", "stumbler_path_5", 0.0, "");
+	AddEnemyPatrolNode("PrisonGrunt", "stumbler_path_6", 6.0, "");
+	
+	for(int i=1;i<=24;i++)
+        {
+        AddEnemyPatrolNode("openwander", "SecondNode_"+i, 0.0, "");
+        }
+	
+	
+						//AddEntityCollideCallback("Player", "TrapArea", "TrapFall", true, 1);
+ 
+// Collide Callbacks
+
+	AddEntityCollideCallback("Player", "MusicTrigger1", "Music1", true, 1);
+	AddEntityCollideCallback("Player", "PushHatchArea", "PushHatch", true, 1);
+	AddEntityCollideCallback("Player", "MusicTrigger2", "Music2", true, 1);
+	AddEntityCollideCallback("Player", "ShrineMusicArea", "Music3", false, 0);
+	AddEntityCollideCallback("Player", "DownMusicArea", "Music4", false, 0);
+	AddEntityCollideCallback("Player", "DownMusicArea", "Sound1", false, 0);
+	AddEntityCollideCallback("Player", "StumblerTrigger", "Alive", true, 1);
+	AddEntityCollideCallback("Player", "StepSoundTrigger_1", "StepSound", true, 1);
+	AddEntityCollideCallback("Player", "FollowTrigger", "Follow", true, 1);
+	AddEntityCollideCallback("Player", "SplinterTrigger", "Splinter", true, 0);
+	AddEntityCollideCallback("Player", "CosmicTeleportTrigger", "FallScene", false, 0);
+	AddEntityCollideCallback("prisoner_cage_2", "CageHitArea", "CageHit", true, 0);
+	
+	AddEntityCollideCallback("Player", "Scare1Trigger", "AmbScares", true, 1);
+	AddEntityCollideCallback("Player", "Scare2Trigger", "AmbScares", false, 1);
+	
+	//AddEntityCollideCallback("Player", "TrapArea_1", "CaptureProxy", true, 1);
+	AddEntityCollideCallback("Player", "SandTrigger", "Sand", true, 1);
+	AddEntityCollideCallback("Player", "CrashTrigger", "Crash", true, 1);
+	AddEntityCollideCallback("Player", "ScuffleStopTrigger", "StopScuffle", true, 1);
+	
+	AddEntityCollideCallback("TunnelGrunt", "SuitorMoreNodesTrigger", "SuitorMoreNodes", false, 1);
+	AddEntityCollideCallback("TunnelGrunt", "prison_section_plain_1", "GruntBreakDoor", false, 1);
+	AddEntityCollideCallback("prisonguy", "DoorOpenTrigger", "DoorOpen", true, 1);
+	AddEntityCollideCallback("openwander", "NoChaseArea", "ChaseSwitch", false, 0);
+	AddEntityCollideCallback("Player", "SafeArea", "NoSanityDrain", false, 0);
+	
+	AddEntityCollideCallback("Player", "GruntFollowTrigger", "GruntFollow", true, 1);
+	
+	AddEntityCollideCallback("Player", "PrisonFX1Trigger", "PrisonFX1", true, 1);
+	AddEntityCollideCallback("Player", "PrisonFX2Trigger", "PrisonFX2", true, 1);
+	
+	AddEntityCollideCallback("Player", "MaskDisappearTrigger", "MaskDisappear", true, 1);
+	
+	
+// Interact Callbacks
+
+	SetEntityPlayerInteractCallback("Examine_barrels", "RemoveExamine", false);
+	SetEntityPlayerInteractCallback("metal_1", "DoorBarredMessage", true);
+	SetEntityPlayerInteractCallback("key_padlock", "EnableCapture", false);
+	//SetEntityPlayerInteractCallback("chest_small_1", "ChestQuest", false);
+	SetEntityPlayerInteractCallback("examine_bridge", "RemoveExamine", false);
+	SetEntityPlayerInteractCallback("SnakeExamine", "RemoveExamine", false);
+	SetEntityPlayerInteractCallback("CageTop", "RemoveExamine", false);
+	SetEntityPlayerInteractCallback("valve_iron_rusty_1", "ValveSwitch", false);
+	//SetEntityPlayerInteractCallback("valve_iron_rusty_2", "ValveSwitch", false);
+	//SetEntityPlayerInteractCallback("drawplatform", "RemoveExamine", false);
+	//SetEntityPlayerInteractCallback("ExamineHex", "RemoveExamine", false);
+	InteractConnectPropWithMoveObject("", "valve_iron_rusty_1", "safety_large_vert_1", false, false, 1);
+	//InteractConnectPropWithMoveObject("", "valve_iron_rusty_2", "safety_large_vert_1", false, false, 1);
+	SetEntityPlayerInteractCallback("prison_section_plain_1", "Goal", true);
+	//SetEntityPlayerInteractCallback("padlock_acid_1", "Goal", true);
+	SetEntityPlayerInteractCallback("item_emotion_stone", "Success", false);
+	
+ // Use Item
+ 
+ 	AddUseItemCallback("", "chisel_item_1", "ExamineHex", "UsedChiselOnHexPre", false);
+ 	AddUseItemCallback("", "chisel_item_1", "ExamineHexRestored", "UsedChiselOnHexPre", false);
+ 	AddUseItemCallback("", "chisel_item_1", "ExamineHexBroken", "UsedChiselAlreadyBroken", false);
+ 	
+ 	AddUseItemCallback("", "chalkstick_1", "ExamineHexRestored", "UsedChalkAlreadyFixed", false);
+ 	AddUseItemCallback("", "chalkstick_1", "ExamineHexBroken", "UsedChalkOnHexPre", false);
+	
+	
+ 	AddUseItemCallback("", "chisel_item_1", "DrawPlatformRestored", "UsedChiselOnHex2Pre", false);
+ 	AddUseItemCallback("", "chisel_item_1", "DrawPlatformBroken", "UsedChiselAlreadyBroken", false);
+ 	
+ 	AddUseItemCallback("", "chalkstick_1", "DrawPlatformRestored", "UsedChalkAlreadyFixed", false);
+ 	AddUseItemCallback("", "chalkstick_1", "DrawPlatformBroken", "UsedChalkOnHex2Pre", false);
+	AddUseItemCallback("", "chalkstick_1", "DrawPlatform", "UsedChalkOnHex2Pre", false);
+ 	
+	AddUseItemCallback("", "key_padlock", "prison_section_plain_1", "OpenCellDoor", true);
+	AddUseItemCallback("", "key_padlock", "padlock_acid_1", "OpenCellDoor", true);
+	
+	AddUseItemCallback("", "finalekey", "finaledoor", "OpenFinaleDoor", true);
+	
+	AddUseItemCallback("", "chisel_item_1", "BreakContact", "SnapChain", false);
+	AddUseItemCallback("", "chisel_item_1", "CageTop", "SnapChain", false);
+	AddUseItemCallback("", "chisel_item_1", "prisoner_cage_1", "FalseCantDo", false);
+	
+ 	SetLocalVarInt("SanityGained", 0);
+	
+	PlaySoundAtEntity("Silence", "kb_cons_s.snt", "Player", 1.0, true);
+	
+	// Sounds
+
+	PlaySoundAtEntity("", "amb_desert_small.snt", "SoundSource_1", 3, true);
+	//PlaySoundAtEntity("swoop", "ambience_swoop_myst_small.snt", "SoundSource_2", 3, true);
+	PlaySoundAtEntity("", "amb_desert_small.snt", "SoundSource_3", 3, true);
+	PlaySoundAtEntity("", "amb_desert_small.snt", "SoundSource_6", 3, true);
+	PlaySoundAtEntity("Hex", "hex_drone.snt", "HexSounds", 1, true);
+	PlaySoundAtEntity("ShrineNote", "bill_rustle.snt", "drawing_shrine_1", 1, true);
+	//PlaySoundAtEntity("", "amb_cons_drone.snt", "SoundSource_4", 3, true);
+}
+
+void OnEnter()
+{
+	PlayMusic("Blank.ogg", true, 1, 3, 0, true);
+	SetMapDisplayNameEntry("Consumption");
+	AutoSave();
+	
+	if(GetGlobalVarInt("lantern_picked") == 1)
+	{
+		SetEntityActive("lantern_3", false);
+	}
+	
+	//SetInDarknessEffectsActive(false);
+	//SetSanityDrainDisabled(true);
+}
+
+void DrawingPick(string &in asItem, int iDiaryIdx)
+{
+    SetMessage("Message", "CopyDrawing", 3);
+    GiveHint("maphint", "Hints", "HintDrawing", -1);
+} 
+
+// Collide Functions
+
+void AmbScares(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asChild, false);
+	if (asChild == "Scare1Trigger")
+	{
+		PlaySoundAtEntity("", "roar_distant", "CrySource", 0, false);
+		AddEntityCollideCallback("Player", "PrisonFX1Trigger", "PrisonFX1", true, 1);
+		AddEntityCollideCallback("Player", "PrisonFX2Trigger", "PrisonFX2", true, 1);
+		AddEntityCollideCallback("Player", "PrisonGruntTrigger", "PrisonGrunt", true, 1);
+	}
+	if (asChild == "Scare2Trigger")
+	{
+		PlaySoundAtEntity("", "tunnel_cry", "RoarSource", 0, false);
+	}
+}
+
+void PrisonGrunt(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("PrisonGrunt",true);
+}
+
+
+void TrapFall(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=6;i++)
+        {
+		SetPropStaticPhysics("bad_"+i, false);
+		}
+	PlaySoundAtEntity("", "06_break_wood", "bad_6", 0, false);
+	PlaySoundAtEntity("", "break_wood", "bad_2", 0, false);
+	SetPlayerActive(false);
+	SetEntityActive("openwander",false);
+	StartPlayerLookAt("LookDown", 2, 2, "");
+	for(int i=1;i<=7;i++)
+        {
+		CreateParticleSystemAtEntity("", "ps_door_damage_wood.ps", "breaks_"+i, false);
+		}
+		
+	AddTimer("", 1.0f, "CaptureTeleport");
+}
+
+void ChaseSwitch(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == -1)
+	{
+		SetGlobalVarInt("ChaseEnabled",1);
+	}
+	else if (alState == 1)
+	{
+		SetGlobalVarInt("ChaseEnabled",0);
+	}
+}
+
+void NoteNoise(string &in Item, int DiaryIdX)
+{
+	StopSound("ShrineNote", 1);
+	ReturnOpenJournal(true);
+}
+
+void PushHatch(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("finalehatch", 1);
+	SetEntityActive("TunnelGrunt",false);
+}
+
+void Music0(string &in asName, int alCount)
+{
+	PlayMusic("Blank.ogg", true, 1, 3, 0, true);
+}
+
+void Music1(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("event_telescope.ogg", false, 2.25, 0, 0, false);
+	CheckPoint ("", "Conscheck1", "Music0", "", "");
+}
+
+void Music2(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("plague.ogg", false, 1.95, 2, 0, false);
+}
+
+void Music3(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1) PlayMusic("mp_inside.ogg", true, 0.4, 11, 1, true);
+	else if (alState == -1) StopMusic(11,1);
+	
+}
+
+void Music4(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1)
+	{
+		PlayMusic("mt_omnipresence_pt1.ogg", true, 0.12, 16, 1, true);
+		
+		AddTimer("Prison Amb Scares", RandInt(30,60), "PrisonAmbScares");
+	}
+	else if (alState == -1)
+	{
+		StopMusic(11,1);
+		RemoveTimer("Prison Amb Scares");
+	}
+}
+
+void PrisonAmbScares(string &in asTimer)
+{
+	PlaySoundAtEntity("", "afx_spooky_eerie_monster_type2_s.snt", "Player", 0, false);
+	AddTimer("Prison Amb Scares", RandInt(30,60), "PrisonAmbScares");
+}
+
+void PrisonFX1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_spooky_footsteps_above_wooden_nocreak.snt", "PrisonFX1Source", 0, false);
+}
+
+void PrisonFX2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_spooky_metal_creak_s.snt", "PrisonFX2Source", 0, false);
+}
+
+void NoSanityDrain(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1) SetSanityDrainDisabled(true);
+	else if (alState == -1) SetSanityDrainDisabled(false);
+	
+}
+
+void Sound1(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1) StopSound("swoop", 5);
+	else if (alState == -1) PlaySoundAtEntity("swoop", "ambience_swoop_myst_small.snt", "SoundSource_2", 3, true);
+	
+}
+
+void Kill(string &in asParent, string &in asChild, int alState)
+{
+	//SetEntityActive("prisonguy",false);
+	SetEntityActive("TunnelGrunt",true);
+	for(int i=1;i<=9;i++)
+        {
+			AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_"+i, 0.0, "");
+		}
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_9", 2.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_10", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_11", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_12", 3.0, "");
+}
+
+void SuitorMoreNodes(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=9;i++)
+        {
+			AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_"+i, 0.0, "");
+		}
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_9", 2.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_10", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_11", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_12", 3.0, "");
+}
+
+void GruntBreakDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("prison_section_plain_1",false);
+	SetEntityActive("prison_section_plain_2",true);
+	
+	PlaySoundAtEntity("", "break_wood_metal.snt", "BreakDoorFX", 0, true);
+	CreateParticleSystemAtEntity("", "ps_break_wood.ps", "BreakDoorFX", true);
+}
+
+void GruntFollow(string &in asParent, string &in asChild, int alState)
+{
+	ClearEnemyPatrolNodes("TunnelGrunt");
+	TeleportEnemyToNode("TunnelGrunt", "SuitorNode_22", true);
+	Grunt2Nodes();
+	
+	AddEntityCollideCallback("Player", "DestroyGrunt2Trigger", "DestroyGrunt2", true, 1);
+}
+
+void DestroyGrunt2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("TunnelGrunt",false);
+}
+
+void Grunt2Nodes()
+{
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_30", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_25", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_32", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_27", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_26", 0.0, "");
+	AddEnemyPatrolNode("TunnelGrunt", "SuitorNode_28", 0.0, "");
+}
+
+void Sand(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "15_sand_debris.snt", "SandTrigger", 0.6, true);
+}
+
+void Chase(string &in asParent, string &in asChild, int alState)
+{
+	if (GetGlobalVarInt("ChaseEnabled") == 1)
+	{
+		ShowEnemyPlayerPosition("openwander");
+	}
+}
+
+void Crash(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "03_rock_move.snt", "CrashSource", 0, true);
+}
+
+void StopScuffle(string &in asParent, string &in asChild, int alState)
+{
+	StopSound("ShrineNote",0.5f);
+}
+
+void Summon(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("openwander",true);
+	
+	AddTimer("", 2.6, "TimerMonsterMusic");
+	//PlaySoundAtEntity("", "fp_monster_skinny_enable.snt", "Player", 0, false);
+}
+
+void TimerMonsterMusic(string &in asTimer)
+{
+	//PlayMusic("servant_sim_theme.ogg",true,1,2,1,true);
+}
+
+void Alive(string &in asParent, string &in asChild, int alState)
+{
+	//SetEntityActive("stumbler_1",true);
+}
+
+void Splinter(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1, "TimerHitSound");
+	PlaySoundAtEntity("", "ptest/enemy/suitor/amb_hunt.snt", "SplinterArea", 0, false);
+}
+
+void TimerHitSound(string &in asTimer)
+{
+	PlaySoundAtEntity("", "hit_wood.snt", "SplinterArea", 0, false);
+	CreateParticleSystemAtEntity("", "ps_door_damage_wood.ps", "SplinterArea", false);
+	CreateParticleSystemAtEntity("", "ps_dust_impact.ps", "SplinterArea", false);
+}
+
+void StepSound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "24_huia.snt", "SoundSource_5", 3, true);
+}
+
+/*void Follow(string &in asParent, string &in asChild, int alState)
+{
+	if (GetLanternActive() == false)
+	{
+	CreateParticleSystemAtEntity("FollowText", "ps_cell_follow.ps", "FollowPos", false);
+	AddTimer("", 2.5, "TimerKillParticle");
+	}
+}
+*/
+void TimerKillParticle(string &in asTimer)
+{
+	DestroyParticleSystem("FollowText");
+}
+
+void Capture(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_capture_2",true);
+	//AddTimer("", 7, "CaptureTeleport");
+	PlayMusic("00_event_hallway.ogg",false,1,1,2,false);
+	AddTimer("", 1.5, "Chasers");
+	StartPlayerLookAt("MonsterLookAt_1", 4, 7, "");
+	//AddEntityCollideCallback("Player", "HostileTrigger_1", "GetDead", true, 1);
+	//AddEntityCollideCallback("Player", "HostileTrigger_2", "GetDead", true, 1);
+}
+
+void GetDead(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("runner",true);
+	SetEntityActive("openwander",false);
+	ShowEnemyPlayerPosition("runner");
+	AddTimer("", 3.35, "CaptureTeleport");
+	StartScreenShake(0.02,1,0.5,0.5);
+	SetPlayerMoveSpeedMul(0.2);
+	SetPlayerRunSpeedMul(0.2);
+	StopMusic(3,0);
+	PlayMusic("10_event_coming.ogg",false,1,0.5,111,false);
+}
+
+void Chasers(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void CaptureProxy(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 0.01, "CaptureTeleport");
+}
+
+void CaptureTeleport(string &in asTimer)
+{
+	SetEntityActive("servant_capture_2",false);
+	FadeOut(0);
+	StopMusic(0,1);
+	StopMusic(3,1);
+	StopMusic(111,1);
+	FadePlayerFOVMulTo(0.6, 1);
+	TeleportPlayer("Captured");
+	SetPlayerCrouching(true);
+	AddTimer("", 4, "Captured2");
+	SetPlayerHealth(100);
+	StopPlayerLookAt();
+	SetSanityDrainDisabled(true);
+	SetPlayerRunSpeedMul(0.4);
+	SetPlayerMoveSpeedMul(0.4);
+	SetPlayerLookSpeedMul(0.4);
+	SetEntityActive("runner",false);
+	SetPlayerActive(true);
+	AddEntityCollideCallback("Player", "KillTrigger", "Kill", true, 1);
+}
+
+void Captured2(string &in asTimer)
+{
+	TeleportPlayer("cagestart");
+	StartPlayerLookAt("CageStartLookAt", 1, 1, "");
+	AddTimer("", 3, "Captured3");
+	SetLanternActive(false, false);
+}
+
+void Captured3(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1, 0.3);
+	FadeIn(4);
+	AddTimer("", 3, "Captured4");
+}
+
+void Captured4(string &in asTimer)
+{
+	FadeOut(1.3);
+	AddTimer("", 3.5, "Captured5");
+}
+
+void Captured5(string &in asTimer)
+{
+	FadeIn(1);
+	SetSanityDrainDisabled(false);
+	SetPlayerCrouching(false);
+	StopPlayerLookAt();
+	SetPlayerRunSpeedMul(1);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	AddTimer("", 1.0, "TimerAutosave");
+	AddTimer("", 2.0, "TimerCageExamine");
+	
+	SetPropActiveAndFade("chalk_hex_1", false, 1.2);
+	SetPropActiveAndFade("chalk_hex_2", true, 1.4);
+}
+
+void FallScene(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(0.25);
+	AddTimer("", 0.25, "CosmicTeleport");
+	SetSanityDrainDisabled(true);
+	AddTimer("", 0.25, "FloatUpward");
+}
+
+void TimerCageExamine(string &in asTimer)
+{
+	SetEntityActive("CageTop",true);
+}
+
+void CosmicTeleport(string &in asTimer)
+{
+	//AddPlayerBodyForce(0, 2500, 0, false);
+	SetPlayerActive(false);
+	SetPlayerHealth(100);
+	TeleportPlayer("FallScene");
+	SetPlayerCrouching(false);
+	FadeIn(2);
+	StopMusic(1, 1);
+	PlayGuiSound("fall_swell.ogg",1.0);
+	AddTimer("", 4.89, "SceneDonePre");
+}
+
+void FloatUpward(string &in asTimer)
+{
+	AddPlayerBodyForce(213, 0, 0, false);
+	AddTimer("Float", 0.01, "FloatUpward");
+}
+
+void SceneDonePre(string &in asTimer)
+{
+	FadeOut(0);
+	AddTimer("", 1, "SceneDone");
+}
+
+void SceneDone(string &in asTimer)
+{
+	TeleportPlayer("PostFallStart");
+	FadeIn(0.25);
+	RemoveTimer("Float");
+	SetPlayerActive(true);
+	SetSanityDrainDisabled(false);
+}
+
+// Interact Functions
+
+void EnableCapture(string &in asEntity)
+{
+	//AddEntityCollideCallback("Player", "CaptureTrigger", "Capture", true, 0);
+	AddEntityCollideCallback("Player", "WanderTrigger", "Summon", true, 0);
+	AddEntityCollideCallback("Player", "runnerTrigger", "GetDead", true, 0);
+	CheckPoint ("", "cagestart", "CaptureProxy", "", "");
+	AddEntityCollideCallback("Player", "TrapArea", "TrapFall", true, 1);
+	AddEntityCollideCallback("Player", "ChaseTrigger", "Chase", true, 1);
+	SetEntityPlayerLookAtCallback("openwander", "LookSanityDrain", true);
+}
+
+void DoorBarredMessage(string &in asEntity)
+{
+	if (GetLocalVarInt("DoorBarredSeen") == 0)
+	{
+		SetMessage("Message","05doorbarred",0);
+		SetLocalVarInt("DoorBarredSeen",1);
+	}
+}
+
+void LookSanityDrain(string &in asEntity, int alState)
+{
+	GiveSanityDamage(10, true);
+}
+
+void Success(string &in asEntity)
+{
+AddGlobalVarInt("relics_found", 1);
+CompleteQuest("02_ConsCellOpen", "02_ConsCellOpen");
+AddPlayerSanity(5);
+//PlayMusic("success.ogg", false, 1, 0.1f, 10, false);
+AutoSave();
+}
+
+void ValveSwitch(string &in asEntity)
+{
+	if ((asEntity == "valve_iron_rusty_1") && (GetGlobalVarInt("ValvePrio") == 2))
+	{
+		InteractConnectPropWithMoveObject("", "valve_iron_rusty_1", "safety_large_vert_1", false, false, 1);
+		SetGlobalVarInt("ValvePrio",1);
+	}
+	else if ((asEntity == "valve_iron_rusty_2") && (GetGlobalVarInt("ValvePrio") == 1))
+	{
+		InteractConnectPropWithMoveObject("", "valve_iron_rusty_2", "safety_large_vert_1", false, false, 1);
+		SetGlobalVarInt("ValvePrio",2);
+	}
+}
+
+void RemoveExamine(string &in asEntity)
+{
+	SetEntityActive(asEntity,false);
+	if (asEntity == "examine_bridge")
+		{
+			AddQuest("02_ConsBridge","02_ConsBridge");
+			SetMessage("Message","05bridge_out",0);
+		}
+	else if (asEntity == "SnakeExamine")
+		{
+			AddDiary("Snake", "diary_snake"); 
+			SetMessage("Message", "CopyDrawing", 3);
+			GiveHint("maphint", "Hints", "HintDrawing", -1);
+			PlayGuiSound("ui_drawing_copy.ogg", 1);
+			
+			SetGlobalVarInt("SnakeDrawing",1);
+		}
+		
+}
+
+void Goal(string &in asEntity)
+{
+	//SeMessage("Message", "06powercell",0);
+	AddTimer("", 1.4, "GoalText");
+}
+
+void GoalText(string &in asEntity)
+{
+	AddQuest("02_ConsCellOpen", "02_ConsCellOpen");
+}
+
+void ChestQuest(string &in asEntity)
+{
+	AddQuest("Storage_Chest", "conschest");
+}
+
+ // Use Item
+ 
+ 
+  void FalseCantDo(string &in asItem, string &in asEntity)
+{
+	SetMessage("Message","06cagechisel",0);
+}
+ 
+  void SnapChain(string &in asItem, string &in asEntity)
+{
+	CreateParticleSystemAtEntity("", "ps_cog_stone.ps", "BreakContact", false);
+	PlaySoundAtEntity("", "impact_metal_low", "BreakContact", 0, false);
+	AddTimer("", 1.4, "SnapChain2");
+	StartPlayerLookAt("BreakContact", 6, 6, "");
+	
+	SetPropActiveAndFade("illusory_cave_wall_3", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_3", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_1", false,5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_1", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_2", true, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_2", true, 5);
+	SetPropActiveAndFade("illusory_cave_wall_4", true,5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_4", true, 5);
+	
+	//SetEntityActive("chalk_hex_1",false);
+	SetEntityActive("chalk_hex_2",false);
+	//SetEntityActive("ExamineHex",false);
+	SetEntityActive("ExamineHexBroken",false);
+	//SetEntityActive("ExamineHexRestored",false);
+	//SetEntityActive("HexSounds",false);
+	StopSound("Hex",1);
+	//RemoveItem("chisel_item_1");
+	//RemoveItem("chalkstick_1");
+}
+
+  void SnapChain2(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_cog_stone.ps", "BreakContact", false);
+	PlaySoundAtEntity("", "impact_metal_med", "BreakContact", 0, false);
+	StartScreenShake(0.02, 0.8, 0.4, 0.4);
+	AddTimer("", 1.6, "SnapChain3");
+}
+
+ void SnapChain3(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_cog_stone.ps", "BreakContact", false);
+	PlaySoundAtEntity("", "17_break_wheel", "BreakContact", 0, false);
+	AddTimer("", 1.9, "SnapChain4");
+	StartScreenShake(0.02, 0.8, 0.4, 0.4);
+}
+
+ void SnapChain4(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_cog_stone.ps", "BreakContact", false);
+	PlaySoundAtEntity("", "17_break_wheel", "BreakContact", 0, false);
+	StartScreenShake(0.02, 0.8, 0.4, 0.4);
+	SetEntityActive("prisoner_cage_1",false);
+	SetEntityActive("prisoner_cage_2",true);
+	FadeOut(1.5);
+	AddTimer("", 1.9, "OnTheGroundPre");
+	StopPlayerLookAt();
+	SetPlayerCrouching(true);
+	//FadePlayerRollTo(-70, 10, 10);
+}
+ 
+  void OnTheGroundPre(string &in asTimer)
+{
+	FadePlayerRollTo(0, 4, 6);
+	TeleportPlayer("GroundWake");
+	SetEntityActive("prisoner_cage_2",false);
+	SetEntityActive("prisoner_cage_4",true);
+	StartPlayerLookAt("CageRope1End", 1, 1, "StopLook");
+	//FadePlayerRollTo(-30, 2, 6);
+	SetPlayerCrouching(true);
+	AddTimer("", 2, "OnTheGround");
+	AddTimer("", 3, "OnTheGround2");
+	SetPlayerMoveSpeedMul(0.3);
+	SetPlayerRunSpeedMul(0.3);
+	FadeIn(3);
+}
+ 
+  void OnTheGround2(string &in asTimer)
+{
+	FadeOut(1.4);
+	AddTimer("", 2, "OnTheGround3");
+}
+ 
+  void OnTheGround3(string &in asTimer)
+{
+	FadeIn(1);
+	//FadePlayerRollTo(0, 3, 9);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	//SetPlayerCrouching(false);
+}
+ 
+  void OnTheGround(string &in asTimer)
+{
+	StopPlayerLookAt();
+	//SetPlayerCrouching(false);
+	//SetMoveObjectState("safety_large_vert_2", 1);
+	//SetEntityActive("prisonguy",true);
+	AddTimer("", 1.0, "prisongo");
+}
+
+ void prisongo(string &in asTimer)
+{
+	AddEnemyPatrolNode("prisonguy", "guynode_1", 3.0, "");
+	AddEnemyPatrolNode("prisonguy", "guynode_2", 0.0, "");
+	AddEnemyPatrolNode("prisonguy", "guynode_3", 0.0, "");
+	AddEnemyPatrolNode("prisonguy", "guynode_4", 0.0, "");
+	AddEnemyPatrolNode("prisonguy", "guynode_5", 3.0, "");
+}
+
+void OpenDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("prison_1", 1);
+	AddBodyForce("prison_1", -7000, 0, 0, "World");
+}
+
+void CageHit(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "15_body_impact", "prisoner_cage_4", 0, false);
+}
+ 
+ void OpenCellDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("prison_section_plain_1", false, true);
+	RemoveItem("key_padlock");
+	PlaySoundAtEntity("","07_pick_lock.snt", "prison_section_plain_1", 0, false);
+	SetEntityActive("padlock_acid_1",false);
+	SetEntityActive("padlock_broken_1",true);
+	AddTimer("", 1.4, "PadlockDE");
+}
+
+void PadlockDE(string &in asTimer)
+{
+	SetPropActiveAndFade("padlock_broken_1", false, 0.9);
+}
+
+ void OpenFinaleDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("finaledoor", false, true);
+	RemoveItem("finalekey");
+	PlaySoundAtEntity("","07_pick_lock.snt", "finaledoor", 0, false);
+}
+ 
+ void UsedChiselOnHexPre(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("ExamineHex", false);
+	SetEntityActive("ExamineHexRestored", false);
+	SetEntityActive("ExamineFake", false);
+	SetEntityActive("ExamineFakeWall", false);
+	AddTimer("", 1.4, "UsedChiselOnHex");
+	PlaySoundAtEntity("", "chipping.ogg", "HexSounds", 0.1, false);
+	SetPropActiveAndFade("chalk_hex_1", false, 1.4);
+	SetPropActiveAndFade("chalk_hex_2", true, 0.4);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+}
+
+void UsedChiselOnHex(string &in asTimer)
+{
+	if (GetLocalVarInt("SanityGained") == 0)
+		{
+		AddPlayerSanity(5);
+		SetLocalVarInt("SanityGained", 1);
+		}
+	AddTimer("", 2, "Walls");
+	CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "HexSounds", false);
+	StopSound("Hex", 0.8);
+}
+
+ void UsedChiselOnHex2Pre(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("DrawPlatformRestored", false);
+	AddTimer("", 1.4, "UsedChiselOnHex2");
+	PlaySoundAtEntity("", "chipping.ogg", "DrawSounds", 0.1, false);
+	SetPropActiveAndFade("chalk_hex_4", false, 1.4);
+	SetPropActiveAndFade("chalk_hex_3", true, 0.4);
+	SetPlayerMoveSpeedMul(0.5);
+	SetPlayerRunSpeedMul(0.5);
+	SetPlayerLookSpeedMul(0.5);
+}
+
+void UsedChiselOnHex2(string &in asTimer)
+{
+	AddTimer("", 2, "BridgeDisappear");
+	CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "DrawSounds", false);
+	StopSound("Hex2", 0.8);
+}
+
+
+void Walls(string &in asTimer)
+{
+	AddTimer("", 0.5, "WallsOut");
+	PlayMusic("12_Cmd_Ambient Draft 1.ogg", true, 0.45, 3, 0, true);
+	FadeSepiaColorTo(10.0, 0.5);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPropActiveAndFade("illusory_cave_wall_3", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_3", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_1", false,5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_1", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_2", true, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_2", true,5);
+	SetPropActiveAndFade("illusory_cave_wall_4", true, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_4", true,5);
+	PlaySoundAtEntity("", "illusion_fade.snt", "illusory_cave_wall_2", 1, true);
+	PlaySoundAtEntity("", "illusion_fade.snt", "illusory_cave_wall_4", 1, true);
+}
+
+void WallsOut(string &in asTimer)
+{
+	FadeSepiaColorTo(0.0, 0.5);
+	SetEntityActive("ExamineHexBroken", true);
+	AutoSave();
+}
+
+void BridgeOut(string &in asTimer)
+{
+	FadeSepiaColorTo(0.0, 0.5);
+	SetEntityActive("DrawPlatformBroken", true);
+}
+
+void UsedChalkOnHexPre(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("ExamineHexRestored", true);
+	SetEntityActive("ExamineHexBroken", false);
+	AddTimer("", 1.4, "UsedChalkOnHex");
+	PlayGuiSound("chalk_writing.ogg", 1.0);
+	SetPropActiveAndFade("chalk_hex_1", true, 1.2);
+	SetPropActiveAndFade("chalk_hex_2", false, 1.4);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+}
+
+void UsedChalkOnHex(string &in asTimer)
+{
+	AddTimer("", 2, "Sllaw");
+	CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "HexSounds", false);
+	PlaySoundAtEntity("Hex", "hex_drone_restored.snt", "HexSounds", 1, true);
+}
+
+void UsedChalkOnHex2Pre(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("DrawPlatformRestored", true);
+	SetEntityActive("DrawPlatformBroken", false);
+	SetEntityActive("DrawPlatform", false);
+	SetEntityActive("examine_bridge", false);
+	AddTimer("", 1.4, "UsedChalkOnHex2");
+	PlayGuiSound("chalk_writing.ogg", 1.0);
+	SetPropActiveAndFade("chalk_hex_4", true, 1.2);
+	SetPropActiveAndFade("chalk_hex_3", false, 1.4);
+	SetPlayerMoveSpeedMul(0.5);
+	SetPlayerRunSpeedMul(0.5);
+	SetPlayerLookSpeedMul(0.5);
+	//StopMusic(3, 1);
+}
+
+void UsedChalkOnHex2(string &in asTimer)
+{
+	AddTimer("", 2, "BridgeAppear");
+	SetEntityActive("DoorBarBlock", false);
+	PlayMusic("cons_bridge_summoning.ogg", false, 1.0, 5, 2, false);
+	StartScreenShake(0.03, 6, 4, 2);
+	CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "DrawSounds", false);
+	PlaySoundAtEntity("Hex2", "hex_drone_restored.snt", "DrawSounds", 1, true);
+	
+	AddTimer("", 9.0, "TimerAutosave");
+}
+
+void BridgeAppear(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPropActiveAndFade("monolith01_1", true, 5);
+	SetPropActiveAndFade("monolith01_2", true, 5);
+	SetEntityActive("block_box_69",true);
+	SetEntityActive("block_box_70",true);
+	SetEntityActive("DoorBarBlock", false);
+	CompleteQuest("02_ConsBridge","02_ConsBridge");
+	AddTimer("", 3, "BridgeEffects");
+	AddTimer("", 0.5, "BridgeIn");
+	AutoSave();
+	
+	SetLocalVarInt("DoorBarredSeen",1);
+}
+
+void BridgeDisappear(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPropActiveAndFade("monolith01_1", false, 5);
+	SetPropActiveAndFade("monolith01_2", false, 5);
+	SetEntityActive("block_box_69",false);
+	SetEntityActive("block_box_70",false);
+	//AddTimer("", 3, "BridgeEffects");
+	AddTimer("", 0.5, "BridgeOut");
+	SetPropStaticPhysics("door_barricade_1", false);
+}
+
+void BridgeEffects(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "BridgeEffects1", false);
+	CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "BridgeEffects2", false);
+	PlayGuiSound("rift_shear.ogg",1.0);
+}
+
+void Sllaw(string &in asTimer)
+{
+	AddTimer("", 0.5, "WallsIn");
+	StopMusic(5, 0);
+	FadeSepiaColorTo(1.0, 0.5);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPropActiveAndFade("illusory_cave_wall_3", true, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_3", true, 5);
+	SetPropActiveAndFade("illusory_cave_wall_1", true,5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_1", true, 5);
+	SetPropActiveAndFade("illusory_cave_wall_2", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_2", false,5);
+	SetPropActiveAndFade("illusory_cave_wall_4", false, 5);
+	SetPropActiveAndFade("illusory_cave_wall_extension_4", false,5);
+	PlaySoundAtEntity("", "illusion_fade.snt", "illusory_cave_wall_3", 1, true);
+	PlaySoundAtEntity("", "illusion_fade.snt", "illusory_cave_wall_1", 1, true);
+}
+
+void WallsIn(string &in asTimer)
+{
+	FadeSepiaColorTo(0.0, 0.5);
+	SetEntityActive("ExamineHexRestored", true);
+}
+
+void BridgeIn(string &in asTimer)
+{
+	SetEntityActive("DrawPlatformRestored", true);
+}
+
+void UsedChalkAlreadyFixed(string &in asItem, string &in asEntity)
+{
+	SetMessage("Message","06hexredfixed",0);
+}
+
+void UsedChiselAlreadyBroken(string &in asItem, string &in asEntity)
+{
+	SetMessage("Message","06hexredbroken",0);
+}
+
+void MaskDisappear(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1, "TimerMask1");
+}
+
+void TimerMask1(string &in asTimer)
+{
+	SetPropActiveAndFade("nurse_mask_3", false, 0.5f);
+}
+
+void TimerAutosave(string &in asTimer)
+{
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(1,1);
+	StopSound("Silence",3.0);
+	
+	if (((GetGlobalVarInt("InsectDrawing")) == 1) && ((GetGlobalVarInt("HeadDrawing")) == 0) && ((GetGlobalVarInt("SnakeDrawing")) == 0)) {SetupLoadScreen("", "", 0, "100.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 0) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 0)) {SetupLoadScreen("", "", 0, "010.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 0) && ((GetGlobalVarInt("HeadDrawing")) == 0) && ((GetGlobalVarInt("SnakeDrawing")) == 1)) {SetupLoadScreen("", "", 0, "001.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 1) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 0)) {SetupLoadScreen("", "", 0, "110.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 0) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 1)) {SetupLoadScreen("", "", 0, "011.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 1) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 1)) {SetupLoadScreen("", "", 0, "111.tga");}
+}

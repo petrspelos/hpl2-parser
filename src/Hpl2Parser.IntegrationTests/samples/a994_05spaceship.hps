@@ -1,0 +1,776 @@
+
+     void OnStart()
+    {
+	
+	if(ScriptDebugOn())
+    {
+	GiveItemFromFile("gran_orbe1", "orbecompleto.ent");
+	GiveItemFromFile("gran_orbe2", "orbecompleto.ent");
+	GiveItemFromFile("orbe1", "orbpiece_emerald.ent");
+		GiveItemFromFile("orbe2", "orbpiece_emerald.ent");
+			GiveItemFromFile("orbe3", "orbpiece_emerald.ent");
+				GiveItemFromFile("orbe4", "orbpiece_emerald.ent");
+					GiveItemFromFile("orbe5", "orbpiece_emerald.ent");
+						GiveItemFromFile("orbe6", "orbpiece_emerald.ent");
+    }
+	
+	SetEnemySanityDecreaseActive("terran", false);
+	SetEnemySanityDecreaseActive("daniel", false);
+	SetEnemySanityDecreaseActive("terran_f", false);
+	SetEnemySanityDecreaseActive("daniel_f", false);
+	SetSanityDrainDisabled(true);
+		
+		AddEntityCollideCallback("Player", "checkpoint_central", "checkpoint_central", false, 1);
+		AddEntityCollideCallback("Player", "inicio_terran", "habizq", false, 1);
+		
+		AddEntityCollideCallback("Player", "Luluvoz_1", "Luluvoz_1", true, 1);
+		AddEntityCollideCallback("Player", "Luluvoz_2", "Luluvoz_2", true, 1);
+		AddEntityCollideCallback("Player", "Luluvoz_4", "Luluvoz_4", true, 1);
+		AddEntityCollideCallback("Player", "Luluvoz_9", "Luluvoz_9", true, 1);
+	
+	for(int e = 1; e<9; e++){  
+		AddEntityCollideCallback("Player", "enfrentamiento_"+e, "enfrentamiento_"+e, false, 1);
+		}
+		 
+
+
+	
+	SetEntityPlayerInteractCallback("gran_orbe1", "gran_orbe1", false);
+	SetEntityPlayerInteractCallback("gran_orbe2", "gran_orbe2", false);
+	SetEntityPlayerInteractCallback("revelacion_14", "Luluvoz_nave_3", true);
+	SetEntityPlayerInteractCallback("revelacion_15", "Luluvoz_nave_4", true);
+			
+	SetLocalVarInt("recuento_orbe", 0);
+	SetLocalVarInt("orbes_salir", 0);
+	SetLocalVarInt("traba", 0);
+	
+	SetLightVisible("orbe_luz1", false);
+	
+	for(int o = 1; o<7; o++){  
+		SetEntityPlayerInteractCallback("orbe"+o, "orbe"+o, false);
+		AddUseItemCallback("","orbe"+o, "pedestal_orbe", "armado_orbe", true);
+		AddEntityCollideCallback("terran", "terran_dentro_"+o, "terran_dentro"+o, false, 1);
+		AddEntityCollideCallback("terran", "terran_fuera_"+o, "terran_fuera"+o, false, 1);
+		SetEntityActive("terran_dentro_"+o, true);
+		SetEntityActive("terran_fuera_"+o, false);
+		SetLocalVarInt("terran_activado"+o, 0);
+		}
+	
+	PlayMusic("05_somethingwrong.ogg", true, 1.0f, 1.0f, 0, true);
+	
+	AddUseItemCallback("","gran_orbe1", "orb_pedestal_1", "desbloquear_puerta1", true);
+	AddUseItemCallback("","gran_orbe2", "orb_pedestal_2", "desbloquear_puerta2", true);
+	
+	CheckPoint("check1", "PlayerStartArea_1", "recargo", "Muertes", "muerteterran");
+	
+	}
+
+
+
+     //===========================================
+		//Cuando se muere
+     //===========================================
+	 
+	void recargo(string &in asName, int alCount)
+	{
+		SetEnemySanityDecreaseActive("terran", false);
+		SetEnemySanityDecreaseActive("daniel", false);
+		SetEnemySanityDecreaseActive("terran_f", false);
+		SetEnemySanityDecreaseActive("daniel_f", false);
+		SetSanityDrainDisabled(true);
+		SetEntityActive("enfrentamiento_1", true);
+		SetEntityActive("enfrentamiento_2", true);
+		SetEntityActive("enfrentamiento_3", true);
+		AddTimer("", 1.5f, "Luluvoz_nave_5");
+	}
+	
+	
+	
+     //===========================================
+		//Checkpoint
+     //===========================================	
+	
+	void checkpoint_central(string &in asParent, string &in asChild, int alState)
+	{
+		if(GetLocalVarInt("orbes_salir")==1){
+			SetEntityActive("terran", false);
+			AddTimer("", 1.0f, "Luluvoz_10");
+			CheckPoint ("central", "PlayerStartArea_1", "recargo", "Muertes", "muertedaniel");
+		}
+		if(GetLocalVarInt("orbes_salir")==2){
+			AddTimer("", 1.0f, "Luluvoz_5");
+			SetEntityActive("daniel", false);
+			CheckPoint ("central", "PlayerStartArea_1", "recargo", "Muertes", "muerteambos");
+		}
+		
+	}
+
+
+
+     //===========================================
+		//Contra el terrant
+     //===========================================
+	 
+	void habizq(string &in asParent, string &in asChild, int alState)
+	{
+	AddTimer("", 0.1f, "terran_comienza");
+	}
+	
+	void terran_comienza(string &in asTimer){
+	SetEntityActive("terran", true);
+	SetEntityActive("daniel", false);
+	AddEnemyPatrolNode("terran", "r10", 6.0f, "");
+	AddTimer("", 10.0f, "terran_patrullando");
+	}
+	
+	void terran_patrullando(string &in asTimer){
+	ClearEnemyPatrolNodes("terran");
+	for(int t = 1; t <15; t++){  
+		AddEnemyPatrolNode("terran", "r"+RandInt(1,12), RandInt(3,6), "");
+     }
+	}
+	 
+
+	 
+	 
+	void orbe1(string &in asEntity)
+	{
+
+	
+	PlaySoundAtEntity("orbe1", "power_down.snt", "Player", 0, false);	
+	StartScreenShake(0.01f, 2.0f, 2.0f, 2.0f);
+	for(int i = 1; i <7; i++){  
+        FadeLightTo("entrada1_"+i, 0, 0, 0, 0, 0, 4.0f);
+     }
+	 if(GetLocalVarInt("terran_activado1")==0)
+	 {
+		ClearEnemyPatrolNodes("terran");
+		SetEntityActive("terran", false);
+		SetEntityActive("terran", true);	
+		TeleportEnemyToNode("terran", "path1", false);
+		AddEnemyPatrolNode("terran", "PathNodeArea_34", 3.0f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_91", 1.0f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_93", 0.001f, "");
+		AddEnemyPatrolNode("terran", "path1", 2.0f, "");
+		AddTimer("", 20.0f, "terran_patrullando");
+	
+	}
+	}
+	void terran_dentro1(string &in asParent, string &in asChild, int alState)
+	{ 
+			AddLocalVarInt("terran_activado1", 1);
+			SetEntityActive("terran_fuera_1", true);
+			SetEntityActive("terran_dentro_1", false);
+	}
+	void terran_fuera1(string &in asParent, string &in asChild, int alState)
+	{
+			AddLocalVarInt("terran_activado1", -1);
+			SetEntityActive("terran_dentro_1", true);
+			SetEntityActive("terran_fuera_1", false);
+	}
+	
+	
+	
+	
+
+	void orbe2(string &in asEntity)
+	{
+	AddTimer("", 2.0f, "Luluvoz_nave_2");
+	PlaySoundAtEntity("orbe2", "power_down.snt", "Player", 0, false);
+	StartScreenShake(0.015f, 2.0f, 2.0f, 2.0f);	
+	for(int i = 1; i <7; i++){  
+        FadeLightTo("entrada2_"+i, 0, 0, 0, 0, 0, 4.0f);
+     }
+	 if(GetLocalVarInt("terran_activado2")==0)
+	 {
+		ClearEnemyPatrolNodes("terran");
+		SetEntityActive("terran", false);
+		SetEntityActive("terran", true);	
+		TeleportEnemyToNode("terran", "path2", false);
+		AddEnemyPatrolNode("terran", "PathNodeArea_95", 1.0f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_96", 0.001f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_104", 0.001f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_110", 0.001f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_99", 0.001f, "");
+		AddEnemyPatrolNode("terran", "path2", 2.0f, "");
+		AddTimer("", 20.0f, "terran_patrullando");
+	}
+	}
+	void terran_dentro2(string &in asParent, string &in asChild, int alState)
+	{ 
+			AddLocalVarInt("terran_activado2", 1);
+			SetEntityActive("terran_fuera_2", true);
+			SetEntityActive("terran_dentro_2", false);
+	}
+	void terran_fuera2(string &in asParent, string &in asChild, int alState)
+	{
+			AddLocalVarInt("terran_activado2", -1);
+			SetEntityActive("terran_dentro_2", true);
+			SetEntityActive("terran_fuera_2", false);
+	}
+
+
+
+
+
+	void orbe3(string &in asEntity)
+	{
+	PlaySoundAtEntity("orbe3", "power_down.snt", "Player", 0, false);
+	StartScreenShake(0.015f, 2.0f, 2.0f, 2.0f);	
+	for(int i = 1; i <7; i++){  
+        FadeLightTo("entrada3_"+i, 0, 0, 0, 0, 0, 4.0f);
+     }
+	 
+	if(GetLocalVarInt("terran_activado3")==0)
+	 {
+		ClearEnemyPatrolNodes("terran");
+		SetEntityActive("terran", false);
+		SetEntityActive("terran", true);	
+		TeleportEnemyToNode("terran", "path3", false);
+		AddEnemyPatrolNode("terran", "PathNodeArea_147", 5.0f, "");
+		AddEnemyPatrolNode("terran", "path3", 3.0f, "");
+		AddTimer("", 20.0f, "terran_patrullando");
+		AddTimer("", 2.0f, "Luluvoz_orbe03");
+}
+
+}
+	void terran_dentro3(string &in asParent, string &in asChild, int alState)
+	{ 
+			AddLocalVarInt("terran_activado3", 1);
+			SetEntityActive("terran_fuera_3", true);
+			SetEntityActive("terran_dentro_3", false);
+	}
+	void terran_fuera3(string &in asParent, string &in asChild, int alState)
+	{
+			AddLocalVarInt("terran_activado3", -1);
+			SetEntityActive("terran_dentro_3", true);
+			SetEntityActive("terran_fuera_3", false);
+	}
+
+
+
+
+
+	void orbe4(string &in asEntity)
+{
+	PlaySoundAtEntity("orbe4", "power_down.snt", "Player", 0, false);
+	StartScreenShake(0.015f, 2.0f, 2.0f, 2.0f);	
+	for(int i = 1; i <7; i++){  
+        FadeLightTo("entrada4_"+i, 0, 0, 0, 0, 0, 4.0f);
+     }
+	 if(GetLocalVarInt("terran_activado4")==0)
+	 {
+		ClearEnemyPatrolNodes("terran");
+		SetEntityActive("terran", false);
+		SetEntityActive("terran", true);	
+		TeleportEnemyToNode("terran", "PathNodeArea_28", false);
+		AddEnemyPatrolNode("terran", "PathNodeArea_129", 8.0f, "");
+		AddEnemyPatrolNode("terran", "path4", 4.0f, "");
+		AddTimer("", 20.0f, "terran_patrullando");
+		AddTimer("", 2.0f, "Luluvoz_orbe04");
+	}
+
+	
+}
+	void terran_dentro4(string &in asParent, string &in asChild, int alState)
+	{ 
+			AddLocalVarInt("terran_activado4", 1);
+			SetEntityActive("terran_fuera_4", true);
+			SetEntityActive("terran_dentro_4", false);
+	}
+	void terran_fuera4(string &in asParent, string &in asChild, int alState)
+	{
+			AddLocalVarInt("terran_activado4", -1);
+			SetEntityActive("terran_dentro_4", true);
+			SetEntityActive("terran_fuera_4", false);
+	}
+	
+	
+	
+
+	void orbe5(string &in asEntity)
+{
+	PlaySoundAtEntity("orbe5", "power_down.snt", "Player", 0, false);
+	StartScreenShake(0.015f, 2.0f, 2.0f, 2.0f);	
+	for(int i = 1; i <7; i++){  
+        FadeLightTo("entrada5_"+i, 0, 0, 0, 0, 0, 4.0f);
+     }
+	if(GetLocalVarInt("terran_activado5")==0)
+	 {
+		ClearEnemyPatrolNodes("terran");
+		SetEntityActive("terran", false);
+		SetEntityActive("terran", true);	
+		TeleportEnemyToNode("terran", "path5", false);
+		AddEnemyPatrolNode("terran", "PathNodeArea_79", 5.0f, "");
+		AddEnemyPatrolNode("terran", "path5", 4.0f, "");
+		AddTimer("", 40.0f, "terran_patrullando");
+		AddTimer("", 2.0f, "Luluvoz_orbe05");
+	}
+}
+	void terran_dentro5(string &in asParent, string &in asChild, int alState)
+	{ 
+			AddLocalVarInt("terran_activado5", 1);
+			SetEntityActive("terran_fuera_5", true);
+			SetEntityActive("terran_dentro_5", false);
+	}
+	void terran_fuera5(string &in asParent, string &in asChild, int alState)
+	{
+			AddLocalVarInt("terran_activado5", -1);
+			SetEntityActive("terran_dentro_5", true);
+			SetEntityActive("terran_fuera_5", false);
+	}
+	
+	
+	
+
+
+	void orbe6(string &in asEntity)
+{	
+	PlaySoundAtEntity("orbe6", "power_down.snt", "Player", 0, false);
+	StartScreenShake(0.015f, 2.0f, 2.0f, 2.0f);	
+	for(int i = 1; i <7; i++){  
+        FadeLightTo("entrada6_"+i, 0, 0, 0, 0, 0, 4.0f);
+     }
+	 
+	 if(GetLocalVarInt("terran_activado6")==0)
+	 {
+		ClearEnemyPatrolNodes("terran");
+		SetEntityActive("terran", false);
+		SetEntityActive("terran", true);	
+		TeleportEnemyToNode("terran", "path6", false);
+		AddEnemyPatrolNode("terran", "PathNodeArea_64", 2.0f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_58", 5.0f, "");
+		AddEnemyPatrolNode("terran", "PathNodeArea_64", 15.0f, "");
+		AddEnemyPatrolNode("terran", "path6", 4.0f, "");
+		AddTimer("", 60.0f, "terran_patrullando");
+	}	
+}
+	void terran_dentro6(string &in asParent, string &in asChild, int alState)
+	{ 
+			AddLocalVarInt("terran_activado6", 1);
+			SetEntityActive("terran_fuera_6", true);
+			SetEntityActive("terran_dentro_6", false);
+	}
+	void terran_fuera6(string &in asParent, string &in asChild, int alState)
+	{
+			AddLocalVarInt("terran_activado6", -1);
+			SetEntityActive("terran_dentro_6", true);
+			SetEntityActive("terran_fuera_6", false);
+	}
+
+ 
+ 
+ 
+ 
+     //===========================================
+		//Armando el orbe
+     //===========================================
+	 
+	 void armado_orbe(string &in asItem, string &in asEntity)
+	 {
+	 PlaySoundAtEntity("pedestal_orbe", "22_orb_forge.snt", "Player", 0, false);
+	 RemoveItem(asItem);
+	 AddLocalVarInt("recuento_orbe", 1);
+	 orbe_completo();
+	}
+	
+	void orbe_completo()
+	{
+		if(GetLocalVarInt("recuento_orbe") == 6)
+		{		
+			SetEntityActive("gran_orbe1", true);
+			
+			for(int i = 1; i <5; i++){  
+				SetLightVisible("orbe_luz"+i, true);
+			}
+		}	
+	}
+	
+	void gran_orbe1(string &in asEntity)
+	{
+		PlaySoundAtEntity("gran_orbe1", "power_down.snt", "Player", 0, false);
+		StartScreenShake(0.02f, 2.0f, 2.0f, 2.0f);
+		
+		CheckPoint ("orbeazul", "PlayerStartArea_3", "Happening3", "Muertes", "muerteterran2");
+
+		for(int i = 1; i <51; i++){  
+				FadeLightTo("Azul_"+i, 0, 0, 0, 0, 0, 4.0f);
+			}		
+		
+		for(int i = 1; i <5; i++){
+				FadeLightTo("orbe_luz"+i, 0, 0, 0, 0, 0, 4.0f);
+			}
+			
+		ClearEnemyPatrolNodes("terran");
+		SetEntityActive("terran", false);
+		SetEntityActive("terran", true);	
+		TeleportEnemyToNode("terran", "path7", false);
+		AddEnemyPatrolNode("terran", "PathNodeArea_202", 5.0f, "");
+		AddEnemyPatrolNode("terran", "path7", 4.0f, "");
+		AddTimer("", 30.0f, "terran_patrullando");
+		
+		
+		AddLocalVarInt("orbes_salir", 1);
+		escenafinal();
+		AddTimer("", 3.0f, "Luluvoz_orbecompleto");
+		SetEntityActive("checkpoint_central", true);
+		SetEntityActive("puerta_bloqueo_2", false);
+	}
+	
+	void Happening3(string &in asName, int alCount)
+	{
+	SetEnemySanityDecreaseActive("terran", false);
+	SetEnemySanityDecreaseActive("daniel", false);
+	SetSanityDrainDisabled(true);
+	SetEnemySanityDecreaseActive("terran_f", false);
+	SetEnemySanityDecreaseActive("daniel_f", false);
+	
+	ClearEnemyPatrolNodes("terran");
+	SetEntityActive("terran", false);
+	SetEntityActive("terran", true);	
+	TeleportEnemyToNode("terran", "path7", false);
+	AddEnemyPatrolNode("terran", "PathNodeArea_202", 5.0f, "");
+	AddEnemyPatrolNode("terran", "path7", 4.0f, "");
+	AddTimer("", 30.0f, "terran_patrullando");
+	}
+	
+	
+	
+	
+     //===========================================
+		//Contra el daniel
+     //===========================================
+	
+	void enfrentamiento_1(string &in asParent, string &in asChild, int alState)
+	{
+		ClearEnemyPatrolNodes("daniel");
+		SetEntityActive("terran", false);
+		SetEntityActive("daniel", true);
+		SetEntityActive("enfrentamiento_2", false);
+		AddEnemyPatrolNode("daniel", "PathNodeArea_65", 2.0f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_94", 0.0001f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_31", 5.0f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_41", 0.0001f, "");
+		SetEntityActive("puerta_bloqueo_1", true);
+	}
+	
+	void enfrentamiento_2(string &in asParent, string &in asChild, int alState)
+	{
+		ClearEnemyPatrolNodes("daniel");
+		SetEntityActive("terran", false);
+		SetEntityActive("daniel", true);
+		SetEntityActive("enfrentamiento_1", false);
+		AddEnemyPatrolNode("daniel", "PathNodeArea_94", 2.0f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_65", 0.0001f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_31", 5.0f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_155", 0.0001f, "");
+		SetEntityActive("puerta_bloqueo_1", true);
+	}
+	
+	void enfrentamiento_3(string &in asParent, string &in asChild, int alState)
+	{
+		AddTimer("", 1.0f, "Luluvoz_12");
+		ClearEnemyPatrolNodes("daniel");
+		SetEntityActive("daniel", false);
+		SetEntityActive("daniel", true);	
+		TeleportEnemyToNode("daniel", "PathNodeArea_284", false);
+		AddEnemyPatrolNode("daniel", "PathNodeArea_285", 1.0f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_310", 1.0f, "");
+		SetEntityActive("enfrentamiento_3", false);
+	}
+	
+	void enfrentamiento_4(string &in asParent, string &in asChild, int alState)
+	{
+		AddTimer("", 1.0f, "Luluvoz_11");
+		ClearEnemyPatrolNodes("daniel");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_311", 2.0f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_294", 2.0f, "");
+	}
+	
+	void enfrentamiento_5(string &in asParent, string &in asChild, int alState)
+	{
+		AddTimer("", 1.0f, "Luluvoz_8");
+		ClearEnemyPatrolNodes("daniel");
+		AlertEnemyOfPlayerPresence("daniel");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_323", 2.0f, "");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_311", 2.0f, "");
+	}
+	
+	void enfrentamiento_6(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("enfrentamiento_7", false);
+		SetEntityActive("enfrentamiento_6", false);
+		ClearEnemyPatrolNodes("daniel");
+		SetEntityActive("daniel", false);
+		SetEntityActive("daniel", true);
+		TeleportEnemyToNode("daniel", "PathNodeArea_329", false);		
+	}
+	
+	void enfrentamiento_7(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("enfrentamiento_7", false);
+		SetEntityActive("enfrentamiento_6", false);
+		ClearEnemyPatrolNodes("daniel");
+		SetEntityActive("daniel", false);
+		SetEntityActive("daniel", true);
+		TeleportEnemyToNode("daniel", "PathNodeArea_325", false);		
+	}
+	
+	void enfrentamiento_8(string &in asParent, string &in asChild, int alState)
+	{
+		ClearEnemyPatrolNodes("daniel");
+		AddEnemyPatrolNode("daniel", "PathNodeArea_323", 1.0f, "");	
+		AddEnemyPatrolNode("daniel", "PathNodeArea_290", 1.0f, "");	
+	}
+	
+	
+	
+     //===========================================
+		//Tomando el orbe rojo
+     //===========================================
+	
+	void gran_orbe2(string &in asEntity)
+	{
+	PlaySoundAtEntity("gran_orbe2", "power_down.snt", "Player", 0, false);
+	StartScreenShake(0.02f, 2.0f, 2.0f, 2.0f);	
+	CheckPoint ("orberojo", "PlayerStartArea_4", "Happening4", "Muertes", "muertedaniel2");
+	
+	for(int i = 1; i <44; i++){
+		FadeLightTo("rojo_"+i, 0, 0, 0, 0, 0, 4.0f);
+		}
+
+	for(int e = 1; e<6; e++){  
+		SetEntityActive("enfrentamiento_"+e, false);
+		}
+	for(int e = 6; e<9; e++){  
+		SetEntityActive("enfrentamiento_"+e, true);
+		}
+		
+		AddLocalVarInt("orbes_salir", 1);
+		escenafinal();
+		AddTimer("", 3.0f, "Luluvoz_orbecompleto2");
+		SetEntityActive("checkpoint_central", true);
+	}
+	
+	void Happening4(string &in asName, int alCount)
+	{
+	SetEnemySanityDecreaseActive("terran", false);
+	SetEnemySanityDecreaseActive("daniel", false);
+	SetEnemySanityDecreaseActive("terran_f", false);
+	SetEnemySanityDecreaseActive("daniel_f", false);
+	SetSanityDrainDisabled(true);
+	for(int e = 6; e<9; e++){  
+		SetEntityActive("enfrentamiento_"+e, true);
+		}
+	}
+	
+	
+	
+	
+	
+     //===========================================
+		//Escena final
+     //===========================================
+
+	 void escenafinal(){
+	if(GetLocalVarInt("orbes_salir")==2){
+		
+		for(int i = 1; i <90; i++){
+			FadeLightTo("PointLight_"+i, 0, 0, 0, 0, 0, 4.0f);
+			}
+		}
+		
+	}
+
+	
+	
+	void desbloquear_puerta1(string &in asItem, string &in asEntity)
+	 {
+	 PlaySoundAtEntity("pedestal_orbe", "22_orb_forge.snt", "Player", 0, false);
+	 SetEntityActive("orbepuerta_1", true);
+	 RemoveItem(asItem);
+	 AddLocalVarInt("traba", 1);
+	 salir();
+	}
+	void desbloquear_puerta2(string &in asItem, string &in asEntity)
+	 {
+	 PlaySoundAtEntity("pedestal_orbe", "22_orb_forge.snt", "Player", 0, false);
+	 SetEntityActive("orbepuerta_2", true);
+	 RemoveItem(asItem);
+	 AddLocalVarInt("traba", 1);
+	 salir();
+	}
+	
+	void salir(){
+	if(GetLocalVarInt("traba")==2){
+	CompleteQuest("quest_nave_1", "orbes");
+	SetLevelDoorLocked("gray_station_door_final", false);
+		
+		SetPlayerActive(false);
+		StartPlayerLookAt("revelado", 6.0f, 3.0f, "");
+		FadePlayerFOVMulTo(0.6f, 2.0f);
+		SetEntityActive("terran_f", true);
+		SetEntityActive("daniel_f", true);
+		AddTimer("", 2.0f, "salvavidas");
+		ShowEnemyPlayerPosition("terran_f");
+		ShowEnemyPlayerPosition("daniel_f");
+		SetEntityActive("puerta_bloqueo_2", true);
+	}
+	}
+	
+	void salvavidas(string &in asTimer){
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	FadePlayerFOVMulTo(1.0f, 3.0f);
+	}
+	
+	
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+     {
+	SetEnemySanityDecreaseActive("terran", false);
+	SetEnemySanityDecreaseActive("daniel", false);
+	SetEnemySanityDecreaseActive("terran_f", false);
+	SetEnemySanityDecreaseActive("daniel_f", false);
+	SetSanityDrainDisabled(true);
+	AutoSave();
+	ClearSavedMaps();
+	SetPlayerHealth(100.0f);
+     }
+ 
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+		SetEntityActive("terran_f", false);
+		SetEntityActive("daniel_f", false);
+		SetupLoadScreen("Loading", "cargando4", 0, "04seguir.jpg");
+     }
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 //===========================================
+		//Luluvoces
+     //===========================================
+	 
+	 
+	void Luluvoz_1(string &in asParent, string &in asChild, int alState)
+	{ 
+		AddEffectVoice("Puf.ogg", "", "Avisos", "LVL3_Lulu_01", false, "" ,0.0f ,0.0f );
+	}
+	
+	
+	
+	
+	void Luluvoz_2(string &in asParent, string &in asChild, int alState)
+	{ 
+		AddEffectVoice("Cansada.ogg", "", "Avisos", "LVL3_Lulu_02", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "LVL3_Lulu_02", false, "" ,0.0f ,0.0f );
+		AddTimer("", 5.0f, "Lulu_puertaabierta");
+		AddTimer("", 6.0f, "Lulu_lotengo");
+		SetEntityActive("puerta_bloqueo_1", false);
+		AddQuest("quest_nave_1", "orbes");
+	}
+	void Lulu_puertaabierta(string &in asTimer)
+	{ 
+		PlaySoundAtEntity("", "abrir_puerta.snt", "Player", 0, false);
+	}
+	void Lulu_lotengo(string &in asTimer)
+	{ 
+		AddEffectVoice("Lo_tengo.ogg", "", "Avisos", "Luluvoz_nave_1", false, "" ,0.0f ,0.0f );
+	}
+	
+	
+	
+
+	
+	void Luluvoz_4(string &in asParent, string &in asChild, int alState)
+	{ 
+		AddEffectVoice("Pensativa.ogg", "", "Avisos", "LVL3_Lulu_04", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_5(string &in asTimer)
+	{ 
+		AddEffectVoice("Risa.ogg", "", "Avisos", "LVL3_Lulu_05", false, "" ,0.0f ,0.0f );
+	}
+	
+	
+	void Luluvoz_8(string &in asTimer)
+	{
+		AddEffectVoice("Cansada.ogg", "", "Avisos", "LVL3_Lulu_08", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_9(string &in asParent, string &in asChild, int alState)
+	{
+		AddEffectVoice("Expresivo01.ogg", "", "Avisos", "LVL3_Lulu_09", false, "" ,0.0f ,0.0f );
+	}
+	
+	
+	void Luluvoz_10(string &in asTimer)
+	{ 
+		AddEffectVoice("Risa.ogg", "", "Avisos", "LVL3_Lulu_10", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_11(string &in asTimer)
+	{ 
+		AddEffectVoice("Pensativa.ogg", "", "Avisos", "LVL3_Lulu_11", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_12(string &in asTimer)
+	{ 
+		AddEffectVoice("Taptap.ogg", "", "Avisos", "LVL3_Lulu_12", false, "" ,0.0f ,0.0f );
+	}
+
+	
+	void Luluvoz_orbecompleto(string &in asTimer)
+	{ 
+		AddEffectVoice("Risa.ogg", "", "Avisos", "LVL3_Lulu_orbecompleto", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_orbecompleto2(string &in asTimer)
+	{ 
+		AddEffectVoice("Risa.ogg", "", "Avisos", "LVL3_Lulu_orbecompleto2", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_orbe03(string &in asTimer)
+	{
+		AddEffectVoice("Expresivo01.ogg", "", "Avisos", "LVL3_Lulu_orbe03", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_orbe04(string &in asTimer)
+	{
+		AddEffectVoice("Expresivo02.ogg", "", "Avisos", "LVL3_Lulu_orbe04", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_orbe05(string &in asTimer)
+	{
+		AddEffectVoice("Expresivo03.ogg", "", "Avisos", "LVL3_Lulu_orbe05", false, "" ,0.0f ,0.0f );
+	}
+	
+	
+	
+	
+	void Luluvoz_nave_2(string &in asTimer)
+	{ 
+		AddEffectVoice("Rumrum.ogg", "", "Avisos", "Luluvoz_nave_2", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_nave_3(string &in asEntity)
+	{ 
+		AddEffectVoice("Pensativa.ogg", "", "Avisos", "Luluvoz_nave_3", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_nave_4(string &in asEntity)
+	{ 
+		AddEffectVoice("Pensativa.ogg", "", "Avisos", "Luluvoz_nave_4", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_nave_5(string &in asTimer)
+	{ 
+		AddEffectVoice("Rumrum.ogg", "", "Avisos", "Luluvoz_nave_5", false, "" ,0.0f ,0.0f );
+	}

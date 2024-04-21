@@ -1,0 +1,583 @@
+void OnStart()
+{
+  //CreateDataCache();
+  AddUseItemCallback("", "kyblikplny", "AreaInterakceLana", "area_kybl_script_1", true);
+  AddUseItemCallback("", "kyblikplny", "area_vylejt", "area_vylejt", true);
+  AddUseItemCallback("", "kyblikprazdny", "AreaInterakceLana", "area_kybl_script_2", true);
+  AddUseItemCallback("", "klic_studna", "padlock1", "unlock2", true);
+  AddUseItemCallback("", "keybranka", "padlock1", "unlock1", false);
+  AddUseItemCallback("", "keybranka", "padlock3", "unlock", false);
+  AddUseItemCallback("", "lopata", "area_kopat", "kopej", false);
+  AddEntityCollideCallback("Player", "area_dychej", "kurva_rikam_dychej", true, 1);
+  GiveItemFromFile("lantern_1", "lantern.ent");
+  AddNote("firstnote", "bg_letter.tga");
+  //GiveItemFromFile("lantern", "lantern_wackersberg.ent");
+  GiveItem("keybranka", "item", "keybranka", "key_study.tga", 1.0);
+  GiveItemFromFile("potion_oil", "potion_oil.ent");  //AddTimer("", 5.0, "experiment1");
+  //AddTimer("", 5.0, "e1");
+
+  // LANO
+  SetLocalVarInt("RopeInArea", 0);
+  SetLocalVarInt("KbelikNaplnen", 0);
+  AddEntityCollideCallback("AreaInterakceLana", "block_box_1", "KontrolaRopePozice", false, 1);
+  AddEntityCollideCallback("AreaDnoStudny", "block_box_1", "RopeDosahDnaStudny", true, 1);
+  InteractConnectPropWithRope("", "crank_wheel_1", "RopeArea_3", false, 1,1,1, false, 0);
+
+  SetPlayerJumpDisabled(false);
+  SetPlayerCrouchDisabled(false);
+  SetPlayerCrouching(false);
+  StopPlayerLookAt();
+  SetInDarknessEffectsActive(true);
+
+  for(int i=1;i<=1;i++){
+  InteractConnectPropWithRope("crackWithRope_"+i, "crank_wheel_1", "RopeArea_"+i, false, 1,1,1, false, 0);
+  }
+
+  FadeOut(0);
+  SetPlayerActive(false);
+  AddTimer("", 3.0, "tahni_ustajit_tu_posranou_kobylu_at_nenadavaji_na_moddb_ze_ji_nekde_nechal");
+  AddTimer("", 3.5, "no_a_at_radsi_udela_i_nejakej_posranej_zvuk");
+  AddTimer("", 4.0, "a_jeste_dvere_vole_pico");
+  AddTimer("", 6.0, "a_jeste_druhy_dvere_vole_pico");
+  AddTimer("", 6.5, "a_oci_otevri_kurva_oci");
+  AddTimer("", 1.0, "kobylkasehybehura");
+  AddTimer("", 9.0, "dopiscti");
+
+//AddTimer("", 1.0, "telo");
+
+}
+
+void telo(string &in asTimer)
+{
+  SetEntityPos("box", GetPlayerPosX(), GetPlayerPosY(), GetPlayerPosZ());
+  TeleportEnemyToEntity("gent", "box", "", true);
+  AddTimer("", 0.1, "telo");
+  AddDebugMessage("ropeinarea set to 1", false);
+}
+
+
+void tahni_ustajit_tu_posranou_kobylu_at_nenadavaji_na_moddb_ze_ji_nekde_nechal(string &in asTimer)
+{
+  PlaySoundAtEntity("", "open_door", "Player", 0, false);
+}
+
+void no_a_at_radsi_udela_i_nejakej_posranej_zvuk(string &in asTimer)
+{
+  PlayGuiSound("hyjeee", 3.5);
+  //PlaySoundAtEntity("", "hyjeee", "Player", 0, false);
+}
+
+void a_jeste_dvere_vole_pico(string &in asTimer)
+{
+  PlaySoundAtEntity("", "close_gate", "Player", 0, false);
+}
+
+void a_oci_otevri_kurva_oci(string &in asTimer)
+{
+  FadeIn(1.5);
+  SetPlayerActive(true);
+}
+
+void kobylkasehybehura(string &in asTimer)
+{
+  StopPropMovement("kobylka");
+  SetLocalVarInt("dobaodposlednihoyhaha", GetLocalVarInt("dobaodposlednihoyhaha")+1);
+  SetLocalVarInt("dejtokonovitensiporadi", RandInt(1, 5));
+
+  if(GetLocalVarInt("dejtokonovitensiporadi") == 1)
+  {
+    SetMoveObjectState("kobylka", 0.1);
+  }
+  if(GetLocalVarInt("dejtokonovitensiporadi") == 2)
+  {
+    SetMoveObjectState("kobylka", -0.1);
+  }
+  if(GetLocalVarInt("dejtokonovitensiporadi") == 3)
+  {
+    RotatePropToSpeed("kobylka", 1.0, 1.0, 0.0, RandInt(1,5), 0.0, false, "");
+  }
+  if(GetLocalVarInt("dejtokonovitensiporadi") == 4)
+  {
+    RotatePropToSpeed("kobylka", 1.0, 1.0, 0.0, -RandInt(1,5), 0.0, false, "");
+  }
+  if(GetLocalVarInt("dejtokonovitensiporadi") == 5)
+  {
+    if(GetLocalVarInt("dobaodposlednihoyhaha") >= 33)
+    {
+      PlaySoundAtEntity("", "hyjeee", "kobylkaarea", 0, false);
+      SetLocalVarInt("dobaodposlednihoyhaha", 0);
+    }
+  }
+AddTimer("", 0.3, "kobylkasehybehura");
+}
+
+void jakyclovek(string &in asEntity)
+{
+  AddDebugMessage("no ted by to melo kurva fungovat", false);
+
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice("jakyclovek.ogg", "", "dabing", "jakyclovekcz", false, "Player", 1.0, 1.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice("jakyclovek_en.ogg", "", "dabing", "jakyclovek", false, "Player", 1.0, 1.0);
+  }
+}
+
+void kobylka_hyje(string &in asTimer)
+{
+  PlaySoundAtEntity("", "hyjeee", "Player", 0, false);
+}
+
+
+void dopiscti(string &in asTimer)
+{
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice("venek1.ogg", "", "dabing", "venek1cz", false, "Player", 1.0, 1.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice("venek1_en.ogg", "", "dabing", "venek1", false, "Player", 1.0, 1.0);
+  }
+}
+
+void experiment1(string &in asTimer)
+{
+  //SetEntityActive("experimentalnidecko", true);
+  //AttachPropToProp("krabicka", "gent0", "gent_actor.ent", 0,0,0,0,0,0);
+  SetEntityPos("experimentalnidecko", GetPlayerPosX()+RandFloat(-10.0, 1.0), GetPlayerPosY(), GetPlayerPosZ()+RandFloat(-10.0, 1.0));
+  //TeleportEnemyToEntity("experimentalnidecko", "Player", "", false);
+  AddTimer("", 1.0, "experiment2");
+
+  // DEBUG
+  //StartPlayerLookAt("experimentalnidecko", 10.0, 10.5, "");
+}
+
+void experiment2(string &in asTimer)
+{
+  SetEntityActive("experimentalnidecko", false);
+  AddTimer("", 10.0, "experiment1");
+}
+
+void e1(string &in asTimer)
+{
+  SetLocalVarInt("vyber_si_svuj_osud", RandInt(1, 7));
+  SetEntityPos("arejka", GetPlayerPosX()+RandFloat(-5.0, 5.0), GetPlayerPosY()+2, GetPlayerPosZ()+RandFloat(-5.0, 5.0));
+
+
+  if(GetLocalVarInt("vyber_si_svuj_osud") == 1)
+  {
+    StartInsanityEvent("Bugs_Swarm");
+  }
+
+  if(GetLocalVarInt("vyber_si_svuj_osud") == 2)
+  {
+    PlaySoundAtEntity("", "1", "Player", 0, false);
+  }
+
+  if(GetLocalVarInt("vyber_si_svuj_osud") == 3)
+  {
+    PlaySoundAtEntity("", "2", "Player", 0, false);
+  }
+
+  if(GetLocalVarInt("vyber_si_svuj_osud") == 4)
+  {
+    PlaySoundAtEntity("", "3", "Player", 0, false);
+  }
+
+  if(GetLocalVarInt("vyber_si_svuj_osud") == 5)
+  {
+    PlaySoundAtEntity("", "4", "Player", 0, false);
+  }
+
+  if(GetLocalVarInt("vyber_si_svuj_osud") == 6)
+  {
+    PlaySoundAtEntity("", "5", "Player", 0, false);
+  }
+
+  if(GetLocalVarInt("vyber_si_svuj_osud") == 7)
+  {
+    PlaySoundAtEntity("", "6", "Player", 0, false);
+  }
+
+  AddTimer("", 10.0, "e1");
+
+}
+
+void KontrolaRopePozice(string &in asParent, string &in asChild, int alState)
+{
+  if(alState == 1)
+  {
+    SetLocalVarInt("RopeInArea", 1);
+    AddDebugMessage("ropeinarea set to 1", false);
+  }
+  else
+  {
+    SetLocalVarInt("RopeInArea", -1);
+    AddDebugMessage("ropeinarea set to minus 1", false);
+  }
+}
+
+void area_kybl_script_1(string &in asItem, string &in asEntity)
+{
+  SetMessage("TheVoice", "kyblmessage1cz", 4.0);
+}
+
+void area_vylejt(string &in asItem, string &in asEntity)
+{
+  PlaySoundAtEntity("", "04_water_puff", "Player", 0, false);
+  RemoveItem("kyblikplny");
+  GiveItem("kyblikprazdny", "item", "kyblikprazdny", "wooden_bucket.tga", 1);
+  SetLocalVarInt("x", GetPlayerPosX());
+  SetLocalVarInt("y", GetPlayerPosY());
+  SetLocalVarInt("z", GetPlayerPosZ());
+  StartInsanityEvent("wide_normalni");
+  SetPlayerActive(false);
+  CreateEntityAtArea("kybl_vylitej_jak_milos_zeman", "wooden_bucket.ent", "mila_hodna_area", false);
+  SetPropStaticPhysics("kybl_vylitej_jak_milos_zeman", true);
+  SetEntityInteractionDisabled("kybl_vylitej_jak_milos_zeman", true);
+  SetEntityPos("kybl_vylitej_jak_milos_zeman", GetPlayerPosX()+RandFloat(-1.0, 1.0), GetPlayerPosY()+1, GetPlayerPosZ()+RandFloat(-1.0, 1.0));
+  StartPlayerLookAt("kybl_vylitej_jak_milos_zeman", 5.0, 5.5, "");
+  AddTimer("", 0.5, "zeman_vylejva_kybl");
+}
+
+void zeman_vylejva_kybl(string &in asTimer)
+{
+  RotatePropToSpeed("kybl_vylitej_jak_milos_zeman", 9.0, 9.0, 0.0, 0.0, -90.0, false, "");
+  AddTimer("", 0.3, "zeman_vylejva_kybl_1");
+  AddTimer("", 0.6, "zeman_vylejva_kybl_2");
+  AddTimer("", 4.0, "zeman_vylejva_kybl_3");
+}
+
+void zeman_vylejva_kybl_1(string &in asTimer)
+{
+  CreateParticleSystemAtEntity("vylejvam_si_kyblicek_lalalala", "ps_water_stream_bucket.ps", "kybl_vylitej_jak_milos_zeman", false);
+  PlaySoundAtEntity("", "musel_jsem_si_sam_dojit_vylejt_kybl_abych_mel_kurva_zvuk.snt", "Player", 0.0, false);
+}
+
+void zeman_vylejva_kybl_2(string &in asTimer)
+{
+  StopPropMovement("kybl_vylitej_jak_milos_zeman");
+}
+
+void zeman_vylejva_kybl_3(string &in asTimer)
+{
+  DestroyParticleSystem("vylejvam_si_kyblicek_lalalala");
+  RotatePropToSpeed("kybl_vylitej_jak_milos_zeman", 7.0, 7.0, 0.0, 0.0, 0.0, false, "");
+  AddTimer("", 0.5, "zeman_vylejva_kybl_4");
+}
+
+void zeman_vylejva_kybl_4(string &in asTimer)
+{
+  StopPropMovement("kybl_vylitej_jak_milos_zeman");
+  StopCurrentInsanityEvent();
+  SetPlayerActive(true);
+  SetPropActiveAndFade("kybl_vylitej_jak_milos_zeman", false, 0.5);
+  StopPlayerLookAt();
+}
+
+void area_kybl_script_2(string &in asItem, string &in asEntity)
+{
+    RemoveItem("kyblikprazdny");
+    if(asItem != "kyblikprazdny")
+    {
+      return;
+    }
+
+    if(GetLocalVarInt("RopeInArea") != 1)
+    {
+      SetMessage("TheVoice", "kyblmessage1cz", 4.0);
+      return;
+    }
+
+    //AttachPropToProp("block_box_1", "wooden_bucket_onrope_1", "wooden_bucket_onrope.ent", 0,0,0,0,0,0);
+    AttachPropToProp("block_box_1", "wooden_bucket_onrope_1", "wooden_bucket_onrope.ent", 0,0,0,0,0,0);
+    SetLocalVarInt("KbelikNaRope", 1);
+    SetWheelStuckState("crank_wheel_1", 0, true);
+}
+
+void RopeDosahDnaStudny(string &in asParent, string &in asChild, int alState)
+{
+  if(GetLocalVarInt("KbelikNaRope") == 0)
+  {
+    return;
+  }
+
+  PlaySoundAtEntity("WaterSplash", "impact_water_med.snt", "AreaSpodekStudny", 0, false);
+  if(GetLocalVarInt("KbelikNaplnen") != 1)
+  {
+    RemoveAttachedPropFromProp("block_box_1", "wooden_bucket_onrope_1");
+
+    AttachPropToProp("block_box_1", "wooden_bucket_onrope_filled_1", "wooden_bucket_onrope_filled.ent", 0,0,0,0,0,0);
+
+    SetEntityActive("AreaInterakceLana", false);
+    SetLocalVarInt("KbelikNaplnen", 1);
+    SetEntityActive("ex_studna",false);
+
+    //SetEntityCustomFocusCrosshair("block_box_1", "Pick");
+    SetEntityPlayerInteractCallback("block_box_1", "SebratNaplneniKbelik", true);
+  }
+}
+
+void SebratNaplneniKbelik(string &in asEntity)
+{
+  SetLocalVarInt("KbelikNaplnen", 0);
+  SetLocalVarInt("KbelikNaRope", 0);
+  RemoveAttachedPropFromProp("block_box_1", "wooden_bucket_onrope_filled_1");
+  PlaySoundAtEntity("pickb", "25_pick_bucket_water.snt", "Player", 0.0f, false);
+  //GiveItemFromFile("wooden_bucket_filled_1", "wooden_bucket_filled.ent");
+  FadeOut(1);
+  AddTimer("", 2.5, "kybliktimer1");
+  AddTimer("", 3.5, "kybliktimer2");
+  StartInsanityEvent("wide_normalni");
+  SetPlayerActive(false);
+}
+
+void kybliktimer1(string &in asTimer)
+{
+  PlaySoundAtEntity("", "04_water_puff.snt", "Player", 0.0f, false);
+}
+
+void kybliktimer2(string &in asTimer)
+{
+  PlaySoundAtEntity("", "25_drop_key.snt", "Player", 0.0f, false);
+  SetEntityActive("klic_studna", true);
+  //SetEntityActive("hollow", false);
+  SetEntityActive("statickej_kyblicek", true);
+  FadeIn(1);
+  StartPlayerLookAt("klic_studna", 5.0, 10.0, "null");
+  AddTimer("", 1.0, "kybliktimer3");
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+  GiveSanityBoostSmall();
+}
+
+void kybliktimer3(string &in asTimer)
+{
+  StopPlayerLookAt();
+}
+
+void unlock2(string &in asItem, string &in asEntity)
+{
+  StartInsanityEvent("wide_normalni");
+  SetPlayerActive(false);
+  SetEntityActive("key_study_2", true);
+  SetEntityInteractionDisabled("key_study_2", false);
+  StartPlayerLookAt("key_study_2", 2.5, 5.0, "null");
+  PlaySoundAtEntity("", "24_put_knife.snt", "padlock1", 0, false);
+  SetMessage("TheVoice", "branka2cz", 3.0);
+  AddTimer("", 1.0, "ut2");
+  SetEntityActive("padlock1", false);
+  SetEntityActive("padlock3", true);
+}
+
+void unlock(string &in asItem, string &in asEntity)
+{
+  RemoveItem("keybranka");
+  PlaySoundAtEntity("", "unlock_door", "padlock1", 0, false);
+  SetEntityActive("padlock3", false);
+  SetEntityActive("padlock2", true);
+  SetEntityActive("padlock_area", true);
+  SetEntityActive("dvere_area", false);
+  //RemoveItem("klic_studna");
+  CompleteQuest("q1", "q1cz");
+}
+
+void unlock1(string &in asItem, string &in asEntity)
+{
+  SetPlayerActive(false);
+  StartInsanityEvent("wide_normalni");
+  SetEntityActive("key_study_1", true);
+  SetEntityInteractionDisabled("key_study_1", false);
+  StartPlayerLookAt("key_study_1", 2.5, 5.0, "null");
+  PlaySoundAtEntity("", "12_valve_stuck", "padlock1", 0, false);
+  SetMessage("TheVoice", "branka1cz", 3.0);
+  AddTimer("", 1.0, "ut1");
+}
+
+void ut1(string &in asTimer)
+{
+  SetEntityActive("key_study_1", false);
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+  StopPlayerLookAt();
+}
+
+void ut2(string &in asTimer)
+{
+  SetEntityActive("key_study_2", false);
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+  StopPlayerLookAt();
+}
+
+void tajnycallback(string &in asEntity)
+{
+  //GiveSanityBoostSmall();
+  SetGlobalVarInt("nalezenych_tajnych_poznamek", GetGlobalVarInt("nalezenych_tajnych_poznamek")+1);
+  SetMessage("TheVoice", "tajemstvinalezenocz", 3.0);
+}
+
+void interakce(string &in asEntity)
+{
+  AddQuest("q1", "q1cz");
+}
+
+void zmen_mapu(string &in asEntity)
+{
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+  //SetupLoadScreen("loadingscreen", "castlecave", 0, "nacitani_castlecave.jpg");
+  if(HasItem("lopata") == true)
+  {
+    RemoveItem("lopata");
+  }
+  ChangeMap("03_castlecavecz.map", "playerstart_0", "", "");
+}
+
+void lopata(string &in asEntity)
+{
+  SetEntityActive("shovel_1", false);
+  GiveItem("lopata", "lopata", "lopatacz", "lopata.tga", 1.0);
+  PlaySoundAtEntity("", "pick_knife", "Player", 0, false);
+  SetMessage("TheVoice", "lopatacz", 3.0);
+}
+
+void kopej(string &in asItem, string &in asEntity)
+{
+  SetPlayerActive(false);
+  StartInsanityEvent("wide_normalni");
+  SetEntityActive("shovel_2", true);
+  AddTimer("", 0.5, "kt1");
+}
+
+void kt1(string &in asTimer)
+{
+  RotatePropToSpeed("shovel_2", 7.0, 7.0, 12.0, 0.0, 0.0, false, "");
+  PlaySoundAtEntity("", "pickaxe_hit", "Player", 0, false);
+  CreateParticleSystemAtEntity("", "ps_hit_dirt.ps", "area_kopat_ps", false);
+  AddTimer("", 0.5, "kt2");
+}
+
+void kt2(string &in asTimer)
+{
+  StopPropMovement("shovel_2");
+  AddTimer("", 0.5, "kt3");
+}
+
+void kt3(string &in asTimer)
+{
+  SetEntityActive("shovel_2", false);
+  SetEntityActive("shovel_3", true);
+  PlaySoundAtEntity("", "pickaxe_hit", "Player", 0, false);
+  RotatePropToSpeed("shovel_3", 7.0, 7.0, 12.0, 0.0, 0.0, false, "");
+  CreateParticleSystemAtEntity("", "ps_hit_dirt.ps", "area_kopat_ps", false);
+  AddTimer("", 0.5, "kt4");
+}
+
+void kt4(string &in asTimer)
+{
+  StopPropMovement("shovel_3");
+  AddTimer("", 0.5, "kt5");
+}
+
+void kt5(string &in asTimer)
+{
+  SetEntityActive("shovel_3", false);
+  SetEntityActive("shovel_4", true);
+  RotatePropToSpeed("shovel_4", 7.0, 7.0, 12.0, 0.0, 0.0, false, "");
+  PlaySoundAtEntity("", "pickaxe_hit", "Player", 0, false);
+  CreateParticleSystemAtEntity("", "ps_hit_dirt.ps", "area_kopat_ps", false);
+  AddTimer("", 0.5, "kt6");
+}
+
+void kt6(string &in asTimer)
+{
+  StopPropMovement("shovel_4");
+  AddTimer("", 0.5, "kt7");
+}
+
+void kt7(string &in asTimer)
+{
+  SetEntityActive("shovel_4", false);
+  SetEntityActive("ExamineArea_2", false);
+  SetEntityActive("area_kopat", false);
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+  SetPropActiveAndFade("chest_small_1", true, 1.0);
+  SetPropActiveAndFade("note_letter_1", true, 1.0);
+  SetPropActiveAndFade("potion_oil_large_1", true, 1.0);
+  AddPropImpulse("chest_small_1", 0.0, 25.0, 0.0, "world");
+  GiveSanityBoostSmall();
+  //PlaySoundAtEntity("", "puzzle", "Player", 0, false);
+  PlayGuiSound("puzzle.ogg", 1.0);
+  RemoveItem("lopata");
+}
+
+void kurva_rikam_dychej(string &in asParent, string &in asChild, int alState)
+{
+  PlaySoundAtEntity("", "lastbreath", "Player", 0, false);
+}
+
+void OnEnter()
+{
+  SetMapDisplayNameEntry("castlefront");
+  PlayMusic("music_ambient_3.ogg", true, 0.7, 0.1, 10, false);
+  AutoSave();
+}
+
+void OnLeave()
+{
+  //DestroyDataCache();
+  ClearSavedMaps();
+  StopMusic(1000, 0.5);
+
+SetGlobalVarInt("dalsi_nacitaci_obrazovka", RandInt(1,5));
+  if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 1)
+  {
+    if(GetGlobalVarInt("potkal_helene") == 0)
+    {
+      if(GetPlayerSanity() < 100 && GetPlayerSanity() > 80)
+      {
+        SetupLoadScreen("loading", "helenecz", 0, "nacitani_helene.jpg");
+      }
+      else if(GetPlayerSanity() < 80 && GetPlayerSanity() > 60)
+      {
+        SetupLoadScreen("loading", "helene2cz", 0, "nacitani_helene_horsi.jpg");
+      }
+      else if(GetPlayerSanity() < 60 && GetPlayerSanity() > 40)
+      {
+        SetupLoadScreen("loading", "helene3cz", 0, "nacitani_helene_horsi_horsi.jpg");
+      }
+      else if(GetPlayerSanity() < 40 && GetPlayerSanity() > 20)
+      {
+        SetupLoadScreen("loading", "helene4cz", 0, "nacitani_helene_horsi_horsi_horsi.jpg");
+      }
+      else if(GetPlayerSanity() < 20)
+      {
+        SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+      }
+    }
+    else
+    {
+      SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+    }
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 2)
+  {
+    SetupLoadScreen("loading", "niklascz", 0, "nacitani_niklas.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 3)
+  {
+    SetupLoadScreen("loading", "adolfcz", 0, "nacitani_adolf.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 4)
+  {
+    SetupLoadScreen("loading", "gotfriedcz", 0, "nacitani_gotfried.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 5)
+  {
+    SetupLoadScreen("loading", "hedwigcz", 0, "nacitani_hedwig.jpg");
+  }
+}

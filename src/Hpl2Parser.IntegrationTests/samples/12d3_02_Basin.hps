@@ -1,0 +1,526 @@
+void OnStart()
+{
+AutoSave();
+SetLocalVarInt("keygot",0);
+SetLocalVarInt("ConvoNum",0);
+CompleteQuest("", "catacombsdoor");
+SetLightVisible("PointLight_33", false);
+SetLightVisible("PointLight_39", false);
+SetEntityPlayerInteractCallback("pipe_entrance", "pipe_reset", true);
+// wo
+SetEntityPlayerInteractCallback("examine_nurse", "begin_mask_scare", true);
+SetEntityPlayerInteractCallback("doorquad", "questforkey", true);
+SetEntityPlayerInteractCallback("key_quad", "completeit", true);
+SetEntityPlayerInteractCallback("InsectExamine", "RemoveExamine", true);
+//SetEntityPlayerInteractCallback("Talk", "Conversations", false);
+// iffa oo
+AddEntityCollideCallback("Player", "Death_Area", "Restart_1", false, 1);
+AddEntityCollideCallback("Player", "Death_Area_2", "Restart_2", false, 1);
+AddEntityCollideCallback("Player", "that_trigger", "noise", true, 1);
+AddEntityCollideCallback("Player", "past_trigger", "event_poison", true, 1);
+AddEntityCollideCallback("Player", "blow_effect_trigger", "event_blow", true, 1);
+AddEntityCollideCallback("Player", "good_huh", "event_faint", true, 1);
+AddEntityCollideCallback("Player", "mask_scare_1", "mask_well", true, 1);
+AddEntityCollideCallback("Player", "mask_scare_2", "mask_basin", true, 1);
+AddEntityCollideCallback("Player", "MaskDisappearTrigger", "MaskDisappear", true, 1);
+AddEntityCollideCallback("Player", "show_him", "puzzle_start", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_1", "sewer_blow2", true, 1);
+AddEntityCollideCallback("Player", "blood_trigger", "sewer_blow", true, 1);
+AddEntityCollideCallback("Player", "Listening", "NotListening", false, -1);
+AddEntityCollideCallback("Player", "MusicArea", "Music1", false, 0);
+AddEntityCollideCallback("Player", "CritterTrigger", "Critter", true, 1);
+//frazzamo yo. FRAZZAMO YO
+SetEntityConnectionStateChangeCallback("lever_gate_4", "Gate4Open");
+AddUseItemCallback("", "lever_small_lever_pickup_1", "lever_mount", "UsedLeverOnMount", true);
+AddUseItemCallback("", "key_quad", "doorquad", "QuadUnlocks", true);
+RemoveItem("rustedkey");
+
+//Trailer();
+
+SetGlobalVarInt("InsectDrawing",0);
+SetGlobalVarInt("HeadDrawing",0);
+SetGlobalVarInt("SnakeDrawing",0);
+
+}
+
+void Trailer()
+{
+SetPlayerLookSpeedMul(0.5);
+SetPlayerMoveSpeedMul(0.5);
+SetPlayerRunSpeedMul(0.5);
+ShowPlayerCrossHairIcons(false);
+}
+
+void OnEnter()
+{
+SetMapDisplayNameEntry("Basin");
+
+PlayMusic("Blank.ogg", true, 0.8, 6, 0, true);
+
+//SetupLoadScreen("Loading", "cstory", 1, "load_5");
+//PlayMusic("ort_phantom.ogg", false, 0.8, 3, 0, true);
+//PlaySoundAtEntity("", "ambience_cave.snt", "sound_source", 0.7, true);
+//PlaySoundAtEntity("", "ambience_cave.snt", "sound_source_1", 0.7, true);
+//PlaySoundAtEntity("", "ambience_cave.snt", "sound_source_2", 0.7, true);
+PlaySoundAtEntity("", "ambience_wind_eerie.snt", "sound_source_3", 0.8, true);
+PlaySoundAtEntity("", "my_07_amb_breath.snt", "blood_trigger", 0.7, true);
+PlaySoundAtEntity("", "ambience_water_no3d_radius.snt", "sound_source_4", 0.0f, true);
+PlaySoundAtEntity("", "ambience_water_no3d_radius.snt", "sound_source_5", 0.0f, true);
+PlaySoundAtEntity("", "15_man_whimp_loop.snt", "sound_source_6", 0.4, true);
+PlaySoundAtEntity("Paper", "bill_rustle.snt", "ScuffleSource", 0, true);
+
+//PlaySoundAtEntity("Silence", "kb_basin_s.snt", "Player", 1.0, true);
+
+if(GetGlobalVarInt("lantern_picked") == 1)
+	{
+	SetEntityActive("lantern_1", false);
+	}
+	AutoSave();
+}
+
+void RemoveExamine(string &in asEntity)
+{
+	SetEntityActive(asEntity,false);
+	if (asEntity == "InsectExamine")
+		{
+			AddDiary("Scorpion", "diary_scorpion"); 
+			SetMessage("Message", "CopyDrawing", 3);
+			GiveHint("maphint", "Hints", "HintDrawing", -1);
+			PlayGuiSound("ui_drawing_copy.ogg", 1);
+			
+			SetGlobalVarInt("InsectDrawing",1);
+		}
+			
+}
+
+void pipe_reset(string &in asEntity)
+{
+SetMessage("Examine", "misc_pipe", 4.0f);
+SetEntityActive("pipe_entrance", false);
+}
+
+
+
+// begin mask scares
+
+void begin_mask_scare(string &in asEntity)
+{
+	StopMusic(1,0);
+	SetMessage("Message", "Blank", 4.0f);
+	SetLanternDisabled(true);
+	SetPlayerActive(false);
+	StartPlayerLookAt("vmask_1", 5, 5, "");
+	PlaySoundAtEntity("","enemy_hallucination_disappear", "Player", 1, false);
+	TeleportPlayer("vision_mask");
+	AddTimer("", 3.5f, "timer_start_appear");
+	SetPlayerCrouching(false);
+}
+
+void timer_start_appear(string &in asEntity)
+{
+	SetEntityActive("vmask_1", true);
+	PlaySoundAtEntity("","scare_nurse", "vmask_1", 1, false);
+	AddTimer("", 0.15f, "vmask_1_disappear");
+}
+
+void vmask_1_disappear(string &in asEntity)
+{
+	SetEntityActive("vmask_1", false);
+	AddTimer("", 0.16f, "vmask_2_appear");
+}
+
+void vmask_2_appear(string &in asEntity)
+{
+	SetEntityActive("vmask_2", true);
+	PlaySoundAtEntity("","scare_nurse", "vmask_2", 1, false);
+	AddTimer("", 0.15f, "vmask_2_disappear");
+}
+
+void vmask_2_disappear(string &in asEntity)
+{
+	SetEntityActive("vmask_2", false);
+	AddTimer("", 0.16f, "vmask_3_appear");
+}
+
+void vmask_3_appear(string &in asEntity)
+{
+	SetEntityActive("vmask_3", true);
+	PlaySoundAtEntity("","scare_nurse", "vmask_3", 1, false);
+	AddTimer("", 0.15f, "vmask_3_disappear");
+}
+
+void vmask_3_disappear(string &in asEntity)
+{
+	SetEntityActive("vmask_3", false);
+	AddTimer("", 0.16f, "vmask_4_appear");
+}
+
+void vmask_4_appear(string &in asEntity)
+{
+	SetEntityActive("vmask_4", true);
+	PlaySoundAtEntity("","scare_nurse", "vmask_4", 1, false);
+	AddTimer("", 0.15f, "vmask_4_disappear");
+}
+
+void vmask_4_disappear(string &in asEntity)
+{
+	SetEntityActive("vmask_4", false);
+	AddTimer("", 0.16f, "vmask_5_appear");
+}
+
+void vmask_5_appear(string &in asEntity)
+{
+	SetEntityActive("vmask_5", true);
+	PlaySoundAtEntity("","scare_nurse", "vmask_5", 1, false);
+	GiveSanityDamage(20, true);
+	AddTimer("", 0.15f, "vmask_5_disappear");
+}
+
+void vmask_5_disappear(string &in asEntity)
+{
+	SetEntityActive("vmask_5", false);
+	AddTimer("", 1.0, "end_mask_scares");
+	FadeOut(0);
+}
+
+void end_mask_scares(string &in asEntity)
+{
+SetEntityActive("examine_nurse", false);
+SetEntityActive("examine_nurse_post", true);
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	TeleportPlayer("post_mask");
+	PlaySoundAtEntity("PlayerScared", "react_scare.snt", "Player", 0.0f, true);
+	FadeIn(1);
+	StartScreenShake(0.01f, 0, 1, 5);
+	PlaySoundAtEntity("","enemy_hallucination_disappear", "Player", 1, false);
+	SetEntityActive("post_vision_insanity", true);
+	PlayMusic("ort_phantom.ogg", true, 0.8, 3, 0, true);
+	SetLanternDisabled(false);
+}
+
+// end mask scares
+
+void Conversations(string &in asEntity)
+{
+	SetEntityActive("Talk", false);
+	if(GetLocalVarInt("ConvoNum") == 0)
+		{
+			AddEffectVoice("101", "", "Voices", "cell001", true, "TalkSource", 5.0, 10.0);
+			AddEffectVoice("101", "", "Voices", "cell002", true, "TalkSource", 5.0, 10.0);
+			AddEffectVoice("101", "", "Voices", "cell003", true, "TalkSource", 5.0, 10.0);
+			AddEffectVoice("101", "", "Voices", "cell004", true, "TalkSource", 5.0, 10.0);
+			SetEffectVoiceOverCallback("ConvoEnd");
+		}
+		
+	if(GetLocalVarInt("ConvoNum") == 1)
+		{
+			AddEffectVoice("101", "", "Voices", "cell101", true, "TalkSource", 5.0, 10.0);
+			AddEffectVoice("102", "", "Voices", "cell102", true, "TalkSource", 5.0, 10.0);
+			AddEffectVoice("103", "", "Voices", "cell103", true, "TalkSource", 5.0, 10.0);
+			
+				if(GetLocalVarInt("keygot") == 0)
+				{
+					SetEffectVoiceOverCallback("ConvoGoalWater");
+				}
+				else
+				{SetEffectVoiceOverCallback("ConvoEnd");}
+		}
+		
+	if(GetLocalVarInt("ConvoNum") == 2)
+		{
+			AddEffectVoice("102", "", "Voices", "cell201", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("103", "", "Voices", "cell202", true, "TalkSource", 4.0, 14.0);
+			SetEffectVoiceOverCallback("ConvoEnd");
+		}
+		
+	if(GetLocalVarInt("ConvoNum") == 3)
+		{
+			AddEffectVoice("101", "", "Voices", "cell301", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("102", "", "Voices", "cell302", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("103", "", "Voices", "cell303", true, "TalkSource", 4.0, 14.0);
+			SetEffectVoiceOverCallback("ConvoEnd");
+		}
+		
+	/*if(GetLocalVarInt("ConvoNum") == 4)
+		{
+			AddEffectVoice("101", "", "Voices", "cell401", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("102", "", "Voices", "cell402", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("103", "", "Voices", "cell403", true, "TalkSource", 4.0, 14.0);
+			SetEffectVoiceOverCallback("ConvoEnd");
+		}*/
+		
+	if(GetLocalVarInt("ConvoNum") == 4)
+		{
+			AddEffectVoice("101", "", "Voices", "cell501", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("102", "", "Voices", "cell502", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("103", "", "Voices", "cell503", true, "TalkSource", 4.0, 14.0);
+			SetEffectVoiceOverCallback("ConvoEnd");
+		}
+		
+	if(GetLocalVarInt("ConvoNum") == 5)
+		{
+			AddEffectVoice("101", "", "Voices", "cell601", true, "TalkSource", 4.0, 14.0);
+			AddEffectVoice("101", "", "Voices", "cell602", true, "TalkSource", 4.0, 14.0);
+			SetEffectVoiceOverCallback("ConvoEnd");
+		}
+		
+	if(GetLocalVarInt("ConvoNum") >= 6)
+		{
+			AddEffectVoice("102", "", "Voices", "cell701", true, "TalkSource", 4.0, 14.0);
+			SetEffectVoiceOverCallback("ConvoEnd");
+		}
+}
+
+void NotListening(string &in asParent, string &in asChild, int alState)
+{
+	StopAllEffectVoices(1.0f);
+	SetEntityActive("Talk", true);
+	AddLocalVarInt("ConvoNum", 1);
+}
+
+void ConvoEnd()
+{
+	AddLocalVarInt("ConvoNum", 1);
+	SetEntityActive("Talk", true);
+}
+
+void ConvoGoalWater()
+{
+	AddQuest("basinkey", "basinkey");
+	AddLocalVarInt("ConvoNum", 1);
+	SetEntityActive("Talk", true);
+}
+
+void questforkey(string &in asEntity)
+{
+	if(GetLocalVarInt("keygot")==0)
+	{
+		AddQuest("02_BasinKey", "02_BasinKey");
+	}
+}
+
+void completeit(string &in asEntity)
+{
+	CompleteQuest("02_BasinKey","02_BasinKey");
+}
+
+void Music1(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1) PlayMusic("ort_phantom.ogg", true, 0.4, 11, 1, true);
+	else if (alState == -1) StopMusic(11,1);
+	
+}
+
+void UsedLeverOnMount(string &in asItem, string &in asEntity)
+{
+RemoveItem("lever_small_lever_pickup_1");
+SetEntityActive("lever_mount", false);
+SetEntityActive("lever_gate_4", true);
+}
+
+void QuadUnlocks(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("doorquad", false);
+	PlaySoundAtEntity("","07_pick_lock.snt", "doorquad", 0, false);
+	RemoveItem("key_quad");
+	CompleteQuest("02_BasinKey","02_BasinKey");
+}
+
+void Gate1Open(string &in asEntity, int alState)
+{
+SetMoveObjectState("gate_1", 1);
+for(int i=7;i<=32;i++)
+        {
+        CreateParticleSystemAtEntity("", "ps_magic_water.ps", "ps_"+i, false);
+        }
+	SetEntityConnectionStateChangeCallback("lever_gate_2", "Gate2Open");
+	SetEntityConnectionStateChangeCallback("lever_gate_3", "Gate3Open");
+	SetLeverStuckState("lever_gate_1", 1, true);
+	StartScreenShake(0.01f, 1.0, 1.0, 2.1);
+}
+
+void Gate2Open(string &in asEntity, int alState)
+{
+for(int i=53;i<=72;i++)
+        {
+        CreateParticleSystemAtEntity("", "ps_magic_water.ps", "ps_"+i, false);
+        }
+SetMoveObjectState("gate_2", 1);
+StartScreenShake(0.01f, 1.0, 1.0, 2.1);
+SetLeverStuckState("lever_gate_2", 1, true);
+}
+
+void Gate3Open(string &in asEntity, int alState)
+{
+SetMoveObjectState("gate_3", 1);
+for(int i=33;i<=49;i++)
+        {
+        CreateParticleSystemAtEntity("", "ps_magic_water.ps", "ps_"+i, false);
+        }
+StartScreenShake(0.01f, 1.0, 1.0, 2.1);
+SetEntityConnectionStateChangeCallback("lever_gate_4", "Gate4Open");
+SetLeverStuckState("lever_gate_3", 1, true);
+}
+
+void Gate4Open(string &in asEntity, int alState)
+{
+SetMoveObjectState("gate_4", 1);
+for(int i=50;i<=52;i++)
+        {
+        CreateParticleSystemAtEntity("", "ps_magic_water.ps", "ps_"+i, false);
+        }
+SetLightVisible("PointLight_33", false);
+StartScreenShake(0.01f, 1.0, 1.0, 2.1);
+SetLeverStuckState("lever_gate_4", 1, true);
+PlayMusic("15_event_girl_mother.ogg", false, 0.6, 0.1, 10, false);
+AddPlayerSanity(5);
+}
+
+void puzzle_start(string &in asParent, string &in asChild, int alState)
+{
+StartScreenShake(0.01f, 1.0, 1.0, 2.1);
+PlayMusic("00_event_gallery.ogg", false, 0.6, 0.1, 10, false);
+StartPlayerLookAt("ps_2", 3, 4, "");
+AddTimer("donelook", 0.5f, "TimerDoneLookAt");
+GiveSanityDamage(10, true);
+PlaySoundAtEntity("", "react_breath.snt", "Player", 0.6f, true);
+for(int i=1;i<=6;i++)
+        {
+        CreateParticleSystemAtEntity("", "ps_magic_water.ps", "ps_"+i, false);
+        }
+SetEntityConnectionStateChangeCallback("lever_gate_1", "Gate1Open");
+}
+
+void TimerDoneLookAt(string &in asTimer)
+{
+  StopPlayerLookAt();
+}
+
+
+void Restart_1(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("", 1, "TimerFade");
+FadeOut(0.75);
+}
+
+void Restart_2(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("", 1, "TimerFade2");
+FadeOut(0.25);
+}
+
+void TimerFade(string &in asTimer)
+{
+FadeIn(3);
+TeleportPlayer("fromCatacombs");
+}
+
+void TimerFade2(string &in asTimer)
+{
+FadeIn(3);
+TeleportPlayer("respawn_1");
+}
+
+void mask_well(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1, "TimerMask1");
+}
+
+void TimerMask1(string &in asTimer)
+{
+	SetPropActiveAndFade("nurse_mask_1", false, 0.5f);
+}
+
+void MaskDisappear(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1, "TimerMask2");
+}
+
+void TimerMask2(string &in asTimer)
+{
+	SetPropActiveAndFade("nurse_mask_2", false, 0.5f);
+}
+
+void mask_basin(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("nurse_mask_2", true);
+AddEntityCollideCallback("Player", "thisone", "mask_goway", true, 1);
+}
+
+void mask_goway(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("nurse_mask_2", false);
+}
+
+void noise(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "scare_wood_creak_scuf.snt", "that_noise", 0.0f, true);
+}
+
+void event_poison(string &in asParent, string &in asChild, int alState)
+{
+	StopSound("Paper",0.35f);
+}
+
+void TimerBed(string &in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerLookSpeedMul(1);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+FadeImageTrailTo(0,1);
+FadeRadialBlurTo(0.0, 2);
+}
+
+void event_blow(string &in asParent, string &in asChild, int alState)
+{
+CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "blow_source", false);
+}
+
+void Critter(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("vase01_2", -500, 600, 300, "World");
+	AddTimer("", .5, "TimerCritter2");
+	//PlaySoundAtEntity("", "creature_scuttle.snt", "wood_box03_broken_1", 0.0f, true);
+}
+
+void TimerCritter2(string &in asTimer)
+{
+	AddPropForce("wood_box03_broken_1", -800, 600, -400, "World");
+}
+
+void sewer_blow2(string &in asParent, string &in asChild, int alState)
+{
+CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "blow_source_1", false);
+AddTimer("", 15, "TimerSewerBlow");
+}
+
+void TimerSewerBlow(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "blow_source_1", false);
+AddTimer("", 15, "TimerSewerBlow");
+}
+
+void sewer_blow(string &in asParent, string &in asChild, int alState)
+{
+CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke.ps", "blood_ps_spawn", false);
+PlaySoundAtEntity("", "04_hole_squeal.snt", "blood_ps_spawn", 0.0f, true);
+}
+
+void event_faint(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "faint_low.snt", "torch_floor_2", 0.0f, true);
+}
+
+void OnLeave()
+{
+	StopSound("Silence",3.0);
+	
+	if (((GetGlobalVarInt("InsectDrawing")) == 1) && ((GetGlobalVarInt("HeadDrawing")) == 0) && ((GetGlobalVarInt("SnakeDrawing")) == 0)) {SetupLoadScreen("", "", 0, "100.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 0) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 0)) {SetupLoadScreen("", "", 0, "010.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 0) && ((GetGlobalVarInt("HeadDrawing")) == 0) && ((GetGlobalVarInt("SnakeDrawing")) == 1)) {SetupLoadScreen("", "", 0, "001.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 1) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 0)) {SetupLoadScreen("", "", 0, "110.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 0) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 1)) {SetupLoadScreen("", "", 0, "011.tga");}
+	if (((GetGlobalVarInt("InsectDrawing")) == 1) && ((GetGlobalVarInt("HeadDrawing")) == 1) && ((GetGlobalVarInt("SnakeDrawing")) == 1)) {SetupLoadScreen("", "", 0, "111.tga");}
+}

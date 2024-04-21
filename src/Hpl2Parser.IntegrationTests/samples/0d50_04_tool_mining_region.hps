@@ -1,0 +1,135 @@
+void OnStart(){
+	events();
+	PlayerFunctions();
+	variables();
+	enemy();
+}
+
+void OnEnter(){
+	PlayMusic("grunt_amb.ogg", true, 1.5f, 0, 0, true);
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "04Drained", 1, "04ToolMining.jpg");
+}
+
+void events(){
+	AddEntityCollideCallback("Player", "AreaPotScare", "potScare", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_1", "playScareSound", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_2", "playScareSound", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_3", "playScareSoundScary", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_4", "playScareSoundScary", true, 1);
+	AddEntityCollideCallback("Player", "AreaHearLast", "playLastSound", true, 1);
+}
+
+void PlayerFunctions(){
+	SetEntityPlayerInteractCallback("evidence", "getQuestAndScareTimer", true);
+	SetEntityConnectionStateChangeCallback("LeverDrain", "drainSewer");
+	AddEntityCollideCallback("Player", "AreaCheckPoint", "addCheckPoint", true, 1);
+}
+
+void variables(){
+	SetLocalVarInt("hasPulled", 0);
+	SetLocalVarInt("gruntHealth", 1);
+}
+
+void enemy(){
+	AddEnemyPatrolNode("grunt", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("grunt", "PathNodeArea_2", 0.001, "");
+	AddEntityCollideCallback("long_1", "grunt", "hitLong_1", false, 1);
+	AddEntityCollideCallback("long_2", "grunt", "hitLong_2", false, 1);
+	AddEntityCollideCallback("short", "grunt", "hitShort", false, 1);
+}
+
+void potScare(string &in asParent, string &in asChild, int alState){
+	AddPropImpulse("ScarePot", -4, 2, 0, "World");
+	PlayGuiSound("impact_metal_high.snt", 1000);
+	PlayGuiSound("react_pant.snt", 100);
+	GiveSanityDamage(1, true);
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaScareParticles", false);
+}
+
+void getQuestAndScareTimer(string &in entity){
+	AddTimer("", 0.1f, "getQuestAndScare");
+}
+
+void getQuestAndScare(string &in asTimer){
+	CompleteQuest("drain", "drain");
+	AddTimer("", 2.5f, "getScare");
+	AddQuest("howto", "howto");
+}
+
+void getScare(string &in asTimer){
+	PlayGuiSound("scare_grunt_2.ogg", 1000);
+}
+
+void drainSewer(string &in asEntity, int alState){
+	if (GetLocalVarInt("hasPulled") == 0){
+		PlayGuiSound("move_gate.snt", 100);
+		SetEntityActive("AreaHearLast", true);
+		SetLevelDoorLocked("Back", false);
+		SetLocalVarInt("hasPulled", 1);
+		SetGlobalVarInt("hasDrainedSewers", 1);
+		SetEntityActive("grunt", true);
+		SetMessage("Messages", "defend", 0);
+		CompleteQuest("howto", "howto");
+	}
+}
+
+void playScareSoundScary(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_grunt_2.ogg", 1000);
+}
+
+void playScareSound(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_grunt_1.ogg", 1000);
+}
+
+void addCheckPoint(string &in asParent, string &in asChild, int alState){
+	CheckPoint("CheckPoint", "CheckPoint", "", "Messages", "death_1");
+}
+
+void hitLong_1(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("gruntHealth") == 1){
+		PlayGuiSound("grunt_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		ChangePlayerStateToNormal();
+		SetLocalVarInt("gruntHealth", 0);
+	}else if (GetLocalVarInt("gruntHealth") == 0){
+		SetEntityActive("grunt", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		PlayGuiSound("grunt_attack.snt", 100);
+		ChangePlayerStateToNormal();
+	}
+}
+
+void hitLong_2(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("gruntHealth") == 1){
+		PlayGuiSound("grunt_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		ChangePlayerStateToNormal();
+		SetLocalVarInt("gruntHealth", 0);
+	}else if (GetLocalVarInt("gruntHealth") == 0){
+		SetEntityActive("grunt", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		ChangePlayerStateToNormal();
+		PlayGuiSound("grunt_attack.snt", 100);
+	}
+}
+
+void hitShort(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("gruntHealth") == 1){
+		PlayGuiSound("grunt_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+		SetLocalVarInt("gruntHealth", 0);
+	}else if (GetLocalVarInt("gruntHealth") == 0){
+		SetEnemyIsHallucination("grunt", true);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+		PlayGuiSound("grunt_attack.snt", 100);
+	}
+}
+
+void playLastSound(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_grunt_3", 1000);
+}

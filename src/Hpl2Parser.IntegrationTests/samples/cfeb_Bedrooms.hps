@@ -1,0 +1,104 @@
+////////////////////////////PlayMusic("*musicfile.ogg*", false, 3, 1, 0, true);/////
+// Run first time starting map
+void OnStart()
+{
+   AddEntityCollideCallback("Player", "Bedroom_Quest_Area", "GetBedroomQuest", true, 1);
+   AddEntityCollideCallback("Player", "Bedroom_Complete_Area", "FinishBedroomQuest", true, 1);
+   AddUseItemCallback("", "Crowbar", "Door", "UseCrowbarOnDoor", true);
+   AddEntityCollideCallback("Joint", "AreaBreak", "BreakDoor", true, 1);
+   AddEntityCollideCallback("Player", "suitor1spawn", "suitor1spawnscript", true, 1);
+   SetEntityPlayerInteractCallback("ItemHammer", "suitor2spawn", false);
+}
+
+void GetBedroomQuest(string &in asParent, string &in asChild, int alState)
+{
+AddQuest("bedroomquest", "BedroomQuest");
+}
+
+void UseCrowbarOnDoor(string &in asItem, string &in asEntity)
+{
+      RemoveItem(asItem);
+      PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+      AddTimer(asEntity, 0.2, "TimerPlaceCrowbar");
+}
+
+void FinishBedroomQuest (string &in asParent, string &in asChild, int alState)
+{
+CompleteQuest("bedroomquest", "BedroomQuest");
+}
+
+void TimerPlaceCrowbar(string &in asTimer)
+{
+      SetEntityActive("Joint", true);
+      PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0, false);
+}
+
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+      SetEntityActive("Joint", false);
+      SetEntityActive("Broken", true);
+
+      SetSwingDoorLocked("Door", false, false);
+      SetSwingDoorClosed("Door", false, false);
+      SetSwingDoorDisableAutoClose("Door", true);
+
+      AddPropImpulse("Door", 0, 0, 3, "world");
+
+      CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaEffect", false);
+      PlaySoundAtEntity("", "break_wood_metal", "AreaEffect", 0, false);
+      
+      GiveSanityBoostSmall();
+
+      AddTimer("", 0.1, "TimerPushDoor");
+
+}
+
+void TimerPushDoor(string &in asTimer)
+{
+      AddPropImpulse("Door", -4, 2, 1, "world");
+      AddTimer("", 1.1, "TimerDoorCanClose");
+}
+
+void TimerDoorCanClose(string &in asTimer)
+{
+      SetSwingDoorDisableAutoClose("Door", false);
+}
+
+void suitor1spawnscript (string &in asParent, string &in asChild, int alState)
+{
+AddEnemyPatrolNode("suitor1", "PathNodeArea_1", 0.001f, "");
+AddEnemyPatrolNode("suitor1", "PathNodeArea_2", 0.001f, "");
+AddEnemyPatrolNode("suitor1", "PathNodeArea_3", 0.001f, "");
+AddEnemyPatrolNode("suitor1", "PathNodeArea_4", 0.001f, "");
+AddEnemyPatrolNode("suitor1", "PathNodeArea_5", 0.001f, "");
+AddEnemyPatrolNode("suitor1", "PathNodeArea_6", 0.001f, "");
+AddEnemyPatrolNode("suitor1", "PathNodeArea_7", 0.001f, "");
+AddEnemyPatrolNode("suitor1", "PathNodeArea_8", 3.0f, "");
+SetEntityActive("suitor1", true);
+}
+
+void suitor2spawn(string &in asEntity)
+{
+AddEnemyPatrolNode("suitor2", "PathNodeArea_9", 0.001f, "");
+AddEnemyPatrolNode("suitor2", "PathNodeArea_10", 0.001f, "");
+AddEnemyPatrolNode("suitor2", "PathNodeArea_11", 0.001f, "");
+AddEnemyPatrolNode("suitor2", "PathNodeArea_12", 0.001f, "");
+AddEnemyPatrolNode("suitor2", "PathNodeArea_13", 0.001f, "");
+AddEnemyPatrolNode("suitor2", "PathNodeArea_14", 0.001f, "");
+AddEnemyPatrolNode("suitor2", "PathNodeArea_15", 0.001f, "");
+AddEnemyPatrolNode("suitor2", "PathNodeArea_16", 3.0f, "");
+SetEntityActive("suitor2", true);
+}
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+ PlayMusic("03_amb.ogg", true, 3, 3, 1, true);
+}
+ 
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

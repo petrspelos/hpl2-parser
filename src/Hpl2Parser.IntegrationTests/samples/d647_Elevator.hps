@@ -1,0 +1,86 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("Elevator");
+	ClearSavedMaps();
+	FadeOut(0);
+	FadeIn(3);
+	AddTimer("", 38, "TimerEndElevator");
+	AddTimer("", 10, "TimerStopElevator");
+	AddTimer("", 18, "TimerResumeElevator");
+	TimerShake("");
+	TimerShakeLamp("");
+	CreateParticleSystemAtEntity("scrape1", "ps_elevator_slow.ps", "Scrape_1", false);
+	CreateParticleSystemAtEntity("scrape2", "ps_elevator_slow.ps", "Scrape_2", false);
+	PlaySoundAtEntity("MoveSound", "elevator_move_normal", "Effects", 1, true);
+	PlaySoundAtEntity("scrape1", "14_scrape_low.snt", "Scrape_1", 5, false);
+	PlaySoundAtEntity("scrape2", "14_scrape_low.snt", "Scrape_2", 5, false);
+	SetMoveObjectStateExt("wall", 1, 2, -1, 0.2, true);
+}
+
+void TimerStopElevator(string &in asTimer)
+{
+	PlaySoundAtEntity("stomp", "15_intro.snt", "Effects", 0.5f, false);
+	PlaySoundAtEntity("shadow", "guardian_activate.snt", "Player", 0, false);
+	PlaySoundAtEntity("elevatorstopsound", "elevator_stop", "Effects", 0, false);
+	SetMoveObjectStateExt("wall", 1, 2, 0, 0.2, true);
+	DestroyParticleSystem("scrape1");
+	DestroyParticleSystem("scrape2");
+	StopSound("scrape1", 0.1);
+	StopSound("scrape2", 0.1);
+	SetLightVisible("LightScrape_1", false);
+	SetLightVisible("LightScrape_2", false);
+	RemoveTimer("shake");
+	RemoveTimer("shakelamp");
+	GiveSanityDamage(10, true);
+	StartScreenShake(0.1, 1, 0, 0);
+	StopSound("MoveSound", 0.2);
+	AddTimer("scare", 1, "TimerPlayerReact");
+	AddTimer("breath", 2.5, "TimerPlayerReact");
+	AddTimer("breath", 4.5, "TimerPlayerReact");
+}
+
+void TimerPlayerReact(string &in asTimer)
+{
+	PlayGuiSound("react_" + asTimer, 0.7);
+}
+
+void TimerShakeLamp(string &in asTimer)
+{
+	AddPropImpulse("lamp", RandFloat(0.8, 1.4), 0, 0, "world");
+	AddTimer("shakelamp", RandFloat(0.5, 2), "TimerShakeLamp");
+}
+
+void TimerResumeElevator(string &in asTimer)
+{
+	SetMoveObjectStateExt("wall", 1, 2, -1, 0.2, true);
+	TimerShake("");
+	TimerShakeLamp("");
+	SetLightVisible("LightScrape_1", true);
+	SetLightVisible("LightScrape_2", true);
+	CreateParticleSystemAtEntity("scrape1", "ps_elevator_slow.ps", "Scrape_1", false);
+	CreateParticleSystemAtEntity("scrape2", "ps_elevator_slow.ps", "Scrape_2", false);
+	PlaySoundAtEntity("MoveSound", "elevator_move_normal", "Effects", 1, true);
+	PlaySoundAtEntity("scrape1", "14_scrape_low.snt", "Scrape_1", 5, false);
+	PlaySoundAtEntity("scrape2", "14_scrape_low.snt", "Scrape_2", 5, false);
+}
+void TimerShake(string &in asTimer)
+{
+	StartScreenShake(0.01, 2, 0, 0);
+	AddTimer("shake", 2, "TimerShake");
+}
+
+void TimerEndElevator(string &in asTimer)
+{
+	AddTimer("", 1, "EndMap");
+	FadeOut(1);
+}
+
+void EndMap(string &in asTimer)
+{
+	ChangeMap("BackCastle.map", "PlayerStartArea_1", "", "");
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "LoadElevator", 0,"");
+}

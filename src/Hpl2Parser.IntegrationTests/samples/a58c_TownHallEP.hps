@@ -1,0 +1,347 @@
+void OnStart()
+{
+AddUseItemCallback("","jar1","bottlearea1","chemical1",true);
+AddUseItemCallback("","jar2","bottlearea2","chemical2",true);
+AddUseItemCallback("","jar3","bottlearea3","chemical3",true);
+AddUseItemCallback("","jar4","bottlearea4","chemical4",true);
+AddUseItemCallback("CrowbarOnDoor", "crowbar", "desk", "CrowbarOnDoor", true);
+SetEntityInteractionDisabled("jar3", true);
+SetEntityInteractionDisabled("jar4", true);
+SetEntityInteractionDisabled("journal_1", true);
+PlayMusic("TownHallAmb", true, 1, 5, 0, true);
+SetMapDisplayNameEntry("TownHall");
+AddTimer("chat", 5, "chat");
+AddTimer("ghostsounds", 15, "ghostsounds");	
+AutoSave();
+}
+
+void ghostsounds(string &in asTimer)
+{
+PlaySoundAtEntity("laptop","scare_human_noices.snt", "Player", 0, false);
+AddTimer("ghostsounds", 26, "ghostsounds");	
+}
+
+void chat(string &in asTimer)
+{
+PlaySoundAtEntity("laptop","laptop.snt", "ScriptArea_1", 0, false);
+AddTimer("chat", 15, "chat");	
+}
+
+void CrowbarOnDoor (string &in asItem, string &in asEntity) 
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("","puzzle_place_jar", "Player", 0, false);
+	SetEntityActive("crowbar_joint_1", true);
+	AddEntityCollideCallback("crowbar_joint_1", "AreaCrowbarCollide", "BreakCrowbarDoor", true, 1);
+	SetPlayerActive(false);
+	StartPlayerLookAt("crowbar_joint_1", 1.3f, 1.3f, "");
+        AddGlobalVarInt("HotelNight", 1);
+	AddTimer ("", 1, "EnablePlayer");
+}
+
+void EnablePlayer (string &in asTimer)
+{
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+}
+
+void BreakCrowbarDoor (string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityBoostSmall();
+	SetSwingDoorLocked("desk", false, false);
+	SetSwingDoorDisableAutoClose("desk", true);
+	SetSwingDoorClosed("desk", false,false);
+	PlaySoundAtEntity("break","break_wood_metal", "AreaCrowbar", 0, false);
+	AddPropImpulse("desk", 0, 0, -5, "world");
+	SetEntityActive("crowbar_joint_1", false);
+	SetEntityActive("crowbar_dyn_1", true);
+	AddTimer("timerpushdoor", 0.1, "TimerPushDoor");	
+	SetEntityPlayerInteractCallback("desk", "", false);
+        GiveItem("crowbar", "", "crowbarstrong", "crowbar.tga", 0);
+        SetEntityInteractionDisabled("journal_1", false);
+}
+
+void TimerPushDoor(string &in asTimer)
+{
+	AddPropImpulse("desk", 2, 0, -2, "world");
+	AddTimer("doorclose", 1.1, "TimerDoorClose");
+}
+
+void TimerDoorClose(string &in asTimer)
+{
+	SetSwingDoorDisableAutoClose("desk", false);
+}
+
+void talk(string &in asTimer)
+{
+AddEffectVoice("ayalaptop1.ogg", "", "Voice", "00_Ayalaptop1", false, "", 0, 0 );
+AddTimer("talk2", 1, "talk2");	
+AddTimer("talk8", 36, "talk8");	
+SetPlayerActive(false);
+SetEntityActive("ScriptArea_1", false);
+StartPlayerLookAt("ScriptArea_1", 1, 2.0f, "");
+StopSound("Laptop", 0.5f);
+RemoveTimer("chat");
+}
+
+void talk2(string &in asTimer)
+{
+AddEffectVoice("shay1.ogg", "", "Voice", "00_Shay1", false, "", 0, 0 );
+AddTimer("talk3", 1, "talk3");	
+}
+
+void talk3(string &in asTimer)
+{
+AddEffectVoice("shay2.ogg", "", "Voice", "00_Shay2", false, "", 0, 0 );
+AddTimer("talk4", 1, "talk4");	
+}
+
+void talk4(string &in asTimer)
+{
+AddEffectVoice("ayalaptop2.ogg", "", "Voice", "00_Ayalaptop2", false, "", 0, 0 );
+AddTimer("talk5", 1, "talk5");	
+}
+
+void talk5(string &in asTimer)
+{
+AddEffectVoice("shay3.ogg", "", "Voice", "00_Shay3", false, "", 0, 0 );
+AddTimer("talk6", 1, "talk6");	
+}
+
+void talk6(string &in asTimer)
+{
+AddEffectVoice("ayalaptop3.ogg", "", "Voice", "00_Ayalaptop3", false, "", 0, 0 );
+AddTimer("talk7", 3, "talk7");	
+}
+
+void talk7(string &in asTimer)
+{
+AddEffectVoice("shay4.ogg", "", "Voice", "00_Shay4", false, "", 0, 0 );
+}
+
+void talk8(string &in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerActive(true);
+AddQuest("Antidote", "Antidote");	
+SetEntityInteractionDisabled("jar3", false);
+SetEntityInteractionDisabled("jar4", false);
+SetLevelDoorLocked("mansion_4", false);
+AddTimer("talk9", 3, "talk9");	
+}
+
+void talk9(string &in asTimer)
+{
+AddPropForce("pot_plant_small01_4", 5000, 2500, 2000,"world");
+AddPropForce("pot_plant_small01_3", 5000, 2500, 2000,"world");
+AddPropForce("book03_26", 5000, 2500, 2000,"world");
+AddPropForce("book02_12", 5000, 2500, 2000,"world");
+AddPropForce("book_bible_5", 5000, 2500, 2000,"world");
+AddPropForce("cross_small_wood_2", 5000, 2500, 2000,"world");
+AddTimer("talk10", 1, "talk10");	
+}
+
+void talk10(string &in asTimer)
+{
+PlaySoundAtEntity("","AyaScared.snt","Player", 0,false);
+AddTimer("phonecall4", 2, "phonecall4");	
+}
+
+//---- Chemicals ----//
+
+void chemical1(string &in asItem, string &in asEntity)
+{
+SetEntityActive("bottle11", true);
+SetEntityActive("bottle1", false);
+RemoveItem("jar1");
+PlaySoundAtEntity("", "puzzle_acid_success.snt", "bottle11", 0, false);
+AddLocalVarInt("Var1", 1);
+func5();
+}
+
+void chemical2(string &in asItem, string &in asEntity)
+{
+SetEntityActive("bottle22", false);
+SetEntityActive("bottle2", true);
+RemoveItem("jar2");
+PlaySoundAtEntity("", "puzzle_acid_fail.snt", "bottle22", 0, false);
+AddLocalVarInt("Var1", 1);
+func5();
+}
+
+void chemical3(string &in asItem, string &in asEntity)
+{
+SetEntityActive("bottle33", false);
+SetEntityActive("bottle3", true);
+RemoveItem("jar3");
+PlaySoundAtEntity("", "puzzle_acid_success.snt", "bottle33", 0, false);
+AddLocalVarInt("Var1", 1);
+func5();
+}
+
+void chemical4(string &in asItem, string &in asEntity)
+{
+SetEntityActive("bottle44", true);
+SetEntityActive("bottle4", false);
+RemoveItem("jar4");
+PlaySoundAtEntity("", "puzzle_acid_fail.snt", "bottle44", 0, false);
+AddLocalVarInt("Var1", 1);
+func5();
+}
+
+void func5()
+{
+if(GetLocalVarInt("Var1") == 4)
+    {
+GiveSanityBoost();
+SetEntityActive("valve2", true);
+SetEntityActive("valve", false);
+    }
+}
+
+void func_valve(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+CreateParticleSystemAtEntity("fireps", "ps_fire_lab_burner", "fire", false);
+CreateParticleSystemAtEntity("fireps", "ps_fire_lab_burner", "fire2", false);
+CreateParticleSystemAtEntity("fireps", "ps_fire_lab_burner", "fire3", false);
+CreateParticleSystemAtEntity("fireps", "ps_fire_lab_burner", "fire4", false);
+SetEntityActive("valve2", false);
+SetEntityActive("valve", true);
+AddTimer("boil", 7, "boil");
+          return;
+     }
+}
+
+void boil(string &in asTimer)
+{
+CreateParticleSystemAtEntity("boilps", "ps_acid_machine_bubble_large", "burn", false);
+CreateParticleSystemAtEntity("boilps", "ps_acid_machine_bubble_large", "burn2", false);
+CreateParticleSystemAtEntity("boilps", "ps_acid_machine_bubble_large", "burn3", false);
+CreateParticleSystemAtEntity("boilps", "ps_acid_machine_bubble_large", "burn4", false);
+PlaySoundAtEntity("boilsound", "puzzle_boil_low.snt", "burn", 0, false);
+PlaySoundAtEntity("boilsound", "puzzle_boil_low.snt", "burn2", 0, false);
+PlaySoundAtEntity("boilsound", "puzzle_boil_low.snt", "burn3", 0, false);
+PlaySoundAtEntity("boilsound", "puzzle_boil_low.snt", "burn4", 0, false);
+AddTimer("boil2", 9, "boil2");
+}
+
+void boil2(string &in asTimer)
+{
+CreateParticleSystemAtEntity("boil2ps", "ps_acid_machine_bubble_end", "done", false);
+AddTimer("boil3", 2, "boil3");
+}
+
+void boil3(string &in asTimer)
+{
+SetEntityActive("mixture2", true);
+SetEntityActive("mixture", false);
+SetEntityActive("bottle44", false);
+SetEntityActive("bottle4", true);
+SetEntityActive("bottle33", false);
+SetEntityActive("bottle3", true);
+SetEntityActive("bottle22", false);
+SetEntityActive("bottle2", true);
+SetEntityActive("bottle11", false);
+SetEntityActive("bottle1", true);
+DestroyParticleSystem("boilps");
+DestroyParticleSystem("boil2ps");
+StopSound("boilsound", 0.5f);
+CompleteQuest("Antidote", "Antidote");
+}
+
+void mixturedone(string &in asEntity)
+{
+AddQuest("HeadBack", "HeadBack");	
+SetLevelDoorLocked("level_cistern_1", false);
+SetEntityActive("stand_1", true);
+AddTimer("ghost2", 3, "ghost2");
+}
+
+void ghost2(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_cloud_thing01", "AreaAlma", false);
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+AddTimer("ghost3", 2, "ghost3");
+}
+
+void ghost3(string &in asTimer)
+{
+SetEntityActive("stand_1", false);
+AddTimer("phonecall", 3, "phonecall");
+}
+
+void phonecall(string &in asTimer)
+{
+PlaySoundAtEntity("","Phone.snt","Player", 0,false);
+AddTimer("phonecall2", 4, "phonecall2");	
+}
+
+void phonecall2(string &in asTimer)
+{
+AddEffectVoice("ayabar9.ogg", "", "Voice", "00_Ayabar9", false, "", 0, 0 );
+AddTimer("phonecall3", 3, "phonecall3");	
+}
+
+void phonecall3(string &in asTimer)
+{
+AddEffectVoice("child10.ogg", "", "Voice", "00_Child10", false, "", 0, 0 );
+AddTimer("phonecall4", 1, "phonecall4");	
+}
+
+void phonecall4(string &in asTimer)
+{
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);	
+}
+
+//---- Messages ----//
+
+void Passwords(string &in asEntity)
+{
+AddEffectVoice("ayapasswords.ogg", "", "Voice", "00_Ayapasswords", false, "", 0, 0 );
+}
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "lockeddesk", 5);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+}
+
+void OnEnter()
+{	
+PlayMusic("TownHallAmb", true, 1, 5, 0, true);
+
+if(GetGlobalVarInt("Powerup2")==1)
+	{
+SetPlayerSanity(100);
+	}
+
+if(GetGlobalVarInt("Powerup7")==1)
+	{
+AddPlayerSanity(30);
+	}
+
+if(GetGlobalVarInt("Powerup8")==1)
+	{
+SetSanityDrainDisabled(true);
+	}
+
+if(GetGlobalVarInt("Powerup9")==1)
+	{
+AddPlayerHealth(30);
+	}
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

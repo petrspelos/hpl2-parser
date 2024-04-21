@@ -1,0 +1,230 @@
+void OnStart()
+{
+	PlayGuiSound("player_awaken", 0.8f);
+	ClearSavedMaps();
+	SetMapDisplayNameEntry("AltstadtInn");
+	SetInventoryDisabled(true);
+	PlaySoundAtEntity("soundcreak", "00_creak.snt", "Player", 1.5f, false);
+	SetPlayerCrouching(true);
+	SetPlayerMoveSpeedMul(0.6f);
+	SetPlayerLookSpeedMul(0.6f);
+	SetPlayerRunSpeedMul(0.6f);
+	ShowPlayerCrossHairIcons(true);
+	FadeOut(0);
+	AddTimer("beginning", 5, "beginning");
+	SetPlayerLampOil(0);
+	AddEntityCollideCallback("Joint", "AreaBreak", "BreakDoor", true, 1);
+	AddEntityCollideCallback("Player", "Area1", "Look", true, 1);
+	AddUseItemCallback("", "Key1", "Level", "Outside", true);
+	AddUseItemCallback("", "Bar", "Door1", "Crowbar", true);
+	StartPlayerLookAt("Chandelier", 0.5f, 0.5f, "");
+	SetPlayerActive(false);
+	PlayMusic("01_amb_darkness.ogg", true, 0.8f, 5, 0, true);
+}
+
+void Memento1Add()
+{
+	SetInventoryDisabled(false);
+	SetMessage("ScreenText", "textintro3", 4.5f);
+	GiveSanityBoostSmall();
+	AddTimer("mementoadd", 4.5f, "MementoAdd");
+}
+
+void MementoAdd(string &in asTimer)
+{
+	AddQuest("Memento0", "M0");
+	AddQuest("Memento1", "M1");
+}
+
+void FlashbackActive(string &in asEntity, string &in onType)
+{
+	StopPlayerLookAt();
+	PlayMusic("01_paper_self.ogg", false, 0.8f, 1, 1, false);
+	SetEntityActive("FB", true);
+}
+
+void beginning(string &in asTimer)
+{
+	FadePlayerAspectMulTo(1.75f, 0.1f);
+	FadePlayerFOVMulTo(0.8f, 0.5f);
+	AddTimer("beginning2", 3.5f, "Beginning2");
+	FadePlayerRollTo(10, 2, 2);
+	FadeIn(1.5);
+}
+
+void Beginning2(string &in asTimer)
+{
+	StartPlayerLookAt("stove", 2, 2, "");
+	FadeOut(2);
+	AddTimer("beginning3", 4.5f, "Beginning3");
+}
+
+void Beginning3(string &in asTimer)
+{
+	FadePlayerRollTo(-10, 2, 2);
+	FadeIn(1.5f);
+	StartPlayerLookAt("orb", 1, 1, "");
+}
+
+void NoteLook()
+{
+	PlayMusic("01_amb_darkness.ogg", true, 0.8f, 5, 0, true);
+	SetPlayerMoveSpeedMul(0.9f);
+	SetPlayerRunSpeedMul(0.9f);
+	SetPlayerLookSpeedMul(0.9f);
+	CreateParticleSystemAtEntity("", "ps_door_damage_wood.ps", "CellarDoor", false);
+	PlaySoundAtEntity("", "scare_male_terrified5.snt", "CellarDoor", 0, false);
+	PlaySoundAtEntity("", "scare_slam_door.snt", "CellarDoor", 0, false);
+	StartPlayerLookAt("CellarDoor", 4, 4, "");
+	GiveSanityDamage(5, true);
+	AddTimer("", 3, "ScareDoor");
+}
+
+void ScareDoor(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void Look(string &in asParent, string &in asChild, int alState)
+{
+	CompleteQuest("Memento1", "M1");
+	PlayGuiSound("react_scare", 0.6);
+	SetPlayerActive(false);
+	PlaySoundAtEntity("", "guardian_ontop.snt", "Player", 0, false);
+	AddTimer("", 4, "LookEvent");
+	StartPlayerLookAt("AreaEffect2", 4, 4, "");
+	GiveSanityDamage(10, true);
+	SetEntityActive("rock1", true);
+	SetEntityActive("rock2", true);
+	StartScreenShake(0.6f, 2, 1, 3);
+}
+
+void LookEvent(string &in asTimer)
+{
+	StopPlayerLookAt();
+	AddTimer("lanternactive", 1, "LanternActive");
+	PlayGuiSound("react_breath_slow", 0.8f);
+	SetEntityActive("lantern", true);
+}
+
+void LanternActive(string &in asTimer)
+{
+	PlaySoundAtEntity("", "guardian_distant.snt", "AreaEffect2", 0, false);
+	SetPlayerActive(true);
+}
+
+void Door1M(string &in asEntity)
+{
+	StartPlayerLookAt("diary", 1.5f, 1.5f, "");
+	SetMessage("ScreenText", "textintrodoor", 4);
+}
+
+void Outside(string &in asItem, string &in asEntity)
+{
+	GiveSanityBoostSmall();
+	SetLevelDoorLocked("Level", false);
+	PlaySoundAtEntity("", "unlock_door.snt", "Level", 0, false);
+	RemoveItem("Key1");
+}
+
+void Crowbar(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05f, false);
+	AddTimer(asEntity, 0.2f, "TimerPlaceCrowbar");
+	RemoveItem(asItem);
+}
+
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth("Door1", 0);
+	AddPropImpulse("Door1", 4, 0, 0, "world");
+	CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaEffect", false);
+	PlayMusic("10_puzzle01.ogg", false, 1, 0.1f, 1, false);
+	CompleteQuest("Memento1", "M1");
+	PlaySoundAtEntity("", "break_wood_metal.snt", "AreaEffect", 0, false);
+	CompleteQuest("Memento1", "M1");
+	GiveSanityBoostSmall();
+	SetEntityActive("Joint", false);
+	SetEntityActive("BrokenBar", true);
+}
+
+void TimerPlaceCrowbar(string &in asTimer)
+{
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0.05f, false);
+	SetEntityActive("Joint", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("01_amb_darkness.ogg", true, 0.8f, 5, 0, true);
+}
+
+void Intro()
+{
+	FadePlayerRollTo(0, 1, 1);
+	FadePlayerFOVMulTo(1, 0.5f);
+	SetEntityActive("orb", false);
+	DestroyParticleSystem("orblight");
+	DestroyParticleSystem("orblight_1");
+	AddTimer("", 0.8f, "Intro2");
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+}
+
+void Intro2(string &in asTimer)
+{
+	SetPlayerCrouching(false);
+	StopSound("soundcreak", 4.5f);
+	FadePlayerAspectMulTo(1, 0.1f);
+	PlayGuiSound("react_scare", 1);
+	StartPlayerLookAt("Door1", 1, 5, "");
+}
+
+void PickupDiary(string &in asEntity, string &in OnPickup)
+{
+	AddTimer("", 1.5f, "EndDiary");
+	PlayMusic("23_paper_alexander.ogg", false, 0.7f, 1.5f, 1, false);
+}
+
+void EndDiary(string &in asTimer)
+{
+	StopMusic(3.5f, 1);
+	PlayMusic("01_amb_darkness.ogg", true, 0.8f, 5, 0, true);
+}
+
+void Lamp(string &in asEntity, string &in OnPickup)
+{
+	SetSwingDoorLocked("CellarDoor", false, false);
+	SetEntityActive("FlashbackArea", false);
+	AddQuest("Memento2", "M2");
+}
+
+void Monster(string &in asEntity, string &in OnPickup)
+{
+	PlayGuiSound("react_scare", 0.8f);
+	SetMessage("ScreenText", "hidetext", 4.5f);
+	CheckPoint("cpoint1", "Spawn1", "", "DeathHint", "DMonster");
+	RemoveItem("Oil");
+	AddTimer("", 2, "MonsterDoor");
+	StartPlayerLookAt("CellarDoor", 4, 4, "");
+	SetPlayerLampOil(50);
+	GiveSanityDamage(5, true);
+	SetEntityActive("Grunt", true);
+	CompleteQuest("Memento2", "M2");
+	AddEnemyPatrolNode("Grunt", "Node_1", 1, "");
+	AddEnemyPatrolNode("Grunt", "Node_2", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "Node_3", 5, "");
+	AddEnemyPatrolNode("Grunt", "Node_4", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "Node_5", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "Node_6", 0.001f, "");
+}
+
+void MonsterDoor(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "Load1", 0,"");
+}

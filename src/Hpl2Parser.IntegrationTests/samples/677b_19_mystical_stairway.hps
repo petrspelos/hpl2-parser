@@ -1,0 +1,102 @@
+//////////////////////////////////////
+/////////////////////////////////////
+
+
+// 		........LEVEL 19..........
+
+//					 ~`~					 //
+//				   ~ ..... ~ 					//
+//--.    ~	.--"MYSTICAL STAIRWAy"--.	  ~ .--//
+//				   ~ ..... ~ 				  //
+//				   	 ~`~					 //
+
+/*
+
+	Transitional map to Dignitary Hall
+
+*/
+
+//--UPON STARTING THE MAP--//
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelStairwayFinal");
+	StopMusic(0.0f, 0);
+	
+	//--COLLIDE CALLBACKS--//
+	AddEntityCollideCallback("Player", "ScriptArea_1", "BeginMusic", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_2", "Wind", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_5", "Wind", true, 1);
+	
+	
+	if(ScriptDebugOn())
+	{
+		//--LANTERN--//
+		SetPlayerLampOil(10.0f); //...
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+	}
+	
+	//--DISPLAY--//
+	SetMapDisplayNameEntry("LevelStairwayFinal");
+	
+	CheckPoint("stairway1", "PlayerStartArea_1", "", "DeathHint", "Dhint1");
+	
+	AutoSave();
+	}
+	
+//--BEGIN MUSIC + SCREEN SHAKING EVENTS--//
+void BeginMusic(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("ending_agrippa.ogg", false, 1.0f, 0.5f, 10, true);
+	
+	SetPlayerMoveSpeedMul(0.5f);	
+	FadeImageTrailTo(1.5f, 5.0f);
+	
+	PlaySoundAtEntity("crumble", "29_crumble", "Player", 7.0f, false);
+	StartScreenShake(0.08f, 10, 7, 7);
+	
+	AddTimer("endshake", 20, "TimerEndShake");
+	}
+	
+//--STOP SHAKING EVENTS--//
+void TimerEndShake(string &in asTimer)
+{
+	/* Stop crumble
+	*/
+	StopSound("crumble", 5);
+	
+	StopPlayerLookAt();
+	AddDebugMessage("Stopped Looking", false);
+}
+
+//--WIND GUST--//
+void Wind(string &in asParent, string &in asChild, int alState)
+{
+	if(asChild == "ScriptArea_2")
+	{
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_3", 0.0f, false);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_3", false);
+	}
+	
+	if(asChild == "ScriptArea_5")
+	{
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_4", 0.0f, false);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_4", false);
+	StartPlayerLookAt("ScriptArea_6", 2, 2, "");
+	
+	AddTimer("endlook", 5, "TimerEndLook");
+	
+	AddDebugMessage("Started Looking", false);
+	}
+}
+
+//--STOP LOOKING EVENTS--//
+void TimerEndLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	AddDebugMessage("Stopped Looking", false);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load19", 0, "int_loading_boats.jpg");
+}

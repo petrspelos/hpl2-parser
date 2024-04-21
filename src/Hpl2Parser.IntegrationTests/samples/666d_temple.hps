@@ -1,0 +1,744 @@
+void OnStart()
+{
+	// Events
+	for(int i=1;i<=6;i++) 
+	{
+		AddUseItemCallback("", "Sharp_" + i, "orb_pedestal", "UseSharpOnPedestal", true);
+		AddUseItemCallback("", "Sharp_" + i, "orb_" + (i - 1), "UseSharpOnPedestal", true);
+	}
+	
+	AddUseItemCallback("", "ShinyEnchant", "orb_6", "UseEnchantOnOrb", true);
+	AddUseItemCallback("", "BridgeLeverHandle", "BridgeLeverScript", "UseHandleOnMount", true);
+	AddUseItemCallback("", "TempleKey", "LockedCellarDoor", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "SecretaryKey", "SecretarySmallDoor", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "UntaggedKey", "UntaggedSmallDoor_2", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "Arrow_Item", "light_box_1", "UseArrowOnLightBox", true);
+		
+	AddEntityCollideCallback("Player", "AreaAngelVoice", "OnCollideAreaAngelVoiceFirst", true, 1);
+	AddEntityCollideCallback("Player", "AreaCellar", "OnCollideAreaCellar", false, 0);
+	AddEntityCollideCallback("Player", "AreaFallDead", "OnCollideAreaFallDead", false, 1);
+	AddEntityCollideCallback("Player", "AreaBodyMass", "OnCollideBodyMass", true, 1);
+	AddEntityCollideCallback("Player", "AreaFlyingChairs", "OnCollideFlyingChairs", true, 1);
+	AddEntityCollideCallback("Player", "AreaRunesFirstCome", "OnCollideRunesFirstCome", true, 1);
+	AddEntityCollideCallback("Player", "AreaEndRoomTorch", "OnCollideEndRoomTorch", true, 1);
+	AddEntityCollideCallback("Player", "AreaEndRoom", "OnCollideEndRoom", true, 1);
+	AddEntityCollideCallback("Player", "AreaAfterWaterHorror", "OnCollideAfterWaterHorror", true, 1);
+	AddEntityCollideCallback("Player", "AreaWaterLocation", "OnCollideWaterLocation", true, 1);
+	for(int i=1;i<=15;i++) AddEntityCollideCallback("Player", "AreaRunes_" + i, "OnCollideRunes", false, 1);
+
+	// Varriables
+	SetLocalVarInt("OrbCount", 0);
+	SetLocalVarInt("IsSecretOpenAsFirst", 0);
+	SetLocalVarInt("SecretPassageHintCount", 1);
+	SetLocalVarInt("LeverTrapDownCount", 0);
+	SetLocalVarInt("IsLightBoxLit", 0);
+	SetLocalVarInt("IsArrowSet", 0);
+	SetSecretSeed();
+	
+	// Required Items
+	if(!HasItem("Lantern")) GiveItemFromFile("Lantern", "lantern.ent");
+	if(!HasItem("HammerChipper")) GiveItem("HammerChipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+	
+	// Other
+	SetMessage("Hints", "Chapter_5", 5.0f);	
+	SetLightVisible("OrbLight", false);
+	SetPlayerSanity(100.0f);
+	PlayMusic("22_amb.ogg", true, 1.0f, 0, 0, true);
+	PlayMusic("22_puzzle_orb.ogg", false, 1.0f, 0, 10, false);
+	CheckPoint("Music", "StartArea", "OnDeathMusic", "", "");
+	SetMoveObjectState("HeavyDoorLurker", -1.0f);
+	for(int i=1;i<=3;i++) InteractConnectPropWithMoveObject("HeavyDoorChangeState_" + i,"valve_iron_rusty02_" + i, "HeavyDoor_" + i, true, false, 0);
+	SetMapDisplayNameEntry("Temple");
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(0.0f, 5);
+	SetupLoadScreen("Loading", "End", 0, "end.jpg");
+}
+
+void OnCollideFlyingChairs(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("Attack2Respawn", "StartAreaProjectionRoom", "OnDeathByChefAttack2", "", "");
+	AddPropImpulse("LockedCellarDoor", 0.0f, 0.0f, 20.0f, "world");
+	AddTimer("LockedCellarDoor", 0.75f, "TimerLockTheDoor");
+	ChairsImpulse();
+}
+
+void OnDeathByChefAttack2(string &in asName, int alCount)
+{
+	ResetProp("LockedCellarDoor");
+	SetSwingDoorLocked("LockedCellarDoor", true, true);
+	for(int i=1;i<=39;i++) ResetProp("chair_nice01_" + i);
+	for(int i=1;i<=5;i++) ResetProp("chair_nice01_cabinet_" + i);
+	for(int i=1;i<=2;i++) ResetProp("MetalCabinet_" + i);
+	ChairsImpulse();
+}
+
+void ChairsImpulse()
+{
+	PlayMusic("01_event_dust.ogg", false, 1.0f, 0.25f, 3, false);
+	for(int i=1;i<=39;i++) AddTimer("" + i, i * 0.25f, "TimerThrowChair");
+	AddTimer("BruteAttack2", 10.0f, "TimerBruteAttack2");
+}
+
+void OnLitLightBox(string &in entityName, string &in asType)
+{
+	SetLocalVarInt("IsLightBoxLit", 1);
+	string lightFilter;
+
+	if(GetLocalVarInt("IsArrowSet") == 1)
+	{
+		lightFilter = "LightBoxArrow";
+		SetEntityActive("BridgeLeverHandle", true);
+	}
+	else
+		lightFilter = "LightBoxEmpty";
+	
+	FadeLightTo(lightFilter, 0.35f, 0.75f, 1.0f, 1.0f, -1, 2.00f);
+}
+
+void SetSecretSeed()
+{
+	int seed = RandInt(1, 5);
+	SetEntityActive("NoteSecretDoor_" + seed, true);
+	switch(seed)
+	{
+		case 1:
+			SetLocalVarInt("SecretLever_1", 1);
+			SetLocalVarInt("SecretLever_2", -1);
+			SetLocalVarInt("SecretLever_3", -1);
+			SetLocalVarInt("SecretLever_4", 1);
+			break;
+		case 2:
+			SetLocalVarInt("SecretLever_1", 1);
+			SetLocalVarInt("SecretLever_2", 1);
+			SetLocalVarInt("SecretLever_3", -1);
+			SetLocalVarInt("SecretLever_4", -1);
+			break;
+		case 3:
+			SetLocalVarInt("SecretLever_1", 1);
+			SetLocalVarInt("SecretLever_2", -1);
+			SetLocalVarInt("SecretLever_3", 1);
+			SetLocalVarInt("SecretLever_4", 1);
+			break;
+		case 4:
+			SetLocalVarInt("SecretLever_1", -1);
+			SetLocalVarInt("SecretLever_2", 1);
+			SetLocalVarInt("SecretLever_3", -1);
+			SetLocalVarInt("SecretLever_4", 1);
+			break;
+		case 5:
+			SetLocalVarInt("SecretLever_1", -1);
+			SetLocalVarInt("SecretLever_2", -1);
+			SetLocalVarInt("SecretLever_3", 1);
+			SetLocalVarInt("SecretLever_4", -1);
+			break;
+	}
+	int secretarySeed = RandInt(1, 3);
+	SetEntityActive("SecretaryBibla_" + secretarySeed, true);
+	SetEntityActive("1_SecretaryButton_" + secretarySeed, true);
+}
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	SetLevelDoorLocked(asEntity, false);
+	PlaySoundAtEntity("Sound_" + asEntity, "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	CompleteQuest(asEntity, asEntity);
+	if(asEntity == "SecretarySmallDoor") SetEntityActive("Sharp_3", true);
+}
+
+void UseArrowOnLightBox(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("SoundUseArrow", "pickaxe_charge.snt", asEntity, 0.0f, false);
+	SetLocalVarInt("IsArrowSet", 1);
+	SetEntityActive("Arrow_Static", true);
+	if(GetLocalVarInt("IsLightBoxLit") == 1)
+	{
+		FadeLightTo("LightBoxEmpty", 0, 0, 0, 0, -1, 0.2f);
+		FadeLightTo("LightBoxArrow", 0.35f, 0.75f, 1.0f, 1.0f, -1, 0.2f);
+		SetEntityActive("BridgeLeverHandle", true);
+	}	
+}
+
+void UseSharpOnPedestal(string &in asItem, string &in asEntity)
+{
+	int orbCount = GetLocalVarInt("OrbCount");
+	RemoveItem(asItem);
+	SetEntityActive("orb_" + orbCount, false);
+	CompleteQuest("OrbQuest" + orbCount, "OrbQuest" + orbCount);
+	AddLocalVarInt("OrbCount", 1);
+	orbCount = GetLocalVarInt("OrbCount");
+	SetEntityActive("orb_" + orbCount, true);
+	AddQuest("OrbQuest" + orbCount, "OrbQuest" + orbCount);
+	PlaySoundAtEntity("DropOrb", "22_orb_forge.ogg", "orb_" + orbCount, 0.0f, false);
+	
+	SetEntityPlayerInteractCallback("Corrupt_" + orbCount, "OnInteractCorrupt", true);	
+	SetEntityActive("SignCorrupt_" + orbCount, false);
+	
+	StartScreenShake(0.002f * orbCount, 0.5f, 0.5f, 0.5f);
+	
+	UseSharpOnPedestalSpecial(asItem, asEntity);
+	
+	CheckPoint("SpawnAtSanctuary_" + orbCount, "PlayerPedestal", "OnDeathMusic", "", "");
+}
+
+void OnInteractCorrupt(string &in asEntity)
+{
+	CreateParticleSystemAtEntity("SlimeDissolution", "ps_slime_attack_normal.ps", asEntity, false);
+	PlaySoundAtEntity("slimeExplosion", "slime_attack_normal_hit.snt", asEntity, 0.0f, false);
+	SetPropStaticPhysics("Corrupt_Door_" + GetLocalVarInt("OrbCount"), false);
+	SetEntityActive(asEntity, false);
+	
+}
+
+void UseSharpOnPedestalSpecial(string &in asItem, string &in asEntity)
+{
+	switch(GetLocalVarInt("OrbCount"))
+	{
+		case 3:
+			SetEntityActive("CorruptInstant_1", false);
+			SetPropStaticPhysics("MetalDoorLeft", false);
+			FadeEnemyToSmoke("Brute_1", true);
+			return;
+		case 6:
+			SetMoveObjectState("castlebase_secret_door_2", 1.0f);
+			PlayMusic("03_puzzle_secret.ogg", false, 1.0f, 0.0f, 10, false);
+			StartPlayerLookAt("castlebase_secret_door_2", 1.5f, 2.0f, "");
+			AddTimer("StopLookAtSecret", 2.25f, "TimerLookComplete");
+			return;
+		default:
+			return;		
+	}
+}
+
+void UseEnchantOnOrb(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive(asEntity, false);
+	SetEntityActive("TheOrb", true);
+	CreateParticleSystemAtEntity("Ps_OrbLight", "ps_orb_light.ps", "TheOrb", true);
+	SetLightVisible("OrbLight", true);
+	FadeLightTo("OrbLight", 0.5f, 1.0f, 1.0f, 1.0f, 8.0f, 3.0f);
+	
+	PlaySoundAtEntity("DropOrb", "03_orb.snt", "TheOrb", 0.0f, false);
+	StartScreenShake(0.04f, 0.5f, 0.5f, 0.5f);
+	
+	SetEntityActive("SignMainDoor", false);
+	SetEntityActive("TheDoorClosed", false);
+	SetEntityActive("TheCorrupt", false);
+	SetEntityActive("TheDoorOpen", true);
+	SetMessage("Hints", "AngelVoiceGate", 5.0f);
+	CompleteQuest("OrbQuest6","OrbQuest6");
+	AddQuest("OrbQuestFinal", "OrbQuestFinal");
+	
+	GiveSanityBoost();
+}
+
+void UseHandleOnMount(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("BridgeLeverFixed", true);
+	PlaySoundAtEntity("", "pickaxe_charge.snt", "BridgeLeverFixed", 0, false);
+	GiveSanityBoostSmall();
+	
+	CheckPoint("BridgeSpawn", "StartArea_Bridge", "", "", "");
+}
+
+void OnInteractDoor(string &in asDoor)
+{
+	if(!QuestIsCompleted(asDoor))
+	{
+		SetMessage("Hints", asDoor, 5.0f);
+		AddQuest(asDoor, asDoor);
+	}
+}
+
+void OnLeverTrapChange(string &in asEntity, int LeverState)
+{
+	if(LeverState == 1)
+	{
+		StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+		AddLocalVarInt("LeverTrapDownCount", 1);
+		SetLeverStuckState(asEntity, LeverState, true);
+		string part = StringSub(asEntity, asEntity.length() - 1, 1);
+		SetMoveObjectState("HeavyDoorLurker_" + part, 0.4f);
+		SetEntityPlayerInteractCallback("HeavyDoorLurker_" + part, "OnInteractHeavyDoorUp", true);
+		
+		if(GetLocalVarInt("LeverTrapDownCount") == 2)
+		{
+			for(int i=1;i<=2;i++) AddTimer("waterlurker_" + i, 4.0f, "TimerSetEntityActive");
+			for(int i=1;i<=7;i++) AddEnemyPatrolNode("waterlurker_1", "LurkerPathNode_" + i, 0.01f, "");
+			for(int i=1;i<=13;i++) AddEnemyPatrolNode("waterlurker_2", "LurkerTwoPathNode_" + i, 0.01f, "");
+			SetMoveObjectState("HeavyDoorLurker", -1.0f);
+			GiveSanityBoostSmall();
+		}
+	}
+}
+
+void OnInteractHeavyDoorUp(string &in asEntity)
+{
+	if(GetLeverState("LeverTrap_" + StringSub(asEntity, asEntity.length() - 1, 1)) == 1)
+	{
+		SetMoveObjectState(asEntity, 0.55f);
+		AddTimer(asEntity, 0.45f, "TimerHeavyDoorDown");
+	}
+}
+
+void OnLeverBridgeChange(string &in asEntity, int LeverState)
+{	
+	if(LeverState == -1)
+	{
+		StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+		SetLeverStuckState(asEntity, LeverState, true);
+		SetEntityActive("block_box_1", false);
+		BreakJoint("bridge_chained_1_BallJoint_1");
+		AddTimer("ChainForce", 0.3f, "TimerChainForce");
+	}
+}
+
+void OnPickUnusedTorch(string &in asEntity, string &in asType)
+{
+	SetEntityActive("Sign_BridgeLever", false);
+}
+
+void OnPickUpSecretCombination(string &in asEntity, string &in asType)
+{
+	SetMessage("Hints", "SecretPassage", 5.0f);
+	AddQuest("SecretPassage1", "SecretPassage1");
+	
+	AddTimer("HintUpSecretPassage", 45.0f, "TimerHintUpSecretPassage");
+}
+
+void TimerHintUpSecretPassage(string &in soundFile)
+{
+	int secretPassageHintCount = GetLocalVarInt("SecretPassageHintCount");
+
+	CompleteQuest("SecretPassage" + secretPassageHintCount, "SecretPassage" + secretPassageHintCount);
+
+	AddLocalVarInt("SecretPassageHintCount", 1);
+	secretPassageHintCount = GetLocalVarInt("SecretPassageHintCount");
+
+	AddQuest("SecretPassage" + secretPassageHintCount, "SecretPassage" + secretPassageHintCount);
+		
+	if(secretPassageHintCount == 5) return;
+	AddTimer("HintUpSecretPassage", 45.0f, "TimerHintUpSecretPassage");
+}
+
+void TimerHeavyDoorDown(string &in asTimer)
+{
+	SetEntityPlayerInteractCallback(asTimer, "OnInteractHeavyDoorUp", true);
+	SetMoveObjectState(asTimer, 0.4f);
+
+}
+
+void OnPickupSharp3(string &in asEntity, string &in asType)
+{
+	Preparation1("", 0);
+	CheckPoint("FirstAttackDead", "PlayerStartArea_Sharp3", "Preparation1", "Die", "BruteTempleDeadByFirstAttack");
+}
+
+void OnPickupSharp4(string &in asEntity, string &in asType)
+{
+	PlayMusic("26_event_brute.ogg", false, 1.0f, 0.0f, 10, false);
+	SetEntityActive("Brute_3", true);
+	StartPlayerLookAt("Brute_3", 3.5f, 4.0f, "");	
+	AddTimer("StopLookAtBrute", 1.0f, "TimerLookComplete");
+	ShowEnemyPlayerPosition("Brute_3");
+	CheckPoint("Music", "PlayerSharp4", "OnDeathMusic", "Die", "Runes");
+}
+
+void OnPickupSharp5(string &in asEntity, string &in asType)
+{
+	CheckPoint("DeathByLurker", "StartAreaLurker", "OnDeathByLurkers", "Die", "Lurkers");
+	PlayMusic("11_event_tree.ogg", false, 1.0f, 0.25f, 10, false);
+	SetPropStaticPhysics("prison_5", true);
+	SetPropStaticPhysics("prison_6", false);
+	ResetProp("prison_5");
+	ResetProp("prison_6");
+	SetEntityActive("CorruptWaterInvert", false);
+	SetEntityActive("AreaAfterWaterHorror", true);
+	SetLanternActive(false, true);
+	SetLanternDisabled(true);
+	AddTimer("EnableLatern", 2.25f, "TimerEnableLatern");
+		
+	StartScreenShake(0.025f, 2.25f, 0.25f, 1.25f);
+	SetMoveObjectState("HeavyDoorLurker", 0.0f);
+	RestartBodyParts();
+	for(int i=1;i<=11;i++) 
+	{
+		SetEntityActive("CorruptWater_" + i, true);
+		CreateParticleSystemAtEntity("SlimeDissolution", "ps_slime_attack_normal.ps", "CorruptWater_" + i, false);
+	}
+	for(int i=1;i<=2;i++)
+	{
+		SetMoveObjectState("HeavyDoorLurker_" + i, 1.0f);
+	}
+	
+}
+
+void RestartBodyParts()
+{
+	for(int i=1;i<=5;i++)
+	{
+		if(GetEntityExists("BodyPart_" + i)) ResetProp("BodyPart_" + i);
+		else CreateEntityAtArea("BodyPart_" + i, "corpse_male_torso.ent", "Script_BodyPart_" + i, false);
+		
+		CreateParticleSystemAtEntity("BloodOnBody", "blood.ps", "BodyPart_" + i, false);
+	}	
+}
+
+void OnDeathByLurkers(string &in asName, int alCount)
+{
+	SetLocalVarInt("LeverTrapDownCount", 0);
+	SetMoveObjectState("HeavyDoorLurker", 0.0f);
+	RestartBodyParts();
+	for(int i=1;i<=2;i++)
+	{
+		SetLeverStuckState("LeverTrap_" + i, 0, false);
+		ResetProp("LeverTrap_" + i);
+		ResetProp("HeavyDoorLurker_" + i);
+		SetMoveObjectState("HeavyDoorLurker_" + i, 1.0f);
+	}
+}
+
+void OnPickupSharp6(string &in asEntity, string &in asType)
+{
+	SetEntityActive("WoodenStairs", false);
+	SetEntityActive("WoodenStairsBroken", true);
+	CreateParticleSystemAtEntity("Ps_BrokenStairsSmoke", "ps_area_fog_xlarge.ps", "WoodenStairsBroken", false);
+	PlaySoundAtEntity("SoundBreakStairs", "break_stairs.snt", "WoodenStairsBroken", 0.0f, false);
+	StartScreenShake(0.025f, 2.25f, 0.25f, 1.25f);
+	
+	SetPropStaticPhysics("Corrupt_Door_5", true);
+	SetEntityActive("CorruptTrap", true);
+	SetEntityActive("Corrupt_5", true);
+	
+	StartPlayerLookAt("WoodenStairs", 1.5f, 2.0f, "");
+	AddTimer("StopLookAtBroekStairs", 1.25f, "TimerLookComplete");
+	AddTimer("react_pant.snt", 4.25f, "TimerScare");
+}
+
+
+void Preparation1(string &in asName, int alCount)
+{
+	ResetProp("Corrupt_Door_1");
+	SetEntityActive("CorruptInstant_1", false);
+	SetPropStaticPhysics("MetalDoorLeft", false);
+	AddEntityCollideCallback("Player", "AreaBruteAttack_1", "OnCollideAreaBruteAttack1", true, 1);
+	
+	PlayMusic("22_amb.ogg", true, 1.0f, 5.0f, 0, true);
+}
+
+void OnLeverSecretFirstOpen(string &in asEntity, int LeverState)
+{
+	if(GetLeverState("Lever1") == GetLocalVarInt("SecretLever_1")
+	&& GetLeverState("Lever2") == GetLocalVarInt("SecretLever_2")
+	&& GetLeverState("Lever3") == GetLocalVarInt("SecretLever_3")
+	&& GetLeverState("Lever4") == GetLocalVarInt("SecretLever_4"))
+	{
+		ResetProp("TheLever");
+		SetMoveObjectState("castlebase_secret_door_1", 1);
+		for(int i=1;i<=4;i++)
+		{
+			SetLeverInteractionDisablesStuck("Lever" + i, false);
+			SetLeverStuckState("Lever" + i, GetLeverState("Lever" + i), true);
+		}
+		if(GetLocalVarInt("IsSecretOpenAsFirst") == 0)
+		{
+			RemoveTimer("HintUpSecretPassage");
+			CompleteQuest("SecretPassage" + GetLocalVarInt("SecretPassageHintCount"), "SecretPassage" + GetLocalVarInt("SecretPassageHintCount"));
+			SetLocalVarInt("IsSecretOpenAsFirst", 1);		
+			AddEntityCollideCallback("Player", "AreaAngelVoice", "OnCollideAreaAngelVoiceHints", false, 1);
+			PlayMusic("10_puzzle01.ogg", false, 1.0f, 0.7f, 10, false);
+			StartPlayerLookAt("castlebase_secret_door_1", 1.5f, 2.0f, "");
+			AddTimer("StopLookAtSecret", 2.25f, "TimerLookComplete");
+		}
+	}
+}
+
+void OnLeverTestChange(string &in asEntity, int LeverState)
+{	
+	SetLeverStuckState(asEntity, LeverState, true);
+	switch(LeverState)
+	{
+		case 1:
+		StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+		SetMoveObjectState("castlebase_secret_door_1", 1);
+		break;
+		case -1:
+		StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+		SetMoveObjectState("castlebase_secret_door_1", 0);
+		for(int i=1;i<=4;i++){ ResetProp("Lever" + i); SetLeverStuckState("Lever" + i, 0, true); }
+		break;
+	}
+}
+
+void OnCollideEndRoomTorch(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("12_event_blood.ogg", false, 1.0f, 0.25f, 10, false);
+	for(int i=1;i<=15;i+=2) AddTimer("" + i, 0.75f * i, "TimerChangeTorch");
+}
+
+void TimerChangeTorch(string &in asTimer)
+{
+	string lTorch = "EndTorch_" + asTimer;
+	string rTorch = "EndTorch_" + (StringToInt(asTimer) + 1);
+	SetLampLit(lTorch, true, true);
+	SetLampLit(rTorch, true, true);
+	PlaySoundAtEntity("turnOnLeft", "ui_use_tinderbox.snt", lTorch, 0.0f, false);
+	PlaySoundAtEntity("turnOnRight", "ui_use_tinderbox.snt", rTorch, 0.0f, false);
+}
+
+void OnCollideWaterLocation(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("LiquidAreaCellar", true);
+}
+
+void OnCollideEndRoom(string &in asParent, string &in asChild, int alState)
+{
+	CompleteQuest("OrbQuestFinal", "OrbQuestFinal");
+	RemoveItem("Arrow_Item");
+	FadeOut(4.0f);
+	AddTimer("ChangeLevel", 4.0f, "TimerChangeLevel");
+}
+
+void OnCollideAreaAngelVoiceFirst(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	SetPlayerCrouching(false);
+	SetLanternActive(false, true);
+	StartPlayerLookAt("angel_statue_1", 1.0f, 1.5f, "");
+	PlayMusic("09_amb_safe.ogg", false, 1.0f, 0.25f, 10, false);	
+	for(int i=1;i<=10;i++) AddTimer("AngelFirstConversation_" + i, 5.0f * (i - 1), "TimerAngelConversation");
+	AddTimer("LetsStart", 50.0f, "TimerLetsStart");
+}
+
+void OnCollideAreaAngelVoiceHints(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=6;i++)
+	{
+		if(HasItem("Sharp_" + i))
+		{
+			SetMessage("Hints", "AngelHint_HasTheSharp", 8.0f);
+			return;
+		}
+	}
+	if(QuestIsAdded("OrbQuest6") && !QuestIsCompleted("OrbQuest6"))
+	{
+		SetMessage("Hints", "AngelHint_HolyRoot", 8.0f);
+		return;
+	}
+	if(QuestIsAdded("OrbQuestFinal"))
+	{
+		SetMessage("Hints", "AngelHint_EndGate", 8.0f);
+		return;
+	}
+	SetMessage("Hints", "AngelHint_Default", 8.0f);
+}
+
+void OnCollideAreaBruteAttack1(string &in asParent, string &in asChild, int alState)
+{	
+	PlayMusic("19_event_brute.ogg", false, 1.0f, 0.0f, 10, false);
+	SetEntityActive("Brute_1", true);
+	StartPlayerLookAt("Brute_1", 2.5f, 3.0f, "");
+	for(int i=1;i<=14;i++) AddEnemyPatrolNode("Brute_1", "PathBruteAttack1_" + i, 0.01f, "");
+	
+	AddTimer("ChangeDoorState", 0.65f, "TimerChangeDoorState");
+	AddTimer("StopLookAtBrute", 0.75f, "TimerLookComplete");
+}
+
+void OnCollideAreaFallDead(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(0.0f);
+}
+
+void OnCollideBodyMass(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=10;i++) AddPropImpulse("Body_" + i, 0.0f, 0.0f, 6.0f, "world");
+	for(int i=1;i<=3;i++) AddPropImpulse("cabinet_metal_" + i, 0.0f, 0.0f, 2.0f, "world");
+	PlayMusic("27_event_bang.ogg", false, 1.0f, 0.25f, 10, false);
+	GiveSanityDamage(15.0f, true);
+	
+	AddTimer("react_pant.snt", 1.0f, "TimerScare");
+}
+
+void OnCollideAreaCellar(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(2.5f, 0);
+	if(alState == 1)
+		AddTimer("23_amb02.ogg", 2.5f, "TimerChangeBackgroundMusic");
+	else			
+		AddTimer("22_amb.ogg", 2.5f, "TimerChangeBackgroundMusic");
+}
+
+void OnCollideRunesFirstCome(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("Music", "StartAreaRunes", "OnDeathMusic", "Die", "Runes");
+}
+
+void OnCollideRunes(string &in asParent, string &in asRune, int alState)
+{
+	GivePlayerDamage(80.0f, "BloodSplat,", false, true);
+	PlaySoundAtEntity("RuneBoom", "27_orb_implode.snt", asRune, 0.0f, false);
+	CreateParticleSystemAtEntity("RunesTrap", "ps_break_pottery.ps ", asRune, false);
+	CreateParticleSystemAtEntity("RunesTrap", "ps_slime_attack_normal.ps ", asRune, false);
+	StartPlayerLookAt(asRune, 4.5f, 5.0f, "");
+	SetEntityActive(asRune, false);
+	AddTimer("StopLookAtRune", 1.0f, "TimerLookComplete");
+	AddTimer(asRune, 2.5f, "TimerSetEntityActive");	
+}
+
+void OnCollideAfterWaterHorror(string &in asParent, string &in asRune, int alState)
+{
+	CheckPoint("Music", "PlayerAfterWaterHorror", "OnDeathMusic", "", "");
+	SetMoveObjectState("HeavyDoor_3", 0.0f);
+	SetEntityActive("waterlurker_1", false);
+	SetEntityActive("waterlurker_2", false);
+}
+
+void TimerAngelConversation(string &in asTextEntry)
+{
+	SetMessage("Hints", asTextEntry, 4.0f);
+}
+
+void TimerChangeBackgroundMusic(string &in asTimer)
+{
+	PlayMusic(asTimer, true, 1.0f, 2.5f, 0, true);
+}
+
+void TimerSetEntityActive(string &in asTimer)
+{
+	SetEntityActive(asTimer, true);
+}
+
+void TimerLookComplete(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerScare(string &in soundFile)
+{
+	PlayGuiSound(soundFile, 1.0f);
+	ChangePlayerStateToNormal();
+}
+
+void TimerChangeDoorState(string &in soundFile)
+{
+	ResetProp("MetalDoorLeft");
+	PlaySoundAtEntity("SoundClose", "close_door.snt", "MetalDoorLeft", 0.0f, false);
+	SetPropStaticPhysics("MetalDoorLeft", true);
+	SetEntityActive("CorruptInstant_1", true);
+}
+
+void TimerChangeLevel(string &in asTimer)
+{
+	ChangeMap("end", "StartArea", "11_event_dog.ogg", "21_event_pit.ogg");
+}
+
+void TimerChainForce(string &in asTimer)
+{
+	AddBodyImpulse("bridge_chained_1_chain", 1.0f, 0.5f, -2.0f, "World");
+	PlaySoundAtEntity("creak", "18_bridge_fall", "bridge_chained_1", 0.0f, false);
+}
+
+void TimerThrowChair(string &in asTimer)
+{
+	AddPropImpulse("chair_nice01_" + StringToInt(asTimer), 0.0f, 2.5f, 0.0f, "world");
+}
+
+void TimerLockTheDoor(string &in asDoor)
+{
+	SetSwingDoorLocked(asDoor, true, true);
+}
+
+void TimerBruteAttack2(string &in asTimer)
+{
+	SetEntityActive("Brute_2", true);
+	for(int i=1;i<=10;i++) AddEnemyPatrolNode("Brute_2", "PathBruteAttack2_" + i, 0.01f, "");
+}
+
+void TimerEnableLatern(string &in asTimer)
+{
+	SetLanternDisabled(false);
+}
+
+void TimerLetsStart(string &in asTimer)
+{
+	AddQuest("OrbQuest0", "OrbQuest0");
+	
+	CreateParticleSystemAtEntity("SlimeDissolution", "ps_slime_attack_normal.ps", "Corrupt_Start", false);
+	PlaySoundAtEntity("slimeExplosion", "slime_attack_normal_hit.snt", "Corrupt_Start", 0.0f, false);
+	
+	SetEntityActive("Corrupt_Start", false);
+	SetEntityActive("SignCorrupt_2", true);
+	
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+
+void OnInteractSkull(string &in asEntity)
+{
+	CreateParticleSystemAtEntity("CursedSkullEffect", "blood.ps", asEntity, false);
+	GiveSanityDamage(15.0f, true);
+	StartScreenShake(0.1f, 0.5f, 0.1f, 0.1f);
+	PlaySoundAtEntity("SkullCry", "BansheeDeath.snt", asEntity, 1.0f, false);
+	AddTimer("react_pant.snt", 1.5f, "TimerScare");
+}
+
+void OnInteractSecretaryButton(string &in asEntity)
+{
+	PlaySoundAtEntity("", "quest_completed.snt", asEntity, 0, false);
+	string SecretDoor = StringSub(asEntity, 0, 1) + "_SecretDoorShelf";
+	PlaySoundAtEntity("MoveSecretaryShelf", "joint_large_wood_move.snt", SecretDoor, 0, false);
+	
+	SetPropStaticPhysics(SecretDoor, false);
+	
+	StartPlayerLookAt(SecretDoor, 1.5f, 2.0f, "");
+	AddTimer("StopLookAtSecretDoorShelf", 1.25f, "TimerLookComplete");
+}
+
+void OnInteractSecretaryShelf(string &in asEntity)
+{
+	StopSound("MoveSecretaryShelf", 1.25f);
+	GiveSanityBoostSmall();
+}
+
+void OnDeathMusic(string &in asName, int alCount)
+{
+	PlayMusic("22_amb.ogg", true, 1.0f, 5.0f, 0, true);
+}
+
+///////////////////////////
+//INTERACT SECURITY GATES
+
+void OnInteractWheel(string &in asEntity)
+{
+	SetEntityPlayerInteractCallback("HeavyDoor_" + StringSub(asEntity, asEntity.length() - 1, 1), "", true);	
+}
+
+void InteractGate(string &in asEntity)
+{
+	PlayGuiSound("17_attach_crank", 0.5f);
+	SetMessage("Ch01Level07", "SecurityGate", 0);
+	
+	SetMoveObjectState(asEntity, 0.05f);
+	
+	AddTimer(asEntity, 0.4f, "TimerCloseGate");
+	AddTimer("sound", 0.8f, "TimerCloseGate");
+}
+
+void TimerCloseGate(string &in asTimer)
+{
+	if(asTimer == "sound")
+		PlayGuiSound("close_gate.ogg", 0.5f);
+	else
+		SetMoveObjectState(asTimer, 0.00f);	
+}
+
+///////////////////////////
+

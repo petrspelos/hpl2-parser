@@ -1,0 +1,144 @@
+////////////////////////////PlayMusic("*musicfile.ogg*", false, 3, 1, 0, true);/////
+// Run first time starting map
+int swings = 0;
+
+void OnStart()
+{
+   AddEntityCollideCallback("Player", "Elevator_Quest_Area", "GetElevatorQuest", true, 1);
+   AddEntityCollideCallback("Player", "ElevatorQuest_Complete_Area", "FinishElevatorQuest", true, 1);
+   AddUseItemCallback("", "attickey", "atticdoor", "UseKeyOnDoor3", true); 
+   AddUseItemCallback("", "hollowneedle", "pathdoor", "UseHollowNeedleOnDoor", true);
+   AddUseItemCallback("", "ItemHammer", "AreaUseItem", "HammerAnimation", true);
+   AddUseItemCallback("", "AcidPot", "Web", "UseAcidOnWeb", true);
+   AddEntityCollideCallback("Player", "elevatorleverarea", "StartElevator", true, 1);
+}
+
+void GetElevatorQuest(string &in asParent, string &in asChild, int alState)
+{
+AddQuest("elevatorquest", "ElevatorQuest");
+}
+
+void UseKeyOnDoor3(string &in asItem, string &in asEntity)
+{
+SetLevelDoorLocked(asEntity, false);
+PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+RemoveItem(asItem);
+}
+
+void UseHollowNeedleOnDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked(asEntity, false, true);
+PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+RemoveItem(asItem);
+}
+
+void HammerAnimation(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("ObjectHammer", true);
+ 
+	swings = 1;
+ 
+	StartPlayerLookAt("ObjectHammer", 2, 2, "");
+ 
+	AddTimer("movehammer", 0.1, "TimerMoveHammer");
+	AddTimer("hammersound", 0.27, "TimerMoveHammer");
+	AddTimer("resethammer", 0.4, "TimerMoveHammer");
+	AddTimer("repeat", 0.6, "TimerMoveHammer");
+ 
+	PlaySoundAtEntity("", "15_rock_break", "FakeWall", 0, false);
+	PlaySoundAtEntity("", "15_make_hammer", "Player", 0.25, false);
+	PlaySoundAtEntity("", "03_rock_move", "FakeWall", 2, false);
+}
+ 
+void TimerMoveHammer(string &in asTimer)
+{
+	if(asTimer == "movehammer") SetMoveObjectState("ObjectHammer", 0.4);
+ 
+	else if(asTimer == "hammersound") {
+		StopPlayerLookAt();
+		PlaySoundAtEntity("", "impact_rock_high", "Player", 0, false);
+		PlaySoundAtEntity("", "15_hammer", "Player", 0, false);
+	}
+ 
+	else if(asTimer == "resethammer") SetMoveObjectState("ObjectHammer", 0);
+ 
+	if(swings < 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.01, "TimerMoveHammer");
+		AddTimer("hammersound", 0.17, "TimerMoveHammer");
+		AddTimer("resethammer", 0.3, "TimerMoveHammer");
+		AddTimer("repeat", 0.5, "TimerMoveHammer");
+ 
+		swings = swings + 1;
+	}
+ 
+	else if(swings == 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.2, "TimerMoveHammer");
+		AddTimer("hammersound", 0.37, "TimerMoveHammer");
+		AddTimer("resethammer", 0.5, "TimerMoveHammer");
+		AddTimer("repeat", 0.8, "TimerMoveHammer");
+ 
+		AddTimer("break", 0.42, "TimerMoveHammer");
+ 
+		swings = swings + 1;
+	}
+ 
+	else if(swings == 4 && asTimer == "break") FinishAnimation();
+ 
+	else if(swings == 4 && asTimer == "repeat") SetEntityActive("ObjectHammer", false);
+}
+ 
+void FinishAnimation()
+{
+	SetPropHealth("FakeWall", 0);
+	GiveSanityBoost();
+	PlaySoundAtEntity("", "03_break_wall", "FakeWall", 0, false);
+}
+
+void UseAcidOnWeb(string &in asItem, string &in asEntity)
+{
+SetPropHealth(asEntity, 0);
+RemoveItem(asItem);
+
+CompleteQuest("ElevatorQuest", "ElevatorQuest");
+
+AddTimer("music", 1, "TimerMusicDelay");
+
+FadeLightTo("PointLightAcid", -1, -1, -1, -1, 3, 1.5f);
+AddTimer("PointLightAcid", 4, "TimerFadeAcidLight");
+}
+
+void TimerMusicDelay(string &in asTimer)
+{
+PlayMusic("02_puzzle", false, 1, 0.1f, 10, false);
+}
+
+void TimerFadeAcidLight(string &in asTimer)
+{
+FadeLightTo(asTimer, 0, 0, 0, 0, -1, 3);
+}
+
+void FinishElevatorQuest(string &in asParent, string &in asChild, int alState)
+{
+CompleteQuest("elevatorquest", "ElevatorQuest");
+}
+
+void StartElevator(string &in asParent, string &in asChild, int alState)
+{
+ChangeMap("Elevator.map", "PlayerStartArea_8", "", "");
+}
+
+
+	
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+ PlayMusic("09_amb_safe", true, 3, 3, 1, true);
+}
+ 
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

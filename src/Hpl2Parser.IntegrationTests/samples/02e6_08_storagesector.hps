@@ -1,0 +1,60 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "playcreepy", "playcreepy", true, 1);
+	AddUseItemCallback("", "key_tomb_1", "work_desk_door_worn_1", "deskwithmeat", true);
+	AddUseItemCallback("", "bone_saw_1", "pig_corpse_hanging_1", "cutmeatoff", true);
+	AddUseItemCallback("", "key_tomb_rusty_2", "level_cistern_1", "doortooldsanctum", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("21_amb", true, 1, 0.1f, 0, true);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "load06", 1, "");
+}
+
+////////////////////////////////////////////
+//////////////////ITEM/USES/////////////////
+////////////////////////////////////////////
+
+void deskwithmeat(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("work_desk_door_worn_1", false, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	SetEntityActive("bone_saw_1", true);
+	AutoSave();
+}
+
+void cutmeatoff(string &in asItem, string &in asEntity)
+{
+	FadeOut(0.5); 
+	SetPlayerActive(false);	
+	AddTimer("finishcut", 4, "finishcut");
+	PlaySoundAtEntity("", "26_saw", "Player", 0, false);
+}
+
+void finishcut(string &in asTimer)
+{
+	FadeIn(0.5); 
+	SetEntityActive("fresh_meat_1", true);
+	StartPlayerLookAt("fresh_meat_1", 1.0f, 1.5f, "lookatmeat");
+}
+
+void lookatmeat()
+{
+	SetPlayerActive(true);	
+	StopPlayerLookAt();
+	AutoSave();
+}
+
+void doortooldsanctum(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked(asEntity, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}

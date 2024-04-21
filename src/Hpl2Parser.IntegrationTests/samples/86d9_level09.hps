@@ -1,0 +1,91 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "Shit", "Shit", true, 1);
+AddEntityCollideCallback("Player", "SuitorStart", "SpawnSuitor", true, 1);
+AddEntityCollideCallback("Suitor", "SuitorEnd", "DespawnSuitor", true, 1);
+AddUseItemCallback("", "DoorKey", "Door", "UnlockDoor", true);
+AddPlayerSanity(100);
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("Door", false, false);
+PlaySoundAtEntity("","unlock_door","Door", 0,false);
+RemoveItem("DoorKey");
+}
+
+void LightTime(string &in asItem)
+{
+AddTimer("", 5.0, "LightsOut");
+}
+
+void LightsOut(string& in asTimer)
+{
+PlayMusic("20_event_darkness.ogg", false, 1.0, 0, 8, false);
+PlaySoundAtEntity("","general_wind_whirl","Player", 0,false);
+SetLampLit("torch_static01_1", false, true);
+SetLampLit("torch_static01_2", false, true);
+SetLampLit("torch_static01_3", false, true);
+SetLampLit("torch_static01_4", false, true);
+SetLampLit("torch_static01_5", false, true);
+SetLampLit("torch_static01_6", false, true);
+SetLampLit("torch_static01_7", false, true);
+SetLampLit("torch_static01_8", false, true);
+SetLampLit("bonfire_1", false, true);
+GiveSanityDamage(1, true);
+}
+
+void Shit(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorClosed("Door", true, true);
+PlaySoundAtEntity("","27_orb_implode","Door", 0,false);
+SetInventoryDisabled(true);
+SetPlayerMoveSpeedMul(0.0f);
+SetPlayerLampOil(0.0f);
+GiveSanityDamage(85, true);
+PlaySoundAtEntity("","react_scare","Player", 0,false);
+AddTimer("", 2.5, "LookAtDoor");
+AutoSave();
+}
+
+void LookAtDoor(string& in asTimer)
+{
+StartPlayerLookAt("Door", 1, 1, "");
+AddTimer("", 1.5, "EndLookAtDoor");
+}
+
+void EndLookAtDoor(string& in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerMoveSpeedMul(0.6f);
+AddTimer("", 5.5, "Message");
+}
+
+void Message(string& in asTimer)
+{
+SetMessage("Messages", "Lantern", 5);
+}
+
+void SpawnSuitor(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Suitor", true);
+PlayMusic("01_event_dust.ogg", false, 1, 3, 10, false);
+AddEnemyPatrolNode("Suitor", "PathNodeArea_1", 0.001f, "Idle");
+AddEnemyPatrolNode("Suitor", "PathNodeArea_2", 0.001f, "Idle");
+AddEnemyPatrolNode("Suitor", "PathNodeArea_3", 0.001f, "Idle");
+}
+
+void SuitorEnd(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Suitor", false);
+}
+
+void music1(string &in asItem)
+{
+PlayMusic("10_event_coming.ogg", false, 1, 0.1, 10, false);
+}
+
+void music2(string &in asItem)
+{
+PlayMusic("24_paper_daniel01.ogg", false, 0.6f, 0.5f, 10, false);
+}

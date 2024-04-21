@@ -1,0 +1,484 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	AddUseItemCallback("", "Crowbar", "Door", "UseCrowbarOnDoor", true);
+    AddEntityCollideCallback("Joint", "AreaBreak", "BreakDoor", true, 1);
+	AddEntityCollideCallback("Player", "push", "Push", true, 1);
+	AddEntityCollideCallback("Player", "BookFall", "PushBook", true, 1);
+	AddEntityCollideCallback("Player", "door_slam", "Slam", true, 1);
+	AddEntityCollideCallback("Player", "InsaneArea", "Particle", true, 1);
+	AddEntityCollideCallback("Player", "OpeningVoices", "Opening", true, 1);
+	AddEntityCollideCallback("Player", "Change", "ToNextMap", true, 1);
+	AddEntityCollideCallback("Handle", "MountLever", "AttachLever", true, 1);
+	AddEntityCollideCallback("Player", "Scene_6", "MoarDialogue", true, 1);
+	AddEntityCollideCallback("Player", "Music", "PlayMusic", false, 1);
+	AddUseItemCallback("", "Real_Key", "Secret_Door", "UnlockSecretDoor", true);
+	AddUseItemCallback("", "Unlock", "Locked", "UnlockWeirdDoor", true);
+	SetEntityPlayerInteractCallback("BlowUp","TakeDownWall", true);
+	SetLightVisible("WallLight", false);
+	SetLightVisible("RedLight", false);
+	for(int i = 1; i <= 6; i++) SetEntityCallbackFunc("Decoy_"+i, "Keys");
+	}
+
+void OnEnter()
+{
+	if(HasItem("Level4") == true)
+			{
+				GiveSanityBoostSmall();
+				SetLevelDoorLocked("DoorLevel", false);
+			}
+	PlayMusic("Track6.ogg", true, 2, 1, 1, true);
+	AutoSave();
+}	
+	
+//////////////////////////////////////////////////////////////////////////////////////	
+//Opening
+//////////////////////////////////////////////////////////////////////////////////////	
+
+void Opening(string &in asParent, string &in asChild, int alState)
+{
+	AddEffectVoice("line_1.ogg" ,"", "Dialogue", "Level3_1", false, "", 0, 0);
+	AddEffectVoice("john_1.ogg" ,"", "Dialogue", "Level3_2", false, "", 0, 0);
+	AddEffectVoice("line_2.ogg" ,"", "Dialogue", "Level3_3", false, "", 0, 0);
+	AddEffectVoice("john_2.ogg" ,"", "Dialogue", "Level3_4", false, "", 0, 0);
+	AddEffectVoice("line_3.ogg" ,"", "Dialogue", "Level3_5", false, "", 0, 0);
+}
+void Memento()
+{
+	AddQuest("EndChat", "Puzzle");
+}	
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Push Book
+//////////////////////////////////////////////////////////////////////////////////////
+
+void PushBook(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("Book", -1500, 0, 0, "world");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Crowbar
+//////////////////////////////////////////////////////////////////////////////////////
+ 
+void UseCrowbarOnDoor(string &in asItem, string &in asEntity)
+{
+        RemoveItem(asItem);
+        PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+        AddTimer(asEntity, 0.2, "TimerPlaceCrowbar");
+}
+ 
+void TimerPlaceCrowbar(string &in asTimer)
+{
+        SetEntityActive("Joint", true);
+        PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0, false);
+}
+ 
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+        SetEntityActive("Joint", false);
+        SetEntityActive("Broken", true);
+ 
+        SetSwingDoorLocked("Door", false, false);
+        SetSwingDoorClosed("Door", false, false);
+        SetSwingDoorDisableAutoClose("Door", true);
+ 
+        AddPropImpulse("Door", 0, 0, 3, "world");
+ 
+        CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaEffect", false);
+        PlaySoundAtEntity("", "break_wood_metal", "AreaEffect", 0, false);
+ 
+        GiveSanityBoostSmall();
+ 
+        PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+ 
+        AddTimer("", 0.1, "TimerPushDoor");
+}
+ 
+void TimerPushDoor(string &in asTimer)
+{
+        AddPropImpulse("Door", -4, 2, 1, "world");
+        AddTimer("", 1.1, "TimerDoorCanClose");
+}
+ 
+void TimerDoorCanClose(string &in asTimer)
+{
+        SetSwingDoorDisableAutoClose("Door", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Door Messages
+//////////////////////////////////////////////////////////////////////////////////////	
+	
+void LockedBehind(string &in asEntity)
+{
+	if(GetSwingDoorLocked(asEntity) == false)
+	{
+		SetMessage("Messages", "Blank", 1);
+	}
+	
+		if(GetSwingDoorLocked(asEntity) == true)
+	{
+		SetMessage("Messages", "Locked", 1);
+	}
+
+}	
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Music
+//////////////////////////////////////////////////////////////////////////////////////
+
+void PlayMusic(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Track6.ogg", true, 2, 1, 1, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Next Map
+//////////////////////////////////////////////////////////////////////////////////////
+
+void ToNextMap(string &in asParent, string &in asChild, int alState)
+    {
+            FadeOut(1);
+			SetLevelDoorLocked("DoorLevel", false);
+            AddTimer("", 1, "TimerTransition");
+    }
+     
+    void TimerTransition(string &in asTimer)
+    {  
+            ChangeMap("level_3_p2", "PlayerStartArea_1", "", "");
+    }
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Insane Particle
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Particle(string &in asParent, string &in asChild, int alState)
+{
+	if((GetPlayerSanity()) <= 15)
+	{
+		CreateParticleSystemAtEntity("cloud", "ps_cloud_thing01.ps", "ParticleArea", false);
+		PlaySoundAtEntity("", "react_pant.snt", "", 0, false);
+		SetLampLit("InsaneLight_1", false, true);
+		SetLampLit("InsaneLight_2", false, true);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Key Unlock
+//////////////////////////////////////////////////////////////////////////////////////
+
+void UnlockWeirdDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	RemoveItem(asItem);
+}
+void UnlockSecretDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	RemoveItem(asItem);
+}
+//////////////////////////////////////////////////////////////////////////////////////	
+//Player Push
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Push(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	PlaySoundAtEntity("", "react_pant.snt", "push", 0, false);
+	PlaySoundAtEntity("", "supernatural_push.snt", "Player", 0, false);
+	AddPlayerBodyForce(0, 0, -200000, false);
+	AddTimer("Stop", 1, "StopPlayer");
+}
+
+void Slam(string &in asParent, string &in asChild, int alState)
+{
+	SetLightVisible("RedLight", true);
+	SetLightVisible("BlueLight", false);
+	SetEntityActive("Melanie_Cloth", false);
+	SetEntityActive("Locked", true);
+	SetEntityActive("Protect", false);
+	SetEntityActive("ProtectBefore", false);
+	SetEntityActive("Secret_Door", false);
+	SetSwingDoorClosed("locked", true, true);
+	SetSwingDoorLocked("locked", true, true);
+	PlayMusic("female_laugh.ogg", false, 10, 3, 1, false);
+	AddQuest("Why", "Push");
+	AddTimer("", 4, "MoarTalking");
+}
+
+void StopPlayer(string &in asTimer)
+{
+	SetPlayerActive(true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Attach Lever
+//////////////////////////////////////////////////////////////////////////////////////
+
+void AttachLever(string &in asParent, string &in asChild, int alState)
+{
+		SetEntityActive("Lever", true);
+        PlaySoundAtEntity("", "pickaxe_charge.snt", "Lever", 0, false);
+        SetEntityActive(asParent, false);
+        SetEntityActive("Mount", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Dialogue
+//////////////////////////////////////////////////////////////////////////////////////
+
+void MoarTalking(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpForceMul(0);
+	AddEffectVoice("line_4.ogg" ,"", "Dialogue", "Push1", false, "", 0, 0);
+	AddEffectVoice("push_1.ogg" ,"", "Dialogue", "Push2", false, "", 0, 0);
+	AddEffectVoice("line_5.ogg" ,"", "Dialogue", "Push3", false, "", 0, 0);
+	AddEffectVoice("push_2.ogg" ,"", "Dialogue", "Push4", false, "", 0, 0);
+	AddEffectVoice("line_6.ogg" ,"", "Dialogue", "Push5", false, "", 0, 0);
+	SetEffectVoiceOverCallback("Normal");
+}
+
+void Normal()
+	{
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+		SetPlayerJumpForceMul(1);
+	}
+
+void MoarDialogue(string &in asParent, string &in asChild, int alState)
+	{
+	SetEntityActive("Secret_Door", true);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpDisabled(true);
+	AddTimer("", 61, "ShakeRedScreen");
+	AddEffectVoice("s6_1.ogg" ,"", "Dialogue", "Scene6-1", false, "", 0, 0);
+	AddEffectVoice("s6_2.ogg" ,"", "Dialogue", "Scene6-2", false, "", 0, 0);
+	AddEffectVoice("s6_3.ogg" ,"", "Dialogue", "Scene6-3", false, "", 0, 0);
+	AddEffectVoice("s6_4.ogg" ,"", "Dialogue", "Scene6-4", false, "", 0, 0);
+	AddEffectVoice("s6_5.ogg" ,"", "Dialogue", "Scene6-5", false, "", 0, 0);
+	AddEffectVoice("s6_6.ogg" ,"", "Dialogue", "Scene6-6", false, "", 0, 0);
+	AddEffectVoice("s6_7.ogg" ,"", "Dialogue", "Scene6-7", false, "", 0, 0);
+	AddEffectVoice("s6_8.ogg" ,"", "Dialogue", "Scene6-8", false, "", 0, 0);
+	AddEffectVoice("s6_9.ogg" ,"", "Dialogue", "Scene6-9", false, "", 0, 0);
+	AddEffectVoice("s6_10.ogg" ,"", "Dialogue", "Scene6-10", false, "", 0, 0);
+	AddEffectVoice("s6_11.ogg" ,"", "Dialogue", "Scene6-11", false, "", 0, 0);
+	AddEffectVoice("s6_12.ogg" ,"", "Dialogue", "Scene6-12", false, "", 0, 0);
+	SetEffectVoiceOverCallback("MovePlayer");
+	}
+	
+void ShakeRedScreen(string &in asTimer)
+{
+	FadeSepiaColorTo(0.5, 0.2);
+	StartScreenShake(0.1f, 3, 0, 0);
+}
+	
+void MovePlayer()
+{
+	FadeSepiaColorTo(0, 0.1);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	AddQuest("Where", "Question");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Levers
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Puzzle(string &in asEntity, int LeverState)
+{
+        if(GetLeverState("one") == 1)
+		{
+		SetLeverStuckState("one", 1, true);
+		AddTimer("", 10, "Lever1");
+		}
+
+	  if(GetLeverState("two") == 1)
+		{
+		SetLeverStuckState("two", 1, true);
+		AddTimer("", 10, "Lever2");
+		}
+		
+		if(GetLeverState("three") == 1)
+		{
+        SetLeverStuckState("three", 1, true);
+		AddTimer("", 10, "Lever3");
+		}
+		
+		if(GetLeverState("four") == 1)
+		{
+        SetLeverStuckState("four", 1, true);
+		AddTimer("", 10, "Lever4");
+		}
+		
+		if(GetLeverState("five") == 1)
+		{
+		SetLeverStuckState("five", 1, true);
+		AddTimer("", 10, "Lever5");
+		}
+		
+		if(GetLeverState("six") == 1)
+		{
+        SetLeverStuckState("six", 1, true);
+		AddTimer("", 10, "Lever6");
+		}
+		
+		if(GetLeverState("seven") == 1)
+		{
+		SetLeverStuckState("seven", 1, true);
+		AddTimer("", 10, "Lever7");
+		}
+		
+		if(GetLeverState("eight") == 1)
+		{
+		SetLeverStuckState("eight", 1, true);
+		AddTimer("", 10, "Lever8");
+		}
+		
+		if(GetLeverState("nine") == 1)
+		{
+        SetLeverStuckState("nine", 1, true);
+		AddTimer("", 10, "Lever9");
+		}
+		
+        if(GetLeverState("two") == 1
+        && GetLeverState("three") == 1
+		&& GetLeverState("seven") == 1
+		&& GetLeverState ("nine") == 1
+		&& GetLeverState ("one") == 0
+		&& GetLeverState ("four") == 0
+		&& GetLeverState ("five") == 0
+		&& GetLeverState ("six") == 0
+		&& GetLeverState ("eight") == 0)
+        {
+                        SetMoveObjectState("Shelf", 1);
+						AddPlayerSanity(20);
+ 
+                        PlaySoundAtEntity("", "quest_completed.snt", "Shelf", 0, false);
+ 
+                        SetLocalVarInt("Check", 1);
+ 
+                        return;
+                
+        SetLeverStuckState("two", 1, true);
+        SetLeverStuckState("three", 1, true);
+		SetLeverStuckState("seven", 1, true);
+        SetLeverStuckState("nine", 1, true);
+        }
+	}
+
+void Lever1(string &in asTimer)
+   {
+        SetLeverStuckState("one", 0, true);
+   }
+	
+void Lever2(string &in asTimer)
+   {
+        SetLeverStuckState("two", 0, true);
+   }
+   
+void Lever3(string &in Timer)
+   {
+        SetLeverStuckState("three", 0, true);
+   }
+
+void Lever4(string &in asTimer)
+   {
+        SetLeverStuckState("four", 0, true);
+   }
+   
+void Lever5(string &in Timer)
+   {
+        SetLeverStuckState("five", 0, true);
+   }
+   
+void Lever6(string &in asTimer)
+   {
+        SetLeverStuckState("six", 0, true);
+   }
+
+void Lever7(string &in asTimer)
+   {
+        SetLeverStuckState("seven", 0, true);
+   }
+   
+void Lever8(string &in asTimer)
+   {
+        SetLeverStuckState("eight", 0, true);
+   }
+   
+void Lever9(string &in asTimer)
+   {
+        SetLeverStuckState("nine", 0, true);
+   }
+
+void ShowKey(string &in asEntity, int LeverState)
+{
+	if(GetLeverState("Lever") == 1) 
+	{
+		SetMoveObjectState("Secret", 1);
+		SetLocalVarInt("Check", 1);
+		SetLeverStuckState(asEntity, LeverState, true);
+		return;
+	}
+}   
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Remove Wall
+//////////////////////////////////////////////////////////////////////////////////////
+
+void TakeDownWall(string &in item)
+	{
+		SetEntityActive("Temporary", false);
+		SetEntityActive("Doorway", true);
+		SetEntityActive("AppearDoorWay", true);
+		SetEntityActive("AppearDoorFrame", true);
+		SetLightVisible("WallLight", true);
+		CreateParticleSystemAtEntity("dust", "ps_dust_break_25.ps", "AreaWallParticle_1", false);
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Remove Keys
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Keys(string &in asEntity)
+{
+    RemoveItem(asEntity);
+} 
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("EndChat", "Puzzle");
+CompleteQuest("Why", "Push");
+CompleteQuest("Where", "Question");
+}

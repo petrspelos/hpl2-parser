@@ -1,0 +1,107 @@
+void OnStart()
+{
+	SetPlayerActive(false);
+	SetPlayerCrouching(true);
+	SetSanityDrainDisabled(true);
+	SetInDarknessEffectsActive(false);
+	
+	StartPlayerLookAt("falllook_area_1", 0.5f, 1.0f, "");
+    FadePlayerRollTo( -40, 20, 20);
+	
+	SetEnemySanityDecreaseActive("bear_walk_up_finale", false);
+	
+	AddTimer("bear_arrive_finale", 5.0f, "bear_arrive_finale");
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("snow_wind_finale", "snow_wind_sfx.snt", "Player", 0.0f, false);
+	
+	SetLanternDisabled(true);
+	
+	StopMusic(1.5f, 1);
+	PlayMusic("Bear_Fog_Appear_Finale", false, 1.0f, 3.0f, 2, false);
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void OnLeave()
+{
+
+}
+
+
+void bear_arrive_finale(string &in AsTimer)
+{
+	StopPlayerLookAt();
+	StartPlayerLookAt("falllook_area_2", 0.5f, 1.0f, "");
+    FadePlayerRollTo( 0, 2, 20);
+
+	SetEntityActive("bear_walk_up_finale", true);
+	AddEnemyPatrolNode("bear_walk_up_finale", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("bear_walk_up_finale", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("bear_walk_up_finale", "PathNodeArea_3", 0.001, "");
+	AddEnemyPatrolNode("bear_walk_up_finale", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("bear_walk_up_finale", "PathNodeArea_5", 0.001, "");
+	
+	PlaySoundAtEntity("", "permabear_attack_claw.snt", "falllook_area_2", 0.0f, false);
+	
+	AddTimer("cutto_darkness_bearkill", 6.5f, "cutto_darkness_bearkill");
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0.0f, false);
+	
+
+}
+
+void cutto_darkness_bearkill(string &in AsTimer)
+{
+	FadeOut(0.0f);
+	StopSound("snow_wind_finale", 0.0f);
+	AddTimer("mountain_scream_view", 5.0f, "mountain_scream_view");
+	StopMusic(0.0f, 2);
+	StartPlayerLookAt("mountain_look_area", 10.0f, 10.0f, "");
+	TeleportPlayer("PlayerStartArea_2");
+	SetEntityActive("bear_walk_up_finale", false);
+	SetPlayerHealth(100.0f);
+}
+
+void mountain_scream_view(string &in AsTimer)
+{
+	FadeIn(0.0f);
+	StopPlayerLookAt();
+	AddTimer("player_scream_bear", 3.0f, "player_scream_bear");
+	PlaySoundAtEntity("snow_wind_finale", "snow_wind_sfx.snt", "Player", 0.0f, false);
+	StartPlayerLookAt("zoom_into_moon", 0.05f, 0.55f, "");
+	FadePlayerFOVMulTo(0.25f, 0.02f);
+	AddTimer("speech_quotenote_end", 9.0f, "speech_quotenote_end");
+}
+
+void speech_quotenote_end(string &in AsTimer)
+{
+	AddTimer("rollcreds_bearsfx", 9.0f, "rollcreds_bearsfx");
+	AddEffectVoice("lunatic_cave_last_words.ogg", "", "Voice", "lunatic_cave_it_aint_bears", false, "", 1.0f, 2.0f);
+	AddTimer("bearscream_shake", 8.5f, "bearscream_shake");
+}
+
+void bearscream_shake(string &in AsTimer)
+{
+	PlaySoundAtEntity("bearroar_end", "permabear_finale_roar.snt", "Player", 0.0f, false);
+	StartScreenShake(0.05f, 3.0f, 0.1f, 1.0f);
+}
+
+void rollcreds_bearsfx(string &in AsTimer)
+{
+	FadeOut(0.0f);
+	StopSound("snow_wind_finale", 0.0f);
+	AddTimer("final_timer_Credits", 3.0f, "final_timer_Credits");
+}
+
+void final_timer_Credits(string &in AsTimer)
+{
+	StartCredits("permafrost_mountain_credits_theme.ogg", true, "Ending", "Perma_Fin", 5);
+}
+
+void player_scream_bear(string &in AsTimer)
+{
+	AddEffectVoice("permaplayer_death_mountains_echo.ogg", "", "Voice", "permaplayer_death_mountains_echo", false, "", 1.0f, 2.0f);
+}
+
+

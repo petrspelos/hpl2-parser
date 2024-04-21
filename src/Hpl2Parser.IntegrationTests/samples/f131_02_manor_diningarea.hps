@@ -1,0 +1,244 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaDoorSpook", "EvenDoorSpook", true, 1);
+	AddEntityCollideCallback("SecretBook_1", "AreaBookSecret", "EvenSecretDoor", true, 1);
+	AddEntityCollideCallback("Player", "AreaPigWtf", "EvenPigSpook", true, 1);
+	AddEntityCollideCallback("Player", "AreaWallKnock", "EvenWallKnock", true, 1);
+	AddEntityCollideCallback("Player", "AreaDoorClose", "EvenDoorClose", true, 1);
+	AddEntityCollideCallback("Player", "AreaChild", "EvenChild", true, 1);
+	AddEntityCollideCallback("Player", "AreaCreak", "EvenCreak", true, 1);
+	AddEntityCollideCallback("wretch_nodes_1", "AreaPigSound", "PigSound", true, 1);
+	SetDeathHint("Death_Hints", "DHint1");	
+	AddUseItemCallback("", "waxroll_record_3", "phonograph_1", "UseWaxroll", true);
+	AddUseItemCallback("", "waxroll_record_1", "phonograph_1", "UseWaxroll1", true);
+	AddUseItemCallback("", "waxroll_record_2", "phonograph_1", "UseWaxroll2", true);
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("", "amb_mansion_small_hallway.snt", "Player", 1, true);
+}
+
+void OnLeave()
+{
+
+}
+
+///////////////////////////////////////////
+//Player hears something from door.
+
+void EvenDoorSpook(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_mansion_attichatch_child.snt", "AreaCreap1", 0, false);
+}
+
+///////////////////////////////////////////
+//Door closes behind player.
+
+void EvenDoorClose(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("mansion_5", true, true);
+	SetSwingDoorLocked("mansion_5", true, true);
+	GiveSanityDamage(5, true);
+	
+}
+
+///////////////////////////////////////////
+//Child runs by.
+
+void EvenChild(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "child_hall_run.snt", "ChildRun", 0, false);
+}
+
+///////////////////////////////////////////
+//Player finds secret book in wall.
+
+void EvenSecretDoor(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+	SetEntityActive("secret_door02_1", false);
+	SetEntityActive("secret_door02_2", true);
+	AddTimer("TimerDoorSound", 0.5, "TimerDoorSound");
+}
+
+void TimerDoorSound(string &in asTimer)
+{
+	PlaySoundAtEntity("", "door_mansion_open.snt", "AreaDoorSound", 0, false);
+	PlaySoundAtEntity("", "quest_completed.snt", "Player", 0, false);
+}
+
+///////////////////////////////////////////
+//Player comes across pig monster sleeping.
+
+void EvenPigSpook(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("TimerPigSound1", 0.2, "TimerPigSound1");
+	AddTimer("TimerPigSound2", 2.0, "TimerPigSound2");
+	AddTimer("TimerPigSound3", 4.5, "TimerPigSound3");
+	AddTimer("TimerPigSound4", 8.5, "TimerPigSound4");
+	AddTimer("TimerPigSound5", 14.7, "TimerPigSound5");
+}
+
+void TimerPigSound1(string &in asTimer)
+{
+	PlaySoundAtEntity("", "wretch_tunnels_IdleQuadruped01_01.snt", "wretch_sleep_1", 0, false);
+}
+
+void TimerPigSound2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "wretch_tunnels_IdleQuadruped01_02.snt", "wretch_sleep_1", 0, false);
+	PlayMusic("Enter_cellar_118.ogg", false, 0.7f, 1, 0, false);
+}
+
+void TimerPigSound3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "wretch_tunnels_IdleQuadruped01_03.snt", "wretch_sleep_1", 0, false);
+}
+
+void TimerPigSound4(string &in asTimer)
+{
+	PlaySoundAtEntity("", "wretch_tunnels_IdleQuadruped01_04.snt", "wretch_sleep_1", 0, false);
+}
+
+void TimerPigSound5(string &in asTimer)
+{
+	PlaySoundAtEntity("", "wretch_tunnels_IdleQuadruped01_05.snt", "wretch_sleep_1", 0, false);
+}
+
+///////////////////////////////////////////
+//Pig monster runs out of closet and runs away.
+
+void KeyPig(string &in asEntity)
+{
+	AddTimer("TimerVaseFall", 0.3, "TimerVaseFall");
+	SetLevelDoorLocked("level_wood_1", false);
+	SetPlayerActive(false);
+}
+
+void TimerVaseFall(string &in asTimer)
+{
+	SetEntityActive("vase02_1", false);
+	SetEntityActive("vase02_2", true);
+	AddTimer("TimerPigEscape", 2.0, "TimerPigEscape");
+	AddTimer("TimerVaseBreak", 1.0, "TimerVaseBreak");
+}
+
+void TimerVaseBreak(string &in asTimer)
+{
+	StartPlayerLookAt("PlayerLookVase",5.0f, 10.0f, "");
+	PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+	GiveSanityDamage(5, true);
+}
+
+void TimerPigEscape(string &in asTimer)
+{
+	SetEntityActive("bed_cage_down_1", false);
+	SetEntityActive("wretch_sleep_1", false);
+	SetEntityActive("bed_cage_up_1", true);
+	SetEntityActive("mansion_4", false);
+	SetEntityActive("mansion_7", true);
+	SetSwingDoorClosed("mansion_6", true, true);
+	PlaySoundAtEntity("", "afx_streets_crazy_pig_seq_01_occluded.snt", "Player", 0, false);
+	PlaySoundAtEntity("", "jim_scream_1.snt", "Player", 0, false);
+	PlayMusic("pend_1.ogg", false, 1, 1, 0, false);
+	AddTimer("TimerPigShake", 2.25, "TimerPigShake");
+	GiveSanityDamage(5, true);
+	StartPlayerLookAt("PlayerLookVase_1", 5.0f, 10.0f, "");
+	SetEntityActive("blood_spatter01_1", true);
+	SetEntityActive("blood_spatter01_2", true);
+	SetEntityActive("blood_spatter01_3", true);
+	SetEntityActive("blood_spatter01_4", true);
+	SetEntityActive("blood_spatter01_5", true);
+	SetEntityActive("blood_spatter03_1", true);
+	SetEntityActive("blood_spatter03_2", true);
+	SetEntityActive("blood_spatter03_3", true);
+	SetEntityActive("blood_spatter03_4", true);
+	SetEntityActive("blood_spatter03_5", true);
+	SetEntityActive("blood_spatter03_6", true);
+	GiveSanityDamage(5, true);
+}
+
+void TimerPigShake(string &in asTimer)
+{
+	StartScreenShake(0.05, 0.7, 0.1, 0.6);
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	SetEntityActive("wretch_nodes_1", true);
+	AddTimer("TimerPigRun", 8.0, "TimerPigRun");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_4", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_6", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_9", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_11", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_13", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_14", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_15", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_16", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_18", 0, "");
+	AddEnemyPatrolNode("wretch_nodes_1", "PathNodeArea_19", 0, "");
+	SetPlayerJumpDisabled(false);
+	SetLanternDisabled(false);
+	SetupLoadScreen("LoadingText", "Load4", 1, "");
+}
+
+void TimerPigRun(string &in asTimer)
+{
+	SetEntityActive("wretch_nodes_1", false);
+}
+
+void PigSound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_streets_wretch_body.snt", "AreaPigSound", 0, false);
+}
+
+///////////////////////////////////////////
+//Knocking is heard from the walls.
+
+void EvenWallKnock(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "door_knock_far.snt", "KnockSound", 0, false);
+}
+
+///////////////////////////////////////////
+//Creaks are heard from the ceiling.
+
+void EvenCreak(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_wood_creak_walk.snt", "CreakSound", 0, false);
+}
+
+///////////////////////////////////////////
+//Waxroll used on phonograph.
+
+void PhonoLocked_1(string &in asEntity)
+{
+	SetMessage("Messages", "PhonoMessage_1", 0);
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("phonograph_1", 0, false);
+	PlaySoundAtEntity("", "lever_metal_min_max.snt", "Player", 0, false);
+	RemoveItem(asItem);
+	SetEntityPlayerInteractCallback("phonograph_1", "", false);
+}
+
+///////////////////////////////////////////
+//Phono Jim.
+
+void Phono_3(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		AddEffectVoice("phono_jim_03", "", "Voice", "JimPhon3", true, "phonograph_1", 1, 10);
+	}
+}

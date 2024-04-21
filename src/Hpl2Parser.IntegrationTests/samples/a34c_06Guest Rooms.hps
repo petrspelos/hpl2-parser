@@ -1,0 +1,232 @@
+void OnStart()
+{  
+	AutoSave();
+	AddEntityCollideCallback("Player", "AreaCollide_1", "LadderBroken", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_2", "GruntGuest", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_3", "LampsOff", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_4", "AddQuest", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_5", "Shake", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_6", "Shake2", true, 1);
+	SetEntityPlayerInteractCallback("key_cellar", "ActivateArea", true);
+	AddUseItemCallback("", "hollow_needle", "doorlocked", "DoorUnlock", true);
+	AddEntityCollideCallback("Player", "AreaDemo", "Demo", true, 1);
+	
+}
+
+
+
+
+
+void OnEnter()
+{ 
+
+	AddTimer("lampabuja", 1, "Lampa");
+	AddTimer("lamparepeat", 3.6f, "Lampa");
+	
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen4", 0, "game_loading_rose.jpg");
+}
+
+//////////////////////Ladder Attaches///////////////////////////////////
+void AttachLadder(string &in asArea, string &in asBody)
+{
+	
+	SetEntityActive("LadderArea_1", true);
+	GiveSanityBoost();
+	PlayMusic("03_puzzle_secret", false, 0.7, 0.1, 10, false);
+	SetEntityActive("block_box_1", false);
+	
+}
+
+//////////////////////Ladder breaks/////////////////////////////////////
+void LadderBroken(string &in asParent, string &in asChild, int alState)
+{
+		SetEntityActive("block_box_1", true);
+		StartPlayerLookAt("ladder broken", 2, 2, "ladderlook");
+		SetEntityActive("ladder", false);
+		SetEntityActive("ladder broken", true);
+		SetEntityActive("StickyArea_1", false);
+		SetEntityActive("LadderArea_1", false);
+		PlaySoundAtEntity("", "25_break_wood", "hatch_ceiling_1", 1, false);
+		GiveSanityDamage(10.0f, true);
+		CompleteQuest("Hatch", "GuestRooms");
+		
+		
+		
+}
+
+void ladderlook()
+{
+	StopPlayerLookAt();
+}
+
+//////////////////////picks up key//////////////////////////////////////
+
+void ActivateArea(string &in item)
+{
+	PlaySoundAtEntity("", "break_wood_metal2.snt", "mansion_4", 1, false);
+	SetEntityActive("AreaCollide_2", true);
+	SetEntityActive("block_box_1", false);
+	PlayMusic("The Key", false, 0.7, 0.1, 10, false);
+	
+	SetLampLit("chandelier_nice_20", false, true);
+	SetLampLit("chandelier_nice_22", false, true);
+	SetLampLit("chandelier_nice_1", false, true);
+	SetLampLit("candlestick_floor_1", false, true);
+	SetLampLit("candlestick_floor_4", false, true);
+	SetLampLit("candlestick_floor_3", false, true);
+	SetLampLit("chandelier_nice_3", false, true);
+	SetLampLit("chandelier_nice_18", false, true);
+}
+
+//////////////////////GruntAppears//////////////////////////////////////
+
+void GruntGuest(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Henryk_1", true);
+	
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+	
+	CheckPoint("GruntAppears", "PlayerStartArea_3", "HenrykRespawn", "", "");
+}
+
+void HenrykRespawn(string &in asName, int alCount)
+{
+	SetEntityActive("Henryk_1", true);
+}
+
+void TimerPlayerreact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+		
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_1", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_2", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_3", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_4", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_5", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_6", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_7", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_9", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_10", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_11", 0.001, "");
+		AddEnemyPatrolNode("Henryk_1", "PathGrunt_12", 0.001, "");
+		
+}		
+
+///////////////////////////Unlock Door//////////////////////////////////
+
+void DoorUnlock(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("doorlocked", false, true);
+	PlaySoundAtEntity("", "07_pick_lock", asEntity, 0, false);
+}
+
+///////////////////////////Lamps Hallway////////////////////////////////
+
+void LampsOff(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(10.0f, true);
+	CreateParticleSystemAtEntity("","ps_dust_paper_blow","AreaPaperBlow", false);
+	PlaySoundAtEntity("", "general_wind_whirl.snt", "AreaPaperBlow", 0, false);
+	PlayMusic("Guest", true, 1, 0.1, 10, false);
+	AddPropImpulse("lampa_3", 2, 0, 0, "world");
+	AddPropImpulse("lampa_2", 1.5f, 0, 0, "world");
+	AddPropImpulse("lampa_1", 1.7f, 0, 0, "world");
+	AddPropImpulse("lampa_4", 2, 0, 0, "world");
+	AddPropImpulse("lampa_5", 1.9f, 0, 0, "world");
+	SetLampLit("lampa_1", false, true);
+	SetLampLit("lampa_2", false, true);
+	SetLampLit("lampa_3", false, true);
+	SetLampLit("lampa_4", false, true);
+	SetLampLit("lampa_5", false, true);
+	
+}
+
+void TimerMusicStart(string &in asTimer)
+{
+	if(asTimer == "music1") PlayMusic("Guest", true, 0.3, 0.1, 10, false);
+}
+
+////////////////////////////////////Demo////////////////////////////////
+void Demo(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+	SetEntityActive("WaterDemo", true);
+}
+
+
+///////////////////////////////RoomShake////////////////////////////////
+
+void Shake2(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("Noise", 1, "Room");
+	AddTimer("Shake", 1.5f, "Room");
+}
+
+void Room(string &in asTimer)
+{
+	if(asTimer == "Noise") PlaySoundAtEntity("", "guardian_ontop.snt", "hatch_ceiling_1", 0, false);
+	
+	else if(asTimer == "Shake") {
+		StartScreenShake(0.1, 0.3, 0.3, 1);
+		SetSwingDoorLocked("hatch_ceiling_1", true, true);
+		}
+}
+
+/////////////////////////////////////Quest//////////////////////////////
+
+void AddQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Hatch", "GuestRooms");
+}
+
+
+///////////////////////////////////DoorMessage//////////////////////////
+
+void message(string &in asEntity) {
+SetMessage("Message", "SimpleLock", 3);
+}
+
+void messagelocked(string &in asEntity) {
+	SetMessage("Message", "CellarLocked", 3);
+}
+
+void messagepresence(string &in asEntity) {
+	SetMessage("Message", "Presence", 3);
+}
+
+
+/////////////////////////////////////Misc//////////////////////////
+
+void Shake(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("stone_1", true);
+	SetEntityActive("stone_2", true);
+	SetEntityActive("stone_3", true);
+	StartScreenShake(0.1, 0.3, 0.3, 1);
+	PlaySoundAtEntity("", "25_break_rock.snt", "dungeon_cave_in_dungeon_cave_in_1", 0, false);
+}
+
+///////////////////////////////////End23////////////////////////////////
+
+void End23(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	
+}

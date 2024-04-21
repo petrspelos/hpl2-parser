@@ -1,0 +1,108 @@
+void OnStart(){
+	SetSanityDrainDisabled(true);
+	SetPropHealth("castle_2", 0.9f);
+	for(int i=1; i<=2; i++)	{	AddEntityCollideCallback("Player", "ScriptArea_"+i, "closeGate", true, 1);	}
+	AddEntityCollideCallback("Player", "ScriptArea_6", "musicloop", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_5", "r1", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_4", "r2", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_7", "smallfeetAmb", false, 0);
+	
+	AddTimer("startClip1", 0, "TimerList");
+	AddTimer("startClip2", 3, "TimerList");
+	AddTimer("startClip3", 7, "TimerList");
+	AddTimer("startClip4", 11, "TimerList");
+	AddTimer("startClip5", 15, "TimerList");
+	
+	PlayMusic("dreamfallintro.ogg", false, 1, 0, 0, false);		AddTimer("musicbreak", 8, "TimerList");
+	
+	SetPlayerRunSpeedMul(0);	SetPlayerMoveSpeedMul(0);	FadePlayerRollTo(-85, 300, 0);	
+	for(int i=0; i<=98; i++)	CreateParticleSystemAtEntityExt("dustechoes", "ps_area_fog_xlarge.ps", "dustechArea_"+i, true, 0.5, 0.6, 0.7, 0.3f, false, 7, 3, 44, 50);
+}
+
+
+void TimerList(string &in asTimer){
+	if(asTimer == "debuffStickArea"){
+		SetEntityActive("StickyArea_1", true);
+		for(int i=2; i<=4; i++)	SetEntityActive("StickyArea_"+i, false);
+	}
+	if(asTimer == "startClip1")	SetPlayerLookSpeedMul(0.15f);
+	if(asTimer == "startClip2")	{	StartPlayerLookAt("FacingExitArea", 1, 1, "");	AddTimer("startClipStopLook", 2, "TimerList");	}
+	if(asTimer == "startClip3")	{	StartPlayerLookAt("ScriptArea_6", 1, 1, "");	AddTimer("startClipStopLook", 5, "TimerList");	}
+	if(asTimer == "startClip4")	{	MovePlayerHeadPos(0,0,0, 5, 5);		FadePlayerRollTo(0, 25, 10);		SetPlayerMoveSpeedMul(0.5f);}
+	if(asTimer == "startClip5")	SetPlayerMoveSpeedMul(0.8f);
+	if(asTimer == "startClipStopLook")	StopPlayerLookAt();
+	if(asTimer == "endClip1"){
+		FadePlayerAspectMulTo(0.8f, 0.8f);
+	}
+	if(asTimer == "endClip2"){
+		StartEffectFlash(3, 5, 5);
+		StopMusic(1, 0);
+		PlayMusic("dreamfallLeaveIn.ogg", false, 1, 0.5f, 0, false);
+	}
+	if(asTimer == "endClip3"){
+		FadeOut(2);
+	}
+	if(asTimer == "endClip4"){
+		ChangeMap("ConTemple.map", "PlayerStartArea_2", "", "");
+		SetGlobalVarInt("GlobalTemple", 1);
+	}
+	if(asTimer == "musicloop"){
+		StopMusic(1, 0);
+		PlayMusic("dreamfallloop.ogg", true, 1, 2.0f, 0, false);
+	}
+	if(asTimer == "musicbreak")
+		StopMusic(7, 0);
+}
+
+
+void musicloop(string &in asParent, string &in asChild, int alState){
+	PlayMusic("dreamfallintro.ogg", false, 1, 0, 0, false);		AddTimer("musicloop", 51, "TimerList");	
+}
+void r1(string &in asParent, string &in asChild, int alState){
+	SetPlayerMoveSpeedMul(0.5f);
+	FadeGlobalSoundVolume(0, 20);
+	
+		StopMusic(0.3f, 0);
+		PlayMusic("dreamfallEnd.ogg", false, 1, 0.5f, 0, false);
+}
+
+void r2(string &in asParent, string &in asChild, int alState){
+	SetPlayerMoveSpeedMul(0.3f);
+	AddTimer("endClip1", 2, "TimerList");
+	AddTimer("endClip2", 5, "TimerList");
+	AddTimer("endClip3", 9, "TimerList");
+	AddTimer("endClip3", 12, "TimerList");
+	AddTimer("endClip4", 15, "TimerList");
+	
+}
+void smallfeetAmb(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		MovePlayerHeadPos(0, -0.4, 0, 2.0f, 0.1f);
+	}
+	else
+	{
+		MovePlayerHeadPos(0, 0, 0, 2.0f, 0.1f);
+	}
+}
+
+
+void closeGate(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("castle_gate_arched01_open_1", false);
+	SetEntityActive("castle_gate_arched01_open_2", true);
+	for (int i=1; i<=2; i++)	RemoveEntityCollideCallback("Player", "ScriptArea_"+i);
+}
+void placeMaterial(string &in asArea, string &in asBody){
+	if(GetGlobalVarInt("stack")	== 0){	SetEntityActive("StickyArea_1", false);	 AddTimer("debuffStickArea", 2, "TimerList");	SetEntityActive("StickyArea_2", true);	 	AddGlobalVarInt("stack", 1);		return;	}
+	if(GetGlobalVarInt("stack")	== 1){	SetEntityActive("StickyArea_1", false);	 AddTimer("debuffStickArea", 2, "TimerList");		SetEntityActive("StickyArea_3", true);	 	AddGlobalVarInt("stack", 1);		return;	}
+	if(GetGlobalVarInt("stack")	== 2){	SetEntityActive("StickyArea_1", false);	 AddTimer("debuffStickArea", 2, "TimerList");		SetEntityActive("StickyArea_4", true);	 	AddGlobalVarInt("stack", 1);		return;	}
+}
+
+
+
+void OnEnter(){
+
+}
+
+void OnLeave(){
+	SetSanityDrainDisabled(false);
+}

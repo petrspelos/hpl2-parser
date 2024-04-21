@@ -1,0 +1,140 @@
+void OnStart()
+{
+	// Events
+	AddUseItemCallback("", "String", "LargeDoor", "StringToLargeDoor", true);
+		
+	AddEntityCollideCallback("LargeDoor", "LargeDoorClose", "OnColliderHatchDoorOpen", true, 1);
+	AddEntityCollideCallback("Player", "AreaHatchDoorClose", "OnColliderHatchDoorClose", true, 1);
+	AddEntityCollideCallback("Player", "AreaLivingStatue", "OnColliderLivingStatue", true, 1);	
+	
+	// Required Items
+	if(!HasItem("Lantern")) GiveItemFromFile("Lantern", "lantern.ent");
+	if(!HasItem("Container")) GiveItemFromFile("Container", "chemical_container.ent");
+	if(!HasItem("HammerChipper")) GiveItem("HammerChipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+	
+	// Other
+	PlayMusic("06_amb.ogg", true, 0.8f, 0, 0, true);
+	SetMapDisplayNameEntry("Warehouse");
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(0.0f, 5);
+	SetGlobalVarInt("ForestSubChapterComplete", 1);
+	SetupLoadScreen("Loading", "OnLeaveWarehouse", 0, "forest.jpg");
+}
+
+void OnPickCrowbar(string &in entityName, string &in type)
+{
+	PlaySoundAtEntity("", "unlock_door.snt", "level_cistern_1", 0, false);
+	SetLevelDoorLocked("level_cistern_1", false);
+	
+	StartPlayerLookAt("level_cistern_1", 2.5f, 3.0f, "");	
+	PlaySoundAtEntity("DoorBoom", "break_wood_metal.snt", "level_cistern_1", 0, false);
+	
+	SetEntityActive("AreaLivingStatue", true);
+	
+	AddTimer("react_pant.snt", 0.35f, "TimerScare");
+	AddTimer("StopLookAtCloseDoor", 1.25f, "TimerLookComplete");
+	AddTimer("scare_steps_big.snt", 2.25f, "TimerScare");
+}
+
+void StringToLargeDoor(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("RopeStrain", "06_rope_strain.snt", asEntity, 0, false);		
+	SetEntityActive("rope", true);
+	SetEntityActive("hook", true);
+	SetWheelStuckState("Crank", 0, true);
+	CompleteQuest("Crank", "Crank");
+	
+	SetEntityPlayerInteractCallback("Crank", "OnInteractHatch", true);
+}
+
+void OnCrankChange(string &in asEntity, int LeverState)
+{
+	CompleteQuest("LargeDoor", "LargeDoor");
+	SetWheelStuckState(asEntity, LeverState, true);
+}
+
+void OnInteractHatch(string &in asEntity)
+{
+	SetPropStaticPhysics("rope", false);
+	SetPropStaticPhysics("hook", false);	
+	
+	SetWheelAngle("Crank", -180, true);
+	
+	PlaySoundAtEntity("hatchs", "door_level_wood_close.snt", "LargeDoor", 0.0f, false);
+	AddPropImpulse("LargeDoor", 0.0f, 10.0f, 0.0f, "World");
+	
+	AddTimer("hatchs", 0.15f, "TimerHatchOn");
+}
+
+void OnColliderHatchDoorClose(string &in asParent, string &in asChild, int alState)
+{	
+	ResetProp("LargeDoor");
+	PlaySoundAtEntity("DoorBoom", "break_wood.snt", "LargeDoor", 0, false);
+	CreateParticleSystemAtEntity("DirtyImpact", "ps_break_mansionbase_wall.ps", "LargeDoor", false);
+	StartPlayerLookAt("LargeDoor", 2.5f, 3.0f, "");
+	
+	AddTimer("react_pant.snt", 0.35f, "TimerScare");
+	AddTimer("StopLookAtCloseDoor", 1.25f, "TimerLookComplete");
+}
+
+void OnColliderHatchDoorOpen(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics(asParent, true);
+	GiveSanityBoostSmall();
+	RemoveTimer("TimerHatchOn");
+}
+
+void OnColliderLivingStatue(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("LivingStatue",false);
+	SetEntityActive("FleshyStatue",true);
+	
+	PlaySoundAtEntity("StatueLaugh", "21_intro_scream.snt", "FleshyStatue", 0, false);	
+	StartPlayerLookAt("FleshyStatue", 2.5f, 3.0f, "");
+	GiveSanityDamage(15.0f, true);
+	
+	CreateParticleSystemAtEntity("StatueSwapEffect", "blood.ps", "FleshyStatue", false);
+	CreateParticleSystemAtEntity("StatueSwapEffect", "ps_break_mansionbase_wall.ps", "FleshyStatue", false);
+	
+	AddTimer("react_scare.snt", 0.2f, "TimerScare");
+	AddTimer("StopLookAtLivingStatue", 0.5f, "TimerLookComplete");
+	AddTimer("SwapStatue", 1.25f, "TimerSwapStatue");
+}
+
+void OnInteractDoor(string &in door)
+{
+	if(!QuestIsCompleted(door))
+	{
+		SetMessage("Hints", door, 5.0f);
+		AddQuest(door, door);
+	}
+}
+
+void TimerSwapStatue(string &in soundFile)
+{
+	SetEntityActive("FleshyStatue",false);
+	SetEntityActive("LivingStatue",true);
+}
+
+void TimerHatchOn(string &in asTimer)
+{
+	StopSound("hatchs", 0.5f);
+	AddPropImpulse("LargeDoor", 0.0f, 10.0f, 0.0f, "World");
+	AddTimer("hatchs", 0.15f, "TimerHatchOn");
+}
+
+void TimerLookComplete(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerScare(string &in soundFile)
+{
+	PlayGuiSound(soundFile, 1.0f);
+	ChangePlayerStateToNormal();
+}

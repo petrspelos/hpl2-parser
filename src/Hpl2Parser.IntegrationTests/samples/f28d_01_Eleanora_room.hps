@@ -1,0 +1,779 @@
+void OnStart()
+{
+//intro();
+intro2();
+TeleportPlayer("PlayerStartArea_6");
+////FOR COMP//////
+AddEntityCollideCallback("Player","Player_right" ,"right_stop",false,1);
+AddEntityCollideCallback("Player","Player_left","left_stop",false,1);
+AddEntityCollideCallback("Player","player_backward_none","mBwd_none",false,1);
+AddEntityCollideCallback("Player","player_forward_none" ,"mFwd_none",false,1);
+AddEntityCollideCallback("Player","player_forward" ,"mFwd",false,1);
+AddEntityCollideCallback("Player","player_backward","mBwd",false,1);
+AddEntityCollideCallback("Player","player_jump_foto01", "mJmp_foto01",false,1);
+AddEntityCollideCallback("Player","player_jump_foto02", "mJmp_foto02",false,1);
+AddEntityCollideCallback("Player","player_jump_foto03", "mJmp_foto03",false,1);
+AddEntityCollideCallback("Player","player_jump", "mJmp",false,1);
+///////////////
+SetLightVisible("PointLight_10", false);
+SetLightVisible("SpotLight_33", false);
+SetLightVisible("photo_1", false);SetLightVisible("photo_2", false);SetLightVisible("photo_3", false);
+SetLightVisible("photo02_on", false);SetLightVisible("photo03_on", false);
+AddEntityCollideCallback("Player", "ScriptArea_2" ,"curtain_sound", false, 1);
+RotatePropToSpeed("camera", 8, 0.55, 0, 0.5, 0, true, "ScriptArea_3");
+PlaySoundAtEntity("", "camera_turn.snt", "ScriptArea_3", 1.0 / 1.5f, false);
+AddEntityCollideCallback("camera", "ScriptArea_5" ,"camera_turn", false, 1);
+AddEntityCollideCallback("camera", "ScriptArea_6" ,"camera_turn", false, 1);
+SetSanityDrainDisabled(true);
+SetMapDisplayNameEntry("Room");
+}
+//////
+void intro2()
+{
+SetPlayerActive(false);
+FadeOut(0);
+ShowPlayerCrossHairIcons(false);
+SetSanityDrainDisabled(true);
+AddTimer("", 1 ,"start");
+SetLocalVarInt("word", 0);
+}
+void start(string &in asTimer)
+{
+FadeIn(2.5);
+AddTimer("pr", 2.1, "print");
+}
+void print(string &in asTimer)
+{
+if (GetLocalVarInt("word") == 8 or GetLocalVarInt("word") == 11 or GetLocalVarInt("word") == 22){
+PlaySoundAtEntity("", "gui_type_space.snt", "ScriptArea_9", 0.3/0.5, false);
+}
+else {
+PlaySoundAtEntity("sp", "gui_type.snt", "ScriptArea_9", 0.3/0.5, false);
+}
+AddTimer("pr", 0.11, "print");
+AddLocalVarInt("word", 1);
+SetEntityActive("word_"+GetLocalVarInt("word"), false);
+if (GetLocalVarInt("word") == 35){
+RemoveTimer("pr");
+StopSound("sp", 0);
+AddTimer("d1", 2, "delay_n");
+AddTimer("d2", 4.3, "delay_n");
+AddTimer("d3", 5.3, "delay_n");
+}
+}
+void delay_n(string &in asTimer)
+{
+if (asTimer == "d1"){
+FadeOut(2);
+return;
+}
+if (asTimer == "d2"){
+TeleportPlayer("PlayerStartArea_1");
+return;
+}
+if (asTimer == "d3"){
+intro();
+return;
+}
+}
+/////STUFF/////////
+void curtain_sound(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("16_plastic_scare.snt", 0.7f);
+}
+//////////////
+void grabhand(string &in asEntity)
+{
+   if (GetPropIsInteractedWith(asEntity) == true){
+   StartInsanityEvent("grab");
+   }
+   AddTimer(asEntity, 0.01,"grabcheck");
+}
+void grabcheck(string &in asTimer)
+{
+AddTimer(asTimer, 0.01,"grabcheck");
+if (GetPropIsInteractedWith(asTimer) == false){
+StopCurrentInsanityEvent();
+RemoveTimer(asTimer);
+}
+}
+///CAMERA//////
+void camera_turn(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_5"){
+StopPropMovement("camera");
+AddTimer("c1", 1.6, "cam_delay");
+return;
+}
+if (asChild == "ScriptArea_6"){
+AddTimer("c2", 1.6, "cam_delay");
+StopPropMovement("camera");
+return;
+}
+}
+void cam_delay(string &in asTimer)
+{
+if (asTimer == "c1"){
+PlaySoundAtEntity("", "camera_turn.snt", "ScriptArea_3", 1.0 / 1.5f, false);
+RotatePropToSpeed("camera", 8, 0.55, 0, 0.5, 0, true, "ScriptArea_3");
+return;
+}
+if (asTimer == "c2"){
+PlaySoundAtEntity("", "camera_turn.snt", "ScriptArea_3", 1.0 / 1.5f, false);
+RotatePropToSpeed("camera", 8, 0.55, 0, -0.5, 0, true, "ScriptArea_3");
+return;
+}
+}
+///////
+void desklamp_interact(string &in asEntity)
+{
+if(GetLocalVarInt("lighton2") == 0)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton2", 1);
+            SetLightVisible("SpotLight_4", false);
+            SetLampLit("mining_room_desklamp_1", false, false);
+			return;
+		}
+		if(GetLocalVarInt("lighton2") == 1)
+		{
+		    
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton2", 0);
+			SetLightVisible("SpotLight_4", true);
+            SetLampLit("mining_room_desklamp_1", true, false);
+            return;
+		}
+}
+void lightswitch(string &in asEntity)
+{
+if(GetLocalVarInt("lighton") == 0)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton", 1);
+            SetLightVisible("SpotLight_1", false);
+			SetLightVisible("SpotLight_2", false);
+			StopSound("Sound_2", 1);
+            SetLampLit("lamp_flourescent01_1", false, false);
+			return;
+		}
+		if(GetLocalVarInt("lighton") == 1)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton", 0);
+			SetLightVisible("SpotLight_1", true);
+			SetLightVisible("SpotLight_2", true);
+			FadeInSound("Sound_2", 1, true);
+            SetLampLit("lamp_flourescent01_1", true, false);
+            return;
+		}
+}
+void olderlamp_interact(string &in asEntity)
+{
+if(GetLocalVarInt("lighton02") == 0)
+		{
+
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton02", 1);
+            SetLampLit("lamp", false, false);
+			return;
+		}
+if(GetLocalVarInt("lighton02") == 1)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton02", 0);
+			SetLampLit("lamp", true, false);
+            return;
+		}
+}
+void shower_interact(string &in asEntity)
+{
+if(GetLocalVarInt("showeron") == 0)
+		{
+         PlayGuiSound("im_gas_on1.ogg", 5.0f);
+	     SetLocalVarInt("showeron", 1);
+         AddTimer("sh1", 0.8, "showerdelay");
+		 SetEntityActive("Area_interact_4", false);
+		 return;
+        }
+		if(GetLocalVarInt("showeron") == 1)
+		{
+        SetLocalVarInt("showeron", 0);
+		PlayGuiSound("im_gas_on1.ogg", 5.0f);
+		DestroyParticleSystem("psshower");
+		StopSound("showersound", 0.8);
+		SetEntityActive("Area_interact_4", false);
+		AddTimer("sh2", 0.8, "showerdelay");
+		return;
+		}
+		
+}
+void showerdelay(string &in asTimer)
+{
+if (asTimer == "sh1"){
+SetEntityActive("Area_interact_4", true);
+CreateParticleSystemAtEntity("psshower", "ps_pipe_flow_small_pen.ps", "Area_water_ps", false);
+PlaySoundAtEntity("showersound", "shower_water.snt", "Area_water_ps", 1, true);
+return;
+}
+if (asTimer == "sh2"){
+SetEntityActive("Area_interact_4", true);
+return;
+}
+}
+void toilet_interact(string &in asEntity)
+{
+PlayGuiSound("Sliv.ogg", 0.85f);
+CreateParticleSystemAtEntity("toilett", "ps_water_stream_toilet.ps", "Area_water_ps_1", true);
+AddTimer("", 3, "psdelete");
+AddTimer("", 9, "toilet_refresh");
+SetEntityActive("Area_interact_6", false);
+SetEntityInteractionDisabled("toilet_chair_6", true);
+}
+void psdelete(string &in asTimer)
+{
+DestroyParticleSystem("toilett");
+PlaySoundAtEntity("toiletflow", "water_flow_toilet.snt", "Area_interact_6", 1, true);
+}
+void toilet_refresh(string &in asTimer)
+{
+StopSound("toiletflow", 2);
+SetEntityActive("Area_interact_6", true);
+SetEntityInteractionDisabled("toilet_chair_6", false);
+}
+void sink_interact(string &in asEntity)
+{
+if(GetLocalVarInt("sinkon") == 0){
+PlayGuiSound("01_vice_close1.ogg", 0.65f);
+SetLocalVarInt("sinkon", 1);
+PlaySoundAtEntity("sinksound", "1_water_stream_sink.snt", "Area_interact_5", 1, true);
+CreateParticleSystemAtEntity("sinkwat1", "ps_water_stream_sink.ps", "ScriptArea_7", true);
+CreateParticleSystemAtEntity("sinkwat2", "ps_water_stream_sink.ps", "ScriptArea_8", true);
+return;
+}
+if(GetLocalVarInt("sinkon") == 1){
+StopSound("sinksound", 1);
+PlayGuiSound("01_vice_close1.ogg", 0.65f);
+SetLocalVarInt("sinkon", 0);
+DestroyParticleSystem("sinkwat1");DestroyParticleSystem("sinkwat2");
+return;
+}
+}
+//////////////////////////
+///SCENE//////////
+///////////////
+void intro()
+{
+PlayMusic("intro_scene.ogg", false, 0.8f, 12, 0, true);
+ShowPlayerCrossHairIcons(false);
+FadeGlobalSoundVolume(0, 0);
+//*in room
+SetLocalVarInt("lighton", 1);
+SetLightVisible("SpotLight_1", false);
+SetLightVisible("SpotLight_2", false);
+StopSound("Sound_2", 1);
+SetLampLit("lamp_flourescent01_1", false, false);
+///
+//*light setup
+for (int i=1; i<=13; i++){
+SetLightVisible("Spot_"+i, false);
+SetLampLit("Spotlamp_"+i, false, false);
+}
+////
+SetPlayerSanity(3);
+FadeSepiaColorTo(0.5, 1);
+FadeOut(0);
+StartInsanityEvent("Flashback");
+FadeRadialBlurTo(0.012, 1);
+SetRadialBlurStartDist(0.4);
+SetPlayerActive(false);
+StartPlayerLookAt("Look_1", 2, 2, "");
+AddTimer("intr1", 2, "introscene");
+AddTimer("intr2", 10, "introscene");
+AddTimer("intr3", 13, "introscene");
+AddTimer("intr4", 14, "introscene");
+AddTimer("intr5", 15, "introscene");
+AddTimer("intr6", 17, "introscene");
+AddTimer("intr7", 18.5, "introscene");
+AddTimer("intr8", 19.5, "introscene");
+AddTimer("intr9", 22.5, "introscene");
+AddTimer("intr10", 23.5, "introscene");
+AddTimer("intr11", 24.5, "introscene");
+AddTimer("intr12", 28.5, "introscene");
+AddTimer("intr13", 30.5, "introscene");
+AddTimer("intr14", 34.5, "introscene");
+}
+void introscene(string &in asTimer)
+{
+if (asTimer == "intr1"){
+FadeIn(6);
+return;
+}
+if (asTimer == "intr2"){
+PlayGuiSound("12_whip2.ogg", 0.8f);
+for (int i=1; i<=4; i++){
+SetLightVisible("Spot_"+i, true);
+SetLampLit("Spotlamp_"+i, true, false);
+}
+return;
+}
+if (asTimer == "intr3"){
+PlayGuiSound("12_whip5.ogg", 0.8f);
+SetLightVisible("Spot_5", true);
+SetLampLit("Spotlamp_5", true, false);
+return;
+}
+if (asTimer == "intr4"){
+SetEntityActive("vision_1", true);SetEntityActive("vision_2", true);SetEntityActive("vision_3", true);
+SetEnemySanityDecreaseActive("vision_1", false);
+SetEnemySanityDecreaseActive("vision_2", false);
+SetEnemySanityDecreaseActive("vision_3", false);
+AddEnemyPatrolNode("vision_1", "PathNodeArea_1", 2, "");
+AddEnemyPatrolNode("vision_2", "PathNodeArea_2", 2, "");
+AddEnemyPatrolNode("vision_3", "PathNodeArea_3", 2, "");
+PlayGuiSound("12_whip2.ogg", 0.8f);
+for (int i=6; i<=11; i++){
+SetLightVisible("Spot_"+i, true);
+SetLampLit("Spotlamp_"+i, true, false);
+}
+return;
+}
+if (asTimer == "intr5"){
+PlayGuiSound("12_whip6.ogg", 0.8f);
+SetLightVisible("Spot_12", true);SetLightVisible("Spot_13", true);
+SetLampLit("Spotlamp_11", true, false);SetLampLit("Spotlamp_12", true, false);
+return;
+}
+if (asTimer == "intr6"){
+
+return;
+}
+if (asTimer == "intr7"){
+FadeSepiaColorTo(0, 1);
+StopPlayerLookAt();
+SetPlayerSanity(90);
+MovePlayerHeadPos(0, -1.2, 0, 100, 1);
+FadeRadialBlurTo(0, 1);
+SetRadialBlurStartDist(0);
+FadePlayerFOVMulTo(1, 100);
+StopCurrentInsanityEvent();
+StartEffectFlash(0.2, 1, 0.1);
+FadeOut(0.6);
+return;
+}
+if (asTimer == "intr8"){
+FadeImageTrailTo(1.5, 1);
+StartScreenShake(0.01, 0, 0.6, 0);
+FadeGlobalSoundVolume(1, 10);
+TeleportPlayer("PlayerStartArea_4");
+FadeIn(0);
+PlayGuiSound("justine_wake1.ogg", 1.0f);
+SetLightVisible("BoxLight_2", false);
+SetFogActive(false);
+return;
+}
+if (asTimer == "intr9"){
+StartPlayerLookAt("Look_4", 2, 2, "");
+PlayGuiSound("justine_rapid_breaths.ogg", 1.0f);
+return;
+}
+if (asTimer == "intr10"){
+StartPlayerLookAt("Look_5", 2, 2, "");
+return;
+}
+if (asTimer == "intr11"){
+StartPlayerLookAt("Look_6", 2, 2, "");
+return;
+}
+if (asTimer == "intr12"){
+FadeImageTrailTo(0, 1);
+PlayGuiSound("player_climb2.ogg", 1.0f);
+StartPlayerLookAt("Look_7", 1, 1, "");
+MovePlayerHeadPos(0, 0, 0, 1, 1);
+AddTimer("automove", 0.1, "TimerMoveForward");
+return;
+}
+if (asTimer == "intr13"){
+SetPlayerActive(true);
+ShowPlayerCrossHairIcons(true);
+StopPlayerLookAt();
+RemoveTimer("automove");
+return;
+}
+if (asTimer == "intr14"){
+SetLocalVarInt("musicon", 1);
+PlayMusic("Penumbra_BP_A4.ogg", true, 0.4f, 12, 0, true);
+narratorhere();
+return;
+}
+}
+void TimerMoveForward(string &in asTimer)
+{
+	MovePlayerForward(0.1);
+	AddTimer("automove", 0, "TimerMoveForward");
+	AddDebugMessage("Move forward!", false);
+}
+
+
+void sanit(string &in asTimer)
+{
+SetPlayerSanity(90);
+SetSanityDrainDisabled(true);
+AutoSave();
+}
+//////////////////
+void tvswitch(string &in asEntity)
+{
+if(GetLocalVarInt("tvon") == 0)
+		{
+         PlayGuiSound("puzzle_button.ogg", 0.6f);
+	     SetLocalVarInt("tvon", 1);
+		 StopSound("Sound_3", 0.8);
+		 SetLightVisible("SpotLight_5", false);
+		 SetLightVisible("SpotLight_3", false);
+         SetEntityActive("furniture_tv_1", false);
+		 SetEntityActive("furniture_tv_2", true);
+		 return;
+        }
+		if(GetLocalVarInt("tvon") == 1)
+		{
+        SetLocalVarInt("tvon", 0);
+		PlayGuiSound("puzzle_button.ogg", 0.6f);
+	    FadeInSound("Sound_3", 1, true);
+		 SetLightVisible("SpotLight_5", true);
+		 SetLightVisible("SpotLight_3", true);
+		SetEntityActive("furniture_tv_1", true);
+		SetEntityActive("furniture_tv_2", false);
+		return;
+		}
+}
+///////////////
+void narratorhere()
+{
+PlaySoundAtEntity("", "item_radio_noise.snt", "tech_speaker_1", 1, true);
+AddTimer("", 1, "narrnow");
+}
+void narrnow(string &in asTimer)
+{
+AddEffectVoice("DIKTOR_03", "", "Voice", "Narrator_3", false, "tech_speaker_1", 9, 16);
+}
+/////////////////
+///COMPUTER//////
+void Comp_gui(string &in asEntity) ///start computer
+{
+SetInventoryDisabled(true);
+SetPlayerCrouchDisabled(true);
+SetPlayerCrouching(false);
+PlayGuiSound("gui_login1.ogg", 5.0f);
+FadeOut(0.4);
+SetLanternDisabled(true);
+SetPlayerActive(false);
+AddTimer("", 0.7, "guistart");
+AddTimer("", 1, "guistart2");
+}
+void guistart(string &in asTimer)
+{
+SetEntityActive("Click_foto01_desktop", true);
+SetEntityActive("Click_foto02_desktop", false);
+SetEntityActive("Click_foto03_desktop", false);
+SetLocalVarInt("iconcount", 3);
+SetLightVisible("photo_1", false);SetLightVisible("photo_2", false);SetLightVisible("photo_3", false);
+SetLightVisible("photo03_on", false);SetLightVisible("photo02_on", false);SetLightVisible("photo01_off", false);
+SetLightVisible("photo01_on", true);
+SetLightVisible("photo02_off", true);SetLightVisible("photo03_off", true);
+ShowPlayerCrossHairIcons(false);
+TeleportPlayer("PlayerStartArea_3");
+}
+void guistart2(string &in asTimer)
+{
+StartInsanityEvent("gui_icon");
+SetPlayerMoveSpeedMul(0.01);
+SetPlayerRunSpeedMul(0);
+SetPlayerLookSpeedMul(0);
+SetPlayerActive(true);
+FadeIn(1.2);
+}
+/////////
+void Click_foto01_desktop(string &in asEntity) ///foto1 file in desktop
+{
+SetEntityActive("player_forward_none", true);
+SetEntityActive("player_backward_none", true);
+SetEntityActive("player_forward", false);
+SetEntityActive("player_backward", false);
+SetLightVisible("photo_1", true);
+PlayGuiSound("gui_open_text1.ogg", 5.0f);
+SetEntityActive("Click_foto01_desktop", false);
+SetEntityActive("player_jump_foto01", true);
+SetEntityActive("player_jump", false);
+SetLocalVarInt("textopen", 1);
+}
+//----------
+void Click_foto02_desktop(string &in asEntity) ///foto2 file in desktop
+{
+SetEntityActive("player_forward_none", true);
+SetEntityActive("player_backward_none", true);
+SetEntityActive("player_forward", false);
+SetEntityActive("player_backward", false);
+SetLightVisible("photo_2", true);
+PlayGuiSound("gui_open_text1.ogg", 5.0f);
+SetEntityActive("Click_foto02_desktop", false);
+SetEntityActive("player_jump_foto02", true);
+SetEntityActive("player_jump", false);
+SetLocalVarInt("textopen", 2);
+}
+//--------
+void Click_foto03_desktop(string &in asEntity) ///foto3 file in desktop
+{
+SetEntityActive("player_forward_none", true);
+SetEntityActive("player_backward_none", true);
+SetEntityActive("player_forward", false);
+SetEntityActive("player_backward", false);
+SetLightVisible("photo_3", true);
+PlayGuiSound("gui_open_text1.ogg", 5.0f);
+SetEntityActive("Click_foto03_desktop", false);
+SetEntityActive("player_jump_foto03", true);
+SetEntityActive("player_jump", false);
+SetLocalVarInt("textopen", 3);
+}
+////
+//MAIN
+void mFwd(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("gui_click1.ogg", 10.0f);
+AddLocalVarInt("iconcount", 1);
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+if (GetLocalVarInt("iconcount") > 3){
+SetLocalVarInt("iconcount", 1);
+SetLightVisible("photo01_on", false);
+SetLightVisible("photo01_off", true);
+SetLightVisible("photo03_on", true);
+SetLightVisible("photo03_off", false);
+SetEntityActive("Click_foto01_desktop", false);
+SetEntityActive("Click_foto02_desktop", false);
+SetEntityActive("Click_foto03_desktop", true);
+}
+if (GetLocalVarInt("iconcount") == 3){
+SetLightVisible("photo01_on", true);
+SetLightVisible("photo01_off", false);
+SetEntityActive("Click_foto02_desktop", false);
+SetEntityActive("Click_foto01_desktop", true);
+SetEntityActive("Click_foto03_desktop", false);
+SetLightVisible("photo02_on", false);
+SetLightVisible("photo02_off", true);
+}
+if (GetLocalVarInt("iconcount") == 2){
+SetLightVisible("photo03_on", false);
+SetLightVisible("photo03_off", true);
+SetEntityActive("Click_foto02_desktop", true);
+SetEntityActive("Click_foto01_desktop", false);
+SetEntityActive("Click_foto03_desktop", false);
+SetLightVisible("photo02_on", true);
+SetLightVisible("photo02_off", false);
+}
+}
+void backup1(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_3");
+}
+void mBwd(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("gui_click1.ogg", 10.0f);
+AddLocalVarInt("iconcount", -1);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+SetPlayerActive(false);
+if (GetLocalVarInt("iconcount") == 2){
+SetLightVisible("photo01_on", false); 
+SetLightVisible("photo01_off", true);
+SetLightVisible("photo02_on", true); 
+SetLightVisible("photo02_off", false); 
+SetEntityActive("Click_foto02_desktop", true); ///
+SetEntityActive("Click_foto01_desktop", false);
+SetEntityActive("Click_foto03_desktop", false);
+}
+if (GetLocalVarInt("iconcount") == 1){
+SetLightVisible("photo02_on", false); 
+SetLightVisible("photo02_off", true); 
+SetLightVisible("photo03_on", true); 
+SetLightVisible("photo03_off", false); 
+SetEntityActive("Click_foto02_desktop", false); 
+SetEntityActive("Click_foto01_desktop", false);
+SetEntityActive("Click_foto03_desktop", true);
+}
+if (GetLocalVarInt("iconcount") < 1){
+SetLocalVarInt("iconcount", 3);
+SetLightVisible("photo01_on", true);
+SetLightVisible("photo01_off", false);
+SetEntityActive("Click_foto02_desktop", false);
+SetEntityActive("Click_foto01_desktop", true);
+SetEntityActive("Click_foto03_desktop", false);
+SetLightVisible("photo03_on", false);
+SetLightVisible("photo03_off", true);
+}
+}
+void delay1(string &in asTimer) ///some delay between push button
+{
+SetPlayerActive(true);
+}
+/////////
+void mFwd_none(string &in asParent, string &in asChild, int alState) //switch none
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void mBwd_none(string &in asParent, string &in asChild, int alState) //switch none
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void right_stop(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void left_stop(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void mJmp(string &in asParent, string &in asChild, int alState) /// for close windows and desktop
+{
+PlayGuiSound("gui_type3.ogg", 10.0f);
+FadeOut(0);
+SetPlayerActive(false);
+AddTimer("", 0.4, "backtp");
+AddTimer("", 0.48, "backtp2");
+}
+void backtp(string &in asTimer)
+{
+SetInventoryDisabled(false);
+SetLanternDisabled(false);
+SetPlayerCrouchDisabled(false);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+TeleportPlayer("PlayerStartArea_5");
+}
+void backtp2(string &in asTimer)
+{
+StopCurrentInsanityEvent();
+PlayGuiSound("gui_logout1.ogg", 5.0f);
+AddTimer("", 1, "resetcomp");
+SetLightVisible("PointLight_10", true);
+SetLightVisible("SpotLight_33", true);
+SetEntityActive("computer_on", true);
+SetEntityActive("computer_off", false);
+SetEntityActive("plane_black_31", false);
+ShowPlayerCrossHairIcons(true);
+FadeIn(0.5);
+SetPlayerActive(true);
+}
+void resetcomp(string &in asTimer)
+{
+SetLightVisible("PointLight_10", false);
+SetLightVisible("SpotLight_33", false);
+PlayGuiSound("interact_computer_off1.ogg", 5.0f);
+SetEntityActive("computer_on", false);
+SetEntityActive("computer_off", true);
+SetEntityActive("plane_black_31", true);
+}
+///////
+void mJmp_foto01(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("player_forward_none", false);
+SetEntityActive("player_backward_none", false);
+SetEntityActive("player_forward", true);
+SetEntityActive("player_backward", true);
+SetEntityActive("Click_foto01_desktop", true);
+SetEntityActive("player_jump_foto01", false);
+PlayGuiSound("gui_close_text1.ogg", 10.0f);
+SetLightVisible("photo_1", false);
+SetPlayerActive(false);
+AddTimer("", 0.6, "retra");
+}
+void retra(string &in asTimer)
+{
+SetPlayerActive(true);
+SetEntityActive("player_jump", true);
+}
+void mJmp_foto02(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("player_forward_none", false);
+SetEntityActive("player_backward_none", false);
+SetEntityActive("player_forward", true);
+SetEntityActive("player_backward", true);
+SetEntityActive("Click_foto02_desktop", true);
+SetEntityActive("player_jump_foto02", false);
+PlayGuiSound("gui_close_text1.ogg", 10.0f);
+SetLightVisible("photo_2", false);
+SetPlayerActive(false);
+AddTimer("", 0.6, "retra");
+}
+void mJmp_foto03(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("player_forward_none", false);
+SetEntityActive("player_backward_none", false);
+SetEntityActive("player_forward", true);
+SetEntityActive("player_backward", true);
+SetEntityActive("Click_foto03_desktop", true);
+SetEntityActive("player_jump_foto03", false);
+PlayGuiSound("gui_close_text1.ogg", 10.0f);
+SetLightVisible("photo_3", false);
+SetPlayerActive(false);
+AddTimer("", 0.6, "retra");
+}
+/////////////////
+/////////////////
+/////////////
+void Sign_box(string &in asEntity)
+{
+if (asEntity == "signs_1"){
+SetMessage("01_Room", "Book01", -1);
+}
+if (asEntity == "signs_2"){
+SetMessage("01_Room", "Posters01", -1);
+}
+if (asEntity == "signs_3"){
+SetMessage("01_Room", "Posters02", -1);
+}
+if (asEntity == "signs_4"){
+SetMessage("01_Room", "Posters04", -1);
+}
+if (asEntity == "signs_5"){
+SetMessage("01_Room", "Posters03", -1);
+}
+if (asEntity == "signs_6"){
+SetMessage("01_Room", "Book02", -1);
+}
+}
+//////////////
+void OnEnter()
+{
+if (GetLocalVarInt("musicon") == 1){
+PlayMusic("Penumbra_BP_A4.ogg", true, 0.4f, 12, 0, true);
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+}
+PreloadSound("shower_water.snt");
+PreloadSound("1_water_stream_sink.snt");
+PreloadSound("water_flow_toilet.snt");
+PreloadParticleSystem("ps_water_stream_sink.ps");
+PreloadParticleSystem("ps_water_stream_toilet.ps");
+PreloadParticleSystem("ps_pipe_flow_small_pen.ps");
+SetSanityDrainDisabled(true);
+}
+
+
+
+void OnLeave()
+{
+StopAllEffectVoices(1);
+StopMusic(0, 0);
+SetupLoadScreen("", "", 1, "residental_loadingscreen.jpg");
+}

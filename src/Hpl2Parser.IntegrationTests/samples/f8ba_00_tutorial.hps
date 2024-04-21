@@ -1,0 +1,288 @@
+void OnEnter()
+{
+	SetMapDisplayNameEntry("Unknown");
+}
+
+void OnLeave()
+{
+
+}
+
+void OnStart()
+{
+	SetMapDisplayNameEntry("Unknown");
+	SetupLoadScreen("LoadingHints", "00To01", 0, "game_loading_rose.jpg");
+	SetLocalVarInt("FirstWakeUp", 1);
+	SetLocalVarInt("SkipTutorial", 0);
+	SetLocalVarInt("CompletedTutorial", 0);
+	SetLocalVarString("CurrentPlayerStartArea", "PlayerStartArea_1");
+	
+	AddEntityCollideCallback("Player", "area_block_section1", "CollidePlayerAndAreaBlockSection", false, 1);
+	AddEntityCollideCallback("Player", "area_block_section2", "CollidePlayerAndAreaBlockSection", false, 1);
+	AddEntityCollideCallback("Player", "area_block_section3", "CollidePlayerAndAreaBlockSection", false, 1);
+	
+	FadeOut(0.0f);
+	SetPlayerActive(false);
+	
+	StartSection("Section1_1");
+}
+
+void StartSection(string asSection)
+{
+	int iTime = 5;
+	bool bWakeUp = false;
+	
+	if(asSection == "Section1_1")
+	{
+		iTime = 9;
+		AddTimer("Section1_2", iTime, "StartSection");
+	}
+	else if(asSection == "Section1_2")
+	{
+		iTime = 10;
+		bWakeUp = true;
+	}
+	else if(asSection == "Section1_3")
+	{
+		iTime = 6;
+	}
+	else if(asSection == "Section2_1")
+	{
+		iTime = 8;
+		AddTimer("Section2_2", iTime, "StartSection");
+	}
+	else if(asSection == "Section2_2")
+	{
+		iTime = 8;
+		AddTimer("Section2_3", iTime, "StartSection");
+	}
+	else if(asSection == "Section2_3")
+	{
+		iTime = 10;
+		AddTimer("Section2_4", iTime, "StartSection");
+	}
+	else if(asSection == "Section2_4")
+	{
+		iTime = 16;
+		AddTimer("EndSection", iTime, "StartSection");
+		bWakeUp = true;
+	}
+	else if(asSection == "Section3_1")
+	{
+		iTime = 7;
+		AddTimer("Section3_2", iTime, "StartSection");
+	}
+	else if(asSection == "Section3_2")
+	{
+		iTime = 7;
+		AddTimer("Section3_3", iTime, "StartSection");
+	}
+	else if(asSection == "Section3_3")
+	{
+		iTime = 14;
+		AddTimer("Section3_4", iTime, "StartSection");
+	}
+	else if(asSection == "Section3_4")
+	{
+		iTime = 10;
+		AddTimer("EndSection", iTime, "StartSection");
+		bWakeUp = true;
+	}
+	
+	SetMessage("Tutorial", asSection, iTime);
+	
+	if(bWakeUp)
+	{
+		AddTimer("FadeInAndActive", iTime, "TimerFadeScreen");
+	}
+}
+
+void CollidePlayerAndAreaBlockSection(string asParent, string asChild, int aiState)
+{
+	SetMessage("Tutorial", "NoButtonPressed", 5.0f);
+}
+
+void PlayerInteractSectionButton(string asEntity)
+{
+	bool bReset = true;
+	
+	if(StringContains(asEntity, "section1"))
+	{
+		if(StringContains(asEntity, "left"))
+		{
+			SetEntityInteractionDisabled("button_right_section1", true);
+			
+			AddTimer("Section1_3", 0.001f, "StartSection");
+			FadeLightTo("light_door_section1", 0.0f, 1.0f, 0.0f, 1.0f, -1, 1.0f);
+			bReset = false;
+		}
+		else if(StringContains(asEntity, "right"))
+		{
+			SetEntityInteractionDisabled("button_left_section1", true);
+			SetPlayerActive(false);
+			FadeOut(1.0f);
+			SetLocalVarInt("SkipTutorial", 1);
+			SetLocalVarString("CurrentPlayerStartArea", "PlayerStartArea_4");
+			AddTimer("FadeInAndActive", 1.0f, "TimerFadeScreen");
+			FadeLightTo("light_door_section1", 1.0f, 0.0f, 0.0f, 1.0f, -1, 1.0f);
+			
+			bReset = false;
+		}
+		
+		SetEntityActive("sign_left_section1", false);
+		SetEntityActive("sign_right_section1", false);
+		SetEntityActive("area_block_section1", false);
+		SetEntityActive("block_section1", false);
+	}
+	else if(StringContains(asEntity, "section2"))
+	{
+		if(StringContains(asEntity, "left"))
+		{
+			SetLocalVarInt("ButtonSection2", 0);
+			PlayGuiSound("sounds/enemy/brute/amb_alert.snt", 0.7f);
+			FadeLightTo("light_door_section2", 1.0f, 0.5f, 0.0f, 1.0f, -1, 1.0f);
+		}
+		else if(StringContains(asEntity, "right"))
+		{
+			SetLocalVarInt("ButtonSection2", 1);
+			PlayGuiSound("custom_stories/Maze_of_lost_memories/sounds/enemy/chiu/flinch.snt", 0.7f);
+			FadeLightTo("light_door_section2", 0.0f, 0.5f, 1.0f, 1.0f, -1, 1.0f);
+		}
+		
+		SetEntityActive("area_block_section2", false);
+		SetEntityActive("block_section2", false);
+	}
+	else if(StringContains(asEntity, "section3"))
+	{
+		if(StringContains(asEntity, "left"))
+		{
+			SetLocalVarInt("ButtonSection3", 0);
+			FadeLightTo("light_door_section3", 1.0f, 1.0f, 0.0f, 1.0f, -1, 1.0f);
+		}
+		else if(StringContains(asEntity, "right"))
+		{
+			SetLocalVarInt("ButtonSection3", 1);
+			FadeLightTo("light_door_section3", 0.0f, 1.0f, 1.0f, 1.0f, -1, 1.0f);
+		}
+		
+		SetEntityActive("area_block_section3", false);
+		SetEntityActive("block_section3", false);
+	}
+	
+	SetEntityInteractionDisabled(asEntity, true);
+	if(bReset)
+	{
+		AddTimer(asEntity, 1.0f, "TimerResetButton");
+	}
+	
+	PlayGuiSound("switch_min_max02.ogg", 0.5f);
+}
+
+void TimerResetButton(string asTimer)
+{
+	SetEntityInteractionDisabled(asTimer, false);
+}
+
+void PlayerInteractSectionDoor(string asEntity)
+{
+	if(asEntity == "door_section1")
+	{
+		SetLocalVarString("CurrentPlayerStartArea", "PlayerStartArea_2");
+		AddTimer("Section2_1", 1.0f, "StartSection");
+	}
+	else if(asEntity == "door_section2")
+	{
+		SetLocalVarString("CurrentPlayerStartArea", "PlayerStartArea_3");
+		AddTimer("Section3_1", 1.0f, "StartSection");
+	}
+	else if(asEntity == "door_section3")
+	{
+		SetLocalVarInt("CompletedTutorial", 1);
+		SetLocalVarString("CurrentPlayerStartArea", "PlayerStartArea_4");
+		AddTimer("FadeInAndActive", 1.0f, "TimerFadeScreen");
+	}
+	
+	SetPlayerActive(false);
+	FadeOut(1.0f);
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "FadeIn") FadeIn(3.0f);
+	else if(asTimer == "FadeInAndActive")
+	{
+		FadeIn(3.0f);
+		SetPlayerActive(true);
+		TeleportPlayer(GetLocalVarString("CurrentPlayerStartArea"));
+		if(GetLocalVarInt("FirstWakeUp") == 1)
+		{
+			PlayMusic("09_amb_safe", true, 0.5f, 1.0f, 0, true);
+			SetLocalVarInt("FirstWakeUp", 0);
+		}
+		if(GetLocalVarInt("SkipTutorial") == 1)
+		{
+			SetMessage("Tutorial", "LastSection_SkipTutorial", 10.0f);
+			SetLocalVarInt("SkipTutorial", 0);
+		}
+		if(GetLocalVarInt("CompletedTutorial") == 1)
+		{
+			SetMessage("Tutorial", "LastSection_DoneTutorial", 10.0f);
+			SetLocalVarInt("CompletedTutorial", 0);
+			
+			if(GetLocalVarInt("ButtonSection2") == 1)
+			{
+				SetEntityActive("note_left", false);
+				SetEntityActive("sign_left", false);
+				SetEntityActive("note_veryleft", false);
+				SetEntityActive("sign_veryleft", false);
+			}
+			else
+			{
+				SetEntityActive("note_right", false);
+				SetEntityActive("sign_right", false);
+				SetEntityActive("note_veryright", false);
+				SetEntityActive("sign_veryright", false);
+			}
+			if(GetLocalVarInt("ButtonSection3") == 1)
+			{
+				SetEntityActive("note_left", false);
+				SetEntityActive("sign_left", false);
+				SetEntityActive("note_right", false);
+				SetEntityActive("sign_right", false);
+			}
+			else
+			{
+				SetEntityActive("note_veryleft", false);
+				SetEntityActive("sign_veryleft", false);
+				SetEntityActive("note_veryright", false);
+				SetEntityActive("sign_veryright", false);
+			}
+		}
+	}
+}
+
+void PickedUpNote(string &in asEntity)
+{
+	AddTimer("0", 0.1f, "TimerStopMusic"); 
+	FadeOut(5.0f);
+	SetPlayerActive(false);
+	if(asEntity == "note_left") AddTimer("Standard", 5.5f, "TimerLoadFirstMap");
+	else if(asEntity == "note_veryleft") AddTimer("StandardHard", 5.5f, "TimerLoadFirstMap");
+	else if(asEntity == "note_right") AddTimer("Funny", 5.5f, "TimerLoadFirstMap");
+	else if(asEntity == "note_veryright") AddTimer("FunnyHard", 5.5f, "TimerLoadFirstMap");
+}
+
+void TimerStopMusic(string &in asTimer)
+{
+	if(asTimer == "0") StopMusic(5.3f, 0);
+	else if(asTimer == "1") StopMusic(5.3f, 1);
+	else if(asTimer == "10") StopMusic(5.3f, 10);
+}
+
+void TimerLoadFirstMap(string &in asTimer)
+{
+	if(asTimer == "Standard") ChangeMap("01_maze.map", "PlayerStartArea_1", "", "ui_sanity_gain.snt");
+	else if(asTimer == "StandardHard") ChangeMap("01_maze_hard.map", "PlayerStartArea_1", "", "ui_sanity_gain.snt");
+	else if(asTimer == "Funny") ChangeMap("01_maze_funny.map", "PlayerStartArea_1", "", "ui_sanity_gain.snt");
+	else if(asTimer == "FunnyHard") ChangeMap("01_maze_funny_hard.map", "PlayerStartArea_1", "", "ui_sanity_gain.snt");
+}

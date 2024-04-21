@@ -1,0 +1,339 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player","AcidArea","AcidArea",false,0);
+AddEntityCollideCallback("Player","AreaHarry","Panic",true,0);
+AddEntityCollideCallback("Player","AreaPanicStop","PanicStop",true,0);
+AddEntityCollideCallback("Player","AreaScare","ScareEvent",true,0);
+AddEntityCollideCallback("Player","AreaEnd","End",true,0);
+AddEntityCollideCallback("Player", "roach_1", "roach1", true, 1);
+AddEntityCollideCallback("Player", "roach_2", "roach2", true, 1);
+AddEntityCollideCallback("Player", "roach_3", "roach3", true, 1);
+AddEntityCollideCallback("Player", "roach_4", "roach4", true, 1);
+AddEntityCollideCallback("Player", "roach_5", "roach5", true, 1);
+AddUseItemCallback("","gland2","AreaLab1","Chemical",false);
+AddUseItemCallback("","bottlec","AreaLab2","Chemical2",false);
+AddUseItemCallback("","bottlec","AreaLab1","ChemicalFail",false);
+AddUseItemCallback("","bottled","AreaLab3","Chemical3",false);
+AddUseItemCallback("","bottled","AreaLab1","ChemicalFail",false);
+AddUseItemCallback("","bottled","AreaLab2","ChemicalFail",false);
+AddUseItemCallback("","brokenpipe","boards","Panic2",false);
+PlayMusic("Morgue.ogg", true, 1, 5.0f, 0, true);
+RotatePropToSpeed("water_wheel_1", 1.0f, 1.0f, 0.0f, -2.0f, 0.0f, true, "");
+SetEntityInteractionDisabled("bottlec", true);
+SetEntityInteractionDisabled("bottled", true);
+SetEntityInteractionDisabled("gland2", true);
+CheckPoint ("Checkpoint", "PlayerStartArea_1", "DeathSettings", "DeathHints", "Killed");
+AutoSave();
+AddTimer("gas", 5, "gas");
+AddTimer("ChapterStart", 3, "ChapterStart");
+}
+
+void ChapterStart(string &in asTimer)
+{
+SetMessage("Messages", "morguestart", 4);
+AddTimer("chapterstart2", 5, "chapterstart2");
+}
+
+void chapterstart2(string &in asTimer)
+{
+SetMessage("Messages", "chapter6", 4);
+}
+
+//---- Making medicine ----//
+
+void Chemical(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("AreaLab1", false);
+SetEntityActive("chemical1", false);
+SetEntityActive("AreaLab2", true);
+SetEntityActive("chemical2", true);
+PlaySoundAtEntity("","puzzle_add_chemical.snt", "AreaLab1", 0, true);	
+}
+
+void Chemical2(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("AreaLab2", false);
+SetEntityActive("chemical2", false);
+SetEntityActive("AreaLab3", true);
+SetEntityActive("chemical3", true);
+PlaySoundAtEntity("","puzzle_acid_success.snt", "AreaLab2", 0, true);	
+}
+
+void Chemical3(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("AreaLab3", false);
+SetEntityActive("chemical3", false);
+SetEntityActive("medicine", true);
+PlaySoundAtEntity("","puzzle_acid_success.snt", "AreaLab2", 0, true);
+CompleteQuest("Ch6chemical", "Ch6chemical");
+}
+
+void ChemicalFail(string &in asItem, string &in asEntity)
+{
+PlayGuiSound("player_falldamage_max", 1);
+PlayGuiSound("explosion_rock_large", 1);
+GivePlayerDamage(200, "BloodSplat", false, true);	
+}
+
+//---- Drinking medicine ----//
+
+void drink(string &in asEntity)
+{
+GiveSanityBoostSmall();
+PlaySoundAtEntity("","ui_sanity_gain.snt","Player", 0,false);	
+SetEntityActive("coffin", false);
+SetEntityActive("coffin2", true);
+SetEntityActive("coffin3", false);
+SetEntityActive("coffin4", true);
+SetEntityActive("corpse", true);
+SetEntityActive("bone", true);
+SetEntityActive("door2", false);
+SetEntityActive("AreaHarry", true);
+AddTimer("drink2", 3, "drink2");
+CheckPoint ("Checkpoint2", "PlayerStartArea_2", "DeathSettings2", "DeathHints", "Ch5harry");
+}
+
+void drink2(string &in asTimer)
+{
+SetEntityActive("rock1", true);
+SetEntityActive("rock2", true);
+SetEntityActive("rock3", true);
+SetEntityActive("rock4", true);
+SetEntityActive("rock5", true);
+SetEntityActive("rock6", true);
+SetEntityActive("rock7", true);
+SetEntityActive("rock8", true);
+SetEntityActive("rock9", true);
+SetEntityActive("rock10", true);
+SetEntityActive("bone", false);
+PlaySoundAtEntity("","explosion_rock_large.snt","rock1", 0,false);
+PlaySoundAtEntity("","12_warn.snt","Player", 0, false);
+AddQuest("Ch6moving", "Ch6moving");
+}
+
+//---- Panic and scare events ----//
+
+void ScareEvent(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerRunSpeedMul(0.1f);
+SetPlayerMoveSpeedMul(0.2f);
+PlayMusic("01_event_dust.ogg", false, 1, 5.0f, 0, false);
+FadePlayerFOVMulTo(2, 2);
+AddTimer("scare2", 2, "scare2");
+SetEntityActive("slime", true);
+SetEntityActive("slime2", true);
+SetEntityActive("slime3", true);
+SetEntityActive("slime4", true);
+SetEntityActive("slime5", true);
+}
+
+void scare2(string &in asTimer)
+{
+PlaySoundAtEntity("", "react_breath_slow", "Player", 0.0f, false);
+AddTimer("scare3", 2, "scare3");
+}
+
+void scare3(string &in asTimer)
+{
+AddEffectVoice("ch4jefferson.ogg", "", "Voice", "00_Ch4jefferson", false, "", 0, 0 );
+AddEffectVoice("ch4harry.ogg", "", "Voice", "00_Ch4harry", false, "", 0, 0 );
+AddEffectVoice("No_get_away_from_me.ogg", "", "Voice", "00_Emma", false, "", 0, 0 );
+AddTimer("scare4", 22, "scare4");
+}
+
+void scare4(string &in asTimer)
+{
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+FadePlayerFOVMulTo(1, 2);
+RemoveTimer("scare2");
+RemoveTimer("scare3");
+RemoveTimer("scare4");
+SetEntityActive("slime", false);
+SetEntityActive("slime2", false);
+SetEntityActive("slime3", false);
+SetEntityActive("slime4", false);
+SetEntityActive("slime5", false);
+PlayMusic("Morgue.ogg", true, 1, 5.0f, 0, true);
+}
+
+void Panic(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("harry", true);
+AddEnemyPatrolNode("harry","node_1",0,"");
+AddEnemyPatrolNode("harry","node_2",0,"");
+AddEnemyPatrolNode("harry","node_3",0,"");
+AddEnemyPatrolNode("harry","node_5",0,"");
+AddEnemyPatrolNode("harry","node_4",0,"");
+AddEnemyPatrolNode("harry","node_2",0,"");
+AddEnemyPatrolNode("harry","node_3",0,"");
+AddEnemyPatrolNode("harry","node_6",0,"");
+AddEnemyPatrolNode("harry","node_7",0,"");
+AddEnemyPatrolNode("harry","node_8",0,"");
+AddEnemyPatrolNode("harry","node_9",0,"");
+AddEnemyPatrolNode("harry","node_8",0,"");
+AddEnemyPatrolNode("harry","node_10",0,"");
+AddEnemyPatrolNode("harry","node_8",0,"");
+AddEnemyPatrolNode("harry","node_7",0,"");
+AddEnemyPatrolNode("harry","node_6",0,"");
+AddEnemyPatrolNode("harry","node_3",0,"");
+AddEnemyPatrolNode("harry","node_2",0,"");
+AddEnemyPatrolNode("harry","node_1",0,"");
+AddEnemyPatrolNode("harry","node_11",0,"");
+AddEnemyPatrolNode("harry","node_12",0,"");
+}
+
+void Panic2(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("", "saws.snt", "boards", 0, false);
+SetEntityActive("boards", false);
+SetEntityActive("boards2", true);
+PlaySoundAtEntity("","break_wood.snt","boards", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_wood_small", "boards", false);
+AddTimer("panic3", 0.5f, "panic3");
+}
+
+void panic3(string &in asTimer)
+{
+ClearEnemyPatrolNodes("harry");
+ShowEnemyPlayerPosition("harry");
+AddTimer("panic7", 0.5f, "panic7");		
+}
+
+void PanicStop(string &in asParent, string &in asChild, int alState)
+{
+RemoveTimer("panic7");
+}
+
+//---- Etc ----//
+
+void roach1(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_1", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_1", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_1", false);	
+}
+
+void roach2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_2", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_2", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_2", false);	
+}
+
+void roach3(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_3", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_3", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_3", false);	
+}
+
+void roach4(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_4", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_4", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_4", false);	
+}
+
+void roach5(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_5", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_5", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_5", false);	
+}
+
+void note(string &in asEntity)
+{
+SetMessage("Messages", "diarych6potion", 12);
+AddDiary("DiaryCh6potion", "");
+AddQuest("Ch6chemical", "Ch6chemical");
+SetEntityInteractionDisabled("bottlec", false);
+SetEntityInteractionDisabled("bottled", false);
+SetEntityInteractionDisabled("gland2", false);
+PlayMusic("11_paper_howl.ogg", false, 1.0, 0, 0, true);
+AddTimer("flashback", 5, "flashback");
+}
+
+void flashback(string &in asTimer)
+{
+SetEntityActive("flashback", true);
+}
+
+void AcidArea(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(5, "BloodSplat", false, true);
+AddPlayerBodyForce(2, 2, -10, false);
+}
+
+void acid(string &in asEntity)
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(5, "BloodSplat", false, true);
+AddPlayerBodyForce(2, 2, -10, false);
+}
+
+void electric(string &in asEntity)
+{
+PlaySoundAtEntity("","29_elec_burst.snt","Player", 0,false);
+GivePlayerDamage(20, "BloodSplat", false, true);
+AddPlayerBodyForce(4, 4, -15, false);
+}
+
+void gas(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_steam_deadly", "AreaGas", false);
+PlaySoundAtEntity("","17_piston_done.snt","AreaGas", 0,false);
+AddTimer("gas", 15, "gas");
+}
+
+void End(string &in asParent, string &in asChild, int alState)
+{
+ChangeMap("Tempel.map", "PlayerStartArea_1", "","");
+}
+
+//---- Messages ----//
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+void blocked(string &in asEntity)
+{
+SetMessage("Messages", "blocked", 4);
+}
+
+void noreason(string &in asEntity)
+{
+SetMessage("Messages", "ch5leverfail", 4);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("Morgue.ogg", true, 1, 5.0f, 0, true);
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("Morgue.ogg", true, 1, 5.0f, 0, true);
+}
+
+void OnEnter()
+{	
+PlayMusic("Morgue.ogg", true, 1, 5.0f, 0, true);
+}
+
+void OnLeave()
+{
+SetupLoadScreen("loadscreentext", "...", 1, "load_morgue.png");
+}

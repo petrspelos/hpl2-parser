@@ -1,0 +1,80 @@
+void OnStart()
+{
+	if (ScriptDebugOn() == true)
+		GiveItem("lantern", "lantern", "lantern", "lantern.tga", 100.0f);
+	//Collide Callbacks//
+	PlayMusic("21_amb", true, 1.0f, 0.0f, 1.0f, false);
+	AddEntityCollideCallback("Player", "AreaFOVChange", "ChangePlayerFov", true, 0);
+	AddEntityCollideCallback("Player", "AreaCorpseScare", "ScareCorpse_1", true, 0);
+	AddEntityCollideCallback("Player", "AreaClosetScare", "ScareCorpse_2", true, 0);
+	AddEntityCollideCallback("Player", "ChangeMapBugControl", "MapChange", false, 0);
+	AddEntityCollideCallback("cabinet_metal_1", "AreaScareCloset_1", "ClosetScare", true, 0);
+	SetLocalVarInt("scares", 0);
+}
+
+
+void MapChange(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("000002.map", "PlayerStartArea_1", "", "NyanCatViolinCoverAnalogExcerpt");
+}
+
+void ChangePlayerFov(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("scare_tingeling", "scare_tingeling_rev2", "Player", 0.0f, false);
+	AddQuest("memento_added", "closet");
+	AddTimer("1", 4.0f, "TimerEventsInt");
+}
+
+void ClosetScare(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=5; ++i)  PlayGuiSound("24_iron_maiden", 1.0f);
+	for(int i=1; i<=5; ++i)  PlayGuiSound("10_event_coming", 1.0f);
+	AddPropImpulse(asParent, 0.0f, 30.0f, 0.0f, "world");
+	CreateParticleSystemAtEntity("PSScare", "ps_iron_maiden_event_smoke.ps", "AreaClosetSmoke_1", false);
+	GiveSanityDamage(10.0f, true);
+	CompleteQuest("memento_added", "closet");
+	GiveSanityBoost();
+	AddLocalVarInt("scares", 1);
+	SetEntityActive("AreaCorpseScare", true);
+	if (GetLocalVarInt("scares") == 2) 
+	{
+		SetLevelDoorLocked("level_hub_1", false);
+		AddQuest("door_unlock", "unlock2");
+	}
+}
+
+void ScareCorpse_1(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=5; ++i)  PlayGuiSound("24_iron_maiden", 1.0f);
+	CreateParticleSystemAtEntity("PSScareSmoke_1", "ps_iron_maiden_event_smoke", "EventSmoke_1", false);
+	SetEntityActive("corpse_male_1", true);
+	AddPropImpulse("corpse_male_1", 0.0f, 0.0f, 20.0f, "world");
+}
+
+void ScareCorpse_2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("corpse_male_2", true);
+	AddPropImpulse("corpse_male_2", 100.0f, 0.0f, 0.0f, "world");
+	AddPropImpulse("cabinet_simple_1", 100.0f, 0.0f, 0.0f, "world");
+	AddLocalVarInt("scares", 1);
+	if (GetLocalVarInt("scares") == 2) 
+	{
+		SetLevelDoorLocked("level_hub_1", false);
+		AddQuest("door_unlock", "unlock2");
+	}
+}
+
+void TimerEventsInt(string &in asTimer)
+{
+	switch(StringToInt(asTimer)) {
+		case 1:
+			for(int i=1; i<=4; ++i)	PlayGuiSound("01_event_critters", 1.0f);
+			SetGlobalVarInt("for_end", RandInt(40, 50));
+			FadePlayerFOVMulTo(6.0f, 0.01);
+			AddTimer("2", 0.1f, "TimerEventsInt");
+			break;
+		case 2:
+			FadePlayerFOVMulTo(1.0f, 0.1);
+			break;
+	}
+}

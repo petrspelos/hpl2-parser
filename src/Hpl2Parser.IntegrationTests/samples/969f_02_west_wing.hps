@@ -1,0 +1,81 @@
+void OnStart(){
+	AddEntityCollideCallback("servant_grunt_1", "ScriptArea_2", "MonsterBreaksMansion1", true, 1);
+	AddEntityCollideCallback("potion", "ScriptArea_3", "ActivateMechanism", true, 1);
+	AddEntityCollideCallback("sledge_1", "servant_grunt_1", "HitMonster", false, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "Abnormalities", true, 1);
+	SetEntityPlayerInteractCallback("mansion_6", "MechanismMessage", false);
+	SetEntityPlayerInteractCallback("note_generic_1", "MonsterSets", true);
+	SetEntityPlayerInteractCallback("mansion_1", "BreakMessage", false);
+	SetLocalVarInt("HaveTouchedAcid", 0);
+	SetDeathHint("Messages", "fightback");
+	SetLocalVarInt("MonsterHealth", 1);
+	SetLocalVarInt("Mechanism", 0);
+}
+
+void OnEnter(){
+	PlayMusic("grunt_amb.ogg", true, 0.75, 0, 0, true);
+}
+
+void OnLeave(){
+}
+
+void Abnormalities(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("grunt_sound.snt", 100);
+	AddTimer("T1", 1.5f, "AbnormalityBreaks");
+}
+
+void AbnormalityBreaks(string &in asTimer){
+	PlayGuiSound("break_wood.snt", 1000000);
+	SetMessage("Messages", "defense", 0);
+	AddQuest("selfdefense", "selfdefense");
+}
+
+void MonsterSets(string &in entity){
+	AddTimer("T2", 0.1f, "MonsterSpawns");
+}
+
+void MonsterSpawns(string &in asTimer){
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_3", 0, "");
+	SetEntityActive("servant_grunt_1", true);
+	GiveSanityDamage(25, true);
+}
+
+void MonsterBreaksMansion1(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("mansion_1_broken", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+	SetEntityActive("mansion_1", false);
+}
+
+void HitMonster(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("MonsterHealth") == 1){
+		PlayGuiSound("grunt_attack.snt", 200);
+		SetLocalVarInt("MonsterHealth", 0);
+	}else if (GetLocalVarInt("MonsterHealth") == 0){
+		PlayGuiSound("grunt_attack.snt", 100);
+		SetEnemyIsHallucination("servant_grunt_1", true);
+	}
+}
+
+void ActivateMechanism(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("move_gate.snt", 100);
+	AddTimer("T3", 2.5, "Complete");
+}
+
+void Complete(string &in asTimer){
+	PlayGuiSound("unlock_door.snt", 100);
+	SetLocalVarInt("Mechanism", 1);
+	SetSwingDoorLocked("mansion_6", false, true);
+	AddPlayerSanity(10);
+}
+
+void BreakMessage(string &in entity){
+	SetMessage("Messages", "doorlocked1", 0);
+}
+
+void MechanismMessage(string &in entity){
+	if (GetLocalVarInt("Mechanism") == 0){
+		SetMessage("Messages", "doorlocked3", 0);
+	}
+}

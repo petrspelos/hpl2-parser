@@ -1,0 +1,91 @@
+void OnStart()
+{
+PlayMusic("22_amb", true, 5.0f, 5, 0, true);
+AddEntityCollideCallback("Player", "Script", "ElevatorPart", true, 1);
+}
+
+void ElevatorPart(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("ForceWall3", true);
+PlayMusic("21_agrippa_lever.ogg", false, 1.0f, 0.8f, 9, false);
+SetPlayerActive(false);
+StartPlayerLookAt("AreaLook1", 2, 1, "");
+PlaySoundAtEntity("","react_breath","Player", 0,false);
+AddTimer("", 5.5, "AreaLook2");
+}
+
+void AreaLook2(string& in asTimer)
+{
+AddTimer("", 6.5, "ActivateSkinny");
+StartPlayerLookAt("AreaLook2", 3, 1, "");
+}
+
+void ActivateSkinny(string& in asTimer)
+{
+PlaySoundAtEntity("","break_wood_metal","Player", 0,false);
+SetEntityActive("Door2", false);
+SetEntityActive("Door2Ded", true);
+PlaySoundAtEntity("","react_pant","Player", 0,false);
+PlaySoundAtEntity("","03_wall_scratch","Player", 0,false);
+SetEntityActive("Skinny", true);
+ShowEnemyPlayerPosition("Skinny");
+AddTimer("", 3.5, "PassOut");
+StartPlayerLookAt("Torch", 0.5f, 1, "");
+}
+
+void PassOut(string& in asTimer)
+{
+FadeOut(1);
+PlayMusic("15_event_elevator.ogg", false, 1.0f, 0.5f, 10, false);
+AddTimer("", 5.5, "Fade");
+AddTimer("", 2.0, "DebrisFall");
+StartPlayerLookAt("AreaLook3", 0.5, 1, "");
+GiveSanityDamage(101, true);
+SetPlayerCrouching(true);
+SetPlayerLampOil(0.0f);
+}
+
+void DebrisFall(string& in asTimer)
+{
+SetEntityActive("Skinny", false);
+SetEntityActive("Debris", true);
+PlaySoundAtEntity("","03_break_wall","Player", 0,false);
+}
+
+void Fade(string& in asTimer)
+{
+SetPlayerActive(true);
+PlayMusic("23_amb02.ogg", true, 1, 4.0f, 0, true);
+StopPlayerLookAt();
+FadeIn(3);
+SetPlayerLampOil(25.0f);
+AddEntityCollideCallback("Player", "ElevatorEvent", "ElevatorEvent", true, 1);
+}
+
+void ElevatorEvent(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorClosed("Gate", true, true);
+SetSwingDoorLocked("Gate", true, true);
+SetEntityActive("Alois", true);
+ShowEnemyPlayerPosition("Alois");
+SetEntityActive("Basile", true);
+ShowEnemyPlayerPosition("Basile");
+SetEntityActive("Malo", true);
+ShowEnemyPlayerPosition("Malo");
+SetEntityActive("ForceWall1", false);
+SetEntityActive("ForceWall2", true);
+PlayMusic("29_amb_end_intense.ogg", true, 1.0f, 1.0f, 10, false);
+}
+
+void OnLeave()
+{
+StopMusic(5, 0);
+}
+
+void LevelChange(string &in asEntity, int alState)
+{
+ChangeMap("level27.map","PlayerStartArea_1","","");
+PlaySoundAtEntity("activate","14_elevator_activate","Player", 0, false);
+PlayMusic("26_event_agrippa_head.ogg", false, 1.0f, 1.0f, 10, false);
+GiveSanityBoostSmall();
+}

@@ -1,0 +1,116 @@
+void OnStart()
+{
+	SetLocalVarInt("Scares", 0);
+	AddPropImpulse("hanging_lantern_ceiling_1", 20.0f, 0.0f, 0.0f, "world");
+	AddEntityCollideCallback("Player", "AreaLightsOut", "BlowLightsOut", true, 0);
+	AddEntityCollideCallback("Player", "ScareArea_1", "ScarePlayer_1", true, 0);
+	AddEntityCollideCallback("Player", "ScareArea_2", "ScarePlayer_2", true, 0);
+	AddEntityCollideCallback("Player", "ScareArea_3", "ScarePlayer_3", true, 0);
+	SetEntityPlayerLookAtCallback("ScareArea_4", "ScarePlayer_4", true);
+	SetEntityPlayerLookAtCallback("ScareArea_5", "ScarePlayer_5", true);
+	PlayMusic("12_amb.ogg", true, 1.0f, 0.0f, 1.0f, false);
+	for(int i=1; i<=20; ++i)
+	{
+		SetEntityPlayerLookAtCallback("servant_grunt_"+i, "hurt", false);
+		SetEntityPlayerLookAtCallback("servant_brute_"+i, "hurt", false);
+	}
+	AddTimer("CheckForDoneNess", 0.2f, "TimerEvents");
+}
+//////////
+//Scares//
+//////////
+void BlowLightsOut(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("hanging_lantern_ceiling_1", false, true);
+	GiveSanityDamage(1.0f, true);
+	PlayGuiSound("05_event_falling.ogg", 1.0f);
+}
+
+void ScarePlayer_1(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	for(int i=1; i<=2; ++i) SetEntityActive("corpse_male_"+i, true);
+	for(int i=1; i<=2; ++i) AddPropImpulse("corpse_male_"+i, -100.0f, 0.0f, 100.0f, "world");
+	AddTimer("dissapear1", 2.0f, "TimerEvents");
+	AddLocalVarInt("Scares", 1);
+}
+
+void ScarePlayer_2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_grunt_1", true);
+	ShowEnemyPlayerPosition("servant_grunt_1");
+	AddLocalVarInt("Scares", 1);
+}
+
+void ScarePlayer_3(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=2; i<=5; ++i)
+	{
+		SetEntityActive("servant_grunt_"+i, true);
+		ShowEnemyPlayerPosition("servant_grunt_"+i);
+	}
+	AddLocalVarInt("Scares", 1);
+}
+
+void ScarePlayer_4(string &in asEntity, int alState)
+{
+	for(int i=1; i<=4; ++i)
+	{
+		SetEntityActive("servant_brute_"+i, true);
+		ShowEnemyPlayerPosition("servant_brute_"+i);
+	}
+	AddLocalVarInt("Scares", 1);
+}
+
+void ScarePlayer_5(string &in asEntity, int alState)
+{
+	for(int i=6; i<=9; ++i)
+	{
+		SetEntityActive("servant_grunt_"+i, true);
+		ShowEnemyPlayerPosition("servant_grunt_"+i);
+	}
+	AddLocalVarInt("Scares", 1);
+}
+////////
+//Hurt//
+////////
+void hurt(string &in asEntity, int alState)
+{	
+	if(StringContains(asEntity, "grunt"))
+	{
+		GivePlayerDamage(20.0f, "Claws", false, false);
+		GiveSanityDamage(1.0f, false);
+		for(int i=1; i<=2; ++i)
+			PlayGuiSound("Pain.snt", 1.0f);
+	}
+	else
+	{
+		GivePlayerDamage(20.0f, "Slash", false, false);
+		GiveSanityDamage(1.0f, false);
+		for(int i=1; i<=3; ++i)
+			PlayGuiSound("Pain.snt", 1.0f);
+	}
+	
+}
+////////////////
+//Timer Events//
+////////////////
+
+void TimerEvents(string &in asTimer)
+{
+	if (asTimer == "dissapear1")
+		for(int i=1; i<=2; ++i) SetEntityActive("corpse_male_"+i, false);
+	if(asTimer == "CheckForDoneNess")
+	{
+		if(GetLocalVarInt("Scares") == 5)
+		{
+			SetLevelDoorLocked("level_celler_1", false);
+			AddQuest("sewer_door", "fd");
+		}
+		else
+		{
+			AddTimer("CheckForDoneNess", 0.2f, "TimerEvents");
+		}
+	}
+	//else if(asTimer == "dissapear2")
+}

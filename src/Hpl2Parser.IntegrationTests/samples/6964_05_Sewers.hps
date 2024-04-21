@@ -1,0 +1,933 @@
+//////////STAMINA SYSTEM SETTINGS//////////////
+///////////////////////////////////////////////
+const string STAMINA_TIMER_CALLBACK_NAME = "STAMINA_TIMER_CALLBACK";
+const string STAMINA_PLAYER_SPEED = "STAMINA_PLAYER_SPEED";
+const string STAMINA_PLAYER_LENGTH = "STAMINA_PLAYER_LENGTH";
+const string STAMINA_PLAYER_BREATH_SLOW = "STAMINA_PLAYER_BREATH_SLOW";
+const string STAMINA_PLAYER_BREATH_SNT = "react_breath_slow.snt";
+const string STAMINA_PLAYER_HEAD_BOB = "STAMINA_PLAYER_HEAD_BOB";
+
+const float STAMINA_TIMER_SPEED_TIME = 0.5f;
+const float STAMINA_PLAYER_HEAD_BOB_SPEED = 0.7f;
+
+enum StaminaStages
+    {
+        Full,
+        Low,
+        Exhausted
+    }
+
+class StaminaSystem
+    {
+        private int state;
+        private uint length;
+        private bool head_bobbing;
+        private bool is_running;
+
+        StaminaSystem()
+            {
+                PreloadSound(STAMINA_PLAYER_BREATH_SNT);
+                this.state = StaminaStages::Full;
+                this.length = 10;
+                this.head_bobbing = false;
+                this.is_running = false;
+            }
+
+        ~StaminaSystem()
+            {
+                this.Stop();
+            }
+
+        void AddDebugMessage(string &in message, bool check, bool to_file)
+            {
+                ::AddDebugMessage("Stamina system: " + message, check);
+                if (to_file) Print("Stamina system: " + message);
+            }
+
+        bool IsPlayerRunning() const
+            {
+                return this.is_running;
+            }
+
+        void PlayBreathSound()
+            {
+                PlaySoundAtEntity(STAMINA_PLAYER_BREATH_SLOW, STAMINA_PLAYER_BREATH_SNT, "Player", 0, false);
+            }
+
+        void Start()
+            {
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				AddTimer(STAMINA_PLAYER_SPEED, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerHeadBob()
+            {
+                if (this.head_bobbing)
+                    MovePlayerHeadPos(0, -0.35, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+                else
+                    MovePlayerHeadPos(0, 0, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+
+                this.head_bobbing = !this.head_bobbing;
+                AddTimer(STAMINA_PLAYER_HEAD_BOB, 0.75f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerTiredEffect()
+            {
+                this.PlayBreathSound();
+                AddTimer(STAMINA_PLAYER_BREATH_SLOW, 1.5f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void Stop()
+            {
+                this.StopPlayerTiredEffect();
+                RemoveTimer(STAMINA_PLAYER_SPEED);
+                RemoveTimer(STAMINA_PLAYER_LENGTH);
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				SetPlayerJumpDisabled(false);
+            }
+
+        void StopPlayerTiredEffect()
+            {
+                this.head_bobbing = false;
+                RemoveTimer(STAMINA_PLAYER_BREATH_SLOW);
+                RemoveTimer(STAMINA_PLAYER_HEAD_BOB);
+                MovePlayerHeadPos(0,0,0, 1, 1);
+				FadeImageTrailTo(0, 1); ////trail off
+                // StopSound(STAMINA_PLAYER_BREATH_SLOW, 1); // Crashes the game upon exit.
+            }
+
+        void SetStaminaLength(uint length)
+            {
+                if (length != 0)
+                    this.length = length;
+                else
+                    this.AddDebugMessage("Length cannot be 0!", false, true);
+            }
+
+        void Update(string &in timer_name)
+            {
+                if (timer_name == STAMINA_PLAYER_SPEED)
+                {
+                    this.is_running = (GetPlayerSpeed() > 3) ? true : false;
+
+                    if (this.is_running && GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) == 0)
+                        AddTimer(STAMINA_PLAYER_LENGTH, this.length, STAMINA_TIMER_CALLBACK_NAME);
+
+                    else if(!this.is_running)
+                    {
+                        if (GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) > 0 && this.state == StaminaStages::Full)
+                            RemoveTimer(STAMINA_PLAYER_LENGTH);
+
+                        else if(this.state == StaminaStages::Low)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/4, STAMINA_TIMER_CALLBACK_NAME);
+
+                        else if(this.state == StaminaStages::Exhausted)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/2, STAMINA_TIMER_CALLBACK_NAME);
+                    }
+
+                    AddTimer(timer_name, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+                }
+
+                else if (timer_name == STAMINA_PLAYER_BREATH_SLOW)
+                    this.StartPlayerTiredEffect();
+
+                else if (timer_name == STAMINA_PLAYER_HEAD_BOB)
+                    this.StartPlayerHeadBob();
+
+                else if (timer_name == STAMINA_PLAYER_LENGTH)
+                {
+                    if (this.is_running)
+                    {
+                        if (this.state == StaminaStages::Full)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.5);
+                        }
+
+                        else if (this.state == StaminaStages::Low)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.3);
+                            SetPlayerMoveSpeedMul(0.5);
+							FadeImageTrailTo(3,1); ////trail on
+                            SetPlayerJumpDisabled(true);
+                            ChangePlayerStateToNormal();
+                            this.StartPlayerTiredEffect();
+                            this.StartPlayerHeadBob();
+                        }
+                    }
+
+                    else
+                    {
+                        this.StopPlayerTiredEffect();
+
+                        SetPlayerRunSpeedMul(1);
+                        SetPlayerMoveSpeedMul(1);
+                        SetPlayerJumpDisabled(false);
+
+                        if (this.state == StaminaStages::Low)
+                            this.state = StaminaStages::Full;
+
+                        else if (this.state == StaminaStages::Exhausted)
+                            this.state = StaminaStages::Full;
+                    }
+                }
+            }
+    }
+
+StaminaSystem stamina_obj;
+
+void STAMINA_TIMER_CALLBACK(string &in timer_name)
+    { stamina_obj.Update(timer_name); } 
+void OnStart()
+{
+Syr();
+SetLightVisible("PointLight_10", false);
+//////////////////
+AddEntityCollideCallback("Player", "ScriptArea_19", "force_end_shadow", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_17", "changerestartstate", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_18", "changerestartstate", false, 1);
+//////////////////
+AddEntityCollideCallback("Player", "Glitch_area_1" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_2" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_3" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_16", "saveafterwater", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_13", "checkpointhere", true, 1);
+AddEntityCollideCallback("level04_water_1", "area_water_check", "killzone_active", false, 1);
+AddEntityCollideCallback("Player", "Area_waterflow_dead", "killzone_playerkill", false, 1);
+AddEntityCollideCallback("level04_water_1", "area_water_check_1", "generator_dead", false, 1);
+//////////////
+SetMapDisplayNameEntry("Sewer");
+AddEntityCollideCallback("level04_water_bridge_5", "Bridge_area_3", "bridge_water_effect", true, 1);
+AddEntityCollideCallback("level04_water_bridge_1", "Bridge_area_1", "bridge_water_effect", true, 1);
+AddEntityCollideCallback("level04_water_bridge_2", "Bridge_area_2", "bridge_water_effect", true, 1);
+AddEntityCollideCallback("level04_water_bridge_3", "Bridge_area_4", "bridge_water_effect", true, 1);
+AddEntityCollideCallback("level04_water_bridge_4", "Bridge_area_5", "bridge_water_effect", true, 1);
+///////////////////////
+AddEntityCollideCallback("Player", "ScriptArea_2", "level_transit", false, 0);
+AddEntityCollideCallback("Player", "ScriptArea_7", "level_transit", false, 0);
+///////////////////////////
+AddEntityCollideCallback("Player", "ScriptArea_3", "Vilmor_speak", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_14", "loadingscreenchange", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_15", "loadingscreenchange", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_8", "horror_worm_far", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_10", "shadow_fade", true, 1);
+/////////////////////////
+AddEntityCollideCallback("Player", "Dead_area_1", "acid_dead", false, 1);
+AddEntityCollideCallback("Player", "Dead_area_2", "acid_dead", false, 1);
+AddEntityCollideCallback("Player", "Dead_area_3", "acid_dead", false, 1);
+AddEntityCollideCallback("Player", "Dead_area_4", "acid_dead", false, 1);
+RotatePropToSpeed("Rotor_1", 6, 6, 0, 0, 1, false, "ScriptArea_6");
+RotatePropToSpeed("Rotor_2", 6, 6, 0, 0, 1, false, "ScriptArea_5");
+AddTimer("flick1", 1.0f, "lampon");
+AddTimer("", 1.0f, "lampon2");
+}
+////GRAB////
+void grabhand(string &in asEntity)
+{
+   if (GetPropIsInteractedWith(asEntity) == true){
+   StartInsanityEvent("grab");
+   }
+   AddTimer(asEntity, 0.01,"grabcheck");
+}
+void grabcheck(string &in asTimer)
+{
+AddTimer(asTimer, 0.01,"grabcheck");
+if (GetPropIsInteractedWith(asTimer) == false){
+StopCurrentInsanityEvent();
+RemoveTimer(asTimer);
+}
+}
+///////////LAMP FLICKER////////
+void lampon(string &in asTimer)
+{
+PlaySoundAtEntity("lampon_1", "lm_light_flicker_long.snt", "ScriptArea_1", 0, false);
+for (int i=1; i<=6; i++){
+SetLightVisible("Spot_"+i, false);
+}
+AddTimer("flick2", 0.3f, "lampoff_1");
+SetLampLit("lamps_wall_light01_work_9", false, false);
+}
+
+void lampoff_1(string &in asTimer)
+{
+SetLampLit("lamps_wall_light01_work_9", true, false);
+for (int i=1; i<=6; i++){
+SetLightVisible("Spot_"+i, true);
+}
+AddTimer("flick1", 1.56f, "lampon");
+}
+/////////////////////////
+void lampon2(string &in asTimer)
+{
+PlaySoundAtEntity("lampon_2", "lm_light_flicker_long.snt", "ScriptArea_11", 0, false);
+SetLocalVarInt("lights", 0);
+for (int i=1; i<=6; i++){
+SetLightVisible("Spott_"+i, false);
+}
+AddTimer("", 0.25f, "lampoff_2");
+SetLampLit("lamp_machineroom_20", false, false);
+}
+
+void lampoff_2(string &in asTimer)
+{
+SetLampLit("lamp_machineroom_20", true, false);
+SetLocalVarInt("lights", 1);
+for (int i=1; i<=6; i++){
+SetLightVisible("Spott_"+i, true);
+}
+AddTimer("", 1, "lampon2");
+}
+//////////////////////////////
+void bridge_control(string &in asEntity, int alState)
+{
+if (asEntity == "tech_lever_2"){
+  if (alState == 1)
+  {
+FadeLightTo("PointLight_16", -1, -1, -1, -1, 0, 0.5);  
+SetLeverStuckState("tech_lever_2", 1, false);  
+SetMoveObjectState("level04_water_bridge_1", 0.8);
+SetMoveObjectState("level04_water_bridge_2", 0.8);
+  }
+return;
+}
+if (asEntity == "tech_lever_1"){
+  if (alState == 1)
+  {
+FadeLightTo("PointLight_15", -1, -1, -1, -1, 0, 0.5);   
+SetLeverStuckState("tech_lever_1", 1, false);    
+SetMoveObjectState("level04_water_bridge_5", 0.8);
+  }
+return;
+}
+if (asEntity == "tech_lever_3"){
+  if (alState == 1)
+  {
+FadeLightTo("PointLight_17", -1, -1, -1, -1, 0, 0.5);    
+SetLeverStuckState("tech_lever_3", 1, false);    
+SetMoveObjectState("level04_water_bridge_3", 0.8);
+SetMoveObjectState("level04_water_bridge_4", 0.8);
+  }
+return;
+}
+}
+/////////////////////
+void Vilmor_speak(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "general_speaker_noise_loud.snt", "tech_speaker_2", 0, false);
+PlaySoundAtEntity("", "general_speaker_noise_loud.snt", "tech_speaker_1", 0, false);
+AddTimer("", 1.9, "Vil_speak");
+}
+void Vil_speak(string &in asTimer)
+{
+AddEffectVoice("WILMAR_01_01", "", "Voice", "Wilmar_1", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_02_02", "", "Voice", "Wilmar_2", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_03_03", "", "Voice", "Wilmar_3", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_04_04", "", "Voice", "Wilmar_4", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_05_05", "", "Voice", "Wilmar_5", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_06_06", "", "Voice", "Wilmar_6", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_07_07", "", "Voice", "Wilmar_7", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_08_08", "", "Voice", "Wilmar_8", false, "narrator_voice_1", 9, 16);
+AddTimer("checkvoice", 1, "voicecheck");
+}
+void horror_worm_far(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("horror_rock_worm_far.snt", 1.0f);
+}
+void voicecheck(string &in asTimer)
+{
+AddTimer("checkvoice", 1, "voicecheck");
+if (GetEffectVoiceActive() == false){
+RemoveTimer("checkvoice");
+AddQuest("Wil", "Wilmar");
+}
+}
+void shadow_fade(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("lc", 0.1, "light_check");
+}
+void light_check(string &in asTimer)
+{
+if (GetLocalVarInt("lights") == 0){
+SetLocalVarInt("pitchover", 1);
+SetEntityActive("character_alted_infected_base_1", false);
+PlayGuiSound("09_pitch2.ogg", 0.5f);
+StartScreenShake(0.1f, 0.0f, 0.0f, 0.35f);
+RemoveTimer("lc");
+return;
+}
+if (GetLocalVarInt("lights") == 1){
+AddTimer("lc", 0.1, "light_check");
+return;
+}
+}
+///////////////////
+///SAVE CAPSULE////
+//////////////////
+void capsule_transit(string &in asEntity)
+{
+PlayGuiSound("player_climb_tube.snt", 1.0f);
+SetPlayerActive(false);
+FadeOut(2.5);
+AddTimer("ca1", 3, "capsule_tr");
+AddTimer("ca2", 4, "capsule_tr");
+AddTimer("ca3", 5, "capsule_tr");
+}
+void capsule_tr(string &in asTimer)
+{
+if (asTimer == "ca1"){
+TeleportPlayer("PlayerStartArea_3");
+return;
+}
+if (asTimer == "ca2"){
+FadeIn(2);
+return;
+}
+if (asTimer == "ca3"){
+SetSwingDoorLocked("Save_capsule", true, true);
+PlayGuiSound("loco_iron_door_close.snt", 0.5f);
+return;
+}
+}
+/////////////////
+void capsule_interact(string &in asEntity)
+{
+if (GetLocalVarInt("door_state") == 0){
+ if (GetLocalVarInt("waterevent") == 1 && asEntity == "level2_button_2"){
+ SetEntityActive("level2_button_3", true);SetEntityActive("level2_button_2", false);
+ SetLocalVarInt("nossafetyplace", 1);
+ StopPropMovement("level04_water_1");
+ AddTimer("", 8, "eventendnow_saveplayer");
+ }
+PlaySoundAtEntity("", "door_emergency_closed.snt", "Save_capsule_1", 0, true);
+SetLocalVarInt("door_state", 1);
+PlayGuiSound("puzzle_button.ogg", 1.0f);
+SetMoveObjectState("Save_capsule_1", 0.82);
+return;
+}
+if (GetLocalVarInt("door_state") == 1){
+SetLocalVarInt("door_state", 0);
+PlaySoundAtEntity("", "door_emergency_opened.snt", "Save_capsule_1", 0, true);
+PlayGuiSound("puzzle_button.ogg", 1.0f);
+SetMoveObjectState("Save_capsule_1", 0);
+return;
+}
+}
+void eventendnow_saveplayer(string &in asTimer)
+{
+StopSound("watersteam", 0.5);
+StartScreenShake(0.02, 1, 0.5,0.5);
+CreateParticleSystemAtEntity("ele1", "ps_electro_bolt.ps", "area_electro_1", true);
+CreateParticleSystemAtEntity("ele2", "ps_electro_bolt.ps", "area_electro_2", true);
+PlaySoundAtEntity("", "electro_break.snt", "area_electro_1", 0, true);
+AddTimer("g1", 1, "generator_death");
+AddTimer("g2", 2.5, "generator_death");
+AddTimer("g3", 4, "generator_death");
+AddTimer("g4", 5, "generator_death");
+}
+///////
+void level_transit(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_2"){
+    if (alState == 1)
+    {
+	SetMessage("04_Morgue", "noway", -1);
+    //ChangeMap("04_morgue.map", "PlayerStartArea_5", "", "");
+    }
+}
+if (asChild == "ScriptArea_7"){
+    if (alState == 1)
+    {
+    ChangeMap("06_Reactor.map", "PlayerStartArea_1", "player_exit_sewer_cut.snt", "");
+    }
+}
+}
+//////////////
+void acid_dead(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "Dead_area_1"){
+SetPlayerActive(false);
+SetPlayerFallDamageDisabled(true);
+StartInsanityEvent("fadedeath");
+AddTimer("d1", 0.3, "playerdead");
+SetEntityActive("Dead_area_1", false);
+}
+if (asChild == "Dead_area_2"){
+SetPlayerActive(false);
+SetPlayerFallDamageDisabled(true);
+StartInsanityEvent("fadedeath");
+AddTimer("d2", 0.3, "playerdead");
+SetEntityActive("Dead_area_2", false);
+}
+if (asChild == "Dead_area_3"){
+SetEntityActive("Dead_area_3", false);
+StopMusic(0, 1);
+GivePlayerDamage(100, "BloodSplat", false, true);
+StartInsanityEvent("fadedeath");
+PlayGuiSound("exp08_chemical_react1.ogg", 2.0f);
+}
+if (asChild == "Dead_area_4"){
+SetEntityActive("Dead_area_4", false);
+StopMusic(0, 1);
+GivePlayerDamage(100, "BloodSplat", false, true);
+StartInsanityEvent("fadedeath");
+PlayGuiSound("exp08_chemical_react1.ogg", 2.0f);
+}
+}
+void playerdead(string &in asTimer)
+{
+PlayGuiSound("exp08_chemical_react1.ogg", 2.0f);
+SetLanternActive(false, false);
+FadeOut(0.5);
+FadeGlobalSoundVolume(0, 5);
+FadeGlobalSoundSpeed(0, 5);
+AddTimer("ref1", 3,"time_refresh");
+if (asTimer == "d1"){
+AddTimer("ref2", 3.2,"time_refresh");
+AddTimer("ref3", 4.5,"time_refresh");
+return;
+}
+if (asTimer == "d2"){
+AddTimer("ref4", 3.2,"time_refresh");
+AddTimer("ref5", 4.5,"time_refresh");
+return;
+}
+}
+void time_refresh(string &in asTimer)
+{
+if (asTimer == "ref1"){
+StartEffectFlash(0.3, 1, 0.8);
+return;
+}
+if (asTimer == "ref2"){
+if (GetLocalVarInt("resstate") == 0){
+TeleportPlayer("PlayerStartArea_6");
+}
+if (GetLocalVarInt("resstate") == 1){
+TeleportPlayer("PlayerStartArea_7");
+}
+return;
+}
+if (asTimer == "ref3"){
+FadeIn(0);
+SetEntityActive("Dead_area_1", true);
+SetPlayerFallDamageDisabled(false);
+SetPlayerActive(true);
+FadeGlobalSoundVolume(1, 5);
+FadeGlobalSoundSpeed(1, 5);
+return;
+}
+if (asTimer == "ref4"){
+TeleportPlayer("PlayerStartArea_2");
+return;
+}
+if (asTimer == "ref5"){
+FadeIn(0);
+if (GetPlayerHealth() <= 50){
+AddPlayerHealth(30);
+}
+SetEntityActive("Dead_area_2", true);
+SetPlayerFallDamageDisabled(false);
+SetPlayerActive(true);
+FadeGlobalSoundVolume(1, 5);
+FadeGlobalSoundSpeed(1, 5);
+return;
+}
+}
+///////
+void bridge_water_effect(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "Bridge_area_1"){
+CreateParticleSystemAtEntity("", "particle_imp_water_med.ps", "Bridge_area_1", true);
+}
+if (asChild == "Bridge_area_2"){
+CreateParticleSystemAtEntity("", "particle_imp_water_med.ps", "Bridge_area_2", true);
+}
+if (asChild == "Bridge_area_3"){
+CreateParticleSystemAtEntity("", "particle_imp_water_med.ps", "Bridge_area_3", true);
+}
+if (asChild == "Bridge_area_4"){
+CreateParticleSystemAtEntity("", "particle_imp_water_med.ps", "Bridge_area_4", true);
+}
+if (asChild == "Bridge_area_5"){
+CreateParticleSystemAtEntity("", "particle_imp_water_med.ps", "Bridge_area_5", true);
+}
+}
+///////////
+void loadingscreenchange(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_14"){
+SetLocalVarInt("transitsewer", 1);
+}
+if (asChild == "ScriptArea_15"){
+SetLocalVarInt("transitsewer", 0);
+}
+}
+//WATER ENCOUNTER////
+void waterflow(string &in asEntity, int alState)
+{
+if (asEntity == "tech_valve01_2"){
+ if (alState == -1){
+AddTimer("", 0.1, "valvecheck");
+AddLocalVarInt("watervalve", 1);
+PlayGuiSound("05_turn_valve1.ogg", 1.0f);
+SetPropStaticPhysics("tech_valve01_2", true);
+SetWheelStuckState("tech_valve01_2", -1, true);
+}
+}
+if (asEntity == "tech_valve01_1"){
+ if (alState == -1){
+AddTimer("", 0.1, "valvecheck");
+AddLocalVarInt("watervalve", 1);
+PlayGuiSound("05_turn_valve1.ogg", 1.0f);
+SetPropStaticPhysics("tech_valve01_1", true);
+SetWheelStuckState("tech_valve01_1", -1, true);
+}
+}
+}
+void valvecheck(string &in asTimer)
+{
+if (GetLocalVarInt("watervalve") == 2){
+StartScreenShake(0.02, 1, 0.5,0.5);
+AddTimer("", 1, "start_water_event");
+}
+}
+void start_water_event(string &in asTimer)
+{
+stamina_obj.Stop();
+ResetProp("level04_water_bridge_1");ResetProp("level04_water_bridge_2");
+AddTimer("", 1.0f, "lampon03");
+SetEntityActive("Dead_area_3", true);SetEntityActive("Dead_area_4", true);
+SetEntityActive("Dead_area_1", false);SetEntityActive("Dead_area_2", false);
+SetLocalVarInt("waterevent", 1);
+StopMusic(0.2, 0.9);
+StopMusic(0.2, 12);
+AddTimer("", 0.4, "muss");
+SetMessage("05_Sewer", "waterrisinghint", -1);
+PlaySoundAtEntity("watersteam", "20_water_stream_heavy_global.snt", "ScriptArea_12", 1, false);
+SetMoveObjectState("level04_water_1", 60);
+}
+void muss(string &in asTimer)
+{
+PlayMusic("penumbra_music_E1_F2.ogg", true, 0.85f, 5, 1, true);
+}
+void killzone_active(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Area_waterflow_dead", true);
+SetEntityActive("area_water_check", false);
+}
+void killzone_playerkill(string &in asParent, string &in asChild, int alState)
+{
+StopMusic(0, 1);
+SetEntityActive("Area_waterflow_dead", false);
+GivePlayerDamage(100, "BloodSplat", false, true);
+StartInsanityEvent("fadedeath");
+PlayGuiSound("exp08_chemical_react1.ogg", 2.0f);
+}
+void generator_dead(string &in asParent, string &in asChild, int alState)
+{
+StopSound("watersteam", 0.5);
+StopPropMovement("level04_water_1");
+StartScreenShake(0.02, 1, 0.5,0.5);
+CreateParticleSystemAtEntity("ele1", "ps_electro_bolt.ps", "area_electro_1", true);
+CreateParticleSystemAtEntity("ele2", "ps_electro_bolt.ps", "area_electro_2", true);
+PlaySoundAtEntity("", "electro_break.snt", "area_electro_1", 0, true);
+if (GetLocalVarInt("nossafetyplace") == 0){
+StopMusic(0, 1);
+GivePlayerDamage(100, "BloodSplat", false, true);
+StartInsanityEvent("fadedeath");
+}
+if (GetLocalVarInt("nossafetyplace") == 1){
+AddTimer("g1", 1, "generator_death");
+AddTimer("g2", 2.5, "generator_death");
+AddTimer("g3", 4, "generator_death");
+AddTimer("g4", 5, "generator_death");
+}
+}
+void generator_death(string &in asTimer)
+{
+if (asTimer == "g1"){
+DestroyParticleSystem("ele1");DestroyParticleSystem("ele2");
+SetEntityActive("signs_7", false);
+SetLightVisible("PointLight_14", false);
+SetEntityActive("Door_3", false);SetEntityActive("Door_4", true);
+StopSound("Sound_5", 2);StopSound("Sound_13", 1);StopSound("Sound_21", 1);
+StopSound("Sound_6", 1);
+StopSound("Sound_7", 1);
+StopPropMovement("Rotor_1");StopPropMovement("Rotor_2");
+SetLampLit("lamp_flourescent01_1", false, false);
+for (int i=24; i<=28; i++){
+SetLightVisible("SpotLight_"+i, false);
+}
+return;
+}
+if (asTimer == "g2"){
+StopMusic(1, 1);StopMusic(1, 0.9);
+PlaySoundAtEntity("", "27_orb_done.snt", "area_electro_1", 1, true);
+return;
+}
+if (asTimer == "g3"){
+stamina_obj.Start();
+for (int i=1; i<=25; i++){
+SetLightVisible("Red_"+i, true);
+SetLampLit("Em_"+i, true, false);
+SetLampLit("Lamp_"+i, false, false);
+SetLightVisible("Spotl_"+i, false);
+SetLightVisible("Spot_"+i, false);
+}
+SetLightFlickerActive("PointLight_11", true);
+SetLightFlickerActive("PointLight_12", true);
+SetLightFlickerActive("PointLight_13", true);
+SetLampLit("lamps_wall_light01_work_9", false, false);
+RemoveTimer("flick1");
+RemoveTimer("flick2");
+ResetProp("level04_water_bridge_*");
+SetEntityActive("ScriptArea_16", true);
+StopSound("Sound_8", 1);
+SetEntityActive("Dead_area_3", false);SetEntityActive("Dead_area_4", false);
+SetEntityActive("Dead_area_1", true);SetEntityActive("Dead_area_2", true);
+SetEntityActive("Area_waterflow_dead", false);
+RemoveTimer("lpp03");RemoveTimer("lp03");
+SetLampLit("emergency_light_red_4", false, false);
+SetLightVisible("PointLight_10", false);
+SetEntityActive("level2_button_4", true);SetEntityActive("level2_button_1", false);
+PlayMusic("penumbra_requiem_PS3.ogg", false, 1.95f, 5, 1, true);
+SetEntityActive("tech_lever_4", false); 
+SetEntityActive("tech_lever_5", true); 
+SetEntityActive("signs_6", false);
+SetLocalVarInt("door_state", 0);
+CompleteQuest("Wil", "Wilmar");
+FadeLightTo("PointLight_18", -1, -1, -1, -1, 0, 0.5);
+PlaySoundAtEntity("", "door_emergency_opened.snt", "Save_capsule_1", 0, true);
+SetMoveObjectState("Save_capsule_1", 0);
+return;
+}
+if (asTimer == "g4"){
+SetEntityActive("grate_1", false);SetEntityActive("grate_2", true);
+SetMoveObjectState("Door_1", 0.4);
+SetPropStaticPhysics("wc_box_2", false);
+SetEntityPlayerInteractCallback("wc_box_2", "grabhand", false);
+SetMoveObjectState("level04_water_1", -5);
+SetEntityActive("LiquidArea_1", false);SetEntityActive("LiquidArea_3", true);
+return;
+}
+}
+void lampon03(string &in asTimer)
+{
+SetLightVisible("PointLight_10", true);
+AddTimer("lpp03", 0.3f, "lampoff_3");
+SetLampLit("emergency_light_red_4", true, false);
+}
+void lampoff_3(string &in asTimer)
+{
+SetLampLit("emergency_light_red_4", false, false);
+SetLightVisible("PointLight_10", false);
+AddTimer("lp03", 1.1f, "lampon03");
+}
+void checkpointhere(string &in asParent, string &in asChild, int alState)
+{
+CheckPoint("first", "PlayerStartArea_2", "refresh_pl", "", "");
+}
+void refresh_pl(string &in asName, int alCount)
+{
+stamina_obj.Start();
+SetPlayerCrouching(false);
+SetEntityActive("Area_waterflow_dead", false);
+SetEntityActive("area_water_check", true);SetEntityActive("area_water_check_1", true);
+PlayMusic("Penumbra_BP_A7.ogg", true, 0.35f, 12, 12, true);
+StopMusic(0, 0.9);
+SetPropStaticPhysics("tech_valve01_1", false);SetPropStaticPhysics("tech_valve01_2", false);
+SetLocalVarInt("watervalve", 0);
+SetWheelStuckState("tech_valve01_1", 0, true);SetWheelStuckState("tech_valve01_2", 0, true);
+AddTimer("", 0.3, "valvefixer");
+StopSound("watersteam", 0);
+ResetProp("level04_water_1");
+SetEntityActive("Dead_area_3", false);SetEntityActive("Dead_area_4", false);
+SetEntityActive("Dead_area_1", true);SetEntityActive("Dead_area_2", true);
+SetLocalVarInt("waterevent", 0);
+RemoveTimer("lpp03");RemoveTimer("lp03");
+SetLampLit("emergency_light_red_4", false, false);
+SetLightVisible("PointLight_10", false);
+DestroyParticleSystem("ele1");DestroyParticleSystem("ele2");
+}
+void valvefixer(string &in asTimer)
+{
+SetWheelAngle("tech_valve01_1", 180, true);
+SetWheelAngle("tech_valve01_2", 180, true);
+}
+void saveafterwater(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+}
+void sanit(string &in asTimer)
+{
+SetPlayerSanity(90);
+SetSanityDrainDisabled(true);
+AutoSave();
+}
+void aftersave_fall_fix(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "Glitch_area_1"){
+TeleportPlayer("PlayerStartArea_5");
+}
+if (asChild == "Glitch_area_2"){
+TeleportPlayer("PlayerStartArea_4");
+}
+if (asChild == "Glitch_area_3"){
+TeleportPlayer("PlayerStartArea_1");
+}
+}
+///////////
+//////////SYRINE////////////
+/////////////////////////////
+void Syr()
+{
+AddTimer("san1", 0.6, "sanity1");
+}
+void sanity1(string &in asTimer)
+{
+AddTimer("san1", 0.6, "sanity1");
+if (GetPlayerSanity() == 85){
+SetPlayerSanity(90);
+if (GetLocalVarInt("adrenalin_inject") == 0){
+stamina_obj.Stop();
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1.1);
+SetPlayerRunSpeedMul(1.05);
+SetPlayerLookSpeedMul(1.15);
+SetPlayerJumpForceMul(1.1);
+}
+AddPlayerHealth(30);
+SetLocalVarInt("adrenalin_inject", 1);
+FadeSepiaColorTo(0.7, 0.5);
+AddTimer("adren", 45 ,"adrenalin_end");
+}
+}
+}
+void adrenalin_end(string &in asTimer)
+{
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+SetPlayerJumpForceMul(1);
+}
+SetLocalVarInt("adrenalin_inject", 0);
+FadeSepiaColorTo(0, 0.5);
+stamina_obj.Start(); 
+}
+//////////////
+/////SIGN/////////
+void Sign_box(string &in asEntity)
+{
+if (asEntity == "signs_1"){
+SetMessage("05_Sewer", "bridge01", -1);
+}
+if (asEntity == "signs_2"){
+SetMessage("05_Sewer", "bridge02", -1);
+}
+if (asEntity == "signs_3"){
+SetMessage("05_Sewer", "radiation", -1);
+}
+if (asEntity == "signs_4"){
+SetMessage("05_Sewer", "bridge03", -1);
+}
+if (asEntity == "signs_5"){
+SetMessage("05_Sewer", "capsule", -1);
+}
+if (asEntity == "signs_6"){
+SetMessage("05_Sewer", "generator", -1);
+}
+if (asEntity == "signs_7"){
+SetMessage("05_Sewer", "symbols", -1);
+}
+if (asEntity == "signs_8"){
+SetMessage("05_Sewer", "farworm", -1);
+}
+if (asEntity == "signs_9"){
+SetMessage("05_Sewer", "farworm", -1);
+}
+if (asEntity == "signs_10"){
+SetMessage("05_Sewer", "farworm", -1);
+}
+if (asEntity == "signs_11"){
+SetMessage("05_Sewer", "farworm", -1);
+}
+if (asEntity == "signs_12"){
+SetMessage("05_Sewer", "farworm", -1);
+}
+if (asEntity == "signs_13"){
+SetMessage("05_Sewer", "fatalvalves", -1);
+}
+}
+////////////////
+void changerestartstate(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_17"){
+SetLocalVarInt("resstate", 0);
+}
+if (asChild == "ScriptArea_18"){
+SetLocalVarInt("resstate", 1);
+}
+}
+///////////////
+void force_end_shadow(string &in asParent, string &in asChild, int alState)
+{
+if (GetLocalVarInt("pitchover") == 0){
+SetEntityActive("character_alted_infected_base_1", false);
+PlayGuiSound("09_pitch2.ogg", 0.5f);
+StartScreenShake(0.1f, 0.0f, 0.0f, 0.35f);
+}
+}
+/////////
+void sewergate(string &in asEntity, int alState)
+{
+if (alState == 1){
+AddTimer("", 1.5, "stopsewergate");
+PlaySoundAtEntity("sewergate", "move_gate_sewers.snt", "ScriptArea_20", 0, false);
+SetLeverStuckState(asEntity, 1, false);  
+SetEntityActive("character_alted_infected_base_2", false);
+SetLightVisible("SpotLight_47", false);
+SetEntityActive("grate_2", false);
+SetEntityActive("grate_1", true);
+}
+}
+void stopsewergate(string &in asTimer)
+{
+SetMessage("05_Sewer", "gatehint", -1);
+StopSound("sewergate", 1.5);
+}
+/////////
+void OnEnter()
+{
+PreloadSound("door_emergency_opened.snt");
+PreloadSound("27_orb_done.snt");
+PreloadSound("20_water_stream_heavy_global.snt");
+PreloadSound("electro_break.snt");
+PreloadParticleSystem("ps_electro_bolt.ps");
+PreloadParticleSystem("particle_imp_water_med.ps");
+for (int i=1; i<=6; i++){
+SetLightVisible("Red_"+i, false);
+SetLampLit("Em_"+i, false, false);
+}
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+stamina_obj.Start(); 
+PlayMusic("Penumbra_BP_A7.ogg", true, 0.35f, 12, 0.9, true);
+}
+void OnLeave()
+{
+stamina_obj.Stop();
+if (GetLocalVarInt("transitsewer") == 1){
+SetupLoadScreen("LoadingText", "03_Sewer", 1, "loadscreen_reactor.jpg"); 
+}
+if (GetLocalVarInt("transitsewer") == 0){
+SetupLoadScreen("", "", 1, "menu_loading_screen.jpg"); 
+}
+StopMusic(1, 0.9);
+}

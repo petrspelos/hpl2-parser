@@ -1,0 +1,519 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaEaster", "Easter", true, 1);
+AddEntityCollideCallback("Player", "AreaSteps", "Steps", true, 1);
+AddEntityCollideCallback("Player", "AreaShopTalk", "ShopTalk", false, 1);
+AddEntityCollideCallback("Player", "rat_1", "rat1", true, 1);
+AddEntityCollideCallback("Player", "rat_2", "rat2", true, 1);
+AddEntityCollideCallback("Player", "rat_3", "rat3", true, 1);
+AddUseItemCallback("", "keypadlock", "gate", "UsedKeyOnDoor", true);
+AddUseItemCallback("", "keypadlock", "padlock", "UsedKeyOnDoor", true);
+AddUseItemCallback("", "jar", "WaterArea", "DrinkWater", true);
+AddUseItemCallback("", "waxwaldon2", "nowax", "UseWaxroll", true);
+AddUseItemCallback("", "waxwaldon", "nowax", "UseWaxroll5", true);
+AddUseItemCallback("", "waxemma", "nowax", "UseWaxroll2", true);
+AddUseItemCallback("", "waxharry", "nowax", "UseWaxroll3", true);
+AddUseItemCallback("", "waxmichael", "nowax", "UseWaxroll4", true);
+AddUseItemCallback("","money6","BuyArea","Buying",false);
+AddUseItemCallback("","money4","BuyArea","Buying2",false);
+AddUseItemCallback("","money7","BuyArea","Buying3",false);
+FadeOut(0.0f);
+AddTimer("start", 2, "start");
+AddTimer("pistons", 1, "pistons");
+SetPlayerActive(false);
+SetEntityInteractionDisabled("letter", true);
+SetEntityInteractionDisabled("letter2", true);
+SetEntityInteractionDisabled("letter3", true);
+SetEntityInteractionDisabled("lantern_1", true);
+SetEntityInteractionDisabled("orb", true);
+SetEntityInteractionDisabled("orb2", true);
+SetEntityInteractionDisabled("orb3", true);
+SetEntityInteractionDisabled("orb4", true);
+SetEntityInteractionDisabled("orb5", true);
+SetEntityInteractionDisabled("orb6", true);
+SetEntityInteractionDisabled("orb7", true);
+SetEntityInteractionDisabled("orb8", true);
+SetEntityInteractionDisabled("orb9", true);
+SetEntityInteractionDisabled("orb10", true);
+CheckPoint ("Checkpoint", "PlayerStartArea_2", "DeathSettings", "DeathHints", "Fall");
+CompleteQuest("Ch4lastroom", "Ch4lastroom");
+AutoSave();
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("gate",false, true);
+SetEntityActive("padlock", false);
+SetEntityActive("padlock2", true);
+PlaySoundAtEntity("", "unlock_door.snt", "gate", 0, false);
+RemoveItem(asItem);
+}
+
+void start(string &in asTimer)
+{
+PlayGuiSound("player_climb.snt", 1.0f);
+AddTimer("start2", 2, "start2");
+}
+
+void start2(string &in asTimer)
+{
+FadeIn(2.0f);
+SetPlayerActive(true);
+AddQuest("Ch4clues", "Ch4clues");
+AddQuest("Ch4water", "Ch4water");
+PlayMusic("Landlordsmansion", true, 1.0f, 4.0f, 0, true);
+}
+
+//---- Water ----//
+
+void Func_water(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+        SetLeverStuckState("lever", -1, true);
+        CompleteQuest("Ch4water2", "Ch4water2");
+        SetEntityActive("water", true);
+        SetEntityActive("water2", true);
+        SetEntityActive("WaterArea", true);
+        CreateParticleSystemAtEntity("", "ps_water_drop_single", "PipeArea", false);
+        PlaySoundAtEntity("","general_water_drip_quick.snt", "PipeArea", 0, true);
+	GiveSanityBoostSmall();
+          return;
+     }
+}
+
+void func_water(string &in asEntity, int alState)
+{	
+AddQuest("Ch4water2", "Ch4water2");
+}
+
+void DrinkWater(string &in asItem, string &in asEntity)
+{
+GiveSanityBoostSmall();
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, true);
+RemoveItem(asItem);
+AddTimer("drinkwater2", 4, "drinkwater2");
+SetEntityActive("block", true);
+CompleteQuest("Ch4water", "Ch4water");
+}
+
+void drinkwater2(string &in asTimer)
+{
+SetRadialBlurStartDist(0.4f);
+FadeRadialBlurTo(0.1f, 1.0f);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.5f);
+AddTimer("drinkwater3", 2, "drinkwater3");
+}
+
+void drinkwater3(string &in asTimer)
+{
+SetMessage("Messages", "badwater", 6);
+AddQuest("Ch4badwater", "Ch4badwater");
+AddTimer("drinkwater4", 5, "drinkwater4");
+}
+
+void drinkwater4(string &in asTimer)
+{
+FadeOut(2.0f);
+AddTimer("drinkwater5", 2, "drinkwater5");
+}
+
+void drinkwater5(string &in asTimer)
+{
+FadeIn(2.0f);
+AddTimer("drinkwater6", 3, "drinkwater6");
+}
+
+void drinkwater6(string &in asTimer)
+{
+FadeOut(1.0f);
+SetPlayerActive(false);
+PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+MovePlayerHeadPos(0.0f, -1.1f, 0.0f, 1.0f, 0.5f);
+AddTimer("drinkwater7", 3, "drinkwater7");
+}
+
+void drinkwater7(string &in asTimer)
+{
+AddEffectVoice("ch4jefferson.ogg", "", "Voice", "00_Ch4jefferson", false, "", 0, 0 );
+AddTimer("drinkwater8", 13, "drinkwater8");
+}
+
+void drinkwater8(string &in asTimer)
+{
+ChangeMap("TunnelSystemUnderFloor.map", "PlayerStartArea_1", "","");
+MovePlayerHeadPos(0.0, 0, 0, 1.0f, 0.5f);
+}
+
+void bedroomopen(string &in asEntity)
+{
+SetEntityActive("bedroom2", true);
+SetEntityActive("bedroom", false);
+AddTimer("notemusic2", 20, "notemusic2");
+PlayMusic("10_paper_daniel01", false, 1.0f, 2.0f, 0, true);
+SetMessage("Messages", "ch4landlord", 8);
+CompleteQuest("Ch4clues", "Ch4clues");
+}
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -14) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+}
+
+//---- Etc ----//
+
+void ShopTalk(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("AreaShopTalk", false);
+PlaySoundAtEntity("","Shop.snt","Player", 0,false);
+AddTimer("shoptalk2", 9, "shoptalk2");	
+}
+
+void shoptalk2(string &in asTimer)
+{
+SetEntityActive("AreaShopTalk", true);
+}
+
+void flash(string &in asEntity)
+{
+SetEntityActive("AreaFlash", false);
+SetEntityActive("Flash", true);
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+void pistons(string &in asTimer)
+{
+SetMoveObjectState("piston1", 0.0f);
+SetMoveObjectState("piston2", 0.7f);
+SetMoveObjectState("piston3", 0.0f);
+PlaySoundAtEntity("","13_press_done.snt", "piston2", 0, true);
+AddTimer("pistons2", 2, "pistons2");
+}
+
+void pistons2(string &in asTimer)
+{
+SetMoveObjectState("piston1", 0.7f);
+SetMoveObjectState("piston2", 0.0f);
+SetMoveObjectState("piston3", 0.7f);
+PlaySoundAtEntity("","13_press_done.snt", "piston2", 0, true);
+AddTimer("pistons", 2, "pistons");
+}
+
+void Steps(string &in asParent, string &in asChild, int alState)
+{	
+PlaySoundAtEntity("","scare_wood_creak_walk.snt", "Player", 0, true);
+AddTimer("scare2", 3, "scare2");
+}
+
+void scare2(string &in asTimer)
+{
+PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.8f, false);
+}
+
+void notemusic(string &in asEntity)
+{
+AddTimer("notemusic2", 20, "notemusic2");
+PlayMusic("10_paper_daniel02", false, 1.0f, 2.0f, 0, true);
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+void notemusic2(string &in asTimer)
+{
+PlayMusic("Landlordsmansion", true, 1.0f, 4.0f, 0, true);
+}
+
+void piano(string &in asEntity)
+{
+PlaySoundAtEntity("Piano", "Piano.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano2(string &in asEntity)
+{
+PlaySoundAtEntity("Piano2", "Piano2.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano3(string &in asEntity)
+{
+PlaySoundAtEntity("Piano3", "Piano3.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano4(string &in asEntity)
+{
+PlaySoundAtEntity("Piano4", "Piano4.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano5(string &in asEntity)
+{
+PlaySoundAtEntity("Piano5", "Piano5.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void pianodone(string &in asTimer)
+{
+SetEntityActive("PianoArea", true);
+SetEntityActive("PianoArea2", true);
+SetEntityActive("PianoArea3", true);
+SetEntityActive("PianoArea4", true);
+SetEntityActive("PianoArea5", true);
+}
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+void bugde(string &in asEntity)
+{
+SetMessage("Messages", "bugde", 4);
+}
+
+void phono(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+AddEffectVoice("jeffersonphono2.ogg", "", "Voice", "00_Jeffersonphono2", false, "", 0, 0 );
+SetPlayerActive(false);
+AddTimer("done", 20, "done");
+AddTimer("phono2", 39, "phono2");
+          return;
+     }
+}
+
+void phono2(string &in asTimer)
+{
+AddDiary("DiaryCh4Phono", "");
+}
+
+void phono3(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+AddEffectVoice("ch3hastobedone.ogg", "", "Voice", "00_Ch3hastobedone", false, "", 0, 0 );
+PlaySoundAtEntity("","cell_basile.snt","Player", 0,false);
+SetPlayerActive(false);
+AddTimer("done", 15, "done");
+AddTimer("phono4", 2, "phono4");
+          return;
+     }
+}
+
+void phono4(string &in asTimer)
+{
+AddEffectVoice("No_get_away_from_me.ogg", "", "Voice", "00_Emma", false, "", 0, 0 );
+AddTimer("phono5", 4, "phono5");
+}
+
+void phono5(string &in asTimer)
+{
+AddEffectVoice("ch3leephono.ogg", "", "Voice", "00_Ch3leephono", false, "", 0, 0 );
+}
+
+void phonoharry(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+AddEffectVoice("harryphono.ogg", "", "Voice", "00_Harryphono", false, "", 0, 0 );
+SetPlayerActive(false);
+AddTimer("done", 20, "done");
+AddTimer("phonoharry2", 20, "phonoharry2");
+          return;
+     }
+}
+
+void phonoharry2(string &in asTimer)
+{
+AddDiary("DiaryHarry", "");
+SetMessage("Messages", "diaryharry", 8);
+}
+
+void phonomichael(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+AddEffectVoice("michaelphono.ogg", "", "Voice", "00_Michaelphono", false, "", 0, 0 );
+SetPlayerActive(false);
+AddTimer("done", 22, "done");
+          return;
+     }
+}
+
+void phonojefferson(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+AddEffectVoice("jeffersonphono.ogg", "", "Voice", "00_Jeffersonphono", false, "", 0, 0 );
+SetPlayerActive(false);
+AddTimer("done", 32, "done");
+          return;
+     }
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+SetEntityConnectionStateChangeCallback("phono", "phono");
+}
+
+void UseWaxroll2(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+SetEntityConnectionStateChangeCallback("phono", "phono3");
+}
+
+void UseWaxroll3(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+SetEntityConnectionStateChangeCallback("phono", "phonoharry");
+}
+
+void UseWaxroll4(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+SetEntityConnectionStateChangeCallback("phono", "phonomichael");
+}
+
+void UseWaxroll5(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+SetEntityConnectionStateChangeCallback("phono", "phonojefferson");
+}
+
+void done(string &in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerActive(true);
+}
+
+void rat1(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_1", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_1", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_1", false);	
+}
+
+void rat2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_2", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_2", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_2", false);	
+}
+
+void rat3(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_3", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_3", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_3", false);	
+}
+
+void Easter(string &in asParent, string &in asChild, int alState)
+{	
+SetMessage("Messages", "eastermessage3", 8);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("oil", true);
+}
+
+void nowax(string &in asEntity)
+{
+SetMessage("Messages", "nowax", 4);
+}
+
+void map(string &in asEntity)
+{
+SetMessage("Messages", "ch4map", 9);
+AddDiary("DiaryMap", "");
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+void Buying(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("tinderbox", true);
+SetEntityActive("oil2", true);
+}
+
+void Buying2(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("wine", true);
+SetEntityActive("meat", true);
+}
+
+void Buying3(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("oil3", true);
+SetEntityActive("beer", true);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("Landlordsmansion", true, 1.0f, 4.0f, 0, true);
+}
+
+void OnEnter()
+{	
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_ch4mansion.png");
+}

@@ -1,0 +1,92 @@
+//// NOTE SCRIPTS ////
+//  RotatePropToSpeed(asTimer, 4.0f, 4.0f, 1.0f, 0, 0, false, asTimer+"_area"); //
+//  StartPlayerLookAt(asTimer, 4.0f, 4.0f, ""); //
+//  SetupLoadScreen("LoadingText", "Ch02_Sewer02", 1, "game_loading_well.jpg"); //
+//////////////////////////////////////////////////////////////////////////////////
+//  void breakBridge(data){ //
+//  	BreakJoint("bridge_chained_BallJoint_1"); //
+//		AddBodyImpulse("bridge_chained_chain", 1,0.5,-2, "World"); //
+//  } //
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////
+void OnStart(){
+	GiveItemFromFile("lantern_1", "lantern.ent");
+	SetMessage("Messages", "gotStuff", 0);
+	GiveItemFromFile("assembled", "hand_drill.ent");
+	SetSanityDrainDisabled(true);
+	AddEntityCollideCallback("lever_down", "ScriptElevatorBroken", "elevatorBroken", false, 1);
+	AddEntityCollideCallback("Player", "AreaSeeCrowbar", "hangingQuest", true, 1);
+	AddUseItemCallback("", "Crowbar", "sewer_bars", "addCrowbar", true);
+	AddEntityCollideCallback("CrowbarMove", "CrowbarCollider", "breakHatch", true, 1);
+	AddEntityCollideCallback("Player", "AreaTransfer", "transferMaps", true, 1);
+	SetEntityPlayerInteractCallback("sewer_bars", "sewerShut", false);
+	SetEntityPlayerInteractCallback("Crowbar", "disableIndication", false);
+	SetPlayerSanity(75);
+	SetPlayerLampOil(75);
+	SetLocalVarInt("sewerShut", 1);
+	SetLocalVarInt("leverPulled", 0);
+	SetGlobalVarInt("hasDrainedSewers", 0);
+	SetGlobalVarInt("hasGotEvidence", 0);
+	SetGlobalVarInt("hasDigged", 0);
+	SetGlobalVarInt("ifGetQuest", 1);
+}
+
+void OnEnter(){
+	SetSkyBoxActive(true);
+	SetSkyBoxTexture("sky_24_1_cube_ss.dds");
+	PlayMusic("grunt_amb.ogg", true, 1.5f, 0, 0, true);
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "01DescentTo02", 1, "01WoodsToSewer.jpg");
+}
+
+void hangingQuest(string &in asParent, string &in asChild, int alState){
+	AddQuest("hanging", "hanging");
+}
+
+void disableIndication(string &in entity){
+	SetLightVisible("Indication", false);
+	CompleteQuest("hanging", "hanging");
+}
+
+void elevatorBroken(string &in asParent, string &in asChild, int alState){
+	SetMessage("Messages", "elevatorBroken", 0);
+	if (GetLocalVarInt("leverPulled") == 0){
+		AddQuest("elevator", "elevator");
+		SetLocalVarInt("leverPulled", 1);
+	}
+}
+
+void sewerShut(string &in entity){
+	if (GetLocalVarInt("sewerShut") == 1){
+		SetMessage("Messages", "sewerShut", 0);
+	}
+	CompleteQuest("elevator", "elevator");
+}
+
+void addCrowbar(string &in item, string &in entity){
+	AddTimer("", 0.2f, "activateJoint");
+	RemoveItem(item);
+}
+
+void activateJoint(string &in asTimer){
+	SetEntityActive("CrowbarMove", true);
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+}
+
+void breakHatch(string &in asParent, string &in asChild, int alState){
+	SetLeverStuckState("sewer_bars", 3, true);
+	AddPropImpulse("sewer_bars", 0, 50, 0, "World");
+	PlaySoundAtEntity("", "break_wood_metal", "EffectsArea", 0, false);
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "EffectsArea", false);
+	AddPlayerSanity(25);
+	SetEntityActive("CrowbarMove", false);
+	SetEntityActive("debug_block", false);
+	SetLocalVarInt("sewerShut", 0);
+	AddPlayerSanity(25);
+}
+
+void transferMaps(string &in asParent, string &in asChild, int alState){
+	ChangeMap("02_sewer.map", "PlayerStartArea_1", "", "impact_water_high.snt");
+}

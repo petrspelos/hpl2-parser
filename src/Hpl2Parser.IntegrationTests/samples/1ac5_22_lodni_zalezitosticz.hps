@@ -1,0 +1,282 @@
+void OnStart()
+{
+  // debug bullshit
+  //AddTimer("", 0.0, "padluj");
+  //GiveItemFromFile("lantern_1", "lantern.ent");
+
+  SetPlayerJumpDisabled(true);
+  SetPlayerCrouchDisabled(true);
+
+  // no going back to Wackersberg... not now...
+  ClearSavedMaps();
+
+  //variable bullshit
+  SetLocalVarInt("zakladni_pohyb", -500.0);
+  SetLocalVarInt("zakladni_rychlost", 5.0);
+  SetLocalVarInt("stav_padel", 0);
+  SetLocalVarInt("ma_padlovat", 1);
+  //vision bullshit
+  //SetInDarknessEffectsActive(false);
+
+  //kolize
+  AddEntityCollideCallback("Player", "area_lod", "e701", true, 1);
+  AddEntityCollideCallback("Player", "area_lod_1", "e702", true, 1);
+  AddEntityCollideCallback("Player", "area_lod_2", "e703", true, 1);
+  AddEntityCollideCallback("Player", "area_lod_3", "l3", true, 1);
+  AddEntityCollideCallback("Player", "area_lod_4", "l4", true, 1);
+  AddEntityCollideCallback("Player", "area_lod_5", "l5", true, 1);
+  AddEntityCollideCallback("Player", "event_666", "e666", true, 1);
+
+}
+
+void e701(string &in asParent, string &in asChild, int alState)
+{
+  SetPlayerActive(false);
+  FadeOut(1.0);
+  AddTimer("e701t1", 1.01, "e701t1");
+}
+
+void e666(string &in asParent, string &in asChild, int alState)
+{
+  ChangeMap("23_upiri_zalezitosticz.map", "playerstart_0", "", "");
+}
+
+void e702(string &in asParent, string &in asChild, int alState)
+{
+  zkurvenapromluva();
+}
+
+void e701t1(string &in asTimer)
+{
+  TeleportPlayer("lod");
+  FadeIn(1.0);
+  AddTimer("", 0.0, "padluj_2");
+  lodka_pohyb();
+  SetInventoryDisabled(true);
+  SetPlayerJumpDisabled(true);
+  //SetPlayerCrouching(true);
+  SetPlayerCrouchDisabled(true);
+  //SetLanternActive(false);
+  SetPlayerActive(true);
+  SetPlayerRunSpeedMul(0.0);
+  SetPlayerMoveSpeedMul(0.0);
+}
+
+void padluj(string &in asTimer)
+{
+  AddDebugMessage("funkce", false);
+  SetMoveObjectState("padlo_1", GetLocalVarInt("zakladni_pohyb"));
+  SetMoveObjectState("padlo_2", GetLocalVarInt("zakladni_pohyb"));
+}
+
+void padluj_2(string &in asTimer)
+{
+  if(GetLocalVarInt("ma_padlovat") == 1)
+  {
+    if(GetLocalVarInt("stav_padel") == 0)
+    {
+      SetLocalVarInt("stav_padel", 1);
+      RotatePropToSpeed("padlo_1", 1.0, 2.0, 0.0, -100.0, -10.0, true, "");
+      //RotatePropToSpeed("ruka_1", 1.0, 2.0, 0.0, -100.0, -10.0, true, "");
+      RotatePropToSpeed("padlo_2", 1.0, 2.0, 0.0, 100.0, -10.0, true, "");
+      //RotatePropToSpeed("ruka_2", 1.0, 2.0, 0.0, 100.0, -10.0, true, "");
+
+    }
+    else if(GetLocalVarInt("stav_padel") == 1)
+    {
+      SetLocalVarInt("stav_padel", 0);
+      RotatePropToSpeed("padlo_1", 1.0, 2.0, 0.0, 100.0, 10.0, true, "");
+      //RotatePropToSpeed("ruka_1", 1.0, 2.0, 0.0, 100.0, 10.0, true, "");
+
+      RotatePropToSpeed("padlo_2", 1.0, 2.0, 0.0, -100.0, 10.0, true, "");
+      //RotatePropToSpeed("ruka_2", 1.0, 2.0, 0.0, -100.0, 10.0, true, "");
+
+    }
+    AddTimer("padluj_2", 1.0, "padluj_2");
+  }
+  else
+  {
+    AddDebugMessage("do nothing", false);
+    RemoveTimer("padluj_2");
+  }
+}
+
+void lodka_pohyb()
+{
+  AddDebugMessage("i tahle funkce", false);
+  /*SetMoveObjectState("lodnilouc", -100);
+  SetMoveObjectState("posranalod", -100);
+  SetMoveObjectState("lampa_1", -100);
+  SetMoveObjectState("lampa_2", -100);
+  SetMoveObjectState("ruka_1", -100);
+  SetMoveObjectState("ruka_2", -100);*/
+
+  SetMoveObjectStateExt("lodnilouc", -2000, 2.0, 4.0, 2.0, false);
+  SetMoveObjectStateExt("posranalod", -1800, 2.0, 4.0, 2.0, false);
+  SetMoveObjectStateExt("lampa_1", -2500, 2.0, 4.0, 2.0, false);
+  SetMoveObjectStateExt("lampa_2", -2500, 2.0, 4.0, 2.0, false);
+  //SetMoveObjectStateExt("ruka_1", -2000, 2.0, 4.0, 2.0, false);
+  //SetMoveObjectStateExt("ruka_2", -2000, 2.0, 4.0, 2.0, false);
+  SetMoveObjectStateExt("padlo_1", -2000, 2.0, 4.0, 2.0, false);
+  SetMoveObjectStateExt("padlo_2", -2000, 2.0, 4.0, 2.0, false);
+  //SetMoveObjectStateExt("zametac_stop", -2000, 2.0, 3.0, 2.0, false);
+  //SetMoveObjectStateExt("zametac_stop_1", -2000, 2.0, 3.0, 2.0, false);
+
+  for(int i=1;i<=4;i++){
+    SetMoveObjectStateExt("block_" + i, -2800, 2.0, 4.0, 2.0, false);
+  }
+
+  PlaySoundAtEntity("lod_zvuk", "lod.snt", "posranalod", 0.75, false);
+
+  PlayMusic("boat.ogg", true, 0.3, 0.1, 1000, false);
+
+
+  // ruční práce
+  // ruční práce nebude kvůli problémům s enginem
+  // případní zájemci o ruční práci, nechť vyhledají štětky na Václaváku
+  // ámen
+  //AttachPropToProp("ruka_1", "padlo_1", "corpse_male_arm_wackersberg_move.ent", 0,0,0,0,-89.691,0);
+
+}
+
+void e703(string &in asParent, string &in asChild, int alState)
+{
+  AddDebugMessage("jjjj", false);
+  StopPropMovement("posranalod");
+  StopPropMovement("lodnilouc");
+  StopPropMovement("lampa_1");
+  StopPropMovement("lampa_2");
+  StopPropMovement("padlo_1");
+  StopPropMovement("padlo_2");
+  StopPropMovement("posranalod");
+  for(int i=1;i<=4;i++){
+    StopPropMovement("block_" + i);
+    SetEntityActive("block_" + i, false);
+  }
+  SetEntityActive("block_5", true);
+  RemoveTimer("padluj_2");
+  SetLocalVarInt("ma_padlovat", 0);
+  SetInventoryDisabled(false);
+  SetPlayerJumpDisabled(false);
+  //SetPlayerCrouching(true);
+  SetPlayerCrouchDisabled(false);
+  StopSound("lod_zvuk", 2.0);
+
+  SetPlayerRunSpeedMul(1.0);
+  SetPlayerMoveSpeedMul(1.0);
+
+}
+
+
+ // mam obavu, že v některých částech tohoto módu bude vidět moje zkurvená
+ // vyjebaná frustrace z některých věcí
+ // jako třeba názvy funkcí. Občas rádoby vtipné, občas plné nechuti a demotivace
+void zkurvenapromluva()
+{
+  SetLocalVarString("dialog", "zkurvenalod");
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "1", "", "dabing", GetLocalVarString("dialog") + "1cz", false, "hedwig2", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "1_en", "", "dabing", GetLocalVarString("dialog") + "1", false, "hedwig2", 5.0, 15.0);
+  }
+}
+
+void l3(string &in asParent, string &in asChild, int alState)
+{
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "2", "", "dabing", GetLocalVarString("dialog") + "2cz", false, "Player", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "2_en", "", "dabing", GetLocalVarString("dialog") + "2", false, "Player", 5.0, 15.0);
+  }
+}
+
+void l4(string &in asParent, string &in asChild, int alState)
+{
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "3", "", "dabing", GetLocalVarString("dialog") + "3cz", false, "Player", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "3_en", "", "dabing", GetLocalVarString("dialog") + "3", false, "Player", 5.0, 15.0);
+  }
+}
+
+void l5(string &in asParent, string &in asChild, int alState)
+{
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "4", "", "dabing", GetLocalVarString("dialog") + "4cz", false, "Player", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "4_en", "", "dabing", GetLocalVarString("dialog") + "4", false, "Player", 5.0, 15.0);
+  }
+}
+
+
+void OnEnter()
+{
+  SetMapDisplayNameEntry("lodka");
+  AutoSave();
+}
+
+void OnLeave()
+{
+  StopMusic(1.0, 1000);
+// LOADING ////////////////////
+SetGlobalVarInt("dalsi_nacitaci_obrazovka", RandInt(1,5));
+if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 1)
+{
+  if(GetGlobalVarInt("potkal_helene") == 0)
+  {
+    if(GetPlayerSanity() < 100 && GetPlayerSanity() > 80)
+    {
+      SetupLoadScreen("loading", "helenecz", 0, "nacitani_helene.jpg");
+    }
+    else if(GetPlayerSanity() < 80 && GetPlayerSanity() > 60)
+    {
+      SetupLoadScreen("loading", "helene2cz", 0, "nacitani_helene_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 60 && GetPlayerSanity() > 40)
+    {
+      SetupLoadScreen("loading", "helene3cz", 0, "nacitani_helene_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 40 && GetPlayerSanity() > 20)
+    {
+      SetupLoadScreen("loading", "helene4cz", 0, "nacitani_helene_horsi_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 20)
+    {
+      SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+    }
+  }
+  else
+  {
+    SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+  }
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 2)
+  {
+    SetupLoadScreen("loading", "niklascz", 0, "nacitani_niklas.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 3)
+  {
+    SetupLoadScreen("loading", "adolfcz", 0, "nacitani_adolf.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 4)
+  {
+    SetupLoadScreen("loading", "gotfriedcz", 0, "nacitani_gotfried.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 5)
+  {
+    SetupLoadScreen("loading", "hedwigcz", 0, "nacitani_hedwig.jpg");
+  }
+  /////////////
+}

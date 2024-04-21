@@ -1,0 +1,543 @@
+void OnEnter()
+{
+	SetMapDisplayNameEntry("LevelTomes");
+	AutoSave();
+	
+	StopMusic(0.5f, 10);
+	StopMusic(0.5f, 0);
+	SetPlayerMoveSpeedMul(1);
+	PlayMusic("21_amb.ogg", true, 0.7f, 1.0f, 0, true);	
+		}
+
+void OnStart()
+{
+	/* Collide Callbacks
+						*/
+	AddEntityCollideCallback("Player", "AreaAddQuest", "CollideHint", true, 1);	
+	AddEntityCollideCallback("Player", "AreaSancEvents", "SancEvents", true, 1);	
+	AddEntityCollideCallback("Player", "ScriptArea_9", "PlateEvent", true, 1);	
+	AddEntityCollideCallback("Player", "AreaEventBangs", "EventBangs", true, 1);	
+	AddEntityCollideCallback("Player", "AreaDeskDoor", "EventDesk", true, 1);	
+	AddEntityCollideCallback("Player", "AreaSteps", "EventSteps", true, 1);	
+	
+	//////////////
+	//////////////
+	
+	AddUseItemCallback("", "TomeOne", "TomeOneUse", "AddTome1", true);
+	AddUseItemCallback("", "TomeTwo", "TomeTwoUse", "AddTome2", true);
+	
+	/* Wrong Tomes
+				*/
+	AddUseItemCallback("", "TomeTwo", "TomeOneUse", "ErrorTome1", true);
+	AddUseItemCallback("", "TomeOne", "TomeTwoUse", "ErrorTome2", true);
+	
+	/* Door Collide
+				*/
+	AddEntityCollideCallback("Player", "AreaStartEvents", "RumblePitfall", true, 1);
+	
+	//Debug
+	if(ScriptDebugOn())
+	{
+		SetPlayerLampOil(100.0f);
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+		
+		GiveItem("TomeOne", "Puzzle", "Tome1", "tome_icon", 1);
+		GiveItem("TomeTwo", "Puzzle", "Tome2", "tome_icon", 1);
+	}
+	
+	////BEGINNING EFFECTS////
+	if(ScriptDebugOn() == false)
+	{
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_4", false);
+	CreateParticleSystemAtEntity("", "ps_rose_petals_whirl.ps", "ScriptArea_4", false);
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_4", 0.0f, false);
+	PlaySoundAtEntity("creaky", "00_creak", "Player", 0.0f, false);
+	SetLampLit("candle_floor_*", false, true);
+	FadeLightTo("PointLight_36", 0, 0, 0, 0, 3, 1);
+	StartScreenShake(0.05, 1, 2, 3);
+	AddTimer("", 8, "EndCreak");
+	SetPlayerRunSpeedMul(0);
+	SetPlayerMoveSpeedMul(0.2f);
+	SetPlayerJumpDisabled(true);
+	}
+	
+	/* Whirl
+		*/
+	AddTimer("whirl", 1, "TimerWhirl");
+		}
+
+/* Fusing Tomes
+				*/	
+void AddTome1(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "28_done", "ETomeArea", 0.0f, false);
+	CreateParticleSystemAtEntity("", "ps_orb_absorb.ps", "ETomeArea", true);
+	RemoveItem(asItem);
+	
+	CreateParticleSystemAtEntity("", "ps_orb_absorb.ps", "ETomeArea", true);
+	AddGlobalVarInt("TomeCount", 1);
+		
+		
+	/////////////////////
+	//Tomes Got effects//
+	////////////////////
+	if(GetGlobalVarInt("TomeCount") == 2)
+	{
+		CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "ScriptArea_1", true);
+		GiveSanityBoost();
+		PlayMusic("21_event_pit.ogg", false, 0.5f, 0.0f, 10, true);
+		SetPlayerMoveSpeedMul(0.5);
+		FadeImageTrailTo(2, 2.0f);
+		StartScreenShake(0.1f, 2, 1.0f, 0.3f);
+		AddTimer("", 10.0f, "DoorFadeOut");
+		StartPlayerLookAt("DoorClosed", 1, 2, "");
+	}
+	
+	}
+	
+void AddTome2(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "28_done", "LTomeArea", 0.0f, false);
+	PlaySoundAtEntity("", "27_energy_loop", "LTomeArea", 0.0f, false);
+	
+	CreateParticleSystemAtEntity("", "ps_orb_absorb.ps", "LTomeArea", true);
+	AddGlobalVarInt("TomeCount", 1);
+	RemoveItem(asItem);
+	
+	/////////////////////
+	//Tomes Got effects//
+	////////////////////
+	if(GetGlobalVarInt("TomeCount") == 2)
+	{
+		CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "ScriptArea_1", true);
+		GiveSanityBoost();
+		PlayMusic("21_event_pit.ogg", false, 0.5f, 0.0f, 10, true);
+		SetPlayerMoveSpeedMul(0.3);
+		FadeImageTrailTo(2, 2.0f);
+		StartScreenShake(0.1f, 10, 1.0f, 0.3f);
+		AddTimer("", 10.0f, "DoorFadeOut");
+		StartPlayerLookAt("DoorClosed", 1, 2, "");
+	}
+	
+	}
+	
+/////////////////////////
+///Door Fade Events////
+//
+//
+void DoorFadeOut(string &in asTimer)
+{
+	GiveSanityDamage(1, true);
+	FadeOut(0.2f);
+	SetPlayerActive(false);
+	SetEntityActive("DoorOpen", true);
+	SetEntityActive("DoorClosed", false);
+	PlaySoundAtEntity("", "29_exit_door", "DoorOpen", 0.0f, false);
+	AddTimer("", 5.0f, "DoorFadeIn");
+		}
+		
+void DoorFadeIn(string &in asTimer)
+{
+	SetPlayerActive(true);
+	FadeIn(2.0f);
+	PlayMusic("21_agrippa_lever.ogg", false, 0.5f, 0.0f, 10, true);
+	StopPlayerLookAt();
+	
+	CompleteQuest("TomeHint2Note", "TomeHint2Note");
+		}
+	
+//-------------------!
+
+///////////////////////
+//RUMBLE EVENTS
+//////////////////////
+
+//------------------!
+	
+void RumblePitfall(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 3, "TimerCaveIns");
+	
+	StartScreenShake(0.05f, 7.0f, 1.0f, 1.0f);
+	
+	PlaySoundAtEntity("creak", "00_creak", "Player", 2, false);
+	PlaySoundAtEntity("spirit", "agrippa_wake", "ScriptArea_3", 2, false);
+	SetPlayerMoveSpeedMul(0.5f);
+	
+	SetPropActiveAndFade("galnuch_3", true, 1);
+		}
+		
+void TimerCaveIns(string &in asTimer)
+{
+	AddLocalVarInt("MControl2", 1);
+	float fTime = 1.5f;
+	
+	int iArea = RandInt(1, 4);
+
+	
+	switch(GetLocalVarInt("MControl2")) 
+	{
+		case 1:
+			PlaySoundAtEntity("collapse", "explosion_rock_large", "SoundCave_"+iArea, 0, false);
+			AddTimer("", 2, "ExpRockParticles");
+			StartScreenShake(0.1f, 0.5f, 0.0f, 0.0f);
+			PlayMusic("04_event_stairs.ogg", false, 1, 1, 10, true);
+			FadeImageTrailTo(1, 1);
+			PlaySoundAtEntity("scare", "react_scare", "Player", 0.75f, false);
+			GiveSanityDamage(10, true);
+			SetPropActiveAndFade("galnuch_3", false, 1);
+			fTime = 2.0f;	
+		break;
+		case 2:
+			PlaySoundAtEntity("collapse", "explosion_rock_large", "SoundCave_"+iArea, 0, false);
+			GiveSanityDamage(10, true);
+			StartScreenShake(0.1f, 0.5f, 0.0f, 0.0f);
+			fTime = 1.0f;
+		break;
+		case 3:
+			PlaySoundAtEntity("collapse", "explosion_rock_large", "SoundCave_"+iArea, 0, false);
+			StartScreenShake(0.1f, 0.5f, 0.0f, 0.0f);
+			fTime = 3.0f;
+		break;
+		case 4:
+			PlaySoundAtEntity("collapse", "25_break_wood", "SoundCave_"+iArea, 0, false);
+			SetPlayerMoveSpeedMul(1);
+			FadeImageTrailTo(0, 1);
+			PlayMusic("12_amb.ogg", true, 0.5, 1, 0, true);
+			StopSound("creak", 4);
+			AddQuest("CavedChamber", "CavedChamber");
+			AddLocalVarInt("MControl", 11);
+		break;
+	}
+	
+	if(GetLocalVarInt("MControl2") < 5) AddTimer("", fTime, "TimerCaveIns");
+		}
+		
+
+void ExpRockParticles(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("crash", "ps_dust_elevator_crash.ps", "AreaParticlePush", false);
+	PlaySoundAtEntity("collapse", "explosion_rock_large", "AreaParticlePush", 0, false);
+	PlaySoundAtEntity("scare", "react_scare", "Player", 0.75f, false);
+		}
+		
+//-------------------!
+
+///////////////////////
+//LANG RELATED
+//////////////////////
+
+//------------------!
+
+
+/* No longer for a hint but keeping the name for convenience
+														*/
+void CollideHint(string &in asParent, string &in asChild, int alState)
+{	
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "AreaWind", false);
+	PlaySoundAtEntity("", "general_wind_whirl", "AreaWind", 0, false);
+	
+	SetLampLit("candlestick", false, true);
+	FadeLightTo("PointLight_35", 0, 0, 0, 0, 0, 2);
+	
+	StartPlayerLookAt("candlestick", 1, 2, "");
+	
+	AddTimer("", 2, "LightBack");
+	
+	SetPlayerMoveSpeedMul(0.3);
+}
+		
+void ErrorTome1(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "ErrorTome1", 2);
+}
+
+void ErrorTome2(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "ErrorTome2", 2);
+}
+	
+//-------------------!
+
+///////////////////////
+//EFFECTS
+//////////////////////
+
+//------------------!
+
+void IntBigDoor(string &in asEntity)
+{
+	PlaySoundAtEntity("", "close_gate", "DoorClosed", 0.0f, false);
+	SetMessage("TextOne", "TextBigDoor", 2);
+}
+
+void EndCreak(string &in asTimer)
+{
+	StopSound("creaky", 1);
+	
+	SetPlayerRunSpeedMul(1);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+}
+
+/* Events When Entering Sanctuary
+								*/
+void SancEvents(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("sanctuarytimer", 0, "TimerSancBlow");
+	PlayMusic("24_event_vision.ogg", false, 0.7f, 1.0f, 10, true);
+	GiveSanityDamage(10, true);
+}
+
+void TimerSancBlow(string &in asTimer)
+{
+	AddLocalVarInt("MControl", 1);
+	float fTime = 1.5f;
+	
+	switch(GetLocalVarInt("MControl")) 
+	{
+		case 1:
+			CreateParticleSystemAtEntity("", "ps_dust_break_25.ps", "ScriptArea_5", false);
+			PlaySoundAtEntity("", "react_scare", "Player", 0, false);
+			PlaySoundAtEntity("", "27_wind", "Player", 0.0f, false);
+			PlaySoundAtEntity("", "insanity_baby_cry", "Noise_1", 0.0f, false);
+			PlaySoundAtEntity("", "15_bang", "Noise_1", 0.0f, false);
+			SetPlayerMoveSpeedMul(0.4f);
+		break;
+		case 2:
+			CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ScriptArea_6", false);
+			CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "ScriptArea_6", false);
+			PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_6", 0.0f, false);
+			PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_6", 0.0f, false);
+			PlaySoundAtEntity("", "15_help", "Player", 0.0f, false);
+			PlaySoundAtEntity("", "15_bang", "Noise_2", 0.0f, false);
+		break;
+		case 3:
+			CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ScriptArea_7", false);
+			CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "ScriptArea_7", false);
+			PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_7", 0.0f, false);
+			PlaySoundAtEntity("", "15_bang", "Noise_3", 0.0f, false);
+			PlaySoundAtEntity("scrape", "scrape_rock", "angel_of_galnuch", 0.0f, false);
+			SetPropActiveAndFade("angel_of_galnuch", true, 2);
+			AddTimer("", 3, "GalnuchFadeAway");
+			AddTimer("endrock", 2, "RockOver");
+		break;
+		case 4:
+			CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ScriptArea_8", false);
+			CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "ScriptArea_8", false);
+			PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_8", 0.0f, false);
+			PlaySoundAtEntity("", "15_bang_fall", "Noise_4", 0.0f, false);
+			SetPlayerMoveSpeedMul(1);
+		break;
+	}
+	
+	if(GetLocalVarInt("MControl") < 10) AddTimer("", fTime, "TimerSancBlow");
+}
+
+/* Angel of Galnuch Leaves
+				*/
+void GalnuchFadeAway(string &in asTimer)
+{
+	SetPropActiveAndFade("angel_of_galnuch", false, 2);
+	AddTimer("endrock", 2, "RockOver");
+}
+
+void RockOver(string &in asTimer)
+{
+	StopSound("scrape", 1);
+}
+
+/* Plate Scare
+			*/
+void PlateEvent(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("plate_1", 0, 0, -2000, "world");
+	AddTimer("plates", 1, "Plate2");
+	AddTimer("plates2", 1.5, "Plate2");
+}
+
+void Plate2(string &in asTimer)
+{
+	if(asTimer == "plates1")
+	{
+		PlaySoundAtEntity("", "react_scare", "Player", 0, false);
+	}
+	
+	if(asTimer == "plates2")
+	{
+		PlaySoundAtEntity("", "enemy/grunt/amb_idle", "AreaGrunt", 0, false);
+	}
+}
+
+/* Bang Events
+			*/
+void EventBangs(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("bang1", 1, "Bang");
+	AddTimer("bang2", 2.5, "Bang");
+	AddTimer("bang3", 3.2, "Bang");
+	AddTimer("bang4", 4, "Bang");
+	AddTimer("bang5", 7, "Bang");
+	AddTimer("bang6", 9, "Bang");
+}
+
+void Bang(string &in asTimer)
+{
+		if(asTimer == "bang1")
+		{
+			PlaySoundAtEntity("", "15_bang", "BangArea_"+RandInt(1, 2), 0, false);
+		}
+		
+		if(asTimer == "bang2")
+		{
+			PlaySoundAtEntity("", "15_bang", "BangArea_"+RandInt(1, 2), 0, false);
+		}
+		
+		if(asTimer == "bang3")
+		{
+			PlaySoundAtEntity("", "15_bang", "BangArea_"+RandInt(1, 2), 0, false);
+		}
+		
+		if(asTimer == "bang4")
+		{
+			PlaySoundAtEntity("", "15_drag_body", "BangArea_"+RandInt(1, 2), 0, false);
+		}
+		
+		if(asTimer == "bang5")
+		{
+			PlaySoundAtEntity("", "15_man_hunted", "BangArea_"+RandInt(1, 2), 0, false);
+		}
+		
+		if(asTimer == "bang6")
+		{
+			GiveSanityDamage(10, true);
+		}
+
+}
+
+/* Desk Door Opens, Tempting Player With Oil
+										*/
+void EventDesk(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("DeskDoor", false, true);
+	SetSwingDoorDisableAutoClose("DeskDoor", true);
+	
+	AddTimer("", .2, "Oil");
+	
+	AddPropForce("DeskDoor", 0, 0, -1000, "world");
+}
+
+void Oil(string &in asEntity)
+{
+	AddPropForce("potion_oil_4", -30, 0, -30, "world");
+}
+
+/* Oil Grab Scare
+				*/
+void IntOilTheft(string &in asEntity)
+{
+	AddPropForce("DeskDoor", 0, 0, -3000, "world");
+	PlaySoundAtEntity("", "lock_door", "DeskDoor", 0, false);
+	SetSwingDoorLocked("DeskDoor", true, true);
+	PlaySoundAtEntity("", "react_scare", "Player", 0, false);
+	GiveSanityDamage(10, true);
+}
+
+/* Creepy Footsteps + Events
+						*/
+void EventSteps(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("stepseq1", 0.5, "Steps");
+	AddTimer("stepseq2", 1, "Steps");
+	AddTimer("stepseq3", 1.5, "Steps");
+	AddTimer("stepseq4", 2, "Steps");
+	AddTimer("stepseq5", 3, "Steps");
+}
+
+void Steps(string &in asTimer)
+{
+	if(asTimer == "stepseq1")
+	{
+		PlaySoundAtEntity("", "step_run_dirt", "AreaStep_1", 0, false);
+	}
+	
+	if(asTimer == "stepseq2")
+	{
+		PlaySoundAtEntity("", "step_run_dirt", "AreaStep_2", 0, false);
+	}
+	
+	if(asTimer == "stepseq3")
+	{
+		PlaySoundAtEntity("", "step_run_dirt", "AreaStep_3", 0, false);
+		PlaySoundAtEntity("", "react_breath", "Breath", 0, false);
+	}
+	
+	if(asTimer == "stepseq4")
+	{
+		PlaySoundAtEntity("", "step_run_dirt", "AreaStep_4", 0, false);
+	}
+	
+	if(asTimer == "stepseq5")
+	{
+		AddPropForce("chair", 0, 0, -8000, "world");
+		PlaySoundAtEntity("", "05_event_bottles", "AreaStep_4", 0, false);
+		PlaySoundAtEntity("", "step_run_dirt", "AreaStep_4", 0, false);
+		SetEntityActive("stepsbottle_*", true);
+	}
+}
+
+/* Light Comes Back
+				*/
+void LightBack(string &in asTimer)
+{
+	SetLampLit("candlestick", true, true);
+	FadeLightTo("PointLight_35", 0.6, 0.6, 0.4, 0.1, 3.5, 2);
+	
+	StopPlayerLookAt();
+	
+	SetPlayerMoveSpeedMul(1);
+}
+
+/* Random Events 
+			*/
+void TimerWhirl(string &in asTimer)
+{
+	int iWhirl = RandFloat(1, 2);	
+	float fWhirl = RandFloat(3.5f,8.5f);
+	
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "AreaWhirl_"+iWhirl, false);
+	
+	PlaySoundAtEntity("", "27_wind", "AreaWhirl_"+iWhirl, 1.0f, false);
+	
+	AddTimer("whirl", 3.5f+fWhirl, "TimerWhirl");
+}
+
+/* Galnuch Scare
+			*/
+void LookGalnuch(string &in asEntity, int alState)
+{
+	if (alState == 1)
+	{
+		SetPropActiveAndFade("galnuch_2", false, 1);
+	}
+}
+
+//-------------------!
+
+///////////////////////
+//MISC
+//////////////////////
+
+//------------------!
+
+void IntNoteTomes(string &in asEntity)
+{
+	PlayMusic("17_paper_herbert03.ogg", false, 1, 1, 10, true);
+	
+	AddQuest("TomeHint2Note", "TomeHint2Note");
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load12", 0, "int_loading_dragon.jpg");
+}

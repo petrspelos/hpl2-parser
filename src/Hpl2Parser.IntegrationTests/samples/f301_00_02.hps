@@ -1,0 +1,91 @@
+void OnStart()
+{
+	FadeOut(0.01);
+	AddTimer("TimerFadeIn", 2.0, "TimerFadeIn");
+	SetLanternActive(false, false);
+	SetLanternDisabled(true);
+	SetInventoryDisabled(true);
+	AddEntityCollideCallback("Player", "AreaGhostEvent", "EvenGhost", true, 1);
+	AddEntityCollideCallback("Player", "AreaDoorSlam", "EvenDoorSlam", true, 1);
+	StopPlayerLookAt();
+	FadeImageTrailTo(0,1);
+	SetPlayerMoveSpeedMul(0.6f);
+	StopMusic(3.0, 2);
+	SetupLoadScreen("LoadingText", "Load7", 1, "");
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("", "vent_voices.snt", "Player", 1.0 / 2, false);
+	PlaySoundAtEntity("", "amb_asylumn.snt", "Player", 1.0 / 2, false);
+}
+
+void OnLeave()
+{
+
+}
+
+void TimerFadeIn(string &in asTimer)
+{
+	FadeIn(3.0);
+}
+
+void EvenGhost(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("adam_boom.ogg", false, 1.0, 0.01, 0, false);
+	SetPlayerRunSpeedMul(0.1);
+	SetPlayerMoveSpeedMul(0.1f);
+	AddEntityCollideCallback("fp_monster_ghost_mod_cinematic_1", "AreaGhostDissapear", "EvenGhostGone", true, 1);
+	SetEntityActive("fp_monster_ghost_mod_cinematic_1", true);
+	AddEnemyPatrolNode("fp_monster_ghost_mod_cinematic_1", "PathNodeArea_1", 0.01, "");
+	AddEnemyPatrolNode("fp_monster_ghost_mod_cinematic_1", "PathNodeArea_2", 0.01, "");
+	AddEnemyPatrolNode("fp_monster_ghost_mod_cinematic_1", "PathNodeArea_3", 0.01, "");
+	AddEnemyPatrolNode("fp_monster_ghost_mod_cinematic_1", "PathNodeArea_4", 0.01, "");
+	AddEnemyPatrolNode("fp_monster_ghost_mod_cinematic_1", "PathNodeArea_5", 0.01, "");
+	AddEnemyPatrolNode("fp_monster_ghost_mod_cinematic_1", "PathNodeArea_6", 0.01, "");
+}
+
+void EvenGhostGone(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("fp_monster_ghost_mod_cinematic_1", false);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerMoveSpeedMul(1.0f);
+}
+
+void EvenDoorSlam(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("scary_event_2.ogg", false, 1.0, 0.0, 0, false);
+	StartPlayerLookAt("AreaLook", 10, 15, "");
+	GiveSanityDamage(1.0, true);
+	AddTimer("TimerBlackout", 7.5, "TimerBlackout");
+	AddTimer("TimerChange", 7.3, "TimerChange");
+	AddTimer("TimerStopLook", 1.0, "TimerStopLook");
+	SetSwingDoorClosed("FancyDoor_8", true, true);
+	SetSwingDoorLocked("FancyDoor_8", true, false);
+	SetEntityActive("block_box_1", true);
+	SetEntityActive("child_fixed_1", true);
+	SetEntityActive("fp_monster_ghost_mod_cinematic_2", true);
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerChange(string &in asTimer)
+{
+	SetEntityActive("fp_monster_ghost_mod_cinematic_2", false);
+	SetEntityActive("wretch_nosound_1", true);
+}
+
+void TimerBlackout(string &in asTimer)
+{
+	PlaySoundAtEntity("", "enemy_hallucination_disappear.snt", "Player", 0, false);
+	TeleportPlayer("PlayerStartArea_2");
+	AddTimer("TimerChangeMap", 3.5, "TimerChangeMap");
+}
+
+void TimerChangeMap(string &in asTimer)
+{
+	ChangeMap("05_dungeon_entrance.map", "PlayerStartArea_1", "", "");
+}

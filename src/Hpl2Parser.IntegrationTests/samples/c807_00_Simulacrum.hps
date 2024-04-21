@@ -1,0 +1,1183 @@
+void OnStart()
+{
+
+}
+
+void OnEnter()
+{
+	FadeOut(0);
+	SetSanityDrainDisabled(true);
+	SetInDarknessEffectsActive(false);
+	FadeIn(6);
+	
+	startBannerPhysics("phys_banner", 10, 0.0f, 65,-1, 0.0f,0.0f);
+	startBannerPhysics("phys_banner_1", 10, 0.0f, 65,-1, 0.0f,0.0f);
+	startBannerPhysics("phys_banner_2", 10, 0.0f, 65,-1, 0.0f,0.0f);
+	TeleportPlayer("Desk");
+	
+	AddTimer("Monologue1", 2.2, "Monologue1");
+	
+	SetPlayerActive(false);
+	
+	Intro();
+}
+
+void Intro()
+{
+	StartPlayerLookAt("DeskLook", 3, 3, "");
+	AddTimer("Move1", 0.03, "Move1");
+}
+
+void Move1(string &in asTimer)
+{
+	AddPlayerBodyForce(220, 0, 0, false);
+	AddTimer("Move1", 0.01, "Move1");
+}
+
+void Monologue1(string &in asTimer)
+{
+	AddEffectVoice("201", "", "Subtitles", "intro001",
+false, "Player", 0, 0);
+AddEffectVoice("202", "", "Subtitles", "intro002",
+false, "Player", 0, 0);
+AddEffectVoice("203", "", "Subtitles", "intro003",
+false, "Player", 0, 0);
+SetEffectVoiceOverCallback("Fade1");
+}
+
+void Fade1()
+{
+	FadeOut(1);
+	StopPlayerLookAt();
+	AddTimer("Monologue2", 1.2, "Monologue2");
+}
+
+void Monologue2(string &in asTimer)
+{
+	RemoveTimer("Move1");
+	StartPlayerLookAt("StormLook", 3, 3, "");
+	
+	AddTimer("", 1, "StopLook");
+	AddTimer("", 2.9, "SomeMusic");
+	
+	TeleportPlayer("Storm");
+	FadeIn(1);
+	AddEffectVoice("204", "", "Subtitles", "intro004",
+false, "Player", 0, 0);
+	AddEffectVoice("205", "", "Subtitles", "intro005",
+false, "Player", 0, 0);
+	SetEffectVoiceOverCallback("Fade2");
+}
+
+void SomeMusic(string &in asTimer)
+{
+	PlayMusic("mp_within.ogg", false, 0.69, 0, 0, false);
+}
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void Fade2()
+{
+	FadeOut(1);
+	AddTimer("Monologue3", 1.2, "Monologue3");
+}
+
+void Monologue3(string &in asTimer)
+{
+	StartPlayerLookAt("OutsideLook", 3, 3, "");
+	
+	AddTimer("", 1, "StopLook");
+	AddTimer("", 0.3, "Move3");
+	
+	TeleportPlayer("Outside");
+	FadeIn(1);
+	AddEffectVoice("206", "", "Subtitles", "intro006",
+false, "Player", 0, 0);
+	SetEffectVoiceOverCallback("Fade3");
+}
+
+void Move3(string &in asTimer)
+{
+	AddPlayerBodyForce(0, 0, -423, false);
+	AddTimer("Move3", 0.01, "Move3");
+}
+
+void Fade3()
+{
+	FadeOut(1);
+	AddTimer("Monologue4", 1.2, "Monologue4");
+}
+
+void Monologue4(string &in asTimer)
+{
+	AddTimer("", 0.3, "Move4");
+	RemoveTimer("Move3");
+	
+	TeleportPlayer("Trek");
+	FadeIn(1);
+	AddEffectVoice("207", "", "Subtitles", "intro007",
+false, "Player", 0, 0);
+	SetEffectVoiceOverCallback("Fade4");
+}
+
+void Move4(string &in asTimer)
+{
+	AddPlayerBodyForce(-415, 0, 0, false);
+	AddTimer("Move4", 0.01, "Move4");
+}
+
+void Fade4()
+{
+	FadeOut(1);
+	AddTimer("Monologue5", 1.2, "Monologue5");
+}
+
+void Monologue5(string &in asTimer)
+{
+	AddTimer("", 0.3, "Move5");
+	RemoveTimer("Move4");
+	PlayMusic("Simulacrum_theme.ogg", false, 0.65, 16, 0, false);
+	
+	TeleportPlayer("Camel");
+	FadeIn(1);
+	AddEffectVoice("208", "", "Subtitles", "intro008",
+false, "Player", 0, 0);
+	AddEffectVoice("209", "", "Subtitles", "intro009",
+false, "Player", 0, 0);
+	AddEffectVoice("210", "", "Subtitles", "intro010",
+false, "Player", 0, 0);
+	AddEffectVoice("onepointfoursecondpause", "", "", "",
+false, "Player", 0, 0);
+	SetEffectVoiceOverCallback("Fade5");
+}
+
+void Move5(string &in asTimer)
+{
+	AddPlayerBodyForce(-335, 0, 0, false);
+	AddTimer("Move5", 0.01, "Move5");
+}
+
+void Fade5()
+{
+	FadeOut(1);
+	AddTimer("Title", 1.2, "Title");
+}
+
+void Title(string &in asTimer)
+{
+	TeleportPlayer("Black");
+	RemoveTimer("Move5");
+	SetMessage("Message", "Title", 6);
+	AddTimer("End1", 4, "End1");
+	
+}
+
+void End1(string &in asTimer)
+{
+	StopMusic(6, 0);
+	AddTimer("End2", 8, "End2");
+}
+
+void End2(string &in asTimer)
+{
+	ChangeMap("01_Desert", "Start", "", "");
+}
+
+/**************************
+****   CLOTH PHYSICS   ****
+**************************/
+
+
+// starts banner physics as well as a mod loop
+void startBannerPhysics(string bannerName, float afX, float afY, float afZ, float afDuration, float afFadeIn, float afFadeOut)
+{
+	setBannerDynamics(bannerName, afX, afY, afZ, afDuration, afFadeIn, afFadeOut);
+	bannerModLoop(bannerName);
+	
+}
+
+
+// changes random properties of the banner, as well as extends its duration
+void bannerModLoop(string &in bannerAsTimer)
+{
+	// help prevent multiple instances of this loop
+	RemoveTimer(bannerAsTimer);
+	
+	float localPause;
+	bool localContinue = true;
+	
+	switch(RandInt(1,bannerModOptions))
+	{
+		// full random push
+		case 1:
+			//db("adding force on "+bannerAsTimer);
+			modBannerAddForce(bannerAsTimer, RandFloat(-modBannerAddForceRange, modBannerAddForceRange), RandFloat(-modBannerAddForceRange, modBannerAddForceRange), RandFloat(-modBannerAddForceRange, modBannerAddForceRange));
+		break;
+		
+		case 2:
+			//db("stopping "+bannerAsTimer+" temporarily");
+			removeBannerFromLoop(bannerAsTimer);
+			AddTimer(bannerAsTimer, RandFloat(bannerPauseMinDur, bannerPauseMaxDur), "addBannerToLoop");
+		break;
+		
+		/*
+		case 3: // not using mul at this time, it causes issues
+			//db("multiplying force of "+bannerAsTimer);
+			modBannerAddForce(bannerAsTimer, RandFloat(modBannerMulForceFloor, modBannerMulForceCeil), RandFloat(modBannerMulForceFloor, modBannerMulForceCeil), RandFloat(modBannerMulForceFloor, modBannerMulForceCeil));
+		break;
+		*/
+	}
+	
+	AddTimer(bannerAsTimer, RandFloat(1.5f, 2.5f), "bannerModLoop");
+	
+}
+
+// stop banner movement time range
+const float bannerPauseMinDur = 0.155f;
+const float bannerPauseMaxDur = 0.315f;
+
+// how many mods we can do to banners
+// not using mulforce for now, it is bugging out -- increasing force slowly over time 
+const int bannerModOptions = 2;
+
+// abs value of how much we can change banner force
+const float modBannerAddForceRange = 0.1f;
+
+const float modBannerMulForceFloor = 0.55f;
+const float modBannerMulForceCeil = 0.56f;
+
+
+
+
+// min/max values for randomization of user-input values for cloth body force
+const float forceRandMin = 0.15f;
+const float forceRandMax = 3.23f;
+
+
+/*
+const float YforceRand = -0.7f;
+const int YrandGenMax = 10;
+*/
+
+const string bannerLISTdelim = "~";
+const string bannerPROPdelim = "|";
+
+// time between frames
+const float frameTime = 0.0166f;
+
+// lvar name for banner timer -- which contains all banners and their properties
+const string bannerParentTimer = "MovingBanners";
+
+
+// starts up a banner
+void setBannerDynamics(string bannerName, float afX, float afY, float afZ, float afDuration, float afFadeIn, float afFadeOut)
+{
+	removeBannerFromLoop(bannerName);
+	if(		afX == 0	&&
+			afY == 0	&&
+			afZ == 0) return;
+	lvs(bannerName, bannerName+bannerPROPdelim+afX+","+afY+","+afZ+bannerPROPdelim+afDuration+bannerPROPdelim+afFadeIn+bannerPROPdelim+afFadeOut);
+	addBannerToLoop(bannerName);
+}
+
+
+// changes force properties of a specific banner to target values
+void changeBannerForce(string bannerName, float afX, float afY, float afZ)
+{
+	if(lvs(bannerName).length() == 0)
+	{
+		db("banner not moving");
+		return;
+	}
+	
+	removeBannerFromLoop(bannerName);
+	string newBannerName;
+	string[] bannerOldProps = splitStringToStringArray(lvs(bannerName), bannerPROPdelim);
+	
+	for(int i=0;i<bannerOldProps.length()-1;i++)
+	{
+		switch(i+1)
+		{
+			case 2:
+				newBannerName += afX + "," + afY + "," + afZ + bannerPROPdelim;
+			break;
+			
+			default:
+				newBannerName += bannerOldProps[i] + bannerPROPdelim;
+			break;
+		}
+	}
+	
+	newBannerName += bannerOldProps[bannerOldProps.length()-1];
+	lvs(bannerName, newBannerName);
+	
+	addBannerToLoop(bannerName);
+	
+}
+
+
+// change force properties of a specific banner, add arg values to current force
+void modBannerAddForce(string bannerName, float afX, float afY, float afZ)
+{
+	if(lvs(bannerName).length() == 0)
+	{
+		db("banner not moving");
+		return;
+	}
+	
+	removeBannerFromLoop(bannerName);
+	string newBannerName;
+	string[] bannerOldProps = splitStringToStringArray(lvs(bannerName), bannerPROPdelim);
+	float[] bannerOldForces = parseStringToFloatArray(bannerOldProps[1]);
+	for(int i=0;i<bannerOldProps.length()-1;i++)
+	{
+		switch(i+1)
+		{
+			case 2:
+				newBannerName += (bannerOldForces[0]+afX) + "," + (bannerOldForces[1]+afY) + "," + (bannerOldForces[2]+afZ) + bannerPROPdelim;
+			break;
+			
+			default:
+				newBannerName += bannerOldProps[i] + bannerPROPdelim;
+			break;
+		}
+	}
+	
+	newBannerName += bannerOldProps[bannerOldProps.length()-1];
+	lvs(bannerName, newBannerName);
+	
+	addBannerToLoop(bannerName);
+	
+}
+
+
+/*
+// multiplies the banner's old force
+void modBannerMulForce(string bannerName, float afXmul, float afYmul, float afZmul)
+{
+	if(lvs(bannerName).length() == 0)
+	{
+		db("banner not moving");
+		return;
+	}
+	
+	removeBannerFromLoop(bannerName);
+	string newBannerName;
+	string[] bannerOldProps = splitStringToStringArray(lvs(bannerName), bannerPROPdelim);
+	float[] bannerOldForces = parseStringToFloatArray(bannerOldProps[1]);
+	for(int i=0;i<bannerOldProps.length()-1;i++)
+	{
+		switch(i+1)
+		{
+			case 2:
+				newBannerName += (bannerOldForces[0]*afXmul) + "," + (bannerOldForces[1]*afYmul) + "," + (bannerOldForces[2]*afZmul) + bannerPROPdelim;
+			break;
+			
+			default:
+				newBannerName += bannerOldProps[i] + bannerPROPdelim;
+			break;
+		}
+	}
+	
+	newBannerName += bannerOldProps[bannerOldProps.length()-1];
+	lvs(bannerName, newBannerName);
+	
+	addBannerToLoop(bannerName);
+}*/
+
+
+
+// add the banner name and its properties to the loop timer name, which parses and applies force to each banner instance found
+void addBannerToLoop(string &in bannerName)
+{
+	RemoveTimer(lvs(bannerParentTimer));
+	alvs(bannerParentTimer, (lvs(bannerParentTimer).length() > 0 ? "~" : "")+lvs(bannerName));
+	//db(lvs(bannerParentTimer));
+	bannerPushTimer(lvs(bannerParentTimer));
+}
+
+// removes the banner and its properties from the loop timer name. banner instantly becomes limp
+void removeBannerFromLoop(string &in bannerName)
+{
+	if(lvs(bannerParentTimer).length() == 0)
+	{
+		//db("no banners up ");
+		return;
+	}
+	RemoveTimer(lvs(bannerParentTimer));
+	string[] parsedBanners;
+	string[] currentBanners = splitStringToStringArray(lvs(bannerParentTimer), bannerLISTdelim);
+	if(currentBanners.length() == 1)
+	{
+		//db("one element");
+		// using parsed banners a different way since we have an array of 1 element, no point in storing invalid matches
+		parsedBanners = splitStringToStringArray(currentBanners[0], bannerPROPdelim);
+		
+		if(parsedBanners[0] == bannerName)
+		{
+			lvs(bannerParentTimer, "");
+			return;
+		}
+		else
+		{
+			//db("not found");
+			return;
+		}
+	}
+	//db(currentBanners.length());
+	string currentBannerName;
+	for(int i=0;i<currentBanners.length();i++)
+	{
+		//db(currentBanners[i]);
+		currentBannerName = splitStringToStringArray(currentBanners[i], bannerPROPdelim)[0];
+		if(bannerName != currentBannerName)
+		{
+			parsedBanners.resize(parsedBanners.length()+1);
+			parsedBanners[parsedBanners.length()-1] = currentBanners[i];
+		}
+	}
+	lvs(bannerParentTimer, "");
+	for(int i=0;i<parsedBanners.length()-1;i++) alvs(bannerParentTimer, parsedBanners[i]+bannerLISTdelim);
+	alvs(bannerParentTimer, parsedBanners[parsedBanners.length()-1]);
+	
+	bannerPushTimer(lvs(bannerParentTimer));
+}
+
+// helper function to build timer names from their properties
+string buildBannerTimerName(string bannerName, float afX, float afY, float afZ, float afDuration, float afFadeIn, float afFadeOut)
+{
+	string output;
+	output = bannerName+bannerPROPdelim+afX+","+afY+","+afZ+bannerPROPdelim+afDuration+bannerPROPdelim+afFadeIn+bannerPROPdelim+afFadeOut;
+	//db(output);
+	return output;
+}
+
+
+void bannerPushTimer(string &in timerName)
+{
+	string[] bannerList = splitStringToStringArray(timerName, bannerLISTdelim);
+	//db(bannerList.length());
+	string[] bannerInfo;
+	string bannerNewEntryName;
+	string newBannerListName;
+	float[] directionArray;
+	float windDuration;
+	float fadeInDuration;
+	float fadeOutDuration;
+	float fadeDiv;
+	floatOpr @op;
+	string bannerName;
+	
+	for(int i=0;i<bannerList.length();i++)
+	{
+		bannerInfo = splitStringToStringArray(bannerList[i], bannerPROPdelim);
+		bannerName = bannerInfo[0];
+		directionArray = parseStringToFloatArray(bannerInfo[1]);
+		windDuration = parseStringToFloatArray(bannerInfo[2])[0];
+		fadeInDuration = parseStringToFloatArray(bannerInfo[3])[0];
+		fadeOutDuration = parseStringToFloatArray(bannerInfo[4])[0];
+	
+		//if(RandInt(1, YrandGenMax) == 1) directionArray[1] += (RandFloat(-YforceRand, YforceRand) * (directionArray[1] > directionArray[3] ? directionArray[1] : directionArray[3]));
+		
+		
+		if(fadeInDuration > ::frameTime)
+		{
+			fadeInDuration-=::frameTime;
+			@op = @divFloats;
+			fadeDiv = fadeInDuration + 1.0f;
+		}
+		else if(windDuration > ::frameTime)
+		{
+			
+			windDuration-=::frameTime;
+			fadeDiv = (windDuration % 0.75f) + 0.75f;
+			@op = @mulFloats;
+			if(windDuration<::frameTime)
+			{
+				for(int i=0;i<directionArray.length();i++) directionArray[i] /= fadeOutDuration;
+			}
+		}
+		else if(windDuration >= 0)
+		{
+			if(fadeOutDuration > ::frameTime)
+			{
+				@op = @mulFloats;
+				fadeDiv = fadeOutDuration;
+				fadeOutDuration-=::frameTime;
+			}
+			else
+			{
+				removeBannerFromLoop(bannerName);
+				continue;
+			}
+		}
+		else
+		{
+			fadeDiv = 1;
+			@op = @mulFloats;
+		}
+		
+		AddBodyForce(bannerName+"_p5", op(directionArray[0],fadeDiv) * RandFloat(::forceRandMin, ::forceRandMax), op(directionArray[1], fadeDiv) * RandFloat(::forceRandMin, ::forceRandMax), op(directionArray[2], fadeDiv) * RandFloat(::forceRandMin, ::forceRandMax), "World");
+		AddBodyForce(bannerName+"_p6", op(directionArray[0],fadeDiv) * RandFloat(::forceRandMin, ::forceRandMax), op(directionArray[1], fadeDiv) * RandFloat(::forceRandMin, ::forceRandMax), op(directionArray[2], fadeDiv) * RandFloat(::forceRandMin, ::forceRandMax), "World");
+		
+		
+		bannerNewEntryName = buildBannerTimerName(bannerName, directionArray[0], directionArray[1], directionArray[2], windDuration, fadeInDuration, fadeOutDuration);
+		if(i<bannerList.length()-1) newBannerListName+=(bannerNewEntryName+bannerLISTdelim);
+		else newBannerListName+=bannerNewEntryName;
+		
+		// store banner name to parse out
+		lvs(bannerName, bannerNewEntryName);
+		//db(bannerNewEntryName);
+	}
+	
+	lvs(bannerParentTimer, newBannerListName);
+	AddTimer(	newBannerListName,
+				::frameTime,
+				"bannerPushTimer");
+}
+
+// some helpers
+funcdef float floatOpr(float, float);
+float mulFloats(float f1, float f2){return f1*f2;}
+float divFloats(float f1, float f2){return f1/f2;}
+
+
+
+
+
+
+
+// /*
+// myBannerName|direction|power|event step
+// */
+
+// /*********************************************/
+// // banner push loop
+// /*********************************************
+// /**/	const string bannerStringDelim = bannerPROPdelim;
+// /**/	const int maxBannerBodies = 6;
+// /**/	const float bodyPushMul = 600.0f;
+// /**/	const float pushBaseClampFloor = 0.1f;
+// /**/	const float pushBaseClampCeiling = 2.5f;
+// void bannerPushEvent(string &in infoTimer)
+// {
+	// string[] bannerProperties = splitStringToStringArray(infoTimer, ::bannerStringDelim);
+	// int bannerBodyNum = ParseFirstInt(bannerProperties[3]);
+	// float pushBaseVal = parseStringToFloatArray(bannerProperties[2])[0];
+	// float pushActual;
+	// int forceMul;
+	// int dir;
+	// int dirpos = 0;
+	
+	// // clamp push base value between certain range
+	// if(pushBaseVal < ::pushBaseClampFloor) pushBaseVal = ::pushBaseClampFloor;
+	// else if(pushBaseVal > ::pushBaseClampCeiling) pushBaseVal = ::pushBaseClampCeiling;
+	
+
+	// // parse direction
+	// if(bannerProperties[1][dirpos] <= 45)
+	// {
+		// forceMul = bannerProperties[1][dirpos] == 45 ? -1 : 1;
+		// dirpos++;
+	// }
+	// dir = 123 - bannerProperties[1][dirpos];
+	
+	// pushActual = bodyPushMul * pushBaseVal;
+	
+	
+	// switch(dir)
+	// {
+		// // z
+		// case 1:
+			// AddBodyForce(bannerProperties[0]+"_p"+bannerBodyNum, 0, 0, pushActual * forceMul, "World");
+		// break;
+		
+		// // y
+		// case 2:
+			// AddBodyForce(bannerProperties[0]+"_p"+bannerBodyNum, 0, pushActual * forceMul, 0, "World");
+		// break;
+		
+		// // x
+		// case 3:
+			// AddBodyForce(bannerProperties[0]+"_p"+bannerBodyNum, pushActual * forceMul, 0, 0, "World");
+		// break;
+	// }
+	
+	// // build new timer name from vars
+	// string newTimerName;
+	// for(int i=0;i<bannerProperties.length()-1;i++) newTimerName += bannerProperties[i] + ::bannerStringDelim;
+	// newTimerName += ""+ (bannerBodyNum < ::maxBannerBodies ? (bannerBodyNum+1) : 1);
+	
+	// if(bannerBodyNum < ::maxBannerBodies) AddTimer(newTimerName, RandFloat(0.02f, 0.05f), "bannerPushEvent");
+	// else AddTimer(newTimerName, RandFloat(1.5f, 1.8f) / pushActual, "bannerPushEvent");
+	
+// }
+
+
+
+
+// void bannerWindPush(string &in bannerName, float powerVal, float duration, float fadeInDur, float fadeOutDur, string &in direction)
+// {
+	
+// }
+
+
+
+/*                                     */
+/********   END CLOTH PHYSICS   ********/
+
+
+/***************************************
+***   APJJM STRING PARSING LIBRARY   ***
+***************************************/
+
+///////////////////////////////
+//Begin String Parsing
+///////////////////////////////
+/* String Parsing functions V3.0 *\
+ *
+ * float[] parseStringToFloatArray(string &in asString)- parses all floats out of a string. Signs, exponent & decimals supported
+ * int[] parseStringToIntArray(string &in asString)    - Parses all integers out of a string. Signs & exponent supported.
+ * uint parseStringUInt(string &in asString)           - Fast UINT parser over entire string (Extracts digits)
+ *
+\* Written by: Apjjm             */
+
+///////////////////////////////
+//+ Float Parsing
+///////////////////////////////
+float[] parseStringToFloatArray(string &in asString)
+ {
+   float[] output = {};
+   int integer = 0;      //Integer part of the number
+   float decimal = 0;      //Decimal part of the number
+   int exponent = 0;      //Exponent of the number
+   bool negativeInteger = false; //Is the integer part negative
+   bool negativeExponent = false; //Is the exponent part negative
+   double dMul = 1;             //Multiplier for the decimal
+   bool readNumber = false;      //Read a number yet or not (stops +. etc returning 0's).
+   
+   //Parsing loop
+   int state = 0;
+   string temp = asString + "!"; //Add an invalid character to end of string
+   for(uint i=0; i<temp.length(); i++)
+    {
+      //Determine properties about this character
+      uint8 chr = temp[i];
+      int  digit = _parseDigit(chr);
+      int sign     = _parseSign(chr);
+      bool isExponent = _parseHasExponent(chr);
+      bool isDecimalP = _parseHasDecimalPoint(chr);
+      bool isWhitesp  = _parseHasWhitespace(chr);
+      bool isDigit    = digit != -1;
+      
+      switch(state)
+      {
+         case 0: //Initial state
+            {
+               if(sign != 0)      { negativeInteger=(sign<0); integer =0; state=1; } //Read +/-XX
+               else if(isDigit)   { integer = digit; state = 1; readNumber=true; } //Read N
+               else if(isDecimalP){ state = 2; } //Read .XX -> Assume 0.XX
+               break;
+            }
+         case 1: //Read the number part of the float
+            {
+               if(isDigit)         { integer = (integer * 10) + digit; readNumber=true; } //Read NNXX
+               else if(isDecimalP) { state = 2; }            //Read NN.XX
+               else if(isExponent && readNumber) { state = 3; } //Read NNeXX -> assume NN.0eXX
+               else if(readNumber) { state = -1; }            //Finished reading the number. 
+               else                { state = 0;  }
+               break;
+            }
+         case 2: //Read the decimal part of the float
+            {
+               if(isDigit)         { decimal += float(digit) * dMul; dMul *= 0.1; readNumber=true; }
+               else if(isExponent && readNumber) { state = 3; }
+               else if(readNumber) { state = -1; }
+               else                { state = 0;  }
+               break;
+            }
+         case 3: //Ignore a single whitespace char after the exponent.
+            {
+               if(isDigit)         { exponent = digit; state = 5; } //Read NNeXX
+               else if(isWhitesp)  { state = 4; } //Read NNe XX
+               else if(sign != 0)  { negativeExponent=(sign<0); state = 5; }
+               else                { state = -1; }
+               break;
+            }
+         case 4: //Read a +/- Sign or a digit for the exponent
+            {
+               if(isDigit)         { exponent = digit; state = 5; } //Read NNe NX
+               else if(sign != 0)  { negativeExponent=(sign<0); state = 5; } //Read NNe +/-XX
+               else                { state = -1; }
+               break;
+            }
+         case 5: //Reading the exponent
+            {
+               if(isDigit) { exponent = (exponent * 10) + digit; } //Read NNe NX
+               else        { state = -1; }
+               break;
+            }
+      }
+      //At the end of a number?
+      if(state < 0)
+       {
+          //Construct the number & add it to the output array
+         int index = output.length(); output.resize(index+1);
+         output[index] = _parseFloatHelper(integer,decimal,exponent,negativeInteger,negativeExponent);
+         //Reset parsing state
+         state = 0; integer=0; decimal=0; exponent=0; dMul =1; 
+         negativeInteger=false; negativeExponent=false; readNumber=false;
+         //This terminating char was possibly the start of next number. Start from this character
+         if(isDecimalP || sign!=0) i-=1; 
+       }
+   }
+   
+   return output;
+ }
+  
+float _parseFloatHelper(int integer, float decimal, int exponent, bool negI, bool negE)
+ {
+   //Calculate the number with no exponent applied
+   float x = float(integer) + decimal * 0.1f;
+   //Apply 10^E
+   float mul = negE?0.1f:10.0f;
+   for(int i=0; i<exponent; i++)
+      x = x*mul;
+   //Apply sign of the number
+   return negI?-x:x;
+ } 
+///////////////////////////////
+//- Float Parsing
+///////////////////////////////
+///////////////////////////////
+//+ Integer Parsing
+///////////////////////////////
+int[] parseStringToIntArray(string &in asString)
+ {
+   int[] output = {};
+   int integer = 0;      //Integer part of the number
+   int exponent = 0;      //Exponent of the number
+   bool negativeInteger = false; //Is the integer part negative
+   bool negativeExponent = false; //Is the exponent part negative
+   bool readNumber = false;      //Read a number yet or not (stops +e etc returning 0's).
+   
+   //Parsing loop
+   int state = 0;
+   string temp = asString + "!"; //Add an invalid character to end of string
+   for(uint i=0; i<temp.length(); i++)
+    {
+      //Determine properties about this character
+      uint8 chr = temp[i];
+      int  digit = _parseDigit(chr);
+      int sign     = _parseSign(chr);
+      bool isExponent = _parseHasExponent(chr);
+      bool isWhitesp  = _parseHasWhitespace(chr);
+      bool isDigit    = digit!=-1;
+      
+      switch(state)
+      {
+         case 0: //Initial state
+            {
+               if(sign != 0)      { negativeInteger=(sign<0); integer =0; state=1; } //Read +/-XX
+               else if(isDigit)   { integer = digit; state = 1; readNumber=true; } //Read N
+               break;
+            }
+         case 1: //Read the number part 
+            {
+               if(isDigit)           { integer = (integer * 10) + digit; readNumber=true; } //Read NNXX
+               else if(isExponent && readNumber) { state = 3; } //Read NNeXX -> assume NN.0eXX
+               else if(readNumber)   { state = -1; }            //Finished reading the number. 
+               else                  { state = 0;  }
+               break;
+            }
+         case 3: //Ignore a single whitespace char after the exponent.
+            {
+               if(isDigit)         { exponent = digit; state = 5; } //Read NNeXX
+               else if(isWhitesp)  { state = 4; } //Read NNe XX
+               else if(sign != 0)  { negativeExponent=(sign<0); state = 5; }
+               else                { state = -1; }
+               break;
+            }
+         case 4: //Read a +/- Sign or a digit for the exponent
+            {
+               if(isDigit)         { exponent = digit; state = 5; } //Read NNe NX
+               else if(sign != 0)  { negativeExponent=(sign<0); state = 5; } //Read NNe +/-XX
+               else                { state = -1; }
+               break;
+            }
+         case 5: //Reading the exponent
+            {
+               if(isDigit)  { exponent = (exponent * 10) + digit; } //Read NNe NX
+               else         { state = -1; }
+               break;
+            }
+      }
+      //At the end of a number?
+      if(state < 0)
+       {
+          //Construct the number & add it to the output array
+         int index = output.length(); output.resize(index+1);
+         output[index] = _parseIntHelper(integer,exponent,negativeInteger,negativeExponent);
+         //Reset parsing state
+         state = 0; integer=0; exponent=0; readNumber=false;
+         negativeInteger=false; negativeExponent=false;
+         //This terminating char was possibly the start of next number. Start from this character
+         if(sign!=0) i-=1; 
+       }
+   }
+   
+   return output;
+ }
+  
+int _parseIntHelper(int integer, int exponent, bool negI, bool negE)
+ {
+   //Calculate the number with no exponent applied
+   int x = integer;
+   //Apply 10^E
+   for(int i=0; i<exponent; i++)
+      x = negE?(x/10):(x*10);
+   //Apply sign of the number
+   return negI?-x:x;
+ } 
+///////////////////////////////
+//- Integer Parsing
+///////////////////////////////
+///////////////////////////////
+//+ Fast UINT Parse
+///////////////////////////////
+uint parseStringUInt(string &in asString) {
+    uint output = 0;
+    for(uint i=0; i<asString.length(); i++) {
+      int digit = _parseDigit(asString[i]);
+      output = (digit != -1)?(10*output+digit):(output); }
+    return output;
+}
+///////////////////////////////
+//- 
+///////////////////////////////
+
+//+ Parsing Helper Functions
+int _parseDigit(uint8 digit) {
+    int d = digit-48; //48 is ASCII code for 0
+    return ((d >= 0)&&(d<=9)) ? d : -1;
+}
+int _parseSign(uint8 chr) {
+ if (chr == 45) return -1;
+ else if(chr == 43) return 1;
+ else return 0;
+}
+bool _parseHasExponent(uint8 chr) { return (chr == 69) || (chr == 101); }
+bool _parseHasDecimalPoint(uint8 chr) { return (chr==46); }
+bool _parseHasWhitespace(uint8 chr) { return (chr == 43)||(chr == 32); }
+//-
+ 
+///////////////////////////////
+//End String Parsing
+///////////////////////////////
+
+
+/*                                              */
+/*********   END APJJM STRING PARSING   *********/
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************
+***  PALIBRARY 1.7.1  ***
+************************/
+
+
+//=== float var snippits - local
+float lvf(string &in name, float val) { SetLocalVarFloat(name, val); return GetLocalVarFloat(name); }
+float lvf(string &in name) { return GetLocalVarFloat(name); }
+float alvf(string &in name, float aval) { AddLocalVarFloat(name, aval); return GetLocalVarFloat(name); }
+float lvfa(string &in name, float aval) { AddLocalVarFloat(name, aval); return (GetLocalVarFloat(name)-aval); }
+
+//=== int var snippits - local
+int lvi(string &in name, int val) { SetLocalVarInt(name, val); return GetLocalVarInt(name); }
+int lvi(string &in name) { return GetLocalVarInt(name); }
+int alvi(string &in name, int aval) { AddLocalVarInt(name, aval); return GetLocalVarInt(name); }
+int ddlvi(string &in name) { AddLocalVarInt(name, -1); return GetLocalVarInt(name); }
+int lvidd(string &in name) { AddLocalVarInt(name, -1); return (GetLocalVarInt(name) + 1); }
+int pplvi(string &in name) { AddLocalVarInt(name, 1); return GetLocalVarInt(name); }
+int lvipp(string &in name) { AddLocalVarInt(name, 1); return (GetLocalVarInt(name)-1); }
+int lvia(string &in name, int aval) { AddLocalVarInt(name, aval); return (GetLocalVarInt(name)-aval); }
+
+//=== string var snippits - local
+string lvs(string &in name, string &in val) { SetLocalVarString(name, val); return GetLocalVarString(name); }
+string lvs(string &in name) { return GetLocalVarString(name); }
+string alvs(string &in name, string &in val){ AddLocalVarString(name, val); return GetLocalVarString(name); }
+string lvsa(string &in name, string &in val) { string retstr = GetLocalVarString(name); AddLocalVarString(name, val); return retstr; }
+
+//=== float var snippits - global
+float gvf(string &in name, float val) { SetGlobalVarFloat(name, val); return GetGlobalVarFloat(name); }
+float gvf(string &in name) { return GetGlobalVarFloat(name); }
+float agvf(string &in name, float aval){ AddGlobalVarFloat(name, aval); return GetGlobalVarFloat(name); }
+float gvfa(string &in name, float aval) { AddGlobalVarFloat(name, aval); return (GetGlobalVarFloat(name) - aval); }
+
+//=== int var snippits - global
+int gvi(string &in name, int val) { SetGlobalVarInt(name, val); return GetGlobalVarInt(name); }
+int gvi(string &in name) { return GetGlobalVarInt(name); }
+int ddgvi(string &in name) { AddGlobalVarInt(name, -1); return GetGlobalVarInt(name); }
+int gvidd(string &in name) { AddGlobalVarInt(name, -1); return (GetGlobalVarInt(name) + 1); }
+int ppgvi(string &in name) { AddGlobalVarInt(name, 1); return GetGlobalVarInt(name); }
+int gvipp(string &in name) { AddGlobalVarInt(name, 1); return (GetGlobalVarInt(name)-1); }
+int agvi(string &in name, int aval) { AddGlobalVarInt(name, aval); return GetGlobalVarInt(name); }
+int gvia(string &in name, int aval) { AddGlobalVarInt(name, aval); return (GetGlobalVarInt(name)-aval); }
+
+//=== string var snippits - global
+string gvs(string &in name, string &in val) { SetGlobalVarString(name, val); return GetGlobalVarString(name); }
+string gvs(string &in name) { return GetGlobalVarString(name); }
+string agvs(string &in name, string &in aval) { AddGlobalVarString(name, aval); return GetGlobalVarString(name); }
+string gvsa(string &in name, string &in aval) { string outstr = GetGlobalVarString(name); AddGlobalVarString(name, aval); return outstr; }
+
+//=== parsing
+int ParseFirstInt(string &in phrase)
+{
+	int outvar=0;
+	int asciiNum;
+	bool intFound=false;
+	
+	for(int i=1;i<=phrase.length();i++)
+	{
+		asciiNum=phrase[i-1]-48;
+		if(asciiNum > -1 && asciiNum < 10)
+		{
+			intFound=true;
+			outvar = outvar * 10 + asciiNum;
+		}
+		else if(intFound) break;
+	}
+	return outvar;
+}
+
+// upgraded ParseFirstInt, also returns location of end of first integer, helps with parsing floats
+int[] ParseFirstIntWithEndIndex(string &in phrase)
+{
+	int[] output = { 0 , 0 };
+	int endIndex;
+	int asciiNum;
+	bool intFound=false;
+	
+	for(int i=1;i<=phrase.length();i++)
+	{
+		asciiNum=phrase[i-1]-48;
+		if(asciiNum > -1 && asciiNum < 10)
+		{
+			intFound=true;
+			output[0] = output[0] * 10 + asciiNum;
+		}
+		else if(intFound)
+		{
+			endIndex = i-1;
+			output[1] = endIndex;
+			break;
+		}
+	}
+	return output;
+}
+
+// parses all integers in a string into an array of integers
+int[] ParseStringToIntArray(string &in phrase)
+{
+    int[] outputarr={0};
+    bool intFound=false;
+
+    int asciiNum;
+    int intBuilder=0;
+    for(int i=1;i<=phrase.length();i++)
+    {
+		asciiNum=phrase[i-1]-48;
+		if(asciiNum > -1 && asciiNum < 10)
+		{
+			intFound=true;
+			outputarr[outputarr.length()-1] = intBuilder = intBuilder * 10 + asciiNum;
+		}
+		else
+		{
+			if(intFound)
+			{
+				intBuilder=0;
+				outputarr.resize(outputarr.length()+1);
+				intFound=false;
+			}
+		}
+    }
+    return outputarr;
+}
+
+////////////////////////////////////////////
+// parses first float found in a string 
+/* 
+
+:::NOTES :::
+		-- doesn't discriminate the characters between the two numbers ( numbers before "decimal" and numbers "after" )
+				-- "abcd_1.2" will yield the same result as "abcd_1.xyznoodles2" --> 1.2
+		
+		-- truncates trailing zeros
+		-- BROKEN: does not properly parse post-decimal values below 0.1 (1.05f gets parsed as 1.5 ; 1.000358 gets parsed as 1.358) BAD BAD BAD!
+*/ 
+/*float ParseFirstFloat(string &in phrase)
+{
+	
+	float output = 0;
+	
+	
+	int perIndex;	// index of decimal after first integer found.
+	int betw;		// ascii number of char between
+	int div = 10;		// how many digits to move decimal over in post
+	float pre,		// number before decimal
+		post;		// number after decimal
+	
+
+	
+	// grab data
+	int[] data = ParseFirstIntWithEndIndex(phrase);
+	
+	// store pre-decimal val
+	pre = data[0];
+	
+	// store between-char
+	betw = phrase[data[1]];
+	
+	// no period, must have been a float value
+	if( betw != 46 ) return output += data[0];
+	
+	post = ParseFirstInt(StringSub(phrase, data[1], (phrase.length() - data[1])));
+	
+	
+	output = pre;
+	
+	for(post;post >= 1; post /= 10) ;
+	output += post;
+	
+	return output;
+}*/
+
+// splits an integer into an array of integers
+int[] SplitIntToIntArray(int aiNum)
+{
+	int num = aiNum;
+	int[] output;
+	int divisor = 10;
+	int builddiv;
+	int digit;
+	
+	if(num < 10)
+	{
+		output.resize(1);
+		output[0] = num;
+		return output;
+	}
+	
+	for(int i=1;num/divisor > 0; output.resize(++i)) divisor *= 10;
+	builddiv = divisor;
+	for(int a=0;a<output.length();a++)
+	{
+		digit=0;
+		builddiv /= 10;
+		while(num >= builddiv)
+		{
+			num -= builddiv;
+			digit += 1;
+		}
+		output[a] = digit;
+	}
+	
+	return output;
+}
+
+// returns left side of string, split at first appearance of delim char
+string splitStringBeforeDelim(string &in asPhrase, string &in asDelim)
+{
+	int delim = asDelim[0];
+	int dpoint;
+	for(dpoint = 0; asPhrase[dpoint] != delim; dpoint++) if(dpoint == asPhrase.length()-1) return asPhrase;
+	return StringSub(asPhrase, 0, dpoint);
+}
+
+// returns string on right side of delim
+string splitStringAfterDelim(string &in asPhrase, string &in asDelim)
+{
+	int delim = asDelim[0];
+	int dpoint;
+	for(dpoint = 0; asPhrase[dpoint] != delim; dpoint++) if(dpoint == asPhrase.length()-1) return asPhrase;
+	return StringSub(asPhrase, dpoint+1, asPhrase.length() - dpoint + 1);
+}
+
+
+// splits string into array, with delim
+string[] splitStringToStringArray(string &in asPhrase, string &in asDelim)
+{
+	string holder;
+	string[] output;
+	output.resize(1);
+	for(int i=0;i<asPhrase.length();i++)
+	{
+		if(asPhrase[i] == asDelim[0]) output.resize(output.length()+1);
+	}
+	
+	holder = asPhrase;
+	for(int i=0;i<output.length()-1;i++)
+	{
+		output[i] = splitStringBeforeDelim(holder, asDelim);
+		holder = splitStringAfterDelim(holder, asDelim);
+	}
+	output[output.length()-1] = holder;
+	
+	return output;
+}
+
+//=== debugging
+bool		db(bool val) 		{ 	if(val) db("true"); else db("false");	return val; }
+float		db(float val) 		{ 	AddDebugMessage(""+val, false); 		return val; }
+int			db(int val) 		{ 	AddDebugMessage(""+val, false); 		return val; }
+string		db(string &in msg) 	{ 	AddDebugMessage(""+msg, false); 		return msg; }
+
+
+int			dbli(string varname) { return db(lvi(varname)); }
+int			dbgi(string varname) { return db(gvi(varname)); }
+float		dblf(string varname) { return db(lvf(varname)); }
+float		dbgf(string varname) { return db(gvf(varname)); }
+string		dbls(string varname) { return db(lvs(varname)); }
+string		dbgs(string varname) { return db(gvs(varname)); }
+
+
+int[] db(int[] arr)
+{
+	string outmsg="";
+	for(int i=1;i<=arr.length()-1;i++) outmsg+=arr[i-1]+", ";
+	outmsg+=arr[arr.length()-1];
+	AddDebugMessage(outmsg, false);
+	return arr;
+}
+float[] db(float[] arr)
+{
+	string outmsg="";
+	for(int i=1;i<=arr.length()-1;i++) outmsg+=arr[i-1]+", ";
+	outmsg+=arr[arr.length()-1];
+	AddDebugMessage(outmsg, false);
+	return arr;
+}
+string[] db(string[] arr)
+{
+	string outmsg="";
+	for(int i=1;i<=arr.length()-1;i++) outmsg+=arr[i-1]+", ";
+	outmsg+=arr[arr.length()-1];
+	AddDebugMessage(outmsg, false);
+	return arr;
+}
+
+/*        END PALIBRARY.HPS        */
+/***********************************/

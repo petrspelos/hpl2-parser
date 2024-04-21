@@ -1,0 +1,160 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+StopMusic(0,1);
+SetSkyBoxTexture("level4sky.dds");
+AddEffectVoice("s7_line1.ogg", "", "Dialogue", "Line_1s7", false, "", 0, 0);
+AddEffectVoice("s7_line2.ogg", "", "Dialogue", "Line_2s7", false, "", 0, 0);
+AddEffectVoice("s7_line3.ogg", "", "Dialogue", "Line_3s7", false, "", 0, 0);
+AddEffectVoice("s7_line4.ogg", "", "Dialogue", "Line_4s7", false, "", 0, 0);
+AddEffectVoice("s7_line5.ogg", "s7_line_background.ogg", "Dialogue", "Line_5s7", false, "", 0, 0);
+AddEffectVoice("s7_line6.ogg", "", "Dialogue", "Line_6s7", false, "", 0, 0);
+AddEffectVoice("s7_line7.ogg", "", "Dialogue", "Line_7s7", false, "", 0, 0);
+SetEffectVoiceOverCallback("Memento");
+for(int i = 1; i <= 3; i++) SetEntityPlayerInteractCallback("ladder_item_"+i, "LadderLights", true);
+AddUseItemCallback("", "ladder_item_1", "AreaUseLadder", "UseLadderOnWall", true);
+AddUseItemCallback("", "roof_key", "Graveyard", "UseKeyOnDoor", true);
+SetEntityPlayerInteractCallback("Note", "MementoHint", true);
+}
+
+void OnEnter()
+{
+	if(HasItem("dirty_key") == true)
+			{
+				SetSwingDoorLocked("Graveyard", true, true);
+				SetLevelDoorLocked("Door", false);
+				GiveSanityBoostSmall();
+				PlayMusic("Track8.ogg", false, 2, 1, 1, true);
+			}
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Lights
+//////////////////////////////////////////////////////////////////////////////////////
+void LadderLights(string &in asItem)
+{
+	for(int i = 1; i <= 3; i++) SetLightVisible("LadderLight_"+i, false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Messages
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Barricade(string &in asEntity)
+{
+	SetMessage("Messages", "Blocked", 3);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Ladders
+//////////////////////////////////////////////////////////////////////////////////////
+
+void UseLadderOnWall(string &in asItem, string &in asEntity)
+{
+AddTimer(asEntity, 0.2, "TimerAttachLadder");
+PlaySoundAtEntity("pickupladder","player_crouch.snt", "Player", 0.05, false);
+RemoveItem(asItem);
+}
+
+void TimerAttachLadder(string &in asTimer)
+{
+PlaySoundAtEntity("attachladder","puzzle_place_jar.snt", "Player", 0, false);
+SetEntityActive("Ladder_1", true);
+AddUseItemCallback("", "ladder_item_2", "AreaUseLadder", "UseLadderOnWall2", true);
+}
+
+void UseLadderOnWall2(string &in asItem, string &in asEntity)
+{
+AddTimer(asEntity, 0.2, "TimerAttachLadder2");
+PlaySoundAtEntity("pickupladder","player_crouch.snt", "Player", 0.05, false);
+RemoveItem(asItem);
+}
+
+void TimerAttachLadder2(string &in asTimer)
+{
+PlaySoundAtEntity("attachladder","puzzle_place_jar.snt", "Player", 0, false);
+SetEntityActive("Ladder_2", true);
+AddUseItemCallback("", "ladder_item_3", "AreaUseLadder", "UseLadderOnWall3", true);
+
+}
+
+void UseLadderOnWall3(string &in asItem, string &in asEntity)
+{
+AddTimer(asEntity, 0.2, "TimerAttachLadder3");
+PlaySoundAtEntity("pickupladder","player_crouch.snt", "Player", 0.05, false);
+RemoveItem(asItem);
+}
+
+void TimerAttachLadder3(string &in asTimer)
+{
+PlaySoundAtEntity("attachladder","puzzle_place_jar.snt", "Player", 0, false);
+SetEntityActive("Ladder_3", true);
+SetEntityActive("LadderArea", true);
+GiveSanityBoostSmall();
+CompleteQuest("Find", "Ladder");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Keys
+//////////////////////////////////////////////////////////////////////////////////////
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("Door", false);
+	FadeOut(1);
+    AddTimer("", 1, "TimerTransition");
+	RemoveItem(asItem);	
+}
+
+void TimerTransition(string &in asTimer)
+    {  
+        ChangeMap("level_4_graveyard", "PlayerStartArea_1", "", "");
+    }
+
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Mementos
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Memento()
+{
+	AddQuest("Weird", "Out");
+	PlayMusic("Track8.ogg", true, 2, 1, 1, true);
+}
+
+void MementoHint(string &in asItem)
+{
+	AddQuest("Find", "Ladder");
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("Weird", "Out");
+}

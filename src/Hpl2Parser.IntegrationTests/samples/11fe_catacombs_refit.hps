@@ -1,0 +1,868 @@
+// Loading the map, first time
+void OnStart()
+{
+	ClearSavedMaps();
+	SetupLoadScreen("", "", 1, "");
+
+	// DISABLE
+	//SetSwingDoorDisableAutoClose("metal_*", true);
+	int i;
+	for(i=1; i<=8; i++) SetLightVisible("TortureLight_"+i, false);
+	SetLightVisible("AltarLight", false);
+	for(i=1; i<=4; i++) SetLightVisible("SkullSpotLight_"+i, false);
+	SetLightVisible("WellSpotLight", false);
+	SetLampLit("ExitStairsTorch_*", false, false);
+
+	// INITIALIZATION
+	CheckPoint("start_point", "PlayerStartArea_1", "MapCheckPoint", "DeathMessages", "C01Level03_Start");
+
+	AddGlobalVarInt("WatchedVol1Credits", 0);
+	AddGlobalVarInt("EnteredVol2", 0);
+
+	AddLocalVarString("CatacombsArea", "0");
+	AddLocalVarInt("SilenceAmbience", 0);
+	AddLocalVarInt("UsedAcidOnPrisonDoor", 0);
+	AddLocalVarString("DeadTimes", "");
+	AddLocalVarString("UnlockingDoor", "");
+	AddLocalVarString("UnlockedDoors", "");
+	AddLocalVarString("TheCorridorDude", "");
+	AddLocalVarString("TheSkull", "");
+	AddLocalVarInt("CorridorsCheckpoint", 0);
+	AddLocalVarInt("challenge_torch", 0);
+	AddLocalVarInt("challenge_tick", 0);
+	AddLocalVarInt("challenge_index", 0);
+	AddLocalVarInt("challenge_fail", 0);
+	AddLocalVarInt("challenge_win", 0);
+	AddLocalVarInt("challenge_round", 0);
+	AddLocalVarFloat("orig_health", 100);
+	PreloadSound("Evil_Laugh");
+	PreloadSound("Creepy_Laugh");
+	CreateParticleSystemAtEntityExt("ShredParticle", "ps_torch_fire_nosmoke", "BlackBookShred_02", true, 0, 1, 1, 1, true, 1, 2, 100, 110);
+
+	InitRiddle("riddle_03_skulls", "PrisonNotePickup", 15.0f);
+
+	// INTERACTIONS
+	AddEntityCollideCallback("Player", "ScriptFlashback_Torture", "StartFlashbackTorture", true, 0);
+	AddEntityCollideCallback("Player", "ScriptSeeDudeBirth", "SeeDudeBirth", true, 0);
+	for(i=0; i<=3; i++) AddEntityCollideCallback("Player", "CatacombsArea_"+i, "SetCatacombsArea", false, 1);
+	for(i=1; i<=8; i++) AddEntityCollideCallback("stone_small01_brown_"+i, "ScriptButtonLadderDown", "ActivateSecretButton", true, 0);
+	for(i=1; i<=9; i++) AddEntityCollideCallback("tools_"+i, "ScriptButtonLadderDown", "ActivateSecretButton", true, 0);
+	for(i=1; i<=2; i++) SetEntityPlayerInteractCallback("ExamineAcid_"+i, "ExamineAcidPond", false);
+	SetEntityPlayerInteractCallback("CellDoor", "InteractLockedDoor", false);
+	SetEntityPlayerInteractCallback("CellPadlock_Breakable", "InteractLockedDoor", false);
+	SetEntityPlayerInteractCallback("cabinet_metal_1", "SkullBreakout", true);
+	SetEntityPlayerInteractCallback("PrisonDoor", "InteractLockedDoor", false);
+	SetEntityPlayerInteractCallback("PrisonPadlock_Solid", "InteractLockedDoor", false);
+	SetEntityPlayerInteractCallback("PrisonPadlock_Breakable", "InteractLockedDoor", false);
+	SetEntityPlayerInteractCallback("ExamineAlistair", "ExaminedAlistair", true);
+	AddUseItemCallback("", "stone_hammer_1", "CellPadlock_Breakable", "UseHCExtra", false);
+	AddUseItemCallback("", "stone_chipper_1", "CellPadlock_Breakable", "UseHCExtra", false);
+	AddUseItemCallback("", "stone_hammer_chipper", "CellPadlock_Breakable", "UseHCExtra", false);
+	AddUseItemCallback("", "stone_hammer_1", "PrisonPadlock_Solid", "UseHCExtra", false);
+	AddUseItemCallback("", "stone_chipper_1", "PrisonPadlock_Solid", "UseHCExtra", false);
+	AddUseItemCallback("", "stone_hammer_chipper", "PrisonPadlock_Solid", "UseHCExtra", false);
+
+	// SetPlayerLampOil(0);
+	// GiveItemFromFile("lantern", "lantern.ent");
+	// TeleportPlayer("PlayerStartArea_2");
+	// EnteredPrison("", "", 1);
+	
+	AutoSave();
+}
+
+// Loading the map, every time
+void OnEnter()
+{
+	SetEntityInteractionDisabled("human_skull_*", true);
+	SetEntityInteractionDisabled("cabinet_skull_*", true);
+	SetEntityInteractionDisabled("Iron_maiden_*", true);
+	SetEntityInteractionDisabled("ceremony_knife_1", true);
+	InitExistingDude("TheCorridorDude");
+	AddEntityCollideCallback("Player", "ScriptNoGoingBack", "TheresNoGoingBack", false, 1);
+	SetLocalVarString("CatacombsArea", "0");
+	SetLocalVarInt("SilenceAmbience", 0);
+	AddTimer("catacombsambiencetick", 20, "CatacombsAmbienceTick");
+	if(GetEntityExists("ExitLevelDoor_1"))
+	{
+		int is_return = GetGlobalVarInt("WatchedVol1Credits");
+		SetEntityActive("ExitLevelDoor_*", false);
+		string proceed_door = "ExitLevelDoor_1";
+		if(is_return > 0)
+		{
+			proceed_door = "ExitLevelDoor_2";
+			SetSwingDoorLocked("PrisonDoor", false, false);
+			SetSwingDoorClosed("PrisonDoor", false, true);
+			SetLightVisible("AltarLight", false);
+			SetEntityActive("riddle_03_skulls_note", false);
+		}
+		SetEntityActive(proceed_door, true);
+	}
+}
+
+// control the checkpoints in this map
+void MapCheckPoint(string &in asName, int alCount)
+{
+	// remember: alCount = 0 at first respawn!
+	// resets something when you die
+	int i;
+	InitExistingDude("TheCorridorDude");
+	if(asName == "start_point")
+	{
+	}
+	else if(asName == "corridors_point")
+	{
+		AddEntityCollideCallback("Player", "ScriptOMGItsHimAgain", "OMGItsHimAgain", true, 0);
+	}
+	else if(asName == "middle_point")
+	{
+		SetLocalVarString("DeadTimes", ""+alCount);
+		ResetProp("Iron_maiden_*");
+		ResetProp("IronDude_*");
+		SetEntityActive("IronDude_*", false);
+		SetLampLit("challenge_torch_*", false, false);
+		SetLightVisible("SkullSpotLight_*", false);
+		SetEntityActive("challenge_skull_*", false);
+		SetPlayerHealth(100);
+		SetLocalVarString("TheSkull", "");
+		SetLocalVarFloat("orig_health", 100);
+		TheChallenge();
+	}
+	else if(asName == "ending_point")
+	{
+	}
+}
+
+void TheresNoGoingBack(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Ch01Level03_Catacombs", "NoGoingBack", 0);
+}
+
+void SetCatacombsArea(string &in asParent, string &in asArea, int alState)
+{
+	CheckForCorridorsCheckpoint();
+	string s_index = StringSub(asArea, 14, 1);
+	SetLocalVarString("CatacombsArea", s_index);
+}
+
+void CatacombsAmbienceTick(string &in asTimer)
+{
+	int silence = GetLocalVarInt("SilenceAmbience");
+	if(silence > 0) return;
+	string s_index = GetLocalVarString("CatacombsArea");
+	string emitter = "SoundEmitter_" + s_index;
+	PlaySoundAtEntity("", "a_mod_pactum_tenebris/sounds/C01L03_Corridors.snt", emitter, 0, false);
+	AddTimer("catacombsambiencetick", 20, "CatacombsAmbienceTick");
+}
+
+void CheckForCorridorsCheckpoint()
+{
+	if(HasItem("stone_hammer_chipper") || HasItem("stone_chipper_1") && HasItem("stone_hammer_1")) {
+		CheckPoint("corridors", "PlayerStartArea_1", "MapCheckPoint", "DeathMessages", "C01Level03_Corridors");
+		SetLocalVarInt("CorridorsCheckpoint", 1);
+	}
+}
+
+void OMGItsHimAgain(string &in asParent, string &in asChild, int alState)
+{
+	DudeSpawnsInCell("TheCorridorDude");
+}
+
+void SeeDudeBirth(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	StartPlayerLookAt("SeeDudeBirthMortal", 2.0f, 2.0f, "");
+	FadePlayerFOVMulTo(0.25f, 2);
+	if(GetLanternActive()) SetLanternActive(false, false);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 2.0f, false);
+	PlayMusic("a_mod_pactum_tenebris/music/Credits.ogg", false, 9.0f, 0.0f, 11, false);
+	AddTimer("dudeisborn", 2, "DudeIsBorn");
+	AddTimer("dudebirthdoorclosing", 3, "DudeBirthDoorClosing");
+	AddTimer("dudebirthdoorclosed", 4, "DudeBirthDoorClosed");
+	AddTimer("dudebirthstoplook", 4, "StopLook");
+	AddTimer("dudebirthdiary", 8, "DudeBirthDiary");
+}
+void DudeIsBorn(string &in asTimer)
+{
+	string theDude = PlaceADude("TheBirthDude", "a_mod_pactum_tenebris/entities/enemy/the_shadow/the_shadow.ent", "BirthDudeManger");
+	ShowEnemyPlayerPosition(theDude);
+	DestroyParticleSystem("ParticleSystem_4");
+	DestroyParticleSystem("ParticleSystem_5");
+	SetLightVisible("TheBirthMiracle", false);
+}
+void DudeBirthDoorClosing(string &in asTimer)
+{
+	SetSwingDoorClosed("metal_2", true, true);
+	SetSwingDoorLocked("metal_2", true, true);
+	CreateParticleSystemAtEntity("", "ps_break_wood", "metal_2", false);
+	PlaySoundAtEntity("", "break_wood_metal", "metal_2", 0, false);	
+	FadePlayerFOVMulTo(1, 4.0f);
+}
+void DudeBirthDoorClosed(string &in asTimer)
+{
+	DestroyAllDudes("TheBirthDude");
+	StopMusic(8, 11);
+	SetSwingDoorLocked("metal_2", false, false);
+}
+void DudeBirthDiary(string &in asTimer)
+{
+	AddDisplayDiary("Ch01Level03_Shadow", "bg_diaries");
+}
+
+void StartFlashbackTorture(string &in asParent, string &in asChild, int alState)
+{
+	StopAllEffectVoices(0);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 2.0f, false);
+	PlayMusic("a_mod_pactum_tenebris/flashbacks/CH01L03_Torture_01.ogg", false, 9.0f, 0.0f, 11, false);
+	SetEntityInteractionDisabled("cabinet_metal_1", true);
+	if(GetLanternActive()) SetLanternActive(false, false);
+	SetLanternDisabled(true);
+	GiveSanityDamage(50.0f, true);
+	AddTimer("endflashbacktorture", 6.66f, "EndFlashBackTorture");
+	SetLampLit("TortureCandle_*", false, false);
+	SetEntityActive("TortureVision_*", true);
+	int i;
+	for(i=1; i<=8; i++) SetLightVisible("TortureLight_"+i, true);
+}
+void EndFlashBackTorture(string &in asTimer)
+{
+	StopMusic(0.5f, 11);
+	int i;
+	for(i=1; i<=8; i++) SetLightVisible("TortureLight_"+i, false);
+	SetEntityActive("TortureVision_*", false);
+	SetLanternDisabled(false);
+	AddTimer("relighttorture", 1.3f, "ReLightTorture");
+	SetEntityInteractionDisabled("cabinet_metal_1", false);
+}
+void ReLightTorture(string &in asTimer)
+{
+	SetLampLit("TortureCandle_*", true, true);
+	AddEffectVoice("Ch01Level03_01_TortureFlashback.ogg", "", "Voice", "Ch01Level03_01_TortureFlashback", false, "", 0, 0);
+	AddDisplayDiary("Ch01Level03_Vision", "bg_diaries");
+}
+
+void ActivateSecretButton(string &in asParent, string &in asButton, int alState)
+{
+	//GiveSanityBoostSmall();
+	PlayMusic("02_puzzle.ogg", false, 0.70f, 0, 10, false);
+	SetEntityActive("ScriptButtonLadderDown", false);
+	SetEntityActive("LadderDown", true);
+	SetEntityActive("LadderDownArea", true);
+	PlaySoundAtEntity("", "impact_wood_heavy_high", "LadderDown", 0, false);
+	CreateParticleSystemAtEntity("ladder_fell", "ps_break_wood_small", "LadderDownBase", false);
+	SetEntityActive("BlackBookShred_02", true);
+	SetEntityCallbackFunc("BlackBookShred_02", "PickedUpSecondShred");
+}
+
+// picked up black book shred 02
+void PickedUpSecondShred(string &in asEntity, string &in type)
+{
+	SetGlobalVarInt("HaveBlackBookShred2", 1);
+	DestroyParticleSystem("ShredParticle");
+	SetLightVisible("ShredLight", false);
+	// SetMessage("BasicPhrases", "PickedUpShred", 6.00f);
+}
+
+void SkullBreakout(string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, false);
+	SetSwingDoorClosed(asEntity, false, true);
+	SetPropStaticPhysics("cabinet_skull_*", false); // sono 40 teschi
+}
+
+void ExamineAcidPond(string &in asEntity)
+{
+	GivePlayerDamage(3.33f, "BloodSplat", false, false);
+}
+
+string GetStringDoor(string &in asEntity)
+{
+	string[] doors = { "Prison", "Cell" };
+	int i;
+	for(i=0; i<3; i++) if(StringSub(asEntity, 0, doors[i].length()) == doors[i]) return doors[i];
+	return "";
+}
+void InteractLockedDoor(string &in asEntity)
+{
+	string door = GetStringDoor(asEntity);
+	string unlocked = GetLocalVarString("UnlockedDoors");
+	if(!StringContains(unlocked, door)) AddTimer(door, 0.3f, "TimerDoorMess");
+}
+void TimerDoorMess(string &in asDoor)
+{
+	string message = "InteractCellDoor";
+	if(asDoor == "Prison" && GetLocalVarInt("UsedAcidOnPrisonDoor") < 1) message = "LockedPerfect";
+	SetMessage("Ch01Level03_Catacombs", message, 0);
+}
+void UseHCExtra(string &in asItem, string &in asEntity)
+{
+	string door = GetStringDoor(asEntity);
+	if(asEntity == "PrisonPadlock_Solid") SetMessage("BasicPhrases", "UseHammerChipperOnGoodLock", 0);
+	else if(
+			door == "Cell" && (
+				asItem == "stone_hammer_1" && HasItem("stone_chipper_1")
+				|| asItem == "stone_chipper_1" && HasItem("stone_hammer_1")
+			)
+		)
+	{
+		UnlockDoor(door);
+		RemoveItem("stone_chipper_1");
+		RemoveItem("stone_hammer_1");
+		GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+	}
+	else if(asItem == "stone_hammer_chipper") UnlockDoor(door);
+	else if(!HasItem("stone_chipper_1")) SetMessage("BasicPhrases", "UseHammerOnLock", 0);
+	else if(!HasItem("stone_hammer_1")) SetMessage("BasicPhrases", "UseChipperOnLock", 0);
+	else TimerDoorMess(door);
+}
+void UnlockDoor(string &in asDoor)
+{
+	if(GetLocalVarString("UnlockingDoor") == asDoor) return;
+	SetLocalVarString("UnlockingDoor", asDoor);
+	PlaySoundAtEntity("", "player_crouch", "Player", 0.0f, false);
+	SetPlayerActive(false);
+	StartPlayerLookAt("SwindArea_"+asDoor, 2.0f, 2.0f, "");
+	AddTimer("e1", 0.1f, "TimerDoorUnlock");
+	AddTimer("e2", 0.3f, "TimerDoorUnlock");
+	AddTimer("e3", 0.4f, "TimerDoorUnlock");
+	SetEntityActive("stone_hammer_move_"+asDoor, true);
+	SetEntityActive("stone_chipper_move_"+asDoor, true);
+}
+void TimerDoorUnlock(string &in asTimer)
+{
+	string door = GetLocalVarString("UnlockingDoor");
+	if(asTimer == "e1"){
+		SetMoveObjectState("stone_hammer_move_"+door, 0.25f);
+	}
+	else if(asTimer == "e2"){
+		PlaySoundAtEntity("", "15_hammer", "Player", 0, false);
+		SetMoveObjectState("stone_chipper_move_"+door, 1.0f);
+		SetMoveObjectState("stone_hammer_move_"+door, 0.0f);
+		CreateParticleSystemAtEntity("bling", "ps_hit_metal", "stone_chipper_move_"+door, false);
+	}
+	else if(asTimer == "e3"){
+		StopPlayerLookAt();
+		SetPlayerActive(true);
+		SetSwingDoorLocked(door+"Door", false, true);
+		SetEntityActive("stone_hammer_move_"+door, false);
+		SetEntityActive("stone_chipper_move_"+door, false);
+		PlaySoundAtEntity("", "impact_metal_high", "Player", 0, false);
+		PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+		SetEntityActive(door+"Padlock_Breakable", false);
+		SetEntityActive(door+"Padlock_Broken", true);
+		AddTimer(door, 0.1f, "UnlockedDoor");
+	}
+}
+
+void UnlockedDoor(string &in asDoor)
+{
+	string unlocked = GetLocalVarString("UnlockedDoors");
+	SetLocalVarString("UnlockedDoors", unlocked+asDoor);
+	if(asDoor == "Cell")
+	{
+		SetEntityActive("ScriptFillAcid", true);
+		AddUseItemCallback("", "glass_container_1", "ScriptFillAcid", "PlaceGlassAcid", true);
+		SetPropHealth("metal_2", 0);
+		DudeSpawnsInCell("TheCorridorDude");
+	}
+	else if(asDoor == "Prison")
+	{
+		AddEntityCollideCallback("Player", "ScriptEnteredPrison", "EnteredPrison", true, 0);
+	}
+}
+
+void DudeSpawnsInCell(string &in asDude)
+{
+	StartExistingDude(asDude);
+	SetLocalVarString("TheCorridorDude", asDude);
+	DudeExitsCell(asDude, "", 1);
+}
+
+void DudeExitsCell(string &in theDude, string &in asChild, int alState)
+{
+	int i;
+	for(i=0; i<=5; i++) AddEnemyPatrolNode(theDude, "TheDudePath_"+i, 0, "");
+	AddEntityCollideCallback(theDude, "ScriptDudeStartsPursuing", "DudeStartsPursuing", true, 0);
+	AddEntityCollideCallback("Player", "ScriptNearTheDude", "DudeStartsPursuing", true, 0);
+}
+
+void DudeStartsPursuing(string &in asParent, string &in asChild, int alState)
+{
+	string theDude = GetLocalVarString("TheCorridorDude");
+	SetEnemyIsHallucination(theDude, true);
+	DudeGetsYou(theDude);
+	AddEntityCollideCallback("Player", theDude, "CorridorDudeGottaGo", true, 0);
+}
+
+void CorridorDudeGottaGo(string &in asPlayer, string &in asDude, int alState)
+{
+	HideOneDude(asDude);
+}
+
+void PlaceGlassAcid(string &in asItem, string &in asEntity)
+{
+	SetEntityActive(asEntity, false);
+	SetEntityActive("ExamineAcid_*", false);
+	SetEntityActive("glass_container_mix_done", true);
+	RemoveItem("glass_container_1");
+	SetMessage("Ch01Level03_Catacombs", "FillJarWithAcid", 0);
+	AddUseItemCallback("", "glass_container_mix_done", "PrisonPadlock_Solid", "UsedAcidOnPadlock", true);
+}
+void UsedAcidOnPadlock(string &in asItem, string &in asEntity)
+{
+	RemoveItem("glass_container_mix_done");
+	AddTimer("e1", 0.5f, "TimerAcidOnPadlock");
+	SetLocalVarInt("UsedAcidOnPrisonDoor", 1);
+	CreateParticleSystemAtEntity("", "ps_extract_oven_smoke", "PrisonDoorAcid", false);
+	PlaySoundAtEntity("acidburns", "gameplay_acid_web", asEntity, 1.3f, false);
+}
+void TimerAcidOnPadlock(string &in asTimer)
+{
+	SetEntityActive("PrisonPadlock_Solid", false);
+	SetEntityActive("PrisonPadlock_Breakable", true);
+	AddUseItemCallback("", "stone_hammer_chipper", "PrisonPadlock_Solid", "UseHCExtra", false);
+	AddUseItemCallback("", "stone_hammer_chipper", "PrisonPadlock_Breakable", "UseHCExtra", false);
+}
+
+void EnteredPrison(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("SilenceAmbience", 1);
+	SetSwingDoorClosed("PrisonDoor", true, true);
+	SetSwingDoorLocked("PrisonDoor", true, true);
+	HideOneDude("TheCorridorDude");
+	SetEntityActive("riddle_03_skulls_note", true);
+	SetEntityActive("riddle_03_skulls_click", true);
+	CheckPoint("middle_point", "PlayerStartArea_2", "MapCheckPoint", "DeathMessages", "C01Level03_Challenge");
+	AddTimer("litprisonlamps", 5.0f, "LitPrisonLamps");
+}
+
+void LitPrisonLamps(string &in asTimer)
+{
+	SetLightVisible("WellSpotLight", true);
+	PlaySoundAtEntity("", "impact_wood_high", "Player", 0, false);
+	//SetLampLit("torch_static_green_*", true, true);
+	AddEffectVoice("Ch01Level03_02_PrisonChallenge.ogg", "", "Voice", "Ch01Level03_02_PrisonChallenge", false, "", 0, 0);
+}
+
+void PrisonNotePickup(string &in asEntity)
+{
+	TheChallenge();
+}
+
+void TheChallenge()
+{
+	SetLocalVarInt("SilenceAmbience", 1);
+	SetEntityActive("PrisonNote", false);
+	SetLocalVarInt("challenge_torch", 0);
+	SetLocalVarInt("challenge_tick", 0);
+	SetLocalVarInt("challenge_fail", 0);
+	SetLocalVarInt("challenge_win", 0);
+	SetLocalVarInt("challenge_round", 0);
+	AddTimer("settingthechallenge", 0.5f, "SetTheChallenge");
+	int i;
+	for(i=1; i<=4; i++) SetLightVisible("SkullSpotLight_"+i, true);
+	PlaySoundAtEntity("", "impact_wood_high", "Player", 0, false);
+}
+
+void SetTheChallenge(string &in asTimer)
+{
+	SetEntityInteractionDisabled("challenge_torch_*", true);
+	int maxrounds = 20;
+	int round = GetLocalVarInt("challenge_round") + 1;
+	if(round > maxrounds)
+	{
+		AddTimer("first", 2, "StartTheChallenge");
+		return;
+	}
+	int base_ind = GetLocalVarInt("challenge_index");
+	int i, sn = 0, rnd = 0, ri = 0;
+	string ent, name;
+	ri = RandInt(1, 4);
+	for(i=1; i<=4; i++)
+	{
+		ent = "human_skull.ent";
+		sn = 4 * (round - 1) + i + base_ind;
+		name = "challenge_skull_" + sn;
+		if(round == maxrounds - 2)
+		{
+			if(rnd == 0) rnd = RandInt(1, 4);
+			if(i == rnd)
+			{
+				ent = "a_mod_pactum_tenebris/entities/smiling_skull/smiling_skull.ent";
+				SetLocalVarString("TheSkull", name);
+				AddDebugMessage("The skull is set to "+name, false);
+			}
+		}
+		CreateEntityAtArea(name, ent, "ScriptFallingSkulls_"+i+"_"+ri, false);
+		//SetEntityActive(name, true);
+		if(round == maxrounds && i == 4) SetLocalVarInt("challenge_index", sn);
+	}
+	SetLocalVarInt("challenge_round", round);
+	AddTimer("settingthechallenge", 0.2f, "SetTheChallenge");
+}
+
+void StartTheChallenge(string &in step)
+{
+	if(GetLocalVarInt("challenge_win") > 0) return;
+	SetLocalVarInt("challenge_tick", 0);
+	string deadtry = GetLocalVarString("DeadTimes");
+	if(GetLocalVarInt("challenge_fail") < 3)
+	{
+		// AddDebugMessage("StartTheChallenge: "+step, false);
+		if(step == "first")
+		{
+			string TheSkull = GetLocalVarString("TheSkull");
+			AddEntityCollideCallback(TheSkull, "ScriptPrisonSkullDrop", "ChallengeWin", true, 0);
+			SetEntityPlayerInteractCallback(TheSkull, "TheSkullLaughs", false);
+			PlaySoundAtEntity("", "Evil_Laugh", TheSkull, 0, false);
+			SetLanternActive(false, false);
+			SetPlayerActive(false);
+			ChallengeTorches("0");
+		}
+		else
+		{
+			SetLampLit("challenge_torch_*", true, true);
+			AddTimer(deadtry, 2.0f, "ChallengeTick");
+		}
+	}
+}
+void TheSkullLaughs(string &in TheSkull)
+{
+	AddDebugMessage("The skull is laughing!", false);
+	PlaySoundAtEntity("", "Creepy_Laugh", TheSkull, 0, false);
+}
+void ChallengeTorches(string &in torch)
+{
+	// int i = torch[0] - 48 + 1;
+	int i = GetLocalVarInt("challenge_torch") + 1;
+	int max = 60;
+	//StopPlayerLookAt();
+	StopLook("");
+	string asEntity = "challenge_torch_"+i;
+	// if(GetEntityExists(asEntity))
+	if(i <= max)
+	{
+		float min_time = 0.05f;
+		float time = 0.7f - 0.05f * i;
+		if(time < min_time) time = min_time;
+		if(GetEntityExists(asEntity))
+		{
+			StartPlayerLookAt(asEntity, 10, 30, "");
+			SetLampLit(asEntity, true, true);
+		}
+		SetLocalVarInt("challenge_torch", i);
+		AddTimer(""+i, time, "ChallengeTorches");
+	}
+	else
+	{
+		SetLocalVarInt("challenge_torch", 0);
+		//SetPlayerActive(true);
+		AddTimer("first", 2.0f, "ChallengeTick");
+	}
+}
+void ChallengeTick(string &in asTimer)
+{
+	if(GetLocalVarInt("challenge_win") > 0) return;
+	int step = GetLocalVarInt("challenge_tick") + 1;
+	string torch = "challenge_torch_" + step;
+	string deadtry = GetLocalVarString("DeadTimes");
+	//AddDebugMessage("ChallengeTick: "+step+" deadtry: "+deadtry+" asTimer: "+asTimer, false);
+	if(GetEntityExists(torch))
+	{
+		if(asTimer == "first" && step == 1)
+		{
+			StartPlayerLookAt(torch, 10, 30, "");
+			AddTimer("", 0.25f, "StopLook");
+		}
+		else if(asTimer != deadtry) return;
+		SetLampLit(torch, false, true);
+		AddTimer(deadtry, 1, "ChallengeTick");
+		SetLocalVarInt("challenge_tick", step);
+	} else {
+		ChallengeFail();
+	}
+}
+void ChallengeFail()
+{
+	if(GetLocalVarInt("challenge_win") > 0) return;
+	int fail = GetLocalVarInt("challenge_fail") + 1;
+	string maiden = "Iron_maiden_" + fail;
+	string dude = "IronDude_" + fail;
+	string block = "ChallengeBlock_" + fail;
+	if(GetEntityExists(maiden))
+	{
+		PlaySoundAtEntity("", "break_wood.snt", maiden, 0.0f, false);
+		SetSwingDoorLocked(maiden, false, false);
+		SetSwingDoorClosed(maiden, false, true);
+		SetEntityActive(block, false);
+		SetEntityActive(dude, true);
+		DudeGetsYou(dude);
+		AddTimer(block, 2.5f, "SetChallengeBlockActive");
+		if(fail == 2)
+		{
+			SetLocalVarFloat("orig_health", GetPlayerHealth());
+			AddTimer(dude, 1, "OneHitDisappear");
+		}
+		SetLocalVarInt("challenge_fail", fail);
+		AddDebugMessage("it's a fail! "+fail, false);
+		if(fail < 3) AddTimer("startingthechallenge", 5.0f, "StartTheChallenge");
+	}
+}
+void SetChallengeBlockActive(string &in asCB)
+{
+	SetEntityActive(asCB, true);
+}
+void OneHitDisappear(string &in asDude)
+{
+	if(GetPlayerHealth() < GetLocalVarFloat("orig_health"))
+	{
+		HideOneDude(asDude);
+	} else {
+		AddTimer(asDude, 1, "OneHitDisappear");
+	}
+}
+void ChallengeWin(string &in asParent, string &in asChild, int alState)
+{
+	if(GetPlayerHealth() < 50) SetPlayerHealth(50);
+	string TheSkull = GetLocalVarString("TheSkull");
+	SetLocalVarInt("challenge_win", 1);
+	int i, fail = GetLocalVarInt("challenge_fail");
+	for(i=0; i<=fail; i++) HideOneDude("IronDude_"+fail);
+	SetEntityActive("IronDude_*", false);
+	SetEntityActive("ChallengeBlock_*", false);
+	SetEntityActive("riddle_03_skulls_note", false);
+	SetLampLit("challenge_torch_*", false, false);
+	SetLampLit("torch_static_green_*", false, false);
+	PlayMusic("02_puzzle.ogg", false, 0.70f, 0, 10, false);
+	// CreateParticleSystemAtEntity("", "ps_fire_orb_room", "ScriptShine", false);
+	CreateParticleSystemAtEntity("", "ps_ritual_vision_glow.ps", "ScriptShine", false);
+	SetLightVisible("AltarLight", true);
+	for(i=1; i<=4; i++) SetLightVisible("SkullSpotLight_"+i, false);
+	SetLightVisible("WellSpotLight", false);
+	ChangePlayerStateToNormal();
+	SetEntityInteractionDisabled("challenge_skull_*", true);
+	HideRiddle("riddle_03_skulls");
+	AddTimer("theregoestheironmaiden", 5.0f, "ThereGoesTheIronMaiden");
+	CheckPoint("ending_point", "PlayerStartArea_2", "MapCheckPoint", "DeathMessages", "C01Level03_Ending");
+}
+void ThereGoesTheIronMaiden(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke.ps", "Iron_maiden_3", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "Iron_maiden_3", 2.0f, false);
+	SetEntityActive("Iron_maiden_3", false);
+	SetEntityActive("block_box_2", false);
+	SetLampLit("ExitStairsTorch_*", true, true);
+	SetLevelDoorLocked("ExitLevelDoor", false);
+	SetSwingDoorClosed("PrisonDoor", false, true);
+	SetSwingDoorLocked("PrisonDoor", false, true);
+}
+
+void ExaminedAlistair(string &in asEntity)
+{
+	SetEntityInteractionDisabled("ExamineAlistair", true);
+	AddDisplayDiary("Ch01Level03_Alistair", "bg_diaries");
+	SetEntityActive("ExamineAlistair", false);
+}
+
+
+/************************
+ *
+ * SOME USEFUL FUNCTIONS!
+ *
+ ***********************/
+
+// shows a text on screen to notify a new diary
+void AddDisplayDiary(string &in asName, string &in asBkg)
+{
+	SetMessage("Hints", "DiaryAdded", 0.0f);
+	AddDiary(asName, asBkg);
+}
+
+// this places a dude wherever you want to
+string PlaceADude(string& asName, string& asEntityFile, string& asAreaName)
+{
+	int i = 0;
+	while(GetEntityExists(asName+i))
+	{
+		i++;
+	}
+	CreateEntityAtArea(asName+i, asEntityFile, asAreaName, false);
+	return asName+i;
+}
+// initialize existing dude
+void InitExistingDude(string &in asDude)
+{
+	DestroyParticleSystem(asDude+"_Smoke");
+	DestroyParticleSystem(asDude+"_Newsmoke");
+	StopSound(asDude+"_Oohs", 0.0f);
+	StopSound(asDude+"_Aahs", 0.0f);
+}
+void StartExistingDude(string &in asDude)
+{
+	SetEntityActive(asDude, true);
+	CreateParticleSystemAtEntityExt(asDude+"_Newsmoke", "ps_fire_orb_room.ps", asDude, false, 0.15f, 1, 0.15f, 1, true, 1, 2, 100, 100);
+	FadeInSound(asDude+"_Oohs", 0.0f, false);
+	FadeInSound(asDude+"_Aahs", 0.0f, false);
+}
+// dude gets you
+void DudeGetsYou(string &in asDude)
+{
+	// if(GetLocalVarInt("DudeEscape") > 0) return;
+	ClearEnemyPatrolNodes(asDude);
+	SetEnemyDisableTriggers(asDude, false);
+	ShowEnemyPlayerPosition(asDude);
+	AddTimer(asDude, 1.0f, "DudeGetsYou");
+}
+// this calms the dudes
+void CalmOneDude(string &in asDude)
+{
+	RemoveTimer(asDude);
+	SetEnemyDisableTriggers(asDude, true);
+}
+void CalmAllDudes(string &in asName)
+{
+	int i = 0;
+	while(GetEntityExists(asName+i))
+	{
+		CalmOneDude(asName+i);
+		i++;
+	}
+}
+// this provides the release animation and then poofs the dudes
+void ReleaseOneDude(string& asDude)
+{
+	CalmOneDude(asDude);
+	PlayPropAnimation(asDude, "IdleExtra3", 0.3, false, "");
+	AddTimer(asDude, 2.5f, "HideOneDude");
+}
+void ReleaseAllDudes(string& asName)
+{
+	int i = 0;
+	while(GetEntityExists(asName+i))
+	{
+		ReleaseOneDude(asName+i);
+		i++;
+	}
+}
+// this poofs the dudes
+void HideOneDude(string& asDude)
+{
+	FadeEnemyToSmoke(asDude, false);
+	AddTimer(asDude, 0.25f, "DestroyOneDude");
+}
+void HideAllDudes(string& asName)
+{
+	int i = 0;
+	while(GetEntityExists(asName+i))
+	{
+		HideOneDude(asName+i);
+		i++;
+	}
+}
+// this hides past dudes (call when respawned from death)
+void DestroyOneDude(string& asDude)
+{
+	DestroyParticleSystem(asDude+"_Smoke");
+	StopSound(asDude+"_Oohs", 0.0f);
+	StopSound(asDude+"_Aahs", 0.0f);
+	//SetEnemyDisabled(asDude, true);
+	SetEntityActive(asDude, false);
+}
+void DestroyAllDudes(string& asName)
+{
+	int i = 0;
+	while(GetEntityExists(asName+i))
+	{
+		DestroyOneDude(asName+i);
+		i++;
+	}
+}
+
+// initiate a riddle
+void InitRiddle(string &in asRiddle, string& asCallback, float afCallbackTimer)
+{
+	HideRiddle(asRiddle);
+	AddLocalVarString(asRiddle + "_callback", "");
+	SetEntityInteractionDisabled(asRiddle + "_note", true);
+	if(asCallback != "")
+	{
+		SetLocalVarString(asRiddle + "_callback", asCallback);
+		SetLocalVarFloat(asRiddle + "_callbackTimer", afCallbackTimer);
+	}
+	SetEntityPlayerInteractCallback(asRiddle + "_click", "ShowRiddle", true);
+}
+// hides a riddle icon
+void HideRiddle(string &in asRiddle)
+{
+	SetEntityActive(asRiddle + "_area", false);
+	FadeLightTo(asRiddle + "_light", 0, 0, 0, 0, 0, 0.01);
+}
+// show a riddle icon
+void ShowRiddle(string &in asClick)
+{
+	SetEntityActive(asClick, false);
+	string trim = "_click";
+	int cnt = asClick.length() - trim.length();
+	string asRiddle = StringSub(asClick, 0, cnt);
+	string asCallback = GetLocalVarString(asRiddle + "_callback");
+	FadeLightTo(asRiddle + "_light", 0.75f, 0.75f, 0.75f, 1, 0.1f, 1.5f);
+	SetEntityActive(asRiddle + "_area", true);
+	SetEntityPlayerInteractCallback(asRiddle + "_area", "FlashRiddle", false);
+	FlashRiddle(asRiddle + "_area");
+	if(asCallback != "")
+	{
+		float afCallbackTimer = GetLocalVarFloat(asRiddle + "_callbackTimer");
+		AddTimer(asRiddle + "_note", afCallbackTimer, asCallback);
+	}
+}
+// flashes a riddle
+void FlashRiddle(string &in asArea)
+{
+	string trim = "_area";
+	int cnt = asArea.length() - trim.length();
+	string asRiddle = StringSub(asArea, 0, cnt);
+	StartEffectEmotionFlash("Riddles", asRiddle, "journal_open");
+}
+
+// stop force-looking at something
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+
+// slam closes a door
+void SlamCloseDoor(string &in asDoor, bool lookAt, bool lockDoor)
+{
+	if(lookAt == true)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt(asDoor, 10.0f, 10.2f, "");
+		AddTimer("stoplooking", 1.5f, "StopLook");
+	}
+	SetSwingDoorDisableAutoClose(asDoor, false);
+	if(lockDoor == true)
+	{
+		SetLocalVarInt("LockDoor_"+asDoor, 1);
+	}
+	PushDoor(asDoor);
+}
+// pushes the door (closes)
+void PushDoor(string &in door_name)
+{
+	if(GetSwingDoorState(door_name) > 0)
+	{
+		AddPropForce(door_name, 800, 0, -800, "object");
+		AddTimer(door_name, 0.1, "PushDoor");
+	}
+	else
+	{
+		SetSwingDoorClosed(door_name, true, true);
+		if(GetLocalVarInt("LockDoor_"+door_name) == 1)
+		{
+			SetSwingDoorLocked(door_name, true, true);
+			SetLocalVarInt("LockDoor_"+door_name, 0);
+		}
+		CreateParticleSystemAtEntity("", "ps_break_wood", door_name, false);
+		PlaySoundAtEntity("", "break_wood_metal", door_name, 0, false);
+	}
+}

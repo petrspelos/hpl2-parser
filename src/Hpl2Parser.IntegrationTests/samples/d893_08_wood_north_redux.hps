@@ -1,0 +1,421 @@
+void OnEnter()
+{
+	PreloadParticleSystem("ps_acid_web_dissolve.ps");
+	PreloadParticleSystem("ps_dust_falling.ps");
+	PreloadParticleSystem("ps_light_dust.ps");
+	PreloadParticleSystem("ps_light_dust_large.ps");
+	PreloadParticleSystem("ps_area_fog.ps");
+	PreloadParticleSystem("ps_area_fog_large.ps");
+	PreloadParticleSystem("ps_area_fog_small.ps");
+	PreloadParticleSystem("ps_area_fog_sewer_long_warmup.ps");
+	PreloadParticleSystem("ps_door_damage_wood.ps");
+	PreloadParticleSystem("ps_break_wood.ps");
+	
+	PreloadParticleSystem("ps_water_rain.ps");
+	
+	PreloadSound("01_rain_no3d.snt");
+	
+	PreloadSound("gameplay_acid_web.snt");
+	PreloadSound("lock_door.snt");
+	PreloadSound("locked_door.snt");
+	PreloadSound("open_door.snt");
+	PreloadSound("open_door_long.snt");
+	PreloadSound("door_gate_bar_locked.snt");
+	PreloadSound("door_mansion_close.snt");
+	PreloadSound("door_mansion_open.snt");
+	PreloadSound("close_door.snt");
+	PreloadSound("close_door_long.snt");
+	PreloadSound("unlock_door.snt");
+	PreloadSound("react_breath.snt");
+	PreloadSound("react_breath_slow.snt");
+	PreloadSound("react_pant.snt");
+	PreloadSound("react_scare.snt");
+	PreloadSound("react_sigh.snt");
+	PreloadSound("general_fire_burning.snt");
+	PreloadSound("general_fire_burning_low.snt");
+	PreloadSound("break_pottery.snt");
+	PreloadSound("break_glass_bottle.snt");
+	PreloadSound("break_glass_large.snt");
+	PreloadSound("break_wood.snt");
+	PreloadSound("break_wood_metal.snt");
+	PreloadSound("guardian_activated.snt");
+	PreloadSound("guardian_ontop.snt");
+	PreloadSound("hit_wood.snt");
+	PreloadSound("player_climb.snt");
+	PreloadSound("player_crouch.snt");
+	PreloadSound("player_jump.snt");
+	PreloadSound("player_stand.snt");
+	PreloadSound("roll_wood.snt");
+	PreloadSound("slime_attack_normal_hit.snt");
+	PreloadSound("slime_create.snt");
+	PreloadSound("slime_loop.snt");
+	PreloadSound("step_run_dirt.snt");
+	PreloadSound("step_walk_dirt.snt");
+	PreloadSound("step_sneak_dirt.snt");
+	PreloadSound("step_run_fabric.snt");
+	PreloadSound("step_walk_fabric.snt");
+	PreloadSound("step_sneak_fabric.snt");
+	PreloadSound("step_run_metal.snt");
+	PreloadSound("step_walk_metal.snt");
+	PreloadSound("step_sneak_metal.snt");
+	PreloadSound("step_run_organic.snt");
+	PreloadSound("step_walk_organic.snt");
+	PreloadSound("step_sneak_organic.snt");
+	PreloadSound("step_run_rock.snt");
+	PreloadSound("step_walk_rock.snt");
+	PreloadSound("step_sneak_rock.snt");
+	PreloadSound("step_run_wood.snt");
+	PreloadSound("step_run_wood_squeaky.snt");
+	PreloadSound("step_walk_wood.snt");
+	PreloadSound("step_walk_wood_squeaky.snt");
+	PreloadSound("step_sneak_wood.snt");
+	PreloadSound("step_sneak_wood_squeaky.snt");
+	PreloadSound("flashback_flash.snt");
+	PreloadSound("hurt_pant.snt");
+	PreloadSound("sanity_damage.snt");
+	PreloadSound("sanity_drain_high.snt");
+	PreloadSound("sanity_drain_med.snt");
+	PreloadSound("sanity_drain_low.snt");
+	PreloadSound("sanity_heartbeat.snt");
+	PreloadSound("sanity_pant.snt");
+	PreloadSound("ui_add_quest.snt");
+	PreloadSound("ui_lantern_off.snt");
+	PreloadSound("ui_lantern_on.snt");
+	PreloadSound("ui_sanity_gain.snt");
+	PreloadSound("ui_terror_meter.snt");
+	PreloadSound("enemy_hallucination_disappear.snt");
+
+	SetMapDisplayNameEntry("Wood3");
+	
+	SetPlayerActive(false);
+	
+	CheckPoint ("OutOfMap", "PlayerStartArea_1", "CPOutOfMap", "DeathHints", "DoNotFall");
+}
+
+void OnLeave()
+{
+	//Do nothing
+}
+
+void OnStart()
+{	
+	FadeOut(0.0f);
+	FadeGlobalSoundVolume(0.0f, 0.0f);
+	SetPlayerActive(false);
+	SetPlayerHealth(100.0f);
+	SetPlayerSanity(100.0f);
+	SetPlayerCrouching(false);
+	
+	AddTimer("globalsoundon", 1.0f, "TimerFadeGlobalSound");
+	AddTimer("fadeinslow", 0.5f, "TimerFadeScreen");
+	AddTimer("1", 5.0f, "TimerStartLookAround");
+	
+	SetupLoadScreen("LoadingHints", "ToLimbo", 0, "menu_loading_rose.jpg");
+}
+
+void CPOutOfMap(string &in asName, int alCount)
+{
+	PlayMusic("03_wood_theme_alternative.ogg", true, 0.6f, 6.0f, 0, false);
+	if(GetGlobalVarInt("NoDeathAchievement") == 1) SetPlayerHealth(100.1f);
+}
+
+void TimerStartLookAround(string &in asTimer)
+{
+	if(asTimer == "1")
+	{
+		PlayerLook("AreaLookAt_1", "", 1.5f, 1.5f);
+		
+		PlaySoundAtEntity("moveheadstart", "static_rock_start.snt", "Player", 0, false);
+		AddTimer("movehead", 0.34f, "TimerMoveHeadSound");
+		AddTimer("moveheadstop", 1.5f, "TimerMoveHeadSound");
+		
+		AddTimer("2", 3.5f, "TimerStartLookAround");
+		
+		SetMessage("Hints", "WhereAmI", 6.5f);
+	}
+	if(asTimer == "2")
+	{
+		PlayerLook("AreaLookAt_2", "", 1.7f, 1.7f);
+		
+		PlaySoundAtEntity("moveheadstart", "static_rock_start.snt", "Player", 0, false);
+		AddTimer("movehead", 0.34f, "TimerMoveHeadSound");
+		AddTimer("moveheadstop", 1.7f, "TimerMoveHeadSound");
+		
+		AddTimer("3", 3.7f, "TimerStartLookAround");
+	}
+	if(asTimer == "3")
+	{
+		PlayerLook("AreaLookAt_3", "", 1.7f, 2.0f);
+		
+		PlaySoundAtEntity("moveheadstart", "static_rock_start.snt", "Player", 0, false);
+		AddTimer("movehead", 0.34f, "TimerMoveHeadSound");
+		AddTimer("moveheadstop", 2.0f, "TimerMoveHeadSound");
+		
+		AddTimer("4", 4.5f, "TimerStartLookAround");
+		
+		SetMessage("Hints", "WhatsHappening", 4.0f);
+	}
+	if(asTimer == "4")
+	{
+		SetEntityActive("deformed_player_1", true);
+		
+		PlayerLook("AreaLookAt_4", "", 1.2f, 1.6f);
+		
+		PlaySoundAtEntity("moveheadstart", "static_rock_start.snt", "Player", 0, false);
+		AddTimer("movehead", 0.34f, "TimerMoveHeadSound");
+		AddTimer("moveheadstop", 1.6f, "TimerMoveHeadSound");
+		
+		AddTimer("5", 4.2f, "TimerStartLookAround");
+		
+		SetMessage("Hints", "FeelDifferent", 6.5f);
+	}
+	if(asTimer == "5")
+	{
+		PlayerLook("AreaLookAt_5", "", 0.6f, 3.5f);
+		
+		PlaySoundAtEntity("moveheadstart", "static_rock_start.snt", "Player", 0, false);
+		AddTimer("movehead", 0.34f, "TimerMoveHeadSound");
+		AddTimer("moveheadstop", 3.5f, "TimerMoveHeadSound");
+		
+		AddTimer("6", 7.0f, "TimerStartLookAround");
+	}
+	if(asTimer == "6")
+	{
+		PlayerLook("AreaLookAt_6", "", 2.0f, 1.0f);
+		
+		PlaySoundAtEntity("moveheadstart", "static_rock_start.snt", "Player", 0, false);
+		AddTimer("movehead", 0.34f, "TimerMoveHeadSound");
+		AddTimer("moveheadstop", 1.0f, "TimerMoveHeadSound");
+		
+		PlaySoundAtEntity("alex_low_freq_rumble", "21_alex_low_freq_rumble.snt", "AreaLookAt_6", 1.0f, false);
+		
+		AddTimer("7", 2.0f, "TimerStartLookAround");
+		AddTimer("step1", 8.5f, "TimerEndingSetup");
+	}
+	if(asTimer == "7")
+	{
+		PlayerLook("AreaLookAt_7", "", 1.5f, 1.5f);
+		
+		PlaySoundAtEntity("moveheadstart", "static_rock_start.snt", "Player", 0, false);
+		AddTimer("movehead", 0.34f, "TimerMoveHeadSound");
+		AddTimer("moveheadstop", 1.5f, "TimerMoveHeadSound");
+	
+		PlaySoundAtEntity("strangesorry", "08_strange_sorry.snt", "Player", 0, false);
+		SetMessage("Strange", "Sorry", 5.0f);
+		AddTimer("1", 1.0f, "TimerPlayerReact");
+	}
+}
+
+void TimerEndingSetup(string &in asTimer)
+{
+	if(asTimer == "step1")
+	{
+		FadeOut(0.0f);
+		FadeGlobalSoundVolume(0.0f, 3.0f);
+		
+		SetGlobalVarInt("OrbEnding", 1);
+		
+		AddTimer("step2", 3.0f, "TimerEndingSetup");
+	}
+	if(asTimer == "step2")
+	{
+		ChangeMap("00_limbo.map", "PlayerStartArea_1", "", ""); 
+	}
+}
+
+void TimerMoveHeadSound(string &in asTimer)
+{
+	if(asTimer == "movehead") PlaySoundAtEntity(asTimer, "static_rock_move_lr.snt", "Player", 0, false);
+	if(asTimer == "moveheadstop")
+	{
+		PlaySoundAtEntity(asTimer, "static_rock_stop.snt", "Player", 0, false);
+		StopSound("movehead", 0.1f);
+	}
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")	FadeIn(2.0f);
+	if(asTimer == "fadeinslow")
+	{
+		FadeIn(5.0f);
+		SetRadialBlurStartDist(0.15f);
+		FadeRadialBlurTo(0.01f, 0.03f);
+		
+		PlayMusic("03_wood_theme_alternative.ogg", true, 0.6f, 6.0f, 0, false);
+	}
+	if(asTimer == "fadeout") FadeOut(2.0f);
+	if(asTimer == "fadeoutslow") FadeOut(5.0f);
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeinslowactiveplayer")
+	{
+		FadeIn(5.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}
+	if(asTimer == "fadeoutslowactiveplayer")
+	{
+		FadeOut(5.0f);
+		SetPlayerActive(true);	
+	}
+}
+
+void TimerFadeGlobalSound(string &in asTimer)
+{
+	if(asTimer == "globalsoundon") FadeGlobalSoundVolume(1.0f, 4.0f);
+	if(asTimer == "globalsoundonquick") FadeGlobalSoundVolume(1.0f, 0.5f);
+	if(asTimer == "globalsoundoff") FadeGlobalSoundVolume(0.0f, 4.0f);
+	if(asTimer == "globalsoundoffquick") FadeGlobalSoundVolume(0.0f, 0.5f);
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);	
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReact(string &in asTimer)
+{
+	if(asTimer == "1") PlayerReact("", 0.1f, true, false);
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}
+
+void PlayerLook(string &in asEntity, string &in asType, float afSpeed, float afTime)
+{
+	StartPlayerLookAt(asEntity, afSpeed, afSpeed, "");
+	if(asType == "speed")
+	{
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);
+		AddTimer("resetspeedmul", afTime, "TimerStopLook");
+	}
+	else
+	if(asType == "active")
+	{
+		SetPlayerActive(false);
+		AddTimer("activeplayer", afTime, "TimerStopLook");
+	}
+	else AddTimer("", afTime, "TimerStopLook");
+}
+
+void PlayerReact(string &in asType, float afCount, bool abUseDamageEffect, bool abUseBlurEffect)
+{
+	if(asType == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "breath_slow")
+	{
+		PlayGuiSound("react_breath_slow", 0.6f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "pant")
+	{
+		PlayGuiSound("react_pant", 0.8f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(abUseDamageEffect == true) GiveSanityDamage(afCount, true);
+	else GiveSanityDamage(afCount, false);
+} 

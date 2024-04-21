@@ -1,0 +1,214 @@
+void OnStart(){
+	enemy();
+	events();
+	PlayerFunctions();
+	variables();
+}
+
+void OnEnter(){
+	PlayMusic("brute_amb.ogg", true, 1.0f, 0, 0, true);
+	SetDeathHint("Messages", "death_2");
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "08Storage", 1, "08Debris.jpg");
+}
+
+void enemy(){
+	AddEntityCollideCallback("Player", "AreaSpawnSuitor", "spawnSuitor1", true, 1);
+	AddEntityCollideCallback("suitor_alive", "AreaDisableSelf", "disableSuitor", true, 1);
+	AddEntityCollideCallback("suitor_alive", "AreaVictim1", "breakVictim1", true, 1);
+	AddEntityCollideCallback("suitor_alive", "AreaVictim2", "breakVictim2", true, 1);
+	AddEntityCollideCallback("suitor_alive", "AreaBreakLast", "breakLast", true, 1);
+	AddEntityCollideCallback("suitor_alive", "AreaEnableDespawn", "enableDespawn", true, 1);
+	AddEntityCollideCallback("suitor", "AreaEnableTriggers", "enableTriggers", true, 1);
+	SetEntityPlayerInteractCallback("Needle", "addSpawnTimer", true);
+	AddEntityCollideCallback("short", "suitor", "hitShort", false, 1);
+	AddEntityCollideCallback("long_1", "suitor", "hitLong_1", false, 1);
+	AddEntityCollideCallback("long_2", "suitor", "hitLong_2", false, 1);
+	nodes();
+}
+
+void events(){
+	AddEntityCollideCallback("Player", "AreaSound_1", "playScareSoundScary", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_4", "playScareSoundScary", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_2", "playScareSoundEasy", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_3", "playScareSoundEasy", true, 1);
+}
+
+void PlayerFunctions(){
+	SetEntityPlayerInteractCallback("Container_1", "containersTooHeavy", false);
+	SetEntityPlayerInteractCallback("Container_2", "containersTooHeavy", false);
+	SetEntityPlayerInteractCallback("Container_3", "containersTooHeavy", false);
+	SetEntityPlayerInteractCallback("Container_4", "containersTooHeavy", false);
+	SetEntityPlayerInteractCallback("Container_5", "containersTooHeavy", false);
+	SetEntityPlayerInteractCallback("Container_6", "containersTooHeavy", false);
+	SetEntityPlayerInteractCallback("Container_7", "containersTooHeavy", false);
+	SetEntityPlayerInteractCallback("ObjectiveRoom", "makeMessage", false);
+	SetEntityConnectionStateChangeCallback("LeverActivate_1", "activateMechanism_1");
+	SetEntityConnectionStateChangeCallback("LeverActivate_2", "activateMechanism_2");
+}
+
+void variables(){
+	SetLocalVarInt("mechanismCondition", 0);
+	SetLocalVarInt("objectiveLocked", 1);
+	SetLocalVarInt("hasPulled_1", 0);
+	SetLocalVarInt("hasPulled_2", 0);
+	SetLocalVarInt("suitorHealth", 1);
+}
+
+void nodes(){
+	AddEnemyPatrolNode("suitor_alive", "PathNodeArea_1", 0.001f, "");
+	AddEnemyPatrolNode("suitor_alive", "PathNodeArea_2", 0.001f, "");
+	AddEnemyPatrolNode("suitor_alive", "PathNodeArea_3", 0.001f, "");
+	AddEnemyPatrolNode("suitor_alive", "PathNodeArea_4", 0.001f, "");
+	AddEnemyPatrolNode("suitor_alive", "PathNodeArea_5", 0.0f, "");
+	AddEnemyPatrolNode("suitor", "PathNodeArea_6", 0.0f, "");
+}
+
+void spawnSuitor1(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("suitor_alive", true);
+	SetMessage("Messages", "hide", 0);
+	GiveSanityDamage(25, true);
+}
+
+
+
+void disableSuitor(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("suitor_alive", false);
+}
+
+void breakVictim1(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("Victim_1", false);
+	SetEntityActive("Victim_1B", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+}
+
+void breakVictim2(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("Victim_2", false);
+	SetEntityActive("Victim_2B", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+}
+
+void breakLast(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("Last", false);
+	SetEntityActive("Last_B", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+	SetEnemyDisableTriggers("suitor_alive", false);
+}
+
+void enableDespawn(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("AreaDisableSelf", true);
+}
+
+void playScareSoundScary(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_suitor_scary.ogg", 1000);
+}
+
+void playScareSoundEasy(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_suitor_easy.ogg", 1000);
+}
+
+void containersTooHeavy(string &in entity){
+	SetMessage("Messages", "tooHeavy", 0);
+}
+
+void makeMessage(string &in entity){
+	if (GetLocalVarInt("objectiveLocked") == 1){
+		SetMessage("Messages", "lockedMechanism", 0);
+	}
+}
+
+void activateMechanism_1(string &in asEntity, int alState){
+	if (GetLocalVarInt("hasPulled_1") == 0){
+		if (GetLocalVarInt("mechanismCondition") == 0){
+			AddLocalVarInt("mechanismCondition", 1);
+			PlayGuiSound("move_gate.snt", 100);
+			SetLocalVarInt("hasPulled_1", 1);
+		}else if (GetLocalVarInt("mechanismCondition") == 1){
+			PlayGuiSound("move_gate.snt", 100);
+			AddTimer("", 2.5f, "playUnlockSound");
+			SetSwingDoorLocked("ObjectiveRoom", false, true);
+			SetLocalVarInt("objectiveLocked", 0);
+			SetLocalVarInt("hasPulled_1", 1);
+		}
+	}
+}
+
+void activateMechanism_2(string &in asEntity, int alState){
+	if (GetLocalVarInt("hasPulled_2") == 0){
+		if (GetLocalVarInt("mechanismCondition") == 0){
+			AddLocalVarInt("mechanismCondition", 1);
+			PlayGuiSound("move_gate.snt", 100);
+			SetLocalVarInt("hasPulled_2", 1);
+		}else if (GetLocalVarInt("mechanismCondition") == 1){
+			PlayGuiSound("move_gate.snt", 100);
+			AddTimer("", 2.5f, "playUnlockSound");
+			SetSwingDoorLocked("ObjectiveRoom", false, true);
+			SetLocalVarInt("objectiveLocked", 0);
+			SetLocalVarInt("hasPulled_2", 1);
+		}
+	}
+}
+
+void playUnlockSound(string &in asTimer){
+	PlayGuiSound("unlock_door.snt", 100);
+	AddPlayerSanity(25);
+}
+
+void addSpawnTimer(string &in entity){
+	AddTimer("", 1.5f, "spawnSuitor");
+}
+
+void spawnSuitor(string &in asTimer){
+	SetEntityActive("suitor", true);
+	GiveSanityDamage(25, true);
+	SetMessage("Messages", "defend", 0);
+	SetDeathHint("Messages", "death_1");
+}
+
+void hitShort(string &in asTimer, string &in asChild, int alState){
+	if (GetLocalVarInt("suitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetLocalVarInt("suitorHealth", 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+	}else if (GetLocalVarInt("suitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetEnemyIsHallucination("suitor", true);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+	}
+}
+
+void hitLong_1(string &in asTimer, string &in asChild, int alState){
+	if (GetLocalVarInt("suitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetLocalVarInt("suitorHealth", 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		ChangePlayerStateToNormal();
+	}else if (GetLocalVarInt("suitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetEntityActive("suitor", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		ChangePlayerStateToNormal();
+	}
+}
+
+void hitLong_2(string &in asTimer, string &in asChild, int alState){
+	if (GetLocalVarInt("suitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetLocalVarInt("suitorHealth", 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		ChangePlayerStateToNormal();
+	}else if (GetLocalVarInt("suitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetEntityActive("suitor", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		ChangePlayerStateToNormal();
+	}
+}
+
+void enableTriggers(string &in asParent, string &in asChild, int alState){
+	SetEnemyDisableTriggers("suitor", false);
+}

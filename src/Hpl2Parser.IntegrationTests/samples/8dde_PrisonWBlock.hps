@@ -1,0 +1,202 @@
+void OnStart()
+{
+AddUseItemCallback("CutBody", "KeyKnife", "KeyBody", "CutBody", true);
+SetEntityPlayerInteractCallback("SectionDoor", "PlayerInteractDoor1", true);
+AddUseItemCallback("", "SectionKey", "SectionDoor", "UnlockDoor", true);
+AddEntityCollideCallback("Player", "AreaBreakDoor", "BreakDoor", true, 1);
+AddEntityCollideCallback("Door_Brute", "Despawn_Door_Brute", "DespawnDoorBrute", true, 1);
+///AddEntityCollideCallback("Player", "Ladder_Quest_Area", "GetLadderQuest", true, 1);
+SetEntityPlayerInteractCallback("LeverDoor", "PlayerInteractDoor2", true);
+SetEntityConnectionStateChangeCallback("LeverLadder", "LadderFallDown");
+AddEntityCollideCallback("Ladder_Brute", "Despawn_Ladder_Brute", "DespawnLadderBrute", true, 1);
+AddUseItemCallback("", "LeverKey", "LeverDoor", "UnlockDoor2", true);
+AddEntityCollideCallback("Player", "Area_End_Level", "EndLevel", true, 1);
+}
+
+void CutBody(string &in asItem, string &in asEntity)
+{
+     SetEntityActive("KeyKnife_Static", true);
+     SetEntityInteractionDisabled(asEntity, true);
+     SetEntityInteractionDisabled("KeyKnife_Static", true);
+     SetEntityActive("StabbingKnife", true);
+     AddTimer("GetKey", 1, "GetKey");
+     RemoveItem(asItem);
+}
+
+void GetKey(string &in asEntity)
+{
+     SetPropHealth("KeyBody", 0);
+     GiveItemFromFile("SectionKey", "key_tomb.ent");
+}
+
+void PlayerInteractDoor1(string &in asEntity)
+{
+    if(HasItem("SectionKey"))
+   {
+          SetMessage("PrisonWBlockMap", "InteractDoorHaveKey1", 0);
+   }
+   else if(GetSwingDoorLocked("SectionDoor")==true)
+   {
+   SetMessage("PrisonWBlockMap", "LevelDoorLocked1", 0);
+   }
+}
+
+void BeginSounds(string &in asTimer)
+{
+      AddTimer("Sounds", RandFloat(15.0f, 30.0f), "Sounds");
+      SetLocalVarInt("SoundID", RandInt(1,9));
+} 
+
+void Sounds(string &in asTimer)
+{
+      RemoveTimer("Sounds");
+
+      if(GetLocalVarInt("SoundID")==1)
+      {
+               PlaySoundAtEntity("s1", "scare_male_terrified.snt", "Player", 0.0f, false);
+      } 
+
+      else if(GetLocalVarInt("SoundID")==2)
+      {
+               PlaySoundAtEntity("s2", "scare_baby_cry.snt", "Player", 0.0f, false);
+      }
+
+      else if(GetLocalVarInt("SoundID")==3)
+      {
+               PlaySoundAtEntity("s3", "insanity_baby_cry.snt", "Player", 0.0f, false);
+      }
+      
+      else if(GetLocalVarInt("SoundID")==4)
+      {
+               PlaySoundAtEntity("s4", "genreal_chain_rattle.snt", "Player", 0.0f, false); 
+      }
+
+      else if(GetLocalVarInt("SoundID")==5)
+      {
+                PlaySoundAtEntity("s5", "15_the_big_scream.snt", "Player", 0.0f, false);
+      }
+
+      else if(GetLocalVarInt("SoundID")==6)
+      {
+                PlaySoundAtEntity("s6", "general_chain_rattle.snt", "Player", 0.0f, false);
+      }
+
+      else if(GetLocalVarInt("SoundID")==7)
+      {
+                PlaySoundAtEntity("s7", "impact_heavy_wood_med.snt", "Player", 0.0f, false);
+      }
+      AddTimer("LoopSound", 0.1f, "BeginSounds");
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity)
+{
+      PlaySoundAtEntity("unlocked", "unlock_door", asEntity, 0.0f, false);
+      SetSwingDoorLocked(asEntity, false, true);
+      RemoveItem(asItem);
+}
+
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+      SetEntityActive("AreaDoorBroke", true);
+      AddTimer("removedoor", 0, "RemoveDoor");
+      SetEntityActive("Door_Brute", true);
+      ClearEnemyPatrolNodes("Door_Brute");
+      AddEnemyPatrolNode("Door_Brute", "PathNodeArea_1", 0, "");
+      AddEnemyPatrolNode("Door_Brute", "PathNodeArea_2", 0, "");
+      AddEnemyPatrolNode("Door_Brute", "PathNodeArea_3", 0, "");
+      AddEnemyPatrolNode("Door_Brute", "PathNodeArea_4", 0, "");
+}
+
+void RemoveDoor(string &in asTimer)
+{
+      SetPropHealth("SectionDoor1", 0);
+}
+
+void DespawnDoorBrute(string &in asParent, string &in asChild, int alState)
+{
+       SetEntityActive("Door_Brute", false);
+}
+
+void GetLadderQuest(string &in asParent, string &in asChild, int alState)
+{
+       AddQuest("lowerladder", "LowerLadder");
+}
+
+void PlayerInteractDoor2(string &in asEntity)
+{
+
+if(HasItem("SmallDoorKey"))
+   {
+          SetMessage("PrisonWBlockMap", "InteractDoorHaveKey2", 0);
+   }
+   else if(GetSwingDoorLocked("LeverDoor")==true)
+   {
+   SetMessage("PrisonWBlockMap", "LevelDoorLocked2", 0);
+   }
+}
+
+void LadderFallDown(string &in asEntity, int alState)
+{
+  
+        if (alState == 0)
+        {
+           SetEntityActive("Ladder_3", true);
+           SetEntityActive("Ladder_4", true);
+           SetEntityActive("LadderArea", true);
+           SetPropStaticPhysics("LeverLadder", true);
+           PlaySoundAtEntity("LadderMove", "lever_wood_move.ogg", "SoundLadder_1", 0, false);
+           AddTimer("", 0, "PlaySoundLadder1");
+           GiveSanityBoostSmall();
+             return;
+        }
+}
+
+void PlaySoundLadder1(string &in asTimer)
+{
+          StopSound("LadderMove", 1);
+          AddTimer("activateladderbrute", 1.0f, "ActivateLadderBrute");
+}
+
+void ActivateLadderBrute(string &in asTimer)
+{
+     ClearEnemyPatrolNodes("Ladder_Brute");
+     SetEntityActive("Ladder_Brute", true);
+     AddEnemyPatrolNode("Ladder_Brute", "PathNodeArea_6", 3, "");
+     AddEnemyPatrolNode("Ladder_Brute", "PathNodeArea_7", 3, "");
+     AddEnemyPatrolNode("Ladder_Brute", "PathNodeArea_8", 0, "");
+}
+
+void DespawnLadderBrute(string &in asParent, string &in asChild, int alState)
+{
+     SetEntityActive("Ladder_Brute", false);
+}
+
+void UnlockDoor2(string &in asItem, string &in asEntity)
+{
+     PlaySoundAtEntity("unlocked", "unlock_door", asEntity, 0.0f, false);
+     SetSwingDoorLocked(asEntity, false, true);
+     RemoveItem(asItem);
+}
+
+void EndLevel(string &in asParent, string &in asChild, int alState)
+{
+    ChangeMap("SafeHall", "PlayerStartArea_1", "", "");
+}
+
+void OnEnter()
+{
+     PlayMusic("04_amb.ogg", true, 1, 4, 2, true);
+     PreloadSound("scare_male_terrified4");
+     PreloadSound("scare_baby_cry4");
+     PreloadSound("insanity_baby_cry2");
+     PreloadSound("15_drag_body");
+     PreloadSound("15_the_big_scream01");
+     PreloadSound("scare_male_terrified1");
+     PreloadSound("impact_heavy_wood_med1");
+     AddTimer("BeginSounds", 1.0f, "BeginSounds");
+}
+
+void OnLeave()
+{
+   
+}

@@ -1,0 +1,278 @@
+float Red_Far, Green_Far = 0;
+float Red_Near, Green_Near = 0;
+float Red_Mid, Green_Mid, Blue_Mid = 0;
+
+void OnStart()
+{
+	/*if(ScriptDebugOn()) //Debug stuff
+	{
+		//GiveItemFromFile("lantern", "lantern.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		//for(int i=0;i<10;i++) GiveItemFromFile("potion_health_"+i, "potion_health.ent");
+		//for(int i=0;i<10;i++) GiveItemFromFile("potion_sanity_"+i, "potion_sanity.ent");
+	}*/
+	
+	SetPlayerLampOil(0);
+	
+	SetupLoadScreen("Loading", "Load_7", 0, "load_car.png");
+	
+	StartUp();
+	
+	CheckPoint("", "LolYouDied", "PlayerRevives", "Death", "Trial7_Darkness");
+	
+	AddEntityCollideCallback("Player", "Trial7_TP", "TPToMain", true, 0);
+	AddEntityCollideCallback("Player", "FuckFallDamage", "FallDamageOP", true, 0);
+	for(int i=0;i<75;i++) AddEntityCollideCallback("Player", "Terror_"+i, "TerrifyPreTimer", false, 1);
+	for(int i=0;i<75;i++) SetEntityPlayerLookAtCallback("Terror_"+i, "LookAtTerror", false); 
+	
+	AddEntityCollideCallback("Player", "Safe", "EnteredMaze", false, 0);
+	AddEntityCollideCallback("Player", "Warning", "NoGo", false, 1);
+	SetLanternLitCallback("CheckLampOil");
+	
+	AddEntityCollideCallback("Player", "LightsArea", "LightsAreSafe", false, 0);
+	
+	AddEntityCollideCallback("Player", "EndMap", "LoadNext", true, 0);
+	
+	AddTimer("", 5, "Heal");
+	
+	FadeLightTo("Middle", 0,0,0,0, -1, 0);
+	for(int i=0;i<4;i++) FadeLightTo("Far_"+i, 0,0,0,0, -1, 0);
+	for(int i=0;i<4;i++) FadeLightTo("Near_"+i, 0,0,0,0, -1, 0);
+}
+
+void Heal(string &in asTimer){
+	AddDebugMessage("Health: "+GetPlayerHealth(), false);
+	AddPlayerHealth(5);
+	AddTimer("", 5, "Heal");
+}
+
+void TPToMain(string &in asParent, string &in asChild, int alState)
+	{TeleportPlayer("Trial7_SpookyHallway");}
+void FallDamageOP(string &in asParent, string &in asChild, int alState)
+	{AddTimer("", 0.1f, "DelayedHeal");}
+void DelayedHeal(string &in asTimer)
+	{SetPlayerHealth(100);}
+
+void GrabLantern(string &in asEntity){
+	SetPlayerLampOil(40);
+	PlayMusic("trial_6.ogg", true, 2.5f, 10.0f, 0, true);
+}
+void LightingTorches(string &in EntityName, string &in OnIgnite){
+	SetLocalVarInt("InMaze", 0);
+	
+	AddLocalVarInt("TorchNumber", 1);
+	AddDebugMessage(GetLocalVarInt("TorchNumber")+"/4 Torches Lit!", false);
+	
+	Red_Mid = Red_Mid + 0.22425f;
+	Green_Mid = Green_Mid + 0.16975f;
+	Blue_Mid = Blue_Mid + 0.03025f;
+	
+	Red_Near = Red_Near + 0.14675f;
+	Green_Near = Green_Near + 0.0965f;
+	
+	Red_Far = Red_Far + 0.06475f;
+	Green_Far = Green_Far + 0.03625f;
+	
+	FadeLightTo("Middle", Red_Mid,Green_Mid,Blue_Mid,0, -1, 0.5f);
+	for(int i=0;i<4;i++) FadeLightTo("Far_"+i, Red_Far,Green_Far,0,0, -1, 0.5f);
+	for(int i=0;i<4;i++) FadeLightTo("Near_"+i, Red_Near,Green_Near,0,0, -1, 0.5f);
+	
+	if(GetLocalVarInt("TorchNumber")==4){
+		
+		SetEntityActive("Blocker", false);
+		SetEntityActive("Blocker_1", true);
+		SetEntityActive("LadderArea_1", true);
+		AddPropForce("hatch_ceiling_1", 0, 100, 0, "world");
+	}
+}
+
+void LightsAreSafe(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("TorchNumber")>0){
+		if(alState==1){
+			AddDebugMessage("In Safe Zone", false);
+			SetLocalVarInt("InMaze", 0);
+		}
+		else if(alState==-1){
+			AddDebugMessage("In DANGER ZONE", false);
+			SetLocalVarInt("InMaze", 1);
+		}
+	}
+}
+
+void LookAtTerror(string &in asEntity, int alState){
+	if(alState==1){
+		FadeRadialBlurTo(1, 0.1);
+		PlaySoundAtEntity("StaticNoise", "insanity_ear_ring.snt", asEntity, 1, false);
+	}
+	else if(alState==-1){
+		FadeRadialBlurTo(0, 1);
+		StopSound("StaticNoise", 1);
+	}
+}
+
+void TerrifyPreTimer(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 0.4f, "Terrify");
+}
+
+void Terrify(string &in asTimer){
+	AddDebugMessage("RIP in Pieces Fiddle 3 second fear. 2009-2013", false); //RIP FIDDLE
+	//FadeOut(0);
+	//SetLanternActive(false, false);
+	SetLocalVarInt("SpookyNumber", RandInt(1,17));
+	TeleportPlayer("Spooked_"+GetLocalVarInt("SpookyNumber"));
+	AddTimer("", 1, "TerrifyTimer");
+	//AddPlayerLampOil(-10);
+}
+void TerrifyTimer(string &in asTimer)
+	{FadeIn(3);}
+	
+	
+void EnteredMaze(string &in asParent, string &in asChild, int alState){
+	if(alState==1){
+		AddDebugMessage("In Safe Zone", false);
+		SetLocalVarInt("InMaze", 0);
+	}
+	else if(alState==-1){
+		AddDebugMessage("In DANGER ZONE", false);
+		SetLocalVarInt("InMaze", 1);
+	}
+}
+void NoGo(string &in asParent, string &in asChild, int alState)
+	{SetMessage("Examine", "Trial7_NoGo", 0);}
+
+
+void CheckLampOil(bool abLit){
+	/*if(GetPlayerLampOil()<=1){
+		AddDebugMessage("PEPSI", false);
+		SetLanternDisabled(true);
+		AddTimer("", 0.1, "PlayerDiesTimer");
+	}*/
+	if(abLit==false && GetLocalVarInt("InMaze")==1){
+		AddDebugMessage("COCACOLA", false);
+		SetLanternDisabled(true);
+		SetLocalVarInt("IntroVar", 0);
+		AddTimer("", 0.1, "PlayerDiesTimer");
+		
+		SetEntityActive("NoLampNoLife", true);
+		SetEntityActive("Warning", true); //I think I need these here for respawns
+	}
+	if(abLit==false && GetLocalVarInt("InMaze")==0){
+		SetEntityActive("NoLampNoLife", true);
+		SetEntityActive("Warning", true);
+	}
+	if(abLit==true && GetLocalVarInt("InMaze")==0){
+		SetEntityActive("NoLampNoLife", false);
+		SetEntityActive("Warning", false);
+	}
+}
+void PlayerDiesTimer(string &in asTimer)
+{
+	AddLocalVarInt("IntroVar", 1);	//What step to play in the event
+	float fEventSpeedIntro = 1.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("IntroVar"))
+	{
+		case 1:
+			FadeOut(1);
+		break;
+		case 2:
+			PlayGuiSound("react_scare.snt", 1);
+			fEventSpeedIntro = 0.25f;
+		break;
+		case 3:
+			SetPlayerActive(false);
+			TeleportPlayer("DeadZone");
+			StartPlayerLookAt("Death_LookAt", 10, 1, "");
+		break;
+		case 4:
+			FadeIn(0);
+			StartScreenShake(0.2f, 6.0f, 0.1f, 0.1f);
+			FadeRadialBlurTo(.75, 0.05);
+			PlayMusic("trial_6_event_death", false, 1.0f, 0, 10, false);
+			PlayGuiSound("sub_shadow_death.ogg", 1.0);
+			fEventSpeedIntro = 0.5f;
+		break;
+		case 5:
+			fEventSpeedIntro = 1.0f;
+		break;
+		case 6:
+			FadePlayerFOVMulTo(0.2f, 0.25f);
+			FadeSepiaColorTo(1.0f, 1);
+			fEventSpeedIntro = 1.0f;
+		break;
+		case 7:
+			FadeOut(0);
+			fEventSpeedIntro = 2.0f;
+		break;
+		case 8:
+			SetPlayerActive(true);
+			SetLanternDisabled(false);
+			FadeRadialBlurTo(0, 1);
+			FadePlayerFOVMulTo(1, 1);
+			FadeSepiaColorTo(0, 1);
+			SetPlayerLampOil(100);
+			StopPlayerLookAt();
+			SetPlayerHealth(0);
+		break;
+	}
+
+	if(GetLocalVarInt("IntroVar") < 8)  AddTimer("", fEventSpeedIntro, "PlayerDiesTimer");	
+}
+void PlayerRevives(string &in asName, int alCount){
+	AddDebugMessage("Scurfs", false);
+	StartPlayerLookAt("LolYouDied_Look", 10, 10, "");
+	StopSound("UrDedM8", 3);
+	AddTimer("", 1, "StopLookAtTimer");
+}
+void StopLookAtTimer(string &in asTimer){
+	StopPlayerLookAt();
+	PlayMusic("trial_6.ogg", true, 2.5f, 10.0f, 0, true); //Restart the music???
+}
+	
+void LoadNext(string &in asParent, string &in asChild, int alState){
+	StartEffectFlash(1.0, 1.0, 1.0);
+	RemoveItem("lantern_1");
+	AddTimer("", 1, "LeaveThisFuckingLevel");
+}
+void LeaveThisFuckingLevel(string &in asTimer)
+	{ChangeMap("Sub_Trial_8", "Trial8_TestRoom", "", "");}
+	
+	
+void StartUp(){
+	FadeOut(0);
+	FadeIn(2.0);
+	StartPlayerLookAt("LookAtMe", 10,10,"");
+	AddTimer("", 1.0f, "StopLookAtPls");
+	AddTimer("", 5.0f, "Voices");
+}
+void StopLookAtPls(string &in asTimer)
+	{StopPlayerLookAt();}
+void Voices(string &in asTimer){
+	AddEffectVoice("M7_S1_P1_01", "", "Voices", "07010101", false, "", 0, 0);
+	AddEffectVoice("M7_S1_P1_02", "", "Voices", "07010102", false, "", 0, 0);
+	AddEffectVoice("M7_S1_P1_03", "", "Voices", "07010103", false, "", 0, 0);
+	AddEffectVoice("M7_S1_P1_04", "", "Voices", "07010104", false, "", 0, 0);
+	AddEffectVoice("M7_S1_P1_05", "", "Voices", "07010105", false, "", 0, 0);
+	AddEffectVoice("M7_S1_P1_06", "", "Voices", "07010106", false, "", 0, 0);
+	AddEffectVoice("M7_S1_P1_07", "", "Voices", "07010107", false, "", 0, 0);
+	SetEffectVoiceOverCallback("TeleportInTo");
+}
+void TeleportInTo(){
+	StartEffectFlash(1.5, 1, 1.5);
+	AddTimer("", 1.5, "Teleporting");
+}
+void Teleporting(string &in asTimer){
+	TeleportPlayer("PlayerStartArea_1");
+	PlayGuiSound("sub_warp.ogg", 1);
+}
+
+
+
+void OnEnter(){
+	AutoSave();
+}	
+void OnLeave(){
+	StopMusic(0,0);
+	SetPlayerLampOil(0);
+}

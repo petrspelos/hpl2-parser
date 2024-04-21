@@ -1,0 +1,304 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+{
+	AddUseItemCallback("", "pipe_piece_2", "pipeusearea", "pipereplace", true);
+	AddEntityCollideCallback("Player", "BookThrowArea_1", "BooksXD", true, 1);
+	AddEntityCollideCallback("Player", "CoughMatu", "Cancer", true, 1);
+	AddEntityCollideCallback("valve_iron_rusty_breakable_1", "ValveEffectArea_1", "ValveQuest", true, 1);
+	AddUseItemCallback("", "wooden_bucket_filled_1", "coal_2", "Extinguish", true);
+	AddUseItemCallback("", "pipe_piece_2", "brokenpipehint", "nope", false);
+	AddEntityCollideCallback("Player", "FirstMonster", "Walks", true, 1);
+	AddEntityCollideCallback("servant_grunt_silent_1", "FirstMonsterEND", "WalksEND", true, 1);
+	AddEntityCollideCallback("hatch_drainage_2", "HatchGrunt", "OMGGRUNTXD", true, 1);
+        PlayMusic("12_puzzle_epoxy.ogg", false, 1, 10, 21, true);
+}
+
+void nope(string &in asItem, string &in asEntity)
+{
+	SetMessage("ScreenText", "nopeXD", 0);
+}
+
+void hands(string &in asEntity)
+{	
+		SetMessage("ScreenText", "handsxd", 0);
+}
+
+void Cancer(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("","player_cough.snt","Player", 0, false);
+}
+
+void BooksXD(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("tome01_1", true);
+	AddTimer("SecondBook", 1.6f, "SecondBook");
+	AddTimer("SecondBookXD", 0.8f, "SecondBookXD");
+	SetPlayerMoveSpeedMul(0.4f);
+	AddPropForce("tome01_1", 0, 0, -720, "world");
+}
+
+void SecondBookXD(string &in asTimer)
+{	
+	PlaySoundAtEntity("","react_pant.snt", "Player", 0, false);
+}
+
+void SecondBook(string &in asTimer)
+{	
+	AddPropForce("book_bible_1", 0, 0, -720, "world");
+	SetEntityActive("book_bible_1", true);
+	AddTimer("ThirdBook", 1.6f, "ThirdBook");
+	PlaySoundAtEntity("","amb_idle_scratch.snt", "chair_wood_1", 0, false);
+}
+
+void ThirdBook(string &in asTimer)
+{	
+	AddPropForce("tome01_2", 0, 0, -720, "world");
+	SetEntityActive("tome01_2", true);
+	SetPlayerMoveSpeedMul(0.89f);
+}
+
+void Walks(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0.46f);
+	AddEnemyPatrolNode("servant_grunt_silent_1","PathNodeArea_1", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_1","PathNodeArea_2", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_1","PathNodeArea_3", 0,"");
+	AddTimer("MoveTimer", 11, "MoveTimer");
+	PlaySoundAtEntity("","react_pant.snt", "Player", 0, false);
+	StartPlayerLookAt("ScriptArea_4", 5.5f, 5.5f, "");
+}
+
+void WalksEND(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_grunt_silent_1", false);
+}
+
+void MoveTimer(string &in asTimer)
+{	
+	SetPlayerMoveSpeedMul(0.89f);
+	StopPlayerLookAt();
+}
+
+void closetbang(string &in asEntity)
+{	
+	AddTimer("Closet", 2, "Closet");
+	PlayMusic("22_paper_daniel01.ogg", false, 0.7f, 0.6f, 10, false);
+}
+
+void Closet(string &in asTimer)
+{	
+	PlaySoundAtEntity("","react_pant.snt", "Player", 0, false);
+	AddTimer("ClosetXD", 1, "ClosetXD");
+	SetPlayerMoveSpeedMul(0.21f);
+	GiveSanityDamage(16, true);
+	StartPlayerLookAt("ScriptArea_7", 5.5f, 5.5f, "");
+	PlaySoundAtEntity("","hit_wood", "ScriptArea_7", 0, false);
+	CreateParticleSystemAtEntity("", "ps_break_pot_plant", "ScriptArea_7", false);
+	PlaySoundAtEntity("","15_man02_whimp.snt","ScriptArea_7", 0, false);
+	PlaySoundAtEntity("","15_man02_whimp.snt","ScriptArea_7", 0, false);
+}
+
+void ClosetXD(string &in asTimer)
+{	
+	SetPlayerMoveSpeedMul(0.8f);
+	StopPlayerLookAt();
+}
+
+///////////////////////////////////////
+////////////////////ValveQuestScript
+
+void ValveQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("ShelfQuestFireXD", "ShelfQuestFireXD");
+	AddQuest("ValveQuest", "ValveQuest");
+	CreateParticleSystemAtEntity("", "ps_hit_metal", "ValveEffectArea_1", false);
+	PlaySoundAtEntity("","07_pick_lock.snt", "Player", 0, false);
+}
+
+void ShelfInteractionHint(string &in asEntity)
+{	
+	SetMessage("ScreenText", "ShelfQuest", 0);
+}
+
+void needstobeoff(string &in asEntity)
+{	
+	AddQuest("ValveQuest", "ValveQuest");
+	SetMessage("ScreenText", "ShelfQuestFire", 0);
+	AddGlobalVarInt("BucketGlobal", 1);
+	AddQuest("ShelfQuestFireXD", "ShelfQuestFireXD");
+}
+
+void SteamInteract(string &in asEntity)
+{	
+	GivePlayerDamage(15, "BloodSplat", true, false);
+	PlaySoundAtEntity("","puzzle_acid.snt", "Player", 0, false);
+}
+
+void Extinguish(string &in asItem, string &in asEntity)
+{
+	SetPropEffectActive("coal_1", true, true);
+	 SetEntityActive("coal_2", false);
+	 SetEntityActive("coal_1", true);
+     RemoveItem(asItem);
+	 CreateParticleSystemAtEntity("", "ps_impact_water_med", "coal_1", false);
+	 CreateParticleSystemAtEntity("", "ps_break_pot_plant", "coal_1", false);
+	 PlaySoundAtEntity("","puzzle_acid.snt", "coal_1", 0, false);
+	 GiveSanityBoostSmall();
+	 SetLampLit("bonfire_1", false, true);
+	 DestroyParticleSystem("SteamParticle_1");
+DestroyParticleSystem("SteamParticle_3");
+DestroyParticleSystem("SteamParticle_2");
+DestroyParticleSystem("SteamParticle_4");
+DestroyParticleSystem("SteamParticle_5");
+DestroyParticleSystem("SteamParticle_6");
+DestroyParticleSystem("SteamParticle_7");
+	 DestroyParticleSystem("firestove");
+	 StopSound("Sound_2", 1);
+	 StopSound("Sound_3", 1);
+	 SetEntityActive("SteamInteract", false);
+	 SetEntityActive("coal_3", false);
+	 SetEntityActive("coal_2", true);
+	 SetEntityActive("pipeusearea", true);
+	 SetEntityActive("brokenpipehint", false);
+}
+
+void finalfix(string &in asEntity)
+{	
+	CompleteQuest("ValveQuest", "ValveQuest");
+	PlaySoundAtEntity("","ui_fire_damage.snt", "coal_2", 0, false);
+	SetMessage("ScreenText", "shouldtrigger", 0);
+	CreateParticleSystemAtEntity("", "ps_fire_stove_small.ps", "coal_1", false);
+	GiveSanityBoostSmall();
+	PlayMusic("02_puzzle.ogg", false, 1, 0.6f, 10, false);
+	 SetEntityActive("book_moveable_3", false);
+	 SetEntityActive("book_moveable_1", true);
+	 AddEntityCollideCallback("book_moveable_1", "BookYes", "BookOpen", true, 1);
+	 CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_9", false);  
+	 CreateParticleSystemAtEntity("", "ps_steam.ps", "SteamInteract_1", false);
+	 PlaySoundAtEntity("","17_steam.snt", "ScriptArea_9", 0, false);
+	 PlaySoundAtEntity("","17_steam.snt", "SteamInteract_1", 0, false);
+}
+
+void hintpipe(string &in asEntity)
+{
+	SetMessage("ScreenText", "pipehintXD", 0);
+}
+	
+void OMGGRUNTXD(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("Checkpoint5", "GruntEast", "DeathSettingsEast", "DeathHints", "DHintEast");
+	PlayMusic("10_event_coming.ogg", false, 0.7f, 0.6f, 10, false);
+	CreateParticleSystemAtEntity("", "ps_break_pot_plant", "ScriptArea_6", false);
+	CreateParticleSystemAtEntity("", "ps_break_pot_plant", "ScriptArea_5", false);
+	SetPropHealth("prison_section_2", 0);
+	SetEntityActive("tome01_1", true);
+	AddTimer("GruntAppear", 1.1f, "GruntAppear");
+	SetPlayerMoveSpeedMul(0.91f);
+	PlaySoundAtEntity("","15_ripp_door.snt", "candlestick_wall_orange_14", 0, false);
+	GiveSanityDamage(42, true);
+	SetMoveObjectState("shelf_secret_door_rot_2", 0.4f);
+	SetEntityActive("ScriptArea_2", false);
+	SetEntityActive("ScriptArea_3", false);
+        SetEntityActive("mansion_3", false);
+	StartScreenShake(0.6f, 0.6f, 0.6f, 2.6f);
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_1", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_2", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_3", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_4", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_5", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_6", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_7", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_8", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_9", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_10", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_11", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_12", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_13", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_14", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_15", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_16", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_17", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_18", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_19", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_20", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_21", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_22", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_23", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_24", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_25", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_26", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_27", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_28", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_29", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_30", 0,"");
+	AddEnemyPatrolNode("servant_grunt_silent_2","SecondGruntPath_31", 0,"");
+	SetEntityActive("servant_grunt_silent_2", true);
+	AddTimer("MusicIntense", 21.6f, "MusicIntense");
+	StopSound("ambienceXD", 1);
+	StopSound("ambienceXD2", 1);
+}
+
+void pipereplace(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("","25_attach_bar_metal.snt", "Player", 0, false);
+	SetEntityActive("replacedpipe", true);
+	RemoveItem(asItem);
+	SetEntityActive("ScriptArea_8", true);
+}
+
+void DeathSettingsEast(string &in asName, int alCount)
+{
+	FadeIn(1);
+	SetPlayerRunSpeedMul(0.8f);
+	SetPlayerCrouching(true);
+	SetEntityActive("servant_grunt_silent_2", true);
+	PlayMusic("29_amb.ogg", true, 1, 0.6f, 10, false);
+}
+
+void MusicIntense(string &in asTimer)
+{	
+	PlayMusic("Suspense.ogg", true, 1, 0.6f, 10, false);
+}
+
+void BookOpen(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("","lock_door.snt", "Player", 0, false);
+	SetMoveObjectState("shelf_secret_door_rot_1", 0.6f);
+	GiveSanityBoostSmall();
+	SetEntityActive("book_moveable_1", false);
+	SetEntityActive("book_moveable_2", true);
+	SetEntityActive("ScriptArea_1", false);
+}
+
+void SecondKeyPickUp(string &in asEntity)
+{
+	SetLightVisible("PointLight_28", false);
+	SetLightVisible("PointLight_10", false);
+	SetMessage("ScreenText", "lastkey", 0);
+}
+
+void feelslike(string &in asEntity)
+{
+	SetMessage("ScreenText", "feelsxd", 0);
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+	PlaySoundAtEntity("ambienceXD","03_amb.snt","Player", 0, false);
+	PlaySoundAtEntity("ambienceXD2","03_amb_library.snt","Player", 0, false);
+	
+}
+
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	StopSound("ambienceXD", 1);
+	StopSound("ambienceXD2", 1);
+	StopMusic(1, 10);
+}
+

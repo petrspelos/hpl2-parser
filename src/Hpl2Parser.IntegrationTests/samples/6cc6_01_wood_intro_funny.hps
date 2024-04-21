@@ -1,0 +1,330 @@
+void OnEnter()
+{
+	PreloadParticleSystem("ps_acid_web_dissolve.ps");
+	PreloadParticleSystem("ps_dust_falling.ps");
+	PreloadParticleSystem("ps_light_dust.ps");
+	PreloadParticleSystem("ps_light_dust_large.ps");
+	PreloadParticleSystem("ps_area_fog.ps");
+	PreloadParticleSystem("ps_area_fog_large.ps");
+	PreloadParticleSystem("ps_area_fog_small.ps");
+	PreloadParticleSystem("ps_area_fog_sewer_long_warmup.ps");
+	PreloadParticleSystem("ps_door_damage_wood.ps");
+	PreloadParticleSystem("ps_break_wood.ps");
+	
+	PreloadParticleSystem("ps_water_rain.ps");
+	
+	PreloadSound("01_ambience_forest.snt");
+	PreloadSound("01_scare_wings_loop.snt");
+	PreloadSound("01_rain_no3d.snt");
+	PreloadSound("15_player_burn.snt");
+	PreloadSound("close_gate.snt");
+	
+	PreloadSound("gameplay_acid_web.snt");
+	PreloadSound("lock_door.snt");
+	PreloadSound("locked_door.snt");
+	PreloadSound("open_door.snt");
+	PreloadSound("open_door_long.snt");
+	PreloadSound("door_gate_bar_locked.snt");
+	PreloadSound("door_mansion_close.snt");
+	PreloadSound("door_mansion_open.snt");
+	PreloadSound("close_door.snt");
+	PreloadSound("close_door_long.snt");
+	PreloadSound("unlock_door.snt");
+	PreloadSound("react_breath.snt");
+	PreloadSound("react_breath_slow.snt");
+	PreloadSound("react_pant.snt");
+	PreloadSound("react_scare.snt");
+	PreloadSound("react_sigh.snt");
+	PreloadSound("general_fire_burning.snt");
+	PreloadSound("general_fire_burning_low.snt");
+	PreloadSound("break_pottery.snt");
+	PreloadSound("break_glass_bottle.snt");
+	PreloadSound("break_glass_large.snt");
+	PreloadSound("break_wood.snt");
+	PreloadSound("break_wood_metal.snt");
+	PreloadSound("guardian_activated.snt");
+	PreloadSound("guardian_ontop.snt");
+	PreloadSound("hit_wood.snt");
+	PreloadSound("player_climb.snt");
+	PreloadSound("player_crouch.snt");
+	PreloadSound("player_jump.snt");
+	PreloadSound("player_stand.snt");
+	PreloadSound("roll_wood.snt");
+	PreloadSound("slime_attack_normal_hit.snt");
+	PreloadSound("slime_create.snt");
+	PreloadSound("slime_loop.snt");
+	PreloadSound("step_run_dirt.snt");
+	PreloadSound("step_walk_dirt.snt");
+	PreloadSound("step_sneak_dirt.snt");
+	PreloadSound("step_run_fabric.snt");
+	PreloadSound("step_walk_fabric.snt");
+	PreloadSound("step_sneak_fabric.snt");
+	PreloadSound("step_run_metal.snt");
+	PreloadSound("step_walk_metal.snt");
+	PreloadSound("step_sneak_metal.snt");
+	PreloadSound("step_run_organic.snt");
+	PreloadSound("step_walk_organic.snt");
+	PreloadSound("step_sneak_organic.snt");
+	PreloadSound("step_run_rock.snt");
+	PreloadSound("step_walk_rock.snt");
+	PreloadSound("step_sneak_rock.snt");
+	PreloadSound("step_run_wood.snt");
+	PreloadSound("step_run_wood_squeaky.snt");
+	PreloadSound("step_walk_wood.snt");
+	PreloadSound("step_walk_wood_squeaky.snt");
+	PreloadSound("step_sneak_wood.snt");
+	PreloadSound("step_sneak_wood_squeaky.snt");
+	PreloadSound("flashback_flash.snt");
+	PreloadSound("hurt_pant.snt");
+	PreloadSound("sanity_damage.snt");
+	PreloadSound("sanity_drain_high.snt");
+	PreloadSound("sanity_drain_med.snt");
+	PreloadSound("sanity_drain_low.snt");
+	PreloadSound("sanity_heartbeat.snt");
+	PreloadSound("sanity_pant.snt");
+	PreloadSound("ui_add_quest.snt");
+	PreloadSound("ui_lantern_off.snt");
+	PreloadSound("ui_lantern_on.snt");
+	PreloadSound("ui_sanity_gain.snt");
+	PreloadSound("ui_terror_meter.snt");
+	PreloadSound("enemy_hallucination_disappear.snt");
+
+	SetMapDisplayNameEntry("Wood1");
+}
+
+void OnLeave()
+{
+	if(GetPlayerLampOil() <= 10) AddPlayerLampOil(10.0f);
+}
+
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaFire", "CollideAreaFire", false, 0);
+	AddEntityCollideCallback("Player", "AreaDiscoverHeaven", "CollideAreaDiscoverHeaven", true, 1);
+	AddEntityCollideCallback("Player", "AreaLoadWoodMap", "CollideAreaLoadWoodMap", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaRoad_1", "CollideAreaRoad", true, 1);
+	AddEntityCollideCallback("Player", "AreaRoad_2", "CollideAreaRoad", true, 1);
+	AddEntityCollideCallback("Player", "AreaEndOfTheRoad", "CollideAreaEndOfTheRoad", true, 1);
+	SetPlayerLookSpeedMul(0.6f);
+	SetPlayerMoveSpeedMul(0.6f);
+	SetPlayerRunSpeedMul(0.6f);
+	
+	FadeGlobalSoundVolume(0.0f, 0.0f);
+	AddTimer("fadeinactiveplayer", 2.0f, "TimerFadeScreen");
+	AddTimer("", 0.1f, "TimerFadeGlobalSound");
+	SetPlayerActive(false);
+	
+	PlaySoundAtEntity("rainsound", "01_rain_no3d.snt", "AreaRainSound", 0, true);
+
+	SetMapDisplayNameEntry("Wood1");
+	
+	SetupLoadScreen("LoadingHints", "01To02", 0, "game_loading_desert.jpg");
+	
+	SetGlobalVarInt("InsaneDifficulty", 0);
+}
+
+void CollideAreaRoad(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("scareeffect", 1.0f, "TimerPlayerReactions");
+	AddTimer("breatheffect", 3.0f, "TimerPlayerReactions");
+	AddTimer("breath", 5.0f, "TimerPlayerReactions");
+	if(asChild == "AreaRoad_1")
+	{
+		PlaySoundAtEntity("woman", "01_woman_angry.snt", "angel_statue_1", 0.1f, false);
+		PlayMusic("03_paper_village", false, 1.0f, 0.1f, 10, false);
+		SetMessage("Woman", "IWillBeYourDeath", 5.5f);
+		SetPropActiveAndFade("angel_statue_2", true, 1.0f);
+	}
+	if(asChild == "AreaRoad_2")
+	{
+		PlayGuiSound("guardian_ontop.snt", 0.9f);		
+		for(int i=1;i<24;i++) SetPropActiveAndFade("slime_"+i, true, 1.0f);
+	}
+}
+
+void CollideAreaEndOfTheRoad(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 6.0f, "TimerStartIntro");
+	
+	AddTimer("resetspeedmul", 6.0f, "TimerStopLook");
+	FadeGlobalSoundVolume(0.0f, 6.0f);
+	FadeOut(6.0f);
+	SetPlayerActive(false);
+	StartPlayerLookAt("AreaLookAt", 1.6f, 1.6f, "");
+	StopMusic(6.0f, 10);
+}
+
+void TimerStartIntro(string &in asTimer)
+{
+	AddTimer("jack01", 9.0f, "TimerSaySomething");
+	SetMessage("Jack", "Intro01", 9.0f);
+	AddTimer("fadeinactiveplayer", 29.0f, "TimerFadeScreen");
+	AddTimer("fadeglobalsound", 27.0f, "TimerFadeGlobalSound");	
+	PlayMusic("01_paper_self", false, 1.0f, 1.0f, 10, true);
+	SetPlayerActive(false);
+	SetPlayerCrouching(true);	
+	SetPlayerLampOil(50.0f);
+	SetPlayerSanity(100.0f);
+	
+	StopSound("rainsound", 2.0f);
+	
+	TeleportPlayer("PlayerStartArea_2");
+}
+
+void CollideAreaFire(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1) AddTimer("burn", 0.1f, "TimerBurnFire");
+	else RemoveTimer("burn");
+}
+
+void TimerBurnFire(string &in asTimer)
+{
+	if(asTimer == "touch")
+	{
+		PlayGuiSound("15_player_burn.snt", 1.0f);
+		GivePlayerDamage(5.0f, "BloodSplat", false,false);
+		AddTimer("InteractFire", 1.0f, "TimerInteractFire");
+		return;
+	}	
+	PlayGuiSound("15_player_burn.snt", 1.0f);
+	GivePlayerDamage(5.0f, "BloodSplat", false,false);	
+	AddTimer("burn", 1.0f, "TimerBurnFire");
+}
+
+void TimerSaySomething(string &in asTimer)
+{
+	if(asTimer == "jack01")
+	{
+		SetMessage("Jack", "Intro02", 9.5f);
+		AddTimer("jack02", 9.5f, "TimerSaySomething");
+	}
+	if(asTimer == "jack02")
+	{
+		SetMessage("Jack", "Intro03", 10.0f);
+		AddTimer("jack03", 10.0f, "TimerSaySomething");
+	}
+	if(asTimer == "jack03") SetMessage("Jack", "Intro04", 5.5f);
+}
+
+void TimerFadeGlobalSound(string &in asTimer)
+{
+	FadeGlobalSoundVolume(1.0f, 4.0f);
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")
+	{
+		FadeIn(2.0f);
+	}
+	if(asTimer == "fadeout")
+	{
+		FadeOut(2.0f);
+	}
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+		SetPlayerCrouching(false);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}	
+}
+
+void CollideAreaDiscoverHeaven(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == -1)
+	{
+	
+	}
+	else if(alState == 1)
+	{
+		StartPlayerLookAt("castle_gate_arched01_1", 2.2f, 2.2f, "");
+		AddTimer("resetspeedmul", 2.0f, "TimerStopLook");
+		PlayGuiSound("close_gate", 0.6f);
+		SetPlayerMoveSpeedMul(0.4f);
+		SetPlayerRunSpeedMul(0.4f);
+		SetPlayerLookSpeedMul(0.4f);
+		
+		SetEntityActive("BoxLoadWoodMap", false);
+		SetEntityActive("AreaLoadWoodMap", true);
+		
+		SetMessage("Jack", "01", 6.0f);
+	}
+}
+
+void CollideAreaLoadWoodMap(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("02_wood_south_funny.map", "PlayerStartArea_1", "", "");
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);	
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}

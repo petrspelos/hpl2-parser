@@ -1,0 +1,172 @@
+void OnStart()
+{
+	wakeUp ();
+	GiveItem("lantern", "lantern", "", "lantern.tga", 1.0f);
+	AddEntityCollideCallback("Player", "coldtext", "coldtext", true, 1);
+	AddEntityCollideCallback("Player", "shakeandrumble", "shakeandrumble", true, 1);
+	SetPlayerLampOil(15.0f);
+	AddUseItemCallback("", "hollow_needle_1", "cellar_wood01_6", "tounlockone", true);
+	AddEntityCollideCallback("Player", "memento1", "memento1", true, 1);
+	AddUseItemCallback("", "chemical_container_2", "firstpuzzle", "jarplace", true);
+	AddUseItemCallback("", "half", "chemicalthing", "jarplacenew", true);
+	AddUseItemCallback("", "gland", "half", "finalstage", true);
+	AddUseItemCallback("", "full", "boards", "noboards", true);
+	AddUseItemCallback("", "sharpboy", "toremove", "toremove", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("22_amb", true, 5, 5, 0, true);
+}
+
+void OnLeave()
+{
+
+}
+////START/SCENE//// 
+
+void wakeUp () 
+{
+    FadeOut(0);          
+    PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0.1, false);
+    FadeImageTrailTo(2, 2);
+    FadeSepiaColorTo(0, 0);
+    SetPlayerActive(false);   
+    FadePlayerRollTo( 40, 40, 40);                 
+    FadeRadialBlurTo(0.55, 2);
+    SetPlayerCrouching(true);              
+    AddTimer("trig1", 7.0f, "beginStory");   
+    AddTimer("fadeintime", 2.0f, "fadeintime");   
+	SetLanternDisabled(true);	
+}
+
+void beginStory(string &in asTimer)
+{
+    ChangePlayerStateToNormal();
+    SetPlayerActive(true);
+    PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0.1, false);
+    FadePlayerRollTo(0, 33, 33);        
+    FadeRadialBlurTo(0.0, 3);
+    FadeSepiaColorTo(0, 0);
+    SetPlayerCrouching(false);
+    FadeImageTrailTo(0,1);
+    PlaySoundAtEntity("Player", "react_pant.snt", "Player", 0.1, false);
+	SetLanternDisabled(false);
+    AddTimer("looktime", 2.0f, "looktime");   
+}
+
+void fadeintime(string &in asTimer)
+{
+    FadeIn(5);
+}
+
+void looktime(string &in asTimer)
+{
+	StartPlayerLookAt("tolookat", 5.0f, 8.0f, "nolook");
+}
+
+void nolook()
+{
+	StopPlayerLookAt();
+	PlayGuiSound("react_pant.snt", 90);
+    SetMessage("Messages", "trapped", 0.0f);
+}
+
+/////////////
+
+////TEXT////
+
+void coldtext(string parent, string child, int state)
+{
+    SetMessage("Messages", "cold", 0.0f);
+    PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0.1, false);
+}
+
+/////////////
+
+////DOOR////
+
+
+void tounlockone(string &in item, string &in door)
+{
+	SetSwingDoorLocked("cellar_wood01_6", false, true);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem("hollow_needle_1");
+}
+
+void lockeddoor(string &in entity)
+ 
+{
+    if(GetSwingDoorLocked("cellar_wood01_6") == true)
+    {
+ 
+        SetMessage("Messages", "locked", 0.0f);
+ 
+    }
+}
+
+///////////////
+
+////JOURNAL////
+
+void memento1(string parent, string child, int state)
+{
+	AddQuest("area1", "memento1");
+}
+
+/////////////
+
+////PUZZELS////
+
+void jarplace(string &in item, string &in door)
+{
+	SetEntityActive("empty", true);
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+	RemoveItem("chemical_container_2");
+	CreateParticleSystemAtEntity("ps_acid_machine_bubble_end", "ps_acid_machine_bubble_end.ps", "dripple", true);
+    AddTimer("newobject", 4.0f, "newobject");   
+    AddTimer("dripsound", 3.0f, "dripsound");   
+}
+
+void newobject(string &in asTimer)
+{
+	SetEntityActive("empty", false);
+	SetEntityActive("half", true);
+}
+
+void dripsound(string &in asTimer)
+{
+	PlayGuiSound("puzzle_add_chemical.snt", 100);
+}
+
+void jarplacenew(string &in item, string &in door)
+{
+	SetEntityActive("statichalf", true);
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+	RemoveItem("half");
+}
+
+void finalstage(string &in item, string &in door)
+{
+	SetEntityActive("full", true);
+	SetEntityActive("half", false);
+	PlayGuiSound("puzzle_add_chemical.snt", 100);
+	RemoveItem("gland");
+}
+
+void noboards(string &in item, string &in door)
+{
+	SetEntityActive("boards", false);
+	SetEntityActive("broken", true);
+	RemoveItem("full");
+	PlayGuiSound("puzzle_acid.snt", 100);
+	CompleteQuest("area1", "memento1");
+}
+
+void toremove(string &in item, string &in door)
+{
+	SetEntityActive("gland", true);
+	RemoveItem("sharpboy");
+	PlayGuiSound("impact_organic_med.snt", 100);
+}
+

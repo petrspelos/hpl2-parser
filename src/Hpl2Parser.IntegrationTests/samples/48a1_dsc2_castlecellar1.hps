@@ -1,0 +1,619 @@
+//////////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+SetPropHealth("castle_2", 0.5f);
+AddUseItemCallback("", "KeyPrisonSecret", "work_desk_door_worn_6", "UsedKeyOnCabinet", true);
+AddUseItemCallback("", "PortalRoomKey", "prison_1", "UsedKeyOnPortalDoor", true);
+AddUseItemCallback("", "RitualKnife", "orb_1", "EndGame", true);
+SetEntityPlayerInteractCallback("work_desk_door_worn_6", "AddCabinetQuest", true);
+AddEntityCollideCallback("Player", "GruntDoor", "GruntDoorEnter", true, 1);
+AddEntityCollideCallback("servant_grunt_1", "GruntGoneActivate", "GruntGoneActivate", true, 1);
+AddEntityCollideCallback("Player", "PlankBreakArea", "BreakPlanks", true, 1);
+SetEntityPlayerInteractCallback("cellar_wood01_1", "DelayedDoorScare", true);
+AddEntityCollideCallback("Player", "noises", "Noises", true, 1);
+AddEntityCollideCallback("Player", "BruteWalkBy", "BruteWalkBy", true, 1);
+AddEntityCollideCallback("servant_brute_2", "BruteWalkDanger", "BruteWalkDanger", true, 1);
+AddEntityCollideCallback("Player", "BruteWarning1", "BruteWarningOne", true, 1);
+AddEntityCollideCallback("Player", "BruteEnter", "BruteEnter", true, 1);
+SetEntityInteractionDisabled("hanging_lantern_ceiling_1", true);
+AddEntityCollideCallback("Player", "FamiliarFlag", "FamiliarFlagEvent", true, 1);
+AddEntityCollideCallback("Player", "OrbFind", "OrbFind", true, 1);
+SetEntityPlayerInteractCallback("orb_6_of_7", "DestroyOrb", true);
+SetEntityConnectionStateChangeCallback("lever_small01_1", "SecretShelfMove");
+AddEntityCollideCallback("corpse_male_1", "ImpactSoundArea", "ImpactSound", true, 1);
+AddEntityCollideCallback("Player", "DeathAreaPre", "DeathAreaPre", false, 1);
+    AddEntityCollideCallback("Player", "DeathAreaPre2", "DeathAreaPre", false, 1);
+AddEntityCollideCallback("Player", "DeathArea", "DeathArea", false, 1);
+    AddEntityCollideCallback("ladder_grab_1", "DeathArea", "ResetFirstLadder", false, 1);
+	AddEntityCollideCallback("ladder_grab_2", "DeathArea", "ResetSecondLadder", false, 1);
+    AddEntityCollideCallback("Player", "DeathArea2", "DeathArea", false, 1);
+AddEntityCollideCallback("Player", "PlankBreak", "PlankBreak", true, 1);
+AddEntityCollideCallback("Player", "PlankNotice", "PlankNotice", true, 1);
+SetEntityPlayerInteractCallback("wooden_boards_block_1", "PlankBreakByHandOne", true);
+AddEntityCollideCallback("Player", "NoiseArea1", "NoisesTwo", true, 1);
+AddEntityCollideCallback("Player", "DistantNoises", "DistantNoises", true, 1);
+AddEntityCollideCallback("ladder_grab_1", "PlankDontBreak", "DontBreakIfLadder", false, 0);
+SetEntityInteractionDisabled("lantern_1", true);
+AttachPropToProp("brick_4", "crank_wood_no_mount_2", "crank_wood_no_mount.ent", 0.154, 0.033, 0, 90, 90, 0);
+	AttachPropToProp("brick_4", "cogwheel_tiny01_1", "cogwheel_tiny01.ent", -0.185, 0.02, -0.041, 90, 0, 0);
+    AttachPropToProp("brick_4", "cogwheel_tiny01_2", "cogwheel_tiny01.ent", -0.189, 0.043, 0.036, 90, 0, 0);
+	AddEntityCollideCallback("brick_4", "KeyInsert", "InsertCrankKey", true, 0);
+AddEntityCollideCallback("Player", "DrownArea1", "Drowning", false, 1);
+    AddEntityCollideCallback("Player", "DrownArea2", "Drowning", false, 1);
+AddTimer("StaticRagdolls", 0.1, "StaticRagdolls");
+PlayMusic("23_amb.ogg", true, 1.0f, 1.0f, 1, false);
+}
+
+
+
+void StaticRagdolls(string &in asTimer)
+{
+SetPropStaticPhysics("corpse_male_4", true);
+SetPropStaticPhysics("corpse_male_5", true);
+}
+
+void BreakPlanks(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("ReactTimer", 0.5f, "PlankBreakFall");
+PlaySoundAtEntity("", "wood_creak.snt", "wooden_boards_block_5", 0, false);
+}
+
+    void PlankBreakFall(string &in asTimer)
+    {
+	AddPropImpulse("shovel_2", 0.1f, 0.1f, 0.1f, "world");
+    SetEntityActive("wooden_boards_block_5", false);
+    SetEntityActive("wooden_boards_block_6", true);
+    PlaySoundAtEntity("", "break_wood.snt", "Player", 0, false);
+    }
+
+void SecretShelfMove(string &in asEntity, int alState)
+{
+    if (alState == 1)
+    {
+    SetMoveObjectState("shelf_secret_door_1", 1.0f);
+    PlaySoundAtEntity("", "lever_metal_min_max.ogg", "lever_small01_1", 0, false);
+        return;
+    }
+}
+
+void DestroyOrb(string &in asEntity)
+{
+CreateParticleSystemAtEntity("fadesmoke", "ps_guardian_appear_explosion.ps", "orb_6_of_7", false);
+CreateParticleSystemAtEntity("fadesmoke", "ps_dust_falling_rumble.ps", "orb_6_of_7", false);
+SetEntityActive("orb_6_of_7", false);
+    SetLightVisible("SpotLight_10", false);
+    SetLightVisible("SpotLight_11", false);
+    SetLightVisible("SpotLight_12", false);
+    SetLightVisible("SpotLight_13", false);
+	SetLampLit("orb_pedestal_1", false, true);
+PlaySoundAtEntity("", "guardian_distant2.snt", "Player", 0, false);
+PlaySoundAtEntity("", "break_glass_large.snt", "Player", 0, false);
+GiveSanityDamage(20.0f, true);
+SetMessage("Level7", "OrbDestroy", 2.5f);
+}
+
+
+
+void OrbFind(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Level7", "OrbFind", 2.0f);
+}
+
+void DistantNoises(string &in asParent, string &in asChild, int alState)
+{
+CheckPoint("Chk1", "PlayerStartArea_2", "ResetLaddersAndGrunt", "", "");
+PlaySoundAtEntity("", "distant_noises.snt", "storage_box_wood01_large_4", 0, false);
+SetMessage("Level7", "EnemyPrison", 4);
+SetEntityActive("servant_grunt_2", true);
+    SetNPCAwake("servant_grunt_2", false, false);
+    AddEnemyPatrolNode("servant_grunt_2", "PathNodeFix", 9999, "Idle");
+    AddEnemyPatrolNode("servant_grunt_2", "PathNodeFix2", 9999, "Idle");
+}
+
+    void ResetLaddersAndGrunt(string &in asName, int alCount)
+	{
+	SetEntityPos("ladder_grab_2", -36.574, 0.695, -128.844);
+	SetEntityPos("wood_platform_1", -20.9, 0.916, -156.243);
+	SetEntityActive("servant_grunt_2", true);
+    SetNPCAwake("servant_grunt_2", false, false);
+    AddEnemyPatrolNode("servant_grunt_2", "PathNodeFix", 9999, "Idle");
+    AddEnemyPatrolNode("servant_grunt_2", "PathNodeFix2", 9999, "Idle");
+	}
+
+    void ResetLadders(string &in asName, int alCount)
+	{
+	SetEntityPos("ladder_grab_2", -36.574, 0.695, -128.844);
+	SetEntityPos("wood_platform_1", -20.9, 0.916, -156.243);
+	}
+
+void PlankBreak(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "break_wood.snt", "Player", 0, false);
+SetEntityActive("wooden_boards_block_1", false);
+SetEntityActive("wooden_boards_block_2", true);
+}
+
+        void PlankBreakByHandOne(string &in asEntity)
+		{
+		PlaySoundAtEntity("", "wood_creak.snt", "wooden_boards_block_1", 0, false);
+		SetEntityPlayerInteractCallback("wooden_boards_block_1", "PlankBreakByHandTwo", true);
+		}
+		
+		    void PlankBreakByHandTwo(string &in asEntity)
+		    {
+		    PlaySoundAtEntity("", "wood_creak.snt", "wooden_boards_block_1", 0, false);
+		    SetEntityPlayerInteractCallback("wooden_boards_block_1", "PlankBreakByHandThree", true);
+		    }
+			
+			    void PlankBreakByHandThree(string &in asEntity)
+		        {
+				RemoveEntityCollideCallback("Player", "PlankBreak");
+		        PlaySoundAtEntity("", "break_wood.snt", "wooden_boards_block_2", 0, false);
+                SetEntityActive("wooden_boards_block_1", false);
+                SetEntityActive("wooden_boards_block_2", true);
+		        }
+
+    void PlankNotice(string &in asParent, string &in asChild, int alState)
+    {
+	SetPlayerActive(false);
+	StartPlayerLookAt("wooden_boards_block_1", 1.0f, 1.5f, "");
+    SetMessage("Level7", "PlankNotice", 5.0f);
+	AddTimer("", 3.0f, "StopLook");
+	CheckPoint ("", "PlayerStartArea_3", "MusicLadderReset", "", "");
+    }
+	    
+		void MusicLadderReset(string &in asName, int alCount)
+		{
+		PlayMusic("23_amb.ogg", true, 1.0f, 1.0f, 1, false);
+		SetEntityPos("ladder_grab_1", -36.52, 2.459, -78.267);
+		}
+		
+
+void DeathAreaPre(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("fallscream.ogg", 100.0f);
+SetLanternActive(false, true);
+}
+
+    void DeathArea(string &in asParent, string &in asChild, int alState)
+    {
+    PlaySoundAtEntity("", "break_wood_metal.snt", "Player", 0, false);
+    GivePlayerDamage(100.0f, "BloodSplat", true, true);
+    }
+	
+	void ResetFirstLadder(string &in asParent, string &in asChild, int alState)
+    {
+    SetEntityPos("ladder_grab_1", -36.52, 2.459, -78.267);
+    }
+	
+		void ResetSecondLadder(string &in asParent, string &in asChild, int alState)
+        {
+	    SetEntityPos("ladder_grab_2", -36.574, 0.695, -128.844);
+        }
+
+void FamiliarFlagEvent(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+StartPlayerLookAt("PlayerLookAt", 1.0f, 1.5f, "");
+SetMessage("Level7", "Flag", 3.0f);
+AddTimer("LookTwo", 4.0f, "LookTwo");
+}
+
+    void LookTwo(string &in asTimer)
+    {
+	StartPlayerLookAt("house_farmhouse01_lowres_3", 1.0f, 1.5f, "");
+	SetMessage("Level7", "Models", 2.0f);
+    AddTimer("StopLook", 2.0f, "StopLook");
+    }
+
+    void StopLook(string &in asTimer)
+    {
+    StopPlayerLookAt();
+	SetPlayerActive(true);
+    }
+	
+
+void GruntDoorEnter(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "door_level_cellar_open.snt", "level_celler_1", 0, false);
+AddTimer("GruntSpawn", 2.3f, "GruntSpawn");
+}
+
+    void GruntSpawn(string &in asTimer)
+    {
+    PlaySoundAtEntity("", "door_level_cellar_close.snt", "level_celler_1", 0, false);
+    SetEntityActive("servant_grunt_1", true);
+        AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_2", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_3", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_4", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_5", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_6", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_5", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_4", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_7", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_8", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_9", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_2", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 0, "");
+	    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_10", 0, "");
+    }
+	
+	    void GruntGoneActivate(string &in asParent, string &in asChild, int alState)
+        {
+        AddEntityCollideCallback("servant_grunt_1", "GruntGone", "GruntGone", false, 1);
+        }
+		
+		void GruntGone(string &in asParent, string &in asChild, int alState)
+        {
+        PlaySoundAtEntity("", "door_level_cellar_open.snt", "level_celler_1", 0, false);
+        AddTimer("GruntGoneDoorCloseSound", 2.3f, "GruntGoneDoorCloseSound");
+        }
+		
+		void GruntGoneDoorCloseSound(string &in asTimer)
+        {
+		SetEntityActive("servant_grunt_1", false);
+		PlaySoundAtEntity("", "door_level_cellar_close.snt", "level_celler_1", 0, false);
+		}
+
+void DelayedDoorScare(string &in asEntity)
+{
+AddTimer("DoorScare", 1.3f, "DoorScare");
+}
+
+    void DoorScare(string &in asTimer)
+    {
+	GiveSanityDamage(10, true);
+	PlaySoundAtEntity("", "break_wood.snt", "Player", 0, false);
+	SetSwingDoorLocked("cellar_wood01_1", false, false);
+	SetPropHealth("cellar_wood01_1", 0.1f);
+	PlaySoundAtEntity("", "guardian_distant3.snt", "Player", 0, false);
+	}
+
+void Noises(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "15_man_whimp2.ogg", "chair_wood02_10", 0.0f, false);
+}
+
+void NoisesTwo(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "insanity_whisper.snt", "Player", 0.0f, false);
+}
+
+void BruteWalkBy(string &in asParent, string &in asChild, int alState)
+{
+SetLanternActive(false, true);
+SetPlayerCrouching(true);
+StartPlayerLookAt("chair_wood02_10", 5.0f, 7.0f, "");
+SetPlayerActive(false);
+AddTimer("BruteWalkByTwo", 3.5f, "BruteWalkByTwo");
+PlaySoundAtEntity("", "15_man_hunted.ogg", "chair_wood02_10", 0.0f, false);
+PlaySoundAtEntity("", "brute_alert1.ogg", "chair_wood02_10", 0.0f, false);
+}
+
+    void BruteWalkByTwo(string &in asTimer)
+    {
+	AddTimer("BruteWalkByThree", 2.0f, "BruteWalkByThree");
+	SetEntityActive("corpse_male_1", true);
+	AddPropImpulse("corpse_male_1", 80.0f, -15.0f, 30.0f, "world");
+	PlaySoundAtEntity("", "blade_hit.ogg", "chair_wood02_10", 0.0f, false);
+	}
+	
+	    void ImpactSound(string &in asParent, string &in asChild, int alState)
+        {
+		StopPlayerLookAt();
+		GiveSanityDamage(20.0f, true);
+        PlaySoundAtEntity("", "15_man_whimp5.ogg", "chair_wood02_10", 0.0f, false);
+        PlaySoundAtEntity("", "break_wood_metal.snt", "chair_wood02_10", 0.0f, false);
+        }
+
+    void BruteWalkByThree(string &in asTimer)
+    {
+	SetEntityActive("servant_brute_2", true);
+    SetEnemyDisableTriggers("servant_brute_2", true);
+        AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_14", 0, "");
+	}
+
+        void BruteWalkDanger(string &in asParent, string &in asChild, int alState)
+        {
+		SetPlayerActive(true);
+        SetEnemyDisableTriggers("servant_brute_2", false);
+        AddTimer("WaitForDisable", 4.0f, "DisableBrute");
+		SetMessage("Level7", "PeopleAlive", 4.0f);
+        }
+	
+	    void DisableBrute(string &in asTimer)
+        {
+	    SetEntityActive("servant_brute_2", false);
+	    PlaySoundAtEntity("", "player_react_guardian2.snt", "Player", 0.0f, false);
+	    }
+	
+void BruteWarning1(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "notice_long03.ogg", "castle_arched01_1", 0.0f, false);
+}
+
+    void BruteEnter(string &in asParent, string &in asChild, int alState)
+    {
+	SetPropHealth("castle_arched01_1", 0.0f);
+	SetEntityActive("servant_brute_3", true);
+	PlaySoundAtEntity("", "attack_claw_hit.snt", "castle_arched01_1", 0.0f, false);
+    PlaySoundAtEntity("", "react_scare.snt", "Player", 0.5f, false);
+	    AddEnemyPatrolNode("servant_brute_3", "PathNodeArea_15", 0, "");
+		AddEnemyPatrolNode("servant_brute_3", "PathNodeArea_16", 0, "");
+	AddTimer("BrutePoof", 2.3f, "BrutePoof");
+    }
+	
+	void BrutePoof(string &in asTimer)
+    {
+	FadeEnemyToSmoke("servant_brute_3", true);
+	PlaySoundAtEntity("", "guardian_ontop.snt", "Player", 0, false);
+	SetMessage("Level7", "Reminder", 3.0f);
+	}
+	
+void DontBreakIfLadder(string &in asParent, string &in asChild, int alState){
+    if (alState == 1){
+    SetEntityActive("PlankBreak", false);
+    }
+
+    if (alState == -1){
+    SetEntityActive("PlankBreak", true);
+    }
+}
+
+void AddCabinetQuest(string &in asEntity)
+{
+AddQuest("cabinetquest", "CabinetQuest");
+}
+
+    void UsedKeyOnCabinet(string &in asItem, string &in asEntity) 
+    {
+    SetSwingDoorLocked("work_desk_door_worn_6", false, true);
+    PlaySoundAtEntity("UnlockSound", "joints_cm_move.snt", "work_desk_door_worn_6", 0, false);
+	AddTimer("StopUnlockSound", 0.5f, "StopUnlockSound");
+    RemoveItem("KeyPrisonSecret");
+    CompleteQuest("cabinetquest", "CabinetQuest");
+    AddPlayerSanity(25.0f);
+    }
+	
+	    void StopUnlockSound(string &in asTimer)
+        {
+        StopSound("UnlockSound", 0);
+        }
+	
+
+    void OpenSecretDoor(string &in asEntity)
+    {
+    SetMoveObjectState("castlebase_secret_door_1", 1);
+    PlaySoundAtEntity("", "joint_oven_close.ogg", "button_simple_1", 0, false);
+    PlaySoundAtEntity("SecretDoorUnlockSound1", "joint_metal_gate.ogg", "castlebase_secret_door_1", 0, false);
+    PlaySoundAtEntity("SecretDoorUnlockSound2", "scrape_rock.ogg", "castlebase_secret_door_1", 0, false);  
+	AddTimer("StopSecretDoorUnlockSound", 4.0f, "StopSecretDoorUnlockSound");
+    }
+	
+	    void StopSecretDoorUnlockSound(string &in asTimer)
+        {
+        StopSound("SecretDoorUnlockSound1", 0);
+		StopSound("SecretDoorUnlockSound2", 0);
+        }
+
+	
+void PrisonerEscape(string &in asEntity)
+{
+CheckPoint("Chk2", "PlayerStartArea_2", "ResetLadders", "", "");
+PlaySoundAtEntity("", "break_wood_metal.snt", "prison_section_1", 0, false);
+SetEntityActive("servant_grunt_2", false);
+    SetEntityActive("wooden_boards_block_3", false);
+	SetEntityActive("wooden_boards_block_4", false);
+	SetEntityActive("padlock_rusty_1", false);
+SetEntityActive("prison_section_1", false);
+SetEntityActive("prison_section_broken_1", true);
+SetEntityActive("padlock_broken_1", true);
+    SetEntityActive("wooden_boards_broken_1", true);
+	SetEntityActive("wooden_boards_broken_2", true);
+AddPropImpulse("padlock_broken_1", -5, 0, 0, "world");
+    AddPropImpulse("prison_section_broken_1", -5, 0, 0, "world");
+    AddPropImpulse("wooden_boards_broken_1", -5, 0, 0, "world");
+	AddPropImpulse("wooden_boards_broken_2", -5, 0, 0, "world");
+AddEntityCollideCallback("servant_grunt_3", "GruntOpenDoor", "GruntOpenDoor", true, 1);
+SetEntityActive("servant_grunt_3", true);
+    AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_25", 0, "");
+    AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_11", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_13", 2, "Idle");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_17", 2, "Idle");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_11", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_18", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_19", 4, "Idle");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_18", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_20", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_21", 4, "Idle");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_20", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_11", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_22", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_23", 4, "Idle");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_22", 0, "");
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_24", 10, "Idle");
+}
+
+    void GruntOpenDoor(string &in asParent, string &in asChild, int alState)
+    {
+	AddPropImpulse("cabinet_metal_3", 0, 0, -10, "world");
+	PlaySoundAtEntity("", "door_bar_open.snt", "cabinet_metal_3", 0, false);
+	}
+
+void InsertCrankKey(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("brick_4", false);
+    SetEntityActive("crank_wood_no_mount_2", false);
+	SetEntityActive("cogwheel_tiny01_1", false);
+	SetEntityActive("cogwheel_tiny01_2", false);
+    SetEntityActive("brick_3", true);
+    SetEntityActive("crank_wood_no_mount_1", true);
+PlaySoundAtEntity("", "unlock_door.snt", "lever_small_mount_1", 0, false);
+}
+
+    void MachineRoomDoor(string &in asEntity, int alState){
+    if (alState == 1){
+    SetMoveObjectState("safety_large_vert_1", 1);
+	PlaySoundAtEntity("", "joint_oven_close.ogg", "lever_small_mount_1", 0, false);
+	PlaySoundAtEntity("", "door_safety_open.ogg", "safety_large_vert_1", 0, false);
+    }
+
+    if (alState == -1){
+    SetMoveObjectState("safety_large_vert_1", 0);
+	PlaySoundAtEntity("", "joint_oven_close.ogg", "lever_small_mount_1", 0, false);
+	PlaySoundAtEntity("", "door_safety_open.ogg", "safety_large_vert_1", 0, false);
+    }
+    }
+	
+	void OpenDoorBackup(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "unlock_door.snt", "button_simple_5", 0, false);
+	SetMoveObjectState("safety_large_vert_1", 1);
+	PlaySoundAtEntity("", "joint_oven_close.ogg", "lever_small_mount_1", 0, false);
+	PlaySoundAtEntity("", "door_safety_open.ogg", "safety_large_vert_1", 0, false);
+	}
+	
+	void OpenChainGate(string &in asEntity)
+    {
+	PlaySoundAtEntity("", "21_lever_fail.ogg", "button_simple_3", 0, false);
+    SetEntityPos("safety_normal_vert_1", -30.029, 1.138, -182.75);
+	SetEntityPos("safety_normal_vert_2", -25.467, 1.138, -182.75);
+	PlaySoundAtEntity("", "door_safety_open.ogg", "safety_normal_vert_1", 0, false);
+    }
+	
+	void NothingHappens(string &in asEntity)
+    {
+    SetMessage("Level7", "NoFeedbackButton", 3.0f);
+	PlaySoundAtEntity("", "crank_old_stuck.ogg", "button_simple_3", 0, false);
+    }
+	
+	void PickupRitualKnife(string &in asEntity)
+    {
+    SetMessage("Level7", "SomeoneTried", 5.0f);
+	AddEntityCollideCallback("Player", "HowToReachOrb", "ReachOrbNotice", true, 1);
+	AddPlayerSanity(25.0f);
+    }
+	
+	    void ReachOrbNotice(string &in asParent, string &in asChild, int alState)
+        {
+		AddTimer("ReachOrbNotice2", 3, "ReachOrbNotice2");
+        StartPlayerLookAt("orb_1", 1, 2, "");
+		SetPlayerActive(false);
+		SetMessage("Level7", "ReachOrb", 5.0f);
+        }
+		
+			void ReachOrbNotice2(string &in asTimer)
+            {
+            SetPlayerActive(true);
+			StopPlayerLookAt();
+            }
+	
+void MachineryStuckSounds(string &in asEntity, int alState){
+if (alState == -1){
+PlaySoundAtEntity("SqueakyNoise", "joint_metal_squeak_move.snt", "button_simple_3", 0, false);
+PlaySoundAtEntity("", "impact_metal_high.snt", "button_simple_3", 0, false);
+AddTimer("MachineryStuckBang", 1.0f, "MachineryStuckBang");
+}
+}
+    
+	void MachineryStuckBang(string &in asTimer)
+    {
+	SetMessage("Level7", "MachineryOutOfOrder", 4.0f);
+    StopSound("SqueakyNoise", 0);
+    PlaySoundAtEntity("", "16_bridge_stuck.snt", "button_simple_3", 0, false);
+    }
+
+void UsedKeyOnPortalDoor(string &in asItem, string &in asEntity) 
+{
+SetSwingDoorLocked("prison_1", false, true);
+PlaySoundAtEntity("", "door_unlock.snt", "prison_1", 0, false);
+RemoveItem("PortalRoomKey");
+AddPlayerSanity(25.0f);
+}
+
+    void Drowning(string &in asParent, string &in asChild, int alState)
+    {
+    AddTimer("Drown2", 1, "Drown2");
+    GivePlayerDamage(35, "", false, true);
+	PlaySoundAtEntity("", "player_cough.snt", "Player", 0, false);
+	PlaySoundAtEntity("", "impact_water_med.snt", "Player", 0, false);
+    }
+	   
+	    void Drown2(string &in asTimer)
+        {
+		AddTimer("Drown3", 1, "Drown3");
+        GivePlayerDamage(35, "", false, true);
+        PlaySoundAtEntity("", "player_cough.snt", "Player", 0, false);
+		PlaySoundAtEntity("", "impact_water_med.snt", "Player", 0, false);
+        }
+		
+			void Drown3(string &in asTimer)
+            {
+            GivePlayerDamage(35, "", false, true);
+            PlaySoundAtEntity("", "player_cough.snt", "Player", 0, false);
+			PlaySoundAtEntity("", "impact_water_med.snt", "Player", 0, false);
+            }
+
+void EndGame(string &in asItem, string &in asEntity) 
+{
+SetPlayerHealth(100);
+RemoveTimer("Drown2");
+RemoveTimer("Drown3");
+AddTimer("EndGame2", 3, "EndGame2");
+SetEntityActive("RitualKnifeStatic", true);
+SetEntityActive("orb_2", true);
+SetEntityInteractionDisabled("RitualKnifeStatic", true);
+DestroyParticleSystem("ParticleSystem_57");
+DestroyParticleSystem("ParticleSystem_58");
+DestroyParticleSystem("ParticleSystem_59");
+DestroyParticleSystem("ParticleSystem_60");
+DestroyParticleSystem("ParticleSystem_61");
+PlaySoundAtEntity("", "break_glass_large.snt", "Player", 0, false);
+PlaySoundAtEntity("", "distant_insanity_roar.snt", "Player", 0, false);
+RemoveItem("RitualKnife");
+RemoveEntityCollideCallback("Player", "DrownArea1");
+}
+  	void EndGame2(string &in asTimer)
+	{
+	AddTimer("EndGame3", 0.7, "EndGame3");
+	SetPlayerActive(false);
+	SetLanternActive(false, true);
+	StartScreenShake(0.5, 4, 0.5, 2);
+	FadePlayerRollTo(45, 5, 20);
+	FadeOut(3);
+	AddPlayerBodyForce(-20000, -10000, -5000, false);
+	StopMusic(1, 1);
+    SetEntityActive("wood_platform_1", false);
+	SetEntityActive("ladder_grab_2", false);
+	SetEntityActive("ladder_grab_1", false);
+	SetEntityActive("servant_grunt_3", false);
+	PlaySoundAtEntity("ExplosionSound", "explosion_rock_large.snt", "Player", 0, false);
+	}
+	
+	    void EndGame3(string &in asTimer)
+        {
+		StopSound("ExplosionSound", 0.2);
+		StopSound("Sound_3", 0.2);
+		StopSound("Sound_5", 0.2);
+		StopSound("Sound_6", 0.2);
+		StopSound("Sound_7", 0.2);
+		AddTimer("EndGame4", 20, "EndGame4");
+		PlaySoundAtEntity("", "fall_underwater.snt", "Player", 0, false);
+        PlaySoundAtEntity("", "endgame_sound.snt", "Player", 0, false);
+        }
+		
+		    void EndGame4(string &in asTimer)
+            {
+		    StartCredits("", false, "Ending", "MainCredits", 5);
+            }
+	
+//////////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

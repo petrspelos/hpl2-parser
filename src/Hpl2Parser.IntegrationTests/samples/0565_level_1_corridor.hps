@@ -1,0 +1,351 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+    {
+		StopMusic(0,1);
+		PlayMusic("Track2.ogg", true, 2, 1, 1, true);
+            AddEntityCollideCallback("Player", "AreaFadeOut", "Transition", true, 1);
+            AddEntityCollideCallback("Player", "Talk", "Dialogue", true, 1);
+            AddEntityCollideCallback("Player", "Memento", "Memento2", true, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_1", "PopUp", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_2", "PopUp2", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_3", "PopUp3", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_4", "PopUp4", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_5", "PopUp5", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_6", "PopUp6", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_7", "PopUp7", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_8", "PopUp8", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_9", "PopUp9", false, 1);
+			AddEntityCollideCallback("Player","MonsterHallucination_10", "PopUp10", false, 1);
+    }
+
+void OnEnter()
+{
+	if(HasItem("monster_key") == true)
+			{
+				SetLevelDoorLocked("Door", false);
+				PlayMusic("Track2.ogg", true, 2, 1, 1, true);
+				AddEntityCollideCallback("Player", "SeeReturn", "Spawn", true, 1);
+				AddEntityCollideCallback("ReturnHallucination", "MonsterDespawn", "Despawn", true, 1);
+				AddUseItemCallback("", "monster_key", "ExploreDoor", "UseKeyOnDoor", true);
+			}
+	AutoSave();
+}	
+	
+//////////////////////////////////////////////////////////////////////////////////////	
+//Door Messages
+//////////////////////////////////////////////////////////////////////////////////////
+	
+	void LockedText(string &in asEntity)
+{
+	SetMessage("Messages", "Held", 3);
+	if(GetSwingDoorLocked("LockedDoor") == false)
+	{
+		SetMessage("Messages", "Blank", 1);
+	}
+	
+}
+
+void Stuck(string &in asEntity)
+{
+	if(GetSwingDoorLocked("ExploreDoor") == false)
+	{
+		SetMessage("Messages", "Blank", 1);
+	}
+	else
+	{
+		SetMessage("Messages", "Locked", 1);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Door Unlock
+//////////////////////////////////////////////////////////////////////////////////////
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Dialogue
+//////////////////////////////////////////////////////////////////////////////////////
+
+	void Dialogue(string &in asParent, string &in asChild, int alState)
+	{
+		for(int i = 1; i <= 10; i++) SetEntityActive("MonsterHallucination_"+i, true);
+		SetPlayerMoveSpeedMul(0.5);
+		SetPlayerRunSpeedMul(0.5);
+		GiveSanityDamage(20, true);
+		PlaySoundAtEntity("", "react_pant.snt", "", 0, false);
+		AddEffectVoice("s2_line1.ogg", "", "Dialogue", "DeathLine_1", true, "", 0, 30);
+		AddEffectVoice("s2_line2.ogg", "", "Dialogue", "DeathLine_2", true, "AreaVoice", 0, 30);
+		AddEffectVoice("s2_line3.ogg", "", "Dialogue", "DeathLine_3", true, "", 0, 30);
+		AddEffectVoice("s2_line4.ogg", "", "Dialogue", "DeathLine_4", true, "AreaVoice", 0, 30);
+		AddEffectVoice("s2_line5.ogg", "", "Dialogue", "DeathLine_5", true, "", 0, 30);
+		AddEffectVoice("s2_line6.ogg", "", "Dialogue", "DeathLine_6", true, "AreaVoice", 0, 30);
+		AddEffectVoice("s2_line7.ogg", "s2_line7_background.ogg", "Dialogue", "DeathLine_7", true, "AreaVoice", 0, 30);
+		AddEffectVoice("s2_line8.ogg", "", "Dialogue", "DeathLine_8", true, "", 0, 30);
+		SetEffectVoiceOverCallback("OpenDoor");
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Open Door
+//////////////////////////////////////////////////////////////////////////////////////	
+
+	void OpenDoor()
+	{
+	for(int i = 1; i <= 10; i++) SetEntityActive("MonsterHallucination_"+i, false);
+	SetSwingDoorLocked("LockedDoor", false, true);
+	AddTimer("", 0.5, "OpenDoorSlightly");
+	AddQuest("Memento_1", "HeardMonster");
+	
+	}
+	
+	void OpenDoorSlightly(string &in asTimer)
+		{
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+        SetSwingDoorClosed("LockedDoor", false, false);
+        SetSwingDoorDisableAutoClose("LockedDoor", true);
+ 
+        PlaySoundAtEntity("creak", "joint_door_move_special.snt", "LockedDoor", 1, false);
+ 
+        AddTimer("", 2, "TimerStopSound");
+        AddTimer("LockedDoor", 0, "TimerMoveDoor");
+		PlayMusic("Track2.ogg", true, 2, 1, 1, true);
+}
+ 
+void TimerMoveDoor(string &in asTimer)
+{
+        if(GetLocalVarInt("VarDoor") == 10) return;
+        AddLocalVarInt("VarDoor", 1);
+ 
+        AddTimer(asTimer, 0.03, "TimerMoveDoor");
+ 
+        AddPropForce(asTimer, -70, 0, 0, "world");
+}
+ 
+void TimerStopSound(string &in asTimer)
+{
+        StopSound("creak", 0.4);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Next Level
+//////////////////////////////////////////////////////////////////////////////////////
+
+    void Transition(string &in asParent, string &in asChild, int alState)
+    {
+            FadeOut(1);
+            AddTimer("", 1, "TimerTransition");
+			SetLevelDoorLocked("Door", false);	
+    }
+     
+    void TimerTransition(string &in asTimer)
+    {
+            ChangeMap("level_1_p2", "PlayerStartArea_1", "", "");
+    }
+
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Monster PopUps
+//////////////////////////////////////////////////////////////////////////////////////	
+	
+void PopUp(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_1", true);
+	AddTimer("monster1", 0.1f, "Despawn");
+}
+
+void PopUp2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_2", true);
+	AddTimer("monster2", 0.1f, "Despawn");
+}
+
+void PopUp3(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_3", true);
+	AddTimer("monster3", 0.1f, "Despawn");
+}
+
+void PopUp4(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_4", true);
+	AddTimer("monster4", 0.1f, "Despawn");
+}
+
+void PopUp5(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_5", true);
+	AddTimer("monster5", 0.1f, "Despawn");
+}
+
+void PopUp6(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_6", true);
+	AddTimer("monster6", 0.1f, "Despawn");
+}
+
+void PopUp7(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_7", true);
+	AddTimer("monster7", 0.1f, "Despawn");
+}
+
+void PopUp8(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_8", true);
+	AddTimer("monster8", 0.1f, "Despawn");
+}
+
+void PopUp9(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_9", true);
+	AddTimer("monster9", 0.1f, "Despawn");
+}
+
+void PopUp10(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Monster_10", true);
+	AddTimer("monster10", 0.1f, "Despawn");
+}
+
+void Despawn(string &in asTimer)
+{
+	if(asTimer == "monster1")
+	{
+		SetEntityActive("Monster_1", false);
+	}
+	
+	if(asTimer == "monster2")
+	{
+		SetEntityActive("Monster_2", false);
+	}
+	
+	if(asTimer == "monster3")
+	{
+		SetEntityActive("Monster_3", false);
+	}
+	
+	if(asTimer == "monster4")
+	{
+		SetEntityActive("Monster_4", false);
+	}
+	
+	if(asTimer == "monster5")
+	{
+		SetEntityActive("Monster_5", false);
+	}
+	
+	if(asTimer == "monster6")
+	{
+		SetEntityActive("Monster_6", false);
+	}
+	
+	if(asTimer == "monster7")
+	{
+		SetEntityActive("Monster_7", false);
+	}
+	
+	if(asTimer == "monster8")
+	{
+		SetEntityActive("Monster_8", false);
+	}
+	
+	if(asTimer == "monster9")
+	{
+		SetEntityActive("Monster_9", false);
+	}
+	
+	if(asTimer == "monster10")
+	{
+		SetEntityActive("Monster_10", false);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Mementos
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Memento2(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Memento_2", "DeadEnd");
+	CompleteQuest("Memento_1", "HeardMonster");
+	SetEntityActive("Whispers", true);
+	SetEntityActive("Foreshadow", true);
+	AddEnemyPatrolNode("Foreshadow", "ForeshadowPoint", 0.001f, "");
+	AddTimer("", 0.1f, "Disappear");
+}
+
+
+void Memento3(string &in asEntity, string &in asType)
+{
+	SetEntityActive("Whispers", false);
+	AddQuest("Memento_3", "FoundLadder");
+	CompleteQuest("Memento_2", "DeadEnd");
+	GiveSanityBoostSmall();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Room Scripts
+//////////////////////////////////////////////////////////////////////////////////////
+
+void TriggerSanity(string &in asEntity, int alState)
+{
+	PlaySoundAtEntity("", "react_pant.snt", "", 0, false);
+	GiveSanityDamage(30, true);
+}
+
+void Disappear(string &in asTimer)
+{
+	SetEntityActive("Foreshadow", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Return Monster
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Spawn(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ReturnHallucination", true);
+	AddEnemyPatrolNode("ReturnHallucination", "PathNodeArea_1", 0.001f, "");
+	AddEnemyPatrolNode("ReturnHallucination", "PathNodeArea_2", 0.001f, "");
+}
+
+void Despawn(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ReturnHallucination", false);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("Memento_3", "FoundLadder");
+}

@@ -1,0 +1,711 @@
+// STEP_ZONES
+const float STEP_SPEED_MAX = 1.75f;
+const float STEP_SPEED_MIN = 0.75f;
+const float STEP_SPEED_STEP = 0.25f;
+
+float stepSpeed = 1.25f;
+bool isAccelerationStep = true;
+
+// Fight system
+float[] x(10); float[] y(10); float[] z(10); int last;
+
+bool bruteIsActive;
+
+void OnStart()
+{
+	// Events
+	AddUseItemCallback("", "HammerChipper", "Wall", "UseHammerOnWall", true);
+	
+	AddEntityCollideCallback("Player", "Area_HeavyDoorStart", "OnCollidePlayerOnAreaHeavyDoorStart", false, 1);
+	AddEntityCollideCallback("Player", "AreaCheckPoint", "OnCollideCheckPoint", false, 0);
+	AddEntityCollideCallback("Player", "AreaDreamWalk", "OnCollideDreamWalk", false, 0);
+	AddEntityCollideCallback("Player", "AreaGlobalPit", "OnCollideGlobalPit", false, 1);
+	AddEntityCollideCallback("Player", "AreaPit", "OnCollideThePit", true, 1);
+	AddEntityCollideCallback("Player", "AreaEndRoom", "OnCollideEndRoomTorchLit", true, 1);
+	
+	for(int i=1;i<=2;i++) 
+	{
+		AddEntityCollideCallback("Player", i + "_DreamLocation", "OnCollideBreakDoor", true, 1);
+	}
+	
+	AddEntityCollideCallback("ThrowStone", "AreaThrowPlace", "OnCollideRockToChain", true, 1);
+	AddEntityCollideCallback("BruteFinal", "AreaFinalBruteAltarRoom", "OnCollideLockAltarRoom", true, 1);
+	
+	AddEntityCollideCallback("ThrowStone", "AreaGlobalPit", "OnCollideRockToVoid", false, 1);
+	AddEntityCollideCallback("ThrowStone", "AreaThrowVoid", "OnCollideRockToVoid", false, 1);
+	AddEntityCollideCallback("BigHammer", "BruteFinal", "UseHammerOnBrute", false, 1);
+	AddEntityCollideCallback("BigHammer", "AfterFinalCorrupt_1", "UseHammerOnCorrupt", false, 1);
+	AddEntityCollideCallback("BigHammer", "AfterFinalCorrupt_2", "UseHammerOnCorrupt", false, 1);
+	
+	// Varriable
+	SetLocalVarInt("OrbsCompleteCount", 0);
+	SetLocalVarInt("OrbQuestIsVisible", 0);
+	SetLocalVarInt("CorruptedBarricadeCount", 2);
+	SetLocalVarInt("BruteHit", 0);
+	
+	SetLocalVarInt("1_SafeStepZone", 0);
+	SetLocalVarInt("2_SafeStepZone", 0);
+	SetLocalVarInt("3_SafeStepZone", 0);
+	SetLocalVarInt("4_SafeStepZone", 0);
+	
+	SetLocalVarInt("1_ZoneMax", 13);
+	SetLocalVarInt("2_ZoneMax", 16);
+	SetLocalVarInt("3_ZoneMax", 16);
+	SetLocalVarInt("4_ZoneMax", 13);
+	
+	// Required Items
+	if(!HasItem("Lantern")) GiveItemFromFile("Lantern", "lantern.ent");
+	if(!HasItem("HammerChipper")) GiveItem("HammerChipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+	
+	// Other
+	StartEvent();
+	SetPlayerRunSpeedMul(0.0f);
+	SetMessage("Hints", "Chapter_6", 5.0f);
+	InteractConnectPropWithMoveObject("HeavyDoorChangeState","Valve_HeavyDoorStart", "HeavyDoorStart", true, false, 0);
+	
+	for(int i=1;i<=13;i++) for(int j=1;j<=4;j++)  AddEntityCollideCallback("Player", j + "_AreaStepZone_" + i, "OnColliderFireDamage", false, 0);
+	for(int i=14;i<=16;i++) for(int j=2;j<=3;j++) AddEntityCollideCallback("Player", j + "_AreaStepZone_" + i, "OnColliderFireDamage", false, 0);
+	
+	CheckPoint("StartCheckpoint", "StartArea", "OnDeathAtStart", "Die", "Run");
+	
+	SetMapDisplayNameEntry("TempleCore");
+	AutoSave();
+}
+
+void UseHammerOnWall(string &in asItem, string &in asEntity)
+{
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	SetEntityActive("SignBreakWall", false);
+	for(int i=0;i<=4;i++) AddTimer(asEntity, 1.25f * i, "TimerHammerAttack");
+	AddTimer(asEntity, 5.05f, "TimerHammerFinalAttack");
+}
+
+void TimerHammerAttack(string &in asTimer)
+{
+	PlaySoundAtEntity("HitSound", "MetalLightChopStone.snt", asTimer, 0.0f, false);
+	CreateParticleSystemAtEntity("HitEffect", "ps_hit_rock.ps", asTimer, false);
+}
+
+void TimerHammerFinalAttack(string &in asTimer)
+{
+	SetPropHealth(asTimer, 0.0f);
+	CompleteQuest(asTimer, asTimer);
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+	
+	for(int i=1;i<=6;i++) SetEntityActive("Fragment_" + i, true);
+}
+
+void OnCollideLockAltarRoom(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("MainGate", 0.0f);
+}
+
+void OnCollideRockToChain(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+	BreakJoint("bridge_chained_1_BallJoint_1");
+	RemoveEntityCollideCallback("ThrowStone", "AreaGlobalPit");
+	RemoveEntityCollideCallback("ThrowStone", "AreaThrowVoid");
+	SetEntityActive("SignBridge", false);
+	AddTimer("ChainForce", 0.3f, "TimerChainForce");	
+}
+
+void OnCollideRockToVoid(string &in asParent, string &in asChild, int alState)
+{
+	ResetProp(asParent);
+}
+
+void TimerChainForce(string &in asTimer)
+{
+	AddBodyImpulse("bridge_chained_1_chain", 1.0f, 0.5f, -2.0f, "World");
+	PlaySoundAtEntity("creak", "18_bridge_fall", "bridge_chained_1", 0.0f, false);
+}
+
+void OnCollideGlobalPit(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(0.0f);
+}
+
+void OnCollideDreamWalk(string &in asParent, string &in asChild, int alState)
+{
+	switch(alState)
+	{
+		case 1:
+			PlayMusic("search_suitor.ogg", true, 1.0f, 4.75f, 11, true);
+			FadeImageTrailTo(2.25f, 4.75f);
+			SetPlayerRunSpeedMul(0.0f);
+		break;
+		case -1:
+			StopMusic(4.75f, 11);
+			FadeImageTrailTo(0.0f, 4.75f);
+			SetPlayerRunSpeedMul(1.0f);
+		break;
+	}
+}
+
+void OnCollideCheckPoint(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("Checkpoint_" + GetLocalVarInt("OrbsCompleteCount"), "PlayerAfterPedestal_1", "OnDeathMusic", "", "");
+	SetEntityActive(asChild, false);
+}
+
+void OnCollideBreakDoor(string &in asParent, string &in asChild, int alState)
+{
+	string door = asChild + "Door";
+	SetPropHealth(door, 40.0f);
+	GiveSanityDamage(30.0f, false);
+	
+	PlaySoundAtEntity("DoorHit", "attack_claw_hit.snt", door, 0, false);
+	
+	CreateParticleSystemAtEntity("DreamDoorHit", "ps_hit_wood.ps", door, false);
+	CreateParticleSystemAtEntity("DreamDoorHit", "ps_break_wood.ps", door, false);
+	StartScreenShake(0.25f, 0.25f, 0.25f, 0.25f);
+	
+	AddTimer("react_pant.snt", 0.75f, "TimerScare");
+	AddTimer(door, 1.5f, "TimerScratchSound");
+}
+
+void OnCollideThePit(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	StopMusic(3.0f, 10);
+	GivePlayerDamage(100.0f, "Slash", true, false);
+	GiveSanityDamage(100.0f, true);
+	FadeOut(6.0f);
+	AddTimer("FinalAngelReveal", 6.0f, "TimerFinalAngelReveal");
+}
+
+void TimerFinalAngelReveal(string &in asTimer)
+{
+	PlayMusic("ending_daniel.ogg", false, 1.0f, 3.0f, 10, false);
+	TeleportPlayer("AreaDeathAtAngel");
+	StartPlayerLookAt("TheAngel", 0.75f, 0.75f, "");
+	FadeIn(6.0f);
+	
+	for(int i=0;i<=2;i++) AddTimer("WhisperingVoices", 4.25f * i, "TimerWhisperingVoices");
+	AddTimer("GameOver", 12.5f, "TimerGameOver");
+}
+
+void TimerWhisperingVoices(string &in asTimer)
+{
+	PlayGuiSound("flashback_flash.snt", 1.0f);
+}
+
+void TimerGameOver(string &in asTimer)
+{
+	StartEffectFlash(0.35f, 0.25f, 0.35f);
+	FadeOut(6.0f);
+	StopMusic(6.0f, 10);
+	AddTimer("InsidePeace", 0.25f, "TimerInsidePeace");
+	AddTimer("Credits", 6.0f, "TimerCredits");
+}
+
+void TimerInsidePeace(string &in asTimer)
+{
+	SetPlayerHealth(100.0f);
+	SetPlayerSanity(100.0f);
+	SetMessage("Hints", "LastWords", 6.0f);
+}
+
+void TimerCredits(string &in asTimer)
+{
+	StartCredits("ending_agrippa.ogg", true, "End", "Full", 0);
+}
+
+void OnCollideEndRoomTorchLit(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("BackDoor", 0.0f);
+	RemoveTimer("BruteRespawn");
+	for(int i=1;i<=8;i++)
+	{
+		SetLampLit("FinalTorch_" + i, true, true);
+		PlaySoundAtEntity("TurnOnFinalTorch_" + i, "ui_use_tinderbox.snt", "FinalTorch_" + i, 0.0f, false);
+		SetMessage("Hints", "WeakFloor" , 5.0f);
+	}
+	SetPlayerActive(false);
+	StartPlayerLookAt("Script_Floor", 1.5f, 1.5f, "");
+	
+	AddTimer("PlayerPlay", 3.0f, "TimerPlayerPlay");
+	AddTimer("BruteRespawn", 3.75f, "TimerBruteRespawn");
+}
+
+void TimerPlayerPlay(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	TeleportEnemyToNode("BruteFinal", "PathFinalRoom", true);
+	AddEntityCollideCallback("BigHammer", "AreaWoodenBarricade", "UseHammerOnBarricade", false, 1);
+}
+
+void OnColliderFireDamage(string &in asParent, string &in asChild, int alState)
+{
+	switch(alState)
+	{
+		case 1:
+			AddTimer(asChild + "_FireDamage", 0.0f, "TimerFireDamage");
+			break;
+		case -1:
+			RemoveTimer(asChild + "_FireDamage");
+			break;
+	}
+}
+
+void TimerFireDamage(string &in asTimer)
+{
+	if(GetPlayerHealth() > 0.0f)
+	{
+		GivePlayerDamage(8.0f, "BloodSplat", false, true);
+		PlayGuiSound("ui_fire_damage.snt", 1.0f);
+		AddTimer(asTimer, 0.25f, "TimerFireDamage");	
+	}
+}
+
+float Distance(string &in asEntity)
+{
+	return MathSqrt(
+	MathPow(GetEntityPosX(asEntity) - GetPlayerPosX(), 2) + 
+	MathPow(GetEntityPosY(asEntity) - GetPlayerPosY(), 2) + 
+	MathPow(GetEntityPosZ(asEntity) - GetPlayerPosZ(), 2));
+}
+
+void StartEvent()
+{
+	PlayMusic("21_event_pit.ogg", false, 1.0f, 0, 9, false);
+	PlayMusic("12_amb.ogg", true, 1.0f, 0, 0, true);
+	for(int i=7;i<=15;i+=2) AddTimer("" + i, 0.75f * i - 4.5f, "TimerChangeTorch");
+	AddTimer("BruteStartAttack", 6.75f, "TimerBruteStartAttack");
+}
+
+void TimerBruteAI(string &in asTimer)
+{
+	float dangerousZone;
+	
+	if(GetLanternActive()) dangerousZone = 22.5f; 
+	else dangerousZone = 15.0f;
+	
+	if(Distance("Brute_Start") <= dangerousZone) SetEnemyDisableTriggers("Brute_Start", false);
+	else AddTimer("BruteAI", 0.25f, "TimerBruteAI");
+}
+
+void TimerBruteStartAttack(string &in asTimer)
+{
+	SetLanternActive(false, true);
+	SetEntityActive("Brute_Start", true);
+	AddTimer("BruteAI", 0.25f, "TimerBruteAI");
+	AddEnemyPatrolNode("Brute_Start", "PathNode_Start", 0.01f, "");
+	PlayMusic("26_event_brute.ogg", false, 1.0f, 0.0f, 10, false);
+	
+	SetPlayerActive(false);
+	StartPlayerLookAt("Brute_Start", 2.75f, 3.25f, "");
+	
+	GiveSanityDamage(15.0f, true);
+	AddTimer("StopLookBehind", 1.25f, "TimerStopLookBehind");
+	
+	SetPlayerRunSpeedMul(1.0f);
+}
+
+void TimerStopLookBehind(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+
+void OnDeathFinalFight(string &in asName, int alCount)
+{
+	RemoveTimer("BruteRespawn");
+	PlayMusic("12_amb.ogg", true, 1.0f, 5.0f, 0, true);
+	FinalFightRestart();
+}
+
+void OnDeathMusic(string &in asName, int alCount)
+{
+	PlayMusic("12_amb.ogg", true, 1.0f, 5.0f, 0, true);
+}
+
+void OnDeathAtStart(string &in asName, int alCount)
+{
+	RemoveTimer("BruteAI");
+	for(int i=7;i<=16;i++) SetLampLit("EndTorch_" + i, false, false);
+	PlayMusic("12_amb.ogg", true, 1.0f, 5.0f, 0, true);
+	SetEntityActive("Area_HeavyDoorStart", true);
+	ResetProp("Lever_HeavyDoorStart");
+	SetLeverStuckState("Lever_HeavyDoorStart", 0, false);
+	ResetProp("HeavyDoorStart");
+	SetEnemyDisableTriggers("Brute_Start", true);
+	SetWheelAngle("Valve_HeavyDoorStart", 0.0f, false);
+	SetPlayerRunSpeedMul(0.0f);
+	StartEvent();
+}
+
+void OnChangeStateLeverHeavyDoorStart(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		SetLeverStuckState(asEntity, alState, true);
+		SetMoveObjectState("HeavyDoorStart", 0.0f);
+		
+		AddTimer("BruteStartToSmoke", 7.0f, "TimerBruteStartToSmoke");
+	}
+}
+
+void OnChangeLabyrintLever(string &in asEntity, int alState)
+{
+	if(alState != 0)
+	{
+		string door = "Labyrint_" + StringSub(asEntity, asEntity.length() - 1, 1);
+		SetLeverStuckState(asEntity, alState, true);
+		SetMoveObjectState(door, 1.0f);
+
+		AddTimer(door, 6.0f, "TimerCloseTheDoor");
+		AddTimer(asEntity, 6.0f, "TimerResetLever");
+	}
+}
+
+void OnChangeLabyrintLeverDestroy(string &in asEntity, int alState)
+{
+	CreateParticleSystemAtEntity("ParticleDestoryLever", "ps_break_wood.ps", asEntity, false);
+	PlaySoundAtEntity("SoundDestoryLever", "break_wood.snt", asEntity, 0.0f, false);
+	SetEntityActive(asEntity, false);
+	
+	SetMessage("Hints", "BreakLever", 4.0f);
+}
+
+void TimerCloseTheDoor(string &in asDoor)
+{
+	SetMoveObjectState(asDoor, 0.0f);
+}
+
+void TimerResetLever(string &in asLever)
+{
+	SetLeverStuckState(asLever, 0, true);
+}
+
+void OnCollidePlayerOnAreaHeavyDoorStart(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asChild, false);
+	SetMessage("Hints", "CloseTheDoorBehind", 5.0f);
+	ShowEnemyPlayerPosition("Brute_Start");
+}
+
+void OnInteractMainDoor(string &in asDoor)
+{
+	SetLocalVarInt("OrbQuestIsVisible", 1);
+	string questName = asDoor + "_" + GetLocalVarInt("OrbsCompleteCount");
+	SetMessage("Hints", questName , 5.0f);
+	AddQuest(questName, questName);
+}
+
+void DestroySlimeArea(string &in slimeName)
+{
+	int i = 1;
+	while(GetEntityExists(slimeName + i))
+	{
+		AddTimer(slimeName + i, 0.25f * i, "TimerCorruptExplode");
+		++i;
+	}
+
+	i = 1;
+	while(GetEntityExists("Area_" + slimeName + i))
+	{
+		SetEntityActive("Area_" + slimeName + i, false);
+		++i;
+	}
+}
+
+void OnInteractAltar(string &in asEntity)
+{
+	SetPlayerActive(false);
+	SetLanternActive(false, true);
+	ShowPlayerCrossHairIcons(false);
+	PlayMusic("24_event_vision03", false, 1.0f, 1.0f, 10, false);
+	
+	SetEntityActive("TheOrb", true);
+	StartPlayerLookAt("TheOrb", 0.75f, 0.75f, "");
+	CreateParticleSystemAtEntity("Ps_OrbLight", "ps_orb_light.ps", "TheOrb", true);
+	FadeLightTo("OrbLight", 0.5f, 0.4f, 0.8f, 1.0f, 8.0f, 3.0f);
+	PlaySoundAtEntity("OrbSound", "03_orb.snt", "TheOrb", 0.0f, false);
+	StartScreenShake(0.1f, 1.0f, 1.0f, 1.0f);
+
+	DestroySlimeArea("Final_Corrupt_");
+	
+	for(int i=1;i<=4;i++) RemoveTimer("" + i);
+	RemoveTimer("ChangeStepSpeed");
+	
+	for(int i=1;i<=3;i++) AddTimer("AngelVoiceEndPart_" + i, 5.0f * (i - 1) + 3, "TimerConversation");
+	
+	AddTimer("SpawnBruteFinal", 13.0f, "TimerSpawnBruteFinal");
+}
+
+void TimerConversation(string &in asEntry)
+{
+	SetMessage("Hints", asEntry, 5.0f);
+}
+
+void TimerSpawnBruteFinal(string &in asTimer)
+{
+	SetEntityActive("BruteFinal", true);
+	AddEnemyPatrolNode("BruteFinal", "PathBruteFinal", 10.0f, "");
+	StartPlayerLookAt("BruteFinal", 2.0f, 2.0f, "");
+	
+	for(int i=1;i<=3;i++) AddTimer("BruteConversationEndPart_" + i, 5.0f * i, "TimerConversation");
+	AddTimer("SendTheHammer", 15.0f, "TimerSendTheHammer");
+	AddTimer("BruteConversationEnd", 17.5f, "TimerEndConversation");
+}
+
+void FinalFightRestart()
+{
+	SetEntityPlayerInteractCallback("BigHammer", "OnInteractBigHammer", true);
+	RemoveEntityCollideCallback("BigHammer", "AreaWoodenBarricade");
+	ResetProp("BigHammer");
+	for(int i=1;i<=2;i++) SetEntityActive("AfterFinalCorrupt_" + i, true);
+	for(int i=1;i<=8;i++) SetLampLit("FinalTorch_" + i, false, false);
+	AddEntityCollideCallback("Player", "AreaEndRoom", "OnCollideEndRoomTorchLit", true, 1);
+	SetLocalVarInt("CorruptedBarricadeCount", 2);
+	SetLocalVarInt("BruteHit", 0);
+	SetMoveObjectState("BackDoor", 0.0f);
+	SetEnemyDisableTriggers("BruteFinal", true);
+	SetEntityActive("BruteFinal", true);
+	ClearEnemyPatrolNodes("BruteFinal");
+	TeleportEnemyToNode("BruteFinal", "PathBruteFinal", true);
+}
+
+void TimerSendTheHammer(string &in asTimer)
+{
+	SetPropActiveAndFade("BigHammer", true, 2.5f);
+	StartPlayerLookAt("BigHammer", 1.0f, 1.0f, "");
+}
+
+void TimerEndConversation(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+	CreateParticleSystemAtEntity("Ps_OrbLight", "ps_orb_light.ps", "BigHammer", false);
+	ClearEnemyPatrolNodes("BruteFinal");	
+	
+	AddTimer("BigHammer", 0.0f, "TimerHammerPosition");
+	
+	CheckPoint("Music_FinalPedestal", "PlayerAfterPedestal_Final", "OnDeathFinalFight", "Die", "FinalFight");
+}
+
+void OnInteractBigHammer(string &in asEntity)
+{
+	SetEnemyDisableTriggers("BruteFinal", false);
+	bruteIsActive = true;
+	PlayMusic("14_elevator_falls.ogg", true, 1.0f, 0.0f, 10, true);
+	if(RandInt(0, 1) == 1) for(int i=1;i<=5;i++) AddEnemyPatrolNode("BruteFinal", "PathBruteSecondPath_" + i, 0.01f, "");
+	else for(int i=5;i>=1;i--) AddEnemyPatrolNode("BruteFinal", "PathBruteSecondPath_" + i, 0.01f, "");
+}
+
+void OnInteractPedestal(string &in asEntity)
+{
+	PlayMusic("24_event_vision02", false, 1.0f, 1.00f, 10, false);
+	
+	string pedestalNumber = StringSub(asEntity, 0, 1);
+	string orb = "Orb_" + pedestalNumber;
+	SetMoveObjectState(pedestalNumber + "_HeavyDoor_1", 1.0f);
+	
+	SetEntityActive(orb, true);
+	SetEntityActive("AreaCheckPoint", true);
+	CreateParticleSystemAtEntity("Ps_OrbLight", "ps_orb_light.ps", orb, true);
+	FadeLightTo("OrbLight_" + pedestalNumber, 0.5f, 0.4f, 0.8f, 1.0f, 8.0f, 3.0f);
+	PlaySoundAtEntity("OrbSound", "03_orb.snt", orb, 0.0f, false);
+	StartScreenShake(0.05f, 0.5f, 0.5f, 0.5f);
+	
+	DestroySlimeArea(pedestalNumber + "_Corrupt_");
+	
+	string oldQuest = "MainGate_" + GetLocalVarInt("OrbsCompleteCount");
+	CompleteQuest(oldQuest, oldQuest);
+	AddLocalVarInt("OrbsCompleteCount", 1);
+	
+	CheckPoint("Music_" + pedestalNumber, "PlayerAfterPedestal_" + pedestalNumber, "OnDeathMusic", "", "");
+	
+	if(GetLocalVarInt("OrbsCompleteCount") == 3)
+	{
+		SetMoveObjectState("MainGate", 1.0f);
+		SetEntityInteractionDisabled("MainGate", true);
+		return;
+	}
+	
+	if(GetLocalVarInt("OrbQuestIsVisible") == 1)
+	{
+		string newQuest = "MainGate_" + GetLocalVarInt("OrbsCompleteCount");
+		AddQuest(newQuest, newQuest);
+	}
+}
+
+void TimerCorruptExplode(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("SlimeDissolution", "ps_slime_attack_normal.ps", asTimer, false);
+	PlaySoundAtEntity("slimeExplosion", "slime_attack_normal_hit.snt", asTimer, 0.0f, false);
+	SetEntityActive(asTimer, false);
+}
+
+void TimerBruteStartToSmoke(string &in asTimer)
+{
+	if(GetPlayerHealth() > 0.0f)
+	{	
+		RemoveTimer("BruteAI");
+		FadeEnemyToSmoke("Brute_Start", false);
+		SetEntityPlayerInteractCallback("1_Pedestal", "OnInteractPedestal", true);
+		
+		for(int i=1;i<=4;i++) AddTimer("" + i, 1.0f, "TimerStepZone");
+		AddTimer("ChangeStepSpeed", 3.0f, "TimerChangeStepSpeed");
+	}
+}
+
+void TimerSetEntityActive(string &in asTimer)
+{
+	SetEntityActive(asTimer, true);
+}
+
+void TimerLookComplete(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerScare(string &in soundFile)
+{
+	PlayGuiSound(soundFile, 1.0f);
+	ChangePlayerStateToNormal();
+}
+
+void TimerScratchSound(string &in asTimer)
+{
+	PlaySoundAtEntity("ScratchSound", "amb_idle_scratch.snt", asTimer, 0.0f, false);
+}
+
+void TimerChangeTorch(string &in asTimer)
+{
+	string lTorch = "EndTorch_" + asTimer;
+	string rTorch = "EndTorch_" + (StringToInt(asTimer) + 1);
+	SetLampLit(lTorch, true, true);
+	SetLampLit(rTorch, true, true);
+	PlaySoundAtEntity("turnOnLeft", "ui_use_tinderbox.snt", lTorch, 0.0f, false);
+	PlaySoundAtEntity("turnOnRight", "ui_use_tinderbox.snt", rTorch, 0.0f, false);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////---FIGHT_SYSTEM---/////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float Distance(string &in asEntity, float x, float y, float z)
+{
+	return MathSqrt(MathPow(GetEntityPosX(asEntity) - x, 2) + MathPow(GetEntityPosY(asEntity) - y, 2) + MathPow(GetEntityPosZ(asEntity) - z, 2));
+}
+
+void UseHammerOnBarricade(string &in weapon, string &in enemy, int alState)
+{	
+	if(bruteIsActive)
+	{
+		if(Distance(weapon, x[last], y[last], z[last]) > 1.0f)
+		{
+			for(int i=1;i<=29;i++) SetPropHealth("wooden_boards_block_" + i, 0.0f);
+			SetPlayerFallDamageDisabled(true);
+			FadeEnemyToSmoke("BruteFinal", false);
+			RemoveTimer("BruteRespawn");
+		}
+	}
+	else
+	{
+		SetMessage("Hints", "BruteNotCollide", 4.0f);
+	}
+}
+
+void UseHammerOnCorrupt(string &in weapon, string &in enemy, int alState)
+{
+	if(Distance(weapon, x[last], y[last], z[last]) > 1.0f)
+	{
+		PlaySoundAtEntity("", "MetalMediumBashFlesh.snt", enemy, 0, false);
+		CreateParticleSystemAtEntity("", "ps_slime_attack_normal.ps", enemy, false);
+		PlaySoundAtEntity("", "slime_attack_normal_hit.snt", enemy, 0.0f, false);
+		SetEntityActive(enemy, false);
+	
+		AddLocalVarInt("CorruptedBarricadeCount", -1);
+		if(GetLocalVarInt("CorruptedBarricadeCount") == 0) SetMoveObjectState("BackDoor", 1.0f);
+	}
+}
+
+void UseHammerOnBrute(string &in weapon, string &in enemy, int alState)
+{	
+	if(Distance(weapon, x[last], y[last], z[last]) > 1.0f)
+	{
+		PlaySoundAtEntity("", "MetalHeavyBashMetal.snt", enemy, 0, false);
+		CreateParticleSystemAtEntity("BloodyHit", "blood.ps", weapon, false);
+		FadeEnemyToSmoke(enemy, false);
+		AddTimer("BruteRespawn", RandFloat(3.75f, 7.25f), "TimerBruteRespawn");
+		AddLocalVarInt("BruteHit", 1);
+		bruteIsActive = false;
+		switch(GetLocalVarInt("BruteHit"))
+		{
+			case 1:
+				SetMessage("Hints", "Fight_BruteHint", 6.5f);
+				break;
+			case 3:
+				SetMessage("Hints", "Fight_AngelHint", 6.5f);
+				break;
+			case 5:
+				SetMessage("Hints", "Fight_FinalHint", 6.5f);
+				break;
+		}
+	}
+}
+
+void TimerHammerPosition(string &in asTimer)
+{
+	x[last] = GetEntityPosX(asTimer);
+	y[last] = GetEntityPosY(asTimer);
+	z[last] = GetEntityPosZ(asTimer);
+
+	last = (last + 1) % 10;
+	
+	AddTimer(asTimer, 0.01f, "TimerHammerPosition");
+}
+
+void TimerBruteRespawn(string &in asTimer)
+{
+	SetEntityActive("BruteFinal", true);
+	bruteIsActive = true;
+	CreateParticleSystemAtEntity("ChefFinalEffect", "ps_dust_ghost.ps","BruteFinal", false);
+	ShowEnemyPlayerPosition("BruteFinal");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////---STEP_ZONE---/////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TimerStepZone(string &in asZone)
+{
+	int stepZone = GetLocalVarInt(asZone + "_SafeStepZone");
+	SetEntityActive(asZone + "_AreaStepZone_" + stepZone, true);
+	CreateParticleSystemAtEntity(asZone + "_DangerousZoneParticle_" + stepZone, "ps_fire_orb_room.ps", asZone + "_AreaStepZone_" + stepZone, true);
+	PlaySoundAtEntity(asZone + "_SoundStepZone_" + stepZone, "29_fire.snt", asZone + "_AreaStepZone_" + stepZone, 0.25f, true);
+		
+	stepZone = (stepZone + 1) % GetLocalVarInt(asZone + "_ZoneMax");
+	SetLocalVarInt(asZone + "_SafeStepZone", stepZone);
+	
+	stepZone = (stepZone + 3) % GetLocalVarInt(asZone + "_ZoneMax");
+	SetEntityActive(asZone + "_AreaStepZone_" + stepZone, false);
+	DestroyParticleSystem(asZone + "_DangerousZoneParticle_" + stepZone);
+	StopSound(asZone + "_SoundStepZone_" + stepZone, 0.25f);
+	RemoveTimer(asZone + "_AreaStepZone_" + stepZone + "_FireDamage");
+
+	AddTimer(asZone, stepSpeed, "TimerStepZone");
+}
+
+void TimerChangeStepSpeed(string &in asTimer)
+{	
+	if(isAccelerationStep)
+	{
+		stepSpeed += STEP_SPEED_STEP;
+		if(stepSpeed >= STEP_SPEED_MAX) isAccelerationStep = false;
+	}
+	else 
+	{
+		stepSpeed -= STEP_SPEED_STEP;
+		if(stepSpeed <= STEP_SPEED_MIN) isAccelerationStep = true;
+	}
+	AddTimer("ChangeStepSpeed", 3.0f, "TimerChangeStepSpeed");
+}

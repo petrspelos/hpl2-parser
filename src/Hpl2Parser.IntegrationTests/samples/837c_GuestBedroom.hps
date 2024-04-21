@@ -1,0 +1,72 @@
+void OnStart()
+{
+SetEntityPlayerInteractCallback("Door", "PlayerInteractDoor", true);
+AddUseItemCallback("", "Crowbar", "Door", "UseCrowbarOnDoor", true);
+AddEntityCollideCallback("Joint", "AreaBreak", "BreakDoor", true, 1);
+}
+
+void PlayerInteractDoor(string &in asEntity)
+{
+     if(HasItem("Crowbar"))
+     {
+     SetMessage("GuestBedroomMap", "InteractDoorHaveCrowbar", 0);
+     }
+     else if(GetSwingDoorLocked("Door")==true)
+     {
+     SetMessage("GuestBedroomMap", "LevelDoorLocked", 0);
+     }
+}
+
+void UseCrowbarOnDoor(string &in asItem, string &in asEntity)
+{
+     RemoveItem(asItem);
+     PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+     AddTimer(asEntity, 0.2, "TimerPlaceCrowbar");
+}
+
+void TimerPlaceCrowbar(string &in asTimer)
+{
+     SetEntityActive("Joint", true);
+     PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0, false);
+}
+
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+     SetEntityActive("Joint", false);
+     SetEntityActive("Broken", true);
+
+     SetSwingDoorLocked("Door", false, false);
+     SetSwingDoorClosed("Door", false, false);
+     SetSwingDoorDisableAutoClose("Door", true);
+
+     AddPropImpulse("Door", 0, 0, 3,  "world");
+
+     CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaDust", false);
+     PlaySoundAtEntity("", "break_wood_metal", "AreaDust", 0, false);
+
+     PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+
+     AddTimer("", 0.1, "TimerPushDoor");
+}
+
+void TimerPushDoor(string &in asTimer)
+{
+     AddPropImpulse("Door", -4, 2, 1, "world");
+     AddTimer("", 1.1, "TimerDoorCanClose");
+}
+
+void TimerDoorCanClose(string &in asTimer)
+{
+     SetSwingDoorDisableAutoClose("Door", false);
+}
+
+void OnEnter()
+{
+     PlayMusic("24_paper_daniel01.ogg", true, 1, 4, 2, true);
+}
+ 
+
+void OnLeave()
+{
+
+}

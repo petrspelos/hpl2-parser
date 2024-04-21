@@ -1,0 +1,246 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	PlayMusic("Outro_Map_Music.ogg", true, 2, 1, 1, true);
+	SetPlayerMoveSpeedMul(0.9);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpForceMul(0);
+	if(GetPlayerYSpeed() <= 0.9)
+	{
+		AddTimer("", 0.5f, "Stop");
+	}
+	
+	AddTimer("", 5, "LastMemento");
+	AddEntityCollideCallback("Player", "BlockEntrance", "Block", true, 1);
+	AddEntityCollideCallback("Player", "LockDoor", "Lock", true, 1);
+	AddEntityCollideCallback("Player", "StareAtDeath", "AvoidRoam", true, 1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnEnter
+//////////////////////////////////////////////////////////////////////////////////////
+
+void OnEnter()
+{
+	ClearSavedMaps();
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Player Effects
+//////////////////////////////////////////////////////////////////////////
+
+void Stop(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0);
+	AddTimer("", 0.1f, "Start");
+}
+
+void Start(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0.9);
+	SetPlayerRunSpeedMul(1);
+	if(GetPlayerYSpeed() <= 0.9)
+	{
+		AddTimer("", 0.5f, "Stop");
+	}
+	
+	if(GetPlayerYSpeed() == 1)
+	{
+		AddTimer("", 0.3f, "Stop");
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Memento
+//////////////////////////////////////////////////////////////////////////
+
+void LastMemento(string &in asTimer)
+{
+	AddQuest("The", "Ending");
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Block
+//////////////////////////////////////////////////////////////////////////
+
+void Block(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Block_1", true);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Lock Door
+//////////////////////////////////////////////////////////////////////////
+
+void Lock(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("DoorToEnd", true, true);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Hang
+//////////////////////////////////////////////////////////////////////////
+
+void AvoidRoam(string &in asParent, string &in asChild, int alState)
+{
+	StartPlayerLookAt("ScriptArea_1", 1, 1, "");
+}
+
+void Hang(string &in asEntity, int alState)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(false);
+	AddTimer("", 3, "Fade");
+}
+
+void Fade(string &in asTimer)
+{
+	FadeOut(3);
+	AddTimer("", 3, "SetUp");
+	AddTimer("", 5, "FadeIn");
+}
+
+void SetUp(string &in asTimer)
+{
+	TeleportPlayer("HangingPosition");
+	SetLanternActive(false, false);
+	SetLanternDisabled(true);
+	SetSwingDoorClosed("EndDoor", true, false);
+}
+
+void FadeIn(string &in asTimer)
+{
+	FadeIn(1);
+	AddEffectVoice("crying.ogg", "", "", "", false, "", 0, 0);
+	PlaySoundAtEntity("ready", "john_tie.snt", "Player", 0, false);
+	AddTimer("", 10, "HangJohn");
+}
+
+void HangJohn(string &in asTimer)
+{
+	PlaySoundAtEntity("go", "noose_snap.snt", "Player", 0, false);
+	StopMusic(0,1);
+	StartScreenShake( 0.1f, 7, 0.1, 0.1);
+	SetEntityActive("Standing", false);
+	SetEntityActive("Hung", true);
+	SetEntityActive("Swinging", true);
+	AddPropForce("SuicideBox", 20, 0, 0, "world");
+	AddPropForce("SuicideBox_2", 20, 0, 0, "world");
+	AddEffectVoice("choking.ogg", "", "", "", false, "", 0, 0);
+	SetEffectVoiceOverCallback("FadeOut2");
+}
+
+void FadeOut2()
+{
+	FadeOut(1);
+	AddTimer("", 1, "Prepare");
+	AddTimer("", 5, "Swing");
+}
+
+void Prepare(string &in asTimer)
+{
+	FadeImageTrailTo(3, 5);
+	FadeRadialBlurTo(0.4, 5);
+}
+
+void Swing(string &in asTimer)
+{
+	FadeIn(1);
+	AddTimer("", 5, "FadeOut3");
+	StartPlayerLookAt("SwingLeft", 1, 1, "SwitchToRight");
+}
+
+void SwitchToRight(string &in asCallback)
+{
+	StopPlayerLookAt();
+	AddTimer("", 0.5, "LookRight");
+}
+
+void LookRight(string &in asTimer)
+{
+	StartPlayerLookAt("SwingRight", 1, 1, "SwitchToLeft");
+}
+
+void SwitchToLeft(string &in asCallback)
+{
+	StopPlayerLookAt();
+	AddTimer("", 0.5, "LookLeft");
+}
+
+void LookLeft(string &in asTimer)
+{
+	StartPlayerLookAt("SwingLeft", 1, 1, "SwitchToRight");
+}
+
+void FadeOut3(string &in asTimer)
+{
+	FadeOut(3);
+	AddTimer("", 6, "PolicemenVoices");
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Policeman Voices
+//////////////////////////////////////////////////////////////////////////
+
+void PolicemenVoices(string &in asTimer)
+{
+	PlayMusic("break_wood3.ogg", false, 2, 1, 1, false);
+	SetPropHealth("EndDoor", -200);
+	AddEffectVoice("police_1.ogg", "", "Dialogue", "Ending1", false, "", 0, 0);
+	AddEffectVoice("police_2.ogg", "", "Dialogue", "Ending2",false, "", 0, 0);
+	AddEffectVoice("police_3.ogg", "", "", "", false, "", 0, 0);
+	AddEffectVoice("police_4.ogg", "", "Dialogue", "Ending3", false, "", 0, 0);
+	AddEffectVoice("police_5.ogg", "", "Dialogue", "Ending4", false, "", 0, 0);
+	//Rope Undone Not By Police
+	AddEffectVoice("police_6.ogg", "", "", "", false, "", 0, 0);
+	SetEffectVoiceOverCallback("Timer");
+}
+
+void Timer()
+{
+	AddTimer("", 5, "FinalText1");
+}
+
+void FinalText1(string &in asTimer)
+{
+	SetMessage("Messages", "Ending1", 5);
+	AddTimer("", 8, "FinalText2");
+}
+
+void FinalText2(string &in asTimer)
+{
+	SetMessage("Messages", "Ending2", 5);
+	AddTimer("", 8, "FinalText3");
+}
+
+void FinalText3(string &in asTimer)
+{
+	SetMessage("Messages", "Ending3", 5);
+	AddTimer("", 8, "FinalText4");
+}
+
+void FinalText4(string &in asTimer)
+{
+	SetMessage("Messages", "Ending4", 5);
+	AddTimer("", 10, "FinalText5");
+}
+
+void FinalText5(string &in asTimer)
+{
+	SetMessage("Messages", "Ending5", 5);
+	AddTimer("", 10, "Finish");
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Credits
+//////////////////////////////////////////////////////////////////////////
+	
+void Finish(string &in asTimer)
+{
+	StartCredits("Outro_CS.ogg", true, "Credits", "Outro", 3);
+	}
+	
+//craziNess is nOT THE rEsult of losiNg your minD. it is letting out your true emotions.

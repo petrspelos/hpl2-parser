@@ -1,0 +1,50 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelIntersectionEnter");
+	
+	AutoSave();
+	StopMusic(1.0f, 0);
+	SetPlayerMoveSpeedMul(0.5f);
+	
+	FadeImageTrailTo(2.0f, 10.0f);
+	AddEntityCollideCallback("Player", "AreaFallEvent", "EventCollapse", true, 1);
+	}
+	
+void EventCollapse(string &in asParent, string &in asChild, int alState)
+{
+	FadePlayerRollTo(40, 20, 20);
+	MovePlayerHeadPos(-0.2f, -1.3f, 0, 1, 0.5f);	
+	SetPlayerActive(false);
+	PlaySoundAtEntity("", "25_guardian_slime_appear", "Player", 0.0f, true);
+	FadePlayerFOVMulTo(1.2f, 2);
+	AddTimer("", 10, "TextAppear");
+	AddTimer("", 25, "ZoomEvent");
+	PlaySoundAtEntity("", "03_waking_up", "Player", 0.0f, true);
+	PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.3f,false);
+	
+	AutoSave();
+	}
+
+void TextAppear(string &in asTimer)
+{
+	SetMessage("TextOne", "IntText", 10);
+	}
+	
+void ZoomEvent(string &in asTimer)
+{
+	FadePlayerFOVMulTo(0.2f, 1);
+	//PlaySoundAtEntity("", "flashback_flash", "Player", 0.0f, true);
+	PlayGuiSound("ui_zoom.ogg", 1);
+	FadeOut(5.0f);
+	AddTimer("", 2, "ChangeThe");
+	}
+
+void ChangeThe(string &in asTimer)
+{
+	ChangeMap("25_alignment_tunnel_ending.map", "PlayerStartArea_1", "", "");
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load15", 0, "int_loading_demon.jpg");
+}

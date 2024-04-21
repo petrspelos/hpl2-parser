@@ -1,0 +1,139 @@
+
+
+void OnStart()
+	{
+		
+	}
+
+void OnEnter()
+	{
+		PlayMusic("tibetan_loop_dkf.ogg", true, 1.0f, 4.0f, 1 , false);
+		FadeOut( 0.0f );
+		FadeSepiaColorTo(1.0f, 1.0f);
+		FadeIn( 4.0f );
+		//FadeImageTrailTo(5.0f, 0.2f);
+		FadeRadialBlurTo(0.02f, 1.2f);
+		
+		//SetInDarknessEffectsActive(false);
+		//StartPlayerSpawnPS("dkf_fog.sps"); //the global fog particle
+		
+		SetUpFlashlight("FlashlightArea");
+		SetUpInsanity();	 
+		
+		CheckPoint ("", "PlayerStartArea_1", "", "DeathHint", "Default");
+		SetEntityPlayerInteractCallback("LADLE", "EndLevel", true);
+		AddEntityCollideCallback("Player", "KillArea", "Kill", false, 1);
+	}
+
+void OnLeave()
+	{
+	
+	}
+	
+void Kill(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(100.0, "", true, true);
+}
+
+void EndLevel(string &in asEntity)
+{
+	FadeOut( 4.0f );
+	//ChangeMap(string& asMapName, string& asStartPos, string& asStartSound, string& asEndSound);
+}
+
+
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+	
+	if(GetPlayerSanity() == 0.0f) SetPlayerSanity(29.0f);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+	
+//////////////////////FLASHLIGHT//////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
+void SetUpFlashlight(string &in asArea)  //Area to create the object at. Should be placed out of player's view
+	{	
+	
+		/////////Gets rid of a bug that occurs the first time the flashlight is used/////////
+		GiveItemFromFile("oldlantern", "lantern.ent");			
+		SetLanternActive(true, false);
+		SetLanternActive(false, false);
+		RemoveItem("oldlantern");
+		////////////////////////////////////////////////////////////////////////////////////
+		
+		AddDebugMessage("Setting up a flashlight...", false);
+		
+		
+		SetLocalVarInt("FlashLightVar", 0);
+		SetLanternLitCallback("FlashlightFunction");
+		
+		CreateEntityAtArea("flashlight_playerhands", "experimental_flashlight.ent", asArea, false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", false);
+		
+		AddTimer("FlickerTimer", 1.0f, "FlickerScript");
+	}
+
+void FlashlightFunction(bool abLit)
+{
+
+	if(GetLocalVarInt("FlashLightVar") == 1)
+	{
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", false);
+		PlaySoundAtEntity("", "flashlight_off.snt", "Player", 0, false);
+		SetLocalVarInt("FlashLightVar", 0);
+		
+	}
+	else if(GetLocalVarInt("FlashLightVar") == 0)
+	{
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", true);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", true);
+		PlaySoundAtEntity("", "flashlight_on.snt", "Player", 0, false);
+		SetLocalVarInt("FlashLightVar", 1);
+		
+	}
+	
+	
+}
+
+void FlickerScript(string &in asTimer)  //looping timer, sets flicker to flashlight if player has one
+{
+	
+	if(GetPlayerLampOil() >= 10.0f || GetPlayerLampOil() == 0.0f || GetLocalVarInt("FlashLightVar") == 0)
+	{
+		SetLightFlickerActive("flashlight_playerhands_Flashlight_Spot", false);
+	}
+	else if(GetLocalVarInt("FlashLightVar") == 1 && GetPlayerLampOil() < 10.0f && GetPlayerLampOil() != 0.0f)
+	{
+		SetLightFlickerActive("flashlight_playerhands_Flashlight_Spot", true);
+	}
+	
+		AddTimer("FlickerTimer", 1.0f, "FlickerScript");
+}
+
+//////////////////////////////END FLASHLIGHT///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+
+

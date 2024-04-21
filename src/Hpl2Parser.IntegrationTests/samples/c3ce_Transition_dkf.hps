@@ -1,0 +1,74 @@
+
+
+void OnStart()
+	{
+		
+	}
+
+void OnEnter()
+	{
+		
+		SetMapDisplayNameEntry("Transition");
+		AutoSave();
+		//SetInDarknessEffectsActive(false);
+		//SetPlayerSanity(60.0f);
+		StartPlayerSpawnPS("dkf_fog.sps");
+		
+		SetEnemySanityDecreaseActive("doll", false);
+		SetUpInsanity();
+		
+		//PlayMusic("24_amb2.ogg", true, 1.0f, 1.0f, 1, true);
+
+		AddEntityCollideCallback("Player", "AreaStartMonsterPatrol", "StartPatrol", true, 1);
+		AddEntityCollideCallback("Player", "SaveArea", "SaveGame", true, 1);
+	}
+
+void OnLeave()
+	{
+		StopMusic(1.0f, 1);
+		ClearSavedMaps();
+	}
+	
+void StartPatrol(string &in asParent, string &in asChild, int alState)
+{
+	AddEnemyPatrolNode("doll", "PathNodeArea_1", 0.0f, "");
+}
+
+void SaveGame(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Saving...", false);
+	AutoSave();
+	CheckPoint ("1", "SaveStation", "", "", "");
+}
+
+void RespawnMonster(string &in asName, int alCount)
+{
+	AddEntityCollideCallback("Player", "AreaStartMonsterPatrol", "StartPatrol", true, 1);
+	SetEntityActive("doll", true);
+}
+
+	
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+

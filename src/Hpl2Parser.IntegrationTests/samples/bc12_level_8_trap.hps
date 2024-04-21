@@ -1,0 +1,183 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	StopMusic(0,1);
+	SetLightVisible("AppearLight", false);
+	AddEntityCollideCallback("AfterPriest", "DestroyMonster", "Disappear", true, 1);
+	AddEntityCollideCallback("Player", "ShutDoor", "Slam", true, 1);
+	AddEntityCollideCallback("Player", "Music", "StartMusic", true, 1);
+	AddEntityCollideCallback("Player", "LockDoor", "LockTheDoor", true, 1);
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	FadeImageTrailTo(3, 1);
+	FadeRadialBlurTo(0.4, 1);
+	FadeIn(3);
+	SetPlayerCrouching(true);
+	AddTimer("", 6, "FadeOut");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnEnter
+//////////////////////////////////////////////////////////////////////////////////////
+
+void OnEnter()
+{
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Wake Up
+//////////////////////////////////////////////////////////////////////////////////////
+
+void FadeOut(string &in asTimer)
+{
+	FadeOut(1);
+	AddTimer("Start", 3, "WakeUp");
+}
+
+void WakeUp(string &in asTimer)
+{
+	if(asTimer == "Start")
+	{
+		SetLightVisible("AppearLight", true);
+		FadeIn(1);
+		AddTimer("MoveHead", 1, "WakeUp");
+	}
+	
+	else if(asTimer == "MoveHead")
+	{
+		MovePlayerHeadPos(-0.5, -0.2, -1.1, 2, 2);
+		FadePlayerRollTo(0, 1.7, 500);
+		AddTimer("ActivatePlayer", 2, "WakeUp");
+		FadeImageTrailTo(0, 1);
+		FadeRadialBlurTo(0, 1);
+		AddEffectVoice("trap_1.ogg" ,"", "Dialogue", "Trap", false, "", 0, 0);
+	}
+	else if(asTimer =="ActivatePlayer")
+	{
+		MovePlayerHeadPos(0, 0, 0, 2 , 2);
+		ShowPlayerCrossHairIcons(true);
+		 SetPlayerCrouching(false);
+		 SetPlayerActive(true);
+		 AddQuest("Trapped", "Trap");
+	}
+	
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Shut Door
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Slam(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("Open", true, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Start Music
+//////////////////////////////////////////////////////////////////////////////////////
+
+void StartMusic(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Track18.ogg", true, 2, 1, 1, true);
+	FadeImageTrailTo(0, 1);
+	FadeRadialBlurTo(0, 1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Flashback Callback
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Leave()
+{
+	SetSwingDoorLocked("LockDoor", false, true);
+	SetEntityActive("CollideB4Flashback", false);
+	SetEntityActive("AfterPriest", true);
+	SetSwingDoorLocked("AfterPriestDoor", false, true);
+	AddEnemyPatrolNode("AfterPriest", "Node_1", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_2", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_3", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_4", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_5", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_6", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_7", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_8", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_9", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_10", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_11", 0.001f, "");
+	AddEnemyPatrolNode("AfterPriest", "Node_12", 0.001f, "");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Checkpoint Death
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Reset(string &in asName, int alCount)
+{
+	SetEnemyDisabled("AfterPriest", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Lock Priest Door
+//////////////////////////////////////////////////////////////////////////////////////
+
+void LockTheDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("LockDoor", true, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Get Rid Of Monster
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Disappear(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AfterPriest", false);
+}
+
+void DoorMessage(string &in asEntity)
+{
+	if(GetSwingDoorLocked(asEntity) == true)
+	{
+		SetMessage("Messages", "Locked", 1);
+	}
+}
+
+void DoorMessage2(string &in asEntity)
+{
+	if(GetSwingDoorLocked("ToPrison") == true)
+	{
+		SetMessage("Messages", "Never", 1);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("Trapped", "Trap");
+}

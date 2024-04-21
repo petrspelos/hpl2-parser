@@ -1,0 +1,99 @@
+void OnStart()
+	{
+		AddEntityCollideCallback("BarrelsBlockingArea", "barrel01_1", "CollideBarrelsBlockingArea", false, -1);
+		AutoSave();
+		SetEntityPlayerInteractCallback("orbpiece_pickup_script", "orbpiece_pickup", false);
+		AddUseItemCallback("", "key_eastwing", "level_eastwing", "UsedKeyOnDoor1", true);
+		SetEntityPlayerInteractCallback("metal_5", "blocked_door_quest", true);
+	}
+
+void OnEnter()
+	{
+		PlayMusic("amb_extra01.ogg", true, 1, 1, 1, true);
+		AutoSave();
+	}
+
+void jammed_door(string &in asEntity)
+	{
+		SetMessage("Messages", "door_jammed1", 5);
+	}
+
+void InteractBarrelBlock(string &in asEntity)
+	{
+		SetSwingDoorLocked("metal_5", false, false);
+		SetEntityPlayerInteractCallback("barrel01_1", "", true);
+		SetEntityPlayerInteractCallback("barrel01_2", "", true);
+	}
+
+void CollideBarrelsBlockingArea(string &in asParent, string &in asChild, int alState)
+	{
+		SetSwingDoorLocked("metal_5", false, false);
+		CompleteQuest("mainhall_blocked_door_quest", "blockeddoormh");
+	}
+
+void InteractBlockDoor(string &in asEntity)
+	{
+		if(GetSwingDoorLocked("metal_5") == true)
+		{
+			SetMessage("Messages", "door_blocked", 0);
+		}
+	}
+
+void orbpiece_pickup(string &in asEntity)
+	{
+		if(HasItem("copper_tube") == true)
+			{
+				SetPlayerActive(false);
+				SetMessage("Messages", "emerald_interaction2", 4);
+				AddTimer("trig1", 5.0f, "emerald_continue_interact");
+				SetEntityActive("orbpiece_pickup_script", false);
+				CompleteQuest("emerald_payment_quest", "emeraldquest");
+			}
+		else
+			{
+				SetMessage("Messages", "emerald_interaction1", 3);
+				AddQuest("emerald_payment_quest", "emeraldquest");
+			}
+	}
+
+void emerald_continue_interact(string &in asTimer)
+	{
+		SetMessage("Messages", "emerald_interaction3", 6);
+		AddTimer("trig1", 7.0f, "end_emerald_interact");
+		RemoveItem("copper_tube");
+	}
+
+void end_emerald_interact(string &in asTimer)
+	{
+		SetPlayerActive(true);
+		AddQuest("correct_receiver_levers_quest", "correctlevers");
+	}
+
+void DoorLockedPlayer1(string &in asEntity)
+	{
+		AddQuest("east_wing_locked_quest", "eastwinglocked");
+	}
+
+void UsedKeyOnDoor1(string &in asItem, string &in asEntity)
+	{
+		SetLevelDoorLocked("level_eastwing", false);
+		PlaySoundAtEntity("", "unlock_door", "level_eastwing", 0, false);
+		RemoveItem("key_eastwing");
+		CompleteQuest("east_wing_locked_quest", "eastwinglocked");
+	}
+
+void DoorLockedPlayer2(string &in asEntity)
+	{
+		AddQuest("old_library_blocked_quest", "oldlibraryblocked");
+	}
+
+void blocked_door_quest(string &in asEntity)
+	{
+		AddQuest("mainhall_blocked_door_quest", "blockeddoormh");
+	}
+		
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

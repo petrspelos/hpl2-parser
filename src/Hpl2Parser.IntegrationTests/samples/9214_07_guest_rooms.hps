@@ -1,0 +1,103 @@
+void OnStart(){
+	SetLocalVarInt("worndoorLocked", 1);
+	SetLocalVarInt("mansion1Locked", 1);
+	SetEntityPlayerInteractCallback("mansion_1", "mansion1Locked", false);
+	SetEntityPlayerInteractCallback("warhammer", "spawnIdiot", true);
+	SetEntityPlayerInteractCallback("worn_door", "worndoorLocked", false);
+	AddUseItemCallback("", "crowbar_1", "mansion_1", "insertCrowbar", true);
+	AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_1", "breakDoor", true, 1);
+	AddEntityCollideCallback("warhammer", "burst_area", "burstDoor", true, 1);
+	AddEntityCollideCallback("warhammer", "enemy_suitor_2", "HitSuitor", false, 1);
+	AddEntityCollideCallback("enemy_suitor_2", "ScriptArea_3", "suitorBreakDoor", true, 1);
+	SetLocalVarInt("SuitorHealth", 1);
+	SetDeathHint("Messages", "fightback");
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.25f, 0, 0, true);
+}
+
+void OnLeave(){
+
+}
+
+void mansion1Locked(string &in entity){
+	if (GetLocalVarInt("mansion1Locked") == 1){
+		SetMessage("Messages", "brokenLock", 0);
+	}
+}
+
+void insertCrowbar(string &in item, string &in door){
+	AddTimer("T1", 0.2f, "activateJoint");
+	RemoveItem(item);
+}
+
+void activateJoint(string &in asTimer){
+	SetEntityActive("crowbar_joint_1", true);
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+	SetEntityActive("enemy_suitor_1", true);
+	AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_1", 0, "");
+	GiveSanityDamage(25, true);
+}
+
+void breakDoor(string &in asParent, string &in asChild, int alState){
+	SetSwingDoorLocked("mansion_1", false, true);
+	AddPropImpulse("mansion_1", -50, 0, 0, "World");
+	SetSwingDoorDisableAutoClose("mansion_1", true);
+	SetSwingDoorClosed("mansion_1", false, false);
+	SetMoveObjectState("mansion_1", 1);
+	PlaySoundAtEntity("", "break_wood_metal", "ScriptArea_2", 0, false);
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "ScriptArea_2", false);
+	AddPlayerSanity(25);
+	SetEntityActive("crowbar_joint_1", false);
+	SetEntityActive("crowbar_broken_1", true);
+	SetLocalVarInt("mansion1Locked", 0);
+	StopMusic(0, 0);
+	PlayMusic("10_puzzle01.ogg", false, 1.0f, 0, 0, false);
+	AddTimer("T2", 14.0f, "restartAmbience");
+}
+
+void restartAmbience(string &in asTimer){
+	PlayMusic("suitor_amb.ogg", true, 0.25f, 0, 0, true);
+}
+
+void burstDoor(string &in asParent, string &in asChild, int alState){
+	SetSwingDoorLocked("worn_door", false, true);
+	AddPropImpulse("worn_door", 40, 0, 0, "World");
+	SetSwingDoorDisableAutoClose("worn_door", true);
+	SetSwingDoorClosed("worn_door", false, false);
+	SetMoveObjectState("worn_door", 1);
+	SetEntityActive("crowbar_1", true);
+	SetLocalVarInt("worndoorLocked", 0);
+	PlaySoundAtEntity("", "break_wood_metal", "burst_area", 0, false);
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "burst_area", false);
+}
+
+void worndoorLocked(string &in entity){
+	if (GetLocalVarInt("worndoorLocked") == 1){
+		SetMessage("Messages", "worn_door", 0);
+	}
+}
+
+void spawnIdiot(string &in entity){
+	SetEntityActive("enemy_suitor_2", true);
+	AddEnemyPatrolNode("enemy_suitor_2", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("enemy_suitor_2", "PathNodeArea_3", 0.001, "");
+	SetMessage("Messages", "defense_repeated", 0);
+}
+
+void HitSuitor(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("SuitorHealth") == 1){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetLocalVarInt("SuitorHealth", 0);
+	}else if (GetLocalVarInt("SuitorHealth") == 0){
+		PlayGuiSound("suitor_attack.snt", 100);
+		SetEnemyIsHallucination("enemy_suitor_2", true);
+	}
+}
+
+void suitorBreakDoor(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("mansion_2", false);
+	PlayGuiSound("break_wood.snt", 1000000);
+	SetEntityActive("mansion_2_broken", true);
+}

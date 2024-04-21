@@ -1,0 +1,729 @@
+void OnStart()
+{
+		//AddEntityCollideCallback("Player", "ScriptArea_1", "TrapTimerEvent", false, 0);
+		AddEntityCollideCallback("Player", "AmbienceArea_1", "ambEnergy", false, 0);
+	AddUseItemCallback("", "chemical_container_static_3", "block_box_nonchar_1", "place_explosiv", true);
+	SetGlobalVarInt("LimitedLife", 2);
+		PlaySoundAtEntity("sparks", "27_tunnel_elec", "ScriptArea_3", 0, true);
+		PlaySoundAtEntity("sparks", "27_tunnel_elec", "ScriptArea_7", 0, true);
+		for(int i=0; i<=4; i++)	FadeLightTo("ReactorLight_"+i, 4, 4, 1.5, 0, -1, 0.3f);
+		FadeLightTo("BoxLight_2", 4, 4, 1.5, 0, -1, 0.3f);
+		for(int i=0; i<3; i++)		{	PlaySoundAtEntity("tunnelmachine"+i, "22_tunnel_machine", "SoundArea01_"+i, 1, true);	}		
+		for(int i=0; i<5; i++)		{	AddEntityCollideCallback("leverOne0"+i, "leverAArea", "lever", false, -1);	}
+		for(int i=0; i<5; i++)		{	AddEntityCollideCallback("leverTwo0"+i, "leverBArea", "lever", false, -1);	}
+		for(int i=0; i<9; i++)		{	AddEntityCollideCallback("leverReactor"+i, "ScriptArea_9", "imputReactor", false, -1);	}
+		//AddEntityCollideCallback("leverOne04_1", "ScriptArea_7", "LeverOneApply", false, 1);
+		//AddEntityCollideCallback("leverTwo04_1", "ScriptArea_8", "LeverTwoApply", false, 1);
+		for(int i=0; i<3; i++)	{	CreateParticleSystemAtEntity("bolt", "ps_electro_bolt.ps", "ParticleArea01_"+i, true);	}
+		AddEntityCollideCallback("Player", "ScriptArea_3", "energyBarrier", false, 1);
+	//	ConnectEntities("","control_room_piston_lever_17","castle_portcullis_1", true, -1, "LeverOneApply");
+		PlaySoundAtEntity("machineAmb", "afx_event_bilge_reactor_loop", "Player", 1, true);
+		
+		AddTimer("waterDrip", RandFloat(4, 10), "TimerList");
+		AddTimer("BoltProgress", 0, "BoltEvent");
+		
+		
+		CheckPoint("checkpoint3","PlayerStartArea_2","doom", "Hints", "DeathDarkCave");
+		
+		AddEntityCollideCallback("Player", "ObjectArea_1", "CogWheelSpinAmb", false, 0);
+		AddEntityCollideCallback("Player", "ObjectArea_2", "PistonAmb", false, 0);
+		AddEntityCollideCallback("Player", "ObjectArea_3", "GiantWheelAmb", false, 0);
+		AddEntityCollideCallback("Player", "ObjectArea_4", "MainWheelAmb", false, 0);
+		AddEntityCollideCallback("Player", "ObjectArea_5", "ReactorWheelAmb", false, 0);
+		SetPlayerRunSpeedMul(1);
+		
+		
+		for(int i=1; i<=4; i++)	PlaySoundAtEntity("crackingWheel", "21_cog_wheel_big", "spinning_cogwheelN_"+i, 0, true);
+		for(int i=1; i<=15; i++)	{		CreateParticleSystemAtEntity("steam", "ps_steam.ps", "ParticleArea03_"+i, true);	PlaySoundAtEntity("steam", "17_steam", "ParticleArea03_"+i, 0, true);		}
+		FadeLightTo("SpotLight_6", 0, 0, 0, 0, -1, 0);
+}
+
+void shake(string &in door_name)	{	AddPropForce(door_name, RandFloat(-70, 70), 0, RandFloat(-70, 70), "world");	}
+//void SetMoveObjectStateExt(string& asName, float afState, float afAcc, float afMaxSpeed, float afSlowdownDist, bool abResetSpeed);
+
+void PistonAmb(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		if(GetLocalVarInt("MachineState") == 0){
+		AddTimer("running2", 0, "PistonEvent");
+		AddTimer("engine", 2, "PistonEvent");
+		}
+	}
+	else
+	{	AddTimer("stopped", 0, "PistonEvent");	}
+}
+
+void CogWheelSpinAmb(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	{
+		if(GetLocalVarInt("MachineState") == 0){
+		StartScreenShake(0.008, 4, 4, 7);
+		RotatePropToSpeed("spinning_cogwheelN_1", 1, 1, -1, 0, 0, false, "");
+		RotatePropToSpeed("spinning_cogwheelN_2", 1, 1, 0, 0, -1, false, "");
+		RotatePropToSpeed("spinning_cogwheelN_3", 1, 1, 0, 0, -1, false, "");
+		RotatePropToSpeed("spinning_cogwheelN_4", 1, 1, -1, 0, 0, false, "");
+		RotatePropToSpeed("spinning_cogwheel_1", 1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("spinning_cogwheel_2", 1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("spinning_cogwheel_3", 1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("spinning_cogwheel_4", 1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("spinning_cogwheel_5", 1, 1, 0, 0, 1, false, "");
+		RotatePropToSpeed("spinning_cogwheel_6", 1, 1, 0, 0, 1, false, "");
+		RotatePropToSpeed("spinning_cogwheel_7", 1, 1, 0, 0, 1, false, "");
+		RotatePropToSpeed("spinning_cogwheel_8", 1, 1, 0, 0, 1, false, "");
+		}
+	}
+	else{
+		for(int i=1; i<=4; i++)	RotatePropToSpeed("spinning_cogwheelN_"+i, 0, 0, 0, 0, 0, false, "");
+		for(int i=1; i<=8; i++)	RotatePropToSpeed("spinning_cogwheel_"+i, 0, 0, 0, 0, 0, false, "");
+	}
+}
+
+void GiantWheelAmb(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		if(GetLocalVarInt("MachineState") == 0){
+		AddTimer("runningAmb", 0, "TimerList");
+		RotatePropToSpeed("elevator_machine_cog_main_1", 2, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_main_2", 2, 1, -1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_main_3", 2, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_main_4", 2, 1, -1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_main_5", 2, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_main_6", 2, 1, 1, 0, 0, false, "");
+		}
+	}
+	else{
+		for(int i=1; i<=6; i++)		RotatePropToSpeed("elevator_machine_cog_main_"+i, 0, 0, 0, 0, 0, false, "");}
+		RemoveTimer("runningAmb");
+}
+void MainWheelAmb(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		if(GetLocalVarInt("MachineState") == 0){
+		AddTimer("runningAmb", 0, "TimerList");
+		for(int i=1; i<=2; i++)	AddTimer("sparks"+i, RandFloat(1, 4), "TimerList");
+		RotatePropToSpeed("MainWheel_1", 2, 0.6f, 0, 0, 1, false, "");
+		RotatePropToSpeed("MainWheel_2", 2, 0.6f, 0, -1, 0, false, "");
+		RotatePropToSpeed("MainWheel_3", 2, 0.6f, 0, 0, -1, false, "");
+		RotatePropToSpeed("MainWheel_4", 2, 0.6f, 0, -1, 0, false, "");
+		RotatePropToSpeed("MainWheel_5", 2, 0.6f, 0, 0, 1, false, "");
+		RotatePropToSpeed("MainWheel_6", 2, 0.6f, 0, 0, -1, false, "");
+		}
+	}
+	else{
+		for(int i=1; i<=2; i++)		RemoveTimer("sparks"+i);
+		for(int i=1; i<=6; i++)		RotatePropToSpeed("MainWheel_"+i, 0, 0, 0, 0, 0, false, "");}
+		RemoveTimer("runningAmb");
+}
+void ReactorWheelAmb(string &in asParent, string &in asChild, int alState){
+		if(alState == 1){
+		if(GetLocalVarInt("MachineState") == 1){
+			RotatePropToSpeed("barrier_machine_cog_1", 2, 0.35f, 0, 1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_2", 2, 0.35f, 0, -1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_3", 2, 0.35f, 0, -1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_4", 2, 0.35f, 0, 0, -1, false, "");
+			RotatePropToSpeed("barrier_machine_cog_5", 2, 0.35f, 0, 0, 1, false, "");
+			PlaySoundAtEntity("ReactorWheel", "reactor_normal", "barrier_machine_cog_1", 4, true);
+			AddTimer("runningAmb", 0, "TimerList");
+			}
+		if(GetLocalVarInt("MachineState") == 2){
+			RotatePropToSpeed("barrier_machine_cog_1", 2, 2, 0, 1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_2", 2, 2, 0, -1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_3", 2, 2, 0, -1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_4", 2, 2, 0, 0, -1, false, "");
+			RotatePropToSpeed("barrier_machine_cog_5", 2, 2, 0, 0, 1, false, "");
+			PlaySoundAtEntity("ReactorWheel", "reactor_fall", "barrier_machine_cog_1", 4, true);
+			}
+		}
+		else
+		{
+			for(int i=1; i<=6; i++)	RotatePropToSpeed("barrier_machine_cog_"+i, 2, 0, 0, 0, 0, false, "");
+			DestroyParticleSystem("overloadReactorW");
+			StopSound("ReactorWheel", 4);	RemoveTimer("runningAmb");
+		}
+	}
+
+void PistonEvent(string &in asTimer){
+	if(asTimer == "engine")		{	AddTimer("running1", 0, "PistonEvent");		AddTimer("running2", 2, "PistonEvent");		AddTimer("engine", 4, "PistonEvent");}
+	if(asTimer == "running1")	{	for(int i=1; i<=6; i++)		{	SetMoveObjectStateExt("piston_"+i, 0.4f, 10.0f, 10.0f, 1.0f, true);	PlaySoundAtEntity("", "17_piston_move", "piston_"+i, RandFloat(0, 2), false);	CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ParticleArea02_"+i, true);	}	}
+	if(asTimer == "running2")	{	for(int i=1; i<=6; i++)		{	SetMoveObjectStateExt("piston_"+i, 0.0f, 10.0f, 10.0f, 1.0f, true);	PlaySoundAtEntity("", "17_piston_done", "piston_"+i, RandFloat(0, 2), false);	}	StartScreenShake(0.008, 1, 1, 1);	}
+	if(asTimer == "stopped")	{	for(int i=1; i<=6; i++)		SetMoveObjectStateExt("piston_"+i, 0, 0, 0, 0, true);	
+									RemoveTimer("running1");	RemoveTimer("running2");	RemoveTimer("engine");	}
+}
+void stuckLever(string &in asEntity){
+	AddTimer("stuckL", RandFloat(0, 0.4f), "TimerList");
+}
+void TimerList(string &in asTimer){
+	if(asTimer == "waterDrip"){		PlaySoundAtEntity("", "general_water_drip", "rock_debris_brown01_1", 0, true);		AddTimer("waterDrip", RandFloat(4, 10), "TimerList");	}
+	if(asTimer == "runningAmb")		{	StartScreenShake(0.005, 4, 4, 4);	AddTimer("runningAmb", 11, "TimerList");}
+	if(asTimer == "sparks1")	{	for(int i=1; i<=3; i++)	FadeLightTo("SparkLight1_"+i, 1, 1, 0.5f, 10, -1, 0);
+									AddTimer("spark1o", 0.1f, "TimerList");
+									CreateParticleSystemAtEntity("", "ps_cog_stone.ps", "SparkArea_1", true);
+									PlaySoundAtEntity("", "elecspk", "SparkArea_1", 0, false);	AddTimer("sparks1", RandFloat(0, 10), "TimerList");}
+	if(asTimer == "sparks2")	{	for(int i=1; i<=3; i++)	FadeLightTo("SparkLight2_"+i, 1, 1, 0.5f, 10, -1, 0);
+									AddTimer("spark2o", 0.1f, "TimerList");
+									CreateParticleSystemAtEntity("", "ps_cog_stone.ps", "SparkArea_2", true);
+									PlaySoundAtEntity("", "elecspk", "SparkArea_2", 0, false);	AddTimer("sparks2", RandFloat(0, 10), "TimerList");	}
+	if(asTimer == "spark1o")	{	for(int i=1; i<=3; i++)	FadeLightTo("SparkLight1_"+i, 0, 0, 0, 0, -1, RandFloat(0.5f, 1));	}
+	if(asTimer == "spark2o")	{	for(int i=1; i<=3; i++)	FadeLightTo("SparkLight2_"+i, 0, 0, 0, 0, -1, RandFloat(0.5f, 1));	}
+	if(asTimer == "mechDeny")	{	PlayGuiSound("machDeny.ogg", 10);	}
+	if(asTimer == "stuckL")		{	PlayGuiSound("16_lever_stuck_clank", 10);		}
+}
+
+void TrapTimerEvent(string &in asParent, string &in asChild, int alState)
+{	if(alState == 1)	{
+	AddTimer("trigger", 6, "TrapTimer");
+	AddEntityCollideCallback("Player", "ScriptArea_2", "TrapTimerEvent02", true, 1);
+	}
+	else
+	{	AddTimer("opengate", 0, "TrapTimer");
+		RemoveEntityCollideCallback("Player", "ScriptArea_1");
+	}
+}
+
+void TrapTimer(string &in asTimer){
+	if(asTimer == "opengate"){
+	SetEntityActive("castle_portcullis_2", true);
+	SetEntityActive("castle_portcullis_1", false);
+	PlaySoundAtEntity("", "16_lever_max_min.snt", "Player", 1.0f, true);
+	StartScreenShake(0.003f, 0.5f, 0.8f, 0.8f);
+	AddTimer("opengate2", 1, "TrapTimer");
+	AddTimer("opengate3", 5, "TrapTimer");
+	}
+	if(asTimer == "opengate2"){
+		PlaySoundAtEntity("grin", "16_ladder_down", "Player", 1.0f, true);
+		PlaySoundAtEntity("grin", "16_winch_bridge.snt", "Player", 3.0f, true);
+	}
+	if(asTimer == "opengate3"){	StopSound("grin", 2.0f);	}
+	if(asTimer == "closegate"){
+	SetEntityActive("castle_portcullis_1", true);
+	SetEntityActive("castle_portcullis_2", false);
+	}
+	if(asTimer == "trigger"){
+	AddEntityCollideCallback("Player", "ScriptArea_3", "energyBarrier", false, 1);
+	}
+	if(asTimer == "ambEnergy"){
+		AddTimer("ambEnergy", 10, "TrapTimer");
+		StartScreenShake(0.02, 5, 4, 4);
+	}
+	if(asTimer == "cripple"){
+		AddTimer("cripple1", 2, "TrapTimer");
+		MovePlayerHeadPos(0, -0.25, 0, 80.0f, 80.0f);
+	}
+	if(asTimer == "cripple1"){
+		FadePlayerRollTo(-7, 1, 1);
+		AddTimer("cripple2", 10, "TrapTimer");
+		FadePlayerFOVMulTo(0.6f, 1.0f/20.0f);
+	}
+	if(asTimer == "cripple2"){
+		FadePlayerRollTo(7, 1, 1);
+		AddTimer("cripple1", 10, "TrapTimer");
+		FadePlayerFOVMulTo(1.4f, 1.0f/20.0f);
+	}
+	if(asTimer == "missReactor"){
+		PlayMusic("20_event_darkness.ogg", false, 1, 0, 0, true);
+		AddEntityCollideCallback("Player", "ScriptArea_11", "notTriggerReactor", true, 1);
+	}
+	if(asTimer == "missReactor2"){
+		StopMusic(2.0f, 0);
+			SetLocalVarInt("MachineState", 2);
+			RotatePropToSpeed("barrier_machine_cog_1", 2, 2, 0, 1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_2", 2, 2, 0, -1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_3", 2, 2, 0, -1, 0, false, "");
+			RotatePropToSpeed("barrier_machine_cog_4", 2, 2, 0, 0, -1, false, "");
+			RotatePropToSpeed("barrier_machine_cog_5", 2, 2, 0, 0, 1, false, "");
+			StopSound("ReactorWheel", 4);
+			PlaySoundAtEntity("ReactorWheel", "reactor_fall", "barrier_machine_cog_1", 4, true);
+			for(int i=1; i<=4; i++)	CreateParticleSystemAtEntity("overloadReactorW", "ps_elevator_fast.ps", "ParticleArea04_"+i, true);
+	}
+	if(asTimer == "missReactor3"){
+		for(int i=0; i<=4; i++)	FadeLightTo("ReactorLight_"+i, 4, 4, 1.5, 0, -1, 0.3f);
+		FadeLightTo("BoxLight_2", 4, 4, 1.5, 0, -1, 0.3f);
+		StartScreenShake(0.16, 8, 0.5, 8);
+		AddTimer("cripple", 0, "TrapTimer");
+		SetPlayerRunSpeedMul(0.6f);
+		SetPlayerMoveSpeedMul(0.5f);
+		AddEntityCollideCallback("Player", "ScriptArea_2", "trigBruteToPrison", true, 1);
+		RemoveTimer("missReactor3");
+		RemoveEntityCollideCallback("Player", "ScriptArea_11");
+	}
+	if(asTimer == "missReactor2Tick1"){
+		PlaySoundAtEntity("", "afx_bilge_reactor_lights_on", "Player", 0, true);
+	}
+	if(asTimer == "missReactor3in"){
+		PlaySoundAtEntity("chaos", "afx_event_reactor_POWERON", "Player", 0, true);
+	}
+	if(asTimer == "imputReactor"){
+	if(GetLeverState("leverReactor1") == -1 && GetLeverState("leverReactor2") == 1 && GetLeverState("leverReactor3") == 1 && GetLeverState("leverReactor4") == -1 && GetLeverState("leverReactor5") == -1 && GetLeverState("leverReactor6") == 1 && GetLeverState("leverReactor7") == -1 && GetLeverState("leverReactor8") == 1){
+		SetSwingDoorClosed("castle_2", true, true);
+		AddTimer("missReactor", 3, "TrapTimer");
+		AddTimer("missReactor2", 8, "TrapTimer");
+		AddTimer("missReactor2Tick1", 10, "TrapTimer");
+		AddTimer("missReactor2Tick1", 14, "TrapTimer");
+		AddTimer("missReactor2Tick1", 15, "TrapTimer");
+		AddTimer("missReactor2Tick1", 16, "TrapTimer");
+		AddTimer("missReactor3in", 17, "TrapTimer");
+		AddTimer("missReactor3", 18, "TrapTimer");
+		
+		SetGlobalVarInt("DeathOfKind", 1);
+		
+		if(GetGlobalVarInt("machineDetonate")==1){
+			AddTimer("missReactorDeath1", 18.8, "TrapTimer");
+			AddTimer("missReactorDeath2", 19, "TrapTimer");
+			AddTimer("missReactorDeath3", 24, "TrapTimer");
+		}
+		}
+	}
+	if(asTimer == "machineOff"){
+		StopSound("machineAmb", 1);
+		PlaySoundAtEntity("", "afx_event_bilge_reactor_off", "Player", 1, true);
+		}
+	if(asTimer == "missReactorDeath1"){
+		StartEffectFlash(0.2f, 0.2f, 0.2f);
+		PlaySoundAtEntity("chaos", "explosion_rock_large", "Player", 0, true);
+		PlaySoundAtEntity("ring", "insanity_ear_ring", "Player", 0, true);
+		//for (int i=0; i<=20; i++)	AutoSave();
+	}
+	if(asTimer == "missReactorDeath2"){
+		FadeOut(0.2f);	FadeGlobalSoundVolume(0, 0.1f);
+		SetPlayerActive(false);	StopSound("chaos", 0.2);
+		StopSound("ring", 10);
+	}
+	if(asTimer == "missReactorDeath3"){
+		StartCredits("26_paper_daniel01.ogg",false,  "Ending", "BombCredits", 0);
+	}
+}
+void notTriggerReactor(string &in asParent, string &in asChild, int alState){
+	AddTimer("missReactor3in", 0, "TrapTimer");
+	AddTimer("missReactor3", 1, "TrapTimer");
+	RemoveTimer("missReactor2Tick1");
+}
+void sabotageEvent(string &in asTimer){
+	if(asTimer == "scene1"){
+		PlaySoundAtEntity("", "afx_factory_quake_creaks", "Player", 1, true);
+		StartScreenShake(0.002, 4, 2, 0);
+	}
+	if(asTimer == "semi1"){
+		PlaySoundAtEntity("creakMetal", "afx_event_factory_metal_strain", "SoundArea02_"+RandInt(1, 8), 0, true);
+		AddTimer("semi1", RandFloat(0.4f, 1.2f), "sabotageEvent");
+	}
+	if(asTimer == "scene2"){
+		GiveSanityDamage(15, true);
+		AddEntityCollideCallback("Player", "AmbienceArea_2", "alertAmb1", false, 0);
+		AddEntityCollideCallback("Player", "AmbienceArea_3", "alertAmb2", false, 0);
+		RemoveTimer("semi1");
+		AddTimer("bangFirework", 0, "sabotageEvent");
+	}
+	if(asTimer == "bangFirework"){
+		int i = RandInt(1, 49);
+	
+		PlaySoundAtEntity("", "afx_enginerooms_bang", "SoundArea03_"+i, 0, true);
+		CreateParticleSystemAtEntity("", "ps_break_cavein_local", "SoundArea03_"+i, true);
+		AddTimer("bangFirework", 1, "sabotageEvent");
+	}
+}
+
+void alertAmb1(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		PlaySoundAtEntity("alert1", "amb_enginerooms_klaxon_pipe", "Player", 5, true);
+	}
+	else
+	{	StopSound("alert1", 5);
+	}
+}
+void alertAmb2(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		PlaySoundAtEntity("alert2", "amb_enginerooms_klaxon", "Player", 5, true);
+	}
+	else
+	{	StopSound("alert2", 5);
+	}
+}
+
+void imputReactor(string &in asParent, string &in asChild, int alState){
+	AddTimer("imputReactor", 0.5, "TrapTimer");
+	}
+
+void place_explosiv(string &in asItem, string &in asEntity){
+	RemoveItem(asItem);
+	SetEntityActive("glass_container_mix_notdone_static_1", true);
+	FadeLightTo("PointLight_41", 1, 1, 0, 1, -1, 0);
+	PlaySoundAtEntity("", "impact_glass_low", "glass_container_mix_notdone_static_1", 0, true);
+	SetGlobalVarInt("machineDetonate", 1);
+}
+void ambEnergy(string &in asParent, string &in asChild, int alState)
+{	if(alState == 1){
+		AddTimer("ambEnergy", 1, "TrapTimer");
+		FadeImageTrailTo(1.05, 1.3f);
+	}
+	else
+	{	RemoveTimer("ambEnergy");
+		FadeImageTrailTo(0, 0.5f);
+	}
+}
+///////////SETUP LEVER
+void LeverTimer(string &in asTimer){
+	if(asTimer == "debug"){
+	SetLeverStuckState("leverOne04_1", 1, false);
+	}
+	if(asTimer == "debug2"){
+	SetLeverStuckState("leverOne04_1", 0, true);
+	}
+	if(asTimer == "debug3"){
+	SetLeverStuckState("leverTwo04_1", 1, false);
+	}
+	if(asTimer == "debug4"){
+	SetLeverStuckState("leverTwo04_1", 0, true);
+	}
+	if(asTimer == "operate"){	
+		for(int i=0; i<3; i++)		{	PlaySoundAtEntity("", "17_start_machine", "SoundArea01_"+i, 0, true);	}
+		for(int i=0; i<3; i++)		{	PlaySoundAtEntity("", "16_lever_max_min", "SoundArea01_"+i, 0, true);	}
+	}	
+	if(asTimer == "steamOneOn"){	PlaySoundAtEntity("tunnelmachine1", "22_tunnel_machine", "SoundArea01_1", 1, true);	}
+	if(asTimer == "steamOneOff"){	StopSound("tunnelmachine1", 5.0f);	}
+	if(asTimer == "steamTwoOn"){	PlaySoundAtEntity("tunnelmachine2", "22_tunnel_machine", "SoundArea01_2", 1, true);	}
+	if(asTimer == "steamTwoOff"){	StopSound("tunnelmachine2", 5.0f);	}
+}
+
+void lever(string &in asParent, string &in asChild, int alState){
+	for(int i=0; i<3; i++){		PlaySoundAtEntity("", "13_machine_fail.snt", "SoundArea01_"+i, 0.5f, true);		}
+	for(int i=0; i<3; i++){		PlaySoundAtEntity("", "pickaxe_charge.snt", "SoundArea01_"+i, 0.5f, true);		}
+	StartScreenShake(0.005, 0.2f, 1, 1);	for (int i = 0; i < 2; i++)	{	AddTimer("corelantern_"+i, i*0.2f, "shake");	}	
+}
+
+
+
+
+void LeverOneApply(string &in asEntity)
+{	PlaySoundAtEntity("", "machInput", "button_simple_1", 0, true);
+	CreateParticleSystemAtEntity("", "ps_hit_soft.ps", "button_simple_1", true);
+
+	if(GetLeverState("leverOne01") == -1 && GetLeverState("leverOne02") == -1 && GetLeverState("leverOne03") == 1 && GetLeverState("leverOne04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageA", 2);
+		PlaySoundAtEntity("", "machAcce", "button_simple_1", 0, true);
+		//PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}
+	if(GetLeverState("leverOne01") == 1 && GetLeverState("leverOne02") == -1 && GetLeverState("leverOne03") == -1 && GetLeverState("leverOne04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageA", 1);
+		PlaySoundAtEntity("", "machAcce", "button_simple_1", 0, true);
+		//PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}
+	if(GetLeverState("leverOne01") == -1 && GetLeverState("leverOne02") == 1 && GetLeverState("leverOne03") == -1 && GetLeverState("leverOne04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		AddTimer("steamOneOff", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageA", 3);
+		PlaySoundAtEntity("", "machAcce", "button_simple_1", 0, true);
+		//PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}
+	if(GetLeverState("leverOne01") == 1 && GetLeverState("leverOne02") == -1 && GetLeverState("leverOne03") == 1 && GetLeverState("leverOne04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		AddTimer("steamOneOn", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageA", 4);
+		PlaySoundAtEntity("", "machAcce", "button_simple_1", 0, true);
+		//PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}
+	else	{	AddTimer("mechDeny", 0.7f, "TimerList");	}
+}
+
+
+
+
+void LeverTwoApply(string &in asEntity)
+{	PlaySoundAtEntity("", "machInput", "button_simple_2", 0, true);
+	CreateParticleSystemAtEntity("", "ps_hit_soft.ps", "button_simple_2", true);
+
+	if(GetLeverState("leverTwo01") == -1 && GetLeverState("leverTwo02") == -1 && GetLeverState("leverTwo03") == 1 && GetLeverState("leverTwo04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageB", 2);
+		PlaySoundAtEntity("", "machAcce", "button_simple_2", 0, true);
+	//	PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}	
+	if(GetLeverState("leverTwo01") == 1 && GetLeverState("leverTwo02") == -1 && GetLeverState("leverTwo03") == -1 && GetLeverState("leverTwo04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageB", 1);
+		PlaySoundAtEntity("", "machAcce", "button_simple_2", 0, true);
+	//	PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}
+	if(GetLeverState("leverTwo01") == -1 && GetLeverState("leverTwo02") == 1 && GetLeverState("leverTwo03") == -1 && GetLeverState("leverTwo04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		AddTimer("steamTwoOff", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageB", 3);
+		PlaySoundAtEntity("", "machAcce", "button_simple_2", 0, true);
+	//	PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}
+	if(GetLeverState("leverTwo01") == 1 && GetLeverState("leverTwo02") == -1 && GetLeverState("leverTwo03") == 1 && GetLeverState("leverTwo04") == 1){
+		AddTimer("operate", 2, "LeverTimer");
+		AddTimer("steamTwoOn", 2, "LeverTimer");
+		SetGlobalVarInt("ControlStageB", 4);
+		PlaySoundAtEntity("", "machAcce", "button_simple_2", 0, true);
+	//	PlayGuiSound("machAcce.ogg", 10);
+		ModeControlState();
+	}
+	else{	AddTimer("mechDeny", 0.7f, "TimerList");	}
+}
+
+
+///MASCHINE STATUS
+
+void ModeControlState(){
+	if(GetGlobalVarInt("ControlStageA") == 1 && GetGlobalVarInt("ControlStageB") == 1){
+		AddTimer("closegate", 2, "TrapTimer");
+		}
+	else if(GetGlobalVarInt("ControlStageA") == 2 && GetGlobalVarInt("ControlStageB") == 2){
+		AddTimer("opengate", 2, "TrapTimer");
+		}
+	else if(GetGlobalVarInt("ControlStageA") == 3 && GetGlobalVarInt("ControlStageB") == 3){				/// OFFLINE
+		RemoveTimer("BoltProgress");
+		DestroyParticleSystem("bolt");
+		RemoveEntityCollideCallback("Player", "ScriptArea_3");
+		RemoveEntityCollideCallback("Player", "AmbienceArea_1");
+		for(int i=0; i<=4; i++)	FadeLightTo("ReactorLight_"+i, 0, 0, 0, 0, -1, 0.3f);
+		FadeLightTo("BoxLight_2", 0, 0, 0, 0, -1, 0.3f);
+		
+		StopSound("elec", 1);
+		StopSound("crackingWheel", 5);
+		StopSound("sparks", 0);
+		AddTimer("machineOff", 5, "TrapTimer");
+		SetLocalVarInt("MachineState", 1);
+		
+		for(int i=1; i<=2; i++)		RemoveTimer("sparks"+i);
+		for(int i=1; i<=6; i++)		RotatePropToSpeed("MainWheel_"+i, 0, 0, 0, 0, 0, false, "");
+	}
+	else if(GetGlobalVarInt("ControlStageA") == 4 && GetGlobalVarInt("ControlStageB") == 4) {				/// DUAL ONLINE
+		if(GetGlobalVarInt("machineDetonate") == 1){
+			AddTimer("scene1", 5, "sabotageEvent");
+			AddTimer("semi1", 0, "sabotageEvent");
+			AddTimer("scene2", 15, "sabotageEvent");
+			
+			SetGlobalVarInt("machine", 1);
+			SetGlobalVarInt("LimitedLife", 3);
+			AddEntityCollideCallback("Player", "ScriptArea_10", "colateralDownRoom", true, 1);
+			CompleteQuest("machineQuest", "machineQuest");
+			CompleteQuest("machineInTrapVision", "machineInTrapVision");
+			CompleteQuest("machineUnplan", "machineUnplan");
+		}
+	}
+	else if(GetGlobalVarInt("ControlStageA") == 4 || GetGlobalVarInt("ControlStageB") == 4) {				///ONLINE
+		AddTimer("BoltProgress", 0, "BoltEvent");
+		for(int i=0; i<=4; i++)	FadeLightTo("ReactorLight_"+i, 4, 4, 1.5, 0, -1, 0.3f);
+		FadeLightTo("BoxLight_2", 4, 4, 1.5, 0, -1, 0.3f);
+		SetLocalVarInt("MachineState", 0);
+		AddTimer("runningAmb", 0, "TimerList");
+		for(int i=1; i<=2; i++)	AddTimer("sparks"+i, RandFloat(1, 4), "TimerList");
+		RotatePropToSpeed("MainWheel_1", 2, 0.6f, 0, 0, 1, false, "");
+		RotatePropToSpeed("MainWheel_2", 2, 0.6f, 0, 1, 0, false, "");
+		RotatePropToSpeed("MainWheel_3", 2, 0.6f, 0, 0, -1, false, "");
+		RotatePropToSpeed("MainWheel_4", 2, 0.6f, 0, 1, 0, false, "");
+		RotatePropToSpeed("MainWheel_5", 2, 0.6f, 0, 0, 1, false, "");
+		RotatePropToSpeed("MainWheel_6", 2, 0.6f, 0, 0, -1, false, "");
+		
+		for(int i=0; i<3; i++)	{	CreateParticleSystemAtEntity("bolt", "ps_electro_bolt.ps", "ParticleArea01_"+i, false);	}
+		PlaySoundAtEntity("elec", "22_tunnel_elec.snt", "ParticleArea01_1", 1, true);
+		PlaySoundAtEntity("sparks", "27_tunnel_elec", "ScriptArea_3", 0, true);
+		PlaySoundAtEntity("sparks", "27_tunnel_elec", "wall_door_frame_plain_worn_13", 0, true);
+		AddEntityCollideCallback("Player", "ScriptArea_3", "energyBarrier", false, 1);
+		AddEntityCollideCallback("Player", "AmbienceArea_1", "ambEnergy", false, 0);
+		PlaySoundAtEntity("machineAmb", "afx_event_bilge_reactor_loop", "Player", 5, true);
+	}
+}
+
+///////////ENERGIE WAND
+
+void energyBarrier(string &in asParent, string &in asChild, int alState)
+{	if(GetGlobalVarInt("energyBarDebug") == 0)
+		{
+		AddEntityCollideCallback("Player", "ScriptArea_2", "trigBruteToPrison", true, 1);
+		AddTimer("cripple", 0, "TrapTimer");
+		SetPlayerMoveSpeedMul(0.6f);
+		PlayMusic("21_amb.ogg", true, 0.5f, 2.0f, 3, false);
+		AddGlobalVarInt("energyBarDebug", 1);
+		SetSwingDoorClosed("castle_2", true, true);
+		}
+	AddPlayerBodyForce(25000, 0, 0, false);
+	AddPlayerHealth(-25);	
+}
+
+////AKTIVIERE DIE JAGD
+void trigBruteToPrison(string &in asParent, string &in asChild, int alState)
+{	SetEntityActive("servant_brute_1", true);
+	SetSwingDoorDisableAutoClose("castle_2", true);
+		SetSwingDoorLocked("castle_2", false, true);
+	for (int i = 0; i < 10; i++)	{	AddTimer("castle_2", i * 0.1, "OpenDoor");	}
+	for (int i = 0; i<3; i++)	{	AddEntityCollideCallback("Player", "DeathScript_"+i, "showEnemyVictory", true, 1);	}
+	//StopMusic(0.5f, 3);
+	PlayMusic("21_event_pit.ogg", false, 1.0f, 1.0f, 4, false);
+	//PlayMusic("22_event_trapped.ogg", true, 0.5f, 2.0f, 3, false);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_222", 0, "");
+	FadeLightTo("PointLight_39", 0.5, 0.5, 0.5, 0, -1, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_5", "alternateKidnapp", true, 1);
+	
+	SetGlobalVarInt("ControlStageA", 4);
+	SetGlobalVarInt("ControlStageB", 4);
+	ModeControlState();
+}
+void showEnemyVictory(string &in asParent, string &in asChild, int alState)
+{
+	ShowEnemyPlayerPosition("servant_brute_1");
+	for(int i=0; i<3; i++)	AddEntityCollideCallback("servant_brute_1", "DeathScript_"+i, "counterattack", true, 1);
+}
+
+void counterattack(string &in asParent, string &in asChild, int alState){
+	AddTimer("counterSlab", 0.5, "KidnappTimer");
+	AddTimer("counterSlab2", 1.5, "KidnappTimer");
+	AddTimer("counterSlab3", 2, "KidnappTimer");
+}
+
+void alternateKidnapp(string &in asParent, string &in asChild, int alState)
+{	AddEntityCollideCallback("castle_6", "ScriptArea_6", "darkroomKidnappEvent", true, 1);
+}
+void darkroomKidnappEvent(string &in asParent, string &in asChild, int alState)
+{	AddTimer("preScene1", 1, "KidnappTimer");
+	AddTimer("preScene2", 2.5, "KidnappTimer");
+	AddTimer("preScene3", 3, "KidnappTimer");
+	AddTimer("PlayerDescent", 4, "KidnappTimer");
+	SetSwingDoorLocked("castle_6", true, false);
+}
+void KidnappTimer(string &in asTimer){
+	if(asTimer == "preScene1"){
+		SetEntityActive("servant_brute_1", false);
+		PlaySoundAtEntity("", "brute\amb_alert.snt", "castle_6", 1, true);
+	}
+	if(asTimer == "preScene2"){
+	for (int i = 0; i < 20; i++)	{	AddTimer("castle_8", i * 0.1, "OpenWestDoor");	}
+		SetEntityActive("servant_brute_2", true);
+		SetEntityActive("castle_6", false);
+		SetEntityActive("castle_8", true);
+	}
+	if(asTimer == "preScene3"){
+		SetEntityActive("servant_brute_2", false);
+		SetPlayerActive(false);
+		FadeOut(0);
+	}
+	if(asTimer == "PlayerDescent")
+		{	AddGlobalVarInt("LimitedLife", 1);
+			ChangeMap("cranny.map", "PlayerStartArea_2", "", "");
+	}
+	if(asTimer == "counterSlab"){
+		for(int i=0; i<5; i++)	CreateParticleSystemAtEntity("", "blood.ps", "slabArea_"+i, true);
+		for(int i=0; i<5; i++)	CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", "slabArea_"+i, true);
+		FadePlayerRollTo(-30, 0.5, 0.5);
+		GivePlayerDamage(35, "BloodSplat", true, false);
+		StartPlayerLookAt("wall_corridor_extension_2m_welder_244", 0.5, 0.5, "");
+		FadeOut(0.7f);
+		SetEntityActive("servant_brute_1", false);
+		FadeGlobalSoundVolume(0, 3);
+	}
+	if(asTimer == "counterSlab2"){
+		SetEntityActive("servant_brute_3", true);
+		AddEnemyPatrolNode("servant_brute_3", "PathNodeArea_218", 0, "");
+		FadeIn(1.7f);
+		AddTimer("terror", 5, "KidnappTimer");
+		PlaySoundAtEntity("terror", "23_terror", "Player", 10.0f, false);
+		TeleportPlayer("PlayerStartArea_3");
+		StartPlayerLookAt("hanging_lantern_ceiling_6", 0.5, 0.5, "");
+		SetPlayerMoveSpeedMul(0.1f);
+		SetPlayerRunSpeedMul(0.2f);
+	}
+	if(asTimer == "counterSlab3"){
+		StopPlayerLookAt();
+	}
+	if(asTimer == "terror"){
+		StopSound("terror", 0);
+		ShowEnemyPlayerPosition("servant_brute_3");
+	}
+}
+
+void OpenDoor(string &in door_name)
+{	AddPropForce(door_name, 200, 0, 0, "world");
+}
+void OpenWestDoor(string &in door_name)
+{	AddPropForce(door_name, 0, 0, 200, "world");
+}
+void BoltEvent(string &in asTimer){
+	if(asTimer == "BoltProgress"){
+	
+		int i = RandInt(1, 3);
+		float f = RandFloat(0, 0.5f);
+		SetGlobalVarInt("RandomBoltPoint", i);
+	
+		AddTimer("clip1", 0, "BoltEvent");
+		AddTimer("clip2", 0.1f, "BoltEvent");
+		AddTimer("clip3", 0.5f, "BoltEvent");
+		AddTimer("BoltProgress", 0.8f, "BoltEvent");
+		
+		AddTimer("spotclip1", f, "BoltEvent");
+		AddTimer("spotclip2", f+0.3f, "BoltEvent");
+	}
+	if(asTimer =="clip1"){
+		if(GetGlobalVarInt("RandomBoltPoint") == 1){
+			FadeLightTo("BoltLight_1", 2, 2, 2, 0, -1, 0);	}
+		else if(GetGlobalVarInt("RandomBoltPoint") == 2){
+			FadeLightTo("BoltLight_2", 2, 2, 2, 0, -1, 0);	}
+		else if(GetGlobalVarInt("RandomBoltPoint") == 3){
+			FadeLightTo("BoltLight_3", 2, 2, 2, 0, -1, 0);	}
+	}
+	if(asTimer  == "clip2"){	
+		if(GetGlobalVarInt("RandomBoltPoint") == 1){
+			FadeLightTo("BoltLight_1", 0.3, 0.5, 1, 0, -1, 0.3f);	}
+		else if(GetGlobalVarInt("RandomBoltPoint") == 2){
+			FadeLightTo("BoltLight_2", 0.3, 0.5, 1, 0, -1, 0.3f);	}
+		else if(GetGlobalVarInt("RandomBoltPoint") == 3){
+			FadeLightTo("BoltLight_3", 0.3, 0.5, 1, 0, -1, 0.3f);}
+	}
+	if(asTimer == "clip3"){		
+		if(GetGlobalVarInt("RandomBoltPoint") == 1){
+			FadeLightTo("BoltLight_1", 0, 0, 0, 0, -1, 0.3f);		}
+		else if(GetGlobalVarInt("RandomBoltPoint") == 2){
+			FadeLightTo("BoltLight_2", 0, 0, 0, 0, -1, 0.3f);		}
+		else if(GetGlobalVarInt("RandomBoltPoint") == 3){
+			FadeLightTo("BoltLight_3", 0, 0, 0, 0, -1, 0.3f);		}
+	}
+	if(asTimer == "spotclip1"){
+		FadeLightTo("BoltSpotLight_1", 1, 1, 2, 0, -1, 0);
+	}
+	if(asTimer == "spotclip2"){
+		FadeLightTo("BoltSpotLight_1", 0, 0, 0, 0, -1, 0.5f);
+	}
+}
+
+
+
+
+
+
+			
+void doom(string &in asName, int alCount)
+{	AddGlobalVarInt("LimitedLife", 1);
+	FadeLightTo("BoxLight_2", 0, 0, 0, 0, -1, 0.3f);
+	ChangeMap("cranny.map", "PlayerStartArea_2", "", "");
+}
+
+
+		
+		////COLATERAL ENGINE
+		
+		void colateralDownRoom(string &in asParent, string &in asChild, int alState){
+			StartScreenShake(0.2, 1, 0, 3);
+			PlaySoundAtEntity("", "afx_factory_quake_base", "Player", 1, true);
+		}
+		
+		
+		
+		
+		
+void OnEnter(){	
+	
+		if(GetGlobalVarInt("LimitedLife")==3){	FadePlayerRollTo(0,1,1);	RemoveTimer("cripple1"); 	RemoveTimer("cripple2"); }
+		
+		SetMapDisplayNameEntry("machine");
+		AutoSave();
+}
+
+void onLeave(){
+	StopMusic(2, 3);
+	StopMusic(2, 4);
+}

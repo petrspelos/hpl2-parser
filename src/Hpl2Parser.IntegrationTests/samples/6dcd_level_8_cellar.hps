@@ -1,0 +1,343 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	PlayMusic("Track17.ogg", true, 2, 1, 1, true);
+	SetLocalVarInt("RopeInArea", 0);
+	SetLocalVarInt("BucketFilled", 0);
+	AddEntityCollideCallback("AreaInteractRope", "InvisibleBox", "CheckRopePosition", false, 0);
+	AddEntityCollideCallback("AreaBottomWell", "InvisibleBox", "RopeHitsBottomWell", false, 0);
+	AddEntityCollideCallback("Player", "CheckForWineWater", "Block", false, 0);
+	AddEntityCollideCallback("Player", "DeleteCheck", "DeleteMessage", true, 0);
+	AddUseItemCallback("bucketonrope", "WoodenBucket", "AreaInteractRope", "UseBucketOnRope", false);
+	AddUseItemCallback("", "HandDrill", "InteractDrill_1", "DrillHole", false);
+	AddUseItemCallback("", "Wine", "InteractBoilerWine", "PlaceWine", false);
+	AddUseItemCallback("", "Water", "InteractBoilerWater", "PlaceWater", false);
+	AddUseItemCallback("", "WineContainer", "InteractExtractorWine", "PlaceBoiledWine", false);
+	AddUseItemCallback("", "WaterContainer", "InteractExtractorWater", "PlaceDistilledWater", false);
+	for(int i=1;i<=3;i++)	
+	{
+		InteractConnectPropWithRope("crankWithRope_"+i, "Crank", "RopeArea_"+i, false, 1,1,1, false, 0);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnEnter
+//////////////////////////////////////////////////////////////////////////////////////
+
+void OnEnter()
+{
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Check Block For Water and Wine
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Block (string &in asParent, string &in asChild, int alState)
+{
+	if(HasItem("WoodenBucketFilled") == true 
+	&& HasItem("ContainerFull_Item") == true)
+	{
+		SetEntityActive("BlockUntilCollect", false);
+	}
+	if(HasItem("WoodenBucketFilled") == true 
+	&& HasItem("ContainerFull_Item") == false)
+	{
+		SetMessage("Messages", "CollectWine", 4);
+	}
+	if(HasItem("WoodenBucketFilled") == false 
+	&& HasItem("ContainerFull_Item") == true)
+	{
+		SetMessage("Messages", "CollectWater", 4);
+	}
+	if(HasItem("WoodenBucketFilled") == false 
+	&& HasItem("ContainerFull_Item") == false)
+	{
+		SetMessage("Messages", "CollectBoth", 4);
+	}
+}
+
+void DeleteMessage(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("CheckForWineWater", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Fill Bucket
+//////////////////////////////////////////////////////////////////////////////////////
+
+void CheckRopePosition(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1)
+	{
+		SetLocalVarInt("RopeInArea", 1);
+	}
+	else
+	{
+		SetLocalVarInt("RopeInArea", -1);
+	}
+}
+
+void UseBucketOnRope(string &in asItem, string &in asEntity)
+{
+	if(GetLocalVarInt("RopeInArea") != 1)
+	{
+		SetMessage("Messages", "BucketLow", 2);
+	}
+	
+	if(GetLocalVarInt("RopeInArea") == 1)
+	{
+		AddAttachedPropToProp("InvisibleBox", "WoodenBucketOnRope", "wooden_bucket_onrope.ent", 0,0,0,0,0,0);
+		RemoveItem(asItem);
+		SetLocalVarInt("BucketOnRope", 1);
+	}
+}
+
+void RopeHitsBottomWell(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("BucketOnRope") == 0)	
+	{
+		return;
+	}
+	PlaySoundAtEntity("WaterSplash","impact_water_med.snt", "AreaBottomWell", 0, false);
+	if(GetLocalVarInt("BucketFilled") != 1)	
+	{
+		RemoveAttachedPropFromProp("InvisibleBox", "WoodenBucketOnRope");
+		AddAttachedPropToProp("InvisibleBox", "WoodenBucketOnRopeFilled", "wooden_bucket_onrope_filled.ent", 0,0,0,0,0,0);
+		SetEntityActive("AreaInteractRope", false);
+		SetLocalVarInt("BucketFilled", 1);
+		SetEntityCustomFocusCrossHair("InvisibleBox","Pick");
+		SetEntityPlayerInteractCallback("InvisibleBox", "PickUpFilledBucket", true);
+	}
+}
+
+void PickUpFilledBucket(string &in asEntity)
+{
+	SetLocalVarInt("BucketOnRope", 0);
+	SetLocalVarInt("BucketFilled", 0);
+	RemoveAttachedPropFromProp("InvisibleBox", "WoodenBucketOnRopeFilled");
+	PlaySoundAtEntity("pickb", "25_pick_bucket_water.snt", "Player", 0.0f, false);
+	GiveItemFromFile("WoodenBucketFilled", "wooden_bucket_filled.ent");
+	GiveSanityBoostSmall();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Drill Containers
+//////////////////////////////////////////////////////////////////////////////////////
+
+void DrillHole(string &in asItem, string &in asEntity)
+{
+	if(HasItem("Container_1") == true)
+	{
+		RemoveItem(asItem);
+		SetEntityActive(asEntity, false);
+		SetEntityActive("InvisibleContainer_1", true);
+		SetEntityActive("HandDrill_1", true);
+		RemoveItem("Container_1");
+		AddAttachedPropToProp("InvisibleContainer_1", "ContainerEmpty", "chemical_container_static.ent", 0,0,0,0,0,0);
+		AddTimer("interact1", 1, "StartDrillingHalf");
+	}
+}
+
+void StartDrillingHalf(string &in asTimer)
+{
+	if(asTimer == "interact1")
+	{
+		RotatePropToSpeed("HandDrill_1", 1, 3, -180, 0, 0, false, "AreaRotate_1");
+		CreateParticleSystemAtEntity("drip1","ps_liquid_epoxy_drip.ps", "AreaParticleWine_1", false);
+		AddTimer("", 5, "GiveFullContainer");
+	}
+	
+}
+
+void GiveFullContainer(string &in asTimer)
+{
+	DestroyParticleSystem("drip1");
+	RotatePropToSpeed("HandDrill_1", 0, 0, 0, 0, 0, false, "AreaRotate_1");
+	RemoveAttachedPropFromProp("InvisibleContainer_1", "ContainerEmpty");
+	AddAttachedPropToProp("InvisibleContainer_1", "ContainerFull", "chemical_container_epoxy_static.ent", 0,0,0,0,0,0);
+	SetEntityCustomFocusCrossHair("InvisibleContainer_1","Pick");
+	SetEntityPlayerInteractCallback("InvisibleContainer_1", "PickUpFullContainer", true);
+}
+
+void PickUpFullContainer(string &in asEntity)
+{
+	RemoveAttachedPropFromProp("InvisibleContainer_1", "ContainerFull");
+	SetEntityActive("InvisibleContainer_1", false);
+	GiveItem("ContainerFull_Item", "Puzzle", "ContainerFull", "chemical_container_epoxy.tga", 1);
+	SetEntityActive("InteractDrill_1", false);
+}
+
+void FillAndCollectWater(string &in asEntity)
+{
+	RemoveItem("WoodenBucketFilled");
+	RemoveItem("Glass_1");
+	GiveItem("Water", "Puzzle", "ContainerWater", "glass_container_mix_notdone.tga", 1);
+}
+
+void FillAndCollectWine(string &in asEntity)
+{
+	RemoveItem("ContainerFull_Item");
+	RemoveItem("Glass_2");
+	GiveItem("Wine", "Puzzle", "ContainerWine", "glass_container_blood.tga", 1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Boiling Glass Containers
+//////////////////////////////////////////////////////////////////////////////////////
+
+void PlaceWine(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive(asEntity, false);
+	SetEntityActive("WineContainerBoiling", true);
+	SetEntityActive("InteractBoilerWater", false);
+	SetEntityConnectionStateChangeCallback("Burner", "BoilWheelWine");
+}
+
+void PlaceWater(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("WaterContainerBoiling", true);
+	SetEntityActive("InteractBoilerWine", false);
+	SetEntityConnectionStateChangeCallback("Burner", "BoilWheelWater");
+}
+
+void BoilWheelWine(string &in asEntity, int alState)
+{
+	CreateParticleSystemAtEntity("flame1","ps_fire_lab_burner.ps", "AreaFire", false);
+	AddTimer("", 5, "DoneBoilWine");
+}
+
+void BoilWheelWater(string &in asEntity, int alState)
+{
+	CreateParticleSystemAtEntity("flame2","ps_fire_lab_burner.ps", "AreaFire", false);
+	AddTimer("", 5, "DoneBoilWater");
+}
+
+void DoneBoilWine(string &in asTimer)
+{
+	DestroyParticleSystem("flame1");
+	SetEntityActive("WineContainerBoiling", false);
+	SetEntityActive("WineContainer", true);
+}
+
+void DoneBoilWater(string &in asTimer)
+{
+	DestroyParticleSystem("flame2");
+	SetEntityActive("WaterContainerBoiling", false);
+	SetEntityActive("WaterContainer", true);
+}
+
+void GetBoilWine(string &in asEntity)
+{
+	SetEntityActive("InteractBoilerWater", true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Extracting Glass Containers
+//////////////////////////////////////////////////////////////////////////////////////
+
+void PlaceBoiledWine(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive(asEntity, false);
+	SetEntityActive("BoiledWine", true);
+	SetEntityConnectionStateChangeCallback("Lever", "ExtractorWine");
+}
+
+void PlaceDistilledWater(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive(asEntity, false);
+	SetEntityActive("DistilledWater", true);
+	SetEntityConnectionStateChangeCallback("Lever", "ExtractorWater");
+}
+
+void ExtractorWine(string &in asEntity, int LeverState)
+{
+	if(GetLeverState("Lever") == 1)
+		{
+			CreateParticleSystemAtEntity("extractor1","ps_blood_tiny_stream.ps", "AreaOvenEffects", false);
+			CreateParticleSystemAtEntity("extractor2","ps_extract_oven_smoke.ps", "AreaExtractorSmoke", false);
+			AddTimer("finalwine", 5, "ExtractionComplete");
+		}
+	}
+	
+void ExtractorWater(string &in asEntity, int LeverState)
+{
+	if(GetLeverState("Lever") == 1)
+		{
+			SetLeverStuckState("Lever", 1, true);
+			CreateParticleSystemAtEntity("extractor1","ps_water_stream_extension.ps", "AreaOvenEffects", false);
+			CreateParticleSystemAtEntity("extractor2","ps_extract_oven_smoke.ps", "AreaExtractorSmoke", false);
+			AddTimer("finalwater", 5, "ExtractionComplete");
+		}
+	}
+	
+void ExtractionComplete(string &in asTimer)
+{
+	if(asTimer == "finalwine")
+	{
+		DestroyParticleSystem("extractor1");
+		DestroyParticleSystem("extractor2");
+		SetEntityActive("BoiledWine", false);
+		SetEntityActive("InteractExtractorWater", true);
+	}
+	
+	if(asTimer == "finalwater")
+	{
+		DestroyParticleSystem("extractor1");
+		DestroyParticleSystem("extractor2");
+		SetEntityActive("FinalWine", true);
+		SetEntityActive("Before", false);
+		SetEntityActive("DistilledWater", false);
+		AddTimer("", 0.5, "Key");
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Key Falls Out
+//////////////////////////////////////////////////////////////////////////
+
+void Key(string &in asTimer)
+{
+	SetEntityActive("FinalWine", false);
+	SetEntityActive("BasementKey", true);
+	PlaySoundAtEntity("", "11_glass_crack", "AreaGlassParticles_1", 0.0f, false);
+	PlaySoundAtEntity("", "11_glass_crack", "AreaGlassParticles_2", 0.0f, false);
+	PlaySoundAtEntity("", "11_glass_crack", "AreaGlassParticles_3", 0.0f, false);
+	CreateParticleSystemAtEntity("", "ps_hit_glass.ps", "AreaGlassParticles_1", false);
+	CreateParticleSystemAtEntity("", "ps_hit_glass.ps", "AreaGlassParticles_2", false);
+	CreateParticleSystemAtEntity("", "ps_hit_glass.ps", "AreaGlassParticles_3", false);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+}

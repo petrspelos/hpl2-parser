@@ -1,0 +1,57 @@
+void OnStart()
+{
+	if(ScriptDebugOn() == true)
+		GiveItem("lantern_1", "Lantern", "lantern", "lantern.tga", 100.0f);
+	AddEntityCollideCallback("Player", "AreaScare_1", "ScarePlayer_1", true, 0);
+	AddEntityCollideCallback("Player", "StartAmb", "AreaCollideAmb", true, 0);
+	SetEntityPlayerInteractCallback("cabinet_metal_1", "ScarePlayer_2", true);
+	SetLocalVarInt("d1", 0);
+	SetLocalVarInt("picknote?", 0);
+}
+
+void PickNote(string &in asEntityName, string &in asType)
+{
+	PlayMusic("12_amb", true, 1.0f, 0.0f, 1.0f, false);
+	RemoveEntityCollideCallback("Player", "StartAmb");
+}
+
+void AreaCollideAmb(string &in asEntityName, string &in asType)
+{
+	StopMusic(0.0f, 1.0f);
+	PlayMusic("12_amb", true, 1.0f, 0.0f, 1.0f, false);
+}
+
+void ScarePlayer_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("corpse_male_1", true);
+	AddPropImpulse("cabinet_nice_1", 50.0f, 0.0f, 0.0f, "world");
+	AddPropImpulse("cabinet_nice_2", -100.0f, 0.0f, 0.0f, "world");
+	AddPropImpulse("corpse_male_1", 10.0f, 0.0f, 0.0f, "world");
+	for(int i=1; i<=3; ++i)	
+		CreateParticleSystemAtEntity("smoke_scare_1", "ps_dust_impact.ps", "AreaCabinetSmoke_1", false);
+	for(int i=1; i<=10; ++i)	
+	{
+		PlayGuiSound("24_iron_maiden", 1.0f);
+		PlayGuiSound("10_event_coming", 1.0f);
+	}
+	AddTimer("cabinetshut", 0.5f, "TimerEvents");
+	StopMusic(0.0f, 1.0f);
+}
+
+void ScarePlayer_2(string &in asEntity)
+{
+	AddPropImpulse(asEntity, 0.0f, 50.0f, -50.0f, "world");
+	for(int i=1; i<=10; ++i)	PlayGuiSound("24_iron_maiden", 1.0f);
+	SetLocalVarInt("d1", 1);
+	SetLevelDoorLocked("level_wood_1", false);
+}
+
+void TimerEvents(string &in asTimer)
+{
+	if(asTimer == "cabinetshut")
+	{
+		SetSwingDoorClosed("cabinet_nice_2", false, true);
+		SetSwingDoorLocked("cabinet_nice_2", true, true);
+		SetEntityActive("corpse_male_1", false);
+	}
+}

@@ -1,0 +1,435 @@
+void OnStart()
+{
+	AutoSave();	
+	SetSanityDrainDisabled(true);
+	SetInDarknessEffectsActive(false);
+
+	AddEntityCollideCallback("Player", "boards_collapse_collide", "break_boards_fall", false, 0);
+	AddEntityCollideCallback("Player", "teleport_nightswitch", "teleport_nightswitch", false, 0);
+	SetSanityDrainDisabled(true);
+	
+	AddEntityCollideCallback("Player", "crack_area_cave_1", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_2", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_3", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_4", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_5", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_6", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_7", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_8", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_9", "crack_ice_Sounds_cave", false, 1);
+	AddEntityCollideCallback("Player", "crack_area_cave_10", "crack_ice_Sounds_cave", false, 1);
+	
+	AddEntityCollideCallback("Player", "toodark_ineedlight_Den", "toodark_ineedlight_Den", false, 1);
+	
+	AddEntityCollideCallback("Player", "earth_quiver_area", "earth_quiver_area", true, 0);
+	AddEntityCollideCallback("Player", "lookoff_area_Behind_den", "lookoff_area_Behind_den", true, 0);
+	
+	AddEntityCollideCallback("Player", "discover_icecave_music", "discover_icecave_music", true, 0);
+	
+	AddEntityCollideCallback("Player", "activate_floorsensor", "activate_floorsensor", true, 0);
+	AddEntityCollideCallback("Player", "bear_hear_you", "bear_hear_you", true, 0);
+	AddEntityCollideCallback("Player", "bear_senseyou_tooclose", "bear_hear_you", true, 0);
+	
+	AddEntityCollideCallback("Player", "demon_waken_finale", "demon_waken_finale", true, 0);
+	AddEntityCollideCallback("Player", "bear_grunt_sfxloc", "bear_grunt_sfxloc", true, 0);
+	
+	AddEntityCollideCallback("Player", "see_piles_of_bones_quote", "see_piles_of_bones_quote", true, 1);
+	
+	AddEntityCollideCallback("Player", "fall_into_finale_cave", "fall_into_finale_cave", false, 1);
+	
+	
+	AddEntityCollideCallback("Player", "cavecrash_1", "cavecrashevent_death", true, 1);
+	AddEntityCollideCallback("Player", "cavecrash_2", "cavecrashevent_death", true, 1);
+	AddEntityCollideCallback("Player", "cavecrash_3", "cavecrashevent_death", true, 1);
+	
+	AddEntityCollideCallback("Player", "activate_glowstick_dark", "activate_glowstick_dark", true, 1);
+	
+	AddEntityCollideCallback("Player", "pantobear_sight", "pantobear_sight", true, 1);
+	
+	AddEntityCollideCallback("stone_small01_2", "userockonhand_area", "userockonhand_area", true, 1);
+	AddEntityCollideCallback("stone_small01_3", "userockonhand_area", "userockonhand_area", true, 1);
+	AddEntityCollideCallback("stone_small01_4", "userockonhand_area", "userockonhand_area", true, 1);
+	
+	SetEntityPlayerInteractCallback("userockonhand_area", "userockonhand_area_interact", false);
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("snow_windagain", "snow_wind_sfx.snt", "Player", 0.0f, false);
+}
+
+void OnLeave()
+{
+
+}
+
+/////////////////////////////////////////////////////
+////////////////TRANSITION/NIGHTTIME/////////////////
+/////////////////////////////////////////////////////
+
+void break_boards_fall(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth("wooden_boards_block_2", 0.0f);
+	SetPropHealth("wooden_boards_block_3", 0.0f);
+	SetEntityActive("noreturn_blockade_fall", true);
+	PlaySoundAtEntity("playerfallscared", "react_breath.snt", "Player", 0.0f, false);
+	PlayMusic("FallIntoDen", false, 1.0f, 3.0f, 1, false);
+}
+
+void teleport_nightswitch(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStartArea_2");
+	StopSound("snow_windagain", 3.0f);
+	FadeOut(0.0f);
+	SetPlayerCrouching(true);
+    FadePlayerRollTo( -40, 20, 20);
+	AddTimer("time_tranisiton_message", 8.0f, "time_tranisiton_message");
+	SetPlayerActive(false);
+	AutoSave();	
+
+}
+
+void time_tranisiton_message(string &in AsTimer)
+{
+	SetMessage("Messages", "nine_hours_later_transition", 4.0f);	
+	AddTimer("begin_wakeupden", 6.0f, "begin_wakeupden");
+	PlaySoundAtEntity("Cavern_Perma_amb", "snow_wind_cave_sfx.snt", "Player", 0.0f, false);
+	StartPlayerLookAt("lookwakeden_1", 0.5f, 1.0f, "");
+}
+
+void begin_wakeupden(string &in AsTimer)
+{
+	FadeIn(6.0f);
+	StopPlayerLookAt();
+	AddTimer("lookup_Tomoon", 8.0f, "lookup_Tomoon");
+	PlayMusic("Awake_Bear_Den", false, 1.0f, 3.0f, 1, false);
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void lookup_Tomoon(string &in AsTimer)
+{
+	StartPlayerLookAt("lookwakeden_2", 0.5f, 1.0f, "");
+    FadePlayerRollTo( 0, 30, 30);
+	AddTimer("getupnow_look", 8.0f, "getupnow_look");
+}
+
+void getupnow_look(string &in AsTimer)
+{
+	StopPlayerLookAt();
+	StartPlayerLookAt("looklast_intoden", 0.5f, 1.0f, "");
+	SetPlayerCrouching(false);
+	AddTimer("gaincontrol_last", 3.5f, "gaincontrol_last");
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void gaincontrol_last(string &in AsTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+	
+///////////////////////////////////////////
+////////////////EXTRA/BITS/////////////////
+///////////////////////////////////////////
+
+void crack_ice_Sounds_cave(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "icecracksfx.snt", "Player", 0.0f, false);
+}
+
+void toodark_ineedlight_Den(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "dentoodark_needlightsource", 0.0f);	
+}
+
+void trigger_allowprogress_light(string &in asEntity)
+{
+	SetEntityActive("toodark_ineedlight_Den", false);
+	SetEntityActive("block_box_25", false);
+	PlaySoundAtEntity("", "glowstick_grab_Whisper.snt", "Player", 0.0f, false);
+	
+}
+
+void earth_quiver_area(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "cavern_squeeze_rumble.snt", "Player", 0.0f, false);
+	StartScreenShake(0.03f, 1.0f, 1.0f, 1.0f);
+}
+
+void lookoff_area_Behind_den(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("blockade_den_noexit", true);
+	StopSound("Cavern_Perma_amb", 5.0f);
+	PlayMusic("Bear_Den_Ambience", true, 1.0f, 3.0f, 1, false);
+	SetEntityActive("Brown_Bear_Scene_1", true);
+	PlayPropAnimation("Brown_Bear_Scene_1", "Bear_Sleep", 1.0f, true, "");
+	PlaySoundAtEntity("BearSleepsound", "BearSleepsfx.snt", "BearSleepsound_loc", 0.0f, false);
+	CheckPoint ("playerdeath_caveretry", "PlayerStartArea_3", "playerdeath_caveretry", "Hints", "cavein_demon_awaken");
+	AutoSave();	
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void playerdeath_caveretry(string &in asName, int alCount)
+{
+	SetEntityActive("cavecrash_1", false);
+	SetEntityActive("cavecrash_2", false);
+	SetEntityActive("cavecrash_3", false);
+	SetPlayerActive(true);
+	FadeIn(0.0f);
+	
+	AddEntityCollideCallback("Player", "cavecrash_1", "cavecrashevent_death", true, 1);
+	AddEntityCollideCallback("Player", "cavecrash_2", "cavecrashevent_death", true, 1);
+	AddEntityCollideCallback("Player", "cavecrash_3", "cavecrashevent_death", true, 1);
+	
+	AddEntityCollideCallback("Player", "activate_floorsensor", "activate_floorsensor", true, 0);
+	AddEntityCollideCallback("Player", "bear_hear_you", "bear_hear_you", true, 0);
+	AddEntityCollideCallback("Player", "bear_senseyou_tooclose", "bear_hear_you", true, 0);
+	
+	AddEntityCollideCallback("Player", "demon_waken_finale", "demon_waken_finale", true, 0);
+	
+	AddEntityCollideCallback("Player", "see_piles_of_bones_quote", "see_piles_of_bones_quote", true, 1);
+	
+	StopSound("demontruth_music", 1.0f);
+	StopSound("rockrumble", 1.0f);
+	
+	SetEntityActive("cave_in_1", false);
+	SetEntityActive("cave_in_2", false);
+	SetEntityActive("cave_in_3", false);
+	
+	SetEntityActive("bear_senseyou_tooclose", true);
+	SetEntityActive("block_box_24", true);
+	SetEntityActive("Brown_Bear_Scene_1", true);
+	SetEntityActive("Wild_Brown_Bear_1", false);
+	PlayPropAnimation("Brown_Bear_Scene_1", "Bear_Sleep", 1.0f, true, "");
+	
+	SetEntityActive("activate_floorsensor", true);
+	SetEntityActive("bear_hear_you", false);
+	
+	ResetProp("Wild_Brown_Bear_1");
+	
+	SetEntityActive("fall_into_finale_cave", true);
+	
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	
+	PlaySoundAtEntity("BearSleepsound", "BearSleepsfx.snt", "BearSleepsound_loc", 0.0f, false);
+	
+	SetEntityActive("blockbox_trigg_bear", false);
+	
+	SetLanternActive(true, false);
+}
+
+
+
+void discover_icecave_music(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Perma_Ice_Cave_Discover", false, 1.0f, 3.0f, 1, false);
+}
+
+/////////////////////////////////////////
+////////////////BEAR/DEN/////////////////
+/////////////////////////////////////////
+
+void activate_floorsensor(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("bear_hear_you", true);
+}
+
+void bear_hear_you(string &in asParent, string &in asChild, int alState)
+{
+	PlayPropAnimation("Brown_Bear_Scene_1", "Bear_Wake_Up", 1.0f, false, "");
+	AddTimer("bear_getfromfromground", 2.5f, "bear_getfromfromground");
+	StopSound("BearSleepsound", 1.0f);
+	PlaySoundAtEntity("", "permabear_idle_extra.snt", "BearSleepsound_loc", 0.0f, false);
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0.0f, false);
+	
+	SetPlayerMoveSpeedMul(0.7f);
+	SetPlayerRunSpeedMul(0.0f);
+	
+	
+	SetEntityActive("bear_hear_you", false);
+	SetEntityActive("activate_floorsensor", false);
+	SetEntityActive("bear_senseyou_tooclose", false);
+	
+	SetEntityActive("blockbox_trigg_bear", true);
+}
+
+void bear_getfromfromground(string &in AsTimer)
+{
+	PlayPropAnimation("Brown_Bear_Scene_1", "Bear_Get_Up", 1.0f, false, "");
+	AddTimer("bear_enemy_Spawn", 1.5f, "bear_enemy_Spawn");
+	PlaySoundAtEntity("", "permabear_idle_extra.snt", "BearSleepsound_loc", 0.0f, false);
+}
+
+void bear_enemy_Spawn(string &in AsTimer)
+{
+	SetEntityActive("Wild_Brown_Bear_1", true);
+	SetEntityActive("Brown_Bear_Scene_1", false);
+	SetEntityActive("block_box_24", false);
+	ShowEnemyPlayerPosition("Wild_Brown_Bear_1");
+	
+	SetEnemySanityDecreaseActive("Wild_Brown_Bear_1", false);
+}
+
+
+
+void bear_wake_up_yell(string &in AsTimer)
+{
+	PlaySoundAtEntity("", "permabear_attack_claw.snt", "bear_waken_disturbsfx", 0.0f, false);
+}
+
+void bear_special_wakeup_trigger(string &in AsTimer)
+{
+	SetEntityActive("Wild_Brown_Bear_1", true);
+	SetEntityActive("Brown_Bear_Scene_1", false);
+	ShowEnemyPlayerPosition("Wild_Brown_Bear_1");
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0.0f, false);
+	AddTimer("showplayerpos_bear_chase", 1.0f, "showplayerpos_bear_chase");
+}
+
+void showplayerpos_bear_chase(string &in AsTimer)
+{
+	ShowEnemyPlayerPosition("Wild_Brown_Bear_1");
+}
+
+void bear_grunt_sfxloc(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "permabear_notice.snt", "BearSleepsound_loc", 0.0f, false);
+}
+
+/////////////////////////////////////
+/////////REALIZE/THE/TRUTH///////////
+/////////////////////////////////////
+
+/// note from earlier have echo effect on voice and voice will just be line about piles and piles of bones
+
+void see_piles_of_bones_quote(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0.2f);
+	SetPlayerRunSpeedMul(0.0f);
+	
+	PlaySoundAtEntity("demontruth_music", "Permafrost_Demon_Truth.snt", "Player", 5.0f, false);
+	
+	AddTimer("returntonormal_den_scary", 7.0f, "returntonormal_den_scary");
+	
+	AddEffectVoice("lunatic_cave_piles_o_bones.ogg", "", "Voice", "lunatic_cave_piles_o_bones", false, "", 1.0f, 2.0f);
+	AddTimer("lunatic_itaintbear_quote", 3.0f, "lunatic_itaintbear_quote");
+	FadeImageTrailTo(1.5f, 1.0f);
+	PlaySoundAtEntity("seebones", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void lunatic_itaintbear_quote(string &in AsTimer)
+{
+	AddEffectVoice("lunatic_cave_it_aint_bears.ogg", "", "Voice", "lunatic_cave_it_aint_bears", false, "", 1.0f, 2.0f);
+}
+
+void returntonormal_den_scary(string &in AsTimer)
+{
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	FadeImageTrailTo(0.0f, 1.0f);
+}
+
+void demon_waken_finale(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("rockrumble", "general_rock_rumble_no3d.snt", "Player", 5.0f, false);
+	StartScreenShake(0.03f, 5.0f, 1.0f, 1.0f);
+	AddTimer("cavein_1", 1.0f, "cavein_1");
+	PlayMusic("Demon_awaken_chase", true, 1.0f, 3.0f, 1, false);
+	PlaySoundAtEntity("finalechase_cavern", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void cavein_1(string &in AsTimer)
+{
+	CreateParticleSystemAtEntity("cave_explosion", "ps_break_cavein.ps", "cavein1_sfx", false);
+
+	PlaySoundAtEntity("", "explosion_rock_large.snt", "Player", 0.0f, false);
+
+	SetEntityActive("cave_in_1", true);
+	AddTimer("cavein_2", 5.0f, "cavein_2");
+}
+
+void cavein_2(string &in AsTimer)
+{
+	CreateParticleSystemAtEntity("cave_explosion", "ps_break_cavein.ps", "cavein2_sfx", false);
+
+	PlaySoundAtEntity("", "explosion_rock_large.snt", "cavein2_sfx", 5.0f, false);
+
+	SetEntityActive("cave_in_2", true);
+	AddTimer("cavein_3", 3.5f, "cavein_3");
+	
+	SetEntityActive("cavecrash_1", true);
+	StartScreenShake(0.03f, 5.0f, 1.0f, 1.0f);
+}
+
+void cavein_3(string &in AsTimer)
+{
+	CreateParticleSystemAtEntity("cave_explosion", "ps_break_cavein.ps", "cavein3_sfx", false);
+
+	PlaySoundAtEntity("", "explosion_rock_large.snt", "cavein3_sfx", 5.0f, false);
+
+	SetEntityActive("cave_in_3", true);
+	AddTimer("cavein_4", 5.0f, "cavein_4");
+	
+	SetEntityActive("cavecrash_2", true);
+	StartScreenShake(0.03f, 6.0f, 1.0f, 1.0f);
+}
+
+void cavein_4(string &in AsTimer)
+{
+	PlaySoundAtEntity("", "explosion_rock_large.snt", "Player", 5.0f, false);
+
+	SetEntityActive("cavecrash_3", true);
+}
+
+void cavecrashevent_death(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(0.0f);
+
+	SetPlayerActive(false);
+	CreateParticleSystemAtEntity("cave_explosion_dead", "ps_break_cavein.ps", "Player", false);
+	FadeOut(0.5f);
+	
+	SetEntityActive("fall_into_finale_cave", false);
+}
+
+void fall_into_finale_cave(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("05_perma_finale_cave", "PlayerStartArea_1", "", "");
+	SetPlayerHealth(100.0f);
+	SetLanternDisabled(true);
+}
+
+void activate_glowstick_dark(string &in asParent, string &in asChild, int alState)
+{
+	SetLanternActive(true, true);
+}
+
+void pantobear_sight(string &in asParent, string &in asChild, int alState)
+{
+	StartPlayerLookAt("BearSleepsound_loc", 3.0f, 4.0f, "");
+	AddTimer("stoplookingatbear", 1.5f, "stoplookingatbear");
+	SetPlayerActive(false);
+	PlaySoundAtEntity("bear_sleptptt", "react_breath.snt", "Player", 0.0f, false);
+}
+
+void stoplookingatbear(string &in AsTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+
+void userockonhand_area(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("static_glowstick_red", false);
+	SetEntityActive("item_glowstick_red_5", true);
+	CreateParticleSystemAtEntity("ps_impact_dirt_high", "ps_impact_dirt_high.ps", "userockonhand_area", false);
+	PlaySoundAtEntity("", "impact_rock_high.snt", "userockonhand_area", 0.0f, false);
+	SetEntityActive("userockonhand_area", false);
+}
+
+void userockonhand_area_interact(string &in AsTimer)
+{
+	SetMessage("Messages", "object_stuckinhand_grasp", 0.0f);	
+}

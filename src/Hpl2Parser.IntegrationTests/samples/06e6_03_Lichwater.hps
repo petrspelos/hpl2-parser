@@ -1,0 +1,377 @@
+void OnStart()
+{
+	SetInventoryDisabled(false);
+	ClearSavedMaps();
+	SetMapDisplayNameEntry("Lich");
+	AddUseItemCallback("", "note_runec", "EndingTrigger", "UseEndNote", false);
+	AddUseItemCallback("", "note_runep", "EndingTrigger", "UseEndNote", false);
+	
+	//GiveItemFromFile("note_runec", "note_runec");
+	//GiveItemFromFile("note_runep", "note_runep");
+	
+	SetEntityPlayerInteractCallback("JawButton", "JawMove", true);
+	
+	AddEntityCollideCallback("Player", "FinalTeleportTrigger", "FinalTeleport", true, 1);
+	AddEntityCollideCallback("Player", "FallDownTrigger", "FallDown2", true, 1);
+	AddEntityCollideCallback("Player", "FadeTrigger", "Fade", true, 1);
+	//AddTimer("TimerPushChasm",0.01,"TimerPushChasm");
+	
+	// Dim the lights
+	
+	SetLightVisible("EndLightRed_1",false);
+	SetLightVisible("EndLightRed_2",false);
+	SetLightVisible("EndLightGreen_1",false);
+	SetLightVisible("EndLightGreen_2",false);
+	
+	PlaySoundAtEntity("Drone Outside", "amb_lich_wind.snt", "MainSoundSource", 1.0, false);
+
+	for (int i=1;i<=11;i++)
+	{
+		SetLightVisible("SkullLight_"+i,false);
+	}
+	
+	CompleteQuest("03_Quad", "03_Quad");
+	
+	if ((HasItem("note_runec") == false) && (HasItem("note_runep") == false))
+	{
+		SetEntityPlayerInteractCallback("EndingTrigger", "BadEnding", true);
+	}
+}
+
+void OnEnter()
+{
+	AutoSave();
+	PlayMusic("Blank.ogg", true, 1, 6, 0, true);
+	SetInDarknessEffectsActive(false);
+	SetSanityDrainDisabled(true);
+}
+
+void BadEnding(string &in asEntity)
+{
+	SetPropActiveAndFade("book_open_1", false, 0.8);
+	SetPropActiveAndFade("book_closed", true, 0.8);
+	SetEntityInteractionDisabled("book_closed", true);
+	PlaySoundAtEntity("paper place", "impact_paper_high.snt", "EndingTrigger", 0.0, false);
+	AddTimer("BadEndingMessage",4,"BadEndingMessage");
+}
+
+void BadEndingMessage(string &in asTimer)
+{
+	AddQuest("04_TorEnd", "04_TorEnd");
+	AddTimer("EndCredits",6,"EndCredits");
+}
+
+void EndCredits(string &in asTimer)
+{
+	StartCredits("ort_descent_pt1", false, "Ending", "Simulacrum_BadCredits", -1);
+}
+
+void RemoveExamine(string &in asEntity)
+{
+	SetEntityActive(asEntity,false);
+	if (asEntity == "EndingTrigger")
+		Ending();
+}
+
+void JawMove(string &in asEntity)
+{
+	SetMoveObjectState("KingJaw", 1);
+	
+	SetLightVisible("EndLightRed_1",true);
+	SetLightVisible("EndLightRed_2",true);
+	SetLightVisible("EndLightGreen_1",true);
+	SetLightVisible("EndLightGreen_2",true);
+	
+	//SetEntityActive("nurse_mask_1", true);
+	
+	for (int i=1;i<=11;i++)
+	{
+		SetLightVisible("SkullLight_"+i,true);
+	}
+}
+
+void UseEndNote(string &in asItem, string &in asEntity)
+{
+	//SetInventoryDisabled(true);
+	PlaySoundAtEntity("paper place", "impact_paper_low.snt", "EndingTrigger", 0.0, false);
+	SetEntityPlayerInteractCallback("EndingTrigger", "RemoveExamine", false);
+	
+	if ((GetLocalVarString("NotePlaced")) == "Red")
+	{
+		GiveItemFromFile("note_runec", "note_runec");
+	}
+	if ((GetLocalVarString("NotePlaced")) == "Green")
+	{
+		GiveItemFromFile("note_runep", "note_runep");
+	}
+	
+	if (asItem == "note_runec")
+	{
+		SetEntityActive("red", true);
+		SetEntityActive("green", false);
+		RemoveItem(asItem);
+		SetLocalVarString("NotePlaced", "Red");
+	}
+	if (asItem == "note_runep")
+	{
+		SetEntityActive("green", true);
+		SetEntityActive("red", false);
+		RemoveItem(asItem);
+		SetLocalVarString("NotePlaced", "Green");
+	}
+}
+
+void ActualTeleport(string &in asTimer)
+{
+	TeleportPlayer("Final");
+	RemoveTimer("TimerDebrisSound");
+	StopSound("Sand",1.0f);
+	
+	SetPlayerMoveSpeedMul(0.5);
+	SetPlayerRunSpeedMul(0.5);
+	SetPlayerLookSpeedMul(1.0);
+}
+
+void Fade(string &in asParent, string &in asChild, int alState)
+{
+	//StartEffectFlash(1.0f, 3.0f, 5.0f);
+	AddTimer("",2.5,"End");
+}
+
+void End(string &in asTimer)
+{
+	ChangeMap("04_Ending_Monastery", "Start", "", "");
+}
+
+void FinalTeleport(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("animal_menace_squid.snt",1.0);
+	AddTimer("",0.7,"ActualTeleport");
+}
+
+void FallDown2(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("",0.01,"FallDown");
+}
+
+void FallDown(string &in asTimer)
+{
+	AddLocalVarInt("FallSceneVar", 1);	//What step to play in the event
+	float fEventSpeedFall = 1.5f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("FallSceneVar")) 
+	{
+		case 1:
+			SetPlayerMoveSpeedMul(0.2);
+			SetPlayerRunSpeedMul(0.2);
+			SetPlayerLookSpeedMul(0.5);
+			
+			MovePlayerHeadPos(0,-0.2, 0, 1, 1);
+			FadePlayerFOVMulTo(0.9, 0.5f);
+			
+			fEventSpeedFall = 1.0f;
+			
+			SetPlayerJumpDisabled(false);
+			SetPlayerCrouchDisabled(false);
+		break;
+		case 2:
+			SetPlayerCrouching(true);
+			fEventSpeedFall = 1.0f;
+			SetPlayerCrouchDisabled(false);
+		break;
+		case 3:
+			FadePlayerRollTo(45, 3, 5);
+			MovePlayerHeadPos(0, -0.7, 0, 3, 5);
+			fEventSpeedFall = 0.75f;
+		break;
+		case 4:
+			FadeOut(0);
+			fEventSpeedFall = 4.0f;
+		break;
+		case 5:
+			//ChangeMap("04_Ending_Monastery", "Start", "", "");
+		break;
+	}
+	
+	if(GetLocalVarInt("FallSceneVar") < 6)  AddTimer("FallDown", fEventSpeedFall, "FallDown");	
+}
+
+void TimerPushChasm(string &in asTimer)
+{
+	//AddDebugMessage("BANG", false);
+	AddPlayerBodyForce(0, 0, 850, true);
+	AddTimer("TimerPushChasm",0.02,"TimerPushChasm");
+}
+
+void Ending()
+{
+	EndingScreenFX();
+	EndingSounds();
+	
+	AddTimer("",5,"EndingPushFade");
+	AddTimer("",6.4,"EndingPushFade2");
+	AddTimer("",7,"EndingUnderwater");
+	
+	AddDebugMessage("wait for it", false);
+	
+	//PlayMusic("lich_event.ogg", true, 1, 6, 0, true);
+	PlayMusic("torture.ogg", false, 1, 0, 0, false);
+	SetPropActiveAndFade("book_open_1", false, 0.8);
+	SetPropActiveAndFade("book_closed", true, 0.8);
+	SetEntityInteractionDisabled("book_closed", true);
+	PlaySoundAtEntity("paper place", "impact_paper_high.snt", "EndingTrigger", 0.0, false);
+	
+	if ((GetLocalVarString("NotePlaced")) == "Red")
+	{
+		SetPropActiveAndFade("red", false, 0.8);
+	}
+	
+	if ((GetLocalVarString("NotePlaced")) == "Green")
+	{
+		SetPropActiveAndFade("green", false, 0.8);
+	}
+}
+
+void EndingPushFade(string &in asTimer)
+{
+	AddDebugMessage("BANG", false);
+	PlaySoundAtEntity("", "enemy_hallucination_disappear.snt", "Player", 0.0, false);
+	
+	AddPlayerBodyForce(0, 0, -30000, true);
+	FadePlayerFOVMulTo(1.2, 1.2);
+	FadeOut(1.4);
+}
+
+void EndingPushFade2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "impact_wood_heavy_med.snt", "Player", 0.0, false);
+}
+
+
+void EndingUnderwater(string &in asTimer)
+{
+	AddLocalVarInt("SceneVar", 1);	//What step to play in the event
+	float fEventSpeedScene = 1.5f;	//The default time between steps in an event
+
+	switch(GetLocalVarInt("SceneVar")) 
+	{
+		case 1:
+			SetInventoryDisabled(true);
+			SetLanternDisabled(true);
+			SetPlayerActive(false);
+			AddDebugMessage("SPLASH", false);
+			PlaySoundAtEntity("", "impact_water_high.snt", "Player", 0, true);
+			PlaySoundAtEntity("Drone Inside", "abyss_village.snt", "Player", 0, true);
+			StopSound("Drone Outside", 0.5f);
+			fEventSpeedScene = 3.6f;
+			MovePlayerHeadPos(0, 0.8, 0, 3, 3);
+			FadePlayerFOVMulTo(1.0, 1.0);
+		break;
+		case 2:
+			TeleportPlayer("Underwater_1");
+			FadeIn(1.3);
+			FadePlayerRollTo(8, 1, 5);
+			MovePlayerHeadPos(0, -0.5, 0, 0.3, 0);
+			AddDebugMessage("BLUB", false);
+			PlaySoundAtEntity("", "bubbles_small_oneshot", "Player", 0, true);
+			fEventSpeedScene = 0.6f;
+		break;
+		case 3:
+			FadeOut(1.0);
+			fEventSpeedScene = 1.0f;
+		break;
+		case 4:
+			fEventSpeedScene = 0.8f;
+			MovePlayerHeadPos(0, 1.1, 0, 3, 3);
+		break;
+		case 5:
+			TeleportPlayer("Underwater_2");
+			FadeIn(1.7);
+			FadePlayerRollTo(-8, 1, 5);
+			MovePlayerHeadPos(0, -0.3, 0, 0.3, 0);
+			PlaySoundAtEntity("", "bubbles_small_oneshot", "Player", 0, true);
+			fEventSpeedScene = 2.0f;
+		break;
+		case 6:
+			FadeOut(1.3);
+			fEventSpeedScene = 1.4f;
+		break;
+		case 7:
+			TeleportPlayer("Underwater_3");
+			StartPlayerLookAt("PushChasmArea", 1, 1, "");
+			FadeIn(1.0);
+			MovePlayerHeadPos(0, 1, 0, 0.2, 0.7);
+			FadePlayerRollTo(9, 1, 5);
+			PlaySoundAtEntity("", "bubbles_small_oneshot", "Player", 0, true);
+			fEventSpeedScene = 7.0f;
+			AddTimer("TimerPushChasm",0.02,"TimerPushChasm");
+		break;
+		case 8:
+			FadeOut(2.0);
+			fEventSpeedScene = 3.0f;
+			FadePlayerRollTo(0, 5, 5);
+			MovePlayerHeadPos(0, 0, 0, 5, 5);
+		break;
+		case 9:
+			SetPlayerActive(true);
+			FadeIn(2.0);
+			
+			SetPlayerMoveSpeedMul(0.3);
+			SetPlayerRunSpeedMul(0.3);
+			SetPlayerLookSpeedMul(0.3);
+			
+			StopSound("Drone Inside", 4.0f);
+			AddTimer("",3,"KingHeadAppear");
+			TeleportPlayer("FaceTheKing");
+			PlaySoundAtEntity("", "animal_whale", "Player", 0, true);
+			StartEffectFlash(1.0f, 1.0f, 5.0f);
+			RemoveTimer("TimerPushChasm");
+			StopPlayerLookAt();
+			fEventSpeedScene = 5.0f;
+		break;
+		case 10:
+			PlaySoundAtEntity("", "amb_cellar_debris", "Player", 0, true);
+			AddTimer("", RandInt(8,18), "TimerDebrisSound");
+		break;
+	}
+	
+	if(GetLocalVarInt("SceneVar") < 11)  AddTimer("Underwater", fEventSpeedScene, "EndingUnderwater");	
+}
+
+void TimerDebrisSound(string &in asTimer)
+{
+	PlaySoundAtEntity("Sand","amb_cellar_debris.snt", "Player", 1.0f, false);
+}
+
+void KingHeadAppear(string &in asTimer)
+{
+	SetEntityActive("nurse_mask_2", true);
+}
+
+void EndingScreenFX()
+{
+	StartScreenShake(0.02, 5, 2, 2);
+	
+	SetMoveObjectState("KingJaw", 1);
+	
+	if ((GetLocalVarString("NotePlaced")) == "Red")
+	{
+		SetLightVisible("EndLightRed_1",true);
+		SetLightVisible("EndLightRed_2",true);
+	}
+	else if ((GetLocalVarString("NotePlaced")) == "Green")
+	{
+		SetLightVisible("EndLightGreen_1",true);
+		SetLightVisible("EndLightGreen_2",true);
+	}
+	
+	//SetEntityActive("nurse_mask_1", true);
+	
+	for (int i=1;i<=11;i++)
+	{
+		SetLightVisible("SkullLight_"+i,true);
+	}
+}
+
+void EndingSounds()
+{}

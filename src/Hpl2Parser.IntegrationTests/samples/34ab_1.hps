@@ -1,0 +1,280 @@
+void OnStart()
+{
+//TEST
+//SetLightVisible("BoxLight_1", false);
+AddEntityCollideCallback("Player", "area_script_0", "area_script_0_script", true, 1);
+AddEntityCollideCallback("Player", "area_0", "area_0_script", true, 1);
+AddEntityCollideCallback("Player", "area_start", "area_start_script", true, 1);
+
+// pig scream
+AddEntityCollideCallback("Player", "area_pigsound_0", "area_pigsound_0_script", true, 1);
+
+// loading screens
+AddEntityCollideCallback("Player", "loading_0", "loading_0_script", false, 1);
+AddEntityCollideCallback("Player", "loading_1", "loading_1_script", false, 1);
+
+// moved to global.hps
+AddTimer("cold_sanity", 15, "cold_sanity_0");
+
+AddUseItemCallback("unlockfactory", "keyfactory", "level_orb_room_door_2", "unlockfactory", true);
+}
+
+void area_start_script(string &in asParent, string &in asChild, int alState)
+{
+GiveItemFromFile("lantern", "lantern.ent");
+FadeOut(0);
+StopPlayerLookAt();
+SetPlayerActive(false);
+SetSanityDrainDisabled(true);
+AddTimer("", 2, "script_pre_0");
+AddTimer("", 25, "cold_sanity_0_text");
+AddTimer("", 60, "cold_sanity_1_text");
+}
+
+void script_pre_0(string &in asTimer){
+TeleportPlayer("playerstart_0");
+StartPlayerLookAt("area_look_0", 10.0, 10.0, "");
+FadeIn(3);
+AddTimer("", 2, "script_pre_1");}
+
+void script_pre_1(string &in asTimer){
+//Arthur speaking about who he is and what's the matter
+PlaySoundAtEntity("", "arthur1", "Player", 0, false);
+SetMessage("TheVoice", "arthur_1", 20.0);
+AddTimer("", 18.5, "script_pre_3");
+AddTimer("", 17.5, "script_pre_2");}
+
+void script_pre_2(string &in asTimer){
+FadeOut(1);}
+
+void script_pre_3(string &in asTimer){
+PlaySoundAtEntity("", "door_level_cellar_close.snt", "Player", 0, false);
+PlayMusic("Approaching-storm-sound-effect.ogg", true, 1.0, 3.0, 1000, true);
+TeleportPlayer("playerstart_2");
+AddTimer("", 2, "script_1");
+StartPlayerLookAt("area_look_1", 10.0, 10.0, "");
+}
+
+void script_1(string &in asTimer){
+FadeIn(3);
+SetPlayerActive(true);
+StopPlayerLookAt();
+SetSanityDrainDisabled(false);
+SetMessage("TheVoice", "system_0", 3.0);
+AddTimer("", 3.5, "script_2");
+}
+
+void script_2(string &in asTimer)
+{
+SetMessage("TheVoice", "system_5", 5.0);
+}
+
+void area_script_0_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "arthur2", "Player", 0, false);
+SetMessage("TheVoice", "arthur_2", 9.0);
+SetLightVisible("BoxLight_1", true);
+}
+
+void area_0_script(string &in asParent, string &in asChild, int alState){
+StopMusic(3, 1000);
+PlaySoundAtEntity("", "NPC_leviathan_search_att.snt", "Player", 0, false);
+SetPlayerActive(false);
+StartPlayerLookAt("area_look_2", 3.0, 3.0, "");
+AddTimer("", 3, "area_0_timer_0");}
+
+void area_0_timer_0(string &in asTimer){
+PlaySoundAtEntity("", "arthur2", "Player", 0, false);
+SetMessage("TheVoice", "arthur_2", 10.0);
+AddTimer("", 11, "area_0_timer_1");}
+
+void area_0_timer_1(string &in asTimer){
+PlaySoundAtEntity("", "break_wood_metal.snt", "Player", 0, false);
+SetPlayerHealth(1);
+SetPlayerSanity(0);
+SetLanternActive(false, true);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddTimer("", 1, "area_0_timer_2");}
+
+void area_0_timer_2(string &in asTimer){
+PlayMusic("NPC_leviathan_attack.ogg", true, 1.0, 3.0, 1000, true);
+AddTimer("", 10, "area_0_timer_3");}
+
+void area_0_timer_3(string &in asTimer){
+FadeOut(1);
+StopMusic(1, 1000);
+AddTimer("", 1, "area_0_timer_4");}
+
+void area_0_timer_4(string &in asTimer){
+PlaySoundAtEntity("", "break_wood_metal.snt", "Player", 0, false);
+FadeOut(0);
+StopMusic(1, 1000);
+}
+
+void cold_sanity_0(string &in asTimer){
+SetPlayerSanity((GetPlayerSanity()-9));
+//StartEffectFlash(0.5, 0.1, 0.5);
+AddTimer("cold_sanity", 15, "cold_sanity_0");
+}
+
+// Arthur interacts with door_0
+void area_12_callback(string &in asEntity)
+{
+SetPlayerActive(false);
+StartPlayerLookAt("area_12", 1.0, 1.0, "");
+AddTimer("area_12_dialogue", 1, "area_12_dialogue_0");
+}
+
+void area_12_dialogue_0(string &in asTimer){
+PlaySoundAtEntity("", "knock1", "area_12", 0, false);
+AddTimer("area_12_dialogue", 1, "area_12_dialogue_1");
+}
+
+// knocking on the door_0
+void area_12_dialogue_1(string &in asTimer){
+SetMessage("TheVoice", "arthur_3", 4.0);
+PlaySoundAtEntity("", "arthur9", "Player", 0, false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+SetEntityActive("area_12", false);
+}
+
+// Arthur interacts with door_1
+void area_11_callback(string &in asEntity)
+{
+SetPlayerActive(false);
+StartPlayerLookAt("area_11", 1.0, 1.0, "");
+AddTimer("area_11_dialogue", 1, "area_11_dialogue_0");
+}
+
+// knocking on the door_1
+void area_11_dialogue_0(string &in asTimer){
+PlaySoundAtEntity("", "knock2", "area_11", 0, false);
+AddTimer("area_11_dialogue", 1, "area_11_dialogue_1");
+}
+
+
+void area_11_dialogue_1(string &in asTimer){
+SetMessage("TheVoice", "arthur_4", 4.0);
+PlaySoundAtEntity("", "arthur10_hello", "Player", 0, false);
+AddTimer("area_11_dialogue", 6, "area_11_dialogue_2");
+}
+
+void area_11_dialogue_2(string &in asTimer){
+SetMessage("TheVoice", "arthur_5", 5.0);
+PlaySoundAtEntity("", "arthur11_ijusthaveaquestion", "Player", 0, false);
+AddTimer("area_11_dialogue", 7, "area_11_dialogue_3");
+}
+
+void area_11_dialogue_3(string &in asTimer){
+SetMessage("TheVoice", "unknown_0", 4.0);
+PlaySoundAtEntity("", "unknown1", "area_11", 0, false);
+AddTimer("area_11_dialogue", 4.5, "area_11_dialogue_4");
+}
+
+void area_11_dialogue_4(string &in asTimer){
+SetMessage("TheVoice", "arthur_6", 4.0);
+PlaySoundAtEntity("", "arthur3", "Player", 0, false);
+AddTimer("area_11_dialogue", 6, "area_11_dialogue_5");
+}
+
+void area_11_dialogue_5(string &in asTimer){
+SetMessage("TheVoice", "arthur_4", 3.0);
+PlaySoundAtEntity("", "arthur12_hello", "Player", 0, false);
+AddTimer("area_11_dialogue", 3, "area_11_dialogue_6");
+}
+
+void area_11_dialogue_6(string &in asTimer){
+SetMessage("TheVoice", "unknown_1", 3.0);
+PlaySoundAtEntity("", "unknown2", "area_11", 0, false);
+AddTimer("area_11_dialogue", 3.5, "area_11_dialogue_7");
+}
+
+void area_11_dialogue_7(string &in asTimer){
+SetMessage("TheVoice", "arthur_7", 2.0);
+PlaySoundAtEntity("", "arthur13_ibegyourpardon", "Player", 0, false);
+AddTimer("area_11_dialogue", 2, "area_11_dialogue_8");
+}
+
+void area_11_dialogue_8(string &in asTimer){
+SetMessage("TheVoice", "unknown_2", 3.0);
+PlaySoundAtEntity("", "unknown3", "area_11", 0, false);
+AddTimer("area_11_dialogue", 3.5, "area_11_dialogue_9");
+}
+
+void area_11_dialogue_9(string &in asTimer){
+SetMessage("TheVoice", "arthur_8", 5.0);
+PlaySoundAtEntity("", "arthur5", "Player", 0, false);
+AddTimer("area_11_dialogue", 5.5, "area_11_dialogue_10");
+}
+
+void area_11_dialogue_10(string &in asTimer){
+SetMessage("TheVoice", "unknown_3", 7.0);
+PlaySoundAtEntity("", "unknown4", "area_11", 0, false);
+AddTimer("area_11_dialogue", 7.5, "area_11_dialogue_11");
+}
+
+void area_11_dialogue_11(string &in asTimer){
+SetMessage("TheVoice", "arthur_9", 4.0);
+PlaySoundAtEntity("", "arthur14_tellwho", "Player", 0, false);
+AddTimer("area_11_dialogue", 6, "area_11_dialogue_12");
+}
+
+void area_11_dialogue_12(string &in asTimer){
+SetMessage("TheVoice", "arthur_10", 4.0);
+PlaySoundAtEntity("", "arthur15_sirareyouthere", "Player", 0, false);
+AddTimer("area_11_dialogue", 3, "area_11_dialogue_13");
+}
+
+void area_11_dialogue_13(string &in asTimer){
+SetPlayerActive(true);
+StopPlayerLookAt();
+SetEntityActive("area_11", false);
+}
+
+void cold_sanity_1_text(string &in asTimer){
+if(GetPlayerSanity()<40)
+{
+SetMessage("TheVoice", "system_1", 6.0);
+}
+}
+
+// arthut interacts with factory and the door is locked
+void factorylockedcallback(string &in asEntity)
+{
+AddQuest("questfactorydoorlocked", "questfactorydoorlocked");
+}
+
+// arthur unlocks factory door
+void unlockfactory(string &in asItem, string &in asEntity)
+{
+SetLevelDoorLocked("level_orb_room_door_2", false);
+PlaySoundAtEntity("", "unlock_door", "level_orb_room_door_2", 0, false);
+RemoveItem("keyfactory");
+CompleteQuest("questfactorydoorlocked", "questfactorydoorlocked");
+}
+
+void area_pigsound_0_script(string &in asParent, string &in asChild, int alState){
+PlaySoundAtEntity("", "afx_sewers_wretchsighting", "area_pigsound_1", 0, false);
+}
+
+void loading_0_script(string &in asParent, string &in asChild, int alState)
+{
+SetupLoadScreen("loadingscreen", "load_01", 0, "loading_unknownhouse.jpg");
+}
+
+void loading_1_script(string &in asParent, string &in asChild, int alState)
+{
+SetupLoadScreen("loadingscreen", "load_03", 0, "loading_factory.jpg");
+}
+
+
+void OnEnter()
+{
+
+}
+
+void OnLeave()
+{
+}

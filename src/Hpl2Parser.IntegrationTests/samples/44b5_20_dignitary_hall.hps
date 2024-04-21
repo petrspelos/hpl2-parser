@@ -1,0 +1,209 @@
+void OnStart()
+{
+	//--COLLIDE CALLBACKS--//
+	AddEntityCollideCallback("Player", "AreaForceQuest", "AddForceQuest", true, 1);
+	AddEntityCollideCallback("Player", "PlayRevealMusic", "Play", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollideWindLight_", "WindLight", true, 1);
+	AddEntityCollideCallback("Player", "AreaFixSpeed", "FixSpeed", true, 1);
+	
+	AddUseItemCallback("usekeybc", "BCKey", "BCDoor", "UseKeyBCDoor", true);
+	
+	//--RESET MOVESPEEDMUL--//
+	SetPlayerMoveSpeedMul(1);
+	//DEBUG
+	
+	if(ScriptDebugOn())
+	{
+		//SetGlobalVarInt("FoggyTempleOK", 1);
+		//SetGlobalVarInt("NoisyLobbyOK", 1);
+		//SetGlobalVarInt("BloodyChamberOK", 1);
+	}
+	
+	//--TIMERS--//
+	AddTimer("hallway", 0.5f, "TimerHallway");
+	
+	//--PARTICLES 4 EVENT--//
+	for(int i=0;i<=6;i++) CreateParticleSystemAtEntity("AreaHallPS_"+i, "ps_dust_falling_narrow", "AreaHallPS_"+i, false);
+	
+	//--DISPLAY--//
+	SetMapDisplayNameEntry("LevelDigHall");
+	AutoSave();
+	}
+	
+void OnEnter()
+{
+	AutoSave();
+	
+	StopMusic(1.0f, 0);
+	StopMusic(1.0f, 10);
+	PlayMusic("29_amb", true, 0.3f, 1.0f, 0, false);
+	
+	//Completed?
+	if (GetGlobalVarInt("NL") > 1 && GetGlobalVarInt("BC") > 1 && GetGlobalVarInt("FT") > 1)
+	{
+		AddEntityCollideCallback("Player", "AreaDisableBarrier", "OpenBarrier", true, 1);
+		SetMessage("TextOne", "20Open", 2);
+	}
+	
+	if (GetGlobalVarInt("NL") > 1)
+	{
+		SetEntityActive("NL1", true);
+	}
+	
+	if (GetGlobalVarInt("BC") > 1)
+	{
+		SetEntityActive("BC1", true);
+	}
+	
+	if (GetGlobalVarInt("FT") > 1)
+	{
+		SetEntityActive("FT1", true);
+	}
+	}
+	
+void Play(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("music_temple_reveal.ogg", false, 0.3f, 1.0f, 0, false);
+	}
+//Memento
+void AddForceQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Force", "Force");
+	}
+	
+//////////////////////////////////
+//Open Next
+void OpenBarrier(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Block", false);
+	
+	SetPlayerMoveSpeedMul(0.3);
+	
+	DestroyParticleSystem("PSBlock");
+	
+	PlayMusic("music_temple_reveal.ogg", false, 1.0f, 1.0f, 0, false);
+	PlaySoundAtEntity("", "27_orb_implode", "Player", 0.0f, false);
+	
+	StartScreenShake(0.1f, 3.0f, 4.0f, 3.0f);
+	
+	AddTimer("", 10.0f, "SpeedUp");
+	
+	CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "Portal", false);
+	
+	CompleteQuest("Force", "Force");
+	}
+	
+void SpeedUp(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(1.0);
+	}
+	
+//---------------------------------------------	
+
+/////////////////////////////
+// BEGIN HALLWAY EVENTS
+/////////////////////////////
+
+//---------------------------------------------	
+
+void TimerHallway(string &in asTimer)
+{
+	AddLocalVarInt("EStep", 1);	//What step to play in the event
+	float fEventSpeed = 0.5f;	//The default time between steps in an event
+
+	switch(GetLocalVarInt("EStep"))
+	{
+		case 1:
+			PlaySoundAtEntity("creak", "00_creak.snt", "Player", 3, false);
+			FadePlayerAspectMulTo(1.7f, 0.03f); 
+			FadeImageTrailTo(1.5f,1.25f);
+			PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.3f,false);
+			StartScreenShake(0.01f,1, 0.5f,0.5f);	
+			SetPlayerMoveSpeedMul(0.6f);			
+			fEventSpeed = 3.5f;
+		break;
+		case 2:
+			SetPlayerMoveSpeedMul(0.5f);
+			StartScreenShake(0.02f,1, 0.5f,0.5f);
+			PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.7f,false);
+			MovePlayerHeadPos(0, 0, 0, 0.75, 0.5f);
+			FadePlayerRollTo(5, 5, 10);
+			SetPlayerLookSpeedMul(0.4f);
+			fEventSpeed = 1.0f;
+		break;
+		case 3:
+			FadePlayerRollTo(-4, 5, 10);
+			SetPlayerLookSpeedMul(0.6f);
+			fEventSpeed = 2.0f;
+		break;
+		case 4:
+			FadePlayerRollTo(5, 8, 10);
+			SetPlayerLookSpeedMul(0.4f);
+			StartScreenShake(0.03f,1, 0.5f,0.5f);
+			fEventSpeed = 2.5f;
+		break;
+		case 5:
+			MovePlayerHeadPos(0, -0.6, 0, 0.75, 0.5f);
+			FadePlayerRollTo(-5, 5, 10);
+			FadeImageTrailTo(1.5,1.25f);
+			SetPlayerLookSpeedMul(0.2f);
+			PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.7f,false);
+		break;
+		case 6:
+			MovePlayerHeadPos(0, 0, 0, 0.75, 0.5f);
+			FadePlayerRollTo(0, 8, 10);
+			SetPlayerLookSpeedMul(1);
+			FadePlayerAspectMulTo(1, 1); 
+			FadeImageTrailTo(0,1.25f);
+		break;
+		case 7:
+			StopSound("creak", 0.25f);
+			SetPlayerLookSpeedMul(1.0f);
+			SetPlayerMoveSpeedMul(1);
+			SetPlayerRunSpeedMul(1);
+		break;
+	}
+	
+	if(GetLocalVarInt("EStep") < 12)  AddTimer("halls", fEventSpeed, "TimerHallway");
+}
+
+//--WINDY LANTERN--//
+void WindLight(string &in asParent, string &in asChild, int alState)
+{
+	int Num = 1;
+	
+	CreateParticleSystemAtEntity("pslight", "ps_dust_whirl.ps", asChild+Num, false);
+	PlaySoundAtEntity("slight", "general_wind_whirl.snt", asChild+Num, 0.0f, false);
+	
+	//GiveSanityDamage(10, true);
+	
+	PlaySoundAtEntity("scare", "react_scare.snt", "Player", 1.0 / 0.7f,false);
+	
+	//Push Lantern
+	AddPropForce("hanging_lantern_ceiling_2", 0, 0, -100, "World"); 
+}
+
+//--FIX SPEED AFTER EVENT--//
+void FixSpeed(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(1);
+	PlaySoundAtEntity("rock", "03_rock_move.snt", "Player", 1.0f, false);
+}
+
+//--UNLOCK BLOODY CHAMBER DOOR--//
+void UseKeyBCDoor(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("BCDoor", false);
+	PlaySoundAtEntity("unlock", "unlock_door", "BCDoor", 0, false);
+	
+	RemoveItem(asItem);
+}
+
+void OnLeave()
+{
+	
+	
+	int iLoad = RandInt(1, 4);
+	
+	SetupLoadScreen("TextOne", "LoadDH_"+iLoad, 0, "int_load_hall_"+iLoad+".jpg");
+}

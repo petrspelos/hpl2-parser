@@ -1,0 +1,96 @@
+//////////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+SetSkyBoxTexture("SkyBox.dds");
+SetSkyBoxActive(true);
+AddEntityCollideCallback("Player", "GoBackText", "GoBackText", true, 1);
+AddEntityCollideCallback("Player", "WrongWay", "WrongWayText", true, 1);
+AddEntityCollideCallback("Player", "NextLevel", "NextLevel", true, 1);
+AddEntityCollideCallback("Player", "CompleteQuest", "CompleteQuest", true, 1);
+AddUseItemCallback("", "GateKey", "elevator_door_1", "OpenGate", true);
+AddUseItemCallback("", "crowbar_1", "elevator_door_1", "GateStrong", false);
+    AddUseItemCallback("", "crowbar_2", "elevator_door_1", "GateStrong", false);
+AddTimer("LookEventEnd", 4, "LookEventEnd");
+    StartPlayerLookAt("NoticeTree", 1.0f, 1.5f, "");
+	SetPlayerActive(false);
+	SetMessage("Level3", "FallenTrees", 5);
+PlaySoundAtEntity("wind", "windnoise.snt", "Player", 0, false);
+}
+
+    void LookEventEnd(string &in asTimer)
+	{
+    SetPlayerActive(true);
+	StopPlayerLookAt();
+	}
+
+void GoBackText(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Level3", "GoBackText", 4);
+}
+
+void WrongWayText(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Level3", "WrongWayText", 4);
+}
+
+void NextLevel(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("ChangeLevel", 5, "ChangeLevel");
+FadeOut(3);
+SetMessage("Level3", "NextLevel", 4);
+}
+
+    void ChangeLevel(string &in asTimer)
+	{
+	ChangeMap("dsc2_outside3.map", "PlayerStartArea_1", "", "");
+	}
+
+void LockedQuest(string &in asEntity)
+{
+AddQuest("lockedgatequest", "LockedGateQuest");
+}
+ 
+    void CompleteQuest(string &in asParent, string &in asChild, int alState)
+    {
+	CompleteQuest("lockedgatequest", "LockedGateQuest");
+	}
+
+void PickupKey(string &in asEntity)
+{
+SetEntityActive("crude_man_chains_statue_1", true);
+AddEntityCollideCallback("Player", "OpenHatch", "OpenHatch", false, 1);
+AddEntityCollideCallback("Player", "LadderArea_1", "HideMan", true, 1);
+}
+
+    void HideMan(string &in asParent, string &in asChild, int alState)
+    {
+	SetEntityActive("crude_man_chains_statue_1", false);
+	}
+
+    void OpenHatch(string &in asParent, string &in asChild, int alState)
+    {
+	AddPropImpulse("hatch_ceiling_1", 0.0f, 15.0f, 0.0f, "world");
+	}
+	
+void OpenGate(string &in asItem, string &in asEntity) 
+{
+RemoveItem("GateKey");
+PlaySoundAtEntity("", "unlock_door.snt", "elevator_door_1", 0, false);
+SetSwingDoorLocked("elevator_door_1", false, false);
+CompleteQuest("lockedgatequest", "LockedGateQuest");
+AddPlayerSanity(25.0f);
+}
+
+    void GateStrong(string &in asItem, string &in asEntity) 
+    {
+	SetMessage("Level3", "GateStrong", 4);
+	}
+	
+
+//////////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

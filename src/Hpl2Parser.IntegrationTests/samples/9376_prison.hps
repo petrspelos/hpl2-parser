@@ -1,0 +1,290 @@
+void OnStart()
+{
+	AutoSave();
+	AddEntityCollideCallback("Player", "area", "tapahtuu", true, 1);
+	AddEntityCollideCallback("Player", "madness", "madmusic", true, 1);
+	AddEntityCollideCallback("Player", "areali", "lit", true, 1);
+	AddEntityCollideCallback("Player", "areado", "tapahtuu3", true, 1);
+	AddEntityCollideCallback("Player", "areaexit", "tapahtuu4", true, 1);
+	AddEntityCollideCallback("Player", "sound", "oviauki", true, 1);
+	AddEntityCollideCallback("Player", "show", "ritual", true, 1);
+	AddEntityCollideCallback("c", "blind", "tapahtuu2", true, 1);
+	AddEntityCollideCallback("Player", "sanity", "tapahtuu100", true, 1);
+	AddUseItemCallback("", "knife", "knifearea", "FUNCTION", true);
+	AddUseItemCallback("", "key", "pri", "FUNCTION2", true);
+	SetEntityInteractionDisabled("d1", true);
+	SetEntityInteractionDisabled("d2", true);
+	SetEntityInteractionDisabled("d3", true);
+	SetEntityInteractionDisabled("d4", true);
+	SetEntityInteractionDisabled("d5", true);
+	SetEntityInteractionDisabled("d6", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("music_0.ogg", true, 0.8f, 1.0f, 10, true);
+}
+
+void hajotapullo(string &in asEntity, string &in Break)
+{
+	AddTimer("", 0.15f, "guisound");
+}
+
+void guisound(string &in asTimer)
+{
+	PlayGuiSound("03_in_a_bottle.ogg", 0.8f);
+	AddTimer("", 3.0f, "spiritual");
+}
+
+void spiritual(string &in asTimer)
+{
+	PlayGuiSound("flashback_flash.snt", 0.8f);
+	AddTimer("", 1.5f, "spiritualreact");
+}
+
+void spiritualreact(string &in asTimer)
+{
+	PlayGuiSound("sanity_pant.snt", 0.9f);
+}
+
+void koske(string &in asEntity)
+{
+	AddTimer("", 1.0f, "fire");
+}
+
+void fire(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("palaa", "ps_fire_candle_red.ps", "nappula", false);
+	AddTimer("", 0.6f, "damage");
+	AddTimer("", 0.8f, "damagesound");
+}
+
+void damagesound(string &in asTimer)
+{
+	PlayGuiSound("react_sigh.snt", 0.9f);
+}
+
+void damage(string &in asTimer)
+{
+	GiveSanityDamage(15, true);
+	GivePlayerDamage(10, "BloodSplat", false, false);
+	ChangePlayerStateToNormal();
+	AddTimer("", 0.6f, "restart");
+}
+
+void restart(string &in asTimer)
+{
+	DestroyParticleSystem("palaa");
+}
+
+void ritual(string &in asParent, string &in asChild, int alState)
+{	
+	SetEntityActive("rit", true);
+	PlaySoundAtEntity("rit", "amb_hunt.snt", "rit", 0, false);
+	GiveSanityDamage(10, true);	
+	AddTimer("", 1.5f, "disaper");
+}
+
+void tapahtuu100(string &in asParent, string &in asChild, int alState)
+{	
+	SetPlayerSanity(90);
+}
+
+void disaper(string &in asTimer)
+{
+	SetEntityActive("rit", false);
+}
+
+void oviauki(string &in asParent, string &in asChild, int alState)
+{	
+	PlaySoundAtEntity("dooru", "door_safety_open.snt", "dooru", 0, false);
+}
+
+void phono(string &in asEntity, int alState)
+{
+	PlaySoundAtEntity("phono", "musicbox.snt", "phono", 0, false);
+}
+
+void tapahtuu4(string &in asParent, string &in asChild, int alState)
+{	
+	ChangeMap("mansion.map", "PlayerStartArea_2", "", "");
+}
+
+void tapahtuu3(string &in asParent, string &in asChild, int alState)
+{	
+	PlayMusic("12_event_blood.ogg", false, 1.0f, 1.0f, 59, false);
+	SetEntityActive("areaexit", true);
+	SetEntityActive("noenter", false);
+	AddTimer("", 6.0f, "leavefast");
+}
+
+void leavefast(string &in asTimer)
+{
+	SetMessage("Messages", "should", 5.0f);
+}
+
+void lit(string &in asParent, string &in asChild, int alState)
+{	
+	SetLampLit("li1", true, true);
+	SetLampLit("li2", true, true);
+	SetEntityActive("b1", true);
+	SetEntityActive("b2", true);
+	SetEntityActive("pr", false);
+	SetEntityActive("v1", false);
+	SetEntityActive("v2", false);
+	SetEntityActive("v3", false);
+}
+
+void FUNCTION(string &in asItem, string &in asEntity)
+{
+	FadeOut(0.0f);
+	AddTimer("", 1.0f, "kill");
+	StopMusic(1, 20);
+	StopMusic(0, 10);
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerLookSpeedMul(0.0f);
+	RemoveItem("knife");
+}
+
+void FUNCTION2(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("pri", false, true);
+	PlaySoundAtEntity("", "unlock_door", "pri", 0, false);
+	RemoveItem("key");
+}
+
+void kill(string &in asTimer)
+{
+	PlayGuiSound("knifesound.ogg", 1.0f);
+	AddTimer("", 0.1f, "kill2");
+}
+
+
+void kill2(string &in asTimer)
+{
+	PlayGuiSound("24_mb_04_01.ogg", 1.0f);
+	AddTimer("", 6.0f, "wakeup");
+	AddTimer("", 4.0f, "teleport");
+	SetSwingDoorLocked("metal", true, true);
+}
+
+void teleport(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_3");
+}
+
+void wakeup(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0.9f);
+	SetPlayerRunSpeedMul(0.78f);
+	SetPlayerLookSpeedMul(1.0f);
+	SetPlayerJumpDisabled(true);
+	FadeIn(4.0f);
+	AddTimer("", 4.0f, "particles");
+	SetEntityActive("sound", true);
+	SetEntityActive("doord", false);
+	SetEntityActive("dooru", true);
+	SetEntityInteractionDisabled("metal", true);
+	SetEntityInteractionDisabled("h1", true);
+	SetEntityInteractionDisabled("h2", true);
+	SetEntityInteractionDisabled("h3", true);
+	SetEntityInteractionDisabled("h4", true);
+	SetEntityInteractionDisabled("h5", true);
+	SetEntityInteractionDisabled("h6", true);
+	PlayMusic("music_3.ogg", true, 0.7f, 0.8f, 30, true);
+}
+
+void particles(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("par1", "ps_orb_absorb.ps", "p1", true);
+	CreateParticleSystemAtEntity("par2", "ps_orb_absorb.ps", "p2", true);
+	CreateParticleSystemAtEntity("par3", "ps_orb_absorb.ps", "p3", true);
+	AddEntityCollideCallback("Player", "n1", "delete1", true, 1);
+	AddEntityCollideCallback("Player", "n2", "delete2", true, 1);
+	AddEntityCollideCallback("Player", "n3", "delete3", true, 1);	
+}
+
+void delete1(string &in asParent, string &in asChild, int alState)
+{	
+	DestroyParticleSystem("par1");
+}
+
+void delete2(string &in asParent, string &in asChild, int alState)
+{	
+	DestroyParticleSystem("par2");
+}
+
+void delete3(string &in asParent, string &in asChild, int alState)
+{	
+	DestroyParticleSystem("par3");
+}
+
+void madmusic(string &in asParent, string &in asChild, int alState)
+{	
+	SetPlayerMoveSpeedMul(0.55f);
+	SetPlayerRunSpeedMul(0.33f);
+	SetPlayerLookSpeedMul(0.8f);
+	PlayMusic("29_amb_end_intense.ogg", true, 1.0f, 3.0f, 20, true);
+}
+
+void tapahtuu(string &in asParent, string &in asChild, int alState)
+{	
+	AddTimer("", 0.5, "push");
+	AddTimer("", 0.2, "sanityd");
+	CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "ps", false);
+	PlayGuiSound("dis.ogg", 0.5f);
+	SetLampLit("10", false, true);
+	SetLampLit("11", false, true);
+	SetLampLit("12", false, true);
+	SetLampLit("13", false, true);
+	AddPropImpulse("s1", 2, 3, 3, "");
+	AddPropImpulse("s2", 3, 3, 3, "");
+	AddPropImpulse("s3", -2, 3, -3, "");
+}
+
+void tapahtuu2(string &in asParent, string &in asChild, int alState)
+{	
+	SetEntityActive("c", false);
+	AddTimer("", 0.8, "hitdoor");
+	SetEntityActive("door1", false);
+	SetEntityActive("door2", true);
+}
+
+void hitdoor(string &in asTimer)
+{
+	SetPropHealth("door2", 40.0f);
+	PlayGuiSound("hit_wood3.ogg", 1.0f);
+
+}
+
+void push(string &in asTimer)
+{
+	SetEntityActive("c", true);
+	SetEntityActive("note", true);	
+	AddTimer("", 2.0, "PushObjects");
+	SetEntityInteractionDisabled("c", true);
+
+}
+
+void PushObjects(string &in asTimer)
+{
+	AddPropImpulse("c", 0.16, 0.16, -0.08, "");
+	AddTimer("", 0.01, "PushObjects");
+}
+
+void musicc(string &in asTimer)
+{
+	PlayMusic("music_0.ogg", true, 1.0f, 5.0f, 10, true);
+}
+
+void sanityd(string &in asTimer)
+{
+	PlayMusic("27_event_bang.ogg", false, 0.9f, 3.0f, 40, false);
+	AddTimer("", 15, "musicc");
+	GiveSanityDamage(50.0f, true);
+	PlayGuiSound("react_scare5.ogg", 1.0f);
+	SetEntityActive("box1", false);
+	SetEntityActive("box2", false);
+}
+

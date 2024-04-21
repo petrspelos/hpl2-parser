@@ -1,0 +1,359 @@
+void OnStart()
+{
+	
+if(ScriptDebugOn())
+    {
+    }
+	
+	//AddTimer("", 0.0f, "introSequence");	
+	//TeleportPlayer("PlayerStartArea_5");
+	
+	AddTimer("", 0.5f, "Intro");
+	
+	StopSound("Sound_1", 0.0f);
+	StopSound("Sound_2", 0.0f);
+	StopSound("Sound_3", 0.0f);
+
+	SetSanityDrainDisabled(true);
+	SetInventoryDisabled(false);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerActive(false);
+	
+	FadeOut(0.0f);
+	
+	FadeImageTrailTo(1,1);
+	SetPlayerMoveSpeedMul(0.15f);
+	SetPlayerRunSpeedMul(0);
+	
+	PlayPropAnimation("lulu", "Idle", 0, true, "");
+	
+	AddEntityCollideCallback("Player", "encuentro", "evento_encuentro", true, 0);
+	AddEntityCollideCallback("Player", "lulu_inicio_presentacion", "lulu_inicio_presentacion", true, 0);
+	AddEntityCollideCallback("Player", "espacio_01", "puzzle_espacio", false, 0);
+	
+	SetLightVisible ("PointLight_35", false);
+}
+
+
+
+
+	 //===========================================
+		//Cinemática Intro
+     //===========================================
+
+void Intro(string &in asTimer)
+{
+	PlayMusic("02Intro.ogg", false, 1.0f, 0.0f, 0, true);
+	AddTimer("", 5.0f, "escena1");
+	TeleportPlayer("PlayerStartArea_1");
+	StartPlayerLookAt("look_1", 10, 100, "");
+	SetMessage ("Messages", "presentacion", 3.0f);
+}
+	
+void escena1(string &in asTimer)	{
+	FadeIn(1.5f);
+	AddTimer("", 4.0f, "cambio1");
+	StartPlayerLookAt("look_2", 0.1, 0.1, "");
+}
+
+void cambio1(string &in asTimer)	{
+	FadeOut(1.5f);
+	AddTimer("", 1.5f, "escena2");
+}
+
+void escena2(string &in asTimer)	{
+	TeleportPlayer("PlayerStartArea_2");
+	FadeIn(1.5f);
+	AddTimer("", 4.0f, "cambio2");
+	StartPlayerLookAt("look_3", 0.1, 0.1, "");
+	AddTimer("automove", 0.01, "TimerMoveForward");
+}
+
+void cambio2(string &in asTimer)	{
+	FadeOut(1.5f);
+	AddTimer("", 1.5f, "escena3");
+	PlaySoundAtEntity("", "switch.snt", "Player", 0, false);
+	SetLightVisible("luz_1", false);
+	SetLightVisible("luz_2", false);
+	SetLightVisible("luz_3", false);	
+}
+
+void escena3(string &in asTimer)	{
+	TeleportPlayer("PlayerStartArea_3");
+	SetEntityActive("monitor_1", false);
+	SetEntityActive("monitor_2", true);
+	FadeIn(1.5f);
+	AddTimer("", 5.0f, "cambio3");
+	StartPlayerLookAt("look_4", 0.1, 0.1, "");
+}
+	
+void cambio3(string &in asTimer)	{
+	FadeOut(1.5f);
+	AddTimer("", 1.5f, "intermedio");
+}
+
+void intermedio(string &in asTimer)	{
+	PlaySoundAtEntity("", "crouch.snt", "Player", 0, false);
+	TeleportPlayer("PlayerStartArea_4");
+	FadePlayerRollTo(-75.0f, 1500.0f, 500.0f); 
+	MovePlayerHeadPos(0.0f, -1.3f, 0, 30.0f, 0.5f);	
+	AddTimer("", 0.5f, "escena4");
+	RemoveTimer("automove");
+}
+
+void escena4(string &in asTimer)	{
+	FadeIn(1.5f);
+	AddTimer("", 5.0f, "cambio4");
+	StartPlayerLookAt("look_5", 0.1, 0.1, "");
+}
+
+void cambio4(string &in asTimer)	{
+	FadeOut(4.0f);
+	AddTimer("", 2.0f, "titulo");
+}
+
+void titulo(string &in asTimer)	{
+	AddTimer("", 5.0f, "introSequence");
+	SetMessage ("Messages", "titulo", 3.0f);
+}
+	
+void TimerMoveForward(string &in asTimer)	{
+	MovePlayerForward(1);
+	AddTimer("automove", 0, "TimerMoveForward");
+}	
+	
+	
+	
+	
+	
+	
+	
+	 //===========================================
+		//Inicio Gameplay
+     //===========================================
+	
+
+void introSequence(string &in asTimer)
+{
+	AddLocalVarInt("iIntroPart", 1); // Increment the part so we move onto the next (first run through will make this 1, or the first part)
+	float partSpeed = 1.5f; // This denotes the DEFAULT value for how long parts last in seconds
+	switch (GetLocalVarInt("iIntroPart"))
+	{ 
+		case 1: 
+			TeleportPlayer("PlayerStartArea_5");
+			StopPlayerLookAt();
+			
+			//partSpeed = 0.0f;
+			partSpeed = 3.0f;
+			
+			PlaySoundAtEntity("thunder", "general_thunder.snt", "Player", 0, false);
+		break; 
+		
+		case 2: 
+			FadeInSound("Sound_1", 1.0f, false);
+			FadeInSound("Sound_2", 1.0f, false);
+			FadeInSound("Sound_3", 1.0f, false);
+			
+			partSpeed = 0.0f;
+		break; 
+		
+		case 3: 
+			PlayMusic("10_amb.ogg", true, 0.85f, 1.0f, 0, true);
+			PlaySoundAtEntity("sigh", "react_sigh.snt", "Player", 1.0 / 1.5f, false);
+			
+			//FadeIn(0.0f);
+			FadeIn(3.0f);
+				
+			FadeImageTrailTo(0, 1.0f);
+			FadePlayerRollTo(0.0f, 10.0f, 30.0f); 
+			MovePlayerHeadPos(0, 0, 0, 1, 0.5f);
+			SetPlayerMoveSpeedMul(1.0f);
+			SetPlayerRunSpeedMul(1.0f);
+				
+			SetInventoryDisabled(false);
+			SetPlayerActive(true);
+			SetPlayerJumpDisabled(false);
+			SetPlayerCrouchDisabled(false);
+		break; 
+	}
+	
+	if (GetLocalVarInt("iIntroPart") <=3) // If the current part is less than the total length of the sequence (in this case 2)
+	{
+		// Then we want to call the same function again to continue the sequence!
+		AddTimer("tmrIntro", partSpeed, "introSequence"); // Notice that we use "partSpeed" as the delay, which will make the current part last for how ever long we specified :)
+	}
+}
+	
+
+	 //===========================================
+		//Encuentro con Aventurera
+     //===========================================
+	 
+	 void evento_encuentro(string &in asParent, string &in asChild, int alState)
+	 {
+		PlayMusic("15_puzzle_hole.ogg", false, 0.75f, 0.5f, 5, false);
+		StartPlayerLookAt("Lulu", 2.0f, 2.0f, "");
+		FadePlayerFOVMulTo(0.6f, 2.0f);
+		SetPlayerActive(false);
+		AddTimer("stoplook", 2.0f, "miradalibre");
+
+	 }
+	 
+	 void miradalibre(string &in asTimer)
+	{
+		StopPlayerLookAt();
+		FadePlayerFOVMulTo(1.0f, 2.0f);
+		SetPlayerActive(true);
+	}
+	 
+
+
+	 //===========================================
+		//Charla
+     //===========================================
+	 void lulu_inicio_presentacion(string &in asParent, string &in asChild, int alState)
+	{
+		AddTimer("", 0.0f, "lulu_presentacion");
+		AddTimer("", 75.0f, "comienzo_puzzle2");
+	}
+	
+	
+	void lulu_presentacion(string &in asTimer){
+	AddLocalVarInt("lulucharla", 1); 
+	float partSpeed = 0.0f; 
+	
+	switch (GetLocalVarInt("lulucharla"))
+		{ 
+		case 1: 
+			AddEffectVoice("Encantada_de_conocerte.ogg", "", "Avisos", "Luluvoz_charla_1", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_1", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_1", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_1", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		case 2: 
+			AddEffectVoice("Expresivo02.ogg", "", "Avisos", "Luluvoz_charla_2", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_2", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_2", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_2", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_2", true, "area_lulu" ,4 ,12 );
+		break; 
+			
+		case 3: 
+			AddEffectVoice("Ha.ogg", "", "Avisos", "Luluvoz_charla_3", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_3", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_3", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_3", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		case 4: 
+			AddEffectVoice("Pensativa.ogg", "", "Avisos", "Luluvoz_charla_4", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_4", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_4", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_4", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_4", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		case 5: 
+			AddEffectVoice("Expresivo01.ogg", "", "Avisos", "Luluvoz_charla_5", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_5", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_5", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_5", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_5", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		case 6: 
+			AddEffectVoice("Risa.ogg", "", "Avisos", "Luluvoz_charla_6", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_6", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_6", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_6", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		case 7: 
+			AddEffectVoice("Expresivo03.ogg", "", "Avisos", "Luluvoz_charla_7", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_7", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_7", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_7", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_7", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		case 8: 
+			AddEffectVoice("Puf.ogg", "", "Avisos", "Luluvoz_charla_8", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_8", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_8", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_8", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_8", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		case 9: 
+			AddEffectVoice("Rumrum.ogg", "", "Avisos", "Luluvoz_charla_9", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_9", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_9", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_9", true, "area_lulu" ,4 ,12 );
+			AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_charla_9", true, "area_lulu" ,4 ,12 );
+		break; 
+		
+		}
+	
+	if (GetLocalVarInt("lulucharla") <=9)
+	{
+		AddTimer("", partSpeed, "lulu_presentacion"); 
+	}
+}
+
+
+	 //===========================================
+		//Puzzle ambas posiciones
+     //===========================================
+	 
+		 
+	void comienzo_puzzle2(string &in asTimer)
+	 {
+			SetEntityActive("espacio_01", true);
+			SetLightVisible("PointLight_35", true);
+			AddQuest("quest1", "sinergia");
+		 }
+	 
+	 void puzzle_espacio(string &in asParent, string &in asChild, int alState)
+	 {
+		 if(alState == 1) {
+		 PlaySoundAtEntity("", "tick_lulu.snt", "Player", 0, false);
+		 AddTimer("tiempo", 1.5f, "puertaabierta");
+		 }
+		 else{
+		 RemoveTimer("tiempo");
+		 }
+	 }
+	 
+	 
+	 void puertaabierta(string &in asTimer)
+	 {
+			PlaySoundAtEntity("", "07_pick_lock.snt ", "Player", 0, false);
+			SetEntityActive("espacio_01", false);
+			SetLightVisible ("PointLight_35", false);
+			SetLevelDoorLocked("nivel1", false);
+			AddTimer("", 1.0f, "fin_charla");
+			
+	 }
+
+	void fin_charla(string &in asTimer)
+	 {
+		 AddEffectVoice("Taptap.ogg", "", "Avisos", "Luluvoz_charla_10", true, "area_lulu" ,4 ,12 );
+		 CompleteQuest("quest1", "sinergia");
+	 }
+
+
+void OnEnter()
+{
+	SetLocalVarInt("iIntroPart", 0); // Initialize the sequence to null
+	SetLocalVarInt("lulucharla", 0); // Initialize the sequence to null
+}
+ 
+
+void OnLeave()
+{
+	SetupLoadScreen("Loading", "cargando1", 0, "01juego.jpg");
+}	 
+
+

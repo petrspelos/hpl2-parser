@@ -1,0 +1,852 @@
+////////////////////////////
+//Run when enteing map
+void OnStart()
+{ 
+AddEntityCollideCallback("Player", "AreaSewerScare", "SewerScare", true, 1);
+AddEntityCollideCallback("Player", "AreaBrigde", "BrigdeEvent", true, 1);
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaGround2", "CollideAreaGround2", false, 1);
+AddEntityCollideCallback("Player", "AreaGround3", "CollideAreaGround3", false, 1);
+AddEntityCollideCallback("Player", "AreaElDeath", "ElDeath", false, 1);
+AddEntityCollideCallback("Player", "AreaBox", "Box", true, 1);
+AddEntityCollideCallback("Player", "AreaLights", "Lights", true, 1);
+AddEntityCollideCallback("Player", "AreaScare", "PictureScare", true, 1);
+AddEntityCollideCallback("Player", "AreaRock", "RockEvent", true, 1);
+AddEntityCollideCallback("Player", "AreaScream", "LoudScream", true, 1);
+AddEntityCollideCallback("Player", "death", "death", true, 1);
+AddEntityCollideCallback("Player", "hurt", "hurt", true, 1);
+AddEntityCollideCallback("Player", "hurt2", "hurt2", true, 1);
+AddEntityCollideCallback("Player", "AreaShopTalk", "ShopTalk", false, 1);
+AddEntityCollideCallback("Player","LanternOn","LanternOn",false,1);
+AddEntityCollideCallback("Player","LanternOff","LanternOff",false,1);
+AddEntityCollideCallback("Player","LanternOff2","LanternOff",false,1);
+AddUseItemCallback("","jar","container","UseJar",false);
+AddUseItemCallback("","jar3","door","PlaceJar",false);
+AddUseItemCallback("","jar3","gate","PlaceJarFail",false);
+AddUseItemCallback("","candle","jar4","PlaceCandle",false);
+AddUseItemCallback("","keyelevator","castle_3","DoorEventKey",false);
+AddUseItemCallback("","brokenpipe","castle_3","DoorEventPipe",false);
+AddUseItemCallback("","brokenpipe","AreaDoor","DoorEventPipe2",false);
+AddUseItemCallback("","brokenpipe","AreaDoor2","DoorEventPipe3",false);
+AddUseItemCallback("","keyelevator","AreaKey","ElevatorKey",false);
+AddUseItemCallback("","bucket","AreaBucket","Bucket",false);
+AddUseItemCallback("","saw","AreaSaw","UseSaw",false);
+AddUseItemCallback("","money12","BuyArea","Buying",false);
+AddUseItemCallback("","money13","BuyArea","Buying2",false);
+AddUseItemCallback("","money15","BuyArea","Buying3",false);
+AddUseItemCallback("","money14","BuyArea","Buying4",false);
+AddUseItemCallback("","money8","BuyArea","Buying5",false);
+AddUseItemCallback("","money10","BuyArea","Buying6",false);
+AddUseItemCallback("","money11","BuyArea","Buying7",false);
+SetEntityInteractionDisabled("candle2", true);
+SetEntityInteractionDisabled("key1", true);
+SetEntityInteractionDisabled("key2", true);
+SetEntityInteractionDisabled("rose", true);
+SetEntityInteractionDisabled("rose2", true);
+SetEntityInteractionDisabled("rose3", true);
+SetEntityInteractionDisabled("rock", true);
+SetEntityInteractionDisabled("rock2", true);
+SetLanternDisabled(false);
+AddTimer("cavesounds", 50, "cavesounds");
+PlayMusic("Mines", true, 1.0f, 4.0f, 0, true);
+SetPlayerPermaDeathSound("harrykill.snt");
+SetMapDisplayNameEntry("DarkWarehouse");
+CheckPoint("Checkpoint2", "PlayerStartArea_1", "DeathSettings", "DeathHints", "Fall");
+SetLightVisible("lightel", false);
+SetPlayerRunSpeedMul(1.0f);
+AutoSave();
+}
+
+//---- Mine quests & events ----//
+
+void LoudScream(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","12_warn.snt","Player", 0, false);
+StartScreenShake(0.1, 2.0, 0.05, 0.5);
+AddTimer("loudscream2", 3, "loudscream2");	
+}
+
+void loudscream2(string &in asTimer)
+{
+SetMessage("Messages", "diarych5hurry", 10);
+AddDiary("DiaryCh5hurry", "");
+}
+
+void RockEvent(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","15_rock_break.snt", "Player", 0, false);
+StartScreenShake(0.1, 2.0, 0.05, 0.5);
+AddTimer("rockevent2", 2, "rockevent2");	
+}
+
+void rockevent2(string &in asTimer)
+{
+PlaySoundAtEntity("","04_rock.snt", "Player", 0, false);
+StartScreenShake(0.1, 2.0, 0.05, 0.5);
+SetEntityActive("rock", false);
+SetEntityActive("rock2", true);
+}
+
+void UseSaw(string &in asItem, string &in asEntity)
+{
+FadeOut(3.0f);
+SetPlayerActive(false);
+RemoveItem(asItem);
+AddTimer("usesaw2", 3, "usesaw2");
+}
+
+void usesaw2(string &in asTimer)
+{
+PlaySoundAtEntity("sawsound", "23_saw2.snt", "Player", 0, false);
+AddTimer("usesaw3", 3, "usesaw3");
+}
+
+void usesaw3(string &in asTimer)
+{
+StopSound("sawsound", 0.9f);
+RemoveTimer("cavesounds");
+TeleportPlayer("PlayerStartArea_2");
+FadeIn(3.0f);
+SetPlayerActive(true);
+}
+
+//---- Warehouse quests ----//
+
+void Func_lever(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+SetMessage("Messages", "machinefail", 4);
+SetEntityPlayerInteractCallback("door", "quest", false);
+          return;
+     }
+}
+
+void Func_door(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+SetMoveObjectState("Gate", 1.0f);
+          return;
+     }
+}
+
+void UseJar(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+CreateParticleSystemAtEntity("stream", "ps_liquid_epoxy", "AreaStream", false);
+PlaySoundAtEntity("streamsound", "12_epoxy_flow.snt", "AreaStream", 0, false);
+SetEntityActive("jar2", true);
+AddTimer("usejar2", 5, "usejar2");
+}
+
+void usejar2(string &in asTimer)
+{
+SetEntityActive("jar2", false);
+SetEntityActive("jar3", true);
+DestroyParticleSystem("stream");
+StopSound("streamsound", 0.9f);
+}
+
+void PlaceJar(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("", "puzzle_place_jar.snt", "Player", 0, false);
+SetEntityActive("jar4", true);
+SetEntityActive("puddle", true);
+SetMessage("Messages", "ch5jar", 5);
+}
+
+void PlaceCandle(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("", "puzzle_place_jar.snt", "Player", 0, false);
+SetEntityActive("candle2", true);
+SetMessage("Messages", "ch5candle", 5);
+AddTimer("explosion", 7, "explosion");
+AddTimer("fire", 4, "fire");
+CheckPoint ("Checkpoint", "PlayerStartArea_3", "DeathSettings2", "DeathHints", "Explosion");
+}
+
+void fire(string &in asTimer)
+{
+CreateParticleSystemAtEntity("fire", "ps_fire_orb_room_orange", "AreaBurn", false);
+}
+
+void explosion(string &in asTimer)
+{
+SetEntityActive("jar4", false);
+SetEntityActive("puddle", false);
+SetEntityActive("candle2", false);
+SetEntityActive("death", true);
+SetEntityActive("hurt", true);
+SetEntityActive("hurt2", true);
+PlaySoundAtEntity("","explosion_rock_large","door", 0,false);
+CreateParticleSystemAtEntity("dustps", "ps_dust_break_25", "door", false);
+CreateParticleSystemAtEntity("dustps", "ps_dust_falling_rumble", "door", false);
+DestroyParticleSystem("fire");
+AddTimer("explosion2", 1, "explosion2");
+CompleteQuest("Ch5explosion", "Ch5explosion");
+SetPropHealth("door", 0.0f);
+SetPropHealth("door", 50.0f);
+}
+
+void explosion2(string &in asTimer)
+{
+SetEntityActive("death", false);
+SetEntityActive("hurt", false);
+SetEntityActive("hurt2", false);
+CheckPoint ("Checkpoint", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+CompleteQuest("Ch5machinedoor", "Ch5machinedoor");
+}
+
+void death(string &in asParent, string &in asChild, int alState)
+{
+SetDeathHint("DeathHints", "Death5");
+GivePlayerDamage(200, "BloodSplat", false, true);	
+}
+
+void hurt(string &in asParent, string &in asChild, int alState)
+{
+SetDeathHint("DeathHints", "Death5");
+GivePlayerDamage(50, "BloodSplat", false, true);	
+}
+
+void hurt2(string &in asParent, string &in asChild, int alState)
+{
+SetDeathHint("DeathHints", "Death5");
+GivePlayerDamage(25, "BloodSplat", false, true);	
+}
+
+void Func_lever2(string &in asEntity)
+{
+AddLocalVarInt("VarIntElectro", 1);
+SetEntityActive("AreaLever", false);
+SetEntityPlayerInteractCallback("lever", "Func_lever3", false);
+	Electro();
+}
+
+void Func_lever3(string &in asEntity)
+{
+AddLocalVarInt("VarIntElectro2", 1);
+SetLeverStuckState("lever", 1, true);
+	Electro2();
+}
+
+void Electro(){
+
+	if(GetLocalVarInt("VarIntElectro") == 1){
+		SetLevelDoorLocked("entrance", false);
+                PlaySoundAtEntity("elsound","27_tunnel_elec.snt","AreaEl", 0,false);
+                PlaySoundAtEntity("elsound","27_jam.snt","AreaEl", 0,false);
+                CreateParticleSystemAtEntity("elps", "ps_orb_room_electro_bolt", "AreaEl", false);
+                SetLightVisible("lightel", true);
+                SetEntityActive("AreaElDeath", true);
+	}
+}
+
+void Electro2(){
+
+	if(GetLocalVarInt("VarIntElectro2") == 1){
+                SetEntityActive("pipe", true);
+                SetEntityActive("pipe2", true);
+                SetEntityActive("AreaElDeath", false);
+                DestroyParticleSystem("elps");
+                StopSound("elsound", 0.9f);
+                PlaySoundAtEntity("","16_ladder_imp3.snt","AreaEl", 0,false);
+                CreateParticleSystemAtEntity("elps", "ps_dust_impact", "AreaEl", false);
+                SetLightVisible("lightel", false);
+                SetEntityConnectionStateChangeCallback("lever3", "Func_door");
+                SetEntityActive("AreaLights", true);
+                PlayMusic("01_puzzle_passage.ogg", false, 1.0f, 0.5, 15, false);
+                CheckPoint ("Checkpoint", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+	}
+}
+
+void ElDeath(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+GivePlayerDamage(1, "BloodSplat", false, true);	
+PlaySoundAtEntity("","29_elec_burst.snt","Player", 0,false);
+CheckPoint ("Checkpoint3", "PlayerStartArea_3", "DeathSettings", "DeathHints", "El");
+AddTimer("eldeath2", 0.4f, "eldeath2");
+}
+
+void eldeath2(string &in asTimer)
+{
+GivePlayerDamage(1, "BloodSplat", false, true);	
+PlaySoundAtEntity("","29_elec_burst.snt","Player", 0,false);
+CreateParticleSystemAtEntity("", "blood", "Player", false);
+AddTimer("eldeath3", 0.4f, "eldeath3");
+}
+
+void eldeath3(string &in asTimer)
+{
+GivePlayerDamage(1, "BloodSplat", false, true);	
+PlaySoundAtEntity("","29_elec_burst.snt","Player", 0,false);
+AddTimer("eldeath4", 0.4f, "eldeath4");
+}
+
+void eldeath4(string &in asTimer)
+{
+GivePlayerDamage(1, "BloodSplat", false, true);	
+PlaySoundAtEntity("","29_elec_burst.snt","Player", 0,false);
+CreateParticleSystemAtEntity("", "blood", "Player", false);
+MovePlayerHeadPos(0.0f, -1.1f, 0.0f, 1.0f, 0.5f);
+AddPlayerBodyForce(3.0f, 3.0f, 3500.0f, true);
+AddTimer("eldeath5", 2, "eldeath5");
+}
+
+void eldeath5(string &in asTimer)
+{
+GivePlayerDamage(1, "BloodSplat", false, true);	
+FadeOut(2);
+AddTimer("eldeath6", 2, "eldeath6");
+}
+
+void eldeath6(string &in asTimer)
+{
+GivePlayerDamage(200, "BloodSplat", false, true);	
+}
+
+//---- Institution quests & events ----//
+
+void boards(string &in asEntity)
+{
+SetMessage("Messages", "ch5boards", 4);
+SetEntityPlayerInteractCallback("boards", "boards2", false);
+}
+
+void boards2(string &in asEntity)
+{
+PlaySoundAtEntity("","hit_wood.snt","boards", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_wood_pulley_blocker", "boards", false);
+SetEntityPlayerInteractCallback("boards", "boards3", false);
+}
+
+void boards3(string &in asEntity)
+{
+PlaySoundAtEntity("","break_wood.snt","boards", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_wood_small", "boards", false);
+SetEntityActive("boards", false);
+}
+
+void pipe(string &in asEntity)
+{
+SetMessage("Messages", "ch5pipe2", 4);
+AddTimer("harryevent", 2, "harryevent");
+}
+
+void harryevent(string &in asTimer)
+{
+SetEntityActive("castle_3", false);
+SetEntityActive("blood", true);
+SetEntityActive("blood2", true);
+SetEntityActive("blood3", true);
+SetEntityActive("blood4", true);
+PlaySoundAtEntity("","15_body_impact.snt", "AreaVoice", 0, false);
+PlayMusic("15_event_prisoner.ogg", false, 1.0f, 0.5, 15, false);
+AddTimer("harryevent2", 1, "harryevent2");
+GiveSanityDamage(5, true);
+}
+
+void harryevent2(string &in asTimer)
+{
+SetEntityActive("castle_3", false);
+AddTimer("harryevent3", 2, "harryevent3");
+}
+
+void harryevent3(string &in asTimer)
+{
+SetEntityActive("castle_3", false);
+SetMessage("Messages", "ch5hell", 4);
+}
+
+void pickkey(string &in asEntity)
+{
+SetEntityActive("castle_3", true);
+SetEntityActive("AreaVoice", false);
+SetEntityPlayerInteractCallback("castle_3", "doorevent", false);
+}
+
+void doorevent(string &in asEntity)
+{
+SetMessage("Messages", "ch5doorevent", 5);
+}
+
+void DoorEventKey(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","lock_door.snt", "Player", 0, false);
+SetMessage("Messages", "ch5dooreventkey", 5);
+}
+
+void DoorEventPipe(string &in asItem, string &in asEntity)
+{
+SetEntityActive("AreaDoor", true);
+PlaySoundAtEntity("","hit_wood.snt","castle_3", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_wood_pulley_blocker", "castle_3", false);
+}
+
+void DoorEventPipe2(string &in asItem, string &in asEntity)
+{
+SetEntityActive("AreaDoor2", true);
+SetEntityActive("AreaDoor", false);
+SetPropHealth("castle_3", 40.0f);
+PlaySoundAtEntity("","hit_wood.snt","castle_3", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_wood_pulley_blocker", "castle_3", false);
+}
+
+void DoorEventPipe3(string &in asItem, string &in asEntity)
+{
+SetEntityActive("AreaDoor2", false);
+SetEntityActive("body", true);
+SetEntityActive("head", true);
+PlaySoundAtEntity("","24_iron_maiden.snt","Player", 0,false);
+CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke", "castle_3", false);
+GiveSanityDamage(203, true);
+AddTimer("doorevent2", 3, "doorevent2");
+FadeOut(3.0f);
+SetInventoryDisabled(true);
+SetPlayerActive(false);
+}
+
+void doorevent2(string &in asTimer)
+{
+SetEntityActive("castle_3", false);
+SetEntityActive("body", false);
+SetEntityActive("head", false);
+FadeIn(5.0f);
+SetPlayerMoveSpeedMul(0.1f);
+SetPlayerLookSpeedMul(0.2f);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerActive(true);
+AddTimer("doorevent3", 6, "doorevent3");
+}
+
+void doorevent3(string &in asTimer)
+{
+SetPlayerMoveSpeedMul(1.0f);
+SetPlayerLookSpeedMul(1.0f);
+SetPlayerRunSpeedMul(1.0f);
+SetInventoryDisabled(false);
+SetMessage("Messages", "ch5please", 8);
+}
+
+void ElevatorKey(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("key1", true);
+AddTimer("elevatorkey2", 1, "elevatorkey2");
+}
+
+void elevatorkey2(string &in asTimer)
+{
+SetEntityActive("key1", false);
+SetEntityActive("key2", true);
+PlaySoundAtEntity("","unlock_door","key2", 0,false);
+AddTimer("elevatorkey3", 1, "elevatorkey3");
+}
+
+void elevatorkey3(string &in asTimer)
+{
+SetEntityActive("key2", false);
+SetMoveObjectState("Elevator", 1.0f);
+}
+
+void Bucket(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+AddTimer("bucket2", 4, "bucket2");
+SetEntityActive("bucket", true);
+SetPlayerActive(false);
+}
+
+void bucket2(string &in asTimer)
+{
+SetEntityActive("bucket2", true);
+SetEntityActive("bucket", false);
+SetEntityActive("AreaBucket", false);
+SetPlayerActive(true);
+}
+
+//---- Etc ----//
+
+void LanternOn(string &in asParent, string &in asChild, int alState)
+{
+SetLanternDisabled(false);
+}
+
+void LanternOff(string &in asParent, string &in asChild, int alState)
+{
+SetLanternDisabled(true);
+}
+
+void music(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+PlaySoundAtEntity("","Boat.snt","MusicArea", 0,false);
+          return;
+     }
+}
+
+void morality(string &in asEntity)
+{
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+void candle(string &in asEntity)
+{
+SetLightVisible("PointLight_19", false);
+}
+
+void SewerScare(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("1", true);
+SetEntityActive("2", true);
+SetEntityActive("3", true);
+SetEntityActive("4", true);
+PlaySoundAtEntity("","Hunter.snt", "Player", 0, false);
+AddTimer("sewerscare2", 1, "sewerscare2");
+}
+
+void sewerscare2(string &in asTimer)
+{
+SetEntityActive("1", false);
+SetEntityActive("2", false);
+SetEntityActive("3", false);
+SetEntityActive("4", false);
+CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke", "AreaBlood", false);
+GiveSanityDamage(10, true);
+}
+
+void BrigdeEvent(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("brigde2", true);
+SetEntityActive("brigde", false);
+SetEntityActive("box1", false);
+SetEntityActive("box2", false);
+SetEntityActive("box3", false);
+SetEntityActive("box4", false);
+SetEntityActive("box1_1", true);
+SetEntityActive("box2_1", true);
+SetEntityActive("box3_1", true);
+SetEntityActive("box4_1", true);
+SetEntityActive("money13", true);
+CreateParticleSystemAtEntity("breakps", "ps_break_wood_small", "brigde", false);
+CreateParticleSystemAtEntity("breakps", "ps_dust_impact", "brigde", false);
+PlaySoundAtEntity("","16_bridge_stuck.snt","brigde", 0,false);
+StartScreenShake(0.05f,0.45f, 0.05f,4.5f);
+}
+
+void Box(string &in asParent, string &in asChild, int alState)
+{
+AddPropForce("box", 920, 600, 600,"world");	
+}
+
+void Lights(string &in asParent, string &in asChild, int alState)
+{
+SetLightVisible("PointLight_4", false);
+SetLightVisible("PointLight_3", false);
+SetLightVisible("PointLight_2", false);
+SetLampLit("light", false, true);
+SetLampLit("light2", false, true);
+SetLampLit("light3", false, true);
+SetLampLit("light4", false, true);
+SetLampLit("light5", false, true);
+SetLampLit("light6", false, true);
+SetLampLit("light7", false, true);
+SetLampLit("light8", false, true);
+SetLampLit("light9", false, true);
+PlaySoundAtEntity("","scare_male_terrified5.snt", "Player", 0, true);
+CreateParticleSystemAtEntity("", "ps_dust_whirl", "light5", false);
+AddPropImpulse("light", 20, 5, 5, "world");
+AddPropImpulse("light2", 34, 4, 3, "world");
+AddPropImpulse("light3", 10, 3, 4, "world");
+AddPropImpulse("light4", 30, 7, 2, "world");
+AddPropImpulse("light5", 16, 8, 1, "world");
+AddPropImpulse("light6", 32, 3, 1, "world");
+AddPropImpulse("light7", 27, 1, 4, "world");
+AddPropImpulse("light8", 23, 2, 2, "world");
+AddPropImpulse("light9", 2, 8, 3, "world");
+PlaySoundAtEntity("","Scare2.snt", "Player", 0, false);
+}
+
+void PictureScare(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("p1", true);
+SetEntityActive("p2", true);
+SetEntityActive("p3", true);
+PlaySoundAtEntity("","Scare.snt", "Player", 0, false);
+StartPlayerLookAt("look", 5, 50, "");
+AddTimer("picturescare2", 1, "picturescare2");
+}
+
+void picturescare2(string &in asTimer)
+{
+SetEntityActive("p1", false);
+SetEntityActive("p2", false);
+SetEntityActive("p3", false);
+SetEntityActive("AreaScare", false);
+StopPlayerLookAt();
+GiveSanityDamage(5, true);
+AddTimer("picturescare3", 2, "picturescare3");
+}
+
+void picturescare3(string &in asTimer)
+{
+SetMessage("Messages", "diarych5dog", 10);
+AddDiary("DiaryCh5dog", "");
+}
+
+void cavesounds(string &in asTimer)
+{
+AddTimer("cavesounds", 50, "cavesounds");
+PlaySoundAtEntity("","04_rock.snt", "Player", 0, false);
+StartScreenShake(0.03f,0.35f, 0.03f,4.5f);
+}
+
+void quest(string &in asEntity)
+{
+AddQuest("Ch5machinedoor", "Ch5machinedoor");
+}
+
+void piano(string &in asEntity)
+{
+PlaySoundAtEntity("Piano", "Piano.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano2(string &in asEntity)
+{
+PlaySoundAtEntity("Piano2", "Piano2.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano3(string &in asEntity)
+{
+PlaySoundAtEntity("Piano3", "Piano3.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano4(string &in asEntity)
+{
+PlaySoundAtEntity("Piano4", "Piano4.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano5(string &in asEntity)
+{
+PlaySoundAtEntity("Piano5", "Piano5.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void pianodone(string &in asTimer)
+{
+SetEntityActive("PianoArea", true);
+SetEntityActive("PianoArea2", true);
+SetEntityActive("PianoArea3", true);
+SetEntityActive("PianoArea4", true);
+SetEntityActive("PianoArea5", true);
+}
+
+void ShopTalk(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("AreaShopTalk", false);
+PlaySoundAtEntity("","Shop.snt","Player", 0,false);
+AddTimer("shoptalk2", 9, "shoptalk2");	
+}
+
+void shoptalk2(string &in asTimer)
+{
+SetEntityActive("AreaShopTalk", true);
+}
+
+void Buying(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("beer", true);
+SetEntityActive("oil", true);
+}
+
+void Buying2(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("oil2", true);
+SetEntityActive("wine", true);
+}
+
+void Buying3(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("tinderbox", true);
+SetEntityActive("meat", true);
+}
+
+void Buying4(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("wine2", true);
+SetEntityActive("meat2", true);
+}
+
+void Buying5(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("tinderbox2", true);
+SetEntityActive("beer2", true);
+}
+
+void Buying6(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("oil3", true);
+}
+
+void Buying7(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("beer3", true);
+SetEntityActive("wine3", true);
+}
+
+void elevator(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+ChangeMap("Theward.map", "PlayerStartArea_1", "","");
+          return;
+     }
+}
+
+//---- Messages ----//
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+void container(string &in asEntity)
+{
+SetMessage("Messages", "ch5container", 5);
+}
+
+void hole(string &in asEntity)
+{
+SetMessage("Messages", "ch5hole", 5);
+}
+
+void lever2(string &in asEntity)
+{
+SetMessage("Messages", "ch5lever2", 4);
+}
+
+void PlaceJarFail(string &in asItem, string &in asEntity)
+{
+SetMessage("Messages", "ch5jarfail", 7);
+}
+
+//---- Collide ground ----//
+//If player hits the ground too hard
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+}
+
+void CollideAreaGround2(string &in asParent, string &in asChild, int alState)
+{
+        GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint2", "PlayerStartArea_1", "DeathSettings2", "DeathHints", "Fall");
+}
+
+void CollideAreaGround3(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+
+        GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint3", "PlayerStartArea_4", "DeathSettings2", "DeathHints", "Fall");
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+SetPlayerActive(true);
+MovePlayerHeadPos(0.0, 0, 0, 1.0f, 0.5f);
+PlayMusic("Mines", true, 1.0f, 4.0f, 0, true);
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+SetEntityInteractionDisabled("rose", true);
+SetEntityInteractionDisabled("rose2", true);
+SetEntityInteractionDisabled("rose3", true);  
+SetEntityInteractionDisabled("key1", true);
+SetEntityInteractionDisabled("key2", true);
+SetLanternDisabled(false);
+PlayMusic("Mines", true, 1.0f, 4.0f, 0, true);        
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{ 
+SetupLoadScreen("loadscreentext", "...", 1, "load_warehouse.png");
+}
+
+
+

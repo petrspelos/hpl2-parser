@@ -1,0 +1,281 @@
+void OnStart()
+{
+SetInsanitySetEnabled("Ch02", true);
+PlayMusic("Forest", true, 1, 5, 0, true);
+SetMapDisplayNameEntry("Kyrenia");
+GiveItem("phone", "phone", "phone", "Cellphone.tga", 0);
+AddEntityCollideCallback("Player", "LeaveVillage", "Forest", false, 1);
+AddEntityCollideCallback("Player", "NotYet", "NotYet", false, 1);
+AddEntityCollideCallback("Player", "Brute", "Brute", true, 1);
+AddEntityCollideCallback("Player", "AreaBang", "DoorBang", true, 1);
+AddEntityCollideCallback("Player", "BruteGone", "BruteGone", false, 1);
+AddEntityCollideCallback("brute", "BruteGone2", "BruteGone2", false, 1);
+AddUseItemCallback("", "keysex", "doorsex", "UsedKeyOnDoor", true);
+AddUseItemCallback("", "keystart", "doorstart", "UsedKeyOnDoor2", false);
+AutoSave();
+
+//---- BEGIN INTRO ----//
+if(!ScriptDebugOn()) Intro(); //no intro when you are testing
+else AddDebugMessage("Skipping Intro", false);
+
+
+//---- DEBUG ----//
+	if(ScriptDebugOn())
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		SetPlayerLampOil(100.0f);
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		
+	}
+
+//---- BEGIN INTRO ----//
+	if(!ScriptDebugOn()) Intro(); //no intro when you are testing
+	
+ConnectEntities("door_connection",		//Name of connection
+		"secret_lever", 	//Parent entity (Affects)
+		"secret_door",	//Child entity 	(Affected) 
+		false,		//Invert the state sent
+		1, 		//States used (0=both), checked before invertion.
+		"CreateDust");	//callback	
+		
+		ConnectEntities("shelf_connection",		//Name of connection
+		"secret_lever", 	//Parent entity (Affects)
+		"secret_shelf",	//Child entity 	(Affected) 
+		false,		//Invert the state sent
+		1, 		//States used (0=both), checked before invertion.
+		"");	//callback	
+		
+		//SetMoveObjectAngularOffsetArea("secret_shelf", "rotatearea");
+	UnBlockHint("SanityAdd"); UnBlockHint("LanternNoItem"); UnBlockHint("LanternNoOil"); UnBlockHint("LeanHint");
+	UnBlockHint("PushHint"); UnBlockHint("ThrowHint"); UnBlockHint("EntitySlide"); UnBlockHint("EntityLever"); 
+	UnBlockHint("SanityHit");
+}
+
+void Intro()
+{
+	AddDebugMessage("Begin Intro", false);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeOut(0.0f);
+	FadeImageTrailTo(1, 2);
+	StartPlayerLookAt("Look1", 10, 100, "");
+    FadeRadialBlurTo(0.10, 2);
+    FadeRadialBlurTo(0.10, 2);
+	AddTimer("1", 3, "IntroTimer");
+	AddTimer("2", 4.5f, "IntroTimer");
+	AddTimer("3", 6.5f, "IntroTimer");
+	AddTimer("4", 9, "IntroTimer");
+	AddTimer("5", 11, "IntroTimer");
+	AddTimer("6", 14, "IntroTimer");
+}
+
+void IntroTimer(string &in asTimer)
+{
+	if(asTimer == "1"){
+		StopPlayerLookAt();
+	SetMessage("Messages", "intro1", 7);
+                 }
+	else if(asTimer == "2"){
+		FadePlayerRollTo(85, 1, 1);                 // "Tilts" the players head
+		SetPlayerCrouching(true);
+	        FadeIn(3.0f);
+	}
+	else if(asTimer == "3"){
+		StartPlayerLookAt("Look2", 1, 2.0f, "");
+	}
+	else if(asTimer == "4"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("Look3", 1, 2.0f, "");
+	}
+	else if(asTimer == "5"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("Look2", 1, 2.0f, "");
+                PlaySoundAtEntity("","Button.snt","Player", 0,false);
+                SetLampLit("lamp1", true, true);
+                SetLampLit("lamp2", true, true);
+	}
+	else if(asTimer == "6"){
+		StopPlayerLookAt();
+		FadeImageTrailTo(0, 1.0f);
+		FadePlayerRollTo(0, 33, 33);        // Change all settings to defaults
+		FadeRadialBlurTo(0.0, 1);
+                PlaySoundAtEntity("","AyaSigh.snt","Player", 0,false);
+		SetPlayerActive(true);
+                SetPlayerRunSpeedMul(0.2f);
+		SetMessage("Message", "Hint0", 0);
+		AddDebugMessage("End Intro", false);
+		SetPlayerCrouching(false);
+	        SetMessage("Messages", "sleep", 7);
+                AddQuest("Cowpls", "Cowpls");
+                  }
+}
+
+//---- Changing maps ----//	
+
+void Forest(string &in asParent, string &in asChild, int alState) 
+{
+ChangeMap("DarkForestEP.map", "PlayerStartArea_1", "","");
+}
+
+void pub(string &in asEntity)
+{
+ChangeMap("TheDrunkCowEP.map", "PlayerStartArea_1", "","");
+SetEntityActive("NotYet", false);
+SetEntityActive("ScriptArea_1", false);
+SetEntityActive("LeaveVillage", true);
+SetEntityActive("Brute", true);
+CompleteQuest("Cowpls", "Cowpls");
+}
+
+//---- Etc ----//
+
+void music(string &in asEntity)
+{
+PlaySoundAtEntity("","SnakeFist.snt","Computer", 0,false);
+}
+
+void cutie(string &in asTimer)
+{
+SetMessage("Messages", "cutie", 5);
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("doorsex",false, true);
+PlaySoundAtEntity("","unlock_door","doorsex", 0,false);
+SetEntityPlayerInteractCallback("doorsex", "", false);
+RemoveItem(asItem);
+}
+
+
+void UsedKeyOnDoor2(string &in asItem, string &in asEntity)
+{
+	if (GetSwingDoorLocked("doorstart") == true)
+		{
+			SetSwingDoorLocked("doorstart", false, true);
+			PlaySoundAtEntity("", "unlock_door.snt", "doorstart", 0, false);
+                        SetPlayerRunSpeedMul(1.0f);
+		}
+	else if (GetSwingDoorLocked("doorstart") == false)
+		{
+			if (GetSwingDoorClosed("doorstart") == true)
+			{
+				SetSwingDoorLocked("doorstart", true, true);
+				PlaySoundAtEntity("", "lock_door.snt", "doorstart", 0, false);
+			}
+			else if (GetSwingDoorClosed("doorstart") == false)
+			{
+				SetMessage("Messages", "mustclose", 4);
+			}
+		}
+}
+
+void NotYet(string &in asParent, string &in asChild, int alState) 
+{
+SetMessage("Messages", "notyet", 7);
+}
+
+void Brute(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("brute", true);
+}
+
+void BruteGone(string &in asParent, string &in asChild, int alState) 
+{
+AddEnemyPatrolNode("brute","node_1",0,"");
+AddEnemyPatrolNode("brute","node_2",0,"");
+}
+
+void BruteGone2(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("brute", false);
+}
+
+void screams(string &in asTimer)
+{
+PlaySoundAtEntity("","15_man01_whimp.snt","Player", 0,false);
+AddTimer("screams2", 8, "screams2");	
+}
+
+void screams2(string &in asTimer)
+{
+PlaySoundAtEntity("","15_brute.snt","BruteSound", 0,false);
+AddTimer("screams3", 11, "screams3");
+}
+
+void screams3(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_animal_squeal.snt","Player", 0,false);
+AddTimer("screams4", 14, "screams4");	
+}
+
+void screams4(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_human_noices.snt","Player", 0,false);	
+}
+
+void DoorBang(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("","break_wood.snt","DoorArea", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DoorArea", false);
+CheckPoint("Checkpoint2", "PlayerStartArea_9", "DeathSettings2", "DeathHints", "Giveup");
+AddTimer("doorbang2", 2, "doorbang2");
+}
+
+void doorbang2(string &in asTimer)
+{
+PlaySoundAtEntity("","break_wood.snt","DoorArea", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DoorArea", false);
+PlaySoundAtEntity("","15_brute.snt","DoorArea", 0,false);
+AddTimer("doorbang3", 2, "doorbang3");
+}
+
+void doorbang3(string &in asTimer)
+{
+PlaySoundAtEntity("","break_wood.snt","DoorArea", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DoorArea", false);
+}
+
+void introtext(string &in asTimer)
+{
+SetMessage("Messages", "introtext1", 5);
+AddTimer("introtext2", 5, "introtext2");
+}
+
+void introtext2(string &in asTimer)
+{
+SetMessage("Messages", "introtext2", 5);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("Intro", true, 1, 5, 0, true);
+}
+
+void OnEnter()
+{	
+SetPlayerRunSpeedMul(0.7f);
+
+if(GetGlobalVarInt("Bar")==1)
+	{
+PlayMusic("Intro", true, 1, 5, 0, true);
+AddQuest("EscapeVillage", "EscapeVillage");
+SetEntityActive("corpse1", true);
+SetEntityActive("corpse2", true);
+SetEntityActive("Brute", true);
+SetEntityActive("AreaBang", true);
+CheckPoint ("Checkpoint", "PlayerStartArea_2", "DeathSettings", "DeathHints", "Killed");
+AddTimer("screams", 5, "screams");
+AddTimer("introtext", 5, "introtext");
+	}
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

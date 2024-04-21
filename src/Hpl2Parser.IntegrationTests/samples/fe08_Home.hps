@@ -1,0 +1,248 @@
+void OnStart()
+{
+	SetLanternDisabled(true);
+	SetPlayerHealth(70);
+	FadeOut(0);
+	SetPlayerActive(false);
+	SetPlayerMoveSpeedMul(0.5);
+	AutoSave();
+	SetEntityCallbackFunc("note_letter_2", "OnPickuplel");
+	SetEntityCallbackFunc("note_letter_2", "OnPickup");
+	AddUseItemCallback("HouseKey", "HouseKey", "mansion_2", "UsedKeyOnDoor", true);
+	SetEntityPlayerInteractCallback("Sleep", "Dream", false);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "ViimuneMorso", true, 1);
+	SetEntityCallbackFunc("HouseKey", "OnPickup2");
+	AddTimer("T1", 0, "EnteredHouse");
+	AddTimer("T2", 2, "EnteredHouse");
+}
+void EnteredHouse(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		FadeIn(2);
+	}
+	else if (x == "T2")
+	{
+		SetPlayerActive(true);
+	}
+}
+void ViimuneMorso(string &in asParent, string &in asChild, int alState)
+ {
+	SetEntityActive("enemy_suitor_malo_1", true);
+		AddEnemyPatrolNode("enemy_suitor_malo_1", "PathNodeArea_1", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_malo_1", "PathNodeArea_2", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_malo_1", "PathNodeArea_3", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_malo_1", "PathNodeArea_4", 0, "");
+		SetPlayerSanity(70);
+		AddTimer("T1", 2, "Feint");
+ }
+ void Feint(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		FadeIn(2);
+		GiveSanityDamage(5, true);
+		SetPlayerActive(true);
+		AddPlayerBodyForce(0, 0, -3000, true);
+		PlaySoundAtEntity("", "react_sigh.snt", "Player", 0, false);
+		AddTimer("T1", 3, "Roll2");
+		AddTimer("T2", 6, "Roll2");
+		AddTimer("T3", 9, "Roll2");
+		SetPlayerSanity(40);
+	}
+}
+void Roll2(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		FadeOut(1);
+		PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+		SetPlayerSanity(30);
+	}
+	else if (x == "T2")
+	{
+		SetPlayerCrouching(false);
+		FadeIn(1);
+		SetPlayerActive(true);
+		SetPlayerSanity(20);
+	}
+	else if (x == "T3")
+	{
+		FadeGlobalSoundVolume(0, 5);
+		PlaySoundAtEntity("Player", "player_bodyfall.snt", "Player", 0, false);
+		SetPlayerCrouching(false);
+		FadeOut(0.1);
+		SetPlayerActive(false);
+		SetPlayerSanity(0);
+	}
+}
+void OnPickuplel(string &in asEntity, string &in type)
+{
+	
+}
+void OnPickup(string &in asEntity, string &in type)
+{
+	SetEntityActive("Sleep", true);
+	AddTimer("T1", 1, "NeedSleep");
+}
+void NeedSleep(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetMessage("Messages", "NeedSleep", 0);
+	}
+}
+void OnPickup2(string &in asEntity, string &in type)
+{
+	AddTimer("T1", 1, "Steps");
+	AddTimer("T2", 2.5, "Steps");
+	AddTimer("T3", 4, "Steps");
+	AddTimer("T4", 7, "Steps");
+	AddTimer("T5", 9, "Steps");
+}
+void Steps(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("ScriptArea_6", 5, 5, "");
+		PlaySoundAtEntity("", "chains_monster_man_sneak_soft.snt", "ScriptArea_2", 0, false);
+	}
+	else if (x == "T2")
+	{
+		PlaySoundAtEntity("", "chains_monster_man_sneak_soft.snt", "ScriptArea_3", 0, false);
+	}
+	else if (x == "T3")
+	{
+		StopPlayerLookAt();
+		PlaySoundAtEntity("", "chains_monster_man_sneak_soft.snt", "ScriptArea_4", 0, false);
+	}
+	else if (x == "T4")
+	{
+		SetPlayerActive(true);
+		PlaySoundAtEntity("", "chains_monster_man_sneak_soft.snt", "ScriptArea_5", 0, false);
+	}
+	else if (x == "T5")
+	{
+		PlaySoundAtEntity("", "suitor/amb_idle_whimp.snt", "mansion_2", 0, false);
+	}
+}
+void Dream (string &in asEntity)
+{
+	SetPlayerMoveSpeedMul(0.5);
+	FadeOut(3);
+	SetPlayerActive(false);
+	AddTimer("T1", 4, "Fade");
+	AddTimer("T2", 5, "Fade");
+	RemoveTimer("Lightning");
+	StopSound("Sound_1", 3);
+	StopSound("general_thunder.snt", 3);
+}
+void Fade(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		TeleportPlayer("PlayerStartArea_3");
+		SetPlayerActive(false);
+		SetPlayerHealth(100);
+	}
+	else if (x == "T2")
+	{
+		PlayMusic("10_amb.ogg", true, 0.4, 2.5f, 0, true);
+		FadeIn(2);
+		AddPlayerBodyForce(0, 0, -3000, true);
+		PlaySoundAtEntity("", "react_sigh.snt", "Player", 0, false);
+		AddTimer("T1", 3, "Roll");
+		AddTimer("T2", 6, "Roll");
+	}
+}
+void Roll(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		FadeOut(1);
+		PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+	}
+	else if (x == "T2")
+	{
+		SetPlayerCrouching(false);
+		FadeIn(1);
+		SetPlayerActive(true);
+	}
+}
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("mansion_2", true, false);
+	SetEntityActive("mansion_2", false);
+	SetEntityActive("mansion_3", true);
+	RemoveItem("HouseKey");
+	AddTimer("T1", 1, "End");
+	AddTimer("T2", 2.9, "End");
+	AddTimer("T3", 3.2, "End");
+	AddTimer("T4", 3.5, "End");
+	AddTimer("T5", 4.5, "End");
+}
+void End(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{	
+		SetPlayerSanity(40);
+		SetEntityActive("enemy_suitor_1", true);
+		PlaySoundAtEntity("", "lurker_hit_wood.snt", "mansion_2", 0, false);
+		CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "ScriptArea_6", false);
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_5", 0, "");
+	}
+	else if (x == "T2")
+	{
+		
+	}
+	else if (x == "T3")
+	{
+		SetPlayerSanity(20);
+		SetPropHealth("mansion_2", 0);
+		SetPropHealth("mansion_3", 0);
+		CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "ScriptArea_6", false);
+		PlaySoundAtEntity("", "break_wood_metal.snt", "mansion_2", 0, false);
+	}
+	else if (x == "T4")
+	{
+		SetPlayerActive(false);
+		FadeOut(0.1);
+		StopMusic(1,0);
+		FadeGlobalSoundVolume(0, 5);
+		PlaySoundAtEntity("Player", "player_bodyfall.snt", "Player", 0, false);
+	}
+	else if (x == "T5")
+	{
+		StartCredits("18_paper_daniel03.ogg", true, "Ending", "MainCredits", 1337);
+	}
+}
+void HouseKeyNeeded(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("mansion_2") == true)
+    {
+ 
+        SetMessage("Messages", "HouseKeyNeeded", 0);
+ 
+    }
+}
+
+void DoorIsLocked(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("mansion_1") == true)
+    {
+ 
+        SetMessage("Messages", "DoorIsLocked", 0);
+ 
+    }
+}

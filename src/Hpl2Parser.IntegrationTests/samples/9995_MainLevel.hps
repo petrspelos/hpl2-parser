@@ -1,0 +1,439 @@
+void OnStart()
+{
+	// Pesky hints
+	BlockHint("EntityLever");
+	BlockHint("EnemySeen");
+	
+	//Set checkpoint
+	CheckPoint ("MasterCheckpoint", "PlayerStartArea_1", "", "DeathHint", "MoreMeat");
+
+	//set screen effects
+	FadePlayerRollTo(-0.7f, 10.0f, 10.0f);
+	FadeImageTrailTo(0.35f, 1.0f);
+
+	
+	//Entity CollideCallbacks
+	AddEntityCollideCallback("Player", "Pit_Intro", "PlayerPitIntro", true, 1);
+	AddEntityCollideCallback("Player", "SecretQuest", "FinalQuest", true, 1);
+
+	//Entity CollideCallbacks Music
+	AddEntityCollideCallback("Player", "PitFall", "Fall_Pit", false, 1);
+	AddEntityCollideCallback("Player", "SafeMusic", "SafeRoomSound", false, 1);
+	AddEntityCollideCallback("Player", "StopSafeMusic", "StopMusicGeneric", false, 1);
+	AddEntityCollideCallback("Player", "MainPit", "MusicMainPit", false, 1);
+	AddEntityCollideCallback("Player", "SecretMusic", "SecretAmbMusic", false, 1);
+	AddEntityCollideCallback("Player", "SecretHallwayMusic", "StopMusicGeneric", false, 1);
+	AddEntityCollideCallback("Player", "HallwayNoMusic", "StopMusicGeneric", false, 1);	
+	AddEntityCollideCallback("Player", "LibMusic", "StopMusicGeneric", false, 1);		
+	AddEntityCollideCallback("Player", "LabMusic", "StopMusicGeneric", false, 1);		
+	AddEntityCollideCallback("Player", "A3Stop", "StopMusicGeneric", false, 1);
+	
+	
+	// Entity Item Callbacks
+	//Pit feeding
+	AddUseItemCallback("Pit_GiveItem", "PitFood_1", "Pit_GiveItem", "Pit_Food1", true);
+	AddUseItemCallback("Pit_GiveItem", "PitFood_2", "Pit_GiveItem", "Pit_Food1", true);
+	AddUseItemCallback("Pit_GiveItem", "PitFood_3", "Pit_GiveItem", "Pit_Food1", true);
+	AddUseItemCallback("Pit_GiveItem", "PitFood_4", "Pit_GiveItem", "Pit_Food1", true);
+	AddUseItemCallback("Pit_GiveItem", "knife_let_go", "Pit_GiveItem", "Pit_Final", true);
+	
+	// Player settings
+	SetPlayerLampOil(10);
+	SetInDarknessEffectsActive(false);
+
+	//Meat Tracker
+	SetLocalVarInt("MeatCollected", 0);
+	
+	// keys
+	SetLightVisible("pl_key", false);
+	SetEntityActive("brokenbottle", false);
+	
+	// misc
+	SetEntityActive("note_letter_1", false);
+	
+	//Preloading
+	PreloadParticleSystem("ps_area_fog_large.ps");
+	PreloadParticleSystem("ps_dust_falling_small_thin.ps");
+	PreloadParticleSystem("ps_dust_whirl_large.ps");
+	PreloadParticleSystem("ps_light_dust_large.ps");
+	
+	PreloadSound("18_prisoner1.snt");
+	PreloadSound("18_prisoner2.snt");
+	PreloadSound("guardian_distant.snt");
+	PreloadSound("00_faint.snt");
+	PreloadSound("00_cuts_3d.snt");
+	PreloadSound("01_door.snt");
+	PreloadSound("general_fire_burning_low.snt");
+	
+	
+	// Opening stuff
+	PlayMusic("obsolete34Amb.ogg", true, 1, 1, 1, false);
+	TeleportPlayer("GameStartArea"); // Scuffed AF but it works and I don't want to break it
+	SetMessage("DisplayText", "PitIntro", 12);
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	AddTimer("Beggining", 12, "introcut");
+	FadeOut(0);
+}
+void introcut(string &in asTimer)
+{
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+	AddTimer("Beggining", 1, "introcut2");
+}
+
+void introcut2(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_1");
+	FadeIn(3);
+}
+
+
+
+// Pit Feed Functions
+void Pit_Food1(string &in asItem, string &in asEntity)
+{	
+	CreateParticleSystemAtEntity("bigpit", "ps_dust_whirl_large.ps", "Pit_Sounds", false);
+	
+	CreateEntityAtArea("Meat", "fresh_meat.ent", "PitFeed_SpawnPoint", false);
+	
+	AddLocalVarInt("MeatCollected", 1);
+	
+	RemoveItem(asItem);
+	
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	
+	StartPlayerLookAt("Pit_Sounds", 1, 3, "");
+	
+	AddTimer("stop moving", 7, "stop_playerpt");
+	
+	StopMusic(1, 1);
+	
+	if(GetLocalVarInt("MeatCollected") < 4)
+		{
+			StartScreenShake(0.2, 5, 1, 1);
+			PlaySoundAtEntity("Pit is Noisy", "guardian_distant.snt", "Pit_Sounds", 0.1, false);
+		}
+		else
+		{
+			StartScreenShake(0.2, 5, 1, 1);
+			
+			PlaySoundAtEntity("Pit is NoisyEnd", "00_faint.snt", "Pit_Sounds", 0.1, false);
+
+			CompleteQuest("FeedPit1", "FeedThePit");
+			
+			AddQuest("FeedPitPart2", "FeedThePitMore");
+			
+			SetLightVisible("pl_key", true);
+			
+			SetEntityActive("key_secret", true);
+			
+			CheckPoint ("MasterCheckpoint", "PlayerStartArea_1", "", "DeathHint", "MastDeathHint");
+			
+			// Lock all doors
+			SetLevelDoorLocked("AreaMainHallEnter", true);
+			SetLevelDoorLocked("Door_Area1", true);
+			SetLevelDoorLocked("Door_Area2", true);
+		}
+}
+void stop_playerpt(string &in asTimer)
+{
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+	StopPlayerLookAt();
+	
+	DestroyParticleSystem("bigpit");
+	
+	if(GetLocalVarInt("MeatCollected") > 3)
+		{
+			PlayMusic("HideWarning.ogg", true, 0.5, 1, 1, false);
+		}
+		else
+		PlayMusic("PitAmb.ogg", true, 1, 1, 1, false);
+}
+
+// End Pit Feed Functions
+
+// Food Pick Up Functions
+
+void FoodCollected(string &in asEntity)
+{
+}
+
+void FoodCollected2(string &in asEntity)
+{
+
+	CheckPoint ("deathCheckpoint", "PlayerStartArea_1", "", "DeathHint", "enemyDeath");
+	SetEntityActive("Kristophe_3", true);
+	
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_1", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_2", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_3", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_4", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_5", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_6", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_7", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_8", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_9", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_10", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_11", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_12", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_13", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_14", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_15", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_16", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_17", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_18", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_19", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_20", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_21", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_22", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_23", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_24", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_25", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_26", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_27", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_28", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_29", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_30", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_31", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_32", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_33", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_34", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_35", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_36", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_37", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_38", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_39", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_40", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_41", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_42", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_43", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_44", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_45", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_46", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_47", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_48", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_49", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_3", "LibraryPath_50", 0.001, "");
+	
+	AddEntityCollideCallback("Player", "EnemyKill_2", "KillEnemy_2", true, 1);
+}
+void FoodCollected3(string &in asEntity)
+{
+	SetLevelDoorLocked("Door_Area3", true);
+	SetEntityActive("note_letter_1", true);
+}
+void FoodCollected4(string &in asEntity)
+{	
+	CheckPoint ("deathCheckpoint", "PlayerStartArea_1", "", "DeathHint", "enemyDeath");
+	
+	//Eneable Enemy for Area1
+	SetEntityActive("Kristophe_1", true);
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_3", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_5", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_7", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_8", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_9", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_10", 5, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_11", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_12", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_13", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_14", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_15", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_16", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_17", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_18", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_19", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_20", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_21", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_22", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_23", 0.001, "");
+	AddEnemyPatrolNode("Kristophe_1", "PathNodeArea_24", 0.001, "");
+	
+	AddEntityCollideCallback("Player", "EnemyKill_1", "KillEnemy_1", true, 1);
+	
+	//End Area1 enemy
+}
+
+// end Food Pick Up Functions
+
+// Pit Kill ending functions
+void Pit_Final(string &in asItem, string &in asEntity)
+{
+	CreateEntityAtArea("Knife", "ceremony_knife.ent", "PitFeed_SpawnPoint", true);
+	RemoveItem(asItem);
+	
+	CompleteQuest("KillPitQuest", "ThePitMustDie");
+	StopMusic(1, 1);
+	
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	
+	StartScreenShake(0.3, 6, 1, 1);
+	
+	StartPlayerLookAt("Pit_Sounds", 1, 3, "");
+	
+	SetLanternDisabled(true);
+	
+	PlaySoundAtEntity("Pit is Kill", "00_cuts_3d.snt", "Pit_Sounds", 0.1, false);
+
+	AddTimer("Pit is Kill", 3, "PitKill_Cutscene");
+	AddTimer("before credits load", 26, "Play_Credits");
+	
+	StartEffectFlash(2, 1, 7);
+
+}
+void PitKill_Cutscene(string &in asTimer)
+{	
+	AddTimer("Pit is Kill part 2", 5, "PitKill_CutscenePt2");
+}
+void PitKill_CutscenePt2(string &in asTimer)
+{
+
+	StopPlayerLookAt();
+	TeleportPlayer("FinalArea");
+	
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	
+	PlayMusic("obsolete34Amb.ogg", true, 1, 1, 1, false);
+
+	FadeOut(12);
+}
+
+void Play_Credits(string &in asTimer)
+{
+	PlayMusic("CreditsPit.ogg", true, 1, 10, 1, false);
+	SetPlayerActive(false);
+	StartCredits("", false, "TheCredits", "CreditsPit", 4);
+}
+
+// end pit kill functions
+
+// CollideCallbacks
+void PlayerPitIntro(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("message_1_Delay", 2, "IntroPitMessage");
+}
+void IntroPitMessage(string &in asTimer)
+{
+	AddQuest("FeedPit1", "FeedThePit");
+}
+
+// Kill Enemy functions
+void KillEnemy_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEnemyDisabled("Kristophe_1", true);
+	SetEntityActive("Kristophe_1", false);
+
+	AddPlayerHealth(200);
+	CheckPoint ("MasterCheckpoint", "PlayerStartArea_1", "", "DeathHint", "MoreMeat");
+}
+void KillEnemy_2(string &in asParent, string &in asChild, int alState)
+{
+	SetEnemyDisabled("Kristophe_3", true);
+	SetEntityActive("Kristophe_3", false);
+
+	AddPlayerHealth(200);
+	CheckPoint ("MasterCheckpoint", "PlayerStartArea_1", "", "DeathHint", "MoreMeat");
+}
+
+void FinalQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("Delay for Effect", 3, "TheRealFinalQuest");
+	
+}
+void TheRealFinalQuest(string &in asTimer)
+{
+	SetEntityActive("note_generic_1", false);
+	CompleteQuest("FeedPitPart2", "FeedThePitMore");
+	AddQuest("KillPitQuest", "ThePitMustDie");
+	SetEnemyDisabled("Kristophe_2", true);
+	SetEntityActive("Kristophe_2", false);
+	AddPlayerHealth(200);
+	CheckPoint ("MasterCheckpoint", "PlayerStartArea_1", "", "DeathHint", "MastDeathHint");
+}
+
+
+void ChaseFinal(string &in asEntity)
+{
+	AddEntityCollideCallback("Player", "TheChase", "MonsterChaseFinal", true, 1);
+	PlaySoundAtEntity("Spooky door sound", "01_door.snt", "SpookySound", 0.1, false);
+}
+void MonsterChaseFinal(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint ("deathCheckpoint", "PlayerStartArea_1", "", "DeathHint", "enemyDeath");
+	SetEntityActive("Kristophe_2", true);
+	AddEnemyPatrolNode("Kristophe_2", "KstartDirection", 0.001, "");
+}
+
+
+// Pit Fall
+void Fall_Pit(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("565491__jakegwizdak__wind-loop", true, 1, 10, 1, false);
+	
+	
+	if(GetLocalVarInt("MeatCollected") < 4)
+		{
+			//Do nothing
+		}
+		else
+		{
+			CheckPoint ("deathCheckpoint", "PlayerStartArea_1", "", "DeathHint", "MastDeathHint");
+			
+			SetLightVisible("pl_key", true);
+			
+			SetEntityActive("key_secret", true);
+			
+			SetLevelDoorLocked("AreaMainHallEnter", false);
+		}
+}
+
+//Music CollideCallback Functions
+void MusicMainPit(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("MeatCollected") > 3)
+		{
+			PlayMusic("HideWarning.ogg", true, 0.5, 1, 1, false);
+		}
+		else
+		PlayMusic("PitAmb.ogg", true, 1, 1, 1, false);
+}
+void SafeRoomSound(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("01_paper_self", true, 1, 1, 1, false);
+}
+
+void SecretAmbMusic(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("21_paper_daniel01", true, 1, 1, 1, false);
+}
+void StopMusicGeneric(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(1, 1);
+}
+
+
+// Door interactions
+
+void NoMusic(string &in asEntity)
+{
+	StopMusic(1, 1);
+}
+
+// key for secret door
+void KeyCheck(string &in asEntity)
+{
+	SetLevelDoorLocked("SecretHallwayEnter", false);
+	RemoveItem("key_secret");
+}

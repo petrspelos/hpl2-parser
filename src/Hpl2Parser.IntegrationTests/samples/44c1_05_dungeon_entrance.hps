@@ -1,0 +1,408 @@
+void OnStart()
+{  
+	AddEntityCollideCallback("electric_fuse_1", "AreaFuse", "EvenAttachFuse", true, 1);
+	AddEntityCollideCallback("Player", "AreaDamage_1", "CollideDamage_1", false, 1);
+	AddEntityCollideCallback("Player", "AreaDamageStop", "CollideDamageStop", false, 1);
+	AddEntityCollideCallback("Player", "AreaCollaps", "CaveIn", true, 1);
+	AddEntityCollideCallback("Player", "AreaShadowAppear_1", "Shadowappear_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaShadowAppear_2", "Shadowappear_2", true, 1);
+	AddEntityCollideCallback("Player", "AreaShadowAppear_3", "Shadowappear_3", true, 1);
+	AddUseItemCallback("", "Key_Portal", "Portal_Door_1", "UnlockPortalDoor", true);
+	PlaySoundAtEntity("", "player_falldamage_max.snt", "Player", 1.0 / 2, false);
+	PlaySoundAtEntity("", "fp_creepy_ambience.snt", "Player", 1.0 / 2, false);
+	SetInventoryDisabled(true);
+	FadeOut(0.0f);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	AddTimer("TimerEIntro", 5.0f, "TimerEIntro");
+	RotatePropToSpeed("barrier_ring01_1", 1, 1, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_2", 1, 1, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_3", 1, 1, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_4", 1, 1, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_5", 1, 1, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_6", 1, 1, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_7", 1, 1, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_8", 1, 1, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_9", 1, 1, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_10", 1, 1, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_11", 1, 1, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_12", 1, 1, 0, 0, -1, false, "");
+	CheckPoint("Checkpoint", "PlayerStartArea_3", "ShadowCheckpoint", "", "");
+	SetLanternDisabled(false);
+	AddEntityCollideCallback("Player", "AreaMomento", "EvenMemento_1", true, 1);
+	SetupLoadScreen("LoadingText", "Load8", 1, "");
+}
+
+void OnEnter()
+{ 
+	PlaySoundAtEntity("", "amb_asylumn.snt", "Player", 1.0, false);
+}
+
+void OnLeave()
+{ 
+	RemoveEntityCollideCallback("Player", "AreaDamage_1");
+	RemoveEntityCollideCallback("Player", "AreaDamageStop");
+	AddEntityCollideCallback("Player", "AreaShadow_2", "EvenShadow", true, 1);
+	StopMusic(2.0, 5);
+}
+
+///////////////////////////////////////////
+//Mines intro.
+
+void TimerEIntro(string &in asTimer)
+{
+	StartPlayerLookAt("Intro_1", 2, 0.2, "");
+	FadeIn(4.0f);
+	PlaySoundAtEntity("", "afx_gameplay_hightone_10sec.snt", "Player", 1.0 / 2, false);
+	FadePlayerRollTo(75, 1, 1); 
+	AddTimer("TimerEIntro1", 3.0f, "TimerEIntro1");
+}
+
+void TimerEIntro1(string &in asTimer)
+{
+	StartPlayerLookAt("Intro_2", 2, 0.2, "");
+	AddTimer("TimerEIntro2", 3.0f, "TimerEIntro2");
+}
+
+void TimerEIntro2(string &in asTimer)
+{
+	StartPlayerLookAt("Intro_4", 2, 0.5, "");
+	AddTimer("TimerEIntro3", 3.0f, "TimerEIntro3");
+}
+
+void TimerEIntro3(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "Intro_3", false);
+	PlaySoundAtEntity("", "guardian_activated.snt", "Player", 1.0 / 2, false);
+	AddTimer("TimerEIntro4", 0.7f, "TimerEIntro4");
+	StartScreenShake(0.03f, 1.5, 1.0, 2.0);
+}
+
+void TimerEIntro4(string &in asTimer)
+{
+	StartPlayerLookAt("Intro_3", 5, 6, "");
+	GiveSanityDamage(5, true);
+	AddTimer("TimerEIntro4B", 3.0, "TimerEIntro4B");
+	AddTimer("TimerEIntro4C", 1.0, "TimerEIntro4C");
+}
+
+void TimerEIntro4B(string &in asTimer)
+{
+	SetPlayerCrouching(false);
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	FadeImageTrailTo(0,1);
+	SetPlayerMoveSpeedMul(1.0f);
+	FadePlayerRollTo(0, 10, 60);
+	SetInventoryDisabled(false);	
+	SetPlayerJumpDisabled(false);
+}
+
+void TimerEIntro4C(string &in asTimer)
+{
+	SetPropActiveAndFade("slime_pile_8", true, 1.0);
+	SetPropActiveAndFade("slime_pile_large_2", true, 1.0);
+	SetPropActiveAndFade("slime_anim_wall_2", true, 1.0);
+	PlaySoundAtEntity("", "25_guardian_slime_appear.snt", "Player", 1.0 / 2, false);
+	PlayMusic("Shadow_Reveal.ogg", false, 1, 0, 0, false);
+	SetEntityActive("SlimeDamageArea_1", true);
+}
+
+void Shadowappear_1(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("slime_pile_15", true, 1.0);
+	SetPropActiveAndFade("slime_pile_large_10", true, 1.0);
+	SetPropActiveAndFade("slime_6way_13", true, 1.0);
+	SetPropActiveAndFade("slime_3way_5", true, 1.0);
+	PlaySoundAtEntity("", "25_guardian_slime_appear.snt", "Player", 1.0 / 2, false);
+	CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "AreaShadow_8", false);
+	SetEntityActive("SlimeDamageArea_12", true);
+	StartScreenShake(0.03f, 1.5, 1.0, 2.0);
+}
+
+void Shadowappear_2(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("slime_pile_17", true, 1.0);
+	SetPropActiveAndFade("slime_pile_large_11", true, 1.0);
+	SetPropActiveAndFade("slime_6way_14", true, 1.0);
+	SetPropActiveAndFade("slime_egg_3", true, 1.0);
+	PlaySoundAtEntity("", "25_guardian_slime_appear.snt", "Player", 1.0 / 2, false);
+	CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "AreaShadow_9", false);
+	SetEntityActive("SlimeDamageArea_7", true);
+	StartScreenShake(0.03f, 1.5, 1.0, 2.0);
+}
+
+void Shadowappear_3(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("slime_pile_20", true, 1.0);
+	SetPropActiveAndFade("slime_pile_large_13", true, 1.0);
+	SetPropActiveAndFade("slime_6way_15", true, 1.0);
+	SetPropActiveAndFade("slime_pile_large_14", true, 1.0);
+	PlaySoundAtEntity("", "25_guardian_slime_appear.snt", "Player", 1.0 / 2, false);
+	CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "AreaShadow_11", false);
+	SetEntityActive("SlimeDamageArea_11", true);
+	StartScreenShake(0.03f, 1.5, 1.0, 2.0);
+}
+
+///////////////////////////////////////////
+//Player opens door.
+
+void OpenDoor_1(string &in asEntity, int alState)
+{
+	if(alState == 1) {
+		SetMoveObjectState("wooden_slide_door_1", 1);
+		SetLeverStuckState("lever_simple01_1", 1, false);
+	}
+}
+
+void CaveIn(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("wooden_slide_door_1", 0);
+	PlayMusic("A2_2_3_Arsenal_Ambience.ogg", true, 1.0, 0, 5, false);
+}
+
+///////////////////////////////////////////
+//Player pulls lever that opens barrier door.
+
+void BarrierLever(string &in asEntity, int alState)
+{
+	if(alState == 1) {
+	SetMoveObjectState("safety_normal_vert_1", 1);
+	SetLeverStuckState("lever_simple01_3", 1, false);
+	SetLampLit("red_light_fusebox_1", false, false);
+	SetLampLit("green_light_fusebox_1", true, false);
+	}
+}
+
+///////////////////////////////////////////
+//Player attaches fuse to barrier machine.
+
+void EvenAttachFuse(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("electric_fuse_1", false);
+	SetEntityActive("electric_fuse_2", true);
+	
+	AddTimer("TimerEBarrierExplode", 1.0f, "TimerEBarrierExplode");
+	
+	PlaySoundAtEntity("", "afx_events_mansion_tremor_01.snt", "Player", 1.0, false);
+	
+	RotatePropToSpeed("barrier_ring01_1", 1, 2, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_2", 1, 2, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_3", 1, 2, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_4", 1, 2, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_5", 1, 2, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_6", 1, 2, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_7", 1, 2, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_8", 1, 2, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_9", 1, 2, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_10", 1, 2, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_11", 1, 2, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_12", 1, 2, 0, 0, -1, false, "");
+	
+	StartScreenShake(0.01f, 6.5f, 1.0f, 4.0f);
+}
+
+void TimerEBarrierExplode(string &in asTimer)
+{
+	AddTimer("TimerEBarrierExplode_1", 3.0f, "TimerEBarrierExplode_1");
+
+	RotatePropToSpeed("barrier_ring01_1", 1, 4, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_2", 1, 4, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_3", 1, 4, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_4", 1, 4, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_5", 1, 4, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_6", 1, 4, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_7", 1, 4, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_8", 1, 4, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_9", 1, 4, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_10", 1, 4, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_11", 1, 4, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_12", 1, 4, 0, 0, -1, false, "");
+	
+	StartScreenShake(0.03f, 6.5f, 1.0f, 4.0f);
+}
+
+void TimerEBarrierExplode_1(string &in asTimer)
+{
+	AddTimer("TimerEBarrierExplode_2", 5.0f, "TimerEBarrierExplode_2");
+
+	RotatePropToSpeed("barrier_ring01_1", 1, 6, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_2", 1, 6, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_3", 1, 6, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_4", 1, 6, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_5", 1, 6, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_6", 1, 6, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_7", 1, 6, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_8", 1, 6, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_9", 1, 6, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_10", 1, 6, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_11", 1, 6, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_12", 1, 6, 0, 0, -1, false, "");
+	
+	StartScreenShake(0.04f, 6.5f, 1.0f, 4.0f);
+}
+
+void TimerEBarrierExplode_2(string &in asTimer)
+{
+	AddTimer("TimerEBarrierExplode_3", 3.0f, "TimerEBarrierExplode_3");
+	
+	CreateParticleSystemAtEntity("", "ps_spark.ps", "AreaExplode", false);
+	CreateParticleSystemAtEntity("", "ps_spark.ps", "AreaExplode_1", false);
+	CreateParticleSystemAtEntity("", "ps_spark.ps", "AreaExplode_2", false);
+	CreateParticleSystemAtEntity("", "ps_spark.ps", "AreaExplode_3", false);
+	CreateParticleSystemAtEntity("", "ps_spark.ps", "AreaExplode_4", false);
+	StartScreenShake(0.05f, 3.5f, 0.0f, 4.0f);
+	FadeImageTrailTo(2,1);
+	PlaySoundAtEntity("", "27_break.snt", "Player", 1.0 / 2, false);
+	PlaySoundAtEntity("", "explosion_rock_large.snt", "Player", 1.0 / 2, false);
+	FadeOut(0.5f);
+	SetPlayerActive(false);
+	GiveSanityDamage(10, true);
+	SetPlayerCrouching(true);
+}
+
+void TimerEBarrierExplode_3(string &in asTimer)
+{
+	AddTimer("TimerEBarrierExplode_4", 3.0f, "TimerEBarrierExplode_4");
+	
+	RotatePropToSpeed("barrier_ring01_1", 10, 0, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_2", 10, 0, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_3", 10, 0, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_4", 10, 0, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_5", 10, 0, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_6", 10, 0, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_7", 10, 0, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_8", 10, 0, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_9", 10, 0, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_10", 10, 0, 0, 0, -1, false, "");
+	RotatePropToSpeed("barrier_ring01_11", 10, 0, 0, 0, 1, false, "");
+	RotatePropToSpeed("barrier_ring01_12", 10, 0, 0, 0, -1, false, "");
+	
+	SetEntityActive("barrier_ring01_13", true);
+	SetEntityActive("barrier_ring01_14", true);
+	SetEntityActive("barrier_ring01_15", true);
+	SetEntityActive("barrier_ring01_3", false);
+	SetEntityActive("barrier_ring01_6", false);
+	SetEntityActive("barrier_ring01_9", false);
+	SetEntityActive("block_box_1", false);
+	
+	StopSound("Sound_69", 1);
+	StopSound("Sound_43", 1);
+	StopSound("Sound_56", 1);
+	StopSound("Sound_57", 1);
+	StopSound("Sound_46", 1);
+	StopSound("Sound_68", 1);
+	StopSound("Sound_58", 1);
+	StopSound("Sound_45", 1);
+	StopSound("Sound_71", 1);
+	StopSound("Sound_70", 1);
+	StopSound("Sound_44", 1);
+	StopSound("Sound_59", 1);
+}
+
+void TimerEBarrierExplode_4(string &in asTimer)
+{
+	FadeImageTrailTo(0,1);
+	SetPlayerCrouching(false);
+	SetPlayerActive(true);
+	GiveSanityBoostSmall();
+	FadeIn(4.0f);
+}
+
+void UnlockPortalDoor(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("Portal_Door_1", false);
+	PlaySoundAtEntity("", "unlock_door.snt", "level_dungeon_2", 0.0f, false);
+	RemoveItem(asItem);
+	SetupLoadScreen("LoadingText", "Load11", 1, "");
+}
+
+void CollideDamage_1(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("InPosion")==1) return;
+	SetLocalVarInt("InPosion", 1);
+	
+	FadeImageTrailTo(0.7, 1);
+	AddTimer("PoisonCough",0.5, "TimerPoisonCough");
+}
+
+void CollideDamageStop(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("InPosion")==0) return;
+	SetLocalVarInt("InPosion", 0);
+	
+	StopPoisonEffects();
+}
+
+void StopPoisonEffects()
+{
+	FadePlayerFOVMulTo( 	1, 1);
+	FadePlayerAspectMulTo(	1, 1);
+	FadeImageTrailTo(0, 1);
+	FadeRadialBlurTo(0.0f, 0.5f);
+	
+	SetPlayerActive(true);
+	
+	RemoveTimer("PoisonCough");
+}
+
+void TimerPoisonCough(string &asTimer)
+{
+	GivePlayerDamage(60, "BloodSplash", false, true);
+	
+	if(GetLocalVarInt("PosionOn") == 0){
+		FadeRadialBlurTo(0.3f, 2.0f);
+		SetRadialBlurStartDist(0.6f);
+		SetLocalVarInt("PosionOn", 1);
+	}else{
+		FadeRadialBlurTo(0.2f, 2.0f);
+		SetRadialBlurStartDist(0.8f);
+		SetLocalVarInt("PosionOn", 0);
+	}
+	
+	AddTimer("PoisonCough",RandFloat(0.5, 0.3), "TimerPoisonCough");
+	
+	CheckPoint("Checkpoint_2", "PlayerStartArea_2", "PoisonCheckpoint", "", "");
+}
+
+void EvenShadow(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("slime_pile_large_1", true, 1.0);
+	SetPropActiveAndFade("slime_pile_1", true, 1.0);
+	SetPropActiveAndFade("slime_pile_2", true, 1.0);
+	SetPropActiveAndFade("slime_pile_3", true, 1.0);
+	SetPropActiveAndFade("slime_pile_4", true, 1.0);
+	SetPropActiveAndFade("slime_pile_5", true, 1.0);
+	SetPropActiveAndFade("slime_pile_6", true, 1.0);
+	SetPropActiveAndFade("slime_pile_7", true, 1.0);
+	SetPropActiveAndFade("slime_6way_3", true, 1.0);
+	SetPropActiveAndFade("slime_6way_4", true, 1.0);
+	SetPropActiveAndFade("slime_6way_2", true, 1.0);
+	SetPropActiveAndFade("slime_6way_1", true, 1.0);
+	SetPropActiveAndFade("slime_6way_5", true, 1.0);
+	GiveSanityDamage(5, true);
+	SetEntityActive("SlimeDamageArea_1", true);
+	SetEntityActive("SlimeDamageArea_2", true);
+	SetEntityActive("SlimeDamageArea_3", true);
+	PlaySoundAtEntity("", "guardian_activated.snt", "Player", 1.0 / 2, false);
+	StartScreenShake(0.03f, 1.5, 1.0, 1.0);
+}
+
+void ShadowCheckpoint(string &in asName, int alCount)
+{
+	RemoveEntityCollideCallback("CaveIn", "AreaCollaps");
+	FadeIn(4.0f);
+	SetPlayerActive(true);
+	GiveSanityBoostSmall();
+	SetEntityActive("cave_in_1", true);
+}
+
+void EvenDeath(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(50, "BloodSplat", true, true);
+}
+
+void EvenMemento_1(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("gate", "gate");
+}

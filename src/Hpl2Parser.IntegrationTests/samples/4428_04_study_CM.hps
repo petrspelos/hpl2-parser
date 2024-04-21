@@ -1,0 +1,152 @@
+void OnStart()
+{
+	AutoSave();
+	SetEntityPlayerInteractCallback("touchatticdoormem", "touchatticdoormem", false);
+	SetEntityPlayerInteractCallback("gotoattic", "gotoattic", false);
+	AddUseItemCallback("", "ladder_item_1", "touchatticdoormem", "youcangotoatticnow", true);
+	SetMessage("Messages", "ishouldfindtimemachine", 0.0f);	
+	SetEntityPlayerInteractCallback("timemachnote", "timemachnote", true);
+	AddEntityCollideCallback("Player", "testifthunderstrike", "testifthunderstrike", false, 0);
+	SetEntityPlayerInteractCallback("button_nowork", "button_nowork", false);
+	AddEntityCollideCallback("Player", "lightningstrikerod", "lightningstrikerod", true, 0);
+	SetLightVisible("lightningflashone", false);
+	SetLightVisible("lightningflashone_1", false);
+	SetLightVisible("lightningflashone_2", false);
+	SetEntityPlayerInteractCallback("button_works_yay", "button_works_yay", true);
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("tunnelvoid", "amb_guardian.snt", "Player", 1.0f, false);
+	SetDeathHint("DeathHint", "DHint1");
+	PlayMusic("22_amb", true, 1.0f, 2.0f, 0, true);
+	PlaySoundAtEntity("granddaddyclocktickstudeee", "grandfatherticking.snt", "tickclockstudyguh", 0.0f, false);
+}
+
+void OnLeave()
+{
+
+}
+
+////////////////////////////////////
+////////////////EVENT///////////////
+////////////////////////////////////
+
+void button_nowork(string &in asEntity)
+{
+	SetMessage("Messages", "buttonpressfail", 0.0f);	
+	PlaySoundAtEntity("buttonfailoofwillfix", "lock_door.snt", "Player", 1.0f, false);
+}
+
+void dadspiano(string &in asEntity, int alState)
+{
+	if(alState == 1)
+		{
+			PlaySoundAtEntity("", "Edwards_piano.snt", asEntity, 0, false);
+		}
+}
+
+void button_works_yay(string &in asEntity)
+{
+	SetPlayerActive(false);
+	FadeOut(5.0f);
+	FadePlayerFOVMulTo(2.0f, 1.0f);
+	AddTimer("gotopastnowcl", 6.0f, "gotopastnowcl");
+	PlaySoundAtEntity("timemach_worksyay", "guardian_activated.snt", "Player", 1.0f, false);
+}
+
+void gotopastnowcl(string &in asTimer)
+{
+	ChangeMap("07_study_PAST_CM.map", "PlayerStartArea_1", "", "");
+}
+
+/////////////////////////////////////
+////////////////PUZZLE///////////////
+/////////////////////////////////////
+
+void touchatticdoormem(string &in asEntity)
+{
+	SetMessage("Messages", "wanttogotoattic", 0.0f);	
+	AddQuest("mem6", "memento6");
+}
+
+void youcangotoatticnow(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("ladder_static_1", true);
+	SetEntityActive("gotoattic", true);
+	SetEntityActive("touchatticdoormem", false);
+	PlaySoundAtEntity("placeladder", "05_attach_ladder.snt", "soundofattachlad", 1.0f, false);
+	CompleteQuest("mem6", "memento6");
+	RemoveItem(asItem);
+}
+
+void gotoattic(string &in asEntity)
+{
+	ChangeMap("06_attic_CM.map", "PlayerStartArea_1", "gotoattic.snt", "");
+}
+
+void timemachnote(string &in asEntity)
+{
+	AddQuest("mem7", "memento7");
+	SetMessage("Messages", "sodadmadetimemach", 0.0f);	
+}
+
+///////////////////////////////////////////
+////////////////TIME/MACHINE///////////////
+///////////////////////////////////////////
+
+void testifthunderstrike(string &in asParent, string &in asChild, int alState)
+{
+	////////////////////////////////
+	//Activate lightning area in tm
+	if(GetGlobalVarInt("electricstart")==1)
+	{
+		SetEntityActive("lightningstrikerod", true);
+		AutoSave();
+	}
+}
+
+void lightningstrikerod(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("thundercrashscawy", "clockman_thunder.snt", "boomclockmansound", 0.0f, false);
+	AddTimer("flashthunder", 0.5f, "flashthunder");
+}
+
+void flashthunder(string &in asTimer)
+{
+	PlaySoundAtEntity("zapthunder", "05_electric_failure1cm.snt", "zapsound", 0.0f, false);
+	SetLightVisible("lightningflashone", true);
+	SetLightVisible("lightningflashone_1", true);
+	SetLightVisible("lightningflashone_2", true);
+	AddTimer("stopflashthunder", 0.2f, "stopflashthunder");
+	PlaySoundAtEntity("finalthundercrack", "thundercrashboomslap.snt", "zapsound", 0.0f, false);
+	StartScreenShake(0.05f, 0.3f, 0.05f, 0.05f);
+}
+
+void stopflashthunder(string &in asTimer)
+{
+	SetLightVisible("lightningflashone", false);
+	SetLightVisible("lightningflashone_1", false);
+	SetLightVisible("lightningflashone_2", false);
+	AddTimer("successtimemach", 2.0f, "successtimemach");
+	PlaySoundAtEntity("zapthundertwo", "05_electric_failure1cm.snt", "zapsound", 0.0f, false);
+	CreateParticleSystemAtEntity("timemachinesteam1", "ps_steam.ps", "steamsource_1", true);
+	CreateParticleSystemAtEntity("timemachinesteam2", "ps_steam.ps", "steamsource_2", true);
+	CreateParticleSystemAtEntity("timemachinesteam3", "ps_steam.ps", "steamsource_3", true);
+	PlaySoundAtEntity("tmachine_go", "13_machine_run.snt", "tmachine_core", 0.0f, true);
+}
+
+void successtimemach(string &in asTimer)
+{
+	PlayMusic("03_puzzle_secret.ogg", false, 1.0f, 2.0f, 0, true);
+	GiveSanityDamage(5.0f, false);
+	GiveSanityBoost();
+	SetLampLit("candlestick_floor_1", true, true);
+	SetLampLit("candlestick_floor_2", true, true);
+	SetLampLit("candlestick_floor_3", true, true);
+	SetLampLit("candlestick_floor_4", true, true);
+	SetLampLit("candlestick_wall_20", true, true);
+	SetEntityActive("button_works_yay", true);
+	SetEntityActive("button_nowork", false);
+	AutoSave();
+}

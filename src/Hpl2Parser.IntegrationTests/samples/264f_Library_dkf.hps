@@ -1,0 +1,304 @@
+
+
+void OnStart()
+{
+	AddUseItemCallback("", "Key", "Wardrobe", "OpenDoor",true);
+	AddUseItemCallback("", "Key", "Wardrobe", "OpenDoor",true);
+	
+	if(ScriptDebugOn()) GiveItemFromFile("flashlight", "Flashlight_lantern_dkf.ent");
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("Library");
+		 
+	StartPlayerSpawnPS("null.sps");
+	AutoSave();
+	//SetInDarknessEffectsActive(false);
+	//SetPlayerSanity(51.0f);
+
+	SetUpInsanity();
+
+		
+		
+	SetLightVisible("RedLight", false); //keypad effects
+	SetLightVisible("GreenLight", false);
+	
+	SetPlayerFallDamageDisabled(true);
+	 
+}
+
+void OnLeave()
+{
+	 SetPlayerFallDamageDisabled(false);
+}
+
+	
+void PhoneTimer(string &in asTimer)
+{
+	StartPhoneRing("Phone", "Dkf_Library", 9);
+}
+
+void RemoveSound(string &in asEntity) //called when book is picked up
+{
+	StopSound("Sound_6", 1.0f);
+	AddGlobalVarInt("Insight", 1);
+	AddTimer("", 17.0f, "PhoneTimer");
+}
+
+void OpenDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "unlock_modern.snt", asEntity, 0.0f , false);
+}
+
+/////////////////////////////////////KEYPAD///////////////////////
+/////////////////////////////////////////////////////////////////
+
+string Current;
+string tmp;
+void StartKeypad(string &in asEntity) //This is put in the entity's InteractCallback
+{
+	SetPlayerActive(false );
+	FadeOut(1.0f);
+	AddTimer("", 1.5f, "StartKeypadCont");
+	
+	SetMessage("Messages","KeypadExit", 0);
+
+	Current = "";
+	SetLocalVarInt("CurrentCount", 0);
+}
+void StartKeypadCont(string &in asTimer)
+{
+	SetPlayerCrouching(true);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerMoveSpeedMul(0);
+	SetLanternDisabled(true);
+	TeleportPlayer("Keypad");
+	
+	AddTimer("", 0.5f, "FadeIn");
+}
+void FadeIn(string &in asTimer)
+{
+	SetPlayerActive(true);
+	FadeIn(1.0f);
+}
+
+void Exit()
+{
+	SetPlayerActive(false );
+	FadeOut(1.0f);
+	AddTimer("", 1.5f, "ExitCont");
+}
+void ExitCont(string &in asTimer)
+{
+	SetPlayerCrouching(false);
+	SetPlayerCrouchDisabled(false);
+	SetPlayerJumpDisabled(false);
+	SetPlayerMoveSpeedMul(1);
+	SetLanternDisabled(false);
+	TeleportPlayer("CellarKeypad");
+	
+	AddTimer("", 0.5f, "FadeIn");
+}
+
+void PressKeypad(string &in asEntity)
+{
+	AddLocalVarInt("CurrentCount", 1);
+	PlaySoundAtEntity("","button_dkf", "Player", 0, false);
+
+	if(asEntity != "Asterisk" && asEntity != "Hashtag")
+	Current += asEntity;
+	
+	if( GetLocalVarInt("CurrentCount") == 4)
+	{
+		CheckPassword();
+		SetLocalVarInt("CurrentCount", 0);
+		Current = "";
+	}
+	
+}
+
+void CheckPassword()
+{
+	if (Current == "2048")
+	{
+		PlaySoundAtEntity("","access_granted_dkf", "Player", 0, false);
+		PlaySoundAtEntity("","unlock_modern", "Player", 0, false);
+		SetSwingDoorLocked("CellarDoor", false, false);
+		
+		SetLightVisible("GreenLight", true);
+		AddTimer("GreenLight", 0.5f, "TurnOffLight");
+		
+		Exit();
+		SetEntityInteractionDisabled("Security_Panel", true);
+	}
+	else
+	{
+		PlaySoundAtEntity("","access_denied_dkf", "Player", 0, false);
+		SetLightVisible("RedLight", true);
+		AddTimer("RedLight", 0.5f, "TurnOffLight");
+	}
+}
+void TurnOffLight(string &in asTimer)
+{
+	SetLightVisible(asTimer, false);
+}
+
+void Hashtag(string &in asEntity)
+{
+	PlaySoundAtEntity("","button_dkf", "Player", 0, false);
+	Exit();
+}
+
+
+
+
+///////////////////////////////////mirror & note hints
+
+void Mirror(string &in asEntity)
+{
+	if((GetLocalVarFloat("HasFirstHint") != 5 || GetLocalVarFloat("HasSecondHint") != 5 || GetLocalVarFloat("HasThirdHint") != 5))
+	{
+		SetMessage("Messages","Mirror", 0);
+	}
+	if(GetLocalVarFloat("HasFirstNote") == 5 && GetLocalVarFloat("HasFirstHint") != 5)
+	{
+		AddDiary("LibraryHint4", "old_note.tga");
+		SetLocalVarInt("HasFirstHint", 5);
+		SetMessage("Messages","LibraryHint", 0);
+		 PlaySoundAtEntity("","ui_add_quest", "Player", 0, false);
+	}
+	if(GetLocalVarFloat("HasSecondNote") == 5 && GetLocalVarFloat("HasSecondHint") != 5)
+	{
+		AddDiary("LibraryHint5", "old_note.tga");
+		SetLocalVarInt("HasSecondHint", 5);
+		SetMessage("Messages","LibraryHint", 0);
+		PlaySoundAtEntity("","ui_add_quest", "Player", 0, false);
+	}
+	if(GetLocalVarFloat("HasThirdNote") == 5 && GetLocalVarFloat("HasThirdHint") != 5)
+	{
+		AddDiary("LibraryHint6", "old_note.tga");
+		SetLocalVarInt("HasThirdHint", 5);
+		SetMessage("Messages","LibraryHint", 0);
+		PlaySoundAtEntity("","ui_add_quest", "Player", 0, false);
+	}
+	else if((GetLocalVarFloat("HasFirstHint") == 5 && GetLocalVarFloat("HasSecondHint") == 5 && GetLocalVarFloat("HasThirdHint") == 5))
+	{
+		SetMessage("Messages","Mirror2", 0);
+	}
+}
+void FirstNote(string &in asEntity)
+{
+	SetLocalVarInt("HasFirstNote", 5);
+}
+void SecondNote(string &in asEntity)
+{
+	SetLocalVarInt("HasSecondNote", 5);
+}
+void ThirdNote(string &in asEntity)
+{
+	SetLocalVarInt("HasThirdNote", 5);
+}
+
+
+///////////////////////PHONE///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+/* Entity = the phone to be played at, if files are "File_01.ogg" and "File_02.ogg", then asFileName = File and asFileCount = 2.
+ All sound files from 1 through the given number are be played.
+ If count = 0, "File" (without the underscore and numbers) is assumed.
+ For best effect use mono sound files.
+ Lang subtitle entries should be titled same as the file and placed in "Dialogues" category. */
+
+void StartPhoneRing(string &in asEntity, string asFileName, int asFileCount)
+{
+	SetLocalVarString("FileName", asFileName); // GetLocalVarString("FileName");
+	SetLocalVarInt("FileCount", asFileCount); // GetLocalVarInt("FileCount");
+	SetLocalVarString("Phone", asEntity);  // GetLocalVarString("Phone");
+	
+	PlaySoundAtEntity("phonering", "phone_ring_loop.snt", asEntity, 0.0f, false);
+	SetEntityPlayerInteractCallback(asEntity, "PickUpPhone", true);
+}
+void PickUpPhone(string &in asEntity)
+{
+	StopSound("phonering", 0.5f);
+	PlaySoundAtEntity("", "phone_up.snt", asEntity, 0.0f, false);
+	AddTimer("", 0.5f, "StartTalking");
+
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerRunSpeedMul(0.0f);
+}
+void StartTalking(string &in asTimer)
+{
+	PlaySoundAtEntity("phonestatic", "phone_static_loop.snt", GetLocalVarString("Phone"), 0.0f, false);
+
+	if (GetLocalVarInt("FileCount") == 0)
+	{
+		AddEffectVoice(GetLocalVarString("FileName"), "", "Dialogues", GetLocalVarString("FileName"), true, GetLocalVarString("Phone"), 0.0f, 15.0f);
+	}
+	else if (GetLocalVarInt("FileCount") > 0)
+	{
+		for (int i = 1; i <= GetLocalVarInt("FileCount"); i++)
+		{
+			if (i < 10)
+			{
+				SetLocalVarString("tmp", GetLocalVarString("FileName")+"_0" + i); 
+			}
+			else
+			{
+				SetLocalVarString("tmp", GetLocalVarString("FileName")+"_" + i); 
+			}
+
+			AddEffectVoice(GetLocalVarString("tmp"), "", "Dialogues", GetLocalVarString("tmp"), true, GetLocalVarString("Phone"), 0.0f, 15.0f);
+		}
+	}
+	SetEffectVoiceOverCallback("HangUp");
+}
+
+void HangUp()
+{
+	PlaySoundAtEntity("", "phone_down.snt", GetLocalVarString("Phone"), 0.0f, false);
+	StopSound("phonestatic", 0.3f);
+
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerJumpDisabled(false);
+
+	AddTimer("phoneOverTimer", 2.0f, "PhoneCallOverCallback");
+}
+
+///////////////END PHONE///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+	
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+	
+	if(GetPlayerSanity() == 0.0f) SetPlayerSanity(29.0f);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	

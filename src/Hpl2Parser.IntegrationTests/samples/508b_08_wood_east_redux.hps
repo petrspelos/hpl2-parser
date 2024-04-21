@@ -1,0 +1,871 @@
+void OnEnter()
+{
+	if(ScriptDebugOn())
+	{
+		SetGlobalVarInt("FastSeekerAchievement", 1);
+		SetGlobalVarInt("HealthAchievement", 1);
+		SetGlobalVarInt("ItemsAchievement", 1);
+		SetGlobalVarInt("NoDeathAchievement", 1);
+		//SetGlobalVarInt("StatuesAchievement", 1);
+		SetGlobalVarInt("WardrobeAchievement", 1);
+		SetGlobalVarInt("EnemiesAchievement", 1);
+		SetGlobalVarInt("PuzzleAchievement", 1);
+		//SetGlobalVarInt("NoPuzzleAchievement", 1);
+		SetGlobalVarInt("NoStatuesAchievement", 1);
+		SetGlobalVarInt("SanityAchievement", 1);
+		SetGlobalVarInt("SlimesAchievement", 1);
+		SetGlobalVarInt("LightsAchievement", 1);
+	}
+	
+	SetMapDisplayNameEntry("Wood4");
+
+	PreloadParticleSystem("ps_acid_web_dissolve.ps");
+	PreloadParticleSystem("ps_dust_falling.ps");
+	PreloadParticleSystem("ps_light_dust.ps");
+	PreloadParticleSystem("ps_light_dust_large.ps");
+	PreloadParticleSystem("ps_area_fog.ps");
+	PreloadParticleSystem("ps_area_fog_large.ps");
+	PreloadParticleSystem("ps_area_fog_small.ps");
+	PreloadParticleSystem("ps_area_fog_sewer_long_warmup.ps");
+	PreloadParticleSystem("ps_door_damage_wood.ps");
+	PreloadParticleSystem("ps_break_wood.ps");
+
+	PreloadSound("08_ambience_forest.snt");
+	PreloadSound("react_sigh.snt");
+	
+	PreloadSound("gameplay_acid_web.snt");
+	PreloadSound("lock_door.snt");
+	PreloadSound("locked_door.snt");
+	PreloadSound("open_door.snt");
+	PreloadSound("open_door_long.snt");
+	PreloadSound("door_gate_bar_locked.snt");
+	PreloadSound("door_mansion_close.snt");
+	PreloadSound("door_mansion_open.snt");
+	PreloadSound("close_door.snt");
+	PreloadSound("close_door_long.snt");
+	PreloadSound("unlock_door.snt");
+	PreloadSound("react_breath.snt");
+	PreloadSound("react_breath_slow.snt");
+	PreloadSound("react_pant.snt");
+	PreloadSound("react_scare.snt");
+	PreloadSound("react_sigh.snt");
+	PreloadSound("general_fire_burning.snt");
+	PreloadSound("general_fire_burning_low.snt");
+	PreloadSound("break_pottery.snt");
+	PreloadSound("break_glass_bottle.snt");
+	PreloadSound("break_glass_large.snt");
+	PreloadSound("break_wood.snt");
+	PreloadSound("break_wood_metal.snt");
+	PreloadSound("guardian_activated.snt");
+	PreloadSound("guardian_ontop.snt");
+	PreloadSound("hit_wood.snt");
+	PreloadSound("player_climb.snt");
+	PreloadSound("player_crouch.snt");
+	PreloadSound("player_jump.snt");
+	PreloadSound("player_stand.snt");
+	PreloadSound("roll_wood.snt");
+	PreloadSound("slime_attack_normal_hit.snt");
+	PreloadSound("slime_create.snt");
+	PreloadSound("slime_loop.snt");
+	PreloadSound("step_run_dirt.snt");
+	PreloadSound("step_walk_dirt.snt");
+	PreloadSound("step_sneak_dirt.snt");
+	PreloadSound("step_run_fabric.snt");
+	PreloadSound("step_walk_fabric.snt");
+	PreloadSound("step_sneak_fabric.snt");
+	PreloadSound("step_run_metal.snt");
+	PreloadSound("step_walk_metal.snt");
+	PreloadSound("step_sneak_metal.snt");
+	PreloadSound("step_run_organic.snt");
+	PreloadSound("step_walk_organic.snt");
+	PreloadSound("step_sneak_organic.snt");
+	PreloadSound("step_run_rock.snt");
+	PreloadSound("step_walk_rock.snt");
+	PreloadSound("step_sneak_rock.snt");
+	PreloadSound("step_run_wood.snt");
+	PreloadSound("step_run_wood_squeaky.snt");
+	PreloadSound("step_walk_wood.snt");
+	PreloadSound("step_walk_wood_squeaky.snt");
+	PreloadSound("step_sneak_wood.snt");
+	PreloadSound("step_sneak_wood_squeaky.snt");
+	PreloadSound("flashback_flash.snt");
+	PreloadSound("hurt_pant.snt");
+	PreloadSound("sanity_damage.snt");
+	PreloadSound("sanity_drain_high.snt");
+	PreloadSound("sanity_drain_med.snt");
+	PreloadSound("sanity_drain_low.snt");
+	PreloadSound("sanity_heartbeat.snt");
+	PreloadSound("sanity_pant.snt");
+	PreloadSound("ui_add_quest.snt");
+	PreloadSound("ui_lantern_off.snt");
+	PreloadSound("ui_lantern_on.snt");
+	PreloadSound("ui_sanity_gain.snt");
+	PreloadSound("ui_terror_meter.snt");
+	PreloadSound("enemy_hallucination_disappear.snt");
+	
+	CheckPoint ("OutOfMap", "PlayerStartArea_1", "CPOutOfMap", "DeathHints", "DoNotFall");
+	
+	SetupLoadScreen("LoadingHints", "28To29", 0, "game_loading_rose.jpg");
+	
+	if(GetGlobalVarInt("HealthAchievement") == 1)
+		AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+	
+	
+}
+
+void OnLeave()
+{
+	RemoveTimer("addhealth");
+	RemoveTimer("checkhealth");
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+}
+
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaLoadWood", "CollideAreaLoadWood", true, 1);
+	AddEntityCollideCallback("Player", "AreaPlayerRoll", "CollideAreaPlayerRoll", true, 1);
+	AddEntityCollideCallback("Player", "AreaStatueFade", "CollideAreaStatueFade", true, 1);
+	
+	StopMusic(0.1f, 10);
+	StopMusic(0.1f, 0);
+	FadeOut(0.0f);
+	FadeGlobalSoundVolume(0.0f, 0.0f);
+	SetPlayerActive(false);
+	AddTimer("fadeinslowactiveplayer", 2.0f, "TimerFadeScreen");
+	AddTimer("globalsoundon", 2.0f, "TimerFadeGlobalSound");
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	else
+		SetPlayerMoveSpeedMul(1.0f);
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	else
+		SetPlayerRunSpeedMul(1.0f);
+	SetPlayerLookSpeedMul(1.0f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(false);
+	SetPlayerHealth(100.0f);
+	SetPlayerSanity(100.0f);
+	ShowPlayerCrossHairIcons(true);
+	SetLanternDisabled(true);
+	SetInventoryDisabled(true);
+	SetInDarknessEffectsActive(false);
+	SetSanityDrainDisabled(true);
+	
+	SetupLoadScreen("LoadingHints", "28To29", 0, "game_loading_rose.jpg");
+}
+
+void TimerHealthAchievement(string &in asTimer)
+{
+	if(asTimer == "addhealth")
+	{
+		if(GetPlayerHealth() <= 98.0f)
+		{
+			AddPlayerHealth(2.0f);
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "checkhealth")
+	{
+		if(GetPlayerHealth() > 98.0f)
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "pausehealth")
+	{
+		RemoveTimer("addhealth");
+		RemoveTimer("checkhealth");
+	}
+}
+
+void CPOutOfMap(string &in asName, int alCount)
+{
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	if(GetGlobalVarInt("NoDeathAchievement") == 1)
+		SetPlayerHealth(100.1f);
+	if(GetGlobalVarInt("SanityAchievement") == 1)
+		SetPlayerSanity(100.1f);
+	PlayMusic("08_wood_theme", true, 1.0f, 5.0f, 0, false);
+}
+
+void CollideAreaStatueFade(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("angel_statue_2", false, 4.0f);
+}
+
+void CollideAreaPlayerRoll(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("sigheffect", 20.0f, "TimerPlayerReactions");
+
+	SetPropActiveAndFade("angel_statue_1", true, 2.0f);
+	SetPropActiveAndFade("angel_statue_2", true, 4.0f);
+
+	SetMessage("Woman", "WakeUpJackNeedYou", 6.0f);
+	
+	PlayGuiSound("scare_whine_loop1.ogg", 1.0f);
+	StartScreenShake(0.05f, 8, 6, 4);
+
+	SetPlayerCrouching(true);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerRollTo("med_slow_fall", 19.9f);
+	
+	PlayerReact("pant", 85.0f, false, true);
+	
+	SetPlayerMoveSpeedMul(0.25f);
+	SetPlayerRunSpeedMul(0.25f);
+}
+
+void CollideAreaLoadWood(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("09_wood_intro_redux.map", "PlayerStartArea_1", "", "");
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")	FadeIn(2.0f);
+	if(asTimer == "fadeinslow")	FadeIn(5.0f);
+	if(asTimer == "fadeout") FadeOut(2.0f);
+	if(asTimer == "fadeoutslow") FadeOut(5.0f);
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeinslowactiveplayer")
+	{
+		FadeIn(5.0f);
+		SetPlayerActive(true);
+		
+		PlayGuiSound("react_sigh", 1.0f);
+		PlayMusic("08_wood_theme", true, 1.0f, 5.0f, 0, false);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}
+	if(asTimer == "fadeoutslowactiveplayer")
+	{
+		FadeOut(5.0f);
+		SetPlayerActive(true);	
+	}
+}
+
+void TimerFadeGlobalSound(string &in asTimer)
+{
+	if(asTimer == "globalsoundon") FadeGlobalSoundVolume(1.0f, 4.0f);
+	if(asTimer == "globalsoundonquick") FadeGlobalSoundVolume(1.0f, 0.5f);
+	if(asTimer == "globalsoundoff") FadeGlobalSoundVolume(0.0f, 4.0f);
+	if(asTimer == "globalsoundoffquick") FadeGlobalSoundVolume(0.0f, 0.5f);
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+			SetPlayerJumpForceMul(1.175f);
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+		
+		SetPropActiveAndFade("angel_statue_1", false, 1.0f);
+		
+		SetPlayerSanity(100.0f);
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerCrouching(false);
+		SetPlayerCrouchDisabled(false);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+			SetPlayerJumpForceMul(1.175f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}
+
+void PlayerLook(string &in asEntity, string &in asType, float afSpeed, float afTime)
+{
+	StartPlayerLookAt(asEntity, afSpeed, afSpeed, "");
+	if(asType == "speed")
+	{
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);
+		AddTimer("resetspeedmul", afTime, "TimerStopLook");
+	}
+	else
+	if(asType == "active")
+	{
+		SetPlayerActive(false);
+		AddTimer("activeplayer", afTime, "TimerStopLook");
+	}
+	else AddTimer("", afTime, "TimerStopLook");
+}
+
+void PlayerReact(string &in asType, float afCount, bool abUseDamageEffect, bool abUseBlurEffect)
+{
+	if(asType == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "breath_slow")
+	{
+		PlayGuiSound("react_breath_slow", 0.6f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "pant")
+	{
+		PlayGuiSound("react_pant", 0.8f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(abUseDamageEffect == true) GiveSanityDamage(afCount, true);
+	else GiveSanityDamage(afCount, false);
+}
+
+//START PLAYER ROLL FUNCTIONS
+void SetPlayerRollTo(string asType, float afTime)
+{
+	float fSpeed = 0.0f;
+	string sProfile = "normal";
+	if(StringContains(asType, "veryslow"))
+	{
+		fSpeed = RandFloat(10.0f, 20.0f);
+		sProfile = "veryslow";
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		fSpeed = RandFloat(37.5f, 42.5f);
+		sProfile = "midslow";
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		fSpeed = RandFloat(25.0f, 30.0f);
+		sProfile = "slow";
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		fSpeed = RandFloat(47.5f, 52.5f);
+		sProfile = "midquick";
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		fSpeed = RandFloat(45.0f, 50.0f);
+		sProfile = "mid";
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		fSpeed = 60.0f;
+		sProfile = "veryquick";
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		fSpeed = RandFloat(50.0f, 55.0f);
+		sProfile = "quick";
+	}
+	else
+		fSpeed = 1.0f;
+	
+	int iRand = RandInt(0, 1);
+	if(iRand == 0)
+	{
+		if(StringContains(asType, "verysmall"))
+			FadePlayerRollTo(RandFloat(5.0f, 10.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "medsmall"))
+			FadePlayerRollTo(RandFloat(20.0f, 25.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "small"))
+			FadePlayerRollTo(RandFloat(10.0f, 20.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "medbig"))
+			FadePlayerRollTo(RandFloat(45.0f, 75.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "med"))
+			FadePlayerRollTo(RandFloat(30.0f, 60.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "big"))
+			FadePlayerRollTo(RandFloat(60.0f, 90.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "max"))
+			FadePlayerRollTo(360.0f, fSpeed, fSpeed + 1.25f);
+		else
+			FadePlayerRollTo(45.0f, fSpeed, fSpeed + 1.25f);
+	}
+	else
+	{
+		if(StringContains(asType, "verysmall"))
+			FadePlayerRollTo(RandFloat(-10.0f, -5.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "medsmall"))
+			FadePlayerRollTo(RandFloat(-25.0f, -20.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "small"))
+			FadePlayerRollTo(RandFloat(-20.0f, -10.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "medbig"))
+			FadePlayerRollTo(RandFloat(-75.0f, -45.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "med"))
+			FadePlayerRollTo(RandFloat(-60.0f, -30.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "big"))
+			FadePlayerRollTo(RandFloat(-90.0f, -60.0f), fSpeed, fSpeed + 1.25f);
+		else if(StringContains(asType, "max"))
+			FadePlayerRollTo(-360.0f, fSpeed, fSpeed + 1.25f);
+		else
+			FadePlayerRollTo(-45.0f, fSpeed, fSpeed + 1.25f);
+	}
+	
+	if(StringContains(asType, "fall"))
+	{
+		PlayGuiSound("player_bodyfall.snt", 0.9f);
+		PlayGuiSound("step_sneak_rock_rev.snt", 0.8f);
+		PlaySoundAtEntity("ear_ring_snt", "insanity_ear_ring.snt", "Player", 0.5f, false);
+		SetPlayerCrouching(true);
+		SetPlayerCrouchDisabled(true);
+		SetPlayerState("speedslow");
+	}
+	
+	if(StringContains(asType, "active"))
+		SetPlayerState("activeoff_inventory");
+	else if(StringContains(asType, "zoomin"))
+	{
+		SetPlayerState("activeoff");
+		SetScreenEffect("zoomin_" + sProfile);
+	}
+	else if(StringContains(asType, "zoomout"))
+	{
+		SetPlayerState("activeoff");
+		SetScreenEffect("zoomout_" + sProfile);
+	}
+
+	if(StringContains(asType, "lanternon") && GetLanternActive() == false)
+	{
+		if(StringContains(asType, "silent"))
+			SetLanternActive(true, false);
+		else
+			SetLanternActive(true, true);
+	}
+	else if(StringContains(asType, "lanternoff") && GetLanternActive())
+	{
+		if(StringContains(asType, "silent"))
+			SetLanternActive(false, false);
+		else
+			SetLanternActive(false, true);
+	}
+	
+	if(afTime != 0)
+		AddTimer(asType, afTime, "TimerPlayerStopRollTo");
+}
+
+void TimerPlayerStopRollTo(string asTimer)
+{
+	float fSpeed = 0.0f;
+	if(StringContains(asTimer, "fall"))
+	{
+		StopSound("ear_ring_snt", 3.0f);
+		SetPlayerCrouching(false);
+		SetPlayerCrouchDisabled(false);
+		SetPlayerState("speedslow");
+		AddTimer("speednormal", RandFloat(1.75f, 2.25f), "SetPlayerState");
+	}
+	
+	if(StringContains(asTimer, "active"))
+		SetPlayerState("activeon_inventory");
+	else if(StringContains(asTimer, "zoom"))
+	{
+		SetPlayerState("activeon");
+		SetScreenEffect("zoomnormal_midslow");
+	}
+	
+	if(StringContains(asTimer, "veryslow"))
+		fSpeed = RandFloat(10.0f, 20.0f);
+	else if(StringContains(asTimer, "midslow"))
+		fSpeed = RandFloat(37.5f, 42.5f);
+	else if(StringContains(asTimer, "slow"))
+		fSpeed = RandFloat(25.0f, 30.0f);
+	else if(StringContains(asTimer, "midquick"))
+		fSpeed = RandFloat(47.5f, 52.5f);
+	else if(StringContains(asTimer, "mid"))
+		fSpeed = RandFloat(45.0f, 50.0f);
+	else if(StringContains(asTimer, "veryquick"))
+		fSpeed = 60.0f;
+	else if(StringContains(asTimer, "quick"))
+		fSpeed = RandFloat(50.0f, 55.0f);
+	else
+		fSpeed = 1.0f;
+	
+	FadePlayerRollTo(0.0f, fSpeed, fSpeed + 1.25f);
+}
+//END PLAYER ROLL FUNCTIONS
+
+void SetScreenEffect(string asType)
+{
+	float fAmount = 0.0f;
+	if(StringContains(asType, "verysmall"))
+		fAmount = 0.2f;
+	else if(StringContains(asType, "medsmall"))
+		fAmount = 0.5f;
+	else if(StringContains(asType, "small"))
+		fAmount = 0.4f;
+	else if(StringContains(asType, "medbig"))
+		fAmount = 0.7f;
+	else if(StringContains(asType, "med"))
+		fAmount = 0.6f;
+	else if(StringContains(asType, "big"))
+		fAmount = 0.8f;
+	else if(StringContains(asType, "max"))
+		fAmount = 1.0f;
+	else
+		fAmount = 0.6f;
+	
+	float fSpeed = 0.0f;
+	if(StringContains(asType, "veryslow"))
+		fSpeed = 8.0f;
+	else if(StringContains(asType, "midslow"))
+		fSpeed = 3.0f;
+	else if(StringContains(asType, "slow"))
+		fSpeed = 4.0f;
+	else if(StringContains(asType, "midquick"))
+		fSpeed = 1.5f;
+	else if(StringContains(asType, "mid"))
+		fSpeed = 2.0f;
+	else if(StringContains(asType, "veryquick"))
+		fSpeed = 0.5f;
+	else if(StringContains(asType, "quick"))
+		fSpeed = 1.0f;
+	else
+		fSpeed = 2.0f;
+	
+	if(StringContains(asType, "flashbackon"))
+	{
+		PlayGuiSound("flashback_flash.snt", 0.8f);
+		StartEffectFlash(0.75f, 1.0f, 0.5f);
+		FadeImageTrailTo(0.3f, 0.3f);
+		SetRadialBlurStartDist(0.3f);
+		FadeRadialBlurTo(0.1f, 1.0f);
+		FadeSepiaColorTo(0.5f, 0.25f);
+	}
+	else if(StringContains(asType, "flashbackoff"))
+	{
+		StartEffectFlash(0.5f, 1.0f, 0.75f);
+		FadeImageTrailTo(0.0f, 2.0f);
+		FadeSepiaColorTo(0.0f, 2.0f);
+		FadeRadialBlurTo(0.0f, 2.0f);
+	}
+	else if(StringContains(asType, "whitetoblack"))
+	{
+		PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+		StartScreenShake(0.075f, 4.5f, 0.055f, 0.5f);
+		FadeGlobalSoundVolume(0.0f, 0.3f);
+		StartEffectFlash(0.2f, 0.1f, 0.3f);
+		FadeOut(0.3f);
+		FadePlayerFOVMulTo(0.5f, 0.5f);
+		SetRadialBlurStartDist(0.1f);
+		FadeRadialBlurTo(1.0f, 0.5f);
+	}
+	else if(StringContains(asType, "allnormal"))
+	{
+		FadeImageTrailTo(0.0f, fSpeed);
+		FadeSepiaColorTo(0.0f, fSpeed);
+		FadeRadialBlurTo(0.0f, fSpeed);
+		FadePlayerFOVMulTo(1.0f, fSpeed);
+		FadePlayerAspectMulTo(1.0f, fSpeed);
+		ShowPlayerCrossHairIcons(true);
+	}
+	else if(StringContains(asType, "trail"))
+		FadeImageTrailTo(fAmount, fSpeed);
+	else if(StringContains(asType, "sepia"))
+		FadeSepiaColorTo(fAmount, fSpeed);
+	else if(StringContains(asType, "blur"))
+	{
+		if(fAmount != 0)
+			SetRadialBlurStartDist(fAmount / 2);
+		
+		FadeRadialBlurTo(fAmount, fSpeed);
+	}
+	else if(StringContains(asType, "_whitetext"))
+	{
+		if(asType.length() > 10)
+			StartEffectEmotionFlash("EmotionFlashbacks", StringSub(asType, 0, asType.length() - 10), "");
+		
+		return;
+	}
+	else if(StringContains(asType, "white"))
+		StartEffectFlash(fSpeed, fAmount, fSpeed + 0.5f);
+	else if(StringContains(asType, "zoomin"))
+	{
+		FadePlayerFOVMulTo(1.0f - fAmount, fSpeed);
+		FadePlayerAspectMulTo(1.0f - fAmount, fSpeed);
+	}
+	else if(StringContains(asType, "zoomout"))
+	{
+		FadePlayerFOVMulTo(1.0f + fAmount, fSpeed);
+		FadePlayerAspectMulTo(1.0f + fAmount, fSpeed);
+	}
+	else if(StringContains(asType, "zoomnormal"))
+	{
+		FadePlayerFOVMulTo(1.0f, fSpeed);
+		FadePlayerAspectMulTo(1.0f, fSpeed);
+	}
+	else if(StringContains(asType, "in"))
+		FadeIn(fSpeed);
+	else if(StringContains(asType, "out"))
+		FadeOut(fSpeed);
+	
+	if(StringContains(asType, "activeon"))
+		SetPlayerState("activeon_inventory");
+	else if(StringContains(asType, "activeoff"))
+		SetPlayerState("activeoff_inventory");
+}
+
+void SetPlayerState(string asType)
+{
+	float fX = 0.0f;
+	float fY = 0.0f;
+	float fZ = 0.0f;
+	float fAmount = 0.0f;
+	if(StringContains(asType, "verysmall"))
+		fAmount = RandFloat(100.0f, 500.0f);
+	else if(StringContains(asType, "medsmall"))
+		fAmount = RandFloat(1500.0f, 2000.0f);
+	else if(StringContains(asType, "small"))
+		fAmount = RandFloat(750.0f, 1000.0f);
+	else if(StringContains(asType, "medbig"))
+		fAmount = RandFloat(5500.0f, 7500.0f);
+	else if(StringContains(asType, "med"))
+		fAmount = RandFloat(2500.0f, 5000.0f);
+	else if(StringContains(asType, "big"))
+		fAmount = RandFloat(8000.0f, 9000.0f);
+	else if(StringContains(asType, "max"))
+		fAmount = 10000.0f;
+	else
+		fAmount = 5000.0f;
+	
+	if(StringContains(asType, "speedveryquick"))
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(StringContains(asType, "runoff") == false)
+			SetPlayerRunSpeedMul(1.35f);
+	}
+	else if(StringContains(asType, "speedquick"))
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(StringContains(asType, "runoff") == false)
+			SetPlayerRunSpeedMul(1.175f);
+	}
+	else if(StringContains(asType, "speednormal"))
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		else
+			SetPlayerRunSpeedMul(1.0f);
+		
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+			SetPlayerJumpForceMul(1.175f);
+	}
+	else if(StringContains(asType, "speedslow"))
+	{
+		SetPlayerMoveSpeedMul(0.5f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(StringContains(asType, "runoff") == false)
+			SetPlayerRunSpeedMul(0.5f);
+	}
+	else if(StringContains(asType, "speedveryslow"))
+	{
+		SetPlayerMoveSpeedMul(0.1f);
+		SetPlayerLookSpeedMul(0.5f);
+		if(StringContains(asType, "runoff") == false)
+			SetPlayerRunSpeedMul(0.1f);
+	}
+	
+	if(StringContains(asType, "runoff"))
+		SetPlayerRunSpeedMul(0.0f);
+	
+	if(StringContains(asType, "force"))
+	{
+		if(StringContains(asType, "-x"))
+			fX = -fAmount;
+		else if(StringContains(asType, "x"))
+			fX = fAmount;
+		
+		if(StringContains(asType, "-y"))
+			fY = -fAmount;
+		else if(StringContains(asType, "y"))
+			fY = fAmount;
+		
+		if(StringContains(asType, "-z"))
+			fZ = -fAmount;
+		else if(StringContains(asType, "z"))
+			fZ = fAmount;
+		
+		AddPlayerBodyForce(fX, fY, fZ, false);
+	}
+	
+	if(StringContains(asType, "sanitydrainon"))
+		SetSanityDrainDisabled(false);
+	else if(StringContains(asType, "sanitydrainoff"))
+		SetSanityDrainDisabled(true);
+	
+	if(StringContains(asType, "darknesson"))
+		SetInDarknessEffectsActive(true);
+	else if(StringContains(asType, "darknessoff"))
+		SetInDarknessEffectsActive(false);
+	
+	if(StringContains(asType, "falldamageon"))
+		SetPlayerFallDamageDisabled(false);
+	else if(StringContains(asType, "falldamageoff"))
+		SetPlayerFallDamageDisabled(true);
+	
+	if(StringContains(asType, "jumpbig"))
+		SetPlayerJumpForceMul(1.175f);
+	else if(StringContains(asType, "jumpnormal"))
+		SetPlayerJumpForceMul(1.0f);
+	else if(StringContains(asType, "jumpon"))
+		SetPlayerJumpDisabled(false);
+	else if(StringContains(asType, "jumpoff"))
+		SetPlayerJumpDisabled(true);
+	
+	if(StringContains(asType, "crouchon"))
+		SetPlayerCrouchDisabled(false);
+	else if(StringContains(asType, "crouchoff"))
+	{
+		SetPlayerCrouching(false);
+		SetPlayerCrouchDisabled(false);
+	}
+	
+	if(StringContains(asType, "bodynormal"))
+	{
+		SetPlayerSanity(100.0f);
+		SetPlayerHealth(100.0f);
+	}
+	
+	if(StringContains(asType, "allnormal"))
+	{
+		SetInventoryDisabled(false);
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		ShowPlayerCrossHairIcons(true);
+		SetPlayerSanity(100.0f);
+		SetPlayerHealth(100.0f);
+	}
+
+	if(StringContains(asType, "activeon"))
+	{
+		SetPlayerActive(true);
+		ShowPlayerCrossHairIcons(true);
+		if(StringContains(asType, "inventory"))
+			SetInventoryDisabled(false);
+	}
+	else if(StringContains(asType, "activeoff"))
+	{
+		SetPlayerActive(false);
+		ShowPlayerCrossHairIcons(false);
+		ExitInventory();
+		if(StringContains(asType, "inventory"))
+			SetInventoryDisabled(true);
+	}
+}

@@ -1,0 +1,153 @@
+void OnStart()
+{
+	AddQuest("generalruleofthumb", "general");
+	SetEntityActive("Billboard_1", false);
+	//SetEntityPlayerInteractCallback("chest_of_drawers_simple_3", "scare", true);
+	AddEntityCollideCallback("Player", "ScriptArea_1","corpse_scare", true, 0);
+	AddEntityCollideCallback("Player", "area_memento","write_memento", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_4","elevator_door", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_5","elevator_door", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_7","elevator_door", true, 0);
+	SetEntityConnectionStateChangeCallback("phonograph_1", "checkforon");
+	SetLocalVarInt("jumpscares", 0); //playedpiano is a local variable that will be used as a general boolean throughout the map
+}
+
+void corpse_scare(string &in asEntity, string &in asChild, int alState)
+{
+	for (int i=1; i<=5; ++i)	PlayGuiSound("24_iron_maiden.ogg", 1.0f);
+	SetEntityActive("corpse_male_2", true);
+	SetEntityActive("Billboard_1", true);
+	AddPropForce("corpse_male_2", -300000.0f, 0.0f, 0.0f, "world");
+	AddTimer("corpse_male_2", 2.0f, "singular_dissapear");
+}
+
+void write_memento(string &in asEntity, string &in asChild, int alState)
+{
+	AddQuest("MementoAdded", "piano");
+}
+
+void scare(string &in entity)
+{
+	for (int i=1; i<=5; ++i)	PlayGuiSound("24_iron_maiden.ogg", 1.0f);
+	SetEntityActive("corpse_male_1", true);
+	SetEntityActive("corpse_male_3", true);
+	SetEntityActive("corpse_male_4", true);
+	AddPropForce("corpse_male_1", 99999.0f, 0.0f, 0.0f, "world");
+	AddPropForce("corpse_male_3", 99999.0f, 0.0f, -99999.0f, "world");
+	AddPropForce("corpse_male_4", -99999.0f, 0.0f, 99999.0f, "world");
+	AddTimer("dissapear", 3.0f, "TimerEvents");
+}
+
+void troll(string &in entity, string &in type)
+{
+	ShowEnemyPlayerPosition("servant_grunt_1");
+	SetEntityActive("torch_static_green_2", true);
+	SetEntityActive("torch_static_green_1", true);
+	SetEntityActive("prison_section_1", true);
+}
+
+void TimerEvents(string &in asTimer)
+{
+	if(asTimer == "dissapear") 
+	{
+		SetEntityActive("corpse_male_1", false);
+		SetEntityActive("corpse_male_3", false);
+		SetEntityActive("corpse_male_4", false);
+		PlayGuiSound("00_laugh.snt", 0.5f);
+	}
+	else if(asTimer == "single_dissapear")	SetEntityActive("corpse_male_2", false);
+	else if(asTimer == "group_scare")
+	{
+		for(int i=6; i<=9; ++i)
+		{
+			PlayGuiSound("24_iron_maiden.snt", 1.0f);
+			SetEntityActive("corpse_male_"+i, true);
+			AddPropForce("corpse_male_"+i, 706548.0f, 0.0f, 0.0f, "world");
+			AddTimer("corpse_male_"+i, 4.0f, "singular_dissapear");
+			if (GetLocalVarInt("jumpscares") > 1)	SetLevelDoorLocked("level_cistern_1", false);
+		}
+	}
+	else if(asTimer == "addOne") 	
+	{
+		AddLocalVarInt("jumpscares", 1);
+		if(GetLocalVarInt("jumpscares") == 2)
+		{
+			AddQuest("level_door", "DoorUnlock");
+			SetLevelDoorLocked("level_cistern_1", false);
+		}
+	}
+}
+void singular_dissapear(string &in asTimer)
+{
+	SetEntityActive(asTimer, false);
+}
+
+
+void checkforon(string &in asEntity, int alState)
+{
+	PlaySoundAtEntity("", "StreetsOfCairo.ogg", asEntity, 0.0f, false);	
+}
+
+void play_piano(string &in asEntity)
+{
+	PlayGuiSound("general_piano0"+RandInt(1, 3)+".ogg", 1.0f);
+	CompleteQuest("MementoAdded", "piano");
+	SetLocalVarInt("playedpiano", 1);
+	AddEntityCollideCallback("Player", "area_memento_scare", "scare_player", true, 0);
+}
+
+void scare_player(string &in asParent ,string &in asChild, int alState)
+{
+	SetEntityActive("corpse_male_5", true);
+	for (int i=1; i<=5; ++i)	PlayGuiSound("24_iron_maiden.ogg", 1.0f);
+	AddPropImpulse("corpse_male_5", 300.0f, 0.0f, 0.0f, "world");
+	AddTimer("corpse_male_5", 3.0f, "singular_dissapear");
+}
+
+void putmonster(string &in asEntity)
+{
+	SetEntityActive("flying_demon_1", true);
+	ShowEnemyPlayerPosition("flying_demon_1");
+	AddEntityCollideCallback("flying_demon_1", "erasemonster", "erasemonster", true, 0);
+}
+
+void erasemonster(string &in asParent, string &in asChild, int alState)
+{
+	FadeEnemyToSmoke(asParent, true);
+}
+void slam_elevator_door(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("elevator_door_1", false);
+	SetEntityActive("elevator_door_2", true);
+	for(int i=1; i<=5; ++i)	PlayGuiSound("elevator_gate_close.snt", 1.0f);
+	GivePlayerDamage(100.0f, "BloodSplat", true, false);
+	AddLocalVarInt("jumpscares", 1);
+	if (GetLocalVarInt("jumpscares") == 2) 
+	{
+		SetLevelDoorLocked("level_cistern_1", false);
+		AddQuest("level_door", "DoorUnlock");
+	}
+}
+
+void PickUpNote(string &in entity, string &in type)
+{
+	PlayMusic("28_paper_daniel01.ogg", false, 1.0f, 0, 10, false);
+}
+void elevator_door(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("elevator_door_1", true);
+	RemoveEntityCollideCallback("Player", "ScriptArea_4");
+	RemoveEntityCollideCallback("Player", "ScriptArea_5");
+	RemoveEntityCollideCallback("Player", "ScriptArea_7");	
+	AddEntityCollideCallback("Player", "ScriptArea_3","slam_elevator_door", true, 0);
+}
+void PickUpKey(string &in asEntity)
+{
+	SetEntityPlayerLookAtCallback("ScriptArea_8", "scare_last", true);
+}
+
+void scare_last(string &in asEntity, int alState)
+{
+	AddTimer("group_scare", 1.0f, "TimerEvents");
+	AddTimer("addOne", 5.0f, "TimerEvents");
+}

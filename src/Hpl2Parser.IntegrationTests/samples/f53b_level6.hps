@@ -1,0 +1,859 @@
+//  ___  _         _            _           _   _            ______ _ _ _       
+// / _ \| |       | |          | |         | | | |           | ___ (_) | |      
+/// /_\ \ |__   __| |_   _  ___| |_ ___  __| | | |__  _   _  | |_/ /_| | |_   _ 
+//|  _  |  _ \ / _  | | | |/ __| __/ _ \/ _  | |  _ \| | | | | ___ \ | | | | | |
+//| | | | |_) | (_| | |_| | (__| ||  __/ (_| | | |_) | |_| | | |_/ / | | | |_| |
+//\_| |_/____/ \__,_|\__,_|\___|\__\___|\__,_| |____/ \__, | \____/|_|_|_|\__, |
+//                                                     __/ |               __/ |
+//                                                    |___/               |___/   
+//													
+//													By: Nick Debergue
+//													
+//****IF YOU'RE READING: Good luck understanding this gibberish :)
+//****Contact: perceptionist420@ymail.com
+//****Or message me or comment at Mod/Indie DB! I'm always looking for collaborations!
+//****
+//****CHEATS: Search the code for "hax" (CAUTION: YOU MUST COMMENT/UNCOMMENT THESE SEGMENTS CORRECTLY FOR THE DESIRED EFFECT!)
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////---BEGINNING---//////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void startArea(string &in asEntity, int alState){
+	SetMapDisplayNameEntry("LVL6");
+	ClearSavedMaps();
+	SetMessage("Messages", "lvl6Enter", 5);
+	SetPlayerActive(false);
+	FadeOut(0);
+	AddTimer("startArea2", 1, "startArea2");
+	
+	//VARIABLES
+	AddLocalVarInt("inside", 0);
+	AddLocalVarInt("seenGhost1", 0);
+	AddLocalVarInt("ghost1Area", 0);
+	AddLocalVarInt("lookingGhost1", 0);
+	AddLocalVarInt("movedStatue1", 0);
+	AddLocalVarInt("seenStatue2", 0);
+	AddLocalVarInt("statueMoveA1", 0);
+	AddLocalVarInt("statueMoveL1", 0);
+	AddLocalVarInt("statueMoveA2", 0);
+	AddLocalVarInt("statueMoveL2", 0);
+	AddLocalVarInt("wineInit", 0);
+	AddLocalVarInt("drunk", 0);
+	AddLocalVarInt("isUpstairs", 0);
+	AddLocalVarInt("chestOpen", 0);
+	AddLocalVarInt("monster2", 0);
+	
+	//ENEMY
+	SetEnemyDisableTriggers("noMusicBrute_1", true);
+	SetEnemySanityDecreaseActive("noMusicBrute_1", false);
+	AddEnemyPatrolNode("noMusicBrute_1", "PathNodeArea_1", 0.01, "");
+	AddEntityCollideCallback("noMusicBrute_1", "monsterStop", "monsterStop", true, 1);
+	
+	//CALLBACKS
+	AddEntityCollideCallback("Player", "inside", "inside", false, 1);
+	AddEntityCollideCallback("Player", "outside", "outside", false, 1);
+	AddEntityCollideCallback("Player", "gasp_1", "gasp1", true, 1);
+	AddEntityCollideCallback("Player", "lightningArea1", "lightningArea1", true, 1);
+	//
+	SetEntityPlayerLookAtCallback("ghostLoc1", "lookAtGhost", false);
+	AddEntityCollideCallback("Player", "ghostArea1", "ghostArea1", false, 0);
+	//
+	SetEntityPlayerLookAtCallback("statueMoveL1", "statueMoveL1", false);
+	AddEntityCollideCallback("Player", "statueMoveA1", "statueMoveA1", false, 0);
+	SetEntityPlayerLookAtCallback("statueMoveL2", "statueMoveL2", false);
+	AddEntityCollideCallback("Player", "statueMoveA2", "statueMoveA2", false, 0);
+	SetEntityPlayerLookAtCallback("statueMoveL3", "seenStatue2", true);
+	SetEntityPlayerLookAtCallback("statueMoveL4", "seenStatue2", true);
+	
+	//DOORS
+	SetEntityPlayerInteractCallback("mansion_1", "checkifLocked", false);
+	SetEntityPlayerInteractCallback("castle_1", "checkifLocked", false);
+	SetEntityPlayerInteractCallback("mansion_2", "checkifLockedF2", false);
+	SetEntityPlayerInteractCallback("mansion_3", "checkifLockedF2", false);
+	
+	//LIGHTS
+	SetLightVisible("lightning1", false);
+	SetLightVisible("lightning2", false);
+	SetLightVisible("lightning3", false);
+	SetLightVisible("lightning4", false);
+	
+	//SET-UP RAIN
+	CreateParticleSystemAtEntity("rainP1", "ps_water_rain.ps", "rain_1", true);
+	CreateParticleSystemAtEntity("rainP2", "ps_water_rain.ps", "rain_2", true);
+	CreateParticleSystemAtEntity("rainP3", "ps_water_rain.ps", "rain_3", true);
+	CreateParticleSystemAtEntity("rainP4", "ps_water_rain.ps", "rain_4", true);
+	CreateParticleSystemAtEntity("rainP5", "ps_water_rain.ps", "rain_5", true);
+	AddEntityCollideCallback("Player", "rainA2", "rainA2", true, 1);
+	
+	//
+	SetEntityActive("drinkWineS", false);
+	SetEntityActive("statueMoveL3", false);
+	SetEntityActive("statueMoveL4", false);
+	
+	//HAXE
+	//TeleportPlayer("start2");
+	//SetSwingDoorLocked("castle_1", false, false);
+	//AddEntityCollideCallback("Player", "inBasement", "inBasement", true, 1);
+	//AddUseItemCallback("crowbarPlace", "crowbar", "treasure_chest_1", "crowbarPlace", true);
+	//GiveItem("lantern", "lantern", "", "lantern.tga", 1);
+	
+	//
+	AutoSave();
+}
+
+void startArea2(string &in asTimer){
+	SetPlayerActive(true);
+	FadeIn(2);
+	
+	//MUSIC
+	PlayMusic("rain.ogg", true, 1, 2, 0, true);
+}
+
+void died(string &in asName, int alCount){
+	if(asName == "basement"){
+		SetEntityActive("noMusicBrute_2", true);
+		AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_2", 0.01, "");
+		AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_3", 0.01, "");
+		AddEntityCollideCallback("noMusicBrute_2", "startMonster2Pat", "startMonster2Pat", true, 1);
+		SetLocalVarInt("monster2", 1);
+		
+		//
+		AutoSave();
+	}
+}
+
+void monsterStop(string &in asParent, string &in asChild, int alState){
+	ClearEnemyPatrolNodes("noMusicBrute_1");
+}
+
+void gasp1(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("monster2") == 0){
+		PlayGuiSound("react_pant.snt", 100.0f);
+		SetMessage("Messages", "pathBlocked", 5);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+void inside(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("inside") == 0){
+		//StopMusic(2, 1);
+		PlayMusic("rain2.ogg", true, 1, 2, 1, true);
+		//
+		PlaySoundAtEntity("windowRain1", "rainWindow.snt", "mb_window_noglass_1", 0.01, true);
+		PlaySoundAtEntity("windowRain2", "rainWindow.snt", "mb_window_noglass_2", 0.01, true);
+		PlaySoundAtEntity("windowRain3", "rainWindow.snt", "mb_window_noglass_3", 0.01, true);
+		PlaySoundAtEntity("windowRain4", "rain3D.snt", "mb_window_noglass_4", 0.01, true);
+		PlaySoundAtEntity("windowRain5", "rainWindow.snt", "mb_window_noglass_5", 0.01, true);
+		PlaySoundAtEntity("windowRain6", "rainWindow.snt", "mb_window_noglass_6", 0.01, true);
+		PlaySoundAtEntity("windowRain7", "rainWindow.snt", "mb_window_noglass_7", 0.01, true);
+		PlaySoundAtEntity("windowRain8", "rainWindow.snt", "mb_window_noglass_8", 0.01, true);
+		PlaySoundAtEntity("windowRain9", "rainWindow.snt", "mb_window_noglass_9", 0.01, true);
+		PlaySoundAtEntity("windowRain10", "rainWindow.snt", "mb_window_noglass_10", 0.01, true);
+		PlaySoundAtEntity("windowRain11", "rainWindow.snt", "mb_window_noglass_11", 0.01, true);
+		PlaySoundAtEntity("windowRain12", "rainWindow.snt", "mb_window_noglass_12", 0.01, true);
+		PlaySoundAtEntity("windowRain13", "rainWindow.snt", "mb_window_noglass_13", 0.01, true);
+		PlaySoundAtEntity("windowRain14", "rainWindow.snt", "mb_window_noglass_14", 0.01, true);
+		PlaySoundAtEntity("windowRain15", "rainWindow.snt", "mb_window_noglass_15", 0.01, true);
+		PlaySoundAtEntity("windowRain16", "rainWindow.snt", "mb_window_noglass_16", 0.01, true);
+		//
+		SetLocalVarInt("inside", 1);
+		
+		//
+		AutoSave();
+	}
+}
+
+void outside(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("inside") == 1){
+		//StopMusic(2, 2);
+		PlayMusic("rain.ogg", true, 1, 2, 1, true);
+		//
+		StopSound("windowRain1", 2);
+		StopSound("windowRain2", 2);
+		StopSound("windowRain3", 2);
+		StopSound("windowRain4", 2);
+		StopSound("windowRain5", 2);
+		StopSound("windowRain6", 2);
+		StopSound("windowRain7", 2);
+		StopSound("windowRain8", 2);
+		StopSound("windowRain9", 2);
+		StopSound("windowRain10", 2);
+		StopSound("windowRain11", 2);
+		StopSound("windowRain12", 2);
+		StopSound("windowRain13", 2);
+		StopSound("windowRain14", 2);
+		StopSound("windowRain15", 2);
+		StopSound("windowRain16", 2);
+		//
+		SetLocalVarInt("inside", 0);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+void lookAtGhost(string &in asEntity, int alState){
+	if(alState == 1){
+		if((GetLocalVarInt("seenGhost1") == 0)&&(GetLocalVarInt("ghost1Area") == 1)){
+			SetEntityActive("ritual_prisoner_noillum_1", true);
+			SetLightVisible("lightning2", true);
+			PlayGuiSound("thunder1.ogg", 0.2);
+			AddTimer("lookAtGhost2", 0.1, "lookAtGhost2");
+			//
+			SetLocalVarInt("seenGhost1", 1);
+		}
+		//
+		SetLocalVarInt("lookingGhost1", 1);
+	}else{
+		//
+		SetLocalVarInt("lookingGhost1", 0);
+	}
+}
+
+void ghostArea1(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		//in
+		if((GetLocalVarInt("seenGhost1") == 0)&&(GetLocalVarInt("lookingGhost1") == 1)){
+			SetEntityActive("ritual_prisoner_noillum_1", true);
+			SetLightVisible("lightning2", true);
+			PlayGuiSound("thunder1.ogg", 0.2);
+			AddTimer("lookAtGhost2", 0.1, "lookAtGhost2");
+			//
+			SetLocalVarInt("seenGhost1", 1);
+		}
+		//
+		SetLocalVarInt("ghost1Area", 1);
+	}else{
+		//out
+		SetLocalVarInt("ghost1Area", 0);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+void statueMoveL1(string &in asEntity, int alState){
+	if(alState == 1){
+		if((GetLocalVarInt("statueMoveA1") == 1)&&(GetLocalVarInt("movedStatue1") == 0)){
+			SetEntityActive("crude_man_chains_statue_1", false);
+			SetEntityActive("crude_man_chains_statue_2", false);
+			SetEntityActive("crude_man_chains_statue_3", false);
+			SetEntityActive("crude_man_chains_statue_4", true);
+			SetEntityActive("crude_man_chains_statue_5", false);
+			//
+			SetLocalVarInt("movedStatue1", 1);
+		}
+		//
+		SetLocalVarInt("statueMoveL1", 1);
+	}else{
+		
+		//
+		SetLocalVarInt("statueMoveL1", 0);
+	}
+}
+
+void statueMoveA1(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		if((GetLocalVarInt("statueMoveL1") == 1)&&(GetLocalVarInt("movedStatue1") == 0)){
+			SetEntityActive("crude_man_chains_statue_1", false);
+			SetEntityActive("crude_man_chains_statue_2", false);
+			SetEntityActive("crude_man_chains_statue_3", false);
+			SetEntityActive("crude_man_chains_statue_4", true);
+			SetEntityActive("crude_man_chains_statue_5", false);
+			//
+			SetLocalVarInt("movedStatue1", 1);
+		}
+		//
+		SetLocalVarInt("statueMoveA1", 1);
+	}else{
+		
+		//
+		SetLocalVarInt("statueMoveA1", 0);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+void statueMoveL2(string &in asEntity, int alState){
+	if(alState == 1){
+		if((GetLocalVarInt("statueMoveA2") == 1)&&(GetLocalVarInt("movedStatue1") == 0)){
+			SetEntityActive("crude_man_chains_statue_1", true);
+			SetEntityActive("crude_man_chains_statue_2", false);
+			SetEntityActive("crude_man_chains_statue_3", false);
+			SetEntityActive("crude_man_chains_statue_4", false);
+			SetEntityActive("crude_man_chains_statue_5", false);
+			//
+			SetLocalVarInt("movedStatue1", 1);
+		}
+		//
+		SetLocalVarInt("statueMoveL2", 1);
+	}else{
+		
+		//
+		SetLocalVarInt("statueMoveL2", 0);
+	}
+}
+
+void statueMoveA2(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+		if((GetLocalVarInt("statueMoveL2") == 1)&&(GetLocalVarInt("movedStatue1") == 0)){
+			SetEntityActive("crude_man_chains_statue_1", true);
+			SetEntityActive("crude_man_chains_statue_2", false);
+			SetEntityActive("crude_man_chains_statue_3", false);
+			SetEntityActive("crude_man_chains_statue_4", false);
+			SetEntityActive("crude_man_chains_statue_5", false);
+			//
+			SetLocalVarInt("movedStatue1", 1);
+		}
+		//
+		SetLocalVarInt("statueMoveA2", 1);
+	}else{
+		
+		//
+		SetLocalVarInt("statueMoveA2", 0);
+	}
+}
+
+void lightningStatue(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("thunder4.ogg", 0.2);
+	SetLightVisible("lightning3", true);
+	AddTimer("lightningS1", 0.15, "lightningS1");
+	//
+	AddTimer("hintT1", 60, "hintT1");
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+void seenStatue2(string &in asEntity, int alState){
+	SetLocalVarInt("seenStatue2", 1);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+void hintT1(string &in asTimer){
+	SetMessage("Messages", "thirstyAgain", 7);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//DRANK WINE////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void drinkWine(string &in asEntity){
+	SetEntityActive("drinkWineS", false);
+	SetEntityActive("wine01_1", false);
+	PlayGuiSound("26_agrippa_drink.ogg", 1.0f);
+	SetPlayerActive(false);
+	AddTimer("foundKey", 2, "foundKey");
+	RemoveTimer("hintT1");
+	//
+	SetEntityActive("crude_man_chains_statue_1", false);
+	SetEntityActive("crude_man_chains_statue_2", false);
+	SetEntityActive("crude_man_chains_statue_3", false);
+	SetEntityActive("crude_man_chains_statue_4", false);
+	SetEntityActive("crude_man_chains_statue_5", false);
+	SetEntityActive("statueMoveL3", false);
+	SetEntityActive("statueMoveL4", false);
+	//
+	AddEntityCollideCallback("Player", "upstairs1", "enterUpstairs", true, 1);
+	AddEntityCollideCallback("Player", "upstairs2", "enterUpstairs", true, 1);
+}
+
+void foundKey(string &in asTimer){
+	SetEntityActive("carpet_moveable_3", false);
+	PlayGuiSound("impact_organic_high1.ogg", 1.0);
+	SetEntityActive("upstairsKey", true);
+	SetMessage("Messages", "lvl6FoundKey", 5);
+	SetPlayerActive(true);
+	if(GetGlobalVarInt("tipsy") == 0){
+		AddTimer("tipsy", 10, "tipsy");
+	}else{
+		AddTimer("drunk", 10, "drunk");
+	}
+	//
+	AddUseItemCallback("openDoor2", "upstairsKey", "mansion_2", "unlockDoor", true);
+	AddUseItemCallback("openDoor3", "upstairsKey", "mansion_3", "unlockDoor", true);
+}
+
+void tipsy(string &in asTimer){
+	SetMessage("Messages", "youreTipsy", 5);
+	FadeRadialBlurTo(0.02, 0.5);
+}
+
+void drunk(string &in asTimer){
+	if(GetGlobalVarInt("drunk") == 0){
+		SetMessage("Messages", "youreDrunk", 5);
+		FadeRadialBlurTo(0.03, 0.5);
+		SetLocalVarInt("drunk", 1);
+	}
+}
+
+void unlockDoor(string &in asItem, string &in asEntity){
+	SetSwingDoorLocked(asEntity, false, true);
+	RemoveItem("upstairsKey");
+	PlayGuiSound("unlock_door.ogg", 1.0);
+	if(asEntity == "mansion_2"){
+		SetEntityActive("basementKey_1", true);
+		AddUseItemCallback("openBasement", "basementKey_1", "castle_1", "openBasement", true);
+	}else{
+		SetEntityActive("basementKey_2", true);
+		AddUseItemCallback("openBasement", "basementKey_2", "castle_1", "openBasement", true);
+	}
+	//
+	AutoSave();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//UPSTAIRS/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void enterUpstairs(string &in asParent, string &in asChild, int alState){
+	if(asChild == "upstairs1"){
+		AddEntityCollideCallback("Player", "upstairs3", "lightningStatue2", true, 1);
+		AddEntityCollideCallback("Player", "upstairs5", "cabinetOpen1", true, 1);
+		SetSwingDoorLocked("mansion_3", false, false);
+		SetEntityActive("upstairs2", false);
+		//
+		SetSwingDoorLocked("mansion_2", true, true);
+		SetSwingDoorClosed("mansion_2", true, true);
+	}else{
+		AddEntityCollideCallback("Player", "upstairs4", "lightningStatue3", true, 1);
+		AddEntityCollideCallback("Player", "upstairs5", "cabinetOpen2", true, 1);
+		SetSwingDoorLocked("mansion_2", false, false);
+		SetEntityActive("upstairs1", false);
+		SetSwingDoorLocked("mansion_3", true, true);
+		SetSwingDoorClosed("mansion_3", true, true);
+	}
+	
+	AddTimer("drunk", 30, "drunk");
+	
+}
+
+void lightningStatue2(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("thunder2.ogg", 0.2);
+	SetEntityActive("statueU2", true);
+	SetLightVisible("lightning4", true);
+	AddTimer("lightningStatue2_2", 0.1, "lightningStatue2_2");
+}
+
+void lightningStatue3(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("thunder2.ogg", 0.2);
+	SetEntityActive("statueU1", true);
+	SetLightVisible("lightning1", true);
+	AddTimer("lightningStatue3_2", 0.1, "lightningStatue3_2");
+}
+
+void cabinetOpen1(string &in asParent, string &in asChild, int alState){
+	PlaySoundAtEntity("cabinetHit", "impact_wood_heavy_high.snt", "cabinet_nice_2", 0.01, true);
+	AddPropImpulse("cabinet_nice_2", -8, 0, 0, "world");
+}
+
+void cabinetOpen2(string &in asParent, string &in asChild, int alState){
+	PlaySoundAtEntity("cabinetHit", "impact_wood_heavy_high.snt", "cabinet_nice_3", 0.01, true);
+	AddPropImpulse("cabinet_nice_3", -8, 0, 0, "world");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//BASEMENT//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void openBasement(string &in asItem, string &in asEntity){
+	SetSwingDoorLocked(asEntity, false, true);
+	PlayGuiSound("unlock_door.ogg", 1);
+	
+	if(HasItem("basementKey_1")){
+		RemoveItem("basementKey_1");
+	}else{
+		RemoveItem("basementKey_2");
+	}
+	
+	AddUseItemCallback("crowbarPlace", "crowbar", "treasure_chest_1", "crowbarPlace", true);
+	SetEntityPlayerInteractCallback("treasure_chest_1", "treasure_chest_1", false);
+	AddEntityCollideCallback("Player", "inBasement", "inBasement", true, 1);
+	
+	//
+	AutoSave();
+}
+
+void crowbarPlace(string &in asItem, string &in asEntity){
+	RemoveItem("crowbar");
+	SetEntityActive("crowbarJoint", true);
+	AddEntityCollideCallback("crowbarJoint", "breakCrowbar", "breakCrowbar", true, 1);
+	
+	//
+	AutoSave();
+}
+
+void breakCrowbar(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("17_break_wheel.ogg", 1.0);
+	SetEntityPlayerInteractCallback("pickupNote", "pickupNote", true);
+	SetEntityActive("crowbarJoint", false);
+	SetEntityActive("crowbarBroken", true);
+	SetEntityActive("blockChest", false);
+	SetLocalVarInt("chestOpen", 1);
+	//
+	AddPropImpulse("treasure_chest_1", 4, 4, 0, "world");
+	
+	//
+	AutoSave();
+}
+
+void treasure_chest_1(string &in asEntity){
+	if(GetLocalVarInt("chestOpen") == 0){
+		SetMessage("Messages", "chestLocked", 2);
+	}
+}
+
+void pickupNote(string &in asEntity){
+	AddEntityCollideCallback("Player", "startMonster2", "startMonster2", true, 1);
+	SetSwingDoorClosed("castle_1", true, true);
+	
+	//
+	AutoSave();
+}
+
+void startMonster2(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("noMusicBrute_1", false);
+	SetEntityActive("enemyBlock", false);
+	AddEntityCollideCallback("Player", "gotoLvl7", "gotoLvl7", true, 1);
+	//
+	SetEntityActive("noMusicBrute_2", true);
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_2", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_3", 0.01, "");
+	AddEntityCollideCallback("noMusicBrute_2", "startMonster2Pat", "startMonster2Pat", true, 1);
+	//
+	PlayGuiSound("lvl6_monster.ogg", 1.0);
+	//
+	CheckPoint("basement", "PlayerStartArea_2", "died", "deathHints", "found");
+	SetLocalVarInt("monster2", 1);
+}
+
+void startMonster2Pat(string &in asParent, string &in asChild, int alState){
+	ClearEnemyPatrolNodes("noMusicBrute_2");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_4", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_5", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_6", 3.0, "");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_7", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_8", 0.01, "");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_9", 3.0, "");
+	AddEnemyPatrolNode("noMusicBrute_2", "PathNodeArea_10", 0.01, "");
+}
+
+//
+void inBasement(string &in asParent, string &in asChild, int alState){
+	PlaySoundAtEntity("outsideRain", "rain3D.snt", "outsideRain", 0.01, true);
+	PlayMusic("rain2.ogg", true, 1, 2, 1, true);
+	DestroyParticleSystem("rainP6");
+	DestroyParticleSystem("rainP7");
+	DestroyParticleSystem("rainP8");
+	DestroyParticleSystem("rainP9");
+	//
+	AddEntityCollideCallback("Player", "outBasement", "outBasement", true, 1);
+}
+
+void outBasement(string &in asParent, string &in asChild, int alState){
+	StopSound("outsideRain", 2);
+	PlayMusic("rain.ogg", true, 0.5, 2, 1, true);
+	CreateParticleSystemAtEntity("rainP6", "ps_water_rain.ps", "rain_6", true);
+	CreateParticleSystemAtEntity("rainP7", "ps_water_rain.ps", "rain_7", true);
+	CreateParticleSystemAtEntity("rainP8", "ps_water_rain.ps", "rain_8", true);
+	CreateParticleSystemAtEntity("rainP9", "ps_water_rain.ps", "rain_9", true);
+	
+	//
+	AddEntityCollideCallback("Player", "inBasement", "inBasement", true, 1);
+	
+	//remove monster2
+	if(GetLocalVarInt("monster2") == 1){
+		FadeEnemyToSmoke("noMusicBrute_2", true);
+	}
+	
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//GO TO LVL 7///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void gotoLvl7(string &in asParent, string &in asChild, int alState){
+	AddTimer("leaveLevelT", 2, "leaveLevelT");
+	FadeOut(2);
+}
+
+void leaveLevelT(string &in asTimer){
+	ChangeMap("level7", "PlayerStartArea_1", "", "");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//RAIN//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void rainA1(string &in asParent, string &in asChild, int alState){
+	//the road
+	RemoveTimer("stopRain1");
+	//
+	AddTimer("stopRain2", 3, "stopRain2");
+	//
+	CreateParticleSystemAtEntity("rainP1", "ps_water_rain.ps", "rain_1", true);
+	CreateParticleSystemAtEntity("rainP2", "ps_water_rain.ps", "rain_2", true);
+	CreateParticleSystemAtEntity("rainP3", "ps_water_rain.ps", "rain_3", true);
+	CreateParticleSystemAtEntity("rainP4", "ps_water_rain.ps", "rain_4", true);
+	CreateParticleSystemAtEntity("rainP5", "ps_water_rain.ps", "rain_5", true);
+	//
+	AddEntityCollideCallback("Player", "rainA2", "rainA2", true, 1);
+	//
+	RemoveEntityCollideCallback("Player", "rainA3");
+}
+
+void stopRain1(string &in asTimer){
+	DestroyParticleSystem("rainP1");
+	DestroyParticleSystem("rainP2");
+	DestroyParticleSystem("rainP3");
+	DestroyParticleSystem("rainP4");
+	DestroyParticleSystem("rainP5");
+}
+
+void rainA2(string &in asParent, string &in asChild, int alState){
+	//outside house
+	RemoveTimer("stopRain2");
+	//
+	AddTimer("stopRain1", 3, "stopRain1");
+	//
+	CreateParticleSystemAtEntity("rainP6", "ps_water_rain.ps", "rain_6", true);
+	CreateParticleSystemAtEntity("rainP7", "ps_water_rain.ps", "rain_7", true);
+	CreateParticleSystemAtEntity("rainP8", "ps_water_rain.ps", "rain_8", true);
+	CreateParticleSystemAtEntity("rainP9", "ps_water_rain.ps", "rain_9", true);
+	//
+	AddEntityCollideCallback("Player", "rainA3", "rainA3", false, 0);
+	AddEntityCollideCallback("Player", "rainA1", "rainA1", true, 1);
+}
+
+void stopRain2(string &in asTimer){
+	DestroyParticleSystem("rainP6");
+	DestroyParticleSystem("rainP7");
+	DestroyParticleSystem("rainP8");
+	DestroyParticleSystem("rainP9");
+}
+
+void rainA3(string &in asParent, string &in asChild, int alState){
+	//upstairs
+	
+	if(alState == 1){
+		if(GetLocalVarInt("isUpstairs") == 0){
+			//in
+			RemoveTimer("stopRain3");
+			//
+			AddTimer("stopRain2", 3, "stopRain2");
+			//
+			CreateParticleSystemAtEntity("rainP10", "ps_water_rain.ps", "rain_10", true);
+			CreateParticleSystemAtEntity("rainP11", "ps_water_rain.ps", "rain_11", true);
+			CreateParticleSystemAtEntity("rainP12", "ps_water_rain.ps", "rain_12", true);
+			CreateParticleSystemAtEntity("rainP13", "ps_water_rain.ps", "rain_13", true);
+			//
+			SetLocalVarInt("isUpstairs", 1);
+		}
+	}else{
+		if(GetLocalVarInt("isUpstairs") == 1){
+			//out
+			RemoveTimer("stopRain2");
+			//
+			AddTimer("stopRain3", 3, "stopRain3");
+			//
+			CreateParticleSystemAtEntity("rainP6", "ps_water_rain.ps", "rain_6", true);
+			CreateParticleSystemAtEntity("rainP7", "ps_water_rain.ps", "rain_7", true);
+			CreateParticleSystemAtEntity("rainP8", "ps_water_rain.ps", "rain_8", true);
+			CreateParticleSystemAtEntity("rainP9", "ps_water_rain.ps", "rain_9", true);
+			//
+			SetLocalVarInt("isUpstairs", 0);
+		}
+	}
+}
+
+void stopRain3(string &in asTimer){
+	DestroyParticleSystem("rainP10");
+	DestroyParticleSystem("rainP11");
+	DestroyParticleSystem("rainP12");
+	DestroyParticleSystem("rainP13");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//LIGHTNING/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void lightningArea1(string &in asParent, string &in asChild, int alState){
+	SetLightVisible("lightning4", true);
+	AddTimer("lightningArea1_2", 0.15, "lightningArea1_2");
+	PlayGuiSound("thunder3.ogg", 1.0);
+}
+
+void lightningArea1_2(string &in asTimer){
+	SetLightVisible("lightning4", false);
+	AddTimer("lightningArea1_3", 0.15, "lightningArea1_3");
+}
+
+void lightningArea1_3(string &in asTimer){
+	SetLightVisible("lightning4", true);
+	AddTimer("lightningArea1_4", 0.15, "lightningArea1_4");
+}
+
+void lightningArea1_4(string &in asTimer){
+	SetLightVisible("lightning4", false);
+}
+
+//
+
+void lookAtGhost2(string &in asTimer){
+	SetLightVisible("lightning2", false);
+	AddTimer("lookAtGhost3", 0.15, "lookAtGhost3");
+}
+
+void lookAtGhost3(string &in asTimer){
+	SetLightVisible("lightning2", true);
+	AddTimer("lookAtGhost4", 0.15, "lookAtGhost4");
+}
+
+void lookAtGhost4(string &in asTimer){
+	SetLightVisible("lightning2", false);
+	AddTimer("lookAtGhost5", 0.15, "lookAtGhost5");
+}
+
+void lookAtGhost5(string &in asTimer){
+	SetLightVisible("lightning2", true);
+	AddTimer("lookAtGhost6", 0.15, "lookAtGhost6");
+}
+
+void lookAtGhost6(string &in asTimer){
+	SetLightVisible("lightning2", false);
+	SetEntityActive("ritual_prisoner_noillum_1", false);
+}
+
+//
+
+void lightningS1(string &in asTimer){
+	SetLightVisible("lightning3", false);
+	AddTimer("lightningS2", 0.15, "lightningS2");
+}
+
+void lightningS2(string &in asTimer){
+	SetLightVisible("lightning3", true);
+	AddTimer("lightningS3", 0.15, "lightningS3");
+}
+
+void lightningS3(string &in asTimer){
+	SetLightVisible("lightning3", false);
+	AddTimer("lightningS4", 0.15, "lightningS4");
+}
+
+void lightningS4(string &in asTimer){
+	SetLightVisible("lightning3", true);
+	AddTimer("lightningS5", 0.15, "lightningS5");
+}
+
+void lightningS5(string &in asTimer){
+	SetLightVisible("lightning3", false);
+}
+
+//
+
+void lightningStatue2_2(string &in asTimer){
+	SetLightVisible("lightning4", false);
+	AddTimer("lightningStatue2_3", 0.1, "lightningStatue2_3");
+}
+
+void lightningStatue2_3(string &in asTimer){
+	SetLightVisible("lightning4", true);
+	AddTimer("lightningStatue2_4", 0.1, "lightningStatue2_4");
+}
+
+void lightningStatue2_4(string &in asTimer){
+	SetLightVisible("lightning4", false);
+	AddTimer("lightningStatue2_5", 0.1, "lightningStatue2_5");
+}
+
+void lightningStatue2_5(string &in asTimer){
+	SetLightVisible("lightning4", true);
+	AddTimer("lightningStatue2_6", 0.1, "lightningStatue2_6");
+}
+
+void lightningStatue2_6(string &in asTimer){
+	SetLightVisible("lightning4", false);
+	SetEntityActive("statueU2", false);
+}
+
+//
+
+void lightningStatue3_2(string &in asTimer){
+	SetLightVisible("lightning1", false);
+	AddTimer("lightningStatue3_3", 0.1, "lightningStatue3_3");
+}
+
+void lightningStatue3_3(string &in asTimer){
+	SetLightVisible("lightning1", true);
+	AddTimer("lightningStatue3_4", 0.1, "lightningStatue3_4");
+}
+
+void lightningStatue3_4(string &in asTimer){
+	SetLightVisible("lightning1", false);
+	AddTimer("lightningStatue3_5", 0.1, "lightningStatue3_5");
+}
+
+void lightningStatue3_5(string &in asTimer){
+	SetLightVisible("lightning1", true);
+	AddTimer("lightningStatue3_6", 0.1, "lightningStatue3_6");
+}
+
+void lightningStatue3_6(string &in asTimer){
+	SetLightVisible("lightning1", false);
+	SetEntityActive("statueU1", false);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//MISC FUNCTIONS////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void checkifLocked(string &in asEntity){
+	if(GetSwingDoorLocked(asEntity)){
+		SetMessage("Messages", "lockedDoor", 2);
+	}
+}
+
+void checkifLockedF2(string &in asEntity){
+	if(GetSwingDoorLocked(asEntity)){
+		SetMessage("Messages", "lockedDoor", 2);
+		
+		if(GetLocalVarInt("seenStatue2") == 0){
+			if(asEntity == "mansion_3"){
+				SetEntityActive("crude_man_chains_statue_1", false);
+				SetEntityActive("crude_man_chains_statue_2", true);
+				SetEntityActive("crude_man_chains_statue_3", false);
+				SetEntityActive("crude_man_chains_statue_4", false);
+				SetEntityActive("crude_man_chains_statue_5", false);
+				SetEntityActive("statueMoveL3", false);
+				SetEntityActive("statueMoveL4", true);
+			}else{
+				SetEntityActive("crude_man_chains_statue_1", false);
+				SetEntityActive("crude_man_chains_statue_2", false);
+				SetEntityActive("crude_man_chains_statue_3", false);
+				SetEntityActive("crude_man_chains_statue_4", false);
+				SetEntityActive("crude_man_chains_statue_5", true);
+				SetEntityActive("statueMoveL3", true);
+				SetEntityActive("statueMoveL4", false);
+			}
+		}
+		
+		if(GetLocalVarInt("wineInit") == 0){
+			//SET UP WINE!!
+			SetEntityActive("drinkWineS", true);
+			SetEntityPlayerInteractCallback("drinkWine", "drinkWine", true);
+			
+			//lightning
+			AddEntityCollideCallback("Player", "lightningStatue", "lightningStatue", true, 1);
+			
+			//
+			SetLocalVarInt("wineInit", 1);
+		}
+	}
+}
+
+void releaseLook(){
+	StopPlayerLookAt();
+}

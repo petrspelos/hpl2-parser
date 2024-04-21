@@ -1,0 +1,227 @@
+
+//When the players first loads into the map from the opening//
+//--------SEQUENCE--------//
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelSide");
+	AutoSave();
+	
+	//...Lever...//
+	InteractConnectPropWithMoveObject("c_s_1", "lever_nice01_1", "safety_normal_vert_valve_1", true, false, 1);
+	SetLeverStuckState("lever_nice01_1", -1, true);
+	SetEntityPlayerInteractCallback("lever_nice01_1", "Rusty", true);
+	AddUseItemCallback("", "glass_container_oil_1", "lever_nice01_1", "UseOilOnLever", true);
+	StopPlayerLookAt();
+	
+	//...Enable Player...//
+	
+		SetPlayerRunSpeedMul(0);
+		SetPlayerActive(false);
+		FadeOut(0);
+
+	SetPlayerCrouching(true);
+	SetSwingDoorDisableAutoClose("mansion_1", true);
+	
+	//...Timers...//
+	
+	AddTimer("", 2, "activate");
+	
+	//...Collide Callbacks...//
+	
+	AddEntityCollideCallback("convenient_brick", "areabreak", "WindowBreak", true, 1);
+	AddEntityCollideCallback("Player", "AreaDoor", "DoorOpen", true, 1);
+	AddEntityCollideCallback("Player", "event1", "WindScare", true, 1);
+	AddEntityCollideCallback("Player", "event2", "CreakScare", true, 1);
+	AddEntityCollideCallback("Player", "event3", "SoundScare", true, 1);
+	AddEntityCollideCallback("Player", "event4", "RumbleScare", true, 1);
+	AddEntityCollideCallback("Player", "event5", "LightScare", true, 1);
+	
+		//--Sounds
+		
+	//DONT LOOK! TERRIBLE CODE! 
+		
+	AddEntityCollideCallback("Player", "soundarea1", "soundscare1", true, 1);
+	AddEntityCollideCallback("Player", "soundarea2", "soundscare2", true, 1);
+	AddEntityCollideCallback("Player", "soundarea3", "soundscare3", true, 1);
+	AddEntityCollideCallback("Player", "soundarea4", "soundscare4", true, 1);
+	AddEntityCollideCallback("Player", "AreaOwl", "owlsound", true, 1);
+	
+	//...Load
+	SetupLoadScreen("TextOne", "Load1", 0, "int_loading_1.jpg");
+	
+	//--Timers--//
+	AddTimer("windy", 1, "TimerWind");
+	AddTimer("rumble", 3, "TimerRumble");
+}
+
+//...Window breaks...//
+
+void WindowBreak(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth("windowbreak", 0);
+	GiveSanityBoostSmall();
+	PlayMusic("03_puzzle_secret", false, 0.7f, 0.0f, 0, true);
+}
+
+void activate(string &in asTimer)
+{
+	AddLocalVarInt("iControl", 1);
+	float fTime = 1.5f;
+	
+	switch(GetLocalVarInt("iControl"))
+	{
+		case 1:
+			SetPlayerCrouching(true);
+			SetPlayerActive(false);
+			StartPlayerLookAt("ScriptArea_3", 1, 2, "");
+			FadeIn(4);
+			fTime = 4.5f;
+		break;
+		case 2:
+			PlaySoundAtEntity("", "react_sigh", "Player", 0, false);
+			FadeOut(2);
+			fTime = 2.0f;
+		break;
+		case 3:
+			FadeIn(2);
+			SetPlayerActive(true);
+			StopPlayerLookAt();
+		break;
+	}
+	
+	if(GetLocalVarInt("iControl") < 3) AddTimer("", fTime, "activate");	
+}
+
+//...End Window Break...//
+//...Begin Wind Scare...//
+
+void WindScare(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_1", false);
+	
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_1", 0.1f, false);
+	PlaySoundAtEntity("", "react_scare", "Player", 0.1f, false);
+	
+	GiveSanityDamage(1, true);
+	
+	PlayMusic("03_event_tomb", false, 0.7f, 0.1f, 1, true);
+}
+
+//...End Wind Scare...//
+//...Door Opens...//
+
+void DoorOpen(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerRunSpeedMul(1);
+	AddPropForce("mansion_1", 0, 0, 200, "world");
+	PlaySoundAtEntity("", "scare_wings", "Player", 0.1f, false);
+}
+
+//...End Door Opens...//
+//...Begin Light...//
+
+void LightScare(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("hanging_lantern_ceiling_1", -1000, 0, 0, "world");
+	
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_2", false);
+
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_2", 0.1f, false);
+	PlaySoundAtEntity("", "react_scare", "Player", 0.1f, false);
+	PlaySoundAtEntity("", "scare_wings", "Player", 0.1f, false);
+	
+	//PlayMusic("03_event_tomb", false, 0.7f, 0.1f, 1, true);
+}
+
+//...End Light Scare..//
+//...Rumble...//
+
+void RumbleScare(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.01f, 5, 1, 0.2f);
+	PlaySoundAtEntity("Creak", "00_creak", "Player", 0.1f, false);
+	AddTimer("", 3, "Stop");
+	SetPlayerMoveSpeedMul(0.2f);
+}
+
+void Stop(string &in asTimer)
+{
+	StopSound("Creak", 2);
+	SetPlayerMoveSpeedMul(1);
+}
+
+//...Various Sounds...//
+
+void soundscare1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_baby_cry", "Player", 0.1f, false);
+}
+
+void soundscare2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_loon", "Player", 0.1f, false);
+}
+
+void soundscare3(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_animal_squeal", "Player", 0.1f, false);
+}
+
+void soundscare4(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_wings", "Player", 0.1f, false);
+}
+
+//...Lever Oil...//
+	
+	//--Initially Finds Lever Rusty
+	
+void Rusty(string &in asEntity)
+{
+	SetMessage("TextOne", "RustyLever", 1.5f);
+}
+
+	//--Oil Lever
+	
+void UseOilOnLever(string &in asItem, string &in asEntity)
+{
+	CreateParticleSystemAtEntity("oilgrease", "ps_oil_grease.ps", "lever_nice01_1", false);
+	PlaySoundAtEntity("greas", "16_grease_lever", "lever_nice01_1", 0.0f, false);	
+	SetLeverStuckState("lever_nice01_1", 0, true);
+	RemoveItem("glass_container_oil_1");
+}
+
+//--RANDOM WIND EFFECTS--//
+void TimerWind(string &in asTimer)
+{
+	int iWind = RandInt(1, 3);
+	
+	CreateParticleSystemAtEntity("windy", "ps_dust_whirl.ps", "AreaWind_"+iWind, false);
+	PlaySoundAtEntity("wind", "general_wind_whirl", "AreaWind_"+iWind, 0.0f, false);
+	
+	AddTimer("windy", RandFloat(10.5, 15.5), "TimerWind");
+}
+//--RANDOM RUMBLE EFFECTS--//
+void TimerRumble(string &in asTimer)
+{
+	PlaySoundAtEntity("rockrumble", "03_rock_move", "AreaRumble", 0.0f, false);
+	
+	AddTimer("rumble", RandFloat(10.5, 15.5), "TimerRumble");
+}
+
+//--INTERRACT STUCK SLIDE DOOR--//
+void InteractDoor(string &in asEntity)
+{
+	int iDust = RandInt(1, 3);
+	
+	CreateParticleSystemAtEntity("dusty", "ps_debris_tunnel.ps", "AreaDust_"+iDust, false);
+	PlaySoundAtEntity("dust", "15_sand_debris", "AreaDust_"+iDust, 0.0f, false);
+	
+	SetMessage("TextOne", "01Dusty", 2);
+}
+
+//--INTERRACT LOCKED DOOR--//
+void LockDoor(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2);
+}

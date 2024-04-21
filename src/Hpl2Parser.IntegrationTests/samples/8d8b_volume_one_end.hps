@@ -1,0 +1,66 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+{
+	SetLanternActive(false, false);
+	SetLanternDisabled(true);
+	AddEntityCollideCallback("Player", "ScriptEnterRoom", "EnterWaitingRoom", false, 1);
+	SetEntityPlayerInteractCallback("CheckVolumeTwo", "UsedStone", false);
+	AddGlobalVarInt("WatchedVol1EndCredits", 0);
+}
+
+void OnEnter()
+{
+	SetFogColor(0, 0, 0, 1);
+	SetFogProperties(10, 15, 0.5f, true);
+	SetFogActive(true);
+	int is_return = GetGlobalVarInt("WatchedVol1Credits");
+	if(is_return > 0) EnterWaitingRoom("Player", "ScriptEnterRoom", 1);
+}
+
+void OnLeave()
+{
+	SetFogActive(false);
+}
+
+// moved to the next room
+void EnterWaitingRoom(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityInteractionDisabled("CheckVolumeTwoStone", true);
+	SetGlobalVarInt("WatchedVol1Credits", 1);
+	if(CheckVolumeTwo() > 0) return;
+	SetEntityActive("level_hub_1", true);
+	SetLanternDisabled(false);
+	AutoSave();
+	int watched_end_credits = GetGlobalVarInt("WatchedVol1EndCredits");
+	if(watched_end_credits > 0) SetEntityActive("SignAboutLevelTwo", true);
+	else SetEntityActive("SignAboutLevelTwo", false);
+}
+
+// use the stone
+void UsedStone(string &in asEntity)
+{
+	int watched_end_credits = GetGlobalVarInt("WatchedVol1EndCredits");
+	if(watched_end_credits > 0) ChangeMap("volume_one_end.hps", "PlayerStartArea_2", "", "");
+	else GotoBedCredits();
+}
+
+// sleeps (start credits)
+void GotoBedCredits()
+{
+	SetGlobalVarInt("WatchedVol1EndCredits", 1);
+	AutoSave();
+	StartCredits("a_mod_pactum_tenebris/music/Credits.ogg", false, "Ending", "Volume_One_Credits", 99);
+}
+
+// activates to check if volume 2 is out
+int CheckVolumeTwo()
+{
+	if(GetEntityExists("VolumeTwoIsOut"))
+	{
+		TeleportPlayer("PlayerStartArea_3");
+		AutoSave();
+		return 1;
+	}
+	return 0;
+}

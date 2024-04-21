@@ -1,0 +1,123 @@
+void OnStart()
+{	
+	SetPlayerLampOil(100.0f);
+	SetLocalVarInt("s cares", 0);
+	SetLanternActive(false, false);
+	SetMessage("ms", "TS4", -1.0f);
+	SetPlayerHealth(100.0f);
+	AddTimer("", 1.0f, "clear_inventory");
+	RemoveItem("lantern_1");
+	RemoveItem("Studium");
+	RemoveItem("key_tomb_1");
+	RemoveItem("orbpiece_obsidian_1");
+	RemoveItem("orbpiece_indigo_1");
+	RemoveItem("orbpiece_emerald_1");
+	RemoveItem("poison_gland_1");
+	RemoveItem("key_torture_chamber_brick_2");
+	RemoveItem("key_torture_chamber_brick_1");
+	SetInventoryDisabled(true);
+	AddEntityCollideCallback("Player", "StartAmb", "ambience", true, 0);
+	AddEntityCollideCallback("Player", "scare_amb", "scare", true, 0);
+	AddEntityCollideCallback("Player", "areaAlter", "alterPlayer", true, 0);
+	AddEntityCollideCallback("Player", "ScareArea_1", "ScarePlayer_1", true, 0);
+	AddEntityCollideCallback("Player", "ScareArea_2", "ScarePlayer_2", true, 0);
+}
+
+
+void ScarePlayer_2(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=4; i<=7; ++i)	SetEntityActive("corpse_male_"+i, true);
+	for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	AddPropImpulse("corpse_male_4", -150.0f, 0.0f, 0.0f, "world");
+	AddPropImpulse("corpse_male_5", 0.0f, 0.0f, -150.0f, "world");
+	AddPropImpulse("corpse_male_6", 0.0f, 0.0f, 1500.0f, "world");
+	AddPropImpulse("corpse_male_7", 150.0f, 0.0f, 0.0f, "world");
+	AddLocalVarInt("s cares", 1);
+	SetLevelDoorLocked("level_dungeon_1", false);
+	AddQuest("cellar_door_unlocked", "cd");
+	AddTimer("dissapear2", 2.0f, "TimerEvents");
+	
+}
+
+void ScarePlayer_1(string &in asParent, string &in asChild, int alState)
+{
+	AddLocalVarInt("s cares", 1);
+	for(int i=2; i<=3; ++i)
+	{
+		SetEntityActive("corpse_male_"+i, true);
+	}
+	PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	AddPropImpulse("corpse_male_2", 0.0f, 0.0f, 150.0f, "world");
+	AddPropImpulse("corpse_male_3", 0.0f, 0.0f, -150.0f, "world");
+	AddTimer("dissapear1", 1.5f, "TimerEvents");
+}
+
+void TimerEvents(string &in asTimer)
+{
+	if(asTimer == "dissapear1")	
+	{
+		for(int i=2; i<=3; ++i) SetEntityActive("corpse_male_"+i, false);
+		FadeSepiaColorTo(0.0f, 0.5f);
+		FadeImageTrailTo(0.0f, 0.5f);
+		SetPlayerMoveSpeedMul(1.0f);
+		PlayGuiSound("react_breath_slow.snt", 1.0f);
+	}
+	else if (asTimer == "dissapear2")
+	{
+		for(int i=4; i<=7; ++i) SetEntityActive("corpse_male_"+i, false);
+	}
+	if (GetLocalVarInt("s cares") == 2)
+	{
+		SetEntityActive("mansion_2", false);
+		PlayGuiSound("react_scare.snt", 1.0f);
+	}
+}
+
+void alterPlayer(string &in asParent, string &in asChild, int alState)
+{
+	FadeSepiaColorTo(0.8f, 0.5f);
+	FadeImageTrailTo(0.63f, 0.5f);
+	SetPlayerMoveSpeedMul(0.5f);
+	PlayGuiSound("react_breath_slow.snt", 1.0f);
+}
+
+void scare(string &in asParent, string &in asChild, int alState)
+{
+	SetLightVisible("SpotLight_2", false);
+	AddLocalVarInt("s cares", 1);
+	GiveSanityDamage(1.0f, true);
+	PlayMusic("20_event_darkness", false, 1.0f, 0.0f, 1.1f, false);
+	SetEntityActive("hanging_lantern_wall_no_light_1",false);
+	PlayGuiSound("break_glass_bottle.snt", 1.0f);
+	AddTimer("", 0.1f, "TimerEvents");
+}
+
+void realization(string &in asEntity, string &in Type)
+{
+	PlayMusic("28_paper_daniel01.ogg", false, 1.0f, 0, 10, false);
+}
+
+void clear_inventory(string &in asTimer)
+{
+	for(int i; i<=40; ++i)	
+	{
+		RemoveItem("AntiHistamine_"+i);
+		RemoveItem("Tinderbox");
+		RemoveItem("advancedCocain_"+i);
+		RemoveItem("potion_oil_smoky_"+i);
+		RemoveItem("potion_oil_large_"+i);
+		RemoveItem("potion_oil_"+i);
+		RemoveItem("potion_oil");
+		RemoveItem("nerveGas_"+i);
+		RemoveItem("potion_health_"+i);
+		RemoveItem("potion_sanity_"+i);
+		RemoveItem("tinderbox");
+	}
+	SetInventoryDisabled(false);
+}
+
+void ambience(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(0.0f, 10);
+	PlayMusic("06_amb.ogg", true, 1.0f, 0.0f, 1.0f, false);
+}

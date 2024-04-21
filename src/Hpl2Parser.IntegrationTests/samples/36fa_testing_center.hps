@@ -1,0 +1,45 @@
+void OnStart()
+{
+	ClearSavedMaps();
+	for(int i=1; i<5; i++) AddUseItemCallback("", "test_"+i+"_key", "door_test_"+i, "OpenDoorTest", true);
+	SetGlobalVarInt("test", 0);
+	
+	SetEntityPlayerInteractCallback("easter_egg_3", "CollectEasterEgg", true);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("testing-center");
+	SetEntityCustomFocusCrossHair("easter_egg_3", "Pick");
+	int lock = GetGlobalVarInt("test");
+	if(lock>0){
+		SetLevelDoorLocked("door_test_"+lock, true);
+		SetLevelDoorLockedText("door_test_"+lock, "Actions", "test_finished");
+	}
+	PlayMusic("09_amb_safe.ogg", true, 1, 0.5, 1, false);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreens", "blank", 0, "");
+	StopMusic(1, 1);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+////////////////////////////
+//////////DOORS/////////////
+
+void OpenDoorTest(string &in item, string &in door)
+{
+	SetLevelDoorLocked(door, false);
+	RemoveItem(item);
+	PlayGuiSound("unlock_door.snt", 1);
+}

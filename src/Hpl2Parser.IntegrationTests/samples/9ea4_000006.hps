@@ -1,0 +1,42 @@
+void OnStart()
+{	
+	AddUseItemCallback("jump_rod", "JumpRod", "AreaPushPlayer", "PushPlayer", false);
+	AddEntityCollideCallback("Player", "AreaPushPlayer", "Tip", false, 0);
+	AddEntityCollideCallback("Player", "EndStory", "EndStories", false, 0);
+	SetLocalVarInt("gravity", 0);
+}
+
+void PushPlayer(string &in asItem, string &in asEntity)
+{
+	SetLocalVarInt("gravity", 0);
+	GivePlayerDamage(50.0f, "BloodSplat", true, false);
+	for(int i=1; i<=10; ++i)PlaySoundAtEntity("hit_sound", "lurker_hit_wood", "Player", 0.0f, false);
+	AddPlayerBodyForce(0.0f, 10000000.0f, 0.0f, false);
+	AddEntityCollideCallback("Player", "Propeller", "Propel", true, 0);
+}
+
+void Tip(string &in asParent, string &in asChild, int alState)
+{
+	if(HasItem("JumpRod") == true)
+		SetMessage("hints", "hints", -1);
+		RemoveEntityCollideCallback(asParent, asChild);
+}
+
+void Propel(string &in asParent, string &in asChild, int alState)
+{
+	AddPlayerBodyForce(0.0f, 10000.0f - GetLocalVarInt("gravity"), 0.0f, false);
+	AddTimer("propel", 0.1f, "engine");
+	AddLocalVarInt("gravity", 4000);
+
+}
+void engine(string &in asTimer)
+{
+	AddPlayerBodyForce(0.0f, 70000.0f, 0.0f, false);
+	AddTimer("propel", 0.1f, "engine");
+}
+
+void EndStories(string &in asParent, string &in asChild, int alState)
+{
+	StartCredits("NyanCatViolinCover", true, "credits", "credits", RandInt(0, 2));
+	RemoveTimer("propel");
+}

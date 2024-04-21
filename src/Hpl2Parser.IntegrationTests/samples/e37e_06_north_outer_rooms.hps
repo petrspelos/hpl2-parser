@@ -1,0 +1,135 @@
+void OnStart(){
+	AddTimer("T1", 1.0f, "lockDoor");
+	SetLocalVarString("Code", "2312113");
+	SetLocalVarString("InputString", "");
+	SetLocalVarInt("presses", 7);
+	SetLocalVarInt("codeComplete", 0);
+	SetEntityPlayerInteractCallback("key_1", "press_1", false);
+	SetEntityPlayerInteractCallback("key_2", "press_2", false);
+	SetEntityPlayerInteractCallback("key_3", "press_3", false);
+	AddUseItemCallback("", "s_guest_rooms_key", "s_guest_rooms", "unlockLastDoor", true);
+	SetEntityPlayerInteractCallback("guide", "screamLoud", true);
+	AddUseItemCallback("", "key_cellar", "cellar", "unlockCellar", true);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "trustCorridors", false, 1);
+	SetEntityPlayerInteractCallback("a_note", "spoox", true);
+	AddEntityCollideCallback("weapon", "servant_brute_1", "HitBrute", false, 1);
+	SetLocalVarInt("BruteHealth", 1);
+	SetLocalVarInt("corridorChase", 0);
+	SetDeathHint("Messages", "fightback");
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.25f, 0, 0, true);
+}
+
+void OnLeave(){
+}
+
+void lockDoor(string &in asTimer){
+	PlayGuiSound("lock_door.snt", 100);
+}
+
+void press_1(string &in entity){
+	if (GetLocalVarInt("codeComplete") == 0){
+		AddLocalVarString("InputString", "1");
+		check_ok();
+	}else{
+		SetMessage("Messages", "codeNotNeeded", 0);
+	}
+}
+
+void press_2(string &in entity){
+	if (GetLocalVarInt("codeComplete") == 0){
+		AddLocalVarString("InputString", "2");
+		check_ok();
+	}else{
+		SetMessage("Messages", "codeNotNeeded", 0);
+	}
+}
+
+void press_3(string &in entity){
+	if (GetLocalVarInt("codeComplete") == 0){
+		AddLocalVarString("InputString", "3");
+		check_ok();
+	}else{
+		SetMessage("Messages", "codeNotNeeded", 0);
+	}
+}
+
+void check_ok(){
+		AddLocalVarInt("presses", -1);
+		PlayGuiSound("impact_book_high.snt", 1000);
+		if (GetLocalVarInt("presses") == 0){
+			if (GetLocalVarString("InputString") == GetLocalVarString("Code") ){
+				AddTimer("T22", 0.1, "completeCode");
+				SetLocalVarInt("codeComplete", 1);
+			}else{
+				SetMessage("Messages", "incorrect", 0);
+				SetLocalVarInt("presses", 7);
+				SetLocalVarString("InputString", "");
+			}
+		}
+}
+
+void completeCode(string &in asTimer){
+	PlayGuiSound("move_gate.snt", 100);
+	AddTimer("T3", 2.5f, "rewardPlayer");
+	SetLocalVarInt("corridorChase", 1);
+	SetLevelDoorLocked("guest_rooms", false);
+}
+
+void rewardPlayer(string &in asTimer){
+	AddPlayerSanity(25);
+	PlayGuiSound("unlock_door.snt", 100);
+}
+
+void spoox(string &in entity){
+	AddTimer("T6", 0.1f, "spawnEnemy");
+}
+
+void spawnEnemy(string &in asTimer){
+	SetEntityActive("servant_brute_1", true);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+	SetMessage("Messages", "defense_repeated", 0)
+;	GiveSanityDamage(25, true);
+}
+
+void HitBrute(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("BruteHealth") == 1){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetLocalVarInt("BruteHealth", 0);
+	}else if (GetLocalVarInt("BruteHealth") == 0){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetEnemyIsHallucination("servant_brute_1", true);
+	}
+}
+
+void screamLoud(string &in entity){
+	AddTimer("T4", 0.1f, "screamLouder");
+}
+
+void screamLouder(string &in asTimer){
+	PlayGuiSound("21_intro_scream.snt", 1000000);
+}
+
+void trustCorridors(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("corridorChase") == 1){
+		SetEntityActive("servant_brute_2", true);
+		AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_3", 0, "");
+		SetEntityActive("ScriptArea_1", false);
+		GiveSanityDamage(25, true);
+	}
+}
+
+void unlockCellar(string &in item, string &in door){
+	SetLevelDoorLocked("cellar", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}
+
+void unlockLastDoor(string &in item, string &in door){
+	SetLevelDoorLocked("s_guest_rooms", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}

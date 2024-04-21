@@ -1,0 +1,415 @@
+void OnStart()
+{
+	SetDeathHint("DeathCategory", "TunnelDeathText");
+	SetPlayerSanity(50);
+	SetPlayerMoveSpeedMul(1);
+	AutoSave();
+	PlayMusic("12_amb.ogg", true, 1, 2.5f, 0, true);
+	AddEntityCollideCallback("Player", "SuitorArea2", "LastChase", false, 1);
+	AddEntityCollideCallback("Player", "SuitorArea3", "LastChase2", false, 1);
+	AddEntityCollideCallback("Player", "TeleportEnemy1", "TeleportSuitorToNode", false, 1);
+	AddEntityCollideCallback("Player", "TeleportEnemy2", "TeleportSuitorToNode2", false, 1);
+	AddEntityCollideCallback("Player", "TeleportEnemy3", "TeleportSuitorToNode3", false, 1);
+	AddEntityCollideCallback("Player", "TeleportEnemy4", "TeleportSuitorToNode4", false, 1);
+	AddEntityCollideCallback("Player", "TeleportEnemy5", "TeleportSuitorToNode5", false, 1);
+	AddEntityCollideCallback("Player", "CaveInArea", "CaveIn", true, 1);
+	AddEntityCollideCallback("enemy_suitor_3", "BreakArea1", "BreakPath1", false, 1);
+	AddEntityCollideCallback("enemy_suitor_3", "BreakArea2", "BreakPath2", false, 1);
+	AddEntityCollideCallback("enemy_suitor_3", "BreakArea3", "BreakPath3", false, 1);
+	AddEntityCollideCallback("enemy_suitor_3", "BreakArea4", "BreakPath4", false, 1);
+	AddEntityCollideCallback("enemy_suitor_1", "RemoveSuitor", "RemoveSuitor", false, 1);
+	AddTimer("T1", 0.5, "SplashLoop1");
+	AddTimer("T1", 0.5, "SplashLoop2");
+	
+	SetEntityConnectionStateChangeCallback("valve_iron_rusty_1", "OpenHeavyDoor");
+	AddUseItemCallback("", "glass_container_oil_1", "valve_iron_rusty_2", "UnstuckValve", true);
+	AddUseItemCallback("", "glass_container_oil_1", "oil_barrel_1", "FillContainer", true);
+	SetEntityPlayerInteractCallback("valve_iron_rusty_2", "ValveStuck", false);
+	SetEntityPlayerInteractCallback("ScriptArea_9", "ItsHeavy", false);
+}
+void OnEnter()
+{
+		ResetProp("wood_box01_breakable_7");
+		ResetProp("wood_box01_breakable_12");
+		ResetProp("wood_box02_breakable_4");
+		ResetProp("wood_box02_breakable_6");
+		ResetProp("wood_box01_breakable_8");
+		ResetProp("wood_box02_breakable_5");
+		ResetProp("wood_box01_breakable_9");
+		ResetProp("wood_box01_breakable_10");
+		ResetProp("wood_box01_breakable_11");
+		ResetProp("wood_box02_breakable_7");
+		ResetProp("wood_box01_breakable_4");
+		ResetProp("wood_box01_breakable_2");
+		ResetProp("wood_box01_breakable_1");
+		ResetProp("wood_box02_breakable_1");
+		ResetProp("wood_box01_breakable_5");
+		ResetProp("wood_box01_breakable_6");
+		ResetProp("wood_box02_breakable_2");
+		ResetProp("wood_box02_breakable_3");
+		ResetProp("wood_box01_breakable_3");
+}
+
+void ValveStuck (string &in asEntity)
+{
+	SetMessage("Messages", "ValveStuck", 0);
+	AddTimer("T1", 1, "GiveValveQuest");
+}
+
+void GiveValveQuest(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		AddQuest ("ValveQuest", "ValveQuest");
+	}
+}
+
+void ItsHeavy (string &in asEntity)
+{
+	SetMessage("Messages", "ItsHeavy", 0);
+}
+
+void FillContainer(string &in asItem, string &in asEntity)
+ {
+	RemoveItem("glass_container_oil_1");
+	GiveItemFromFile("glass_container_oil.ent", "glass_container_oil.ent");
+	PlaySoundAtEntity("", "quest_added.snt", "Player", 0.0f, true);
+ }
+
+void UnstuckValve(string &in asItem, string &in asEntity)
+ {
+	CompleteQuest ("ValveQuest", "ValveQuest");
+	SetEntityActive("valve_iron_rusty_2", false);	
+	SetEntityActive("valve_iron_rusty_1", true);
+	PlaySoundAtEntity("", "puzzle_acid_fail.snt", "Player", 0.0f, true);
+ }
+
+void OpenHeavyDoor(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+     SetMoveObjectState("castle_portcullis_1",1.0f);
+	SetEntityActive("valve_iron_rusty_3", true);
+	SetEntityActive("ScriptArea_9", false);
+	RemoveItem("glass_container_oil_1");
+	 return;
+     }
+}
+
+void CaveIn (string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("cave_in_1", true);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_4", false);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_5", false);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_6", false);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_7", false);
+	PlaySoundAtEntity("", "explosion_rock_large.snt", "cave_in_1", 0.0f, true);
+	StartScreenShake(0.05, 1.5, 1.4, 2);
+}
+void Restart(string &in asName, int alCount)
+{
+		PlayMusic("12_amb.ogg", true, 1, 2.5f, 0, true);
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerSanity(50);
+		SetEntityActive("block_box_1", false);
+		ResetProp("wood_box01_breakable_7");
+		ResetProp("wood_box01_breakable_12");
+		ResetProp("wood_box02_breakable_4");
+		ResetProp("wood_box02_breakable_6");
+		ResetProp("wood_box01_breakable_8");
+		ResetProp("wood_box02_breakable_5");
+		ResetProp("wood_box01_breakable_9");
+		ResetProp("wood_box01_breakable_10");
+		ResetProp("wood_box01_breakable_11");
+		ResetProp("wood_box02_breakable_7");
+		ResetProp("wood_box01_breakable_4");
+		ResetProp("wood_box01_breakable_2");
+		ResetProp("wood_box01_breakable_1");
+		ResetProp("wood_box02_breakable_1");
+		ResetProp("wood_box01_breakable_5");
+		ResetProp("wood_box01_breakable_6");
+		ResetProp("wood_box02_breakable_2");
+		ResetProp("wood_box02_breakable_3");
+		ResetProp("wood_box01_breakable_3");
+		SetEntityActive("TeleportEnemy1", true);
+		SetEntityActive("TeleportEnemy2", true);
+		SetEntityActive("TeleportEnemy3", true);
+		SetEntityActive("TeleportEnemy4", true);
+		SetEntityActive("TeleportEnemy5", true);
+}
+
+void Restart2(string &in asName, int alCount)
+{
+		PlayMusic("12_amb.ogg", true, 1, 2.5f, 0, true);
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerSanity(50);
+		SetEntityActive("block_box_1", false);
+		ResetProp("wood_box01_breakable_7");
+		ResetProp("wood_box01_breakable_12");
+		ResetProp("wood_box02_breakable_4");
+		ResetProp("wood_box02_breakable_6");
+		ResetProp("wood_box01_breakable_8");
+		ResetProp("wood_box02_breakable_5");
+		ResetProp("wood_box01_breakable_9");
+		ResetProp("wood_box01_breakable_10");
+		ResetProp("wood_box01_breakable_11");
+		ResetProp("wood_box02_breakable_7");
+		ResetProp("wood_box01_breakable_4");
+		ResetProp("wood_box01_breakable_2");
+		ResetProp("wood_box01_breakable_1");
+		ResetProp("wood_box02_breakable_1");
+		ResetProp("wood_box01_breakable_5");
+		ResetProp("wood_box01_breakable_6");
+		ResetProp("wood_box02_breakable_2");
+		ResetProp("wood_box02_breakable_3");
+		ResetProp("wood_box01_breakable_3");
+		SetPropHealth("wood_box01_breakable_4", 100);
+		SetPropHealth("wood_box01_breakable_2", 100);
+		SetPropHealth("wood_box01_breakable_1", 100);
+		SetPropHealth("wood_box02_breakable_1", 100);
+		SetPropHealth("wood_box01_breakable_5", 100);
+		SetPropHealth("wood_box01_breakable_6", 100);
+		SetPropHealth("wood_box02_breakable_2", 100);
+		SetPropHealth("wood_box01_breakable_3", 100);
+		SetPropHealth("wood_box02_breakable_3", 100);
+		SetPropHealth("wood_box01_breakable_8", 100);
+		SetPropHealth("wood_box02_breakable_4", 100);
+		SetPropHealth("wood_box01_breakable_7", 100);
+		SetPropHealth("wood_box02_breakable_6", 100);
+		SetPropHealth("wood_box01_breakable_12", 100);
+		SetPropHealth("wood_box01_breakable_9", 100);
+		SetPropHealth("wood_box02_breakable_7", 100);
+		SetPropHealth("wood_box01_breakable_11", 100);
+		SetPropHealth("wood_box01_breakable_10", 100);
+		SetEntityActive("TeleportEnemy1", true);
+		SetEntityActive("TeleportEnemy2", true);
+		SetEntityActive("TeleportEnemy3", true);
+		SetEntityActive("TeleportEnemy4", true);
+		SetEntityActive("TeleportEnemy5", true);
+}
+
+void RemoveSuitor (string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("enemy_suitor_1", false);
+}
+
+void LastChase (string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint ("FirstCheckpoint", "PlayerStartArea_2", "Restart", "DeathCategory", "DeathHintEntry");
+	SetEntityActive("enemy_suitor_1", true);
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_1", 3, "");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_2", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_3", 5, "");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_4", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_18", 0, "");
+}
+void LastChase2 (string &in asParent, string &in asChild, int alState)
+{
+		CheckPoint ("SecondCheckpoint", "PlayerStartArea_2", "Restart2", "DeathCategory", "DeathHintEntry");
+		SetEntityActive("block_box_1", true);
+		SetEntityActive("enemy_suitor_1", false);
+		SetEntityActive("enemy_suitor_3", true);
+		ShowEnemyPlayerPosition("enemy_suitor_3");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_5", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_6", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_7", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_8", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_9", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_10", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_11", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_12", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_13", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_14", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_15", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_16", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_17", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_18", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_19", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_20", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_21", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_22", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_23", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_24", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_25", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_26", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_27", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_28", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_29", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_30", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_31", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_32", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_33", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_34", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_35", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_36", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_37", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_38", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_39", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_40", 0, "");
+		AddEnemyPatrolNode("enemy_suitor_3", "PathNodeArea_41", 0, "");
+		AddTimer("T1", 1, "ShowEnemyPlayerPositionLoop");
+		ResetProp("wood_box01_breakable_7");
+		ResetProp("wood_box01_breakable_12");
+		ResetProp("wood_box02_breakable_4");
+		ResetProp("wood_box02_breakable_6");
+		ResetProp("wood_box01_breakable_8");
+		ResetProp("wood_box02_breakable_5");
+		ResetProp("wood_box01_breakable_9");
+		ResetProp("wood_box01_breakable_10");
+		ResetProp("wood_box01_breakable_11");
+		ResetProp("wood_box02_breakable_7");
+		ResetProp("wood_box01_breakable_4");
+		ResetProp("wood_box01_breakable_2");
+		ResetProp("wood_box01_breakable_1");
+		ResetProp("wood_box02_breakable_1");
+		ResetProp("wood_box01_breakable_5");
+		ResetProp("wood_box01_breakable_6");
+		ResetProp("wood_box02_breakable_2");
+		ResetProp("wood_box02_breakable_3");
+		ResetProp("wood_box01_breakable_3");
+		SetPropHealth("wood_box01_breakable_4", 100);
+		SetPropHealth("wood_box01_breakable_2", 100);
+		SetPropHealth("wood_box01_breakable_1", 100);
+		SetPropHealth("wood_box02_breakable_1", 100);
+		SetPropHealth("wood_box01_breakable_5", 100);
+		SetPropHealth("wood_box01_breakable_6", 100);
+		SetPropHealth("wood_box02_breakable_2", 100);
+		SetPropHealth("wood_box01_breakable_3", 100);
+		SetPropHealth("wood_box02_breakable_3", 100);
+		SetPropHealth("wood_box01_breakable_8", 100);
+		SetPropHealth("wood_box02_breakable_4", 100);
+		SetPropHealth("wood_box01_breakable_7", 100);
+		SetPropHealth("wood_box02_breakable_6", 100);
+		SetPropHealth("wood_box01_breakable_12", 100);
+		SetPropHealth("wood_box01_breakable_9", 100);
+		SetPropHealth("wood_box02_breakable_7", 100);
+		SetPropHealth("wood_box01_breakable_11", 100);
+		SetPropHealth("wood_box01_breakable_10", 100);
+		SetEntityActive("wood_box01_breakable_7", true);
+		SetEntityActive("wood_box01_breakable_12", true);
+		SetEntityActive("wood_box02_breakable_4", true);
+		SetEntityActive("wood_box02_breakable_6", true);
+		SetEntityActive("wood_box01_breakable_8", true);
+		SetEntityActive("wood_box02_breakable_5", true);
+		SetEntityActive("wood_box01_breakable_9", true);
+		SetEntityActive("wood_box01_breakable_10", true);
+		SetEntityActive("wood_box01_breakable_11", true);
+		SetEntityActive("wood_box02_breakable_7", true);
+		SetEntityActive("wood_box01_breakable_4", true);
+		SetEntityActive("wood_box01_breakable_2", true);
+		SetEntityActive("wood_box01_breakable_1", true);
+}
+void ShowEnemyPlayerPositionLoop(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		AddTimer("T1", 1, "ShowEnemyPlayerPositionLoop");
+		ShowEnemyPlayerPosition("enemy_suitor_3");
+	}
+}
+void BreakPath1 (string &in asParent, string &in asChild, int alState)
+{
+	FadeRadialBlurTo(0.25, 3);
+	StartScreenShake(0.05, 1.5, 1.4, 2);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_2", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "BreakArea1", 0.0f, true);
+	SetPropHealth("wood_box01_breakable_8", 0);
+	SetPropHealth("wood_box02_breakable_4", 0);
+	SetPropHealth("wood_box01_breakable_7", 0);
+	SetPropHealth("wood_box02_breakable_6", 0);
+	SetPropHealth("wood_box01_breakable_12", 0);
+	SetPropHealth("wood_box01_breakable_9", 0);
+	SetPropHealth("wood_box02_breakable_7", 0);
+	SetPropHealth("wood_box01_breakable_11", 0);
+	SetPropHealth("wood_box01_breakable_10", 0);
+}
+void BreakPath2 (string &in asParent, string &in asChild, int alState)
+{
+	FadeRadialBlurTo(0.25, 3);
+	StartScreenShake(0.05, 1.5, 1.4, 2);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_3", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "BreakArea2", 0.0f, true);
+	SetPropHealth("wood_box01_breakable_4", 0);
+	SetPropHealth("wood_box01_breakable_2", 0);
+	SetPropHealth("wood_box01_breakable_1", 0);
+	SetPropHealth("wood_box02_breakable_1", 0);
+	SetPropHealth("wood_box01_breakable_5", 0);
+	SetPropHealth("wood_box01_breakable_6", 0);
+	SetPropHealth("wood_box02_breakable_2", 0);
+	SetPropHealth("wood_box01_breakable_3", 0);
+	SetPropHealth("wood_box02_breakable_3", 0);
+}
+void BreakPath3 (string &in asParent, string &in asChild, int alState)
+{
+	FadeRadialBlurTo(0.25, 3);
+	StartScreenShake(0.05, 1.5, 1.4, 2);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_10", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "BreakArea3", 0.0f, true);
+	SetPropHealth("wood_box01_breakable_15", 0);
+	SetPropHealth("wood_box01_breakable_18", 0);
+	SetPropHealth("wood_box01_breakable_14", 0);
+	SetPropHealth("wood_box02_breakable_8", 0);
+	SetPropHealth("wood_box02_breakable_11", 0);
+	SetPropHealth("wood_box02_breakable_12", 0);
+	SetPropHealth("wood_box01_breakable_17", 0);
+	SetPropHealth("wood_box01_breakable_13", 0);
+	SetPropHealth("wood_box01_breakable_16", 0);
+	SetPropHealth("wood_box01_breakable_19", 0);
+	SetPropHealth("wood_box02_breakable_10", 0);
+	SetPropHealth("wood_box02_breakable_9", 0);
+}
+void BreakPath4 (string &in asParent, string &in asChild, int alState)
+{
+	FadeRadialBlurTo(0.25, 3);
+	StartScreenShake(0.05, 1.5, 1.4, 2);
+	CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "ScriptArea_11", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "BreakArea4", 0.0f, true);
+	SetPropHealth("wood_box02_breakable_14", 0);
+	SetPropHealth("wood_box01_breakable_23", 0);
+	SetPropHealth("wood_box02_breakable_15", 0);
+	SetPropHealth("wood_box01_breakable_22", 0);
+	SetPropHealth("wood_box02_breakable_16", 0);
+	SetPropHealth("wood_box01_breakable_20", 0);
+	SetPropHealth("wood_box01_breakable_21", 0);
+	SetPropHealth("wood_box02_breakable_13", 0);
+	SetPropHealth("wood_box01_breakable_24", 0);
+}
+void TeleportSuitorToNode(string &in asParent, string &in asChild, int alState)
+{
+	TeleportEnemyToNode("enemy_suitor_3", "PathNodeArea_10", true);
+	SetEntityActive("TeleportEnemy1", false);
+	PlaySoundAtEntity("", "L01_suitor_hunt.snt", "Player", 0, false);
+}
+void TeleportSuitorToNode2(string &in asParent, string &in asChild, int alState)
+{
+	TeleportEnemyToNode("enemy_suitor_3", "PathNodeArea_25", true);
+	SetEntityActive("TeleportEnemy2", false);
+	PlaySoundAtEntity("", "L01_suitor_hunt.snt", "Player", 0, false);
+}
+void TeleportSuitorToNode3(string &in asParent, string &in asChild, int alState)
+{
+	TeleportEnemyToNode("enemy_suitor_3", "PathNodeArea_30", true);
+	SetEntityActive("TeleportEnemy3", false);
+	PlaySoundAtEntity("", "L01_suitor_hunt.snt", "Player", 0, false);
+}
+void TeleportSuitorToNode4(string &in asParent, string &in asChild, int alState)
+{
+	TeleportEnemyToNode("enemy_suitor_3", "PathNodeArea_33", true);
+	SetEntityActive("TeleportEnemy4", false);
+	PlaySoundAtEntity("", "L01_suitor_hunt.snt", "Player", 0, false);
+}
+void TeleportSuitorToNode5(string &in asParent, string &in asChild, int alState)
+{
+	TeleportEnemyToNode("enemy_suitor_3", "PathNodeArea_38", true);
+	SetEntityActive("TeleportEnemy5", false);
+	PlaySoundAtEntity("", "L01_suitor_hunt.snt", "Player", 0, false);
+}
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	StopMusic(2,0);
+	SetupLoadScreen("Loading", "LoadScreen8", 0, "pic16.png");
+}

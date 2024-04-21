@@ -1,0 +1,245 @@
+void OnEnter()
+{
+	SetMapDisplayNameEntry("Unknown");
+	
+	SetupLoadScreen("LoadingHints", "ToTavern", 0, "menu_loading_screen.jpg");
+}
+
+void OnLeave()
+{
+	if(GetPlayerLampOil() <= 10) AddPlayerLampOil(10.0f);
+}
+
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaLoadTavern", "CollideAreaLoadTavern", true, 1);
+	
+	SetPlayerActive(true);
+	SetPlayerHealth(100.0f);
+	SetPlayerSanity(100.0f);
+	SetPlayerMoveSpeedMul(0.2f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerLookSpeedMul(0.2f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(false);
+	
+	StopPlayerLookAt();
+	
+	SetMessage("Hints", "EndingChosen", 7.0f);
+	AddTimer("part1", 7.5f, "TimerDoorSetup");
+	AddTimer("part2", 13.0f, "TimerDoorSetup");
+	
+	FadeGlobalSoundVolume(1.0f, 4.0f);
+	
+	if(GetGlobalVarInt("OrbEnding") == 1) PlayMusic("ending_alexander", true, 0.7f, 0.1f, 10, false);
+	if(GetGlobalVarInt("MazeEnding") == 1) PlayMusic("00_maze_ending", true, 0.7f, 0.1f, 10, false);
+	if(GetGlobalVarInt("FreeEnding") == 1) PlayMusic("ending_agrippa", true, 0.7f, 4.0f, 10, false);
+}
+
+void TimerDoorSetup(string &in asTimer)
+{
+	if(asTimer == "part1")
+	{
+		if(GetGlobalVarInt("OrbEnding") == 1) SetMessage("Hints", "OrbEnding", 5.0f);
+		if(GetGlobalVarInt("MazeEnding") == 1) SetMessage("Hints", "MazeEnding", 5.0f);
+		if(GetGlobalVarInt("FreeEnding") == 1) SetMessage("Hints", "FreeEnding", 5.0f);
+	}
+	if(asTimer == "part2")
+	{
+		SetEntityActive("AreaLoadTavern", true);
+		
+		SetPlayerMoveSpeedMul(0.5f);
+		SetPlayerRunSpeedMul(0.0f);
+		SetPlayerLookSpeedMul(0.5f);
+		
+		PlayerLook("AreaLoadTavern", "", 1.0f, 3.0f);
+		
+		FadeLightTo("PointLight_46", 1.0f, 1.0f, 1.0f, 1.0f, -1, 2.0f);
+	}
+}
+
+void CollideAreaLoadTavern(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("00_tavern.map", "PlayerStartArea_1", "29_exit_door.snt", "");
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+	SetSwingDoorLocked(asEntity, false, false);
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")	FadeIn(2.0f);
+	if(asTimer == "fadeinslow")	FadeIn(5.0f);
+	if(asTimer == "fadeout") FadeOut(2.0f);
+	if(asTimer == "fadeoutslow") FadeOut(5.0f);
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeinslowactiveplayer")
+	{
+		FadeIn(5.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}
+	if(asTimer == "fadeoutslowactiveplayer")
+	{
+		FadeOut(5.0f);
+		SetPlayerActive(true);	
+	}
+}
+
+void TimerFadeGlobalSound(string &in asTimer)
+{
+	if(asTimer == "globalsoundon") FadeGlobalSoundVolume(1.0f, 4.0f);
+	if(asTimer == "globalsoundonquick") FadeGlobalSoundVolume(1.0f, 0.5f);
+	if(asTimer == "globalsoundoff") FadeGlobalSoundVolume(0.0f, 4.0f);
+	if(asTimer == "globalsoundoffquick") FadeGlobalSoundVolume(0.0f, 0.5f);
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);	
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}
+
+void PlayerLook(string &in asEntity, string &in asType, float afSpeed, float afTime)
+{
+	StartPlayerLookAt(asEntity, afSpeed, afSpeed, "");
+	if(asType == "speed")
+	{
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);
+		AddTimer("resetspeedmul", afTime, "TimerStopLook");
+	}
+	else
+	if(asType == "active")
+	{
+		SetPlayerActive(false);
+		AddTimer("activeplayer", afTime, "TimerStopLook");
+	}
+	else AddTimer("", afTime, "TimerStopLook");
+}
+
+void PlayerReact(string &in asType, float afCount, bool abUseDamageEffect, bool abUseBlurEffect)
+{
+	if(asType == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "breath_slow")
+	{
+		PlayGuiSound("react_breath_slow", 0.6f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "pant")
+	{
+		PlayGuiSound("react_pant", 0.8f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(abUseDamageEffect == true) GiveSanityDamage(afCount, true);
+	else GiveSanityDamage(afCount, false);
+} 

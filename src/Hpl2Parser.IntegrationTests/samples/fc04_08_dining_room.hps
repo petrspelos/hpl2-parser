@@ -1,0 +1,398 @@
+//===========================================
+     // This runs when the map first starts
+     void OnStart()
+
+    {
+             
+StopSound("Sound_6", 0.2);
+StopMusic(2,0);
+SetMapDisplayNameEntry("DiningRoom1");  
+StopMusic(2,2);
+StopMusic(2,3);
+StopMusic(2,4);
+StopMusic(2,5);
+StopMusic(2,6);
+StopMusic(2,7);
+StopMusic(2,8);
+StopMusic(2,9);
+StopMusic(2,10);
+StopMusic(2,11);
+StopMusic(2,12);
+StopMusic(2,13);
+StopMusic(2,14);
+			  
+			  SetEntityPlayerInteractCallback("OrbPiece_3", "OrbCheck", true);
+			  SetEntityPlayerInteractCallback("painting03_dynamic_1", "PicCheck", true);
+			  SetEntityPlayerInteractCallback("EagleKey", "EnginSpawn", true);
+			  SetEntityPlayerInteractCallback("gun_cabinet_DR", "OrbQuest", true);
+			  
+			  
+			  SetGlobalVarInt("CollectDiningOrb", 0);
+			  AddEntityCollideCallback("Player", "ScriptArea_14", "DroneChange", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_15", "DroneChange2", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_2", "DroneChange3", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_3", "DroneChange4", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_4", "Breath1", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_6", "Breath2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_8", "Scare", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_10", "CheckP", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_12", "Reminder", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_19", "Chase", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_20", "RemoveAres", true, 1);
+			  AddEntityCollideCallback("engineer_1", "ScriptArea_18", "RemovePig", true, 1);
+			  AddEntityCollideCallback("engineer_1", "ScriptArea_11", "Triggers", true, 1);
+			  AddEntityCollideCallback("engineer_1", "cellar_wood01_2", "Destroy", true, 1);
+			  
+			  SetEntityConnectionStateChangeCallback("StatueLever1", "MoveStatue");
+			  
+			  AddUseItemCallback("", "GunCab", "gun_cabinet_DR", "OpenCab", false);
+					
+     }      
+	
+//---------------------------------------------------------------------------------------
+//Drone setup
+//---------------------------------------------------------------------------------------
+
+ void DroneChange(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			PlayMusic("amb_mansion_mansion_drone_courtyard", true, 0.3, 3, 2, true);
+			StopMusic(5, 3);
+			AddTimer("DRONE", 1.2f, "DRONE");
+	
+	}
+	
+	void DroneChange2(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			
+			StopMusic(5, 2);
+			PlayMusic("amb_mansion_mansion_drone_general", true, 1.2, 1, 3, false);
+			AddTimer("DRONE2", 1.2f, "DRONE2");
+			
+	
+	}
+	
+	
+	void DroneChange3(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			
+			StopSound("Sound_6", 3);
+			PlayMusic("amb_mansion_mansion_drone_courtyard", true, 0.3, 3, 2, true);
+			AddTimer("", 0.5f, "DRONE3");
+			
+	
+	}
+	
+	void DroneChange4(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			
+			StopMusic(5, 2);
+			
+			FadeInSound("Sound_6", 3, false);
+			AddTimer("", 0.5f, "DRONE4");
+			
+	
+	}
+	
+	
+	
+	void DRONE(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_15", true);
+				SetEntityActive("ScriptArea_14", false);
+		
+			}
+	
+	void DRONE2(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_14", true);
+				SetEntityActive("ScriptArea_15", false);	
+		
+			}
+	
+	void DRONE3(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_3", true);
+				SetEntityActive("ScriptArea_2", false);
+		
+			}
+	
+	void DRONE4(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("ScriptArea_2", true);
+				SetEntityActive("ScriptArea_3", false);
+		
+			}	
+
+//---------------------------------------------------------------------------------------
+//End Drone setup
+//---------------------------------------------------------------------------------------
+	
+	
+	void Chase(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("ScriptArea_18", false);
+	}
+	
+	void RemoveAres(string &in asParent, string &in asChild, int alState)
+	
+	{
+			AddGlobalVarInt("DiningRoomFirst", 1);
+	}
+	
+	void Destroy(string &in asParent, string &in asChild, int alState)
+
+{
+		SetPropHealth("cellar_wood01_2", 0.0f);
+		CreateParticleSystemAtEntity("break1", "ps_break_wood.ps", "ScriptArea_13", false);
+		CreateParticleSystemAtEntity("break2", "ps_break_wood.ps", "ScriptArea_16", false);
+		PlaySoundAtEntity("", "break_wood.snt", "ScriptArea_17", 0.0f, false);
+}
+	
+	void Triggers(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEnemyDisableTriggers("engineer_1", false);
+			SetupLoadScreen("LoadingText", "DiningRoomB", 0, "08_loading_b.png");
+	}
+	
+	void RemovePig(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("engineer_1", false);
+	}
+	
+	void Reminder(string &in asParent, string &in asChild, int alState)
+	
+	{
+			if(GetGlobalVarInt("CollectDiningOrb")==0)
+		
+			 {
+					
+						SetMessage("Messages", "GetTheDamnOrb", 5);
+						SetEntityActive("block_box_1", true);
+							
+			 }
+	}
+	
+	void CheckP(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			CheckPoint("check02","PlayerStartArea_5", "","", "");
+			CompleteQuest("Statues2", "Statues2");
+	}
+	
+	void OrbQuest(string &in asEntity)
+	
+	{
+			AddQuest("GunCabinetQuest", "GunCabinetQuest");
+	}
+	
+	void Breath1(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "scare_wall_scratch_single", "ScriptArea_5", 0.0, false);
+	}
+	
+	void Breath2(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "scare_wall_scratch_single", "ScriptArea_7", 0.0, false);
+	}
+	
+	void Scare(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "insanity_step_crawl", "ScriptArea_9", 0.0, false);
+	}
+	
+	
+	
+	
+	void MoveStatue(string &in asEntity, int alState)	
+	
+	{
+		if(GetLeverState("StatueLever1")==1)
+		
+			 {
+					SetEntityActive("socha2_1", false);
+					SetEntityActive("socha2_3", true);
+					SetLeverStuckState("StatueLever1", 1, true);
+					AddGlobalVarInt("DiningRoom", 1);
+					AddQuest("FindLever", "FindLever");
+					SetPropStaticPhysics("StatueLever1", true);
+					CheckDiningRoomCount();		
+			 }
+							 	
+	}
+	
+	void CheckStatBCount()
+	
+{
+
+	if(GetGlobalVarInt("StatB") == 1) 
+	
+		{
+			SetEntityActive("socha2_2", false);
+			SetEntityActive("socha2_4", true);
+						
+		}
+}
+	
+	void CheckDiningRoomCount()
+	
+	
+{
+
+	if(GetGlobalVarInt("DiningRoom") == 2) 
+	
+		{
+			SetMessage("Messages", "OutsideNow", 5);
+			DestroyParticleSystem("ParticleSystem_17");
+			StopSound("Sound_14", 0.2);
+			SetEntityActive("moon_1", true);
+			CompleteQuest("FindLever", "FindLever");
+			SetEntityActive("fence_mansion_1", false);
+			SetEntityActive("fence_mansion_2", true);
+			
+		}
+}
+	
+	
+	void OrbCheck(string &in asEntity)
+	
+	{
+			AddGlobalVarInt("OrbCollect", 1);
+			AddGlobalVarInt("CollectDiningOrb", 1);
+			
+			CheckPoint("check01","PlayerStartArea_4", "","", "");
+			SetEntityActive("block_box_1", false);
+	}
+	
+	void EnginSpawn(string &in asEntity)
+	
+	{
+			
+			AddTimer("", 1.2f, "EngineerAppears");
+			
+	}
+	
+	void EngineerAppears(string &in asTimer)
+{
+			CheckPoint("check03","PlayerStartArea_6", "","", "");
+			SetEntityActive("engineer_1", true);
+			SetEntityActive("cellar_wood01_1", false);
+			SetEntityActive("cellar_wood01_3", true);
+			SetEntityActive("metal_1", false);
+			SetEntityActive("metal_2", true);
+			SetEntityActive("ScriptArea_19", true);
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_1", 8, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_2", 6, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_3", 9, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_9", 6, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_4", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_5", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_6", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_7", 0.001, "");
+			AddEnemyPatrolNode("engineer_1", "PathNodeArea_8", 0.001, "");
+			PlayMusic("music_cellar_post_quake", false, 1, 1, 3, false);
+			SetEntityActive("ScriptArea_12", true);
+			AddGlobalVarInt("PickedEagle", 1);
+}
+	
+	void PicCheck(string &in asEntity)
+	
+	{
+			AddGlobalVarInt("PictureMove", 1);
+			
+			
+	}
+	
+	void OpenCab(string &in asItem, string &in asEntity)
+					 
+			{
+				 
+				 PlaySoundAtEntity("", "lock_door.snt", "Player", 0, false);
+				 RemoveItem("GunCab");
+				 CompleteQuest("GunCabinetQuest", "GunCabinetQuest");
+				 SetSwingDoorLocked("gun_cabinet_DR", false, false);
+				 SetEntityActive("block_box_13", false);
+			}
+			
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+  {
+			  PreloadSound("owl1.snt");
+			  PreloadSound("dog1.snt");
+			  PreloadSound("dog2.snt");
+			  PreloadSound("children_laugh.snt");
+			  PreloadSound("insanity_step_crawl.snt");
+			  PreloadSound("morgue_drone.snt");
+			  PreloadSound("scare_wall_scratch_single.snt");
+			  PreloadSound("engineer_enabled.snt");
+			  PreloadSound("engineer_tunnels_enabled.snt");
+			  PreloadSound("engineer_tunnels_amb_notice.snt");
+			  PreloadSound("engineer_tunnels_amb_idle.snt");
+			  PreloadSound("engineer_tunnels_amb_hunt.snt");
+			  PreloadSound("engineer_tunnels_amb_alert.snt");
+			  PreloadSound("engineer_tunnels_threatstart_vocal.snt");
+			  PreloadSound("engineer_tunnels_threatloop_01.snt");
+			  PreloadSound("engineer_tunnels_threatloop_02.snt");
+			  PreloadSound("engineer_engroom_amb_notice.snt");
+			  PreloadSound("engineer_engroom_amb_idle.snt");
+			  PreloadSound("engineer_engroom_amb_hunt.snt");
+			  PreloadSound("engineer_amb_notice.snt");
+			  PreloadSound("engineer_amb_hunt.snt");
+			  PreloadSound("engineer_amb_idle.snt");
+			  PreloadSound("engineer_amb_alert.snt");
+			  PreloadSound("engineer_threatstart_vocal.snt");
+			  PreloadSound("RainSound_Fx_1.snt");
+			  
+			  
+			  SetupLoadScreen("LoadingText", "DiningRoomA", 0, "08_loading_a.png");
+			  PreloadParticleSystem("ps_area_fog_xlarge.ps");
+			  PreloadParticleSystem("ps_area_fog.ps");
+			  PreloadParticleSystem("ps_water_rain.ps");
+			  StopMusic(2,1);
+		  
+	      CheckDiningRoomCount();
+		  CheckStatBCount();
+		  SetInDarknessEffectsActive(false);
+		  
+		  SetPlayerRunSpeedMul(1);
+
+		  PlayMusic("amb_mansion_mansion_drone_general", true, 1.2, 1, 3, true);
+		  AutoSave();
+     }
+ 
+
+     void Dontgrabtheorblikethis(string &in asEntity)
+{ 
+
+}
+ 
+ 
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+	 
+     }

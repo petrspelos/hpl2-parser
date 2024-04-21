@@ -1,0 +1,937 @@
+//////////STAMINA SYSTEM SETTINGS//////////////
+///////////////////////////////////////////////
+const string STAMINA_TIMER_CALLBACK_NAME = "STAMINA_TIMER_CALLBACK";
+const string STAMINA_PLAYER_SPEED = "STAMINA_PLAYER_SPEED";
+const string STAMINA_PLAYER_LENGTH = "STAMINA_PLAYER_LENGTH";
+const string STAMINA_PLAYER_BREATH_SLOW = "STAMINA_PLAYER_BREATH_SLOW";
+const string STAMINA_PLAYER_BREATH_SNT = "react_breath_slow.snt";
+const string STAMINA_PLAYER_HEAD_BOB = "STAMINA_PLAYER_HEAD_BOB";
+
+const float STAMINA_TIMER_SPEED_TIME = 0.5f;
+const float STAMINA_PLAYER_HEAD_BOB_SPEED = 0.7f;
+
+enum StaminaStages
+    {
+        Full,
+        Low,
+        Exhausted
+    }
+
+class StaminaSystem
+    {
+        private int state;
+        private uint length;
+        private bool head_bobbing;
+        private bool is_running;
+
+        StaminaSystem()
+            {
+                PreloadSound(STAMINA_PLAYER_BREATH_SNT);
+                this.state = StaminaStages::Full;
+                this.length = 10;
+                this.head_bobbing = false;
+                this.is_running = false;
+            }
+
+        ~StaminaSystem()
+            {
+                this.Stop();
+            }
+
+        void AddDebugMessage(string &in message, bool check, bool to_file)
+            {
+                ::AddDebugMessage("Stamina system: " + message, check);
+                if (to_file) Print("Stamina system: " + message);
+            }
+
+        bool IsPlayerRunning() const
+            {
+                return this.is_running;
+            }
+
+        void PlayBreathSound()
+            {
+                PlaySoundAtEntity(STAMINA_PLAYER_BREATH_SLOW, STAMINA_PLAYER_BREATH_SNT, "Player", 0, false);
+            }
+
+        void Start()
+            {
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				AddTimer(STAMINA_PLAYER_SPEED, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerHeadBob()
+            {
+                if (this.head_bobbing)
+                    MovePlayerHeadPos(0, -0.35, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+                else
+                    MovePlayerHeadPos(0, 0, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+
+                this.head_bobbing = !this.head_bobbing;
+                AddTimer(STAMINA_PLAYER_HEAD_BOB, 0.75f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerTiredEffect()
+            {
+                this.PlayBreathSound();
+                AddTimer(STAMINA_PLAYER_BREATH_SLOW, 1.5f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void Stop()
+            {
+                this.StopPlayerTiredEffect();
+                RemoveTimer(STAMINA_PLAYER_SPEED);
+                RemoveTimer(STAMINA_PLAYER_LENGTH);
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				SetPlayerJumpDisabled(false);
+            }
+
+        void StopPlayerTiredEffect()
+            {
+                this.head_bobbing = false;
+                RemoveTimer(STAMINA_PLAYER_BREATH_SLOW);
+                RemoveTimer(STAMINA_PLAYER_HEAD_BOB);
+                MovePlayerHeadPos(0,0,0, 1, 1);
+				FadeImageTrailTo(0, 1); ////trail off
+                // StopSound(STAMINA_PLAYER_BREATH_SLOW, 1); // Crashes the game upon exit.
+            }
+
+        void SetStaminaLength(uint length)
+            {
+                if (length != 0)
+                    this.length = length;
+                else
+                    this.AddDebugMessage("Length cannot be 0!", false, true);
+            }
+
+        void Update(string &in timer_name)
+            {
+                if (timer_name == STAMINA_PLAYER_SPEED)
+                {
+                    this.is_running = (GetPlayerSpeed() > 3) ? true : false;
+
+                    if (this.is_running && GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) == 0)
+                        AddTimer(STAMINA_PLAYER_LENGTH, this.length, STAMINA_TIMER_CALLBACK_NAME);
+
+                    else if(!this.is_running)
+                    {
+                        if (GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) > 0 && this.state == StaminaStages::Full)
+                            RemoveTimer(STAMINA_PLAYER_LENGTH);
+
+                        else if(this.state == StaminaStages::Low)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/4, STAMINA_TIMER_CALLBACK_NAME);
+
+                        else if(this.state == StaminaStages::Exhausted)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/2, STAMINA_TIMER_CALLBACK_NAME);
+                    }
+
+                    AddTimer(timer_name, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+                }
+
+                else if (timer_name == STAMINA_PLAYER_BREATH_SLOW)
+                    this.StartPlayerTiredEffect();
+
+                else if (timer_name == STAMINA_PLAYER_HEAD_BOB)
+                    this.StartPlayerHeadBob();
+
+                else if (timer_name == STAMINA_PLAYER_LENGTH)
+                {
+                    if (this.is_running)
+                    {
+                        if (this.state == StaminaStages::Full)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.5);
+                        }
+
+                        else if (this.state == StaminaStages::Low)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.3);
+                            SetPlayerMoveSpeedMul(0.5);
+							FadeImageTrailTo(3,1); ////trail on
+                            SetPlayerJumpDisabled(true);
+                            ChangePlayerStateToNormal();
+                            this.StartPlayerTiredEffect();
+                            this.StartPlayerHeadBob();
+                        }
+                    }
+
+                    else
+                    {
+                        this.StopPlayerTiredEffect();
+
+                        SetPlayerRunSpeedMul(1);
+                        SetPlayerMoveSpeedMul(1);
+                        SetPlayerJumpDisabled(false);
+
+                        if (this.state == StaminaStages::Low)
+                            this.state = StaminaStages::Full;
+
+                        else if (this.state == StaminaStages::Exhausted)
+                            this.state = StaminaStages::Full;
+                    }
+                }
+            }
+    }
+
+StaminaSystem stamina_obj;
+
+void STAMINA_TIMER_CALLBACK(string &in timer_name)
+    { stamina_obj.Update(timer_name); } 
+//////////////////////////////////////
+void OnStart()
+{
+SetPlayerHealth(90);
+///intro();
+intro2();
+TeleportPlayer("PlayerStartArea_11");
+Syr();
+StopSound("Sound_sp", 0);
+SetPlayerSanity(90);
+AddEntityCollideCallback("Player", "ScriptArea_14" ,"tunnelsqu", true, 1); 
+//GiveItemFromFile("adrenaline_4", "item_syringe_adrenaline.ent");
+//GiveItemFromFile("adrenaline_5", "item_syringe_adrenaline.ent");
+SetMapDisplayNameEntry("Meteo");
+AddEntityCollideCallback("Player", "gasquest_area_1" ,"quest_added_here", true, 1); 
+AddEntityCollideCallback("Player","player_backward","mBwd_none",false,1);
+AddEntityCollideCallback("Player","player_forward" ,"mFwd_none",false,1);
+AddEntityCollideCallback("Player","Player_right" ,"right_stop",false,1);
+AddEntityCollideCallback("Player","Player_left","left_stop",false,1);
+AddEntityCollideCallback("Player","player_jump", "mJmp",false,1);
+StopSound("Sound_4", 0);
+AddEntityCollideCallback("Player", "ScriptArea_3", "change_level", false, 0);
+AddEntityCollideCallback("Player", "ScriptArea_2" ,"Kevin_event", true, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_5" ,"danger_gas", false, 0); 
+AddEntityCollideCallback("Player", "ScriptArea_1" ,"entry_save", true, 1); 
+AddEntityCollideCallback("Player", "Falldead_area" ,"fall_dead", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_1" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_2" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_3" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_4" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "transit_area_1", "Transit", false, 0);
+////
+AddEntityCollideCallback("Player", "ScriptArea_9" ,"load_screen_tr", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_10" ,"load_screen_tr", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_11" ,"load_screen_tr", false, 1); 
+}
+////////////
+void intro2()
+{
+FadeGlobalSoundVolume(1, 5);
+SetFogActive(false);
+SetPlayerActive(false);
+FadeOut(0);
+ShowPlayerCrossHairIcons(false);
+SetSanityDrainDisabled(true);
+AddTimer("", 1 ,"start");
+SetLocalVarInt("word", 0);
+}
+void start(string &in asTimer)
+{
+FadeIn(2.5);
+AddTimer("pr", 2.1, "print");
+}
+void print(string &in asTimer)
+{
+if (GetLocalVarInt("word") == 8 or GetLocalVarInt("word") == 12){
+PlaySoundAtEntity("", "gui_type_space.snt", "ScriptArea_9", 0.3/0.5, false);
+}
+else {
+PlaySoundAtEntity("sp", "gui_type.snt", "ScriptArea_12", 0.3/0.5, false);
+}
+AddTimer("pr", 0.11, "print");
+AddLocalVarInt("word", 1);
+SetEntityActive("word_"+GetLocalVarInt("word"), false);
+if (GetLocalVarInt("word") == 23){
+RemoveTimer("pr");
+StopSound("sp", 0);
+AddTimer("d1", 2, "delay_n");
+AddTimer("d2", 4.3, "delay_n");
+AddTimer("d3", 5.8, "delay_n");
+}
+}
+void delay_n(string &in asTimer)
+{
+if (asTimer == "d1"){
+FadeOut(2);
+return;
+}
+if (asTimer == "d2"){
+TeleportPlayer("PlayerStartArea_8");
+return;
+}
+if (asTimer == "d3"){
+intro();
+return;
+}
+}
+//////////////
+void intro()
+{
+SetFogActive(true);
+////FadeInSound("Sound_1", 1, false);
+PlaySoundAtEntity("Sound_1", "amb_outside_19_low_global.snt", "ScriptArea_13", 5, true);
+SetPlayerCrouchDisabled(true);
+SetPlayerCrouching(false);
+///FadeGlobalSoundVolume(0, 1);
+StartInsanityEvent("Wide5");
+StartPlayerLookAt("ScriptArea_7", 3, 3, "");
+///TeleportPlayer("PlayerStartArea_8");
+SetPlayerActive(false);
+FadeOut(0);
+SetInventoryDisabled(false);
+RemoveItem("item_circuit_card_red_2");RemoveItem("item_glowstick_1");
+RemoveItem("item_syringe_adrenaline_1");
+RemoveItem("dlc_jacket_1");
+RemoveItem("note_1");
+RemoveItem("item_painkillers_ss");
+
+for (int i=1; i<=8; i++){
+RemoveItem("item_painkillers_"+i);
+}
+PlayPropAnimation("Amabel", "Run", 0, true, "");
+AddTimer("in1", 1,"intro_scene");
+AddTimer("in2", 14,"intro_scene");
+AddTimer("in3", 14.1,"intro_scene");
+AddTimer("in4", 24,"intro_scene");
+AddTimer("in5", 27.5,"intro_scene");
+AddTimer("in6", 29.5,"intro_scene");
+}
+void intro_scene(string &in asTimer)
+{
+if (asTimer == "in1"){
+FadeIn(12);
+SetEntityActive("Amabel", false);
+PlayMusic("penumbra_music_E1_C10.ogg", false, 0.65f, 5, 0.1, true);
+///FadeGlobalSoundVolume(1, 15);
+return;
+}
+if (asTimer == "in2"){
+MovePlayerHeadPos(7, 0, 7, 1.15, 1.15);
+return;
+}
+if (asTimer == "in3"){
+SetEntityActive("Amabel", true);
+PlayPropAnimation("Amabel", "Walk", 0, true, "");
+SetEntityPos("Amabel", GetEntityPosX("Amabel")-0.05, GetEntityPosY("Amabel"), GetEntityPosZ("Amabel")+0.02);
+AddTimer("mm", 0.05, "move_resume");
+return;
+}
+if (asTimer == "in4"){
+FadeOut(3);
+return;
+}
+if (asTimer == "in5"){
+RemoveTimer("mm");
+SetEntityActive("Amabel", false);
+MovePlayerHeadPos(0, 0, 0, 100, 1);
+StopPlayerLookAt();
+TeleportPlayer("PlayerStartArea_1");
+return;
+}
+if (asTimer == "in6"){
+FadeIn(3);
+AddTimer("cd", RandInt(4, 7), "cold_damage");
+SetPlayerActive(true);
+GiveItemFromFile("adrenaline_1", "item_syringe_adrenaline.ent");
+GiveItemFromFile("adrenaline_2", "item_syringe_adrenaline.ent");
+GiveItemFromFile("adrenaline_3", "item_syringe_adrenaline.ent");
+SetLanternDisabled(false);
+ShowPlayerCrossHairIcons(true);
+SetPlayerCrouchDisabled(false);
+return;
+}
+}
+void cold_damage(string &in asTimer)
+{
+AddPlayerHealth(-3);
+StartInsanityEvent("DamageIce");
+PlayGuiSound("react_breath_slow.snt", 1.0f);
+AddTimer("cd", RandInt(4, 7), "cold_damage");
+}
+void move_resume(string &in asTimer)
+{
+SetEntityPos("Amabel", GetEntityPosX("Amabel")-0.05, GetEntityPosY("Amabel"), GetEntityPosZ("Amabel")+0.02);
+AddTimer("mm", 0.05, "move_resume");
+}
+////////////
+void grabhand(string &in asEntity)
+{
+   if (GetPropIsInteractedWith(asEntity) == true){
+   StartInsanityEvent("grab");
+   }
+   AddTimer(asEntity, 0.01,"grabcheck");
+}
+void grabcheck(string &in asTimer)
+{
+AddTimer(asTimer, 0.01,"grabcheck");
+if (GetPropIsInteractedWith(asTimer) == false){
+StopCurrentInsanityEvent();
+RemoveTimer(asTimer);
+}
+}
+////////////
+/////////////////
+void fall_dead(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Falldead_area", false);
+AddTimer("d1", 0.3, "playerdead");
+StartInsanityEvent("fadedeath");
+}
+void playerdead(string &in asTimer)
+{
+GivePlayerDamage(100, "BloodSplat", false, true);
+PlayGuiSound("12_implode_player1.ogg", 2.0f);
+}
+
+/////////////
+void Transit(string &in asParent, string &in asChild, int alState)
+{
+  if (alState == 1){
+  SetMoveObjectState("Gate_1", -1);
+  SetMoveObjectState("Gate_2", 1);
+  return;
+  }
+  if (alState == -1){
+  SetMoveObjectState("Gate_1", 0);
+  SetMoveObjectState("Gate_2", 0);
+  return;
+  }
+}
+//////////
+//SAVE FIX//////
+void aftersave_fall_fix(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "Glitch_area_1"){
+TeleportPlayer("PlayerStartArea_3");
+}
+if (asChild == "Glitch_area_2"){
+TeleportPlayer("PlayerStartArea_5");
+}
+if (asChild == "Glitch_area_3"){
+TeleportPlayer("PlayerStartArea_4");
+}
+if (asChild == "Glitch_area_4"){
+TeleportPlayer("PlayerStartArea_6");
+}
+}
+//////////////
+void entry_save(string &in asParent, string &in asChild, int alState)
+{
+AddPlayerHealth(50);
+SetLightVisible("PointLight_5", false);SetLightVisible("SpotLight_75", false);
+PlayMusic("Twilight - Nothingness.ogg", true, 0.35, 15, 0.5, true);
+//SetMessage("09_Meteo", "Chapter", -1);
+SetLocalVarInt("entry", 1);
+SetGlobalVarInt("entrymus", 1);
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+AddTimer("", 0.1, "sanit");
+GiveSanityBoostSmall();
+SetLightVisible("SpotLight_28", false);SetLightVisible("SpotLight_25", false);
+SetLightVisible("SpotLight_26", false);SetLightVisible("SpotLight_27", false);
+}
+void sanit(string &in asTimer)
+{
+SetPlayerSanity(90);
+SetSanityDrainDisabled(true);
+AutoSave();
+}
+//////////////
+//GAS/////////
+void danger_gas(string &in asParent, string &in asChild, int alState)
+{
+if (alState == 1){
+if (GetLocalVarInt("questgas") == 0){
+SetLocalVarInt("questgas", 1);  ////need a quest line in lang file
+//AddQuest();
+}
+GivePlayerDamage(10, "BloodSplat", false, true);
+StartInsanityEvent("Poison");
+PlayGuiSound("female_cough.ogg", 1.0f); //// by OwlStorm https://www.freesound.org/
+FadeRadialBlurTo(0.08, 3);
+SetPlayerMoveSpeedMul(0.6);
+SetPlayerRunSpeedMul(0.6);
+SetPlayerLookSpeedMul(0.6);
+AddTimer("dg", RandFloat(5, 7), "dead_gas");
+}
+if (alState == -1){
+RemoveTimer("dg");
+FadeRadialBlurTo(0, 1);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+}
+}
+void dead_gas(string &in asTimer)
+{
+AddTimer("dg", RandFloat(5, 7), "dead_gas");
+int x = RandInt(1, 4);
+switch(x)
+{
+case 1:
+  PlayGuiSound("female_cough.ogg", 1.0f);  
+	break;
+case 2:
+  PlayGuiSound("justine_breath1.ogg", 1.0f);
+    break;
+case 3:
+  PlayGuiSound("female_cough.ogg", 1.0f);
+    break;	
+case 4:
+    PlayGuiSound("justine_breath2.ogg", 1.0f);
+    break;	
+}
+StartInsanityEvent("Poison");
+GivePlayerDamage(15, "BloodSplat", false, true);
+}
+////////////////
+///Kevin/////////
+void Kevin_event(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("scientist_base_claren_2", true);
+for (int i=1; i<=8; i++){
+AddEnemyPatrolNode("scientist_base_claren_2", "PathNodeArea_"+i, 0.01, "");
+}
+///SetMoveObjectState("Door_1", -1);
+SetEnemySanityDecreaseActive("scientist_base_claren_2", false);
+SetEntityActive("scientist_base_claren_1", false);
+SetPlayerActive(false);
+SetGlobalVarInt("kevinnow", 1);
+StartPlayerLookAt("Door_1", 1.5, 1.5, "");
+ChangePlayerStateToNormal();
+SetPlayerCrouching(false);
+StartInsanityEvent("Wide2");
+ShowPlayerCrossHairIcons(false);
+AddTimer("kv_1", 1.5, "kev_event");
+AddTimer("kv_2", 8.2, "kev_event");
+}
+void kev_event(string &in asTimer)
+{
+if (asTimer == "kv_1"){
+StopPlayerLookAt();
+return;
+}
+if (asTimer == "kv_2"){
+SetEntityActive("scientist_base_claren_2", false);
+SetPlayerActive(true);
+ShowPlayerCrossHairIcons(true);
+AddQuest("clarence", "StrangeMan");
+return;
+}
+}
+////////////////
+void change_level(string &in asParent, string &in asChild, int alState)
+{
+if (alState == 1)
+{
+ChangeMap("11_lead_mine.map", "PlayerStartArea_1", "player_exit_tunnel.snt", "");
+}
+}
+/////////////
+//////////////////
+//DOOR TRANSIT////
+/////////////////
+void teleport_outside(string &in asEntity)
+{
+AddTimer("cd", RandInt(4, 7), "cold_damage");
+SetLocalVarInt("inhouse", 0);
+PlaySoundAtEntity("", "01_door_open_2.snt", "Player", 0, true);
+SetPlayerActive(false);
+FadeOut(1);
+AddTimer("ou1", 1.2,"to_outside_transit");
+AddTimer("ou2", 1.5,"to_outside_transit");
+}
+void to_outside_transit(string &in asTimer)
+{
+if (asTimer == "ou1"){
+TeleportPlayer("PlayerStartArea_2");
+SetFogColor(0.55, 0.58, 0.6, 1);
+SetFogProperties(0, 15, 1, false);
+return;
+}
+if (asTimer == "ou2"){
+StopSound("Sound_4", 0);
+PlaySoundAtEntity("", "01_door_close_2.snt", "Player", 0, true);
+FadeInSound("Sound_sp", 1, true);
+FadeIn(1);
+SetPlayerActive(true);
+return;
+}
+}
+void teleport_inside(string &in asEntity)
+{
+RemoveTimer("cd");
+SetLocalVarInt("inhouse", 1);
+PlaySoundAtEntity("", "01_door_open_2.snt", "Player", 0, true);
+SetPlayerActive(false);
+FadeOut(1);
+AddTimer("to1", 1.2,"to_house_transit");
+AddTimer("to2", 1.5,"to_house_transit");
+}
+void to_house_transit(string &in asTimer)
+{
+if (asTimer == "to1"){
+TeleportPlayer("PlayerStartArea_3");
+SetFogColor(0.07, 0.1, 0.12, 1);
+SetFogProperties(10, 40, 1, false);
+return;
+}
+if (asTimer == "to2"){
+StopSound("Sound_1", 0);
+StopSound("Sound_sp", 0);
+StopSound("genoutside", 0);
+FadeInSound("Sound_4", 1, true);
+FadeIn(1);
+PlaySoundAtEntity("", "01_door_close_2.snt", "Player", 0, true);
+SetPlayerActive(true);
+return;
+}
+}
+/////
+void point_one(string &in asName, int alCount)
+{
+if (GetLocalVarInt("inhouse") == 0){
+TeleportPlayer("PlayerStartArea_1");
+}
+if (GetGlobalVarInt("entrymus") == 1){
+PlayMusic("Twilight - Nothingness.ogg", true, 0.35, 15, 0.5, true);
+}
+if (GetGlobalVarInt("entrymus") == 2){
+PlayMusic("Penumbra_BP_A15.ogg", true, 0.85, 2, 0.6, true);
+}
+RemoveTimer("dg");
+SetEntityActive("Falldead_area", true);
+FadeRadialBlurTo(0, 5);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+}
+///////
+void interact_fencedoor(string &in asEntity)
+{
+PlayGuiSound("interact_locked_gate.snt", 1.0f);
+SetMessage("07_Center", "LockedFence", -1);
+}
+void lightswitch(string &in asEntity)
+{
+if(GetLocalVarInt("lighton") == 0)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton", 1);
+			for (int i=1; i<=9; i++){
+            SetLightVisible("Spot_"+i, false);
+			}
+			StopSound("Sound_14", 1);
+            SetLampLit("lamp_flourescent01_7", false, false);
+			return;
+		}
+		if(GetLocalVarInt("lighton") == 1)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton", 0);
+				for (int i=1; i<=9; i++){
+            SetLightVisible("Spot_"+i, true);
+			}
+			FadeInSound("Sound_14", 1, true);
+            SetLampLit("lamp_flourescent01_7", true, false);
+            return;
+		}
+}
+///////
+void comp_interact(string &in asEntity)
+{
+RemoveTimer("adren");
+SetLocalVarInt("adrenalin_inject", 0);
+FadeSepiaColorTo(0, 2);
+FadeImageTrailTo(0, 100);
+SetEntityActive("plane_black_25", false);
+SetLightVisible("SpotLight_75", true);SetLightVisible("PointLight_5", true);SetLightVisible("Chat", false);
+SetInventoryDisabled(true);
+SetPlayerCrouchDisabled(true);
+SetPlayerCrouching(false);
+PlayGuiSound("gui_login1.ogg", 5.0f);
+FadeOut(0.6);
+stamina_obj.Stop();
+SetLanternActive(false, false);
+///SetLanternDisabled(true);
+SetPlayerActive(false);
+AddTimer("", 0.9, "guistart");
+AddTimer("", 1.3, "guistart2");
+}
+void guistart(string &in asTimer)
+{
+SetLanternDisabled(true);
+SetFogActive(false);
+ShowPlayerCrossHairIcons(false);
+TeleportPlayer("Comp_area");
+}
+void guistart2(string &in asTimer)
+{
+StartInsanityEvent("gui_icon");
+SetPlayerMoveSpeedMul(0.01);
+SetPlayerRunSpeedMul(0);
+SetPlayerLookSpeedMul(0);
+FadeIn(1.2);
+SetPlayerActive(true);
+///GiveHint("aboutcomp", "Hints", "CompHint", -1);
+}
+void mJmp(string &in asParent, string &in asChild, int alState) /// for close windows and desktop
+{
+PlayGuiSound("gui_type3.ogg", 10.0f);
+FadeOut(0);
+SetPlayerActive(false);
+AddTimer("", 0.4, "backtp");
+AddTimer("", 0.48, "backtp2");
+}
+void backtp(string &in asTimer)
+{
+stamina_obj.Start();
+SetFogActive(true);
+SetInventoryDisabled(false);
+SetLanternDisabled(false);
+SetPlayerCrouchDisabled(false);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+TeleportPlayer("PlayerStartArea_9");
+}
+void backtp2(string &in asTimer)
+{
+SetEntityActive("Click_text_desktop", true);
+StopSound("beb", 0);
+SetEntityActive("computer_1", true);
+SetEntityActive("computer", false);
+PlayGuiSound("gui_logout1.ogg", 5.0f);
+AddTimer("", 1, "resetcomp");
+ShowPlayerCrossHairIcons(true);
+FadeIn(0.5);
+SetPlayerActive(true);
+StopCurrentInsanityEvent();
+}
+void resetcomp(string &in asTimer)
+{
+if (GetLocalVarInt("nochatt") == 0)
+{
+SetLocalVarInt("nochatt", 1);
+SetMessage("09_Meteo", "nochat", -1);
+}
+SetEntityActive("plane_black_25", true);
+SetEntityActive("computer_1", false);
+SetEntityActive("computer", true);
+SetLightVisible("PointLight_5", false);
+SetLightVisible("SpotLight_75", false);
+PlayGuiSound("interact_computer_off1.ogg", 5.0f);
+}
+void right_stop(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void left_stop(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void backup1(string &in asTimer)
+{
+TeleportPlayer("Comp_area");
+}
+void delay1(string &in asTimer) ///some delay between push button
+{
+SetPlayerActive(true);
+}
+void mFwd_none(string &in asParent, string &in asChild, int alState) //switch none
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void mBwd_none(string &in asParent, string &in asChild, int alState) //switch none
+{
+SetPlayerActive(false);
+AddTimer("", 0.6, "delay1");
+AddTimer("", 0.2, "backup1");
+}
+void Click_text_desktop(string &in asEntity)
+{
+PlayGuiSound("gui_open_icon1.ogg", 10.0f);
+SetEntityActive("Click_text_desktop", false);
+SetLightVisible("Chat", true);
+PlaySoundAtEntity("beb", "gui_chat_incoming.snt", "Click_area_1", 1, false);
+}
+/////////
+void radio_switcher(string &in asEntity)
+{
+if(GetLocalVarInt("radio") == 0)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("radio", 1);
+            PlaySoundAtEntity("Sound_rad", "lm_radio_thump.snt", "ScriptArea_8", 1, false);
+           	return;
+		}
+		if(GetLocalVarInt("radio") == 1)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("radio", 0);
+			StopSound("Sound_rad", 1);
+            return;
+		}
+}
+///////////
+void load_screen_tr(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_9"){
+SetLocalVarInt("loadingscrr", 1);
+return;
+}
+if (asChild == "ScriptArea_10"){
+SetLocalVarInt("loadingscrr", 2);
+return;
+}
+if (asChild == "ScriptArea_11"){
+SetLocalVarInt("loadingscrr", 3);
+return;
+}
+}
+void quest_added_here(string &in asParent, string &in asChild, int alState)
+{
+AddQuest("gas", "gasarea");
+}
+//////////SYRINE////////////
+/////////////////////////////
+void Syr()
+{
+AddTimer("san1", 0.6, "sanity1");
+}
+void sanity1(string &in asTimer)
+{
+AddTimer("san1", 0.6, "sanity1");
+if (GetPlayerSanity() == 85){
+SetPlayerSanity(90);
+if (GetLocalVarInt("adrenalin_inject") == 0){
+stamina_obj.Stop();
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1.1);
+SetPlayerRunSpeedMul(1.05);
+SetPlayerLookSpeedMul(1.15);
+SetPlayerJumpForceMul(1.1);
+}
+AddPlayerHealth(30);
+SetLocalVarInt("adrenalin_inject", 1);
+FadeSepiaColorTo(0.7, 0.5);
+AddTimer("adren", 45 ,"adrenalin_end");
+}
+}
+}
+void adrenalin_end(string &in asTimer)
+{
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+SetPlayerJumpForceMul(1);
+}
+SetLocalVarInt("adrenalin_inject", 0);
+FadeSepiaColorTo(0, 0.5);
+stamina_obj.Start(); 
+}
+//////////////
+/////////////
+void Sign_box(string &in asEntity)
+{
+if (asEntity == "signs_1"){
+SetMessage("09_Meteo", "comradio", -1);
+}
+if (asEntity == "signs_2"){
+SetMessage("09_Meteo", "posters01", -1);
+}
+if (asEntity == "signs_3"){
+SetMessage("09_Meteo", "posters03", -1);
+}
+if (asEntity == "signs_4"){
+SetMessage("09_Meteo", "posters02", -1);
+}
+if (asEntity == "signs_5"){
+SetMessage("09_Meteo", "posters04", -1);
+}
+if (asEntity == "signs_6"){
+SetMessage("09_Meteo", "chasm", -1);
+}
+if (asEntity == "signs_7"){
+SetMessage("09_Meteo", "Phillip", -1);
+}
+}
+///////////////
+void tunnelsqu(string &in asParent, string &in asChild, int alState)
+{
+AddQuest("inmine", "Minestunnel");
+}
+////////////
+void OnEnter()
+{
+PreloadSound("gui_type_space.snt");
+PreloadSound("gui_type.snt");
+PreloadSound("amb_outside_19_low_global.snt");
+PreloadSound("01_door_open_2.snt");
+PreloadSound("01_door_close_2.snt");
+PreloadSound("gui_chat_incoming.snt");
+PreloadSound("lm_radio_thump.snt");
+SetLocalVarInt("adrenalin_inject", 0);
+RemoveTimer("adren");
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+SetPlayerJumpForceMul(1);
+FadeSepiaColorTo(0, 100);
+CheckPoint("first", "PlayerStartArea_7", "point_one", "", "");
+stamina_obj.Start(); 
+if (GetLocalVarInt("entry") == 1){
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+AddTimer("", 0.1, "sanit");
+GiveSanityBoostSmall();
+}
+if (GetGlobalVarInt("entrymus") == 1){
+PlayMusic("Twilight - Nothingness.ogg", true, 0.35, 15, 0.5, true);
+}
+if (GetGlobalVarInt("gas_overnow") == 1){
+CompleteQuest("gas", "gasarea");
+DestroyParticleSystem("ParticleSystem_3");
+SetEntityActive("ScriptArea_5", false);
+SetEntityActive("ScriptArea_14", true);
+SetLevelDoorLocked("PLevelDoor_5", false);
+}
+if (GetGlobalVarInt("entrymus") == 2){
+PlayMusic("Penumbra_BP_A15.ogg", true, 0.85, 2, 0.6, true);
+SetLightVisible("SpotLight_28", true);SetLightVisible("SpotLight_25", true);
+SetLightVisible("SpotLight_26", true);SetLightVisible("SpotLight_27", true);
+SetLampLit("emergency_light_red_7", true, false);
+SetEntityActive("ScriptArea_2", true);
+SetEntityActive("Door_1", true);SetEntityActive("Door", false);
+SetEnemySanityDecreaseActive("scientist_base_claren_1", false);
+ if (GetGlobalVarInt("kevinnow") == 0){
+SetEntityActive("scientist_base_claren_1", true);
+ }
+}
+}
+void OnLeave()
+{
+if (GetLocalVarInt("loadingscrr") == 1){
+SetupLoadScreen("LoadingText", "09_engine", 1, "loadscreen_engine.jpg");
+}
+if (GetLocalVarInt("loadingscrr") == 2){
+SetupLoadScreen("", "", 1, "loadscreen_factory.jpg");
+}
+if (GetLocalVarInt("loadingscrr") == 3){
+SetupLoadScreen("LoadingText", "08_meteo", 1, "loadscreen_leadmine.jpg");
+}
+stamina_obj.Stop();
+StopMusic(0, 0.5);
+StopMusic(0, 0.6);
+}

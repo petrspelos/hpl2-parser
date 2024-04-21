@@ -1,0 +1,383 @@
+void OnStart()
+{
+//SetupLoadScreen("Loading", "astory", 2, "load_5");
+PreloadParticleSystem("ps_cave_monster_breath.ps");
+PreloadParticleSystem("ps_iron_maiden_event_smoke.ps");
+PreloadParticleSystem("ps_break_glass.ps");
+
+PreloadSound("general_chain_rattle_single");
+PreloadSound("water_lurker_idle");
+PreloadSound("afx_spooky_eerie_monster_type2_s");
+// entity collide
+//AddEntityCollideCallback("Player", "AmbVoiceTrigger", "AmbientVoice", true, 1);
+AddEntityCollideCallback("Player", "breath_trigger", "breath", true, 1);
+AddEntityCollideCallback("Player", "BarsScareTrigger", "BarsScare", true, 1);
+AddEntityCollideCallback("Player", "q_chasm_cmplt", "q_chasm_end", true, 1);
+AddEntityCollideCallback("Player", "chain_trigger", "chains", true, 1);
+AddEntityCollideCallback("Player", "death_place", "jumpdeath", false, 1);
+AddEntityCollideCallback("Player", "death_place_2", "jumpdeath", false, 1);
+AddEntityCollideCallback("Player", "dog_trigger", "dog_appear", true, 1);
+AddEntityCollideCallback("Player", "squeeze_trigger", "squeeze", true, 1);
+AddEntityCollideCallback("Player", "Growl_Trigger", "Alert", true, 1);
+AddEntityCollideCallback("Player", "SoundTrigger", "Beware", true, 1);
+AddEntityCollideCallback("bastard_joint_1", "sword_breaktrigger", "break_coffin", true, 1);
+//AddEntityCollideCallback("Player", "DustTrigger", "event_blow", true, 1);
+AddEntityCollideCallback("Player", "BlurbTrigger", "Blurb", true, 1);
+AddEntityCollideCallback("Player", "Scare1Trigger", "AmbScares", false, 1);
+AddEntityCollideCallback("DummyLever", "LeverBreakTrigger", "LeverBreak", true, 1);
+AddEntityCollideCallback("LeverHold", "LeverAttachTrigger", "LeverAttach", true, 1);
+AddEntityCollideCallback("DogDouble", "KillTrigger", "DoubleKill", true, 1);
+AddEntityCollideCallback("LeverHold", "death_place_2", "LeverRespawn", false, 1);
+AddEntityCollideCallback("LeverHold", "death_place", "LeverRespawn", false, 1);
+
+// use dem items
+AddUseItemCallback("", "bastard_pickup_1", "coffin_dirty_stuck", "used_sword", true);
+AddUseItemCallback("", "bastard_pickup_1", "slime_anim_ceiling_1", "used_sword_slime", true);
+AddUseItemCallback("", "bastard_2", "slime_anim_ceiling_1", "used_sword_slime", true);
+AddUseItemCallback("", "needle", "outerdoor", "open_outer", true);
+AddUseItemCallback("", "needle", "outerdoor", "open_outer", true);
+AddUseItemCallback("", "rustedkey", "outerdoor", "break_key", true);
+AddUseItemCallback("", "bastard_2", "outerdoor", "sword_lock", true);
+AddUseItemCallback("", "bastard_pickup_1", "outerdoor", "sword_lock", true);
+// inty act calla back
+SetEntityPlayerInteractCallback("coffin_dirty_stuck", "stuckmessage", true);
+SetEntityPlayerInteractCallback("slime_anim_ceiling_1", "slime_hurts", true);
+SetEntityPlayerInteractCallback("sewer_arched_1", "musictrans", true);
+SetEntityPlayerInteractCallback("upright", "buckettrick", true);
+SetEntityPlayerInteractCallback("lantern_1", "givesome", true);
+SetEntityPlayerInteractCallback("LeverHold", "silence_timer", true);
+SetEntityPlayerInteractCallback("LeverExamine", "RemoveExamine", false);
+SetEntityConnectionStateChangeCallback("DoorLevel", "DoorControl");
+// n other shit
+giveNodes();
+SetPlayerLookSpeedMul(1);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPropStaticPhysics("cell_bucket_2", true);
+SetGlobalVarInt("lantern_picked", 0);
+SetLocalVarInt("DoorPowered", 0);
+SetLocalVarInt("DoorOpen", 0);
+}
+
+void giveNodes()
+{
+AddEnemyPatrolNode("dog","dogpath_1",0.0f,"");
+AddEnemyPatrolNode("dog","dogpath_2",0.0f,"");
+AddEnemyPatrolNode("dog","dogpath_3",0.0f,"");
+AddEnemyPatrolNode("dog","dogpath_4",0.0f,"");
+AddEnemyPatrolNode("dog","dogpath_5",0.0f,"");
+AddEnemyPatrolNode("dog","dogpath_6",0.0f,"");
+AddEnemyPatrolNode("dog","dogpath_7",0.0f,"");
+AddEnemyPatrolNode("dog","dogpath_8",0.0f,"");
+}
+
+void OnEnter()
+{
+SetMapDisplayNameEntry("Catacombs");
+MusicPt1();
+SetEnemyDisableTriggers("DogDouble", true);
+}
+
+void MusicPt1()
+{
+	PlayMusic("12_Gas_Ambient Draft 2.ogg", true, 0.21, 3, 0, true);
+}
+
+void DoorControl(string &in asEntity, int alState)
+{
+		if (alState == 1 && (GetLocalVarInt("DoorOpen") == 0))
+		{
+			SetMoveObjectState("safety_normal_vert_1", 1);
+			//AddTimer("tillstatic", 4, "MakeItStop");
+			SetLocalVarInt("DoorOpen", 1);
+		}
+		else if (alState == -1 && (GetLocalVarInt("DoorOpen") == 1))
+		{
+			SetMoveObjectState("safety_normal_vert_1", 0);
+			SetLocalVarInt("DoorOpen", 0);
+		}
+}
+
+void LeverBreak(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("DummyLever",false);
+	SetEntityActive("LeverHold",true);
+	SetEntityActive("DummyMount",true);
+
+	PlaySoundAtEntity("","06_break_wood.snt", "BreakEffectsLever", 0, false);
+	CreateParticleSystemAtEntity("", "ps_door_damage_wood.ps", "BreakEffectsLever", true);
+}
+
+void LeverAttach(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("EmptyMount",false);
+	SetEntityActive("LeverHold",false);
+	SetEntityActive("LeverExamine",false);
+	SetEntityActive("DoorLevel",true);
+	PlaySoundAtEntity("","13_rod_in.snt", "DoorLevel", 0, false);
+	
+	CompleteQuest("01_CataLever","01_CataLever");
+	
+	GiveSanityBoostSmall();
+}
+
+void LeverRespawn(string &in asParent, string &in asChild, int alState)
+{
+	//SetPropActiveAndFade("LeverHold", false, 1.2);
+	//AddTimer("",1.5,"TimerLeverRespawn");
+	PlaceEntityAtEntity("LeverHold", "LeverRespawnArea", "", false);
+}
+
+void TimerLeverRespawn(string &in asTimer)
+{
+	CreateEntityAtArea("LeverHold", "lever_small_lever.ent", "LeverRespawnArea", true);
+}
+
+void DoubleKill(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("DogDouble",false);
+}
+
+void AmbScares(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asChild, false);
+	if (asChild == "Scare1Trigger")
+	{
+		PlaySoundAtEntity("", "tunnel_cry", "CrySource", 0, false);
+	}
+	if (asChild == "Scare2Trigger")
+	{
+		PlaySoundAtEntity("", "tunnel_cry", "RoarSource", 0, false);
+	}
+}
+
+void Blurb(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_water_dump_splash.ps", "BlurbSource", false);
+	PlaySoundAtEntity("", "water_lurker_idle.snt", "BlurbSource", 0.8, true);
+}
+
+void BarsScare(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_spooky_eerie_monster_type2_s.snt", "BarsScareSource", 0, true);
+}
+
+void event_blow(string &in asParent, string &in asChild, int alState)
+{
+CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "blowsource", false);
+AddTimer("", 1.6, "TimerLightsOut");
+}
+
+void TimerLightsOut(string &in asTimer)
+{
+SetLampLit("candlestick_wall_9", false, true);
+SetLightVisible("PointLight_24", false);
+PlayGuiSound("general_wind_whirl.snt", 1.0f);
+}
+
+void AmbientVoice(string &in asParent, string &in asChild, int alState)
+{
+//PlaySoundAtEntity("voice", "ambience_voice.snt", "coffin_dirty_2", 0.8, true);
+//PlaySoundAtEntity("", "ptest/enemy/suitor/amb_idle.snt", "ScriptArea_2", 0.1, true);
+SetLampLit("torch_floor_1", true, true);
+}
+
+void chains(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "general_chain_rattle_single.snt", "torchholder_empty_5", 0.6, true);
+}
+
+void breath(string &in asParent, string &in asChild, int alState)
+{
+CreateParticleSystemAtEntity("", "ps_cave_monster_breath.ps", "breath_source", true);
+AddTimer("", 1.2, "TimerQuest");
+}
+
+void TimerQuest(string &in asTimer)
+{
+//AddQuest("chasm", "chasm");
+CheckPoint("PreChasm", "checkpoint_1", "MusicPt1", "", "");
+AutoSave();
+}
+
+void jumpdeath(string &in asParent, string &in asChild, int alState)
+{
+GivePlayerDamage(999, "BloodSplat", true, true);
+}
+
+void slime_hurts(string &in asEntity)
+{
+GivePlayerDamage(5, "Slash", true, false);
+PlayGuiSound("slime_attack_normal_hit.snt", 0.8);
+}
+
+void q_chasm_end(string &in asParent, string &in asChild, int alState)
+{
+CompleteQuest("chasm", "chasm");
+CheckPoint("PostChasm", "checkpoint_2", "MusicPt2", "", "");
+}
+
+void silence_timer(string &in asEntity)
+{
+AddTimer("", 3, "TimeForSilence");
+}
+
+void TimeForSilence(string &in asTimer)
+{
+StopMusic(12, 0);
+}
+
+void stuckmessage(string &in asEntity)
+{
+SetMessage("Message", "01coffin_stuck", 3.0);
+}
+
+void used_sword(string &in asItem, string &in asEntity)
+{
+AddTimer("", 0.2, "TimerSwitchShovel");
+RemoveItem("bastard_pickup_1");
+}
+
+void TimerSwitchShovel(string &in asTimer)
+{
+SetEntityActive("bastard_joint_1", true);
+PlaySoundAtEntity("","puzzle_place_jar.snt", "bastard_joint_1", 0, false);
+}
+
+void break_coffin(string &in asParent, string &in asChild, int alState)
+{
+StopSound("voice", 3);
+AddPlayerSanity(5);
+PlayMusic("fireplace.ogg", false, 0.7, 0.1, 10, false);
+SetEntityActive("coffin_dirty_stuck", false);
+SetEntityActive("coffin_dirty_loose", true);
+AddPropImpulse("coffin_dirty_loose", 0, 5, 0, "");
+PlaySoundAtEntity("","impact_metal_low.snt", "breakeffects", 0, false);
+PlaySoundAtEntity("","break_wood.snt", "breakeffects", 0, false);
+CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "breakeffects", false);
+SetEntityActive("bastard_joint_1", false);
+SetEntityActive("bastard_2", true);
+AutoSave();
+}
+
+void used_sword_slime(string &in asItem, string &in asEntity)
+{
+PlayMusic("04_event_stairs.ogg", false, 0.7, 0.1, 10, false);
+SetEntityActive("bastard_1", true);
+SetEntityActive("slime_pile_2", true);
+PlaySoundAtEntity("","19_inject.snt", "slime_pile_2", 0, false);
+CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke.ps", "stab_ps_spawn", false);
+StartScreenShake(0.1, 2.0, 0.5, 1.0);
+AddTimer("", 1.75, "TimerStabEnd");
+}
+
+void TimerStabEnd(string &in asTimer)
+{
+SetEntityActive("bastard_1", false);
+SetEntityActive("slime_anim_ceiling_1", false);
+SetEntityActive("SlimeDamageArea_1", false);
+}
+
+void musictrans(string &in asEntity)
+{
+	MusicPt2();
+SetSanityDrainDisabled(false);
+AddTimer("", RandInt(20,40), "TimerDebrisSound");
+}
+
+void MusicPt2()
+{
+	PlayMusic("ort_tunnel.ogg", true, 0.32, 7, 0, true);
+}
+
+void TimerDebrisSound(string &in asTimer)
+{
+	PlaySoundAtEntity("","amb_cellar_debris.snt", "Player", 0, false);
+}
+
+void dog_appear(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("dog", true);
+//PlayMusic("20_event_darkness.ogg", false, 0.8, 1, 0, false);
+}
+
+void Beware(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "faint_low.snt", "sound_source_1", 0, true);
+}
+
+void squeeze(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 5, "squeeze_end");
+	PlayGuiSound("warp.ogg", 1.0);
+	CheckPoint("", "checkpoint_2", "", "", "");
+	SetPlayerLookSpeedMul(0.9);
+	SetPlayerMoveSpeedMul(0.9);
+	SetPlayerRunSpeedMul(0.9);
+	//StartScreenShake(0.01f, 5.0, 2.0, 2.1);
+}
+
+void squeeze_end(string &in asTimer)
+{
+SetPlayerLookSpeedMul(1);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+}
+
+void Alert(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","enemy_dog_idle.snt", "growl_source", 0, false);
+CheckPoint ("", "Catacheck2", "", "", "");
+AddTimer("", 1.3, "ShadowScare");
+}
+
+void ShadowScare(string &in asTimer)
+{
+	AddEnemyPatrolNode("DogDouble","shadowpath_1",0.0f,"");
+	AddEnemyPatrolNode("DogDouble","shadowpath_2",0.0f,"");
+}
+
+void buckettrick(string &in asEntity)
+{
+SetPropStaticPhysics("cell_bucket_2", false);
+AddEntityCollideCallback("Player", "squeeze_trigger_1", "dog_appear", true, 1);
+}
+
+void givesome(string &in asEntity)
+{
+AddGlobalVarInt("lantern_picked", 1);
+SetPlayerLampOil(25);
+}
+
+void break_key(string &in asItem, string &in asEntity)
+{
+RemoveItem("rustedkey");
+SetMessage("Message", "01key_broke", 0);
+//AddQuest("catacombsdoor", "catacombsdoor");
+CreateParticleSystemAtEntity("", "ps_break_glass.ps", "breakps", false);
+PlaySoundAtEntity("","impact_metal_low.snt", "breakps", 0, false);
+}
+
+void open_outer(string &in asItem, string &in asEntity)
+{
+RemoveItem("needle");
+RemoveItem("rustedkey");
+PlaySoundAtEntity("","07_pick_lock.snt", "breakps", 0, false);
+SetLevelDoorLocked("outerdoor", false);
+SetMessage("Message", "univ_unlocked", 0);
+CompleteQuest("catacombsdoor", "catacombsdoor");
+//SetupLoadScreen("Loading", "bstory", 1, "load_5");
+}
+
+void RemoveExamine(string &in asEntity)
+{
+	SetEntityActive(asEntity,false);
+	if (asEntity == "LeverExamine")
+		{
+			AddQuest("01_CataLever","01_CataLever");
+		}
+}
+
+void OnLeave()
+{
+}

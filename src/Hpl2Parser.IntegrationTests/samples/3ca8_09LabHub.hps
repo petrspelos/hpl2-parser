@@ -1,0 +1,297 @@
+void OnStart()
+{  
+	AutoSave();
+	AddEntityCollideCallback("Player", "AreaSuitor", "GruntAppears", true, 1);
+	AddEntityCollideCallback("character_dog_1", "SuitorGone", "Gruntgone", true, 1);
+	AddUseItemCallback("", "hollow_needle", "closet", "winecloset", true);
+	AddUseItemCallback("", "MasterKey", "mansion_6", "KeyDoor", true);
+	AddUseItemCallback("", "MasterKey", "WineCellar", "usekey", true);
+	AddEntityCollideCallback("Player", "VarM", "VarMachine", true, 1);
+	AddUseItemCallback("", "Explosive", "PlaceExplosive", "ExplosivePlaced", true);
+	AddEntityCollideCallback("Player", "DamageArea", "Damage", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_1", "AreaQuest", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_2", "Flashback", true, 1);
+}
+
+
+
+
+
+void OnEnter()
+{ 
+		PlayMusic("Nest", true, 0.3, 0.1, 10, false);
+		AddTimer("PlayerCough", 30, "TimerCough");
+		if(GetGlobalVarInt("FlashBackNest") == 1) {
+		SetEntityActive("FlashbackArea_3", true);
+		}
+		
+		if(GetGlobalVarInt("Machinery") == 1) {
+			SetEntityActive("WineCellar", false);
+			SetEntityActive("WineCellar_1", true);
+		}
+		
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen7", 0, "game_loading_rose.jpg");
+}
+
+
+///////////////////////////////Grunt Appears///////////////////////////
+
+void aquaregia(string &in asEntity)
+{
+	SetEntityActive("AreaSuitor", true);
+	SetEntityActive("level_wood_2", false);
+	SetEntityActive("level_wood_3", true);
+	
+}
+
+
+void GruntAppears(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(6.0f, 10);
+	PlayMusic("22_event_trapped", false, 0.7, 0.1, 10, false);
+	SetEntityActive("character_dog_1", true);
+	AddEffectVoice("character_dog_howl1", "", "", "", false, "Player", 0, 15);
+	
+	CheckPoint("DogNest", "PlayerStartArea_2", "DogRespawn", "", "");
+	
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+	
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_1", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_2", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_3", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_4", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_6", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_8", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_10", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_11", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_12", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_14", 6, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_16", 5, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_15", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_17", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_18", 5, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_19", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_20", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_21", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_22", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_23", 0.001, "");
+	
+}
+
+
+
+void DogRespawn(string &in asName, int alCount)
+{
+	SetEntityActive("character_dog_1", true);
+}  
+		
+
+void Gruntgone(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("character_dog_1", false);
+	AddTimer("music1", 10, "TimerMusicStart");
+	SetEntityActive("level_wood_3", false);
+	SetEntityActive("level_wood_2", true);
+	PlaySoundAtEntity("", "door_level_cellar_close.snt", "level_celler_1", 0, false);
+	
+	
+}
+
+////////////////////////////Timer Music/////////////////////////////////
+void TimerMusicStart(string &in asTimer)
+{
+	if(asTimer == "music1") PlayMusic("Nest", true, 0.3, 0.1, 10, false);
+}
+
+/////////////////////////////Timer Reaction/////////////////////////////
+void TimerPlayerreact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+}
+
+///////////////////////////////Opens Closet/////////////////////////////
+void winecloset(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("closet", false, true);
+	PlaySoundAtEntity("", "07_pick_lock", asEntity, 0, false);
+}
+
+////////////////////////////////Use Master Key/////////////////////////////////
+
+void KeyDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("mansion_6", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	GiveSanityBoostSmall();
+	
+	if(GetGlobalVarInt("Tonic") == 0) return;
+	SetEntityActive("ITonic", true);
+}
+
+////////////////////////////////Wine Cellar Unlocked/////////////////////////
+
+void usekey(string &in asItem, string &in asEntity)
+{	
+	SetLevelDoorLocked(asEntity, false);
+	SetMessage("Message", "CellarUnlock", 3);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	GiveSanityBoostSmall();
+	SetEntityActive("level_wood_3", false);
+	SetEntityActive("level_wood_2", true);
+}
+
+/////////////////////////////////Lever//////////////////////////////////
+
+void Lever(string &in asEntity, int LeverState)
+{
+	if(GetGlobalVarInt("Machinery") == 0) {
+		SetMessage("Message", "LabHubLever", 3);
+		AddQuest("LabMachine", "LabMachinery");
+		return;
+	}
+		if(LeverState == 1) {
+	
+		SetMoveObjectState("castle_portcullis_1", 1);
+		SetLeverStuckState("leverinsert", 1, true);
+		GiveSanityBoostSmall();
+		CompleteQuest("LabMachine", "LabMachinery");
+		SetEntityActive("level_wood_3", false);
+		SetEntityActive("level_wood_2", true);
+		}
+}
+
+///////////////////////////////Explosives///////////////////////////////
+
+void ExplosivePlaced(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", asEntity, 0, false);
+	RemoveItem("Explosive");
+	SetEntityActive("ExplosiveUnStable", true);
+	SetMessage("Message", "Explosion", 2);
+	AddTimer("Ignite", 0.5f, "TimerExplosion");
+	AddTimer("Explosion", 3.5, "TimerExplosion");
+	
+}
+
+
+void TimerExplosion(string &in asTimer)
+{
+	if(asTimer == "Ignite") {
+		PlaySoundAtEntity("", "12_epoxy_blow", "ExplosiveHitArea", 0, false);
+		}
+		
+		else if(asTimer == "Explosion") {
+		
+		
+			StartScreenShake(0.08, 2.5f, 0, 1.0f);
+			SetEntityActive("cave_in_1", false);
+			SetEntityActive("cave_in_2", false);
+			SetEntityActive("cave_in_destroyed_1", true);
+			SetEntityActive("1", true);
+			SetEntityActive("2", true);
+			SetEntityActive("3", true);
+			SetEntityActive("4", true);
+			SetEntityActive("5", true);
+			SetEntityActive("6", true);
+			AddPropImpulse("1", -300,0,0,"World");
+			AddPropImpulse("2", 0,0,300,"World");
+			AddPropImpulse("3", 300,0,0,"World");
+			AddPropImpulse("4", -300,0,0,"World");
+			AddPropImpulse("5", 0,0,-300,"World");
+			AddPropImpulse("6", -300,0,0,"World");
+			CreateParticleSystemAtEntity("","ps_area_fog_falling.","effect_1", false);
+			CreateParticleSystemAtEntity("","ps_area_fog_falling.","effect_7", false);
+			CreateParticleSystemAtEntity("","ps_area_fog_xlarge","effect_2", false);
+			CreateParticleSystemAtEntity("","ps_area_fog_xlarge","effect_3", false);
+			CreateParticleSystemAtEntity("","ps_area_fog_xlarge","effect_4", false);
+			CreateParticleSystemAtEntity("","ps_area_fog_xlarge","effect_5", false);
+			CreateParticleSystemAtEntity("","ps_area_fog_xlarge","effect_6", false);
+			SetEntityActive("DamageArea", true);
+			AddTimer("Damage", 0.1, "TimerDamage");
+			CompleteQuest("Debris", "LabDebris");
+			SetLevelDoorLocked("level_wood_2", false);
+			
+		}
+}
+
+void TimerDamage(string &in asTimer)
+{
+	if(asTimer == "Damage") SetEntityActive("DamageArea", false);
+}
+
+void Damage(string &in asParent, string &in asChild, int alState)
+{
+		GivePlayerDamage(80, "BloodSplat", true, true);
+}
+
+void AreaQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Debris", "LabDebris");
+}
+
+///////////////////////////////Cough////////////////////////////////////
+
+void TimerCough(string &in asTimer)
+{
+		if(asTimer == "PlayerCough") {
+	
+		SetLocalVarInt("RandomInt", RandInt(1,4));
+		
+		GetLocalVarInt("RandomInt");
+		
+		}
+		
+		
+		if(GetLocalVarInt("RandomInt") == 1) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 16, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 2) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 35, "TimerCough");
+		}
+		
+		
+		else if(GetLocalVarInt("RandomInt") == 3) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 23, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 4) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 25, "TimerCough");
+		}
+		
+
+		
+}
+
+/////////////////////////////////Messgaes///////////////////////////////
+
+void messagelocked(string &in asEntity) {
+	SetMessage("Message", "CellarLocked", 3);
+}
+
+///////////////////////////////////End23////////////////////////////////
+
+void End23(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	
+}

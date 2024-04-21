@@ -1,0 +1,570 @@
+//////////STAMINA SYSTEM SETTINGS//////////////
+///////////////////////////////////////////////
+const string STAMINA_TIMER_CALLBACK_NAME = "STAMINA_TIMER_CALLBACK";
+const string STAMINA_PLAYER_SPEED = "STAMINA_PLAYER_SPEED";
+const string STAMINA_PLAYER_LENGTH = "STAMINA_PLAYER_LENGTH";
+const string STAMINA_PLAYER_BREATH_SLOW = "STAMINA_PLAYER_BREATH_SLOW";
+const string STAMINA_PLAYER_BREATH_SNT = "react_breath_slow.snt";
+const string STAMINA_PLAYER_HEAD_BOB = "STAMINA_PLAYER_HEAD_BOB";
+
+const float STAMINA_TIMER_SPEED_TIME = 0.5f;
+const float STAMINA_PLAYER_HEAD_BOB_SPEED = 0.7f;
+
+enum StaminaStages
+    {
+        Full,
+        Low,
+        Exhausted
+    }
+
+class StaminaSystem
+    {
+        private int state;
+        private uint length;
+        private bool head_bobbing;
+        private bool is_running;
+
+        StaminaSystem()
+            {
+                PreloadSound(STAMINA_PLAYER_BREATH_SNT);
+                this.state = StaminaStages::Full;
+                this.length = 10;
+                this.head_bobbing = false;
+                this.is_running = false;
+            }
+
+        ~StaminaSystem()
+            {
+                this.Stop();
+            }
+
+        void AddDebugMessage(string &in message, bool check, bool to_file)
+            {
+                ::AddDebugMessage("Stamina system: " + message, check);
+                if (to_file) Print("Stamina system: " + message);
+            }
+
+        bool IsPlayerRunning() const
+            {
+                return this.is_running;
+            }
+
+        void PlayBreathSound()
+            {
+                PlaySoundAtEntity(STAMINA_PLAYER_BREATH_SLOW, STAMINA_PLAYER_BREATH_SNT, "Player", 0, false);
+            }
+
+        void Start()
+            {
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				AddTimer(STAMINA_PLAYER_SPEED, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerHeadBob()
+            {
+                if (this.head_bobbing)
+                    MovePlayerHeadPos(0, -0.35, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+                else
+                    MovePlayerHeadPos(0, 0, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+
+                this.head_bobbing = !this.head_bobbing;
+                AddTimer(STAMINA_PLAYER_HEAD_BOB, 0.75f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerTiredEffect()
+            {
+                this.PlayBreathSound();
+                AddTimer(STAMINA_PLAYER_BREATH_SLOW, 1.5f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void Stop()
+            {
+                this.StopPlayerTiredEffect();
+                RemoveTimer(STAMINA_PLAYER_SPEED);
+                RemoveTimer(STAMINA_PLAYER_LENGTH);
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				SetPlayerJumpDisabled(false);
+            }
+
+        void StopPlayerTiredEffect()
+            {
+                this.head_bobbing = false;
+                RemoveTimer(STAMINA_PLAYER_BREATH_SLOW);
+                RemoveTimer(STAMINA_PLAYER_HEAD_BOB);
+                MovePlayerHeadPos(0,0,0, 1, 1);
+				FadeImageTrailTo(0, 1); ////trail off
+                // StopSound(STAMINA_PLAYER_BREATH_SLOW, 1); // Crashes the game upon exit.
+            }
+
+        void SetStaminaLength(uint length)
+            {
+                if (length != 0)
+                    this.length = length;
+                else
+                    this.AddDebugMessage("Length cannot be 0!", false, true);
+            }
+
+        void Update(string &in timer_name)
+            {
+                if (timer_name == STAMINA_PLAYER_SPEED)
+                {
+                    this.is_running = (GetPlayerSpeed() > 3) ? true : false;
+
+                    if (this.is_running && GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) == 0)
+                        AddTimer(STAMINA_PLAYER_LENGTH, this.length, STAMINA_TIMER_CALLBACK_NAME);
+
+                    else if(!this.is_running)
+                    {
+                        if (GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) > 0 && this.state == StaminaStages::Full)
+                            RemoveTimer(STAMINA_PLAYER_LENGTH);
+
+                        else if(this.state == StaminaStages::Low)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/4, STAMINA_TIMER_CALLBACK_NAME);
+
+                        else if(this.state == StaminaStages::Exhausted)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/2, STAMINA_TIMER_CALLBACK_NAME);
+                    }
+
+                    AddTimer(timer_name, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+                }
+
+                else if (timer_name == STAMINA_PLAYER_BREATH_SLOW)
+                    this.StartPlayerTiredEffect();
+
+                else if (timer_name == STAMINA_PLAYER_HEAD_BOB)
+                    this.StartPlayerHeadBob();
+
+                else if (timer_name == STAMINA_PLAYER_LENGTH)
+                {
+                    if (this.is_running)
+                    {
+                        if (this.state == StaminaStages::Full)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.5);
+                        }
+
+                        else if (this.state == StaminaStages::Low)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.3);
+                            SetPlayerMoveSpeedMul(0.5);
+							FadeImageTrailTo(3,1); ////trail on
+                            SetPlayerJumpDisabled(true);
+                            ChangePlayerStateToNormal();
+                            this.StartPlayerTiredEffect();
+                            this.StartPlayerHeadBob();
+                        }
+                    }
+
+                    else
+                    {
+                        this.StopPlayerTiredEffect();
+
+                        SetPlayerRunSpeedMul(1);
+                        SetPlayerMoveSpeedMul(1);
+                        SetPlayerJumpDisabled(false);
+
+                        if (this.state == StaminaStages::Low)
+                            this.state = StaminaStages::Full;
+
+                        else if (this.state == StaminaStages::Exhausted)
+                            this.state = StaminaStages::Full;
+                    }
+                }
+            }
+    }
+
+StaminaSystem stamina_obj;
+
+void STAMINA_TIMER_CALLBACK(string &in timer_name)
+    { stamina_obj.Update(timer_name); } 
+//////////////////////////////////////
+void OnStart()
+{
+///CAMERAS/////////////////////
+AddEntityCollideCallback("cam_1", "CamArea_1" ,"camera_turn", false, 1);
+AddEntityCollideCallback("cam_1", "CamArea_2" ,"camera_turn", false, 1);
+RotatePropToSpeed("cam_1", 8, 0.55, 0, 0.5, 0, true, "RotateArea_1");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_1", 1.0 / 1.5f, false);
+//--------------------------------------------------------------------
+AddEntityCollideCallback("cam_2", "CamArea_3" ,"camera_turn", false, 1);
+AddEntityCollideCallback("cam_2", "CamArea_4" ,"camera_turn", false, 1);
+RotatePropToSpeed("cam_2", 8, 0.55, 0, 0.5, 0, true, "RotateArea_2");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_2", 1.0 / 1.5f, false);
+//--------------------------------------------------------------------
+AddEntityCollideCallback("cam_3", "CamArea_5" ,"camera_turn", false, 1);
+AddEntityCollideCallback("cam_3", "CamArea_6" ,"camera_turn", false, 1);
+RotatePropToSpeed("cam_3", 8, 0.55, 0, 0.5, 0, true, "RotateArea_3");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_3", 1.0 / 1.5f, false);
+//--------------------------------------------------------------------
+AddEntityCollideCallback("cam_4", "CamArea_7" ,"camera_turn", false, 1);
+AddEntityCollideCallback("cam_4", "CamArea_8" ,"camera_turn", false, 1);
+RotatePropToSpeed("cam_4", 8, 0.55, 0, 0.5, 0, true, "RotateArea_4");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_4", 1.0 / 1.5f, false);
+//--------------------------------------------------------------------
+AddEntityCollideCallback("cam_5", "CamArea_9" ,"camera_turn", false, 1);
+AddEntityCollideCallback("cam_5", "CamArea_10" ,"camera_turn", false, 1);
+RotatePropToSpeed("cam_5", 8, 0.55, 0, 0.5, 0, true, "RotateArea_5");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_5", 1.0 / 1.5f, false);
+//--------------------------------------------------------------------
+SetMapDisplayNameEntry("Residential");
+AddEntityCollideCallback("Player", "ScriptArea_1", "scientist_hello", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_2", "Start_map", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_4", "screenimage", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_5", "screenimage", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_3", "music_change", true, 1);
+AddEntityCollideCallback("Player", "transit_area_1", "Transit", false, 0);
+}
+///Medical Door
+void Transit(string &in asParent, string &in asChild, int alState)
+{
+  if (alState == 1){
+  SetMoveObjectState("Gate_1", -5);
+  SetMoveObjectState("Gate_2", 5);
+  return;
+  }
+  if (alState == -1){
+  SetMoveObjectState("Gate_1", 0);
+  SetMoveObjectState("Gate_2", 0);
+  return;
+  }
+}
+//////////
+void lightswitch(string &in asEntity)
+{
+if(GetLocalVarInt("lighton") == 0)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton", 1);
+			for (int i=1; i<=6; i++){
+            SetLightVisible("Spot_"+i, false);
+			}
+			StopSound("Sound_21", 1);
+            SetLampLit("lamp_flourescent01_26", false, false);
+			return;
+		}
+		if(GetLocalVarInt("lighton") == 1)
+		{
+		    PlayGuiSound("interact_lamp1.ogg", 5.0f);
+			SetLocalVarInt("lighton", 0);
+				for (int i=1; i<=6; i++){
+            SetLightVisible("Spot_"+i, true);
+			}
+			FadeInSound("Sound_21", 1, true);
+            SetLampLit("lamp_flourescent01_26", true, false);
+            return;
+		}
+}
+void grabhand(string &in asEntity)
+{
+   if (GetPropIsInteractedWith(asEntity) == true){
+   StartInsanityEvent("grab");
+   }
+   AddTimer(asEntity, 0.01,"grabcheck");
+}
+void grabcheck(string &in asTimer)
+{
+AddTimer(asTimer, 0.01,"grabcheck");
+if (GetPropIsInteractedWith(asTimer) == false){
+StopCurrentInsanityEvent();
+RemoveTimer(asTimer);
+}
+}
+////////////
+//Start
+void Start_map(string &in asParent, string &in asChild, int alState)
+{
+//SetMessage("02_Residential", "StartChapter", -1);
+SetLocalVarInt("first_enter", 1);
+//AddTimer("", 10, "narrator_speak");
+PlayMusic("Penumbra_BP_A5.ogg", true, 0.45f, 6, 1, true);
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+}
+void sanit(string &in asTimer)
+{
+SetPlayerSanity(90);
+SetSanityDrainDisabled(true);
+AutoSave();
+}
+void narrator_speak(string &in asTimer)
+{
+PlayGuiSound("general_speaker_noise.snt", 0.8f);
+AddTimer("", 1, "speak_now");
+}
+void speak_now(string &in asTimer)
+{
+AddEffectVoice("DIKTOR_01", "", "Voice", "Narrator_1", false, "narrator_voice_1", 9, 16);
+if (GetLocalVarInt("spr") == 1){
+AddTimer("", 60, "narrator_speak");
+}
+}
+void screenimage(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_4"){
+SetLocalVarInt("inlazaret", 1);
+return;
+}
+if (asChild == "ScriptArea_5"){
+SetLocalVarInt("inlazaret", 0);
+if (GetLocalVarInt("sp") == 0){
+PlayGuiSound("general_speaker_noise.snt", 0.8f);
+AddTimer("", 1, "speak_now");
+SetLocalVarInt("sp", 2);
+}
+return;
+}
+}
+
+///CAMERA//////
+void camera_turn(string &in asParent, string &in asChild, int alState)
+{
+if (asParent == "cam_1"){
+    if (asChild == "CamArea_1"){
+     StopPropMovement("cam_1");
+     AddTimer("c1", 1.6, "cam_delay");
+     return;
+    }
+    if (asChild == "CamArea_2"){
+     AddTimer("c2", 1.6, "cam_delay");
+    StopPropMovement("cam_1");
+    return;
+    }
+return;	
+}
+if (asParent == "cam_2"){
+    if (asChild == "CamArea_3"){
+     StopPropMovement("cam_2");
+     AddTimer("c3", 1.6, "cam_delay");
+     return;
+    }
+    if (asChild == "CamArea_4"){
+     AddTimer("c4", 1.6, "cam_delay");
+    StopPropMovement("cam_2");
+    return;
+    }
+return;	
+}
+if (asParent == "cam_3"){
+    if (asChild == "CamArea_5"){
+     StopPropMovement("cam_3");
+     AddTimer("c5", 1.6, "cam_delay");
+     return;
+    }
+    if (asChild == "CamArea_6"){
+     AddTimer("c6", 1.6, "cam_delay");
+    StopPropMovement("cam_3");
+    return;
+    }
+return;	
+}
+if (asParent == "cam_4"){
+    if (asChild == "CamArea_7"){
+     StopPropMovement("cam_4");
+     AddTimer("c7", 1.6, "cam_delay");
+     return;
+    }
+    if (asChild == "CamArea_8"){
+     AddTimer("c8", 1.6, "cam_delay");
+    StopPropMovement("cam_4");
+    return;
+    }
+return;	
+}
+if (asParent == "cam_5"){
+    if (asChild == "CamArea_9"){
+     StopPropMovement("cam_5");
+     AddTimer("c9", 1.6, "cam_delay");
+     return;
+    }
+    if (asChild == "CamArea_10"){
+     AddTimer("c10", 1.6, "cam_delay");
+    StopPropMovement("cam_5");
+    return;
+    }
+return;	
+}
+}
+void cam_delay(string &in asTimer)
+{
+if (asTimer == "c1"){
+RotatePropToSpeed("cam_1", 8, 0.55, 0, 0.5, 0, true, "RotateArea_1");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_1", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c2"){
+RotatePropToSpeed("cam_1", 8, 0.55, 0, -0.5, 0, true, "RotateArea_1");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_1", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c3"){
+RotatePropToSpeed("cam_2", 8, 0.55, 0, 0.5, 0, true, "RotateArea_2");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_2", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c4"){
+RotatePropToSpeed("cam_2", 8, 0.55, 0, -0.5, 0, true, "RotateArea_2");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_2", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c5"){
+RotatePropToSpeed("cam_3", 8, 0.55, 0, 0.5, 0, true, "RotateArea_3");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_3", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c6"){
+RotatePropToSpeed("cam_3", 8, 0.55, 0, -0.5, 0, true, "RotateArea_3");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_3", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c7"){
+RotatePropToSpeed("cam_4", 8, 0.55, 0, 0.5, 0, true, "RotateArea_4");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_4", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c8"){
+RotatePropToSpeed("cam_4", 8, 0.55, 0, -0.5, 0, true, "RotateArea_4");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_4", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c9"){
+RotatePropToSpeed("cam_5", 8, 0.55, 0, 0.5, 0, true, "RotateArea_5");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_5", 1.0 / 1.5f, false);
+return;
+}
+if (asTimer == "c10"){
+RotatePropToSpeed("cam_5", 8, 0.55, 0, -0.5, 0, true, "RotateArea_5");
+PlaySoundAtEntity("", "camera_turn.snt", "RotateArea_5", 1.0 / 1.5f, false);
+return;
+}
+}
+///////
+void soda_interact(string &in asEntity)
+{
+PlayGuiSound("02_vend_machine_button1.ogg", 1.0f);
+if (asEntity == "ScriptArea_13"){
+ if (GetLocalVarInt("soda") == 0){
+   SetLocalVarInt("soda", 1);
+   AddTimer("", 1, "soda_ready");
+   return;
+   }
+}
+}
+void soda_ready(string &in asTimer)
+{
+PlayGuiSound("02_vend_machine_can1.ogg", 1.0f);
+SetPropActiveAndFade("sodacan", true, 0.5);
+}
+///////////
+void scientist_hello(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+StartInsanityEvent("WideCorridors");
+ShowPlayerCrossHairIcons(false);
+StartPlayerLookAt("ScriptArea_6", 1.5, 1.5, "");
+AddEffectVoice("Scientist.ogg", "", "Voice", "Scientist_1", true, "ScriptArea_6", 1, 18);
+SetEntityActive("Yinston", true);
+SetEnemySanityDecreaseActive("Yinston", false);
+AddEnemyPatrolNode("Yinston", "PathNodeArea_3", 9, "");
+AddEnemyPatrolNode("Yinston", "PathNodeArea_4", 0.01, "");
+AddEnemyPatrolNode("Yinston", "PathNodeArea_5", 0.01, "");
+AddEnemyPatrolNode("Yinston", "PathNodeArea_6", 100, "");
+AddTimer("", 9.8, "endsc");
+}
+void endsc(string &in asTimer)
+{
+AddTimer("", 15, "narrator_speak");
+SetLocalVarInt("sp", 2);
+SetLocalVarInt("spr", 1);
+StopPlayerLookAt();
+ShowPlayerCrossHairIcons(true);
+SetPlayerActive(true);
+}
+//////////////
+/////////////
+void Sign_box(string &in asEntity)
+{
+if (asEntity == "signs_1"){
+SetMessage("02_Residential", "rooms01", -1);
+}
+if (asEntity == "signs_2"){
+SetMessage("02_Residential", "rooms02", -1);
+}
+if (asEntity == "signs_3"){
+SetMessage("02_Residential", "rooms03", -1);
+}
+if (asEntity == "signs_4"){
+SetMessage("02_Residential", "rooms04", -1);
+}
+if (asEntity == "signs_5"){
+SetMessage("02_Residential", "rooms05", -1);
+}
+if (asEntity == "signs_6"){
+SetMessage("02_Residential", "rooms06", -1);
+}
+if (asEntity == "signs_7"){
+SetMessage("02_Residential", "rooms07", -1);
+}
+if (asEntity == "signs_8"){
+SetMessage("02_Residential", "machineroom", -1);
+}
+if (asEntity == "signs_9"){
+SetMessage("02_Residential", "Messhallsign", -1);
+}
+if (asEntity == "signs_10"){
+SetMessage("02_Residential", "Outsidedoor", -1);
+}
+if (asEntity == "signs_11"){
+SetMessage("02_Residential", "securityhere", -1);
+}
+}
+void lockedforever(string &in asEntity)
+{
+SetMessage("04_Morgue", "closeddoubledoor", -1);
+}
+//////////////
+void intersct_handscan(string &in asEntity)
+{
+SetEntityActive("ScriptArea_7", false);
+AddTimer("", 1.0, "resetpanel2");
+PlaySoundAtEntity("","scan_not.snt", "ScriptArea_7", 0.5, false);
+SetMessage("02_Residential", "handscaner", -1);
+SetEntityActive("handscan_panel_red", true);
+SetEntityActive("handscan_normal", false);
+}
+void resetpanel2(string &in asTimer)
+{
+SetEntityActive("ScriptArea_7", true);
+SetEntityActive("handscan_panel_red", false);
+SetEntityActive("handscan_normal", true);
+}
+///////////////
+void OnEnter()
+{
+PreloadSound("camera_turn.snt");
+PreloadSound("scan_not.snt");
+///stamina_obj.Start(); 
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+if (GetLocalVarInt("first_enter") == 1){
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+PlayMusic("Penumbra_BP_A5.ogg", true, 0.45f, 6, 1, true);
+}
+}
+
+void OnLeave()
+{
+StopAllEffectVoices(0);
+//stamina_obj.Stop();
+StopMusic(0, 1);
+if (GetLocalVarInt("inlazaret") == 1){
+SetupLoadScreen("LoadingText", "01_Dream", 1, "inf_loadingscreen.jpg");
+}
+if (GetLocalVarInt("inlazaret") == 0){
+SetupLoadScreen("", "", 1, "room_loadingscreen.jpg");
+}
+}

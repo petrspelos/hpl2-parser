@@ -1,0 +1,297 @@
+void OnStart()
+{
+	//PLAYER COLLIDE CALLBACKS
+	AddEntityCollideCallback("Player", "area_trigger_brute", "SpawnBrute", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaBruteAlert_1", "BruteAlert", true, 0);
+	AddEntityCollideCallback("Player", "AreaBruteAlert_2", "BruteAlert", true, 0);
+	AddEntityCollideCallback("Player", "AreaBruteAlert_3", "BruteAlert", true, 0);
+	AddEntityCollideCallback("Player", "AreaBlockedMsg", "BlockedMsgArea", false, 0);
+	
+	//PLAYER INTERACT CALLBACKS
+	AddUseItemCallback("minikey", "key_closet", "cabinet_metal_3", "ClosetUnlock", true);
+	AddUseItemCallback("mansionkey", "key_mansion", "mansion_12", "DoorLockedUnlock", true);
+	AddUseItemCallback("crowbar_use", "crowbar", "mansion_3", "CrowbarAttach", true);
+	SetEntityCallbackFunc("key_jar_1", "ReplaceJarKey");
+	SetEntityPlayerInteractCallback("mansion_3", "DoorBrokenLock", false);
+	SetEntityPlayerInteractCallback("mansion_2", "DoorBudge", false);
+	SetEntityPlayerInteractCallback("mansion_10", "DoorBlocked", false);
+	SetEntityPlayerInteractCallback("mansion_12", "DoorLocked", false);
+	AddEntityCollideCallback("mansion_11", "Collide_blocked_door", "DoorBaricade", false, 1);
+	SetEntityPlayerInteractCallback("key_jar_1", "DisableKeyLight", true);
+	SetEntityPlayerInteractCallback("door_upstairs", "DoorLockedUp", false);
+	SetEntityPlayerInteractCallback("cabinet_scare", "CabinetScare", true);
+	SetEntityPlayerInteractCallback("cabinet_metal_3", "CabinetInteract", false);
+	SetEntityCallbackFunc("key_equipment", "KeyPickupAutosave");
+	
+	//OTHER CALLBACKS
+	AddEntityCollideCallback("table_block", "AreaUnblockDoor", "TableUnblock", true, -1);
+	
+	//ONSTART SETUP
+	SetEntityInteractionDisabled("key_equipment", true);
+	SetLocalVarInt("blockedMsg", 1);
+	SetLocalVarInt("cabinetMsg", 1);
+	SetLocalVarInt("bruteSpawned", 0);
+	
+	SetEntityPlayerInteractCallback("easter_egg_10", "CollectEasterEgg", true);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("test-4-upstairs");
+	SetEntityCustomFocusCrossHair("easter_egg_10", "Pick");
+	if(GetLocalVarInt("bruteSpawned")==1)
+	{
+		SetEntityActive("brute", true);
+		StartBrutePath();
+	}
+	SetPropHealth("door_look", 5);
+	PlayMusic("02_amb_safe.ogg", true, 1, 1, 1, false);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(1, 1);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+//////////////////////
+/////Change map///////
+
+void LoadCellar()
+{
+	SetPlayerActive(false);
+	FadeOut(0.25);
+	AddTimer("", 0.25, "ChangeMap_Cellar");
+}
+
+void ChangeMap_Cellar(string &in asTimer)
+{
+	ChangeMap("test_4.map", "To_Test4_Cellar", "", "door_mansion_close.snt");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////Quests & Messages/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CabinetInteract(string &in asEntity)
+{
+	if(GetLocalVarInt("cabinetMsg")==1) SetMessage("Actions", "test4cabinet", 0);
+	if(GetSwingDoorLocked("cabinet_metal_3")) PlaySoundAtEntity("", "door_gate_bar_locked.snt", "cabinet_metal_3", 0.01, false);
+}
+
+void DoorLockedUp(string &in asEntity)
+{
+	LoadCellar();
+}
+
+void BlockedMsgArea(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1) SetLocalVarInt("blockedMsg", 0);
+	else SetLocalVarInt("blockedMsg", 1);
+}
+
+void DoorBaricade(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Actions", "test4baricade", 0);
+}
+
+void DoorLocked(string &in asEntity)
+{
+	SetMessage("Actions", "locked", 0);
+	if(not QuestIsAdded("test4_lockedRoom")) AddQuest("test4_lockedRoom", "test4_lockedRoom");
+}
+
+void DoorBlocked(string &in asEntity)
+{
+	if(GetLocalVarInt("blockedMsg")==1) SetMessage("Actions", "test4blocked", 0);
+}
+
+void DoorBrokenLock(string &in asEntity)
+{
+	SetMessage("Actions", "test4brokenlock", 0);
+	if(not QuestIsAdded("test4_brokenLock")) AddQuest("test4_brokenLock", "test4_brokenLock");
+}
+
+void DoorBudge(string &in asEntity)
+{
+	SetMessage("Actions", "budge", 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////Doors & MISC/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TableUnblock(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaUnblockDoor", false);
+	SetEntityActive("AreaBlockedMsg", false);
+	SetLocalVarInt("blockedMsg", 0);
+	SetSwingDoorLocked("mansion_10", false, false);
+}
+
+void DoorLockedUnlock(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("Collide_blocked_door", false);
+	SetEntityActive("mansion_12", false);
+	SetEntityActive("mansion_12_new", true);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoostSmall();
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(asItem);
+	CompleteQuest("test4_lockedRoom", "test4_lockedRoom");
+	//AutoSave();
+}
+
+void ClosetUnlock(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("cabinet_metal_3", false, true);
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(asItem);
+	SetEntityActive("alexander_insane", true);
+	SetEntityInteractionDisabled("key_equipment", false);
+}
+
+void KeyPickupAutosave(string &in asEntity, string &in type)
+{
+	AutoSave();
+}
+
+void ReplaceJarKey(string &in asEntity, string &in type)
+{
+	if(type=="Break")
+	{
+		SetEntityActive("key_closet", true);
+		SetEntityPos("key_closet", GetEntityPosX("key_jar_1_broken"), GetEntityPosY("key_jar_1_broken")+0.065, GetEntityPosZ("key_jar_1_broken"));
+		AlertEnemyOfPlayerPresence("brute");
+		SetLocalVarInt("cabinetMsg", 0);
+	}
+}
+
+void DisableKeyLight(string &in asEntity)
+{
+	FadeLightTo("KeyLight", 0.6, 0.3, 0.6, 1, 0, 0.5);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////SCARES & EFFECTS//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CabinetScare(string &in asEntity)
+{
+	ChangePlayerStateToNormal();
+	GiveSanityDamage(40, true);
+	SetEntityActive("fake_grunt", true);
+	ShowEnemyPlayerPosition("fake_grunt");
+	StartPlayerLookAt("Area_FakeGruntLook", 8, 14, "");
+	AddTimer("gruntScareDespawn", 1, "CabinetScareEnd");
+}
+
+void CabinetScareEnd(string &in asTimer)
+{
+	FadeEnemyToSmoke("fake_grunt", true);
+	StopPlayerLookAt();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////BRUTE/////////////////////////////////////////////////////////////////////////////////////////////////
+
+void ReactivateBrute(string &in asEntity, string &in type)
+{
+	SetEntityActive("brute", true);
+	StartBrutePath();
+}
+
+void SpawnBrute(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("bruteSpawned", 1);
+	SetEntityActive("brute", true);
+	PlayGuiSound("react_scare.snt", 1);
+	GiveSanityDamage(15, true);
+	StartPlayerLookAt("AreaBruteLook", 4, 8, "StopBruteLook");
+	StartBrutePath();
+	CheckPoint("CheckPoint_Upstairs", "To_Test4_Upstairs", "Respawn", "Deaths", "test4up");
+}
+
+void StopBruteLook()
+{
+	StopPlayerLookAt();
+}
+
+void StartBrutePath()
+{
+	ClearEnemyPatrolNodes("brute");
+	int[] brutepath = {269, 310, 304, 191, 182, 179, 177, 175, 270, 173, 172, 269};
+	for(int i=0; i<12; i++)
+	{
+		if(i==3) AddEnemyPatrolNode("brute", "PathNodeArea_"+brutepath[i], 4.5, "");
+		else AddEnemyPatrolNode("brute", "PathNodeArea_"+brutepath[i], 0.001, "");
+	}
+}
+
+void Respawn(string &in asName, int alCount)
+{
+	SetEntityActive("brute", true);
+	StartBrutePath();
+}
+
+void BruteAlert(string &in asParent, string &in asChild, int alState)
+{
+	AlertEnemyOfPlayerPresence("brute");
+}
+
+void BruteDoor(string &in asEntity, string &in type)
+{
+	if(type=="Break")
+	{
+		SetEntityActive("brute", false);
+		SetEntityActive("brute", true);
+		AlertEnemyOfPlayerPresence("brute");
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////MECHANISMS////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CrowbarAttach(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("player_crouch.snt", 1);
+	RemoveItem(asItem);
+	SetEntityActive("crowbar_joint", true);
+	AddEntityCollideCallback("crowbar_joint", "crowbar_collide", "CrowbarOpen", true, 1);
+	AutoSave();
+}
+
+void CrowbarOpen(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("crowbar_joint", false);
+	SetEntityActive("crowbar_broken", true);
+	SetEntityActive("mansion_3", false);
+	SetEntityActive("mansion_3_new", true);
+	SetSwingDoorDisableAutoClose("mansion_3_new", true);
+	SetSwingDoorClosed("mansion_3_new", false, false);
+	AddPropForce("mansion_3_new", 0, 0, -6000, "world");
+	CreateParticleSystemAtEntity("door_broken", "ps_hit_wood.ps", "crowbar_collide", true);
+	PlaySoundAtEntity("crowbar_sound", "break_wood_metal.snt", "crowbar_collide", 0, false);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoost();
+	CompleteQuest("test4_brokenLock", "test4_brokenLock");
+	AddTimer("", 0.5, "CrowbarAlert");
+	AddTimer("", 1.5, "CrowbarAlert2");
+}
+
+void CrowbarAlert(string &in asTimer)
+{
+	SetEntityActive("brute", false);
+	SetEntityActive("brute", true);
+}
+
+void CrowbarAlert2(string &in asTimer)
+{
+	ShowEnemyPlayerPosition("brute");
+}

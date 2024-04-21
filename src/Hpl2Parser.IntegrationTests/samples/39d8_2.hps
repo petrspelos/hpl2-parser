@@ -1,0 +1,242 @@
+void OnStart()
+{
+PlayMusic("04_02_ambience3.ogg", true, 1.0, 3.0, 1000, true);
+AddUseItemCallback("", "crowbar1", "wooden_boards_block_1", "UsedCrowbarOnDoor", true);
+AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_1", "CollideAreaBreakDoor", true, 1);
+
+AddUseItemCallback("", "crowbar1", "mansion_2", "UsedCrowbarOnDoor_3", true);
+AddEntityCollideCallback("crowbar_joint_3", "ScriptArea_3", "CollideAreaBreakDoor_3", true, 1);
+
+AddUseItemCallback("", "crowbar1", "cabinet_simple_1", "UsedCrowbarOnDoor1", true);
+AddEntityCollideCallback("crowbar_joint_2", "ScriptArea_2", "CollideAreaBreakDoor2", true, 1);
+
+AddEntityCollideCallback("Player", "area_ohen", "area_ohen_script", false, 1);
+AddEntityCollideCallback("Player", "area_ohen_2", "area_ohen2_script", false, 1);
+AddEntityCollideCallback("Player", "area_zapalit", "area_zapalit_script", true, 1);
+
+AddEntityCollideCallback("sledge_1", "rat_2", "kill_the_fucking_rat_holy_shit_kill_it", true, 1);
+
+SetMessage("TheVoice", "system_2", 6.0);
+SetEntityCallbackFunc("crowbar1", "crowbar_callback");
+SetEntityCallbackFunc("fire_place_1", "fireplace_callback");
+AddQuest("questfactoryexploration", "questfactoryexploration");
+
+// loading screens
+AddEntityCollideCallback("Player", "loading_0", "loading_0_script", false, 1);
+AddEntityCollideCallback("Player", "loading_1", "loading_1_script", false, 1);
+}
+
+// arthur uses crowbar on wooden blocks=============================
+void UsedCrowbarOnDoor(string &in asItem, string &in asEntity)
+ {
+ RemoveItem("crowbar1");
+ AddTimer("", 0.2, "TimerSwitchShovel");
+ }
+ 
+ 
+void TimerSwitchShovel(string &in asTimer)
+ {
+ PlaySoundAtEntity("","puzzle_place_jar.snt", "", 0, false);
+ SetEntityActive("crowbar_joint_1", true);
+ }
+
+void CollideAreaBreakDoor(string &in asParent, string &in asChild, int alState)
+ {
+ AddPlayerSanity(25);
+ //PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+ PlaySoundAtEntity("","break_wood_metal", "AreaBreakEffect", 0, false);
+ CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaBreakEffect", false);
+ SetEntityActive("crowbar_joint_1", false);
+ SetEntityActive("wooden_boards_block_1", false);
+ SetEntityActive("wooden_boards_block_2", true);
+ //SetPropHealth("wooden_boards_block1", 0.0);
+ GiveItem("crowbar1", "item", "crowbar1", "crowbar.tga", 1);
+ 
+ //Wrong implementation is "from file", no SubItemTypeName etc.
+ //GiveItemFromFile("crowbar1", "crowbar.ent");
+ } 
+ 
+//=======================================================================
+
+void UsedCrowbarOnDoor1(string &in asItem, string &in asEntity)
+ {
+ RemoveItem("crowbar1");
+ AddTimer("", 0.2, "TimerSwitchShovel1");
+ }
+ 
+void TimerSwitchShovel1(string &in asTimer)
+ {
+ PlaySoundAtEntity("","puzzle_place_jar.snt", "", 0, false);
+ SetEntityActive("crowbar_joint_2", true);
+ }
+
+void CollideAreaBreakDoor2(string &in asParent, string &in asChild, int alState)
+ {
+ AddPlayerSanity(25);
+ //PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+ PlaySoundAtEntity("","break_wood_metal", "AreaBreakEffec", 0, false);
+ CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaBreakEffec", false);
+ SetEntityActive("crowbar_joint_2", false);
+ SetSwingDoorLocked("cabinet_simple_1", false, true);
+ GiveItem("crowbar1", "item", "crowbar1", "crowbar.tga", 1);
+ } 
+ 
+// arthur uses crowbar on mansion_2==========================================
+void UsedCrowbarOnDoor_3(string &in asItem, string &in asEntity)
+{ 
+RemoveItem("crowbar1");
+AddTimer("", 0.2, "TimerSwitchShovel_3");
+}
+
+void TimerSwitchShovel_3(string &in asTimer)
+{
+PlaySoundAtEntity("", "puzzle_place_jar.snt", "", 0, false);
+SetEntityActive("crowbar_joint_3", true);
+}
+
+void CollideAreaBreakDoor_3(string &in asParent, string &in asChild, int alState)
+{
+AddPlayerSanity(25);
+PlaySoundAtEntity("", "break_wood_metal", "AreaBreakEffect_3", 0, false);
+CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaBreakEffect_3", false);
+SetEntityActive("crowbar_joint_3", false);
+AddPropImpulse("mansion_2", 0.0, 0.0, -30.0, "world");
+SetSwingDoorLocked("mansion_2", false, true);
+GiveItem("crowbar1", "item", "crowbar1", "crowbar.tga", 1);
+}
+// ====================================================================
+
+void area_ohen_script(string &in asParent, string &in asChild, int alState)
+ {
+ AddTimer("fire_sanity", 5.0, "timer_fire_sanity_plus");
+ } 
+
+void timer_fire_sanity_plus(string &in asTimer)
+ {
+if(GetPlayerSanity()<100){
+AddPlayerSanity(5);}
+AddTimer("fire_sanity", 5.0, "timer_fire_sanity_plus");
+ }
+
+void area_ohen2_script(string &in asParent, string &in asChild, int alState)
+ {
+RemoveTimer("timer_fire_sanity_plus");
+RemoveTimer("fire_sanity");
+ } 
+
+void area_zapalit_script(string &in asParent, string &in asChild, int alState)
+ {
+SetMessage("TheVoice", "system_3", 6.0);
+ } 
+
+void crowbar_callback(string &in asEntity, string &in type)
+{
+SetMessage("TheVoice", "system_4", 6.0);
+}
+
+void fireplace_callback(string &in asEntity, string &in type)
+{
+SetEntityActive("area_ohen", true);
+SetMessage("TheVoice", "system_3", 6.0);
+}
+
+// arthur interacts with the toilet================
+void area_toilet_callback(string &in asTimer){
+SetEntityActive("area_toilet", false);
+AddTimer("area_toilet_timer", 34, "area_toilet_timer_0");
+PlaySoundAtEntity("", "toilet", "area_toilet_2", 0, false);
+}
+
+void area_toilet_timer_0(string &in asTimer)
+ {
+SetEntityActive("area_toilet", true);
+ }
+
+
+//================================================	
+
+// arthur interacts with the sink
+
+void area_sink_0_callback(string &in asTimer){
+PlaySoundAtEntity("", "sink", "area_sink_0", 0, false);
+
+// particles don't work this way :(
+//SetEntityActive("particle_sink_0", true);
+SetEntityActive("area_sink_0", false);
+
+//ok let's try...
+CreateParticleSystemAtEntity("particle_sink_0", "ps_water_stream_bucket.ps", "area_sink_1", false);
+//oh yeah add more because 1 is not enough and cannot be seen because of the green mess everywhere around
+CreateParticleSystemAtEntity("particle_sink_1", "ps_water_stream_bucket.ps", "area_sink_1", false);
+CreateParticleSystemAtEntity("particle_sink_2", "ps_water_stream_bucket.ps", "area_sink_1", false);
+AddTimer("area_sink_timer", 6, "area_sink_timer_0");
+}
+
+void area_sink_timer_0(string &in asTimer)
+ {
+DestroyParticleSystem("particle_sink_0");
+DestroyParticleSystem("particle_sink_1");
+DestroyParticleSystem("particle_sink_2");
+SetEntityActive("area_sink_0", true);
+ }
+
+
+//================================================
+
+// arthur interacts with the bath================
+void area_bath_0_callback(string &in asTimer){
+PlaySoundAtEntity("", "step_sneak_water", "area_bath_0", 0, false);
+AddTimer("area_bath_0_timer", 1, "area_bath_0_timer_0");
+SetEntityActive("area_bath_0", false);
+}
+
+void area_bath_0_timer_0(string &in asTimer)
+ {
+SetEntityActive("area_bath_0", true);
+ }
+ 
+//================================================
+ 
+// arthur interacts with the sink 2
+
+void area_sink_2_callback(string &in asTimer){
+PlaySoundAtEntity("", "sink_stuck", "area_sink_2", 0, false);
+SetEntityActive("area_sink_2", false);
+AddTimer("area_sink_timer", 1, "area_sink_2_timer_0");
+}
+
+void area_sink_2_timer_0(string &in asTimer)
+ {
+SetEntityActive("area_sink_2", true);
+ }
+
+//============================================
+// I have a LOT things to do right now... yet I'm scripting killing a rat. Am I weird?
+// I don't think anybody will notice this detail
+void kill_the_fucking_rat_holy_shit_kill_it(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "critter_rat_scare", "Player", 0, false);
+SetEntityActive("rat_2", false);
+}
+
+// regular loading shit... to make it look pretty... like pretty christine? Oh fuck...
+void loading_0_script(string &in asParent, string &in asChild, int alState)
+{
+SetupLoadScreen("loadingscreen", "load_04", 0, "loading_outside2.jpg");
+}
+
+void loading_1_script(string &in asParent, string &in asChild, int alState)
+{
+SetupLoadScreen("loadingscreen", "load_05", 0, "loading_underground.jpg");
+}
+
+
+void OnEnter()
+{
+}
+
+void OnLeave()
+{
+// He'll basically be exploring it the whole time, let's keep it there
+//CompleteQuest("questfactoryexploration", "questfactoryexploration");
+}

@@ -1,0 +1,184 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaQuest", "Quest", true, 1);
+AddEntityCollideCallback("Player", "AreaStop2", "Stop", false, 1);
+AddEntityCollideCallback("Player", "AreaStop3", "Stop", false, 1);
+AddEntityCollideCallback("Player", "AreaPanic", "Panic", false, 1);
+AddUseItemCallback("", "hammer", "AreaBoards", "Boards", false);
+PlayMusic("StorageAmb", true, 1, 5, 0, true);
+SetMapDisplayNameEntry("HospitalStorage");
+AddTimer("intro", 10, "intro");
+CompleteQuest("Mark2", "Mark2");
+CheckPoint ("Checkpoint", "PlayerStartArea_1", "DeathSettings", "DeathHints", "Move");
+AutoSave();
+}
+
+void intro(string &in asTimer)
+{
+AddEffectVoice("shay13.ogg", "", "Voice", "00_Shay13", false, "", 0, 0 );
+AddTimer("intro2", 5, "intro2");	
+}
+
+void intro2(string &in asTimer)
+{
+SetLightVisible("PointLight_3", false);
+SetMoveObjectState("Elevator", 1.0f);
+SetEntityActive("zombie", true);
+SetEntityActive("zombie2", true);
+AddEnemyPatrolNode("zombie","node_2",0,"");
+AddQuest("Other", "Other");
+AddTimer("intro3", 3, "intro3");	
+}
+
+void intro3(string &in asTimer)
+{
+ShowEnemyPlayerPosition("zombie");
+PlayMusic("StorageChase", true, 1, 5, 0, true);	
+AddTimer("intro4", 3, "intro4");
+}
+
+void intro4(string &in asTimer)
+{
+ShowEnemyPlayerPosition("zombie");
+AddTimer("intro5", 3, "intro5");
+}
+
+void intro5(string &in asTimer)
+{
+ShowEnemyPlayerPosition("zombie");
+}
+
+void Boards(string &in asItem, string &in asEntity)
+{
+SetEntityActive("plank", false);
+SetEntityActive("plank2", true);
+SetEntityActive("block", false);
+PlaySoundAtEntity("","break_wood.snt","BreakPlank", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "BreakPlank", false);
+CompleteQuest("Stairs", "Stairs");
+}
+
+//---- Etc ----//
+
+void Quest(string &in asParent, string &in asChild, int alState) 
+{
+AddQuest("Stairs", "Stairs");
+}
+
+void hammer(string &in asEntity)
+{
+SetEntityActive("rock1", true);
+SetEntityActive("rock2", true);
+SetEntityActive("rock3", true);
+CheckPoint ("Checkpoint2", "PlayerStartArea_4", "DeathSettings2", "DeathHints", "Move");
+PlaySoundAtEntity("","15_rock_break.snt", "Player", 0, true);
+StartScreenShake(0.2f,0.2f, 0.2f,2.5f);
+}
+
+void regenerate(string &in asTimer)
+{
+AddTimer("regenerate", 20, "regenerate");
+AddPlayerHealth(5);
+}
+
+void regenerate2(string &in asTimer)
+{
+AddTimer("regenerate2", 25, "regenerate2");
+AddPlayerHealth(3);
+}
+
+void regenerate3(string &in asTimer)
+{
+AddTimer("regenerate3", 40, "regenerate3");
+AddPlayerLampOil(3);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(80);
+SetPlayerSanity(80);
+SetEntityActive("zombie", true);
+AddEnemyPatrolNode("zombie","node_2",0,"");
+StopMusic(0, 0);
+AddTimer("intro3", 3, "intro3");
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(80);
+SetPlayerSanity(80);
+SetEntityActive("zombie2", true);
+AddEnemyPatrolNode("zombie3","node_29",0,"");
+AddEnemyPatrolNode("zombie3","node_30",0,"");
+AddEnemyPatrolNode("zombie3","node_31",0,"");
+SetEntityActive("zombie3", true);
+PlayMusic("StorageChase", true, 1, 5, 0, true);	
+}	
+	
+void OnEnter()
+{	
+PlayMusic("StorageAmb", true, 1, 5, 0, true);
+
+if(GetGlobalVarInt("Powerup1")==1)
+	{
+SetPlayerHealth(100);
+	}
+
+if(GetGlobalVarInt("Powerup2")==1)
+	{
+SetPlayerSanity(100);
+	}
+
+if(GetGlobalVarInt("Powerup3")==1)
+	{
+SetPlayerLampOil(100);
+	}
+
+if(GetGlobalVarInt("Powerup4")==1)
+	{
+AddTimer("regenerate", 10, "regenerate");
+	}
+
+if(GetGlobalVarInt("Powerup5")==1)
+	{
+AddTimer("regenerate2", 10, "regenerate2");
+	}
+
+if(GetGlobalVarInt("Powerup6")==1)
+	{
+SetPlayerRunSpeedMul(1.2f);
+	}
+
+if(GetGlobalVarInt("Powerup7")==1)
+	{
+AddPlayerSanity(30);
+	}
+
+if(GetGlobalVarInt("Powerup8")==1)
+	{
+SetSanityDrainDisabled(true);
+	}
+
+if(GetGlobalVarInt("Powerup9")==1)
+	{
+AddPlayerHealth(30);
+	}
+
+if(GetGlobalVarInt("Powerup10")==1)
+	{
+AddPlayerLampOil(25);
+	}
+
+if(GetGlobalVarInt("Powerup11")==1)
+	{
+AddTimer("regenerate3", 20, "regenerate3");
+	}
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

@@ -1,0 +1,607 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+
+{
+          if(ScriptDebugOn())
+          {
+               GiveItemFromFile("lantern", "lantern.ent");
+               SetPlayerLampOil(100.0f);
+ 
+               for(int i = 0;i < 10;i++)
+               {
+                    GiveItemFromFile("tinderbox", "tinderbox.ent");
+               }
+          }
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+	AddLocalVarInt("book1InPlace", 0);
+	AddLocalVarInt("book2InPlace", 0);
+	AddLocalVarInt("barrelInPlace", 0);
+	AddLocalVarInt("chair1InPlace", 0);
+	AddLocalVarInt("chair2InPlace", 0);
+	AddLocalVarInt("chair3InPlace", 0);
+	CheckPoint("Checkpoint_1", "PlayerStartArea_1", "Reset", "", "");
+	for(int i=0; i<=3; i++)SetEntityPlayerInteractCallback("button_"+i, "PressedButton"+i, true);
+	SetEntityConnectionStateChangeCallback("lever2", "correctSwitch1");
+	SetEntityConnectionStateChangeCallback("lever1", "correctSwitch2");
+	SetEntityConnectionStateChangeCallback("lever3", "correctSwitch3");
+	SetEntityPlayerInteractCallback("middoorkey", "LockDoor", true);
+	for(int i=0; i<=3; i++) AddLocalVarInt("lever"+i, 0);
+	AddEntityCollideCallback("ladder","ladderisPlaced", "PlaceLadder", true, 0);
+	AddUseItemCallback("", "middoorkey", "mansion_2", "UnlockDoor", true);
+	SetEntityPlayerInteractCallback("ladderbutton", "BringDownLadder", true);
+	AddEntityCollideCallback("trollChest", "trollChestArea", "spawnSteveTroll", true, 0);
+	AddEntityCollideCallback("chest_small_15", "FoundItemArea", "ShardIsFound", true, 0);
+	SetEntityPlayerInteractCallback("orbpiece", "PickedUpOrb", true);
+	SetEntityPlayerLookAtCallback("steveChase", "LookedAtArea", true);
+	AddUseItemCallback("", "orbpiece", "brokenorb", "OpenDoor", true); 
+	SetEntityPlayerInteractCallback("resetTimer", "ResetTimer", true);
+	for (int i=0; i<=3; i++)SetEntityPlayerInteractCallback("button_fake_"+i, "SpawnGreg", true);
+	SetEntityPlayerLookAtCallback("resetTimer", "ResetTimerText", false);
+	AddEntityCollideCallback("Player", "TimerStart", "StartTimer", true, 0);
+	AddEntityCollideCallback("Player", "lightCandles", "Light", true, 0);
+	AddEntityCollideCallback("Player", "FinalArea", "FinalEvent", true, 0);
+	AddEntityCollideCallback("Player", "LookAtGate", "LookAtFreedom", true, 0);
+	AddEntityCollideCallback("Player", "TheEnd", "FinalFunction", true, 0);
+	AddEntityCollideCallback("Player", "TheEnd_2", "StopPlayer", true, 0);
+	AddEntityCollideCallback("steve2", "DisplayRunText", "DisplayRunText", false, 0);
+	AddEntityCollideCallback("steve2", "TheEnd_1", "End", false, 0);
+	AddEntityCollideCallback("greg", "DisplayRunText", "DisplayRunText", false, 0);
+	AddEntityCollideCallback("greg", "TheEnd_1", "End", false, 0);
+	AddEntityCollideCallback("chair", "replacechair", "unlockFirstDoor", true, 0); 
+	AddEntityCollideCallback("deskchair", "replacechair_1", "placeDeskChair", true, 0); 
+	AddEntityCollideCallback("pianochair", "replacechair_2", "placePianoChair", true, 0); 
+	AddEntityCollideCallback("book1", "bookreplace", "placeBook1", true, 0); 
+	AddEntityCollideCallback("book2", "bookreplace", "placeBook2", true, 0); 
+	AddUseItemCallback("", "middoorkey", "middoor", "OpenMidDoor", true);
+	AddEntityCollideCallback("barrel", "replace_barrel", "placeBarrel", true, 0); 
+}
+		
+	void StartTimer(string &in asParent, string &in asChild, int alState)
+	{
+		SetMessage("ScreenMessages", "TimerActivated10", 0);
+		AddTimer("Warn", 540, "Warning");
+		AddTimer("Warn5", 300, "Warning5");
+		AddTimer("Time", 600, "spawnSteve");
+		SetEntityActive("resetTimer", true);
+	}	
+	
+	void Reset(string &in asName, int alCount)
+	{
+		ResetProp("steve");
+		SetMessage("ScreenMessages", "TimerActivated4", 0);
+		AddTimer("Warn", 540, "Warning");
+		AddTimer("Warn5", 300, "Warning5");
+		AddTimer("Time", 600, "spawnSteve");
+		SetEntityActive("resetTimer", true);
+	}
+	
+	void spawnSteve(string &in asTimer)
+		{
+			SetEntityActive("steve", true);
+			SetEntityActive("resetTimer", false);
+			for (int c=1; c<=18; c++)AddEnemyPatrolNode("steve", "PathNodeArea_"+c, 0.01, "");
+		}
+		
+	void SpawnGreg(string &in asEntity)
+	{
+		SetEntityActive("greg2", true);
+		ResetProp("greg2");
+		ShowEnemyPlayerPosition("greg2");
+	}
+		
+	void correctSwitch1(string &in asEntity, int asState)
+	{
+		if (GetLeverState("lever2") == -1)
+		{
+			SetLeverStuckState("lever2", -1, true);
+			PlaySoundAtEntity("", "pick_knife.snt", "Player", 0, true); 
+			SetLocalVarInt("lever2", 1);
+			AddDebugMessage("Lever 2 is correct.", true);
+		}
+		else if (GetLeverState("lever2") == 1 || GetLeverState("lever1") == 1 || GetLeverState("lever3") == -1)
+		{
+			SetLocalVarInt("lever1", 0);
+			SetLocalVarInt("lever2", 0);
+			SetLocalVarInt("lever3", 0);
+			SetLeverStuckState("lever1", 0, true);
+			SetLeverStuckState("lever2", 0, true);
+			SetLeverStuckState("lever3", 0, true);
+			PlaySoundAtEntity("", "17_break_wheel.snt", "Player", 0, true);
+			AddDebugMessage("Lever 2 is incorrect.", true);
+		}
+	}
+	
+	void correctSwitch2(string &in asEntity, int alState)
+	{
+		if (GetLeverState("lever1") == 1 && GetLeverState("lever2") == -1)
+		{
+			SetLeverStuckState("lever1", 1, true);
+			PlaySoundAtEntity("", "pick_knife.snt", "Player", 0, true); 
+			SetLocalVarInt("lever1", 1);
+			AddDebugMessage("Lever 1 is correct.", true);
+		}
+			else if (GetLeverState("lever1") == -1 || GetLeverState("lever3") == -1)
+			{
+				SetLocalVarInt("lever1", 0);
+				SetLocalVarInt("lever2", 0);
+				SetLocalVarInt("lever3", 0);
+				SetLeverStuckState("lever1", 0, true);
+				SetLeverStuckState("lever2", 0, true);
+				SetLeverStuckState("lever3", 0, true);
+				PlaySoundAtEntity("", "17_break_wheel.snt", "Player", 0, true);
+				AddDebugMessage("Lever 1 is incorrect.", true);
+			}
+	}
+	
+	void correctSwitch3(string &in asEntity, int alState)
+	{
+		if (GetLeverState("lever1") == 1 && GetLeverState("lever2") == -1 && GetLeverState("lever3") == -1)
+		{
+			SetLeverStuckState("lever3", -1, true);
+			PlaySoundAtEntity("", "pick_knife.snt", "Player", 0, true); 
+			SetLocalVarInt("lever3", 1);
+			AddDebugMessage("Lever 3 is correct.", true);
+		}
+			else if (GetLeverState("lever3") == 1)
+			{
+				SetLocalVarInt("lever1", 0);
+				SetLocalVarInt("lever2", 0);
+				SetLocalVarInt("lever3", 0);
+				SetLeverStuckState("lever1", 0, true);
+				SetLeverStuckState("lever2", 0, true);
+				SetLeverStuckState("lever3", 0, true);
+				PlaySoundAtEntity("", "17_break_wheel.snt", "Player", 0, true);
+				AddDebugMessage("Lever 3 is incorrect.", true);
+			}
+		if (GetLocalVarInt("lever1") == 1 && GetLocalVarInt("lever2") == 1 && GetLocalVarInt("lever3") == 1)
+		{
+			PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, true);
+			SetSwingDoorLocked("mansion_3", false, true);
+			SetMessage("ScreenMessages", "DoorUnlocked", 0);
+			PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, true);
+			for(int i=0; i<=2; i++)SetLampLit("candle_"+i, true, true);
+			AddDebugMessage("Puzzle solved.", true);
+		}
+	}
+		
+		void placePianoChair(string &in asParent, string &in asChild, int alState)
+		{
+			SetEntityActive("pianochair", false);
+			SetEntityActive("pianochair_filler", true);
+			SetLocalVarInt("chair1InPlace", 1);
+			if(GetLocalVarInt("chair1InPlace") == 1 && GetLocalVarInt("chair2InPlace") == 1 && GetLocalVarInt("chair3InPlace") == 1)
+			{
+				PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+				SetSwingDoorLocked("mansion_1", false, true);
+				PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+				SetMessage("ScreenMessages", "DoorUnlocked", 0);
+				PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, true);
+				for(int i=0; i<=2; i++)SetLampLit("candle_"+i, false, true);
+				for(int i=5; i<=6; i++)SetLampLit("candle_"+i, true, true);
+			}
+		}
+		
+			void placeDeskChair(string &in asParent, string &in asChild, int alState)
+			{
+				SetEntityActive("deskchair", false);
+				SetEntityActive("deskchair_filler", true);
+				SetLocalVarInt("chair2InPlace", 1);
+				if(GetLocalVarInt("chair1InPlace") == 1 && GetLocalVarInt("chair2InPlace") == 1 && GetLocalVarInt("chair3InPlace") == 1)
+				{
+					PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+					SetSwingDoorLocked("mansion_1", false, true);
+					PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+					SetMessage("ScreenMessages", "DoorUnlocked", 0);
+					PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, true);
+					for(int i=0; i<=2; i++)SetLampLit("candle_"+i, false, true);
+					for(int i=5; i<=6; i++)SetLampLit("candle_"+i, true, true);
+				}
+			}
+			
+				void unlockFirstDoor(string &in asParent, string &in asChild, int alState)
+				{
+					SetEntityActive("chair", false);
+					SetEntityActive("chair_replaced", true);
+					SetLocalVarInt("chair3InPlace", 1);
+					if(GetLocalVarInt("chair1InPlace") == 1 && GetLocalVarInt("chair2InPlace") == 1 && GetLocalVarInt("chair3InPlace") == 1)
+					{
+						PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+						SetSwingDoorLocked("mansion_1", false, true);
+						PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+						SetMessage("ScreenMessages", "DoorUnlocked", 0);
+						PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, true);
+						for(int i=0; i<=2; i++)SetLampLit("candle_"+i, false, true);
+						for(int i=5; i<=6; i++)SetLampLit("candle_"+i, true, true);
+					}
+				}
+		
+		void placeBook1(string &in asParent, string &in asChild, int alState)
+		{
+			SetEntityActive("book1", false);
+			SetEntityActive("bottombook", true);
+			SetLocalVarInt("book1InPlace", 1);
+			if (GetLocalVarInt("book1InPlace") == 1 && GetLocalVarInt("book2InPlace") == 1 && GetLocalVarInt("barrelInPlace") == 1)
+			{
+				SetSwingDoorLocked("mansion_2", false, true);
+				PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, true);
+				for(int i=5; i<=6; i++)SetLampLit("candle_"+i, false, true);
+				for(int i=3; i<=4; i++)SetLampLit("candle_"+i, true, true);
+				AddTimer("", 0.1, "PlaySound");
+				SetMessage("ScreenMessages", "DoorUnlocked", 0);
+				
+			}
+		}
+		
+		void placeBook2(string &in asParent, string &in asChild, int alState)
+		{
+			SetEntityActive("book2", false);
+			SetEntityActive("topbook", true);
+			SetLocalVarInt("book2InPlace", 1);
+			if (GetLocalVarInt("book1InPlace") == 1 && GetLocalVarInt("book2InPlace") == 1 && GetLocalVarInt("barrelInPlace") == 1)
+			{
+				SetSwingDoorLocked("mansion_2", false, true);
+				PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, true);
+				for(int i=5; i<=6; i++)SetLampLit("candle_"+i, false, true);
+				for(int i=3; i<=4; i++)SetLampLit("candle_"+i, true, true);
+				AddTimer("", 0.1, "PlaySound");
+				SetMessage("ScreenMessages", "DoorUnlocked", 0);
+			}
+
+		}
+		
+		void placeBarrel(string &in asParent, string &in asChild, int alState)
+		{
+			
+			AddTimer("", 0.5, "startLock");
+			SetEntityActive("ladderisPlaced", true);
+			SetLocalVarInt("barrelInPlace", 1);
+			SetEntityActive("barrel", false);
+			SetEntityActive("barrel_replace", true);
+			SetPlayerActive(false);
+			if (GetLocalVarInt("book1InPlace") == 1 && GetLocalVarInt("book2InPlace") == 1 && GetLocalVarInt("barrelInPlace") == 1)
+			{
+				SetSwingDoorLocked("mansion_2", false, true);
+				PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, true);
+				for(int i=5; i<=6; i++)SetLampLit("candle_"+i, false, true);
+				for(int i=3; i<=4; i++)SetLampLit("candle_"+i, true, true);
+				AddTimer("", 0.1, "PlaySound");
+				SetMessage("ScreenMessages", "DoorUnlocked", 0);
+			}	
+		}
+			
+			void startLock(string &in asTimer)
+			{
+				SetSwingDoorLocked("mansion_4", true, true);
+				PlaySoundAtEntity("", "break_wood.snt", "Player", 0, true);
+				AddTimer("", 0.2, "StartLookAt"); 
+			}
+		
+			void StartLookAt(string &in asTimer)
+			{
+				StartPlayerLookAt("LookHere", 10, 10, "");
+				AddTimer("", 1, "StopLook");
+				SetPlayerActive(false);
+			}
+			
+			void StopLook(string &in asTimer)
+			{
+				StopPlayerLookAt();
+				SetPlayerActive(true);
+			} 
+	
+		void PlaceLadder(string &in asParent, string &in asChild, int alState)
+		{
+			SetEntityActive("ladder", false);
+			SetEntityActive("placedLadder", true);
+			SetEntityActive("teleportPlayer", true);
+			SetEntityActive("ClimbArea", true);
+			SetEntityActive("block_box", true);
+			//AddTimer("", 0.2, "PlaySound");
+			PlaySoundAtEntity("", "impact_wood_low.snt", "Player", 0, true);
+			AddEntityCollideCallback("Player", "teleportPlayer", "teleportPlayerOut", true, 0);
+		}
+			
+			void PlaySound(string &in asTimer)
+			{
+				PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, true);
+			}
+				
+				void teleportPlayerOut(string &in asParent, string &in asChild, int alState)
+				{
+					FadeOut(0.3);
+					AddTimer("", 0.3, "PlayerTeleported");
+				}
+				
+					void PlayerTeleported(string &in asTimer)
+					{
+						FadeIn(0.3);
+						TeleportPlayer("TeleportHere");
+					}
+		void UnlockDoor(string &in asEntity, string &in asItem)
+		{
+			SetSwingDoorLocked("mansion_2", false, true);
+			//RemoveItem("middoorkey");
+			PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, true);
+		}
+		
+		void BringDownLadder(string &in asEntity)
+		{
+			SetPlayerActive(false);
+			AddTimer("", 0.3, "BringDownLadder2");
+			SetEntityActive("ladderup", false);
+			SetEntityActive("ladderdown", true);
+			SetEntityActive("LadderArea_2", true);
+			PlaySoundAtEntity("", "impact_wood_low.snt", "Player", 0, true);
+		}
+		
+			void BringDownLadder2(string &in asTimer)
+			{
+				StartPlayerLookAt("LadderArea_2", 2, 2, "");
+				AddTimer("", 1.3, "StopLook");
+				PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, true);
+			}
+	
+		void spawnSteveTroll(string &in asParent, string &in asChild, int alState)
+		{
+			SetEntityActive("stevethetroll", true);
+			SetEntityActive("steveChase", true);
+		}
+		
+		void LookedAtArea(string &in asEntity, int alState)
+		{
+			if (alState ==1)
+			{
+				ShowEnemyPlayerPosition("stevethetroll");
+				//AddEnemyPatrolNode("stevethetroll", "playerishere", 0.1, "");
+				AddDebugMessage("Looked", true);
+			}
+		}
+		
+		void ShardIsFound(string &in asParent, string &in asChild, int alState)
+		{
+			for(int i=3; i<=6; i++)FadeLightTo("PointLight"+i, 0, 0, 0, 0, -1, 0.5);
+			//PlayMusic("02_puzzle.ogg", false, 5, 0, 1, false);
+			PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, true);
+			AddDebugMessage("Music is playing.", true);
+		}
+		
+		void PickedUpOrb(string &in asEntity)
+		{
+			for(int i=0; i<=2; i++)FadeLightTo("PointLight"+i, 0, 0, 0, 0, -1, 0.5);
+		}
+		
+		void OpenMidDoor(string &in asItem, string &in asEntity)
+		{
+			SetSwingDoorLocked("middoor", false, true);
+			PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, true);
+			RemoveItem("middoorkey");
+		}
+		
+		void OpenDoor(string &in asItem, string &in asEntity)
+		{
+			SetEntityActive("brokenorb", false);
+			SetEntityActive("fullorb", true);
+			RemoveItem("brokenorb");
+			SetSwingDoorLocked("freedomdoor", false, true);
+			SetSwingDoorClosed("freedomdoor", false, true);
+			SetSwingDoorDisableAutoClose("freedomdoor", true);
+			SetPlayerActive(false);
+			StartPlayerLookAt("lookatdoor", 1.5, 1.5, "");
+			AddTimer("", 3, "StopLook");
+			PlayMusic("02_puzzle.ogg", false, 5, 0, 1, false);
+			for (int i = 0; i < 10; i++)
+			{
+				AddTimer("", i * 0.1, "OpenExitDoor");
+			}
+		}
+		
+				void OpenExitDoor(string &in asTimer)
+				{
+					AddPropForce("freedomdoor", 100, 0, 0, "world"); 
+				}
+		
+		void ResetTimer(string &in asEntity)
+		{
+			RemoveTimer("Warn");
+			RemoveTimer("Time");
+			AddTimer("Warn", 240, "Warning");
+			AddTimer("Time", 300, "spawnSteve");
+			SetMessage("ScreenMessages", "Confirm_resetTimer", 0);
+			SetEntityActive("resetTimer", false);
+			AddDebugMessage("Candles are lighting up.", true);
+		}
+	
+		void ResetTimerText(string &in asEntity, int alState)
+		{
+			if (alState ==1)
+			{
+				SetMessage("ScreenMessages", "resetTimer", 0);
+			}
+		}
+		
+		void Light(string &in asParent, string &in asChild, int alState)
+		{
+			SetPlayerActive(false);
+			StartPlayerLookAt("LookHerePlz", 1.5, 1.5, "");
+			AddTimer("", 2, "StopLook");
+			AddTimer("", 0.1, "LightCandles1");
+		}
+		
+		void LightCandles1(string &in asTimer)
+		{
+			for(int i=0; i<=2; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles2");
+		}
+		
+		void LightCandles2(string &in asTimer)
+		{
+			for(int i=3; i<=4; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles3");
+		}
+		
+		void LightCandles3(string &in asTimer)
+		{
+			for(int i=5; i<=6; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles4");
+		}
+		
+		void LightCandles4(string &in asTimer)
+		{
+			for(int i=7; i<=8; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles5");
+		}
+		
+		void LightCandles5(string &in asTimer)
+		{
+			for(int i=9; i<=10; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles6");
+		}
+		
+		void LightCandles6(string &in asTimer)
+		{
+			for(int i=11; i<=12; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles7");
+		}
+		
+		void LightCandles7(string &in asTimer)
+		{
+			for(int i=13; i<=14; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles8");
+		}
+		
+		void LightCandles8(string &in asTimer)
+		{
+			for(int i=15; i<=16; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles9");
+		}
+		
+		void LightCandles9(string &in asTimer)
+		{
+			for(int i=17; i<=18; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles10");
+		}
+		
+		void LightCandles10(string &in asTimer)
+		{
+			for(int i=19; i<=20; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+			AddTimer("", 0.1, "LightCandles11");
+		}
+
+		void LightCandles11(string &in asTimer)
+		{
+			for(int i=21; i<=22; i++)SetLampLit("wallcandle_"+i, true, true);
+			PlaySoundAtEntity("", "ui_use_tinderbox.snt", "Player", 0, true);
+		}
+		
+		void FinalEvent(string &in asParent, string &in asChild, int alState)
+		{
+			SetPlayerActive(false);
+			SetLanternDisabled(true);
+			SetInventoryDisabled(true);
+			AddTimer("", 1.2, "FinalEncounter"); 
+			StartPlayerLookAt("LookHere1", 1, 1, "");
+			PlayMusic("15_puzzle_hole.ogg", false, 5, 0, 1, false); 
+			CheckPoint("Final", "PlayerStartArea_3", "Reset2", "", "");
+		}
+		
+			void Reset2(string &in asName, int alCount)
+			{
+				SetPlayerActive(false);
+				AddTimer("", 5, "LookAtMonsters");
+			}
+		
+			void FinalEncounter(string &in asTimer)
+			{
+				AddTimer("WalkLooper", 0.016f, "FinalEncounter");
+				MovePlayerForward(4);
+			}
+		
+		void LookAtFreedom(string &in asParent, string &in asChild, int alState)
+		{
+			RemoveTimer("WalkLooper");
+			StartPlayerLookAt("LookHere2", 2, 2, "");
+			SetMessage("ScreenMessages", "FreedomFinally", 0);
+			AddTimer("", 7, "LookAtMonsters");
+		}
+		
+		void LookAtMonsters(string &in asTimer)
+		{
+			SetEntityActive("steve2", true);
+			SetEntityActive("greg", true);
+			AddTimer("", 3, "ShowThePlayer");
+			StartPlayerLookAt("LookHereMonsters", 2, 2, "");
+		}
+		
+		void ShowThePlayer(string &in asTimer)
+		{
+			ShowEnemyPlayerPosition("steve2");
+			ShowEnemyPlayerPosition("greg");
+			for (int i=19; i<=21; i++)AddEnemyPatrolNode("steve2", "PathNodeArea_"+i, 0.01, "");
+			for (int i=19; i<=21; i++)AddEnemyPatrolNode("greg", "PathNodeArea_"+i, 0.01, "");
+		}
+		
+		void FinalFunction(string &in asParent, string &in asChild, int alState)
+		{
+			SetPlayerActive(false);
+			SetLanternDisabled(true);
+			SetInventoryDisabled(true);
+			StartEffectFlash(2, 5, 2);
+			AddTimer("", 5, "RollCredits");
+			AddTimer("", 4, "FadeToBlack");
+			AddTimer("", 0, "FinalEncounter");
+			StartPlayerLookAt("LookHere3", 1, 1, "");
+		}
+		
+		void DisplayRunText(string &in asParent, string &in asChild, int alState)
+		{
+			StartPlayerLookAt("LookHere2", 8, 8, "");
+			AddTimer("", 0.3, "StopLook");
+			SetMessage("ScreenMessages", "Run", 0);
+		}
+		
+		void End(string &in asParent, string &in asChild, int alState)
+		{
+			FadeEnemyToSmoke("steve2", false);
+			FadeEnemyToSmoke("greg", false);
+			SetEntityActive("stevethetroll", false);
+			SetEntityActive("steveChase", false);
+		}
+		
+		void StopPlayer(string &in asParent, string &in asChild, int alState)
+		{
+			AddTimer("", 0, "StopLook");
+			RemoveTimer("WalkLooper");
+		}
+		
+		void RollCredits(string &in asTimer)
+		{	
+			StartCredits("free.ogg", true, "Ending", "MainCredits", 3);
+		}
+		
+		void FadeToBlack(string &in asTimer)
+		{	
+			FadeOut(0);
+			PlaySoundAtEntity("", "enemy_hallucination_disappear.snt", "Player", 0, true);
+		}
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

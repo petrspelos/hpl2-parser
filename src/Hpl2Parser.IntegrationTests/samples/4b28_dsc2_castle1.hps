@@ -1,0 +1,277 @@
+//////////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+PlayMusic("corridor_ambience.ogg", true, 1.0f, 1.0f, 1, false);
+SetEntityPlayerInteractCallback("castle_gate_arched01_1", "UseLargeDoor", false);
+    SetEntityPlayerInteractCallback("castle_gate_arched01_2", "UseLargeDoorLocked", false);
+SetEntityCustomFocusCrossHair("castle_gate_arched01_1", "LevelDoor");
+SetEntityInteractionDisabled("lantern_1", true);
+AddEntityCollideCallback("Player", "GruntArea", "SpawnGrunt", true, 1);
+    AddEntityCollideCallback("Player", "bugprevent", "PreventBug", false, 1);
+AddUseItemCallback("", "key_torture_chamber_1", "metal_1", "UnlockDoor", true);
+AddUseItemCallback("", "bucket_of_tar_1", "metal_1", "UnlockDoorExplosion", true);
+AddEntityCollideCallback("Player", "Caution", "CautionMessage", true, 1);
+SetPropHealth("castle_10", 0.1f);
+AddEntityCollideCallback("Player", "ThoughtsCondition", "ThoughtsCondition", true, 1);
+AddEntityCollideCallback("Player", "CreakArea", "PlankCreak", false, 1);
+AddUseItemCallback("", "crowbar_1", "castle_1", "DoorIsBlocked", false);
+    AddUseItemCallback("", "crowbar_2", "castle_1", "DoorIsBlocked", false);
+AddUseItemCallback("", "crowbar_1", "castle_12", "UsedCrowbarOnLockedDoor", true);
+    AddUseItemCallback("", "crowbar_2", "castle_12", "UsedCrowbarOnLockedDoor", true);
+	AddEntityCollideCallback("crowbar_joint_1", "OpenDoor", "BreakDoor", true, 1);
+AddEntityCollideCallback("Player", "LightSpook", "LightSpook", true, 1);
+    SetLightVisible("PointLight_35", false);
+    SetLightVisible("PointLight_36", false);
+	SetLightVisible("PointLight_37", false);
+	SetLightVisible("PointLight_38", false);
+	SetLightVisible("PointLight_39", false);
+	SetLightVisible("PointLight_40", false);
+	SetLightVisible("PointLight_41", false);
+}
+
+void DoorIsBlocked(string &in asItem, string &in asEntity) 
+{
+SetMessage("Level4", "DoorIsBlocked", 4);
+}
+    
+	void UsedCrowbarOnLockedDoor(string &in asItem, string &in asEntity) 
+    {
+    PlaySoundAtEntity("", "impact_metal_high.snt", "castle_12", 0, false);
+	SetEntityActive("crowbar_joint_1", true);
+    RemoveItem("crowbar_1");
+	    RemoveItem("crowbar_2");
+    }
+	    
+		void BreakDoor(string &in asParent, string &in asChild, int alState)
+        {
+        SetSwingDoorLocked("castle_12", false, false);
+        SetSwingDoorDisableAutoClose("castle_12", true);
+        SetSwingDoorClosed("castle_12", false, false);
+        PlaySoundAtEntity("break","break_wood_metal", "castle_12", 0, false);
+        CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "OpenDoor", false);
+		AddPropImpulse("castle_12", 3, 0, -3, "world");
+		AddPlayerSanity(25.0f);
+		SetEntityActive("crowbar_joint_1", false);
+		SetEntityActive("crowbar_1", true);
+        }
+
+void Flashback(string &in asEntity)
+{
+SetLanternActive(false, true);
+SetLanternDisabled(true);
+StartPlayerLookAt("PlayerLookArea", 10, 20, "");
+AddTimer("FlashbackStage2", 1.0, "FlashbackStage2");
+PlaySoundAtEntity("", "break_stairs.ogg", "PlayerLookArea", 0.0f, false);
+PlaySoundAtEntity("", "15_the_big_scream2.ogg", "Player", 0.0f, false);
+    SetEntityActive("wood_beam_1", true);
+	SetEntityActive("wood_beam_2", true);
+	SetEntityActive("wood_beam_3", true);
+	SetEntityActive("wood_box01_broken_1", true);
+	SetEntityActive("wood_box01_broken_2", true);
+	SetEntityActive("wood_box01_broken_3", true);
+}
+		
+    void FlashbackStage2(string &in asTimer)
+	{
+	StartPlayerLookAt("corpse_male_2", 2, 1, "");
+	SetEntityActive("corpse_male_2", true);
+    AddPropImpulse("corpse_male_2", 0.0f, -15.0f, 0.0f, "world");
+	AddTimer("FlashbackStage3", 1.7, "FlashbackStage3");
+	PlaySoundAtEntity("", "break_wood.snt", "PlayerLookArea", 0.0f, false);
+	PlaySoundAtEntity("", "25_break_rock.snt", "PlayerLookArea", 0.0f, false);
+	SetLanternDisabled(false);
+	StopPlayerLookAt();
+	}
+	
+	void FlashbackStage3(string &in asTimer)
+	{
+    GiveSanityDamage(10.0f, true);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "PlayerLookArea", 0.0f, false);
+	PlaySoundAtEntity("", "player_react_guardian1.snt", "Player", 0.0f, false);
+	SetEntityActive("corpse_male_2", false);
+	SetEntityActive("wood_beam_1", false);
+	SetEntityActive("wood_beam_2", false);
+	SetEntityActive("wood_beam_3", false);
+	}
+
+
+void CorpseFallOut(string &in asEntity)
+{
+SetEntityActive("corpse_male_1", true);
+SetEntityActive("vase02_ghost_1", true);
+SetEntityActive("wood_box02_broken_1", true);
+SetEntityActive("vase01_1", true);
+AddPropImpulse("corpse_male_1", 0.0f, 0.0f, -5.0f, "world");
+AddPropImpulse("wood_box02_broken_1", 0.0f, 0.0f, -5.0f, "world");
+AddTimer("SantiyDamage", 0.3, "SantiyDamage");
+}
+
+    void SantiyDamage(string &in asTimer)
+	{
+    GiveSanityDamage(10.0f, true);
+	}
+	
+void LightSpook(string &in asParent, string &in asChild, int alState)
+{
+SetLightVisible("PointLight_35", true);
+    SetLightVisible("PointLight_36", true);
+	SetLightVisible("PointLight_37", true);
+	SetLightVisible("PointLight_38", true);
+	SetLightVisible("PointLight_39", true);
+	SetLightVisible("PointLight_40", true);
+	SetLightVisible("PointLight_41", true);
+SetLampLit("hanging_lantern_ceiling_chain_1", true, false);
+    SetLampLit("hanging_lantern_ceiling_chain_2", true, false);
+	SetLampLit("hanging_lantern_ceiling_chain_3", true, false);
+	SetLampLit("hanging_lantern_ceiling_chain_4", true, false);
+	SetLampLit("hanging_lantern_ceiling_chain_5", true, false);
+	SetLampLit("hanging_lantern_ceiling_chain_6", true, false);
+	SetLampLit("hanging_lantern_ceiling_chain_7", true, false);
+PlaySoundAtEntity("", "scare_breath.snt", "Player", 0.0f, false);
+PlaySoundAtEntity("", "scare_male_terrified.snt", "Player", 0.0f, false);
+PlaySoundAtEntity("", "insanity_imageflash01.snt", "Player", 0.0f, false);
+GiveSanityDamage(5.0f, true);
+}
+
+void WayAroundQuest(string &in asEntity)
+{
+AddQuest("wayaroundquest", "WayAroundQuest");
+}
+
+void SecretPot(string &in asEntity)
+{
+SetEntityActive("tinderbox_9", true);
+PlaySoundAtEntity("", "player_crouch.snt", "Player", 0, false);
+}
+
+
+void SpawnGrunt(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Level4", "Caution2", 3);
+PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+SetEntityActive("servant_grunt_1", true);
+    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 2, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_4", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_6", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_9", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_8", 4, "");
+}
+
+    void PreventBug(string &in asParent, string &in asChild, int alState)
+    {
+	RemoveEntityCollideCallback("Player", "GruntArea");
+	RemoveEntityCollideCallback("Player", "ThoughtsCondition");
+	}
+
+void giveopenquest(string &in asEntity)
+{
+AddQuest("openmetaldoorquest", "OpenMetalDoorQuest");
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity) 
+{
+SetSwingDoorLocked("metal_1", false, true);
+RemoveItem("key_torture_chamber_1");
+PlaySoundAtEntity("", "unlock_door.snt", "metal_1", 0, false);
+CompleteQuest("openmetaldoorquest", "OpenMetalDoorQuest");
+}
+
+void PlankCreak(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "scare_wood_creak_scuf.snt", "Player", 0, false);
+}
+
+void UnlockDoorExplosion(string &in asItem, string &in asEntity) 
+{
+CompleteQuest("openmetaldoorquest", "OpenMetalDoorQuest");
+SetEntityActive("bucket_of_tar_1", true);
+SetEntityInteractionDisabled("bucket_of_tar_1", true);
+CreateParticleSystemAtEntity("Ignition", "ps_fire_stove_small.ps", "bucket_of_tar_1", false);
+AddTimer("Boom", 6, "Boom");
+    AddTimer("SmokePre", 4, "SmokePre");
+PlaySoundAtEntity("Fuse", "scrape_generic_hard.snt", "bucket_of_tar_1", 0, false);
+RemoveItem("bucket_of_tar_1");
+}
+
+    void SmokePre(string &in asTimer)
+	{
+    CreateParticleSystemAtEntity("", "ps_dust_break_stair.ps", "ParticleArea1", false);
+	CreateParticleSystemAtEntity("", "ps_dust_break_stair.ps", "ParticleArea1", false);
+	}
+	
+    void Boom(string &in asTimer)
+	{
+	StopSound("Fuse", 0);
+	DestroyParticleSystem("Ignition");
+	PlaySoundAtEntity("", "break_wood_metal.snt", "bucket_of_tar_1", 0, false);
+	PlaySoundAtEntity("", "lurker_hit_wood.snt", "bucket_of_tar_1", 0, false);
+	    PlaySoundAtEntity("", "lurker_hit_wood.snt", "bucket_of_tar_1", 0, false);
+	CreateParticleSystemAtEntity("Ignition", "ps_break_mansionbase_wall.ps", "metal_1", false);
+		CreateParticleSystemAtEntity("", "ps_hit_metal.ps", "metal_1", false);
+		CreateParticleSystemAtEntity("", "ps_hit_metal.ps", "metal_1", false);
+		CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "metal_1", false);
+	SetEntityActive("bucket_of_tar_1", false);
+	SetEntityActive("metal_1", false);
+	SetEntityActive("metal_broken", true);
+	AddPropImpulse("metal_broken", 30, 0, 0, "world");
+	SetEntityActive("servant_grunt_2", true);
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_13", 0, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_14", 4, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_15", 5, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_14", 0, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_16", 0, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_18", 5, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_19", 0, "");
+	AddEntityCollideCallback("DeathExplosion", "Player", "ExplosionDeath", true, 0);
+	AddEntityCollideCallback("HurtExplosion", "Player", "ExplosionHurt", true, 0);
+	PlayMusic("08_amb.ogg", true, 1.0f, 1.0f, 1, false);
+	}
+	
+	    void ExplosionDeath(string &in asParent, string &in asChild, int alState)
+	    {
+		GivePlayerDamage(1000, "BloodSplat", true, true);
+		}
+		
+		void ExplosionHurt(string &in asParent, string &in asChild, int alState)
+	    {
+		GivePlayerDamage(50, "BloodSplat", true, false);
+		}
+
+void UseLargeDoor(string &in asEntity)
+{
+ChangeMap("dsc2_castle2.map", "PlayerStartArea_1", "door_large_castle_open.snt", "close_gate.snt");
+}
+
+    void UseLargeDoorLocked(string &in asEntity)
+    {
+    PlaySoundAtEntity("", "door_level_wood_locked.snt", "castle_gate_arched01_2", 0, false);
+    }
+
+void ThoughtsCondition(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Level4", "Condition", 4);
+}
+
+void CautionMessage(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Level4", "Caution", 4);
+CompleteQuest("wayaroundquest", "WayAroundQuest");
+SetEntityInteractionDisabled("castle_1", true);
+}
+
+//////////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

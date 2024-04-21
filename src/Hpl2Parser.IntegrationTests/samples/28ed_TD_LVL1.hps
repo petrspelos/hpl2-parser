@@ -1,0 +1,1717 @@
+void OnStart()
+{
+SetMapDisplayNameEntry("LVL1Name");
+SetGlobalVarInt("Achiev6", 1);
+SetPropStaticPhysics("ExorcismCandle", true);
+CompleteQuest("Chapter1Only", "CHP1");
+SetGlobalVarInt("DeathType", 0);
+SetSanityDrainDisabled(true);
+SetPropHealth("mansion_2", 50);
+SetLocalVarInt("KeypadCode", 0);
+SetLocalVarInt("CanProgress", 0);
+SetLocalVarInt("TindyAvailable", 5);
+SetLocalVarInt("FurnaceFuel1st", 0);
+SetLocalVarInt("FurnaceFuel2nd", 7);
+SetLocalVarInt("TimeMINCount", 9);
+SetLocalVarInt("TimeSECCount2", 0);
+SetLocalVarInt("TimeSECCount", 0);
+SetLocalVarInt("NightBegan", 0);
+SetLocalVarInt("NightOver", 0);
+SetLocalVarInt("FurnaceOn", 1);
+SetLocalVarInt("GearsUp", 1);
+SetLocalVarInt("TimeBlink", 0);
+SetLocalVarInt("CoalAvailable", 1);
+SetLocalVarInt("InTheDark", 0);
+SetLocalVarInt("RedLightX", 0);
+SetLocalVarInt("RedOn1", 0);
+SetLocalVarInt("RedOn2", 0);
+SetLocalVarInt("RedOn3", 0);
+SetLocalVarInt("RedOn4", 0);
+SetLocalVarInt("RedOn5", 0);
+SetLocalVarInt("RedOn6", 0);
+SetLocalVarInt("RedOn7", 0);
+SetLocalVarInt("RedOn8", 0);
+SetLocalVarInt("RedOn9", 0);
+SetLocalVarInt("RedOn10", 0);
+SetLocalVarInt("RedOn11", 0);
+SetLocalVarInt("TorchLit1", 1);
+SetLocalVarInt("TorchLit2", 1);
+SetLocalVarInt("TorchLit3", 1);
+SetLocalVarInt("TorchLit4", 1);
+SetLocalVarInt("TorchLit5", 1);
+SetLocalVarInt("TorchLit6", 1);
+SetLocalVarInt("TorchSystem", 6);
+SetLocalVarFloat("TimeSpeed", 0.5f);
+SetLocalVarFloat("HuntSpeed", 2.0f);
+SetLocalVarInt("VentTimer", -1);
+SetLocalVarInt("VentNum", 4);
+StopSound("HorrorStatic", 0);
+StopSound("DarkNoise", 0);
+AddEntityCollideCallback("Player", "SavePoint", "AutoSave", true, 1);
+AddEntityCollideCallback("ExorcismCandle", "VentCandle_1", "VentScare1", false, 1);
+AddEntityCollideCallback("ExorcismCandle", "VentCandle_2", "VentScare2", false, 1);
+AddEntityCollideCallback("ExorcismCandle", "VentCandle_3", "VentScare3", false, 1);
+AddEntityCollideCallback("ExorcismCandle", "VentCandle_4", "VentScare4", false, 1);
+AddUseItemCallback("", "DeskKey1", "DeskDoor1", "DeskUnlock", true);
+AddTimer("", 1.0f, "ReduceFuel");
+AddTimer("", 1.0f, "RedLightDrainTimer");
+AddTimer("", 1.0f, "RedLighter");
+AddTimer("", 1.0f, "TimeCounter");
+AddTimer("", 1.0f, "TimeCountUpdate");
+AddTimer("FurnaceLightBlinks", 4.0f, "FurnaceLightBlinks");
+AddTimer("", 0.1f, "FurnaceGearHandler");
+AddTimer("", 6.0f, "CHP1AAdd");
+AddTimer("", 2.0f, "DarkDamager");
+AddTimer("VentHandler", 2.0f, "VentHandler");
+AddTimer("DarkDamageCause", 0.25f, "DarkDamageCause");
+AddTimer("TorchSystemHandler", 0.25f, "TorchSystemHandler");
+AddTimer("", 2.0f, "TinderboxSpawner");
+RotatePropToSpeed("Cog1", 1, 1, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog2", 1, -3, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog3", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog4", 1, 3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog5", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog6", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog7", 1, 3, 1, 0, 0, false, "");
+RotatePropToSpeed("monolith01_1", 3, 6, 0, 1, 0, false, "");
+RotatePropToSpeed("monolith01_2", 3, 6, 0, 1, 0, false, "");
+RotatePropToSpeed("monolith02_1", 3, 6, 0, 1, 0, false, "");
+RotatePropToSpeed("monolith02_2", 3, 6, 0, 1, 0, false, "");
+SetEntityInteractionDisabled("ExorcismCandle", true);
+SetEntityInteractionDisabled("SpawnCoalLever", true);
+SetPropEffectActive("Coal", false, false);
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+}
+
+void AutoSave(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("SavePoint", false);
+AutoSave();
+SetMessage("TD_Custom", "Saved", 1.0f);
+}
+
+void CHP1AAdd(string &in asTimer)
+{
+AddQuest("Chapter1AOnly", "CHP1A");
+}
+
+void TimeCounter(string &in asTimer)
+{
+if(GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("TimeBlink") == 0 && GetLocalVarInt("NightOver") == 0 && GetLocalVarInt("TorchSystem") > 0)
+{
+AddLocalVarInt("TimeSECCount", -1);
+if(GetLocalVarInt("TimeSECCount") < 0)
+{
+SetLocalVarInt("TimeSECCount", 9);
+AddLocalVarInt("TimeSECCount2", -1);
+if(GetLocalVarInt("TimeSECCount2") < 0)
+{
+AddLocalVarInt("TimeMINCount", -1);
+AddLocalVarInt("TimeSECCount2", 6);
+}
+}
+SetLampLit("TimeBlink1", true, false);
+SetLampLit("TimeBlink2", true, false);
+SetLocalVarInt("TimeBlink", 1);
+PlaySoundAtEntity("", "15_hammer.snt", "TimeWall", 0.0, false);
+}
+if(GetLocalVarInt("NightBegan") == 0 || GetLocalVarInt("TorchSystem") == 0) 
+{
+AddTimer("", 4.5f, "TimeCounter");
+}
+if(GetLocalVarInt("NightBegan") == 1)
+{
+AddTimer("", GetLocalVarFloat("TimeSpeed"), "TimeCounter2");
+AddTimer("", 0.0f, "TimeCountUpdate");
+}
+if(GetLocalVarInt("NightOver") == 0 && GetLocalVarInt("TimeSECCount") == 0 && GetLocalVarInt("TimeSECCount2") == 0 && GetLocalVarInt("TimeMINCount") == 0)
+{
+AddTimer("", 0.1f, "NightChecker");
+}
+}
+
+void TimeCounter2(string &in asTimer)
+{
+if(GetLocalVarInt("TimeBlink") == 1 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+SetLampLit("TimeBlink1", false, false);
+SetLampLit("TimeBlink2", false, false);
+SetLocalVarInt("TimeBlink", 0);
+AddTimer("", GetLocalVarFloat("TimeSpeed"), "TimeCounter");
+}
+}
+
+void ReduceFuel(string &in asTimer)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") > 9)
+{
+SetLocalVarInt("FurnaceFuel2nd", 9);
+}
+AddDebugMessage("Current Fuel level is: " + GetLocalVarInt("FurnaceFuel2nd") + GetLocalVarInt("FurnaceFuel1st"), false);
+if(GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0 && GetLocalVarInt("FurnaceOn") == 1)
+{
+AddLocalVarInt("FurnaceFuel1st", -3);
+}
+if(GetLocalVarInt("FurnaceFuel1st") < 0 && GetLocalVarInt("FurnaceFuel2nd") > 0)
+{
+SetLocalVarInt("FurnaceFuel1st", 9);
+AddLocalVarInt("FurnaceFuel2nd", -1);
+}
+if(GetLocalVarInt("FurnaceFuel1st") < 0 && GetLocalVarInt("FurnaceFuel2nd") == 0)
+{
+SetLocalVarInt("FurnaceOn", 0);
+SetGlobalVarInt("Achiev6", 0);
+}
+AddTimer("", 6.0f, "ReduceFuel");
+}
+
+void NightChecker(string &in asTimer)
+{
+if(GetLocalVarInt("NightOver") == 0 && GetLocalVarInt("TimeSECCount") == 0 && GetLocalVarInt("TimeSECCount2") == 0 && GetLocalVarInt("TimeMINCount") == 0)
+{
+SetLocalVarInt("NightOver", 1);
+SetMessage("TD_Custom", "NightDone", 3.0f);
+SetLocalVarInt("NightBegan", 0);
+SetLampLit("MansLight_1", true, true);
+SetLampLit("MansLight_2", true, true);
+SetLampLit("MansLight_3", true, true);
+SetLampLit("MansLight_4", true, true);
+SetLampLit("MansLight_5", true, true);
+SetLampLit("MansLight_6", true, true);
+SetLampLit("MansLight_7", true, true);
+SetLampLit("MansLight_8", true, true);
+SetLampLit("MansLight_9", true, true);
+SetLampLit("MansLight_10", true, true);
+SetLampLit("MansLight_11", true, true);
+SetLampLit("GreenTorch_1", true, true);
+SetLampLit("GreenTorch_2", true, true);
+SetLampLit("GreenTorch_3", true, true);
+SetLampLit("GreenTorch_4", true, true);
+SetLampLit("GreenTorch_5", true, true);
+SetLampLit("GreenTorch_6", true, true);
+ChangePlayerStateToNormal();
+SetLocalVarInt("CanProgress", 1);
+SetEntityActive("PhonoGraph2", true);
+AddTimer("", 0.25f, "RefixNight");
+}
+}
+
+void FurnaceLightBlinks(string &in asTimer)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") < 5 && GetLocalVarInt("FurnaceFuel2nd") >= 2 && GetLocalVarInt("FurnaceOn") == 1)
+{
+int WhichLX1 = RandInt(1, 11);
+SetLampLit("MansLight_" + WhichLX1, false, false);
+PlaySoundAtEntity("", "lm_light_flicker.snt", "MansLight_" + WhichLX1, 0, false);
+AddTimer("", 0.1f, "FurnaceLightBlinksReset");
+AddTimer("", RandFloat(1.5f, 4.0f), "FurnaceLightBlinks");
+}
+if(GetLocalVarInt("FurnaceFuel2nd") < 2 && GetLocalVarInt("FurnaceOn") == 1)
+{
+int WhichLX2 = RandInt(1, 11);
+SetLampLit("MansLight_" + WhichLX2, false, false);
+PlaySoundAtEntity("", "lm_light_flicker.snt", "MansLight_" + WhichLX2, 0, false);
+AddTimer("", 0.1f, "FurnaceLightBlinksReset");
+AddTimer("", RandFloat(0.5f, 1.5f), "FurnaceLightBlinks");
+}
+if(GetLocalVarInt("FurnaceFuel2nd") >= 5)
+{
+AddTimer("", 10.0f, "FurnaceLightBlinks");
+}
+}
+
+void FurnaceLightBlinksReset(string &in asTimer)
+{
+if(GetLocalVarInt("FurnaceOn") == 1)
+{
+SetLampLit("MansLight_1", true, true);
+SetLampLit("MansLight_2", true, true);
+SetLampLit("MansLight_3", true, true);
+SetLampLit("MansLight_4", true, true);
+SetLampLit("MansLight_5", true, true);
+SetLampLit("MansLight_6", true, true);
+SetLampLit("MansLight_7", true, true);
+SetLampLit("MansLight_8", true, true);
+SetLampLit("MansLight_9", true, true);
+SetLampLit("MansLight_10", true, true);
+SetLampLit("MansLight_11", true, true);
+}
+if(GetLocalVarInt("FurnaceOn") == 0)
+{
+SetLampLit("MansLight_1", false, true);
+SetLampLit("MansLight_2", false, true);
+SetLampLit("MansLight_3", false, true);
+SetLampLit("MansLight_4", false, true);
+SetLampLit("MansLight_5", false, true);
+SetLampLit("MansLight_6", false, true);
+SetLampLit("MansLight_7", false, true);
+SetLampLit("MansLight_8", false, true);
+SetLampLit("MansLight_9", false, true);
+SetLampLit("MansLight_10", false, true);
+SetLampLit("MansLight_11", false, true);
+}
+}
+
+void HorrorEvent(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("Bang.snt", 1);
+PlayGuiSound("Bang.snt", 1);
+SetInventoryDisabled(true);
+StopMusic(3.0f, 1);
+FadeImageTrailTo(0.47f, 0.16f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeInSound("HorrorStatic", 9.5f, true);
+SetEntityActive("Blockade_1", true);
+SetEntityActive("Blockade_2", true);
+SetEntityActive("Blockade_3", true);
+AddTimer("", 9.5f, "HorrorEvent2");
+}
+
+void HorrorEvent2(string &in asTimer)
+{
+FadeOut(0);
+PlayMusic("PhonoAmb3.ogg", true, 1.0f, 0.0f, 2, false);
+SetEntityActive("Halluc_1", true);
+SetEntityActive("Halluc_2", true);
+PlayGuiSound("Bang.snt", 1);
+FadeSepiaColorTo(0.7f, 0.5f);
+FadeRadialBlurTo(0.04f, 0.02f);
+StopSound("HorrorStatic", 0);
+SetEntityActive("HallwayLight_1", false);
+SetEntityActive("HallwayLight_2", false);
+SetEntityActive("HallwayLight_3", false);
+SetEntityActive("HallwayLight_4", false);
+SetEntityActive("HallwayLight_5", false);
+SetEntityActive("HallwayLight_6", false);
+SetEntityActive("HallwayLight_1R", true);
+SetEntityActive("HallwayLight_2R", true);
+SetEntityActive("HallwayLight_3R", true);
+SetEntityActive("HallwayLight_4R", true);
+SetEntityActive("HallwayLight_5R", true);
+SetEntityActive("HallwayLight_6R", true);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_thump_flash.snt", 1);
+FadeIn(3);
+AddEffectVoice("TD_Code1.ogg", "", "TD_Voice", "Code1", false, "Player", 0, 20);
+AddEffectVoice("TD_Code1.ogg", "", "TD_Voice", "Code1", false, "Player", 0, 20);
+AddEffectVoice("TD_Code1.ogg", "", "TD_Voice", "Code1", false, "Player", 0, 20);
+AddEffectVoice("TD_Code1.ogg", "", "TD_Voice", "Code1", false, "Player", 0, 20);
+SetEffectVoiceOverCallback("HorrorEventEnd");
+StartScreenShake(0.02f, 12.0f, 1, 1);
+}
+
+void HorrorEventEnd()
+{
+FadeOut(0);
+StopMusic(0.0f, 2);
+SetEntityActive("Halluc_1", false);
+SetEntityActive("Halluc_2", false);
+PlayMusic("TD_Dreamscape2.ogg", true, 1.0f, 3.0f, 1, false);
+SetEntityActive("HallwayLight_1", true);
+SetEntityActive("HallwayLight_2", true);
+SetEntityActive("HallwayLight_3", true);
+SetEntityActive("HallwayLight_4", true);
+SetEntityActive("HallwayLight_5", true);
+SetEntityActive("HallwayLight_6", true);
+SetEntityActive("HallwayLight_1R", false);
+SetEntityActive("HallwayLight_2R", false);
+SetEntityActive("HallwayLight_3R", false);
+SetEntityActive("HallwayLight_4R", false);
+SetEntityActive("HallwayLight_5R", false);
+SetEntityActive("HallwayLight_6R", false);
+PlayGuiSound("scare_thump_flash.snt", 1);
+SetEntityActive("Blockade_1", false);
+SetEntityActive("Blockade_2", false);
+SetEntityActive("Blockade_3", false);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeIn(3);
+FadeImageTrailTo(0.0f, 0.16f);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+SetInventoryDisabled(false);
+}
+
+void InitPhono2(string &in asEntity, int alState)
+{
+PlayMusic("PhonoAmb2.ogg", false, 0.5f, 0.0f, 2, false);
+AddGlobalVarInt("Achiev2", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeGlobalSoundVolume(0.2f, 0.5f);
+SetWheelStuckState("PhonoGraph2", alState, true);
+AddEffectVoice("TD_Phono21.ogg", "", "TD_Voice", "Phono2_1", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono22.ogg", "", "TD_Voice", "Phono2_2", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono23.ogg", "", "TD_Voice", "Phono2_3", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono24.ogg", "", "TD_Voice", "Phono2_4", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono25.ogg", "", "TD_Voice", "Phono2_5", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono26.ogg", "", "TD_Voice", "Phono2_6", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono27.ogg", "", "TD_Voice", "Phono2_7", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono28.ogg", "", "TD_Voice", "Phono2_8", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono29.ogg", "", "TD_Voice", "Phono2_9", false, asEntity, 0, 20);
+SetEffectVoiceOverCallback("GivePointPhono");
+SetEntityActive("Blockade_1", true);
+SetSwingDoorLocked("CellarDoor", true, true);
+SetLevelDoorLocked("BackDoor", true);
+SetInventoryDisabled(true);
+}
+
+void InitNightPhono(string &in asEntity, int alState)
+{
+SetInventoryDisabled(true);
+SetPropHealth("MansDoor", 0);
+SetEntityActive("MansDoorBlock", true);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeGlobalSoundVolume(0.2f, 0.5f);
+PlayMusic("TD_Danger.ogg", true, 1.0f, 6.0f, 2, false);
+AddEffectVoice("TD_PhonoLVL11.ogg", "", "TD_Voice", "PhonoLVL1_1", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL12.ogg", "", "TD_Voice", "PhonoLVL1_2", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL13.ogg", "", "TD_Voice", "PhonoLVL1_3", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL14.ogg", "", "TD_Voice", "PhonoLVL1_4", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL15.ogg", "", "TD_Voice", "PhonoLVL1_5", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL16.ogg", "", "TD_Voice", "PhonoLVL1_6", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL17.ogg", "", "TD_Voice", "PhonoLVL1_7", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL18.ogg", "", "TD_Voice", "PhonoLVL1_8", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL19.ogg", "", "TD_Voice", "PhonoLVL1_9", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL110.ogg", "", "TD_Voice", "PhonoLVL1_10", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL111.ogg", "", "TD_Voice", "PhonoLVL1_11", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL112.ogg", "", "TD_Voice", "PhonoLVL1_12", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL113.ogg", "", "TD_Voice", "PhonoLVL1_13", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL114.ogg", "", "TD_Voice", "PhonoLVL1_14", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL115.ogg", "", "TD_Voice", "PhonoLVL1_15", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL116.ogg", "", "TD_Voice", "PhonoLVL1_16", false, asEntity, 0, 20);
+AddEffectVoice("TD_PhonoLVL117.ogg", "", "TD_Voice", "PhonoLVL1_17", false, asEntity, 0, 20);
+SetEffectVoiceOverCallback("InitNight");
+SetEntityActive("SkipPhonoLVL1", true);
+SetMessage("TD_Custom", "SkipCallMSG", 3.0f);
+AddEntityCollideCallback("Player", "HorrorBlock", "HorrorEvent", true, 0);
+}
+
+void SkipCall(string &in asEntity)
+{
+StopAllEffectVoices(0);
+SetPropStaticPhysics("ExorcismCandle", false);
+AddTimer("", RandFloat(60.0f, 120.0f), "TorchSystemReducer");
+SetEntityInteractionDisabled("ExorcismCandle", false);
+SetEntityInteractionDisabled("SpawnCoalLever", false);
+SetInventoryDisabled(false);
+SetEntityActive("SkipPhonoLVL1", false);
+FadeGlobalSoundVolume(1.0f, 6.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetLocalVarInt("NightBegan", 1);
+PlayGuiSound("lock_door.snt", 1);
+}
+
+void InitNight()
+{
+SetInventoryDisabled(false);
+SetPropStaticPhysics("ExorcismCandle", false);
+AddTimer("", RandFloat(60.0f, 120.0f), "TorchSystemReducer");
+SetEntityActive("SkipPhonoLVL1", false);
+SetEntityInteractionDisabled("ExorcismCandle", false);
+SetEntityInteractionDisabled("SpawnCoalLever", false);
+FadeGlobalSoundVolume(1.0f, 6.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetLocalVarInt("NightBegan", 1);
+PlayGuiSound("lock_door.snt", 1);
+}
+
+void GivePointPhono()
+{
+StopMusic(0.25f, 2);
+PlayMusic("TD_Dreamscape2.ogg", true, 1.0f, 0.0f, 1, false);
+SetSwingDoorLocked("CellarDoor", false, true);
+SetLevelDoorLocked("BackDoor", false);
+FadeGlobalSoundVolume(1.0f, 6.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("lock_door.snt", 1);
+SetInventoryDisabled(false);
+SetEntityActive("Blockade_1", false);
+AddTimer("", 0.25f, "GivePointTimer");
+}
+
+void GivePoint(string &in asEntity)
+{
+AddGlobalVarInt("DreamPoint", 1);
+FadeOut(0.1f);
+AddTimer("", 0.1f, "GivePointFX");
+}
+
+void GivePointTimer(string &in asTimer)
+{
+AddGlobalVarInt("DreamPoint", 1);
+FadeOut(0.1f);
+AddTimer("", 0.1f, "GivePointFX");
+}
+
+void GivePointFX(string &in asTimer)
+{
+PlayGuiSound("DPChord.snt", 1.0f);
+FadeIn(6.0f);
+}
+
+void OnEnter()
+{
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+SetInDarknessEffectsActive(false);
+SetSanityDrainDisabled(true);
+SetPlayerFallDamageDisabled(true);
+SetPropHealth("mansion_2", 50);
+SetPropEffectActive("Coal", false, false);
+PlayMusic("TD_Dreamscape2.ogg", true, 1.0f, 3.0f, 1, false);
+PreloadSound("DPChord.snt");
+PreloadSound("Bang.snt");
+PreloadSound("VentBang.snt");
+PreloadSound("NightDeath.snt");
+PreloadSound("HorrorStatic.snt");
+PreloadSound("scare_breath.snt");
+}
+
+void OnLeave()
+{
+StopMusic(1.0f, 1);
+}
+
+void TimeCountUpdate(string &in asTimer)
+{
+if(GetLocalVarInt("TimeSECCount") == 0)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", true, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", false, false);
+SetLampLit("TimeSECLight_5", true, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 1)
+{
+SetLampLit("TimeSECLight_1", false, false);
+SetLampLit("TimeSECLight_2", false, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", false, false);
+SetLampLit("TimeSECLight_5", false, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", false, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 2)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", false, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", true, false);
+SetLampLit("TimeSECLight_5", true, false);
+SetLampLit("TimeSECLight_6", false, false);
+SetLampLit("TimeSECLight_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 3)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", false, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", true, false);
+SetLampLit("TimeSECLight_5", false, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 4)
+{
+SetLampLit("TimeSECLight_1", false, false);
+SetLampLit("TimeSECLight_2", true, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", true, false);
+SetLampLit("TimeSECLight_5", false, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", false, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 5)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", true, false);
+SetLampLit("TimeSECLight_3", false, false);
+SetLampLit("TimeSECLight_4", true, false);
+SetLampLit("TimeSECLight_5", false, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 6)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", true, false);
+SetLampLit("TimeSECLight_3", false, false);
+SetLampLit("TimeSECLight_4", true, false);
+SetLampLit("TimeSECLight_5", true, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 7)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", false, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", false, false);
+SetLampLit("TimeSECLight_5", false, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", false, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 8)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", true, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", true, false);
+SetLampLit("TimeSECLight_5", true, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount") == 9)
+{
+SetLampLit("TimeSECLight_1", true, false);
+SetLampLit("TimeSECLight_2", true, false);
+SetLampLit("TimeSECLight_3", true, false);
+SetLampLit("TimeSECLight_4", true, false);
+SetLampLit("TimeSECLight_5", false, false);
+SetLampLit("TimeSECLight_6", true, false);
+SetLampLit("TimeSECLight_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 0)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", true, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", false, false);
+SetLampLit("TimeSECLight2_5", true, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 1)
+{
+SetLampLit("TimeSECLight2_1", false, false);
+SetLampLit("TimeSECLight2_2", false, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", false, false);
+SetLampLit("TimeSECLight2_5", false, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", false, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 2)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", false, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", true, false);
+SetLampLit("TimeSECLight2_5", true, false);
+SetLampLit("TimeSECLight2_6", false, false);
+SetLampLit("TimeSECLight2_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 3)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", false, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", true, false);
+SetLampLit("TimeSECLight2_5", false, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 4)
+{
+SetLampLit("TimeSECLight2_1", false, false);
+SetLampLit("TimeSECLight2_2", true, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", true, false);
+SetLampLit("TimeSECLight2_5", false, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", false, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 5)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", true, false);
+SetLampLit("TimeSECLight2_3", false, false);
+SetLampLit("TimeSECLight2_4", true, false);
+SetLampLit("TimeSECLight2_5", false, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 6)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", true, false);
+SetLampLit("TimeSECLight2_3", false, false);
+SetLampLit("TimeSECLight2_4", true, false);
+SetLampLit("TimeSECLight2_5", true, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 7)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", false, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", false, false);
+SetLampLit("TimeSECLight2_5", false, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", false, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 8)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", true, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", true, false);
+SetLampLit("TimeSECLight2_5", true, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", true, false);
+}
+if(GetLocalVarInt("TimeSECCount2") == 9)
+{
+SetLampLit("TimeSECLight2_1", true, false);
+SetLampLit("TimeSECLight2_2", true, false);
+SetLampLit("TimeSECLight2_3", true, false);
+SetLampLit("TimeSECLight2_4", true, false);
+SetLampLit("TimeSECLight2_5", false, false);
+SetLampLit("TimeSECLight2_6", true, false);
+SetLampLit("TimeSECLight2_7", true, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 0)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", true, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", false, false);
+SetLampLit("TimeMINLight_5", true, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", true, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 1)
+{
+SetLampLit("TimeMINLight_1", false, false);
+SetLampLit("TimeMINLight_2", false, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", false, false);
+SetLampLit("TimeMINLight_5", false, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", false, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 2)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", false, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", true, false);
+SetLampLit("TimeMINLight_5", true, false);
+SetLampLit("TimeMINLight_6", false, false);
+SetLampLit("TimeMINLight_7", true, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 3)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", false, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", true, false);
+SetLampLit("TimeMINLight_5", false, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", true, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 4)
+{
+SetLampLit("TimeMINLight_1", false, false);
+SetLampLit("TimeMINLight_2", true, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", true, false);
+SetLampLit("TimeMINLight_5", false, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", false, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 5)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", true, false);
+SetLampLit("TimeMINLight_3", false, false);
+SetLampLit("TimeMINLight_4", true, false);
+SetLampLit("TimeMINLight_5", false, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", true, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 6)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", true, false);
+SetLampLit("TimeMINLight_3", false, false);
+SetLampLit("TimeMINLight_4", true, false);
+SetLampLit("TimeMINLight_5", true, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", true, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 7)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", false, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", false, false);
+SetLampLit("TimeMINLight_5", false, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", false, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 8)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", true, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", true, false);
+SetLampLit("TimeMINLight_5", true, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", true, false);
+}
+if(GetLocalVarInt("TimeMINCount") == 9)
+{
+SetLampLit("TimeMINLight_1", true, false);
+SetLampLit("TimeMINLight_2", true, false);
+SetLampLit("TimeMINLight_3", true, false);
+SetLampLit("TimeMINLight_4", true, false);
+SetLampLit("TimeMINLight_5", false, false);
+SetLampLit("TimeMINLight_6", true, false);
+SetLampLit("TimeMINLight_7", true, false);
+}
+}
+
+void DeskUnlock(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("DeskDoor1", false, true);
+PlayGuiSound("unlock_door.snt", 1);
+RemoveItem("DeskKey1");
+}
+
+void SpawnCoal(string &in asEntity, int alState)
+{
+if(alState == 1 && GetLocalVarInt("CoalAvailable") == 1)
+{
+PlaceEntityAtEntity("Coal", "SpawnCoalHere", "", true);
+SetLeverStuckState("SpawnCoalLever", alState, true);
+PlayGuiSound("13_ignite.snt", 1);
+PlayGuiSound("13_press_done.snt", 1);
+PlayGuiSound("13_flow_done.snt", 1);
+CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "SpawnCoalHere", false);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetLocalVarInt("CoalAvailable", 0);
+AddEntityCollideCallback("Coal", "InsertCoal", "RefuelFurnace", true, 0);
+}
+}
+
+void RefuelFurnace(string &in asParent, string &in asChild, int alState)
+{
+if(GetLocalVarInt("FurnaceOn") == 1)
+{
+PlaceEntityAtEntity("Coal", "PlaceCoalHere", "", true);
+PlayGuiSound("13_ignite.snt", 1);
+AddLocalVarInt("FurnaceFuel2nd", 5);
+AddTimer("", 60.0f, "SpawnCoalReset");
+}
+if(GetLocalVarInt("FurnaceOn") == 0)
+{
+PlaceEntityAtEntity("Coal", "PlaceCoalHere", "", true);
+AddLocalVarInt("FurnaceFuel2nd", 5);
+PlayGuiSound("13_ignite.snt", 1);
+}
+}
+
+void SpawnCoalReset(string &in asTimer)
+{
+SetLocalVarInt("CoalAvailable", 1);
+SetLeverStuckState("SpawnCoalLever", 0, true);
+AddDebugMessage("Coal is available!", false);
+}
+
+void FurnaceGearHandler(string &in asTimer)
+{
+if(GetLocalVarInt("FurnaceOn") == 0 && GetLocalVarInt("GearsUp") == 1)
+{
+RotatePropToSpeed("Cog1", 0.33, 0, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog2", 1, 0, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog3", 1, 0, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog4", 1, 0, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog5", 1, 0, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog6", 1, 0, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog7", 1, 0, 1, 0, 0, false, "");
+StopSound("FurnaceAmbClose", 0.5f);
+StopSound("FurnaceAmbDistant", 3.5f);
+SetLocalVarInt("GearsUp", 0);
+SetLeverStuckState("RestartLever", 0, true);
+}
+if(GetLocalVarInt("FurnaceOn") == 1 && GetLocalVarInt("GearsUp") == 0)
+{
+RotatePropToSpeed("Cog1", 1, 1, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog2", 1, -3, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog3", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog4", 1, 3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog5", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog6", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog7", 1, 3, 1, 0, 0, false, "");
+SetLocalVarInt("GearsUp", 1);
+FadeInSound("FurnaceAmbClose", 0.5f, true);
+FadeInSound("FurnaceAmbDistant", 0.5f, true);
+}
+AddTimer("", 1.0f, "FurnaceGearHandler");
+}
+
+void RestartFurnace(string &in asEntity, int alState)
+{
+if(alState == 1 && GetLocalVarInt("FurnaceFuel1st") >= 0 && GetLocalVarInt("FurnaceFuel2nd") > 0)
+{
+SetLeverStuckState("RestartLever", alState, true);
+SetLocalVarInt("FurnaceOn", 1);
+PlayGuiSound("12_valve_stuck.snt", 1);
+AddTimer("", 60.0f, "SpawnCoalReset");
+AddTimer("", 0.1f, "FurnaceLightBlinks");
+}
+}
+
+void PullSledge(string &in asEntity)
+{
+SetMessage("TD_Custom", "SledgeDoor", 2.0f);
+AddPropHealth("mansion_2", -2);
+PlayGuiSound("step_run_wood_squeaky.snt", 1);
+PlayGuiSound("step_run_wood_squeaky.snt", 1);
+if(GetPropHealth("mansion_2") < 34)
+{
+SetPropStaticPhysics("mansion_2", false);
+SetMessage("TD_Custom", "SledgeDoor2", 2.0f);
+SetPropHealth("mansion_2", 0);
+SetEntityActive("sledge_1", false);
+SetEntityActive("sledge_2", true);
+}
+}
+
+void DarkDamager(string &in asTimer)
+{
+if(GetLocalVarInt("FurnaceOn") == 0 && GetLocalVarInt("InTheDark") == 0)
+{
+FadeInSound("DarkNoise", 3, true);
+FadeSepiaColorTo(1.0f, 0.2f);
+SetLocalVarInt("InTheDark", 1);
+}
+if(GetLocalVarInt("FurnaceOn") == 1 && GetLocalVarInt("InTheDark") == 1)
+{
+StopSound("DarkNoise", 6);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+FadePlayerRollTo(0, 0.2f, 0.2f);
+SetLocalVarInt("InTheDark", 0);
+}
+AddTimer("", 1.0f, "DarkDamager");
+}
+
+void DarkDamageCause(string &in asTimer)
+{
+if(GetLocalVarInt("NightOver") == 1)
+{
+RemoveTimer("DarkDamageCause");
+return;
+}
+if(GetLocalVarInt("InTheDark") == 1)
+{
+StartScreenShake(0.01f, 3.25f, 0.5f, 0.5f);
+FadeRadialBlurTo(RandFloat(0.04f, 0.12f), 0.06f);
+FadePlayerRollTo(RandFloat(-10, 10), 2.2f, 2.2f);
+if(GetPlayerSanity() > 20)
+{
+AddPlayerSanity(-8.0f);
+}
+if(GetPlayerSanity() < 20)
+{
+AddPlayerHealth(-8.0f);
+}
+if(GetPlayerHealth() < 5)
+{
+CheckPoint ("", "Start", "DeathByDark", "TD_Custom", "GO");
+SetupLoadScreen("TD_Custom", "LVLDeadScreen", 1, "");
+SetLocalVarInt("NightBegan", 0);
+SetPlayerHealth(-5);
+}
+}
+if(GetLocalVarInt("InTheDark") == 0)
+{
+if(GetPlayerSanity() < 90)
+{
+SetPlayerSanity(GetPlayerSanity() + 1.0f);
+}
+if(GetPlayerHealth() < 90)
+{
+AddPlayerHealth(0.5f);
+}
+}
+AddTimer("DarkDamageCause", 1.0f, "DarkDamageCause");
+}
+
+void ResetLights1(string &in asEntity)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") >= 1 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+SetEntityActive("MansLight_3R", false);
+SetEntityActive("MansLight_2R", false);
+SetEntityActive("MansLight_1R", false);
+SetEntityActive("MansLight_3", true);
+SetEntityActive("MansLight_2", true);
+SetEntityActive("MansLight_1", true);
+SetLampLit("MansLight_1", false, false);
+SetLampLit("MansLight_2", false, false);
+SetLampLit("MansLight_3", false, false);
+SetEntityInteractionDisabled("ResetLights_1", true);
+PlayGuiSound("lm_light_flicker.snt", 1);
+AddTimer("", RandFloat(0.2f, 0.8f), "ResetLights1Timer");
+}
+}
+
+void ResetLights1Timer(string &in asTimer)
+{
+SetEntityInteractionDisabled("ResetLights_1", false);
+SetLampLit("MansLight_1", true, true);
+SetLampLit("MansLight_2", true, true);
+SetLampLit("MansLight_3", true, true);
+SetLocalVarInt("RedOn1", 0);
+SetLocalVarInt("RedOn2", 0);
+SetLocalVarInt("RedOn3", 0);
+AddLocalVarInt("FurnaceFuel1st", -1);
+PlayGuiSound("lm_light_flicker.snt", 1);
+}
+
+void ResetLights2(string &in asEntity)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") >= 1 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+SetEntityActive("MansLight_11R", false);
+SetEntityActive("MansLight_11", true);
+SetLampLit("MansLight_11", false, false);
+SetEntityInteractionDisabled("ResetLights_2", true);
+PlayGuiSound("lm_light_flicker.snt", 1);
+AddTimer("", RandFloat(0.2f, 0.8f), "ResetLights2Timer");
+}
+}
+
+void ResetLights2Timer(string &in asTimer)
+{
+SetEntityInteractionDisabled("ResetLights_2", false);
+SetLampLit("MansLight_11", true, true);
+SetLocalVarInt("RedOn11", 0);
+AddLocalVarInt("FurnaceFuel1st", -1);
+PlayGuiSound("lm_light_flicker.snt", 1);
+}
+
+void ResetLights3(string &in asEntity)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") >= 1 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+SetEntityActive("MansLight_4R", false);
+SetEntityActive("MansLight_4", true);
+SetEntityActive("MansLight_5R", false);
+SetEntityActive("MansLight_5", true);
+SetLampLit("MansLight_4", false, false);
+SetLampLit("MansLight_5", false, false);
+SetEntityInteractionDisabled("ResetLights_3", true);
+PlayGuiSound("lm_light_flicker.snt", 1);
+AddTimer("", RandFloat(0.2f, 0.8f), "ResetLights3Timer");
+}
+}
+
+void ResetLights3Timer(string &in asTimer)
+{
+SetEntityInteractionDisabled("ResetLights_3", false);
+SetLampLit("MansLight_4", true, true);
+SetLampLit("MansLight_5", true, true);
+SetLocalVarInt("RedOn4", 0);
+SetLocalVarInt("RedOn5", 0);
+AddLocalVarInt("FurnaceFuel1st", -1);
+PlayGuiSound("lm_light_flicker.snt", 1);
+}
+
+void ResetLights4(string &in asEntity)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") >= 1 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+SetEntityActive("MansLight_6R", false);
+SetEntityActive("MansLight_6", true);
+SetEntityActive("MansLight_7R", false);
+SetEntityActive("MansLight_7", true);
+SetEntityActive("MansLight_8R", false);
+SetEntityActive("MansLight_8", true);
+SetLampLit("MansLight_6", false, false);
+SetLampLit("MansLight_7", false, false);
+SetLampLit("MansLight_8", false, false);
+SetEntityInteractionDisabled("ResetLights_4A", true);
+SetEntityInteractionDisabled("ResetLights_4B", true);
+PlayGuiSound("lm_light_flicker.snt", 1);
+AddTimer("", RandFloat(0.2f, 0.8f), "ResetLights4Timer");
+}
+}
+
+void ResetLights4Timer(string &in asTimer)
+{
+SetEntityInteractionDisabled("ResetLights_4A", false);
+SetEntityInteractionDisabled("ResetLights_4B", false);
+SetLampLit("MansLight_6", true, true);
+SetLampLit("MansLight_7", true, true);
+SetLampLit("MansLight_8", true, true);
+SetLocalVarInt("RedOn6", 0);
+SetLocalVarInt("RedOn7", 0);
+SetLocalVarInt("RedOn8", 0);
+AddLocalVarInt("FurnaceFuel1st", -1);
+PlayGuiSound("lm_light_flicker.snt", 1);
+}
+
+void ResetLights5(string &in asEntity)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") >= 1 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+SetEntityActive("MansLight_9R", false);
+SetEntityActive("MansLight_9", true);
+SetLampLit("MansLight_9", false, false);
+SetEntityInteractionDisabled("ResetLights_5", true);
+PlayGuiSound("lm_light_flicker.snt", 1);
+AddTimer("", RandFloat(0.2f, 0.8f), "ResetLights5Timer");
+}
+}
+
+void ResetLights5Timer(string &in asTimer)
+{
+SetEntityInteractionDisabled("ResetLights_5", false);
+SetLampLit("MansLight_9", true, true);
+SetLocalVarInt("RedOn9", 0);
+AddLocalVarInt("FurnaceFuel1st", -1);
+PlayGuiSound("lm_light_flicker.snt", 1);
+}
+
+void ResetLights6(string &in asEntity)
+{
+if(GetLocalVarInt("FurnaceFuel2nd") >= 1 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+SetEntityActive("MansLight_10R", false);
+SetEntityActive("MansLight_10", true);
+SetLampLit("MansLight_10", false, false);
+SetEntityInteractionDisabled("ResetLights_6", true);
+PlayGuiSound("lm_light_flicker.snt", 1);
+AddTimer("", RandFloat(0.2f, 0.8f), "ResetLights6Timer");
+}
+}
+
+void ResetLights6Timer(string &in asTimer)
+{
+SetEntityInteractionDisabled("ResetLights_6", false);
+SetLampLit("MansLight_10", true, true);
+SetLocalVarInt("RedOn10", 0);
+AddLocalVarInt("FurnaceFuel1st", -1);
+PlayGuiSound("lm_light_flicker.snt", 1);
+}
+
+void RedLighter(string &in asTimer)
+{
+if(GetLocalVarInt("NightBegan") == 1)
+{
+SetLocalVarInt("RedLightX", RandInt(1, 11));
+}
+if(GetLocalVarInt("NightBegan") == 0 || GetLocalVarInt("NightOver") == 1)
+{
+SetLocalVarInt("RedLightX", 0);
+}
+if(GetLocalVarInt("RedLightX") == 1 && GetLocalVarInt("RedOn1") == 0)
+{
+SetEntityActive("MansLight_1R", true);
+SetEntityActive("MansLight_1", false);
+SetLocalVarInt("RedOn1", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 2 && GetLocalVarInt("RedOn2") == 0)
+{
+SetEntityActive("MansLight_2R", true);
+SetEntityActive("MansLight_2", false);
+SetLocalVarInt("RedOn2", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 3 && GetLocalVarInt("RedOn3") == 0)
+{
+SetEntityActive("MansLight_3R", true);
+SetEntityActive("MansLight_3", false);
+SetLocalVarInt("RedOn3", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 4 && GetLocalVarInt("RedOn4") == 0)
+{
+SetEntityActive("MansLight_4R", true);
+SetEntityActive("MansLight_4", false);
+SetLocalVarInt("RedOn4", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 5 && GetLocalVarInt("RedOn5") == 0)
+{
+SetEntityActive("MansLight_5R", true);
+SetEntityActive("MansLight_5", false);
+SetLocalVarInt("RedOn5", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 6 && GetLocalVarInt("RedOn6") == 0)
+{
+SetEntityActive("MansLight_6R", true);
+SetEntityActive("MansLight_6", false);
+SetLocalVarInt("RedOn6", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 7 && GetLocalVarInt("RedOn7") == 0)
+{
+SetEntityActive("MansLight_7R", true);
+SetEntityActive("MansLight_7", false);
+SetLocalVarInt("RedOn7", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 8 && GetLocalVarInt("RedOn8") == 0)
+{
+SetEntityActive("MansLight_8R", true);
+SetEntityActive("MansLight_8", false);
+SetLocalVarInt("RedOn8", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 9 && GetLocalVarInt("RedOn9") == 0)
+{
+SetEntityActive("MansLight_9R", true);
+SetEntityActive("MansLight_9", false);
+SetLocalVarInt("RedOn9", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 10 && GetLocalVarInt("RedOn10") == 0)
+{
+SetEntityActive("MansLight_10R", true);
+SetEntityActive("MansLight_10", false);
+SetLocalVarInt("RedOn10", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+if(GetLocalVarInt("RedLightX") == 11 && GetLocalVarInt("RedOn11") == 0)
+{
+SetEntityActive("MansLight_11R", true);
+SetEntityActive("MansLight_11", false);
+SetLocalVarInt("RedOn11", 1);
+PlayGuiSound("PitchNoise.snt", 0.03f);
+}
+AddTimer("", RandFloat(35.0f, 125.0f), "RedLighter");
+}
+
+void RedLightDrainTimer(string &in asTimer)
+{
+int FuelSpeed = GetLocalVarInt("RedOn1") + GetLocalVarInt("RedOn2") + GetLocalVarInt("RedOn3") + GetLocalVarInt("RedOn4") + GetLocalVarInt("RedOn5") + GetLocalVarInt("RedOn6") + GetLocalVarInt("RedOn7") + GetLocalVarInt("RedOn8") + GetLocalVarInt("RedOn9") + GetLocalVarInt("RedOn10") + GetLocalVarInt("RedOn11");
+AddLocalVarInt("FurnaceFuel1st", -FuelSpeed);
+AddTimer("", 6.0f, "RedLightDrainTimer");
+}
+
+void VentHandler(string &in asTimer)
+{
+if(GetLocalVarInt("NightOver") == 1)
+{
+RemoveTimer("VentHandler");
+return;
+}
+if(GetLocalVarInt("VentTimer") == 0)
+{
+SetLocalVarInt("VentNum", RandInt(1, 4));
+AddLocalVarInt("VentTimer", 1);
+}
+if(GetLocalVarInt("VentTimer") >= 40 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0 && GetPlayerHealth() > 20)
+{
+PlaySoundAtEntity("", "VentBang.snt", "Vent_" + GetLocalVarInt("VentNum"), 0, false);
+CreateParticleSystemAtEntity("", "ps_hit_metal.ps", "Vent_" + GetLocalVarInt("VentNum"), false);
+StartScreenShake(0.01f, 0.1f, 0, 0);
+}
+if(GetLocalVarInt("VentTimer") >= 80 && GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0 && GetPlayerHealth() > 20)
+{
+SetupLoadScreen("TD_Custom", "LVLDeadScreen", 1, "");
+SetPlayerHealth(1);
+SetLocalVarInt("NightBegan", 0);
+SetGlobalVarInt("DeathType", 0);
+FadeOut(1.0f);
+PlayGuiSound("NightDeath.snt", 1);
+PlayGuiSound("break_wood_metal.snt", 1);
+PlayGuiSound("break_wood_metal.snt", 1);
+AddTimer("", 7.0f, "VentDead");
+StopMusic(1.0f, 2);
+StopMusic(1.0f, 1);
+}
+AddTimer("VentHandler", RandFloat(0.25f, GetLocalVarFloat("HuntSpeed")), "VentHandler");
+if(GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+AddLocalVarInt("VentTimer", 1);
+}
+}
+
+void VentDead(string &in asTimer)
+{
+ChangeMap("Dead.map", "Death", "", "DeadEnter.snt");
+}
+
+void VentScare1(string &in asParent, string &in asChild, int alState)
+{
+if(GetLocalVarInt("VentTimer") >= 40 && GetLocalVarInt("VentNum") == 1)
+{
+PlaySoundAtEntity("", "outside_howl.snt", "Vent_1", 0, false);
+SetLocalVarInt("VentTimer", -2);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("PitchNoise.snt", 0.2f);
+}
+}
+
+void VentScare2(string &in asParent, string &in asChild, int alState)
+{
+if(GetLocalVarInt("VentTimer") >= 40 && GetLocalVarInt("VentNum") == 2)
+{
+PlaySoundAtEntity("", "outside_howl.snt", "Vent_2", 0, false);
+SetLocalVarInt("VentTimer", -2);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("PitchNoise.snt", 0.2f);
+}
+}
+
+void VentScare3(string &in asParent, string &in asChild, int alState)
+{
+if(GetLocalVarInt("VentTimer") >= 40 && GetLocalVarInt("VentNum") == 3)
+{
+PlaySoundAtEntity("", "outside_howl.snt", "Vent_3", 0, false);
+SetLocalVarInt("VentTimer", -2);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("PitchNoise.snt", 0.2f);
+}
+}
+
+void VentScare4(string &in asParent, string &in asChild, int alState)
+{
+if(GetLocalVarInt("VentTimer") >= 40 && GetLocalVarInt("VentNum") == 4)
+{
+PlaySoundAtEntity("", "outside_howl.snt", "Vent_4", 0, false);
+SetLocalVarInt("VentTimer", -2);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("PitchNoise.snt", 0.2f);
+}
+}
+
+void DeathByDark(string &in asName, int alCount)
+{
+SetGlobalVarInt("DeathType", 1);
+ChangeMap("Dead.map", "Death", "", "DeadEnter.snt");
+}
+
+void LightTorch1(string &in asEntityName, string &in asType)
+{
+AddDebugMessage("Torch 1 lit!", false);
+AddLocalVarInt("TindyAvailable", -1);
+SetLocalVarInt("TorchLit1", 1);
+}
+
+void LightTorch2(string &in asEntityName, string &in asType)
+{
+AddDebugMessage("Torch 2 lit!", false);
+AddLocalVarInt("TindyAvailable", -1);
+SetLocalVarInt("TorchLit2", 1);
+}
+
+void LightTorch3(string &in asEntityName, string &in asType)
+{
+AddDebugMessage("Torch 3 lit!", false);
+AddLocalVarInt("TindyAvailable", -1);
+SetLocalVarInt("TorchLit3", 1);
+}
+
+void LightTorch4(string &in asEntityName, string &in asType)
+{
+AddDebugMessage("Torch 4 lit!", false);
+AddLocalVarInt("TindyAvailable", -1);
+SetLocalVarInt("TorchLit4", 1);
+}
+
+void LightTorch5(string &in asEntityName, string &in asType)
+{
+AddDebugMessage("Torch 5 lit!", false);
+AddLocalVarInt("TindyAvailable", -1);
+SetLocalVarInt("TorchLit5", 1);
+}
+
+void LightTorch6(string &in asEntityName, string &in asType)
+{
+AddDebugMessage("Torch 6 lit!", false);
+AddLocalVarInt("TindyAvailable", -1);
+SetLocalVarInt("TorchLit6", 1);
+}
+
+void TorchSystemHandler(string &in asTimer)
+{
+SetLocalVarInt("TorchSystem", GetLocalVarInt("TorchLit1") + GetLocalVarInt("TorchLit2") + GetLocalVarInt("TorchLit3") + GetLocalVarInt("TorchLit4") + GetLocalVarInt("TorchLit5") + GetLocalVarInt("TorchLit6"));
+if(GetLocalVarInt("TorchSystem") == 6)
+{
+SetLocalVarFloat("TimeSpeed", 0.5f);
+SetLocalVarFloat("HuntSpeed", 2.0f);
+}
+if(GetLocalVarInt("TorchSystem") == 5)
+{
+SetLocalVarFloat("TimeSpeed", 0.75f);
+SetLocalVarFloat("HuntSpeed", 1.7f);
+}
+if(GetLocalVarInt("TorchSystem") == 4)
+{
+SetLocalVarFloat("TimeSpeed", 1.0f);
+SetLocalVarFloat("HuntSpeed", 1.5f);
+}
+if(GetLocalVarInt("TorchSystem") == 3)
+{
+SetLocalVarFloat("TimeSpeed", 1.25f);
+SetLocalVarFloat("HuntSpeed", 1.25f);
+}
+if(GetLocalVarInt("TorchSystem") == 2)
+{
+SetLocalVarFloat("TimeSpeed", 1.75f);
+SetLocalVarFloat("HuntSpeed", 1.1f);
+}
+if(GetLocalVarInt("TorchSystem") == 1)
+{
+SetLocalVarFloat("TimeSpeed", 2.75f);
+SetLocalVarFloat("HuntSpeed", 0.9f);
+}
+if(GetLocalVarInt("TorchSystem") == 0)
+{
+SetLocalVarFloat("TimeSpeed", 0.5f);
+SetLocalVarFloat("HuntSpeed", 0.4f);
+}
+if(GetLocalVarInt("NightOver") == 1)
+{
+RemoveTimer("TorchSystemHandler");
+return;
+}
+AddTimer("TorchSystemHandler", 1.0f, "TorchSystemHandler");
+}
+
+void TorchSystemReducer(string &in asTimer)
+{
+if(GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+int RandomTorch = RandInt(1, 6);
+if(RandomTorch == 1 && GetLocalVarInt("TorchLit1") == 1)
+{
+SetLampLit("GreenTorch_1", false, true);
+SetLocalVarInt("TorchLit1", 0);
+PlayGuiSound("scare_wind.snt", RandFloat(0.0f, 0.3f));
+}
+if(RandomTorch == 2 && GetLocalVarInt("TorchLit2") == 1)
+{
+SetLampLit("GreenTorch_2", false, true);
+SetLocalVarInt("TorchLit2", 0);
+PlayGuiSound("scare_wind.snt", RandFloat(0.0f, 0.3f));
+}
+if(RandomTorch == 3 && GetLocalVarInt("TorchLit3") == 1)
+{
+SetLampLit("GreenTorch_3", false, true);
+SetLocalVarInt("TorchLit3", 0);
+PlayGuiSound("scare_wind.snt", RandFloat(0.0f, 0.3f));
+}
+if(RandomTorch == 4 && GetLocalVarInt("TorchLit4") == 1)
+{
+SetLampLit("GreenTorch_4", false, true);
+SetLocalVarInt("TorchLit4", 0);
+PlayGuiSound("scare_wind.snt", RandFloat(0.0f, 0.3f));
+}
+if(RandomTorch == 5 && GetLocalVarInt("TorchLit5") == 1)
+{
+SetLampLit("GreenTorch_5", false, true);
+SetLocalVarInt("TorchLit5", 0);
+PlayGuiSound("scare_wind.snt", RandFloat(0.0f, 0.3f));
+}
+if(RandomTorch == 6 && GetLocalVarInt("TorchLit6") == 1)
+{
+SetLampLit("GreenTorch_6", false, true);
+SetLocalVarInt("TorchLit6", 0);
+PlayGuiSound("scare_wind.snt", RandFloat(0.2f, 0.7f));
+}
+}
+AddTimer("", RandFloat(15.0f, 40.0f), "TorchSystemReducer");
+}
+
+void IncreaseTindy(string &in asEntity)
+{
+AddLocalVarInt("TindyAvailable", 1);
+}
+
+void TinderboxSpawner(string &in asTimer)
+{
+if(GetLocalVarInt("NightBegan") == 1 && GetLocalVarInt("NightOver") == 0)
+{
+if(GetLocalVarInt("TindyAvailable") < 2)
+{
+CreateEntityAtArea("", "tinderbox.ent", "SpawnTind_" + RandInt(1, 4), false);
+AddLocalVarInt("TindyAvailable", 1);
+AddDebugMessage("Tinderbox spawned!", false);
+int ExtraTindy = RandInt(1, 30);
+if(ExtraTindy == 1)
+{
+CreateEntityAtArea("", "tinderbox.ent", "SpawnTind_" + RandInt(1, 4), false);
+AddLocalVarInt("TindyAvailable", 1);
+}
+}
+if(GetLocalVarInt("TindyAvailable") >= 2)
+{
+AddDebugMessage("Too many tinderboxes currently available!", false);
+}
+}
+if(GetLocalVarInt("NightOver") == 1 || GetLocalVarInt("NightBegan") == 0)
+{
+AddDebugMessage("Tinderbox not spawned because night isn't started!", false);
+}
+AddTimer("", RandFloat(10.0f, 50.0f), "TinderboxSpawner");
+}
+
+void RefixNight(string &in asTimer)
+{
+SetLocalVarInt("TimeMINCount", 9);
+SetLocalVarInt("TimeSECCount2", 0);
+SetLocalVarInt("TimeSECCount", 0);
+SetEntityPos("ExorcismCandle", 11.5f, 9, -2);
+SetPropStaticPhysics("ExorcismCandle", true);
+PlaceEntityAtEntity("Coal", "PlaceCoalHere", "", true);
+SetLocalVarInt("CoalAvailable", 1);
+SetLocalVarInt("FurnaceFuel1st", 0);
+SetLocalVarInt("FurnaceFuel2nd", 7);
+SetLocalVarInt("VentTimer", -1);
+SetLocalVarInt("FurnaceOn", 1);
+SetLocalVarInt("GearsUp", 1);
+SetLocalVarInt("TorchLit1", 1);
+SetLocalVarInt("TorchLit2", 1);
+SetLocalVarInt("TorchLit3", 1);
+SetLocalVarInt("TorchLit4", 1);
+SetLocalVarInt("TorchLit5", 1);
+SetLocalVarInt("TorchLit6", 1);
+SetLocalVarInt("TorchSystem", 6);
+SetEntityInteractionDisabled("ExorcismCandle", true);
+SetEntityInteractionDisabled("SpawnCoalLever", true);
+RotatePropToSpeed("Cog1", 1, 1, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog2", 1, -3, 0, 0, 1, false, "");
+RotatePropToSpeed("Cog3", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog4", 1, 3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog5", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog6", 1, -3, 1, 0, 0, false, "");
+RotatePropToSpeed("Cog7", 1, 3, 1, 0, 0, false, "");
+SetLocalVarInt("RedOn1", 0);
+SetLocalVarInt("RedOn2", 0);
+SetLocalVarInt("RedOn3", 0);
+SetLocalVarInt("RedOn4", 0);
+SetLocalVarInt("RedOn5", 0);
+SetLocalVarInt("RedOn6", 0);
+SetLocalVarInt("RedOn7", 0);
+SetLocalVarInt("RedOn8", 0);
+SetLocalVarInt("RedOn9", 0);
+SetLocalVarInt("RedOn10", 0);
+SetLocalVarInt("RedOn11", 0);
+StopMusic(1.0f, 2);
+SetLocalVarInt("InTheDark", 0);
+StopSound("DarkNoise", 6);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+FadePlayerRollTo(0, 0.2f, 0.2f);
+SetLocalVarInt("InTheDark", 0);
+SetLocalVarInt("NightOver", 0);
+SetEntityActive("MansDoorBlock", false);
+SetEntityActive("MansLight_3R", false);
+SetEntityActive("MansLight_2R", false);
+SetEntityActive("MansLight_1R", false);
+SetEntityActive("MansLight_3", true);
+SetEntityActive("MansLight_2", true);
+SetEntityActive("MansLight_1", true);
+SetEntityActive("MansLight_6R", false);
+SetEntityActive("MansLight_5R", false);
+SetEntityActive("MansLight_4R", false);
+SetEntityActive("MansLight_6", true);
+SetEntityActive("MansLight_5", true);
+SetEntityActive("MansLight_4", true);
+SetEntityActive("MansLight_9R", false);
+SetEntityActive("MansLight_8R", false);
+SetEntityActive("MansLight_7R", false);
+SetEntityActive("MansLight_9", true);
+SetEntityActive("MansLight_8", true);
+SetEntityActive("MansLight_7", true);
+SetEntityActive("MansLight_11R", false);
+SetEntityActive("MansLight_10R", false);
+SetEntityActive("MansLight_11", true);
+SetEntityActive("MansLight_10", true);
+SetLampLit("MansLight_1", true, true);
+SetLampLit("MansLight_2", true, true);
+SetLampLit("MansLight_3", true, true);
+SetLampLit("MansLight_4", true, true);
+SetLampLit("MansLight_5", true, true);
+SetLampLit("MansLight_6", true, true);
+SetLampLit("MansLight_7", true, true);
+SetLampLit("MansLight_8", true, true);
+SetLampLit("MansLight_9", true, true);
+SetLampLit("MansLight_10", true, true);
+SetLampLit("MansLight_11", true, true);
+SetLampLit("GreenTorch_1", true, true);
+SetLampLit("GreenTorch_2", true, true);
+SetLampLit("GreenTorch_3", true, true);
+SetLampLit("GreenTorch_4", true, true);
+SetLampLit("GreenTorch_5", true, true);
+SetLampLit("GreenTorch_6", true, true);
+}
+
+void Press1(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+if(GetLocalVarInt("KeypadCode") == 2)
+{
+AddLocalVarInt("KeypadCode", 1);
+SetLightVisible("LightButton_3", true);
+}
+else
+{
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+}
+
+void Press2(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+if(GetLocalVarInt("KeypadCode") == 3)
+{
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+SetupLoadScreen("TD_Custom", "LVL2Screen", 1, "TD_LVL2PNG");
+PlayGuiSound("unlock_door.snt", 1);
+ChangeMap("TD_LVL2", "Start", "door_large_castle_open.snt", "close_gate.snt");
+}
+else
+{
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+}
+
+void Press3(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+if(GetLocalVarInt("KeypadCode") == 0)
+{
+AddLocalVarInt("KeypadCode", 1);
+SetLightVisible("LightButton_1", true);
+}
+else
+{
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+}
+
+void Press4(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+
+void Press5(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+
+void Press6(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+
+void Press7(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+if(GetLocalVarInt("KeypadCode") == 1)
+{
+AddLocalVarInt("KeypadCode", 1);
+SetLightVisible("LightButton_2", true);
+}
+else
+{
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+}
+
+void Press8(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}
+
+void Press9(string &in asEntity)
+{
+if(GetLocalVarInt("CanProgress") == 1)
+{
+PlayGuiSound("puzzle_button.snt", 1);
+SetLightVisible("LightButton_1", false);
+SetLightVisible("LightButton_2", false);
+SetLightVisible("LightButton_3", false);
+SetLightVisible("LightButton_4", false);
+SetLocalVarInt("KeypadCode", 0);
+}
+}

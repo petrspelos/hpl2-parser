@@ -1,0 +1,512 @@
+///////// move to Include hps
+
+void ResumeNormalSpeed() {
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+
+void DisableCandles(bool abDisabled) {
+	SetEntityInteractionDisabled("candle_floor_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick01_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick02_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_floor_*", abDisabled);
+	SetEntityInteractionDisabled("torch_*", abDisabled);
+	SetEntityInteractionDisabled("hanging_lantern_ceiling_*", abDisabled);
+	SetEntityInteractionDisabled("elevator_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_tri_*", abDisabled);
+	
+	SetEntityInteractionDisabled("lamp_wall_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("ki_lampion_*", abDisabled);
+	SetEntityInteractionDisabled("lamp_gas_*", abDisabled);
+	SetEntityInteractionDisabled("LampBarrelsTake_*", abDisabled);
+}
+
+void PickUpCandleOil(string &in asEntity) {
+	SetEntityActive(asEntity, false);
+	SetPropActiveAndFade("item_" + asEntity, false, 0.5f);
+	GiveItemFromFile("new_canlde_" + 1, "new_canlde.ent");
+	PlayGuiSound("pick_generic", 1.0f);
+	SetMessage("Inventory", "ItemName_CandleOilItem", -1.0f);
+}
+
+void RemoveQuest_Diary(string &in asTimer) {
+	CompleteQuest(asTimer, "commongospel");
+}
+
+void DeathChecker() {
+	SetGlobalVarInt("NumOfDeaths", GetGlobalVarInt("NumOfDeaths") + 1);
+	if (GetGlobalVarInt("NumOfDeaths") <= 3) {
+		RemoveHint("deathshint");
+		GiveHint("deathshint", "Hints", "DeathCounter", -1);
+	}
+	else 
+	if (GetGlobalVarInt("NumOfDeaths") == 10) {
+		AddQuest("Deathwarning1", "deathwarning1");
+	} else if (GetGlobalVarInt("NumOfDeaths") == 15) {
+		CompleteQuest("Deathwarning1", "deathwarning1");
+		AddQuest("Deathwarning2", "deathwarning2");
+	}
+	else if (GetGlobalVarInt("NumOfDeaths") == 20) {
+		CompleteQuest("Deathwarning2", "deathwarning2");
+		AddQuest("Deathwarning3", "deathwarning3");
+		GiveSanityDamage(200, true);
+		FadeOut(8);
+		AddTimer("deathCheckOut_Timer", 15.0f, "DeathCheckOut_Timer");
+	}
+}
+void DeathCheckOut_Timer(string &in asTimer) {
+	ChangeMap("esophagus_VI.map", "PlayerStartArea_2", "", "");
+}
+
+////////////
+
+void OnStart() {
+	DisableCandles(true);
+
+	StopMusic(10, 0);
+	SetInDarknessEffectsActive(false);
+	SetEntityActive("GraveArea_*", false);
+	
+	SetLocalVarInt("corpseCurrentlyCarried", 0);
+	SetLocalVarInt("corpsesDelivered", 0);
+	SetLocalVarInt("corpseDelivered_1", 0);
+	SetLocalVarInt("corpseDelivered_2", 0);
+	SetLocalVarInt("corpseDelivered_3", 0);
+	
+	SetLightVisible("GraveArea_1_PointLight", false);
+	SetLightVisible("GraveArea_2_PointLight", false);
+	SetLightVisible("GraveArea_3_PointLight", false);
+	SetLightVisible("PointLight_Leveldoor", false);
+	SetLightVisible("PointLight_RedEyes", false);
+	
+	SetEntityCustomFocusCrossHair("GraveArea_1", "Push");
+	SetEntityCustomFocusCrossHair("GraveArea_2", "Push");
+	SetEntityCustomFocusCrossHair("GraveArea_3", "Push");
+	
+	if (ScriptDebugOn()) {
+		if (!HasItem("lantern_1")) {
+			GiveItemFromFile("lantern_1", "lantern.ent");
+		}
+		SetGlobalVarInt("NumOfDeaths", 0);
+		PlayMusic("cherno_corvin_kingfisher", true, 0.7f, 5.0f, 0, true);
+		//AddEntityCollideCallback("Player", "GhostTesla_TestArea", "GhostTesla_Test", true, 0);
+	} else {
+		CryptArrive_Dialog();
+		SetEntityInteractionDisabled("corpse_male_*", true);
+		// raise/lower sanity to the normal for this level
+		//if (GetPlayerSanity() > 60) {
+			SetPlayerSanity(60);
+		//}
+	}
+	
+	SetEntityPlayerInteractCallback("candle_oil_*", "PickUpCandleOil", true);
+	SetEntityPlayerInteractCallback("corpse_male_*", "PickUpCorpse", false);
+	SetEntityPlayerInteractCallback("GraveArea_1", "DropCorpseIntoGrave", false);
+	SetEntityPlayerInteractCallback("GraveArea_2", "DropCorpseIntoGrave", false);
+	SetEntityPlayerInteractCallback("GraveArea_3", "DropCorpseIntoGrave", false);
+	SetEntityPlayerInteractCallback("GraveArea_*_blocker", "TouchFilledGrave", false);
+	
+	AddEntityCollideCallback("Player", "ScriptArea_GravesEvent", "GravesEvent", true, 0);
+	
+	AutoSave();
+}
+
+void CryptArrive_Dialog() {
+	FadeOut(0);
+	FadeIn(5);
+	SetEntityActive("ScriptArea_GravesEvent", false);
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerRunSpeedMul(0.3f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	AddTimer("cryptDialog_Timer1", 2.5f, "CryptDialog_Timer1");
+}
+
+void CryptDialog_Timer1(string &in asTimer) {
+	SetEffectVoiceOverCallback("CryptDialog_Timer2");
+	AddEffectVoice("05_pilgrim1.ogg", "", "Voice", "05_pilgrim1", false, "", 0, 0);
+	AddEffectVoice("05_pilgrim2.ogg", "", "Voice", "05_pilgrim2", false, "", 0, 0);
+	AddEffectVoice("05_pilgrim3.ogg", "", "Voice", "05_pilgrim3", false, "", 0, 0);
+	AddEffectVoice("05_pilgrim4.ogg", "", "Voice", "05_pilgrim4", false, "", 0, 0);
+}
+
+void CryptDialog_Timer2() {
+	ResumeNormalSpeed();
+	SetEntityActive("ScriptArea_GravesEvent", true);
+	SetInDarknessEffectsActive(true);
+}
+
+/////////// Quest to fill graves
+
+void GravesEvent(string &in asParent, string &in asChild, int alState) {
+	PlayMusic("voices_of_withered_idols", true, 0.5f, 10.0f, 0, true);
+	SetPlayerActive(false);
+	StartPlayerLookAt("LookatPainting", 0.5f, 1.0f, "LookAtRedEyes");
+	AddTimer("gravesEvent_Timer0", 1.5f, "GravesEvent_Timer0");
+}
+
+void GravesEvent_Timer0(string &in asTimer) {
+	if (GetLanternActive()) {
+		SetLanternActive(false, true);
+	}
+}
+
+void LookAtRedEyes() {
+	AddPlayerHealth(30);
+	SetEntityActive("terrorsource_1", true);
+	SetLightVisible("PointLight_RedEyes", true);
+	FadePlayerFOVMulTo(0.5, 0.3);
+	StopPlayerLookAt();
+	PlayGuiSound("emotion_stone_rebirth.snt", 1.5f);
+	AddTimer("gravesEvent_Timer1", 2.5f, "GravesEvent_Timer1");
+	AddTimer("gravesEvent_Timer2", 6.5f, "GravesEvent_Timer2");
+	AddTimer("gravesEvent_Timer3", 9.5f, "GravesEvent_Timer3");
+}
+
+void GravesEvent_Timer1(string &in asTimer) {
+	SetEntityActive("terrorsource_1", false);
+	SetLightVisible("GraveArea_1_PointLight", true);
+	SetLightVisible("GraveArea_2_PointLight", true);
+	StartPlayerLookAt("LookAtGrave_1", 3, 5, "");
+	FadePlayerFOVMulTo(0.3, 0.05);
+}
+
+void GravesEvent_Timer2(string &in asTimer) {
+	SetLightVisible("GraveArea_3_PointLight", true);
+	StopPlayerLookAt();
+	StartPlayerLookAt("LookAtGrave_2", 0.5f, 1.0f, "");
+}
+
+void GravesEvent_Timer3(string &in asTimer) {
+	StopPlayerLookAt();
+	FadePlayerFOVMulTo(1, 0.5);
+	SetPlayerActive(true);
+	
+	AddQuest("05_commongospel", "commongospel");
+	AddDiary("Gospel_Level5", "diary_page");
+	AddTimer("05_commongospel", 10.0f, "RemoveQuest_Diary");
+	AddTimer("pickUpCorpse_Quest", 25.0f, "PickUpCorpse_Quest");
+	
+	SetLightVisible("PointLight_Leveldoor", true);
+	
+	SetEntityInteractionDisabled("corpse_male_*", false);
+	CheckPoint("eso5_check", "PlayerStartArea_2", "Eso5Checkpoint", "", "");
+}
+
+void PickUpCorpse_Quest(string &in asTimer) {
+	AddQuest("05_fetchcorpses", "05fetchcorpses");
+}
+
+void PickUpCorpse(string &in asEntity) {
+	SetPlayerActive(false);
+	if (GetLanternActive()) {
+		SetLanternActive(false, true);
+	}
+	FadeOut(2);
+	SetEntityInteractionDisabled("corpse_male_*", true);
+	SetPropActiveAndFade(asEntity, false, 3.0f);
+	AssignPickedUpCorpseToPlayer(asEntity);
+	SetEntityActive("GraveArea_1", true);
+	SetEntityActive("GraveArea_2", true);
+	SetEntityActive("GraveArea_3", true);
+	AddTimer("pickUpCorpse_" + asEntity, 3.0f, "PickUpCorpse_Timer");
+}
+
+void PickUpCorpse_Timer(string &in asTimer) {
+	FadeIn(1);
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(0.6f);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerLookSpeedMul(0.4f);
+	SetPlayerJumpDisabled(true);
+	SetLanternLitCallback("DropCorpse");
+}
+
+void AssignPickedUpCorpseToPlayer(string &in asEntity){
+    int corpseVar = StringToInt(StringSub(asEntity, 12, 1));
+	AddDebugMessage("Corpse number:" + corpseVar + " was picked up", false);
+	SetLocalVarInt("corpseCurrentlyCarried", corpseVar);
+}
+
+void DropCorpse(bool abLit) {
+	SetMessage("Message", "CorpseDrop", -1);
+	int dropCorpseVar = GetLocalVarInt("corpseCurrentlyCarried");
+	SetEntityActive("corpse_male_" + dropCorpseVar, true);
+	
+	// todo
+	//SetEntityPos("corpse_male_" + dropCorpseVar, GetPlayerPosX(), GetPlayerPosY() + 1, GetPlayerPosZ());
+	//AddDebugMessage("You dropped corpse number " + dropCorpseVar + "! It's at : " + GetEntityPosX("corpse_male_" + dropCorpseVar) + ", " + GetEntityPosY("corpse_male_" + dropCorpseVar) + ", " + GetEntityPosZ("corpse_male_" + dropCorpseVar), false);
+	
+	ResetCorpseCarry();
+}
+
+void ResetCorpseCarry() {
+	SetLanternLitCallback("RegularLanternFunc");
+	SetEntityInteractionDisabled("corpse_male_*", false);
+	SetEntityActive("GraveArea_1", false);
+	SetEntityActive("GraveArea_2", false);
+	SetEntityActive("GraveArea_3", false);
+	SetLocalVarInt("corpseCurrentlyCarried", 0);
+	CheckWhichCorpsesAreDelivered();
+	ResumeNormalSpeed();
+}
+
+void RegularLanternFunc(bool abLit) {
+	AddDebugMessage("Lantern works regularly now.", false);
+}
+
+void DropCorpseIntoGrave(string &in asEntity) {
+	SetEntityActive("ghost_tesla", false);
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	FadeOut(2);
+	
+	AddTimer(asEntity, 3.0f, "DropCorpse_Timer");
+}
+
+void DropCorpse_Timer(string &in asTimer) {
+	FadeIn(2);
+	PlayGuiSound("emotion_stone_rebirth.snt", 1.0f);
+	SetPlayerActive(true);
+	FadeLightTo(asTimer + "_PointLight", 1, 0, 0, 0, -1, 2.0f);
+	SetEntityActive(asTimer + "_bloodpool", true);
+	SetEntityActive(asTimer + "_corpse", true);
+	SetEntityActive(asTimer + "_blocker", true);
+	CheckWhichCorpseIsDropped();
+	ResetCorpseCarry();
+	GhostGravePuzzleHandler();
+}
+
+void CheckWhichCorpseIsDropped() {
+	string deliveredCorpse = "corpseDelivered_" + GetLocalVarInt("corpseCurrentlyCarried");
+	SetLocalVarInt(deliveredCorpse, 1);
+	SetLocalVarInt("corpsesDelivered", GetLocalVarInt("corpsesDelivered") + 1);
+}
+
+void TouchFilledGrave(string &in asEntity) {
+	SetMessage("Message", "FilledGrave", 2);
+}
+
+void CheckWhichCorpsesAreDelivered() {
+	if (GetLocalVarInt("corpseDelivered_1") == 1) {
+		SetEntityActive("corpse_male_1", false);
+	}
+	if (GetLocalVarInt("corpseDelivered_2") == 1) {
+		SetEntityActive("corpse_male_2", false);
+	}
+	if (GetLocalVarInt("corpseDelivered_3") == 1) {
+		SetEntityActive("corpse_male_3", false);
+	}
+}
+
+////////////////////////
+/////////// Monster events
+///////////////////////
+
+void Eso5Checkpoint(string &in asName, int alCount) {
+	DeathChecker();
+	RemoveTimer("ghostTeleport_Timer");
+	SetEntityActive("corpse_male_*", true);
+
+	ResetCorpseCarry();
+	if (GetLocalVarInt("corpsesDelivered") >= 2) {
+		if (GetLocalVarInt("corpsesDelivered") == 3) {
+			StopSound("terrorsound", 1.0f);
+			SetEntityActive("ghost_chase", true);
+			AddTimer("ghostChase_Timer", 5, "GhostChase_Timer");
+		} else {
+			SetEntityActive("ghost_tesla", true);
+			SetEnemyDisableTriggers("ghost_tesla", true);
+			AddTimer("ghostTeleport_Timer", 10, "GhostTeleports");
+		}
+		PlayMusic("withered_idols", true, 1.0f, 5.0f, 0, true);
+	} else {
+		PlayMusic("voices_of_withered_idols", true, 1.0f, 5.0f, 0, true);
+	}
+}
+
+// debug test for teleport
+void GhostTesla_Test(string &in asParent, string &in asChild, int alState) {
+	SetEnemyDisableTriggers("ghost_tesla", true);
+	SetEntityActive("ghost_tesla", true);
+	AddTimer("ghostTeleport_Timer", 1, "GhostTeleports");
+	PlayMusic("withered_idols", true, 1.0f, 5.0f, 0, true);
+}
+////////////////////////////
+
+void GhostGravePuzzleHandler() {
+	switch(GetLocalVarInt("corpsesDelivered")) {
+		case 1: 
+			GhostCutscene();
+		break;
+		case 2:
+			ShowPlayerCrossHairIcons(true);
+			RemoveTimer("ghostTeleport_Timer");
+			SetEntityActive("ghost_tesla", true);
+			SetEnemyDisableTriggers("ghost_tesla", true);
+			AddTimer("ghostTeleport_Timer", RandInt(10, 20), "GhostTeleports");
+			PlayMusic("withered_idols", true, 1.0f, 5.0f, 0, true);
+		break;
+		case 3:
+			RemoveTimer("ghostTeleport_Timer");
+			AddTimer("preGhostChase_1", 3, "PreGhostChase_1");
+			AddTimer("preGhostChase_2", 5, "PreGhostChase_2");
+			AddTimer("preGhostChase_3", 8, "PreGhostChase_3");
+		break;
+	}
+}
+
+void GhostCutscene() {
+	SetPlayerActive(false);
+	StopMusic(3, 0);
+	AddTimer("ghostCutscene_Timer1", 2.0f, "GhostCutscene_Timer1");
+	AddTimer("ghostCutscene_Timer2", 4.0f, "GhostCutscene_Timer2");
+	AddTimer("ghostCutscene_Timer3", 12.5f, "GhostCutscene_Timer3");
+	AddTimer("ghostCutscene_Timer4", 16.0f, "GhostCutscene_Timer4");
+	
+	SetEntityActive("badcat_coffin_2", false);
+	SetEntityActive("badcat_coffin_1", true);
+	
+	PlayPropAnimation("fp_monster_ghost_scene03_1", "Idle", 0, true, "");
+}
+
+void GhostCutscene_Timer1(string &in asTimer) {
+	PlayGuiSound("Pressure_Plate_Step_On_rebirth.snt", 1.5f);
+	StartPlayerLookAt("LookatPainting", 0.5f, 1.0f, "");
+	FadePlayerFOVMulTo(0.2, 0.3);
+	PlayMusic("voices_of_withered_idols", true, 1.0f, 5.0f, 0, true);
+}
+
+void GhostCutscene_Timer2(string &in asTimer) {
+	PlayGuiSound("ghost_alert.snt", 0.7f);
+	StopPlayerLookAt();
+	SetLightVisible("PointLight_RedEyes", false);
+	SetEntityActive("terrorsource_1", true);
+	StartPlayerLookAt("terrorsource_1", 2.0f, 3.0f, "");
+	SetEntityActive("fp_monster_ghost_scene03_1", true);
+	PlayPropAnimation("fp_monster_ghost_scene03_1", "Idle", 0, true, "");
+}
+
+void GhostCutscene_Timer3(string &in asTimer) {
+	StopPlayerLookAt();
+	PlayGuiSound("ghost_idle.snt", 1.0f);
+	SetEntityActive("terrorsource_1", false);
+	SetEntityActive("fp_monster_ghost_scene03_1", false);
+	SetEntityActive("ghost_tesla_ph", true);
+	SetEnemyDisableTriggers("ghost_tesla_ph", true);
+	AddEnemyPatrolNode("ghost_tesla_ph", "PathNodeArea_157", 20, "");
+	AddTimer("ghostTeleport_Timer", 20, "GhostTeleports");
+}
+
+void GhostCutscene_Timer4(string &in asTimer) {
+	SetPlayerActive(true);
+	FadePlayerFOVMulTo(1, 0.8);
+	SetEntityActive("ghost_tesla_ph", false);
+	SetEntityActive("ghost_tesla", true);
+	AddEnemyPatrolNode("ghost_tesla", "PathNodeArea_1", 20, "");
+	SetEnemyDisableTriggers("ghost_tesla", true);
+	ShowPlayerCrossHairIcons(true);
+}
+
+void GhostTeleports(string &in asTimer) {
+	if (GetEnemyStateName("ghost_tesla") != "Hunt" && GetEnemyStateName("ghost_tesla") != "Alert") {
+		SetEnemyDisableTriggers("ghost_tesla", false);
+		int randVar = RandInt(1, 6);
+		TeleportEnemyToNode("ghost_tesla", "PathNodeArea_" + randVar, true);
+		ClearEnemyPatrolNodes("ghost_tesla");
+		AddDebugMessage("Ghost just teleported to : " + GetEntityPosX("ghost_tesla") + ", " + GetEntityPosY("ghost_tesla") + ", " + GetEntityPosZ("ghost_tesla"), false);
+	} else {
+		ForceTeslaPigSighting("ghost_tesla");
+		AddDebugMessage("Ghost has : " + GetEnemyStateName("ghost_tesla") + " status, will not teleport!", false);
+	}
+	AddTimer("ghostTeleport_Timer", RandInt(10, 20), "GhostTeleports");
+}
+
+//// ending chase and events
+
+void PreGhostChase_1(string &in asTimer) {
+	SetPlayerActive(false);
+	FadeOut(2);
+}
+
+void PreGhostChase_2(string &in asTimer) {
+	PlayGuiSound("guardian_activated", 1.0f);
+	FadeIn(2);
+	SetLightVisible("GraveArea_1_PointLight", false);
+	SetLightVisible("GraveArea_2_PointLight", false);
+	SetLightVisible("GraveArea_3_PointLight", false);
+	SetEntityActive("GraveArea_*", false);
+	StartPlayerLookAt("LookatPainting", 0.5f, 1.0f, "");
+}
+
+void PreGhostChase_3(string &in asTimer) {
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+	GhostChase();
+}
+
+void GhostChase() {
+	CompleteQuest("05_fetchcorpses", "05fetchcorpses");
+	SetLightVisible("PointLight_26", false);
+	SetLightVisible("PointLight_23", false);
+	SetLightVisible("PointLight_25", false);
+	
+	SetEntityActive("web_leveldoor", false);
+	FadeLightTo("PointLight_Leveldoor", 1, 0, 0, 0, -1, 2.0f);
+	
+	SetEntityActive("ghost_chase", true);
+	SetEnemyDisableTriggers("ghost_chase", true);
+	AddTimer("ghostChase_Timer", 5, "GhostChase_Timer");
+}
+
+void GhostChase_Timer(string &in asTimer) {
+	SetEnemyDisableTriggers("ghost_chase", false);
+	ShowEnemyPlayerPosition("ghost_chase");
+	PlaySoundAtEntity("terrorsound", "ui_terror_meter_rebirth_morelayers.snt", "Player", 3.0f, true);
+	
+	// StopSound("terrorsound", 1.0f);
+	SetLevelDoorLocked("prison_level", false);
+	// ActivateTestEnd();
+}
+
+// legacy function from test ending
+
+void ActivateTestEnd() {
+	SetEntityActive("TestEnd_Leveldoor", true);
+	SetEntityCustomFocusCrossHair("TestEnd_Leveldoor", "LevelDoor");
+}
+
+void TestEnd(string &in asEntity) {
+	SetEntityActive("ghost_chase", false);
+	SetEntityActive("ghost_tesla", false);
+	StopSound("terrorsound", 1.0f);
+	SetPlayerActive(false);
+	FadeOut(2);
+	AddTimer("testend_timer", 5, "Testend_timer");
+	AddTimer("testend_timer2", 20, "Testend_timer2");
+}
+
+void Testend_timer(string &in asTimer) {
+	SetMessage("Message", "TestEnd", 14);
+}
+
+void Testend_timer2(string &in asTimer) {
+	FadeIn(1);
+	SetPlayerActive(true);
+	SetEntityActive("TestEnd_Leveldoor", false);
+	SetLevelDoorLocked("prison_level", false);
+	AutoSave();
+}
+
+void OnLeave() {
+	SetupLoadScreen("Voice", "", 0, "eso_loading_VI.jpg");
+
+	DestroyDataCache();
+	ClearSavedMaps();
+}

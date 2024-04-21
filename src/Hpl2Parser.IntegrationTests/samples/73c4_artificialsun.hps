@@ -1,0 +1,495 @@
+void OnStart(){
+	EventBegins();
+	SetInDarknessEffectsActive(false);
+	SetSanityDrainDisabled(true);
+	FadeGlobalSoundVolume(0, 0);
+		FadeLightTo("PointLight_6", 1, 1, 0.6f, 1, -1, 0);	
+		FadeLightTo("PointLight_7", 0, 0, 0, 0, -1, 0);	
+		SetEntityActive("paper01_2", false);
+}
+void TimerList(string &in asTimer)
+{	
+	if(asTimer == "wakeUpEvent1"){
+		FadeOut(0);
+		StartPlayerLookAt("deskpad_1", 1, 1, "");	
+		FadePlayerRollTo(-30, 7, 7);
+		MovePlayerHeadPos(0, -1.6f, 0, 1, 1);		}
+	if(asTimer == "wakeUpEvent2")	{
+		FadeIn(2);
+		FadeLightTo("PointLight_10", 0.1, 0.1, 0.2, 0, -1, 8);
+		FadeLightTo("PointLight_12", 0.1, 0.1, 0.16, 0, -1, 3);
+		FadeGlobalSoundVolume(1, 0);
+	}
+	if(asTimer == "wakeUpEvent3"){
+		PlaySoundAtEntity("", "impact_paper_low", "deskpad_1", 0, false);
+		PlayMusic("backMemory1.ogg", false, 1, 0, 1, false);
+	}
+	if(asTimer == "wakeUpEvent4"){
+		FadeLightTo("PointLight_8", 0.5f, 0.5f, 0.2f, 0, -1, 3);
+		FadeLightTo("PointLight_1x", 0.2f, 0.2f, 0.3f, 0, -1, 8);
+		CreateParticleSystemAtEntity("", "ps_rose_petals_wind.ps", "deskpad_1", false);}
+	if(asTimer == "wakeUpEvent5"){
+	}
+	if(asTimer == "wakeUpEvent6"){
+		PlayGuiSound("react_sigh", 1);
+		PlayGuiSound("player_crouch", 1);
+		FadePlayerRollTo(0, 3, 3);
+		MovePlayerHeadPos(0, 0, 0, 1, 1);
+		SetPlayerActive(true);
+		FadeLightTo("PointLight_8", 0, 0, 0, 0, -1, 3);	
+		AddEntityCollideCallback("Player", "ScriptArea_1", "moveOnChairEvent", true, 1);
+		StopPlayerLookAt();	}
+	if(asTimer == "sitChairEvent1"){
+		StartPlayerLookAt("chair_wood_1", 1, 1, "");	
+		PlaySoundAtEntity("writingEvent2", "03_amb_library", "Player", 1, true);}
+	if(asTimer == "sitChairEvent2"){
+		FadeOut(1);	
+		SetPlayerActive(false);}
+	if(asTimer == "sitChairEvent3"){
+		SetEntityActive("chair_wood_1", false);	
+		TeleportPlayer("PlayerStartArea_3");
+		StartPlayerLookAt("ScriptArea_2", 1, 1, "");
+		FadeIn(1);	}
+	if(asTimer == "sitChairEvent4"){
+		MovePlayerHeadPos(0, 0, 0, 5, 5);	}
+	if(asTimer == "sitChairEvent5"){
+			MovePlayerHeadPos(0, -0.4f, 0, 5, 5);
+			for(int i=0; i<1; i++)	GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");	
+			StopPlayerLookAt();	
+			SetPlayerActive(true);
+			SetPlayerJumpDisabled(true);
+			SetPlayerCrouchDisabled(true);
+			PlayGuiSound("sittingchair.ogg", 20);
+			SetPlayerMoveSpeedMul(0.000001f);	
+			SetPlayerRunSpeedMul(0.000001f);	
+		}
+	if(asTimer == "sitChairEvent6"){
+			MovePlayerHeadPos(0, -0.4f, 0.2f, 5, 5);
+			}
+	if(asTimer == "writeJournalEvent1"){
+		SetPropActiveAndFade("map_spain_1", true, 0.5f);
+	}
+	if(asTimer == "writeJournalEvent2"){
+		SetPropActiveAndFade("map_spain_1", false, 1.0f);
+		SetPropActiveAndFade("paper01_2", true, 0.5f);
+		SetEntityPlayerInteractCallback("paper01_2", "PastEvent", true);
+	}
+	if(asTimer == "writeJournalEvent3"){
+		PlaySoundAtEntity("writingEvent", "ui_add_quest", "paper01_2", 2, true);
+		AddTimer("writeJournalEvent3", 1, "TimerList");
+	}
+}
+
+void EventBegins(){
+	SetPlayerActive(false);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerMoveSpeedMul(0.5f);
+	
+	AddTimer("wakeUpEvent1", 0, "TimerList");
+	AddTimer("wakeUpEvent2", 5, "TimerList");
+	AddTimer("wakeUpEvent3", 12, "TimerList");
+	AddTimer("wakeUpEvent3", 12.5, "TimerList");
+	AddTimer("wakeUpEvent3", 13, "TimerList");
+	AddTimer("wakeUpEvent4", 15, "TimerList");
+	AddTimer("wakeUpEvent5", 18, "TimerList");
+	AddTimer("wakeUpEvent6", 25, "TimerList");
+}
+
+void moveOnChairEvent(string &in asChild, string &in asParent, int alState){
+		AddTimer("sitChairEvent1", 0, "TimerList");
+		AddTimer("sitChairEvent2", 1.2f, "TimerList");
+		AddTimer("sitChairEvent3", 2+1.5f, "TimerList");
+		AddTimer("sitChairEvent4", 2+2.5f, "TimerList");
+		AddTimer("sitChairEvent5", 2+4, "TimerList");
+		AddTimer("sitChairEvent6", 2+5.5, "TimerList");
+}
+
+void IgniteCandle(string &in asEntityName, string &in asType){
+	AddTimer("writeJournalEvent1", 2, "TimerList");
+	AddTimer("writeJournalEvent2", 5, "TimerList");
+	AddTimer("writeJournalEvent3", 5, "TimerList");
+}
+
+void PastEvent(string &in asEntity){
+	AddTimer("JournalEvent01", 0.3f, "PastTimerEvent");
+	AddTimer("JournalEvent02", 1.8f, "PastTimerEvent");
+	AddTimer("JournalEvent03", 6.0f, "PastTimerEvent");
+	AddTimer("JournalEvent04", 45.0f, "PastTimerEvent");
+	
+	AddTimer("dialog1", 10, "PastTimerEvent");
+	AddTimer("dialog2", 18.5f, "PastTimerEvent");
+	AddTimer("dialog3", 20.5f, "PastTimerEvent");
+	AddTimer("dialog4", 23.1f, "PastTimerEvent");
+	AddTimer("dialog5", 27.5f, "PastTimerEvent");
+	AddTimer("dialog6", 35.5f, "PastTimerEvent");
+	AddTimer("dialog7", 38.5f, "PastTimerEvent");
+	AddTimer("dialog8", 46.2f, "PastTimerEvent");
+	AddTimer("dialog9", 50.6f, "PastTimerEvent");
+	AddTimer("dialog10", 54.3f, "PastTimerEvent");
+	AddTimer("dialog11", 58.6f, "PastTimerEvent");
+	AddTimer("dialog12", 62.7f, "PastTimerEvent");
+	AddTimer("dialog13", 77, "PastTimerEvent");
+	AddTimer("dialog14", 82.7f, "PastTimerEvent");
+	AddTimer("dialog15", 90.9f, "PastTimerEvent");
+	AddTimer("dialog16", 104.5f, "PastTimerEvent");
+	AddTimer("dialog17", 112, "PastTimerEvent");
+	AddTimer("dialog18", 120, "PastTimerEvent");
+	AddTimer("dialog19", 123.9f, "PastTimerEvent");
+	AddTimer("dialog20", 127.9f, "PastTimerEvent");
+	AddTimer("dialog21", 140, "PastTimerEvent");
+	AddTimer("dialog22", 147.5f, "PastTimerEvent");
+	AddTimer("dialog23", 160.8f, "PastTimerEvent");
+	AddTimer("dialog24", 167.2f, "PastTimerEvent");
+	AddTimer("dialog25", 174, "PastTimerEvent");
+	AddTimer("dialog26", 183, "PastTimerEvent");
+	AddTimer("dialog27", 193.5f, "PastTimerEvent");
+	
+	AddTimer("dialog28", 201, "PastTimerEvent");
+	AddTimer("dialog29", 206.1f, "PastTimerEvent");
+	AddTimer("dialog30", 210.2f, "PastTimerEvent");
+	AddTimer("dialog31", 214.5f, "PastTimerEvent");
+	AddTimer("dialog32", 224.4f, "PastTimerEvent");
+	AddTimer("dialog33", 228, "PastTimerEvent");
+	AddTimer("dialog34", 232.9f, "PastTimerEvent");
+	AddTimer("dialog35", 236, "PastTimerEvent");
+	AddTimer("dialog36", 244, "PastTimerEvent");
+	AddTimer("dialog37", 248.4f, "PastTimerEvent"); 
+	AddTimer("dialog38", 257.8f, "PastTimerEvent");
+	AddTimer("dialog39", 265.5f, "PastTimerEvent");
+	AddTimer("dialog40", 276.6f, "PastTimerEvent");
+	AddTimer("dialog41", 287.6f, "PastTimerEvent");
+	AddTimer("dialog42", 304.8f, "PastTimerEvent");
+	
+	AddTimer("dialog43", 308.4f, "PastTimerEvent");
+	AddTimer("dialog44", 319.3f, "PastTimerEvent");
+	AddTimer("dialog45", 332.6f, "PastTimerEvent");
+	AddTimer("dialog46", 346.5f, "PastTimerEvent");
+	AddTimer("dialog47", 355.5f, "PastTimerEvent");
+	AddTimer("dialog48", 361.5f, "PastTimerEvent");
+	AddTimer("dialog49", 370, "PastTimerEvent");
+	AddTimer("dialog50", 378, "PastTimerEvent");
+	AddTimer("dialog51", 387.3f, "PastTimerEvent");
+	AddTimer("dialog52", 392.4f, "PastTimerEvent");
+	AddTimer("dialog53", 394.6f, "PastTimerEvent");
+	AddTimer("dialog54", 402.2f, "PastTimerEvent");
+	AddTimer("dialog55", 407.4f, "PastTimerEvent");
+	AddTimer("dialog56", 409.4f, "PastTimerEvent");
+	AddTimer("dialog57", 413.5f, "PastTimerEvent");
+	AddTimer("dialog58", 416.8f, "PastTimerEvent");
+	AddTimer("dialog59", 421.7f, "PastTimerEvent");
+	AddTimer("dialog60", 427.3f, "PastTimerEvent");
+	AddTimer("dialog61", 433.9f, "PastTimerEvent");
+	AddTimer("dialog62", 437.4f, "PastTimerEvent");
+	AddTimer("dialog63", 441.5f, "PastTimerEvent");
+	AddTimer("dialog64", 446.4f, "PastTimerEvent");
+	AddTimer("dialog65", 456.9f, "PastTimerEvent");
+	AddTimer("dialog66", 460.6f, "PastTimerEvent");
+	AddTimer("dialog67", 467, "PastTimerEvent");
+	AddTimer("dialog68", 470.8f, "PastTimerEvent");
+	AddTimer("dialog69", 480, "PastTimerEvent");
+	AddTimer("dialog70", 491, "PastTimerEvent");
+	AddTimer("dialog71", 495, "PastTimerEvent");
+	AddTimer("dialog72", 501.1f, "PastTimerEvent");
+	AddTimer("dialog73", 506.6f, "PastTimerEvent");
+	AddTimer("dialog74", 513.4f, "PastTimerEvent");
+	AddTimer("dialog75", 519.1f, "PastTimerEvent");
+	AddTimer("dialog76", 525.8f, "PastTimerEvent");
+	AddTimer("dialog77", 529.8f, "PastTimerEvent");
+	AddTimer("dialog78", 532.3f, "PastTimerEvent");
+	AddTimer("dialog79", 536.1f, "PastTimerEvent");
+	AddTimer("dialog80", 541.3f, "PastTimerEvent");
+	AddTimer("dialog81", 545.3f, "PastTimerEvent");
+	AddTimer("dialog82", 549.4f, "PastTimerEvent");
+	AddTimer("dialog83", 554, "PastTimerEvent");
+	AddTimer("dialog84", 559.5f, "PastTimerEvent");
+	AddTimer("dialog85", 565.5f, "PastTimerEvent");
+	AddTimer("dialog86", 571.3f, "PastTimerEvent");
+	AddTimer("dialog87", 573.4f, "PastTimerEvent");
+	AddTimer("dialog88", 577.6f, "PastTimerEvent");
+	AddTimer("dialog89", 582.3f, "PastTimerEvent");
+	AddTimer("dialog90", 591.4f, "PastTimerEvent");
+	AddTimer("dialog91", 598.9f, "PastTimerEvent");
+	AddTimer("dialog92", 606, "PastTimerEvent");
+	AddTimer("dialog93", 609.6f, "PastTimerEvent");
+	AddTimer("dialog94", 616.3f, "PastTimerEvent");
+	AddTimer("dialog95", 621.9f, "PastTimerEvent");
+	AddTimer("dialog96", 631.1f, "PastTimerEvent");
+	AddTimer("dialog97", 636.3f, "PastTimerEvent");
+	AddTimer("dialog98", 641.5f, "PastTimerEvent");
+	
+	
+	AddTimer("dialogAmb01bedPlay", 44, "PastTimerEvent");
+	AddTimer("dialogAmb01bedStop", 61, "PastTimerEvent");
+	AddTimer("dialogAmb01syringe", 44, "PastTimerEvent");
+	AddTimer("dialogAmb02rainPlay", 58, "PastTimerEvent");
+	AddTimer("dialogAmb02rainStop", 98, "PastTimerEvent");
+	AddTimer("dialogAmb02rainwalkPlay", 65, "PastTimerEvent");
+	AddTimer("dialogAmb03musePlay", 95, "PastTimerEvent");
+	AddTimer("dialogAmb03museStop", 131, "PastTimerEvent");
+	AddTimer("dialogAmb03laddPlay", 136, "PastTimerEvent");
+	AddTimer("dialogAmb03laddStop", 151, "PastTimerEvent");
+	AddTimer("dialogAmb03minglePlay", 121, "PastTimerEvent");
+	AddTimer("dialogAmb03mingleStop", 134, "PastTimerEvent");
+	AddTimer("dialogAmb03pickPlay", 153, "PastTimerEvent");
+	AddTimer("dialogAmb03pickStop", 159, "PastTimerEvent");
+	AddTimer("dialogAmb03bookstie", 158, "PastTimerEvent");
+	AddTimer("dialogAmb03bookpaged", 160, "PastTimerEvent");
+	AddTimer("dialogAmb03bookpageStop", 167, "PastTimerEvent");
+	AddTimer("dialogAmb03bookFall", 166, "PastTimerEvent");
+	AddTimer("dialogAmb03alarmPlay", 163, "PastTimerEvent");
+	AddTimer("dialogAmb03alarmStop", 181, "PastTimerEvent");
+	AddTimer("dialogAmb03stairs", 163, "PastTimerEvent");
+	AddTimer("dialogAmb03medivalPlay", 172, "PastTimerEvent");
+	AddTimer("dialogAmb03medivalStop", 180, "PastTimerEvent");
+	AddTimer("frontpunch", 181, "PastTimerEvent");
+	AddTimer("dialogAmb03GateKick", 180.2f, "PastTimerEvent");
+	AddTimer("dialogAmb03Terror", 181.6f, "PastTimerEvent");
+	AddTimer("dialogAmb04prisongateclose", 189, "PastTimerEvent");
+	AddTimer("jailamb", 189, "PastTimerEvent");
+		AddTimer("jailambstop", 274, "PastTimerEvent");
+	AddTimer("dialogAmb04prisongateopen", 223, "PastTimerEvent");
+	AddTimer("chaserstep", 220, "PastTimerEvent");
+	AddTimer("chaserstepstop", 250, "PastTimerEvent");
+	AddTimer("dialogAmb03medivalPlay", 224, "PastTimerEvent");
+	AddTimer("dialogAmb03medivalStop", 250, "PastTimerEvent");
+	AddTimer("dropkeys", 242, "PastTimerEvent");
+	AddTimer("reactmurderer", 244, "PastTimerEvent");
+	
+	for(int i=0; i<=21; i++)	AddTimer("sidepunch", 245+(i*0.67f), "PastTimerEvent");
+	
+	AddTimer("dialogAmb03medivalPlay", 255, "PastTimerEvent");
+	AddTimer("dialogAmb03medivalStop", 274, "PastTimerEvent");
+	
+	AddTimer("keypickin", 244, "PastTimerEvent");
+	AddTimer("celllock", 249, "PastTimerEvent");
+	AddTimer("dialogAmb04prisongateopen", 254, "PastTimerEvent");
+	AddTimer("chaserstep", 255, "PastTimerEvent");
+	AddTimer("chaserstepstop", 258, "PastTimerEvent");
+	AddTimer("chaserstep", 265, "PastTimerEvent");
+	AddTimer("chaserstepstop", 270, "PastTimerEvent");
+	AddTimer("potmove", 270.5f, "PastTimerEvent");
+	AddTimer("potmovestop", 273.5f, "PastTimerEvent");
+	AddTimer("splash", 274, "PastTimerEvent");
+	AddTimer("sewerAmb", 273, "PastTimerEvent");
+	AddTimer("waterwalkM", 273.8f, "PastTimerEvent");
+	AddTimer("waterwalkM", 274.6f, "PastTimerEvent");
+	AddTimer("waterwalkM", 275.4f, "PastTimerEvent");
+	AddTimer("waterwalkM", 276.2f, "PastTimerEvent");
+	AddTimer("waterwalkM", 277, "PastTimerEvent");
+	AddTimer("waterwalkM", 277.8f, "PastTimerEvent");
+	AddTimer("waterwalkL", 278.6f, "PastTimerEvent");
+	AddTimer("waterwalkL", 279.4f, "PastTimerEvent");
+	AddTimer("waterwalkL", 280.2f, "PastTimerEvent");
+	AddTimer("waterwalkL", 281, "PastTimerEvent");
+	AddTimer("waterwalkL", 281.8f, "PastTimerEvent");
+	AddTimer("waterwalkL", 282.6f, "PastTimerEvent");
+	AddTimer("sewerAmbstop", 286, "PastTimerEvent");
+	AddTimer("sewerDoor", 286, "PastTimerEvent");
+	AddTimer("sewerDoor2", 286.6f, "PastTimerEvent");
+	AddTimer("VoyagePlay", 286, "PastTimerEvent");
+	AddTimer("FaceRain", 286, "PastTimerEvent");
+	AddTimer("FaceRainStop", 296, "PastTimerEvent");
+	AddTimer("streetBare", 298, "PastTimerEvent");
+	AddTimer("Stay", 314, "PastTimerEvent");
+	AddTimer("creepBoots", 314, "PastTimerEvent");
+	
+	AddTimer("outsideVillaPlay", 407, "PastTimerEvent");
+	AddTimer("VoyageStop", 407, "PastTimerEvent");
+	AddTimer("basemantVilPlay", 426, "PastTimerEvent");
+	AddTimer("basemantVilStop", 440, "PastTimerEvent");
+	AddTimer("outsideVillaStop", 437, "PastTimerEvent");
+	
+	for(int i=0; i<=3; i++)	AddTimer("CLOTH", RandFloat(316, 322), "PastTimerEvent");
+	
+	AddTimer("streetBoots", 324, "PastTimerEvent");
+	AddTimer("Stay", 328.8f, "PastTimerEvent");
+	AddTimer("creepBoots", 328.8f, "PastTimerEvent");
+	AddTimer("ambForest", 336, "PastTimerEvent");
+	AddTimer("ambSoil", 352, "PastTimerEvent");
+	AddTimer("ambSoilEnd", 378, "PastTimerEvent");
+	for(int i=0; i<=4; i++)	AddTimer("dialogAmb03logbook", RandInt(378, 395), "PastTimerEvent");
+	
+	AddTimer("MinerStepPlay", 435+5, "PastTimerEvent");
+	AddTimer("MinerStepStop", 475+5, "PastTimerEvent");
+	
+	AddTimer("VillaPlay", 426, "PastTimerEvent");
+	AddTimer("VillaStop", 445+5, "PastTimerEvent");
+	AddTimer("minePlay", 471+5, "PastTimerEvent");
+	AddTimer("mineStop", 484+5, "PastTimerEvent");
+	AddTimer("airPlay", 484+5, "PastTimerEvent");
+	AddTimer("airStop", 505+5, "PastTimerEvent");
+	AddTimer("stonePlay", 510+5, "PastTimerEvent");
+	AddTimer("stoneStop", 625+5, "PastTimerEvent");
+	
+	
+	
+	AddTimer("mazeWater", 612, "PastTimerEvent");
+	AddTimer("mazeWater", 619, "PastTimerEvent");
+}
+
+
+void PastTimerEvent(string &in asTimer){
+	if(asTimer == "JournalEvent01"){
+		FadeLightTo("PointLight_9", 1, 1, 0, 1, -1, 2);
+		MovePlayerHeadPos(0, -0.7f, 0.8f, 6, 100);
+	}
+	if(asTimer == "JournalEvent02"){
+		MovePlayerHeadPos(0, -0.7f, 0.8f, 6, 34);
+		SetLampLit("candlestick01_1", false, true);
+		StartPlayerLookAt("ScriptArea_4", 1, 10, "");		
+	}
+	if(asTimer == "JournalEvent03"){
+		FadeOut(5);
+		FadeLightTo("PointLight_9", 0, 0, 0, 0, -1, 5);
+		StopSound("writingEvent2", 10);
+	}
+	if(asTimer == "JournalEvent04"){
+		StopSound("writingEvent", 0);
+		PlayGuiSound("26_place_glass", 1);
+		PlayGuiSound("26_string_on_glass", 1);
+		RemoveTimer("writeJournalEvent3");
+		//MovePlayerHeadPos(0, 0, 0, 200, 200);
+	}
+	if(asTimer == "JournalEvent05"){
+		PlayGuiSound("vc_epilogueNote01.ogg", 1);
+		StopSound("writingEvent2", 10);
+		FadeGlobalSoundVolume(0.3f, 8);
+	}
+	if(asTimer == "JournalEvent06"){
+		FadeGlobalSoundVolume(1, 5);
+		StopPlayerLookAt();
+		}
+	if(asTimer == "JournalEvent07"){
+		TeleportPlayer("PlayerStartArea_4");
+		FadeIn(0);
+	}
+	if(asTimer == "JournalEvent08"){
+		PlayGuiSound("vc_epilogueNote02.ogg", 1);
+	}
+	if(asTimer == "JournalEvent09"){
+		FadeOut(5);
+	}
+	if(asTimer == "JournalEvent10"){
+		FadeIn(5);
+		TeleportPlayer("PlayerStartArea_5");
+		SetPlayerLookSpeedMul(0.1f);
+	}
+	if(asTimer == "JournalEvent11"){
+		PlayGuiSound("vc_epilogueNote03.ogg", 1);
+	}
+	if(asTimer == "JournalEvent12"){
+		PlayGuiSound("vc_epilogueNote04.ogg", 1);
+	}
+	if(asTimer == "JournalEvent13"){
+		PlayGuiSound("vc_epilogueNote05.ogg", 1);
+	}
+	if(asTimer == "JournalEvent14"){
+		PlayGuiSound("vc_epilogueNote06.ogg", 1);
+	}
+	if(asTimer == "JournalEvent15"){
+		PlayGuiSound("vc_epilogueNote07.ogg", 1);
+	}
+	if(asTimer == "JournalEvent16"){
+		PlayGuiSound("vc_epilogueNote08.ogg", 1);
+	}
+	if(asTimer == "JournalEvent17"){
+		PlayGuiSound("vc_epilogueNote09.ogg", 1);
+	}
+	if(asTimer == "JournalEvent18"){
+		PlayGuiSound("vc_epilogueNote10.ogg", 1);
+	}
+	if(asTimer == "kayth"){
+		PlayMusic("kayth.ogg", false, 1, 0, 1, false);
+	}
+	if(asTimer == "detour"){
+		SetGlobalVarInt("detour", 1);
+		ChangeMap("laststand.map", "PlayerStartArea_2", "", "");
+	}
+	
+	for(int i=0; i<=98; i++)	{	if(asTimer == "dialog"+i)	{	
+		AddEffectVoice("RichsMind01_"+i+".ogg", "", "Amnesia", "Entry"+i, false, "Player", 1, 1);
+		}
+	}
+	if(asTimer == "dialogAmb01bedPlay")	{	PlaySoundAtEntity("bed", "amnesia_01hospitalbed", "Player", 5, true);	}
+	if(asTimer == "dialogAmb01bedStop")	{	StopSound("bed", 5);	}
+	if(asTimer == "dialogAmb01syringe")	{	PlaySoundAtEntity("syringe", "amnesia_01hospitalsyringe", "Player", 0, true);	}
+	if(asTimer == "dialogAmb02rainPlay")	{	PlaySoundAtEntity("rain", "amnesia_02rain", "Player", 5, true);	}
+	if(asTimer == "dialogAmb02rainStop")	{	StopSound("rain", 5);	}
+	if(asTimer == "dialogAmb02rainwalkPlay")	{	PlaySoundAtEntity("walk", "rainoudwalking", "Player", 1, true);	}
+	if(asTimer == "dialogAmb02librPlay")	{	PlaySoundAtEntity("library", "amnesia_02libr", "Player", 1, true);	}
+	if(asTimer == "dialogAmb02librStop")	{	StopSound("library", 5);	}
+	if(asTimer == "dialogAmb03musePlay")	{	PlaySoundAtEntity("museum", "amnesia_03museumAmb", "Player", 9, true);	}
+	if(asTimer == "dialogAmb03museStop")	{	StopSound("museum", 5);	}
+	if(asTimer == "dialogAmb03laddPlay")	{	PlaySoundAtEntity("ladder", "amnesia_03museumLadder", "Player", 5, true);	}
+	if(asTimer == "dialogAmb03laddStop")	{	StopSound("ladder", 5);	}
+	if(asTimer == "dialogAmb03minglePlay")	{	PlaySoundAtEntity("mingle", "mingle", "Player", 8, true);	}
+	if(asTimer == "dialogAmb03mingleStop")	{	StopSound("mingle", 3);	}
+	if(asTimer == "dialogAmb03pickPlay")	{	PlaySoundAtEntity("picklocking", "amnesia_03picklockingRobWood", "Player", 5, true);	}
+	if(asTimer == "dialogAmb03pickStop")	{	StopSound("picklocking", 0);	}
+	if(asTimer == "dialogAmb03bookstie")	{	PlaySoundAtEntity("", "amnesia_03bookscripe", "Player", 1, true);	}
+	if(asTimer == "dialogAmb03bookpaged")	{	PlaySoundAtEntity("page", "amnesia_03bookpagesLoud", "Player", 0, true);	}
+	if(asTimer == "dialogAmb03bookpageStop")	{	StopSound("page", 0);	}
+	if(asTimer == "dialogAmb03logbook")	{	PlaySoundAtEntity("", "amnesia_03logbook", "Player", 0, true);	}
+	if(asTimer == "dialogAmb03bookFall")	{	PlaySoundAtEntity("", "amnesia_03bookfall", "Player", 0, true);	}
+	if(asTimer == "dialogAmb03alarmPlay")	{	PlaySoundAtEntity("alarm", "amnesia_03alarmRaining", "Player", 2, true);	}
+	if(asTimer == "dialogAmb03alarmStop")	{	StopSound("alarm", 1);	}
+	if(asTimer == "dialogAmb03stairs")	{	PlaySoundAtEntity("", "crowstairs", "Player", 0, true);	}
+	if(asTimer == "dialogAmb03medivalPlay")	{	PlaySoundAtEntity("ambush", "medievalrun", "Player", 0, true);	}
+	if(asTimer == "dialogAmb03medivalStop")	{	StopSound("ambush", 0.5);	}
+	if(asTimer == "dialogAmb03GateKick")	{	PlaySoundAtEntity("", "forcegate", "Player", 0, true);	}
+	if(asTimer == "dialogAmb03Terror")	{	PlaySoundAtEntity("", "amnesia_03terrorcapture", "Player", 0, true);	}
+	if(asTimer == "dialogAmb04prisongateopen")	{	PlaySoundAtEntity("", "amnesia_04prisongateopen", "Player", 0, true);	}
+	if(asTimer == "dialogAmb04prisongateclose")	{	PlaySoundAtEntity("", "amnesia_04prisongateclose", "Player", 0, true);	}
+	if(asTimer == "jailamb")	{	PlaySoundAtEntity("jail", "jailamb", "Player", 2, true);	}
+	if(asTimer == "jailambstop")	{	StopSound("jail", 5);	}
+	if(asTimer == "chaserstep")	{	PlaySoundAtEntity("run", "chaserstep", "Player", 8, true);	}
+	if(asTimer == "chaserstepstop")	{	StopSound("run", 0);	}
+	if(asTimer == "frontpunch")	{	PlaySoundAtEntity("", "frontpunch", "Player", 0, true);	}
+	if(asTimer == "sidepunch")	{	PlaySoundAtEntity("", "sidepunch", "Player", RandFloat(0, 0.5f), true);	}
+	if(asTimer == "dropkeys")	{	PlaySoundAtEntity("", "dropkeys", "Player", 0, true);	}
+	if(asTimer == "keypickin")	{	PlaySoundAtEntity("", "keypickin", "Player", 0, true);	}
+	if(asTimer == "celllock")	{	PlaySoundAtEntity("", "celllock", "Player", 0, true);	}
+	if(asTimer == "potmove")	{	PlaySoundAtEntity("pot", "potmove", "Player", 4, true);	}
+	if(asTimer == "potmovestop")	{	StopSound("pot", 0.3f);	}
+	if(asTimer == "splash")	{	PlaySoundAtEntity("", "splash", "Player", 0, true);	}
+	if(asTimer == "waterwalkL")	{	PlaySoundAtEntity("", "20_waterwheel_impact_low", "Player", 0, true);	}
+	if(asTimer == "waterwalkM")	{	PlaySoundAtEntity("", "20_waterwheel_impact_med", "Player", 0, true);	}
+	if(asTimer == "waterwalkH")	{	PlaySoundAtEntity("", "20_waterwheel_impact_high", "Player", 0, true);	}
+	if(asTimer == "sewerAmb")	{	PlaySoundAtEntity("sewer", "sewerAmb", "Player", 1, true);	}
+	if(asTimer == "sewerAmbstop")	{	StopSound("sewer", 5);	}
+	if(asTimer == "sewerDoor")	{	PlaySoundAtEntity("", "door_sewer_open", "Player", 0, true);	}
+	if(asTimer == "sewerDoor2")	{	PlaySoundAtEntity("", "door_sewer_close", "Player", 0, true);	}
+	if(asTimer == "FaceRain")	{	PlaySoundAtEntity("RFace", "rainFaced", "Player", 4, true);	}
+	if(asTimer == "FaceRainStop")	{	StopSound("RFace", 5);	}
+	if(asTimer == "streetBoots")	{	PlaySoundAtEntity("", "step_run_hard_water", "Player", RandFloat(0, 0.2f), true);	AddTimer("streetBoots", 0.4f, "PastTimerEvent");	}
+	if(asTimer == "creepBoots")		{	PlaySoundAtEntity("", "step_run_water", "Player", RandFloat(0, 0.2f), true);	}
+	if(asTimer == "streetBare")		{	PlaySoundAtEntity("", "step_run_female_dirt", "Player", RandFloat(0, 0.2f), true);		AddTimer("streetBare", 0.4f, "PastTimerEvent");	}
+	if(asTimer == "Stay")	{	if(GetLocalVarInt("secBoots") == 1)		RemoveTimer("streetBoots");		
+									RemoveTimer("streetBare");	SetLocalVarInt("secBoots", 1);		}
+	if(asTimer == "CLOTH")	{	PlaySoundAtEntity("", "cloth_rustle", "Player", 0, true);	}
+	if(asTimer == "ambForest")	PlaySoundAtEntity("", "walkingwoods", "Player", 0, true);
+	if(asTimer == "ambSoil")	PlaySoundAtEntity("soil", "crossvalley", "Player", 0, true);
+	if(asTimer == "ambSoilEnd")	StopSound("soil", 4);
+	if(asTimer == "outsideVillaPlay")	{	PlaySoundAtEntity("vilA", "outsVilAmb", "Player", 6, true);	}
+	if(asTimer == "outsideVillaStop")	{	StopSound("vilA", 1);	}
+	if(asTimer == "basemantVilPlay")	{	PlaySoundAtEntity("basement", "basemantVil", "Player", 1, true);	}
+	if(asTimer == "basemantVilStop")	{	StopSound("basement", 2);	}
+	if(asTimer == "VoyagePlay")	{			PlaySoundAtEntity("voyage", "VoyaAmb", "Player", 2, true);	}
+	if(asTimer == "VoyageStop")	{	StopSound("voyage", 4);	}
+	if(asTimer == "MinerStepPlay")	{	PlaySoundAtEntity("crowd", "MinerSteps", "Player", 30, true);	}
+	if(asTimer == "MinerStepStop")	{	StopSound("crowd", 2);	}
+	if(asTimer == "VillaPlay")	{	PlaySoundAtEntity("vill", "villaAmb", "Player", 4, true);	}
+	if(asTimer == "VillaStop")	{	StopSound("vill", 2);	}
+	
+	if(asTimer == "minePlay")	{	PlaySoundAtEntity("mine", "mineAmb", "Player", 8, true);	}
+	if(asTimer == "mineStop")	{	StopSound("mine", 3);	}
+	if(asTimer == "airPlay")	{	PlaySoundAtEntity("luft", "loAmb", "Player", 3, true);	}
+	if(asTimer == "airStop")	{	StopSound("luft", 3);	}
+	if(asTimer == "stonePlay")	{	PlaySoundAtEntity("sun", "sunAmb", "Player", 0, true);	}
+	if(asTimer == "stoneStop")	{	StopSound("sun", 20);	}
+	if(asTimer == "mazeWater")	{	PlaySoundAtEntity("", "archeAmb01", "Player", 0, true);	}
+}			
+
+void OnEnter(){
+		SetMapDisplayNameEntry("memory");
+		}

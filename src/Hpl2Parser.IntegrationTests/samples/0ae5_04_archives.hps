@@ -1,0 +1,166 @@
+//This map is where the player finds the crowbar//
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelArchives");
+	AutoSave();
+	
+	StopMusic(0.1f, 0);
+	
+	AddUseItemCallback("unlockstorage", "KeyStorage", "mansion_1", "UseKeyOnDoor", true);
+	//AddUseItemCallback("", "hollow_needle_1", "mansion_1", "HollowNoUse", true);
+	
+	SetEntityCallbackFunc("note_generic_1", "OnPickup");
+	
+	//Collides
+	AddEntityCollideCallback("Player", "ScriptArea_1", "LookNote", true, 1);
+	AddEntityCollideCallback("Player", "ASE", "EventStair", true, 1);
+	AddEntityCollideCallback("Player", "ACE", "EventChair", true, 1);
+	
+	//Windy Event
+	CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ScriptArea_2", false);
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_2", 0.0f, false);
+	SetLampLit("candle", false, true);
+	AddPropForce("DoorForce", -5000.0f, 0.0f, 0.0f, "world");
+	FadePlayerFOVMulTo(1.2f, 1.0f);
+	AddTimer("", 3.0f, "NormalFOV");
+	
+	//Debug
+	if(ScriptDebugOn() == true)
+	{
+		GiveItem("String","Puzzle", "", "pile_string.tga", 1);
+	}
+}
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("mansion_1", false, true);
+	
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem("KeyStorage");
+	PlayMusic("20_puzzle.ogg", false, 0.4f, 1, 0, false);
+	
+	AddEntityCollideCallback("Player", "LeavingScare1", "EventScare1", true, 1);
+	AddEntityCollideCallback("Player", "LeavingScare2", "EventScare2", true, 1);
+	AddEntityCollideCallback("Player", "LeavingScare3", "EventScare3", true, 1);
+	AddEntityCollideCallback("Player", "LeavingScare4", "EventScare4", true, 1);
+	
+	CompleteQuest("ArchivesLock", "ArchivesLock");
+
+	GiveSanityBoost();
+}
+///STOP LOOKING
+/*
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+//ACTUAL BREAKING OF DOOR
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth("mansion_1", 0);
+	GiveSanityBoost();
+	
+	CompleteQuest("rot", "rot");
+	}
+*/
+
+void OnEnter()
+{
+	PlayMusic("25_amb", true, 0.7f, 1, 0, false);
+}
+
+//Look at the note
+void LookNote(string &in asParent, string &in asChild, int alState)
+{
+
+}
+
+void Endlook(string &in asTimer)			 
+{			 
+	 StopPlayerLookAt();
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load4", 0, "int_loading_hellmouth.jpg");
+	}
+////////////////////////////////////////////
+
+//LANG RELATED
+void QR(string &in asEntity)
+{
+	AddQuest("ArchivesLock", "ArchivesLock");
+	
+	SetMessage("TextOne", "LockDoor2", 2.0);
+}
+
+//////////////////////////
+//EFFECTS
+void NormalFOV(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1.0f, 0.5f);
+	}
+	
+void EventStair(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "general_wind_whirl", "WindE", 0.0f, false);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "WindE", false);
+	FadePlayerFOVMulTo(1.2f, 1.0f);
+	FadePlayerRollTo(-30.0f, 1.0f, 1.5f);
+	PlaySoundAtEntity("rumble", "00_creak", "Player", 1.0f, false);
+	PlaySoundAtEntity("rumble", "general_chain_rattle", "Player", 1.0f, false);
+	StopSound("rumble", 0.5f);
+	PlaySoundAtEntity("", "react_scare", "Player", 0.0f, false);
+	PlayMusic("05_event_steps.ogg", false, 0.5f, 3, 10, false);
+	AddPropForce("CN1", -500.0f, 0.0f, 0.0f, "world");
+	SetLampLit("CN1", true, true);
+	PlaySoundAtEntity("", "agrippa_wake", "CN1", 0.0f, false);
+	AddTimer("", 3.0f, "EndStair");
+	}
+	
+void EndStair(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	FadePlayerRollTo(0.0f, 1.0f, 1.5f);
+	StopSound("rumble", 0.5f);
+	}
+	
+void EventChair(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("Chair", 5000.0f, 0.0f, 0.0f, "world");
+	AddPropForce("Chair2", 0.0f, 0.0f, 2000.0f, "world");
+	PlaySoundAtEntity("", "03_amb_idle", "Chair", 0.0f, true);
+	}
+
+//LEAVING WITH KEY
+void EventScare1(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("L1", false, true);
+	PlaySoundAtEntity("", "insanity_whisper", "Player", 0.5f, false);
+	SetLightVisible("CL1", false);
+	GiveSanityDamage(1, true);
+	StopMusic(1.0f, 0);
+	PlayMusic("02_amb_strange", true, 0.7f, 1, 0, false);
+	}
+	
+void EventScare2(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("L2", false, true);
+	PlaySoundAtEntity("", "insanity_whisper", "Player", 0.5f, false);
+	SetLightVisible("CL2", false);
+	}
+	
+void EventScare3(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("L3", false, true);
+	PlaySoundAtEntity("", "insanity_whisper", "Player", 0.5f, false);
+	SetLightVisible("CL3", false);
+	}
+	
+void EventScare4(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("L4", false, true);
+	PlaySoundAtEntity("", "insanity_whisper", "Player", 0.5f, false);
+	SetLightVisible("CL4", false);
+	}

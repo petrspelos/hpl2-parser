@@ -1,0 +1,80 @@
+void OnStart()
+{
+AddUseItemCallback("", "Handle", "AttachLever", "PlaceLever", true);
+AddEntityCollideCallback("Player", "Spawn_Brute2", "SpawnBrute2", false, 1);
+AddEntityCollideCallback("Player", "DeathArea", "Death", false, 1);
+SetEntityPlayerInteractCallback("Door", "PlayerInteractDoor", true);
+}
+
+void PlaceLever(string &in asItem, string &in asEntity)
+{
+   SetEntityActive("Lever_mount", false);
+   SetEntityActive("Lever", true);
+   SetEntityActive("AttachLever", false);
+   RemoveItem("Handle");
+}
+
+void BreakDoor(string &in asEntity, int LeverState)
+{
+      if(LeverState == 1) {
+      SetPropHealth("Door", 0);
+      SetLeverStuckState(asEntity, LeverState, true);
+   }
+}
+
+void SpawnBrute2(string &in asParent, string &in asChild, int alState)
+{
+   if(HasItem("Rod1"))
+   {
+      SetLocalVarInt("O1", 1);
+      AddLocalVarInt("Rod1", 1);
+   }
+   if(GetLocalVarInt("Rod1")==1)
+   {
+    SetEntityActive("Spawn_Brute2", true);
+    ClearEnemyPatrolNodes("Brute2");
+    SetEntityActive("Brute2", true);
+    AddEnemyPatrolNode("Brute2", "PathNodeArea_4", 0, "");
+    AddEnemyPatrolNode("Brute2", "PathNodeArea_5", 5, ""); 
+    AddEnemyPatrolNode("Brute2", "PathNodeArea_6", 0, "");     
+    AddEnemyPatrolNode("Brute2", "PathNodeArea_7", 0, "");
+    AddEnemyPatrolNode("Brute2", "PathNodeArea_8", 0, "");    
+   }
+}
+
+void Death(string &in asParent, string &in asChild, int alState)
+{
+   FadeOut(1);
+   CheckPoint("FallInAbyss", "PlayerStartArea_1", "CheckPointFallAbyss", "Hints", "FallInAbyssDeathHint");
+   AddTimer("death1", 0.5f, "TimerFallDeath");	
+   AddTimer("death2", 1, "TimerFallDeath");	
+}
+
+void TimerFallDeath(string &in asTimer)
+{	
+	if(asTimer == "death1"){
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+	
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+}
+
+void PlayerInteractDoor(string &in asEntity)
+{
+   SetMessage("AulaMap", "LevelDoorLocked", 0);
+}
+
+void OnEnter()
+{
+   PlayMusic("22_amb", true, 1, 4, 2, true);
+}  
+ 
+void OnLeave()
+{
+
+}

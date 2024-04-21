@@ -1,0 +1,366 @@
+void OnStart()
+{
+SetSanityDrainDisabled(true);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.3f);
+AddTimer("screams", 45, "screams");
+AddEntityCollideCallback("Player", "BlockArea", "Notnow", false, 1);
+AddUseItemCallback("","chapelkey","chapel","UsedKeyOnDoor",false);
+AddEntityCollideCallback("Player", "EnterBarn", "EnterBarn", true, 1);
+AddEntityCollideCallback("Player", "Tutorial", "Investigate", true, 1);
+AddEntityCollideCallback("Player", "DogArea", "DogArea", true, 1);
+AddEntityCollideCallback("Player", "DogArea2", "DogArea2", true, 1);
+AddEntityCollideCallback("Player", "DogArea3", "DogArea3", false, 1);
+AddEntityCollideCallback("Player", "Villagecheckpoint", "Villagecheckpoint", true, 1);
+AddEntityCollideCallback("dog", "DogStop", "DogStop", true, 1);
+AddTimer("ChapterStart", 3, "ChapterStart");
+CheckPoint ("Checkpoint", "PlayerStartArea_2", "DeathSettings", "DeathHints", "Fall");
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+SetMapDisplayNameEntry("Village");
+AutoSave();
+}
+
+void ChapterStart(string &in asTimer)
+{
+SetMessage("Messages", "checkinstart", 4);
+AddTimer("chapterstart2", 5, "chapterstart2");
+}
+
+void chapterstart2(string &in asTimer)
+{
+SetMessage("Messages", "chapter1", 4);
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("chapel",false, true);
+PlaySoundAtEntity("","unlock_door","chapel", 0,false);
+SetEntityPlayerInteractCallback("chapel", "", false);
+RemoveItem(asItem);
+CompleteQuest("Chapel", "Chapel");
+}
+
+void Chapel(string &in asParent, string &in asChild, int alState) 
+{
+StopSound("outsidesound", 0.9f);
+PlaySoundAtEntity("chapelsound","ambience_swoop_myst.snt","Player", 0,false);
+}
+
+void Outside(string &in asParent, string &in asChild, int alState) 
+{
+StopSound("chapelsound", 0.9f);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+}
+
+void Func_wall(string &in asEntity, int alState)
+{
+     if (alState == 0)
+     {
+SetMoveObjectState("Secret", 1.0f);
+AddTimer("close", 8, "close");
+          return;
+     }
+}
+
+void close(string &in asTimer)
+{
+SetMoveObjectState("Secret", 0.0f);
+}
+
+void BlockDelete(string &in asEntity)
+{
+SetEntityActive("block", false);
+SetEntityActive("BlockArea", false);
+SetEntityActive("LadderArea_3", true);
+SetEntityActive("EnterBarn", true);
+}
+
+void EnterBarn(string &in asParent, string &in asChild, int alState)
+{
+ChangeMap("GothfairBarn.map", "PlayerStartArea_1", "","");
+SetEntityActive("LadderArea_3", false);
+SetEntityActive("DogArea2", true);
+}
+
+void Investigate(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Messages", "chapelinvestigate", 6);
+SetPlayerActive(false);
+AddTimer("investigate2", 3, "investigate2");
+StartPlayerLookAt("LookChapel", 1.0f, 1.0f, "");
+AddQuest("Investigatechapel", "Investigatechapel");
+}
+
+void investigate2(string &in asTimer)
+{
+AddTimer("investigate3", 3, "investigate3");
+StartPlayerLookAt("LookChapel2", 1.0f, 1.0f, "");
+}
+
+void investigate3(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+StartEffectEmotionFlash("Flash", "Investigate", "ui_insanity_touch.snt");
+}
+
+void Clue1(string &in asEntity)
+{
+SetEntityPlayerInteractCallback("Clue1", "", false);
+SetMessage("Messages", "chapelblood", 5);
+AddLocalVarInt("VarIntClue", 1);
+	CluesDone();
+}
+
+void Clue2(string &in asEntity)
+{
+SetEntityPlayerInteractCallback("Clue2", "", false);
+SetMessage("Messages", "ch1crusaders", 7);
+AddLocalVarInt("VarIntClue", 1);
+	CluesDone();
+}
+
+void CluesDone(){
+
+	if(GetLocalVarInt("VarIntClue") == 2){
+		CompleteQuest("Investigatechapel", "Investigatechapel");
+                CompleteQuest("Secret", "Secret");
+                CompleteQuest("Explore", "Explore");
+                SetEntityActive("Flash", true);
+                AddTimer("activateopen", 15, "activateopen");
+	}
+}
+
+void activateopen(string &in asTimer)
+{
+SetEntityActive("Open", true);
+}
+
+void Open(string &in asEntity)
+{
+StartPlayerLookAt("BloodArea", 2.0f, 3.0f, "");
+AddTimer("open2", 3, "open2");
+SetPlayerActive(false);
+}
+
+void open2(string &in asTimer)
+{
+PlaySoundAtEntity("","touch_corpse.snt", "BloodArea", 0, false);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "BloodArea", false);
+StartPlayerLookAt("Open", 1.0f, 1.0f, "");
+AddTimer("open3", 3, "open3");
+SetEntityActive("blood", true);
+}
+
+void open3(string &in asTimer)
+{
+SetMoveObjectState("Secret", 1.0f);
+StartPlayerLookAt("Secret", 2.0f, 3.0f, "");
+AddTimer("open4", 3, "open4");
+PlayMusic("03_puzzle_secret.ogg", false, 1.0, 0, 0, true);
+}
+
+void open4(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+}
+
+void DogBarnActivate(string &in asEntity)
+{
+SetEntityActive("DogArea", true);
+SetEntityActive("LadderArea_3", true);
+}
+
+void DogArea(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("dog", true);
+AddEnemyPatrolNode("dog","node_1",0,"");
+AddEnemyPatrolNode("dog","node_2",0,"");
+AddEnemyPatrolNode("dog","node_3",0,"");
+AddEnemyPatrolNode("dog","node_4",0,"");
+AddEnemyPatrolNode("dog","node_5",0,"");
+AddEnemyPatrolNode("dog","node_6",0,"");
+AddEnemyPatrolNode("dog","node_7",0,"");
+AddEnemyPatrolNode("dog","node_8",0,"");
+}
+
+void DogArea2(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","Wolf.snt", "DogSounds", 0, false);
+}
+
+void DogArea3(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("hammer"))
+	{
+SetEntityActive("DogArea", false);
+SetEntityActive("dog2", true);
+AddEnemyPatrolNode("dog2","node_3",0,"");
+AddEnemyPatrolNode("dog2","node_2",0,"");
+AddEnemyPatrolNode("dog2","node_1",0,"");
+AddEnemyPatrolNode("dog2","node_9",0,"");
+AddEnemyPatrolNode("dog2","node_10",3,"");
+AddEnemyPatrolNode("dog2","node_9",0,"");
+AddEnemyPatrolNode("dog2","node_1",0,"");
+AddEnemyPatrolNode("dog2","node_2",0,"");
+AddEnemyPatrolNode("dog2","node_3",0,"");
+AddEnemyPatrolNode("dog2","node_5",0,"");
+AddEnemyPatrolNode("dog2","node_11",0,"");
+AddEnemyPatrolNode("dog2","node_12",0,"");
+AddEnemyPatrolNode("dog2","node_13",0,"");
+AddEnemyPatrolNode("dog2","node_14",0,"");
+AddEnemyPatrolNode("dog2","node_15",0,"");
+AddEnemyPatrolNode("dog2","node_14",0,"");
+AddEnemyPatrolNode("dog2","node_13",0,"");
+AddEnemyPatrolNode("dog2","node_12",0,"");
+AddEnemyPatrolNode("dog2","node_11",0,"");
+AddEnemyPatrolNode("dog2","node_5",0,"");
+CheckPoint ("Checkpoint3", "PlayerStartArea_6", "DeathSettings", "DeathHints", "Killed");
+	}
+	
+}
+
+void DogStop(string &in asParent, string &in asChild, int alState)
+{
+FadeEnemyToSmoke("dog", true);
+}
+
+void Villagecheckpoint(string &in asParent, string &in asChild, int alState)
+{
+CheckPoint ("Checkpoint2", "PlayerStartArea_7", "DeathSettings", "DeathHints", "Killed");
+SetEntityActive("DogArea3", false);
+}
+
+//---- Collide ground ----//
+//If player hits the ground too hard
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint4", "PlayerStartArea_8", "DeathSettings", "DeathHints", "Fall");
+}
+
+void CollideAreaGround2(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint5", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+}
+
+//---- Random sounds ----//
+// Random sounds playing once in a while
+
+void screams(string &in asTimer)
+{
+AddTimer("screams", 176, "screams");
+AddTimer("screams2", 25, "screams2");
+AddTimer("screams3", 46, "screams3");
+AddTimer("screams4", 78, "screams4");
+AddTimer("screams5", 99, "screams5");
+AddTimer("screams6", 116, "screams6");
+AddTimer("screams7", 133, "screams7");
+AddTimer("screams8", 146, "screams8");
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea6", 0, false);
+}
+
+void screams2(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_loon_single.snt", "SoundArea", 0, false);
+}
+
+void screams3(string &in asTimer)
+{
+PlaySoundAtEntity("","Wolf.snt", "SoundArea2", 0, false);
+}
+
+void screams4(string &in asTimer)
+{
+PlaySoundAtEntity("","Wolf.snt", "SoundArea3", 0, false);
+}
+
+void screams5(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea4", 0, false);
+}
+
+void screams6(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea5", 0, false);
+}
+
+void screams7(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea7", 0, false);
+}
+
+void screams8(string &in asTimer)
+{
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea8", 0, false);
+}
+
+//---- Messages ----//
+
+void Notnow(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Messages", "notnow", 4);
+}
+
+void barn(string &in asEntity)
+{
+SetMessage("Messages", "barn", 4);
+}
+
+void closednight(string &in asEntity)
+{
+SetMessage("Messages", "closednight", 4);
+}
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+}
+
+void OnEnter()
+{	
+StopMusic(10, 0);
+FadeIn(1);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.3f);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+SetSanityDrainDisabled(true);
+AddEntityCollideCallback("Player", "Chapel", "Chapel", false, 1);
+AddEntityCollideCallback("Player", "Chapel2", "Chapel", false, 1);
+AddEntityCollideCallback("Player", "Outside", "Outside", false, 1);
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaGround2", "CollideAreaGround2", false, 1);
+SetMapDisplayNameEntry("Village");
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

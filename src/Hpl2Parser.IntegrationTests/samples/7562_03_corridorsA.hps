@@ -1,0 +1,195 @@
+void OnStart()
+{
+SetEntityPlayerInteractCallback("ScriptArea_1", "BridgeUp", false);
+SetEntityPlayerInteractCallback("ScriptArea_2", "BridgeDown", false);
+SetEntityPlayerInteractCallback("ScriptArea_99", "CORB", false);
+SetEntityPlayerInteractCallback("auto_door_1", "CORB", false);
+AddEntityCollideCallback("Player", "ScriptArea_50", "Texttt", true, 0);
+AddEntityCollideCallback("Player", "ScriptArea_4", "ElecHit", false, 0);
+AddEntityCollideCallback("Player", "ScriptArea_12", "Death", false, 0);
+SetEntityCallbackFunc("item_card_blue", "pickingupcard");
+	AddEntityCollideCallback("Player", "ScriptArea_8", "MonsterScene2", true, 0);
+}
+
+void Death(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(1000.0f, "", false, true);
+}
+
+void ElecHit(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("buttonclick", "ui_elec_damage.snt", "Player", 0.0f, false);
+AddTimer("Text2", (0.1f), "backhit");
+TeleportPlayer("PlayerStartArea_1");
+GivePlayerDamage(30.0f, "BloodSplat", true, true);
+}
+
+void pickingupcard(string &in asEntity, string &in type) 
+{
+	SetLightVisible("PointLight_13", false);
+	CompleteQuest("Journal2", "BlueLock");
+	GiveSanityBoost();
+	AddQuest("zalupa", "BlueLock2");
+	SetEntityActive("ScriptArea_9", true);
+	AddEntityCollideCallback("Player", "ScriptArea_9", "AlmostMonsterScene", true, 0);
+}
+
+void AlmostMonsterScene(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ScriptArea_10", true);
+	SetEntityActive("ScriptArea_11", true);
+	AddEntityCollideCallback("Player", "ScriptArea_10", "MonsterScene", true, 0);
+	SetEntityPlayerLookAtCallback("ScriptArea_11", "MonsterSceneLook", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("penumbra_music_E1_A5.ogg", true, 0.9f, 1.0f, 1, true);
+}
+
+void MonsterScene(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("infected_normal_1", true);
+	SetEntityActive("block_box_3", true);
+	SetEnemyDisableTriggers("infected_normal_1", false);
+	SetEntityActive("ScriptArea_7", true);
+	SetEntityActive("block_box_4", true);
+	SetEntityActive("ScriptArea_8", true);
+	SetEntityActive("ScriptArea_11", false);
+	AddEntityCollideCallback("Player", "ScriptArea_8", "MonsterScene2", true, 0);
+	AddEntityCollideCallback("infected_normal_1", "ScriptArea_7", "MonsterSceneEnd", true, 0);
+	AddEnemyPatrolNode("infected_normal_1", "PathNodeArea_1", 0.0f, "");
+	PlayMusic("Penumbra_BP_C1.ogg", true, 0.6f, 1.0f, 1, false);
+	AddTimer("Text2", (5.3f), "MusicAgain");
+}
+
+void MusicAgain(string &in asTimer)
+{
+	PlayMusic("penumbra_music_E1_A5.ogg", true, 0.6f, 1.0f, 1, true);
+}
+
+
+void MonsterScene2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("infected_normal_2", true);
+	AddTimer("Text2", (3.1f), "MonsterScene2End");
+	AddEnemyPatrolNode("infected_normal_2", "PathNodeArea_2", 0.0f, "");
+}
+
+void MonsterSceneLook(string &in asEntity, int alState) 
+{
+	SetEntityActive("infected_normal_1", true);
+	SetEntityActive("block_box_4", true);
+	SetEntityActive("block_box_3", true);
+	SetEntityActive("ScriptArea_7", true);
+	SetEntityActive("ScriptArea_8", true);
+	SetEntityActive("ScriptArea_10", false);
+	AddEntityCollideCallback("Player", "ScriptArea_8", "MonsterScene2", true, 0);
+	AddEntityCollideCallback("infected_normal_1", "ScriptArea_7", "MonsterSceneEnd", true, 0);
+	AddEnemyPatrolNode("infected_normal_1", "PathNodeArea_1", 0.0f, "");
+}
+
+void MonsterSceneEnd(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("infected_normal_1", false);
+	SetEntityActive("block_box_3", false);
+	SetEntityActive("block_box_4", false);
+}
+
+void MonsterScene2End(string &in asTimer)
+{
+	SetEnemyIsHallucination("infected_normal_2", true);
+}
+
+void Texttt(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("t1", "22.snt", "Player", 0.0f, false);
+SetMessage("Message", "m1_41", 0);
+AddTimer("Text2", (11.1f), "text2");
+}
+
+void text2(string &in asTimer)
+{
+PlaySoundAtEntity("t1", "31.snt", "Player", 0.0f, false);
+SetMessage("Message", "m1_42", 0);
+AddTimer("Text2", (12.1f), "text3");
+}
+
+void text3(string &in asTimer)
+{
+PlaySoundAtEntity("t1", "32.snt", "Player", 0.0f, false);
+SetMessage("Message", "m1_43", 0);
+}
+
+void HeadMove(string &in asEntity, int alState) 
+{
+AddTimer("di1t", 2.5f, "HeadMove2");
+}
+
+void CoridB(string &in asEntity)
+{
+ChangeMap("01_corridorsB.map", "PlayerStartArea_5", "", "");
+PlaySoundAtEntity("vsvs", "door_code_incorrect1.snt", "Player", 0.0f, false);
+}
+
+void CORB(string &in asEntity)
+{
+ChangeMap("01_corridorsB.map", "PlayerStartArea_5", "", "");
+PlaySoundAtEntity("vsvs", "door_code_correct1.snt", "Player", 0.0f, false);
+}
+
+void BridgeUp(string &in asEntity)
+{
+SetMoveObjectStateExt("tech_panel3a_up_down_1", 0.435f, 0.2f, 1, 0.025f, false);
+AddTimer("di1t", 8.5f, "LeftBridge");
+PlaySoundAtEntity("vent_sound", "elevator_move.snt", "tech_panel3a_up_down_1", 0.0f, false);
+SetEntityActive("ScriptArea_1", false);
+SetEntityActive("ScriptArea_2", true);
+PlaySoundAtEntity("buttonclick", "button_click.snt", "Player", 0.0f, false);
+}
+
+void BridgeDown(string &in asEntity)
+{
+SetMoveObjectStateExt("tech_panel3a_up_down_1", 0, 0.2f, 1, 0.025f, false);
+SetEntityActive("tech_panel3a_up_down_1", true);
+SetEntityActive("tech_panel3a_left_right_1", false);
+PlaySoundAtEntity("vent_sound", "elevator_move.snt", "tech_panel3a_up_down_1", 0.0f, false);
+SetEntityActive("ScriptArea_2", false);
+SetEntityActive("ScriptArea_1", true);
+}
+
+void LeftBridge(string &in asTimer)
+{
+PlaySoundAtEntity("vent_sound", "elevator_move.snt", "tech_panel3a_left_right_1", 0.0f, false);
+SetMoveObjectStateExt("tech_panel3a_left_right_1", 90, 0.2f, 1, 0.025f, false);
+SetEntityActive("tech_panel3a_up_down_1", false);
+SetEntityActive("tech_panel3a_left_right_1", true);
+AddTimer("di1t", 0.5f, "AxeOnChain3");
+}
+
+void RightBridge(string &in asTimer)
+{
+PlaySoundAtEntity("vent_sound", "elevator_move.snt", "tech_panel3a_left_right_1", 0.0f, false);
+SetMoveObjectStateExt("tech_panel3a_left_right_1", 0, 0.2f, 1, 0.025f, false);
+SetEntityActive("tech_panel3a_up_down_1", false);
+SetEntityActive("tech_panel3a_left_right_1", true);
+AddTimer("di1t", 7.5f, "AxeOnChain3");
+PlaySoundAtEntity("buttonclick", "button_click.snt", "Player", 0.0f, false);
+}
+
+void HeadMove2(string &in asTimer)
+{
+SetMoveObjectStateExt("skeleton_static3_1", 0.5f, 25, 25, 1, false);
+StartPlayerLookAt("skeleton_static3_1", 6.0f, 6.0f, "");
+AddTimer("di1t", 0.65f, "backtohallway");
+}
+
+void backtohallway(string &in asTimer)
+{
+StartScreenShake(0.5f, 0.25f, 0, 0.1f);
+TeleportPlayer("PlayerStartArea_2");
+SetEntityActive("skeleton_static3_1", false);
+SetEntityActive("auto_door_6", true);
+SetEntityActive("skeleton_static3_2", true);
+StopPlayerLookAt();
+}

@@ -1,0 +1,222 @@
+void OnStart(){
+	initEvents();
+	initVariables();
+	initPlayerFunctions();
+	initEnemy();
+}
+
+void OnEnter(){
+	SetDeathHint("Messages", "death_1");
+	PlayMusic("suitor_amb.ogg", true, 0.5f, 0, 0, true);
+
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "11Determination", 1, "12Shelves.jpg");
+}
+
+///////////////////////////
+///START CUSTOM COMMANDS//
+//////////////////////////
+void AUIC(string i, string o, string fu, bool tf){
+	AddUseItemCallback("", i, o, fu, tf);
+}
+
+void PGS(string sndfile){
+	PlayGuiSound(sndfile, 100);
+}
+
+void UnlockLevelDoor(string k, string d, string s){
+	SetLevelDoorLocked(d, false);
+	PlayGuiSound(s, 100);
+	RemoveItem(k);
+}
+
+void UnlockSwingDoor(string k, string d, string s){
+	SetSwingDoorLocked(d, false, true);
+	PlayGuiSound(s, 100);
+	RemoveItem(k);
+}
+
+void SEPIC(string i, string fu, bool tf){
+	SetEntityPlayerInteractCallback(i, fu, tf);
+}
+
+void AECC(string c, string a, string fu, bool tf){
+	AddEntityCollideCallback(c, a, fu, tf, 1);
+}
+
+void HurtEnemyUsingHammer(string enemy, string weapon, string sound, string var){
+	if (GetLocalVarInt(var) == 1){
+		PlayGuiSound(sound, 100);
+		SetLocalVarInt(var, 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", weapon, false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", weapon, false);
+	}else if (GetLocalVarInt(var) == 0){
+		PlayGuiSound(sound, 100);
+		SetEnemyIsHallucination(enemy, true);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", weapon, false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", weapon, false);
+	}
+}
+
+void HurtEnemyUsingBrick(string enemy, string weapon, string sound, string var){
+	if (GetLocalVarInt(var) == 1){
+		PlayGuiSound(sound, 100);
+		SetLocalVarInt(var, 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", weapon, false);
+		ChangePlayerStateToNormal();
+	}else if (GetLocalVarInt(var) == 0){
+		PlayGuiSound(sound, 100);
+		SetEntityActive(enemy, false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", weapon, false);
+		ChangePlayerStateToNormal();
+	}
+}
+///////////////////////////
+//FINISH CUSTOM COMMANDS//
+//////////////////////////
+
+void initEvents(){
+	AECC("Player", "AreaSound_1", "playScareSoundScary", true);
+	AECC("Player", "AreaSound_2", "playScareSoundEasy", true);
+	AECC("Player", "AreaSound_3", "playScareSoundScary", true);
+	AECC("Player", "AreaSound_4", "playScareSoundEasyIf", false);
+}
+
+void initVariables(){
+	SetLocalVarInt("collectedCellarItems", 0);
+	SetLocalVarInt("hasHeard", 0);
+	SetLocalVarInt("bruteHealth", 1);
+	SetLocalVarInt("bruteHealth_2", 1);
+}
+
+void initPlayerFunctions(){
+	SEPIC("aqua_regia", "disableHighlight", true);
+	SEPIC("cuprite", "interactChangeVar", true);
+	SEPIC("orpiment", "interactChangeVar", true);
+}
+
+void initEnemy(){
+	// "brute_1" // 
+	AECC("Player", "AreaBrute", "spawnBrute_1", true);
+	AECC("brute_1", "AreaDespawn_1", "despawnBrute_1", true);
+	AECC("short_1", "brute_1", "hitBrute_1Short_1", false);
+	AECC("long_1_1", "brute_1", "hitBrute_1Long_1_1", false);
+	AECC("long_1_2", "brute_1", "hitBrute_1Long_1_2", false);
+	AECC("short_2", "brute_1", "hitBrute_1Short_2", false);
+	AECC("long_2_1", "brute_1", "hitBrute_1Long_2_1", false);
+	AECC("long_2_2", "brute_1", "hitBrute_1Long_2_2", false);
+	// "brute_2" //
+	SEPIC("lab_key", "spawnBrute_2", true);
+	AECC("brute_2", "AreaDespawn_2", "despawnBrute_2", true);
+	AECC("short_1", "brute_2", "hitBrute_2Short_1", false);
+	AECC("long_1_1", "brute_2", "hitBrute_2Long_1_1", false);
+	AECC("long_1_2", "brute_2", "hitBrute_2Long_1_2", false);
+	AECC("short_2", "brute_2", "hitBrute_2Short_2", false);
+	AECC("long_2_1", "brute_2", "hitBrute_2Long_2_1", false);
+	AECC("long_2_2", "brute_2", "hitBrute_2Long_2_2", false);
+}
+
+void playScareSoundScary(string &in asParent, string &in asChild, int alState){
+	PGS("scare_brute_scary.ogg");
+}
+
+void playScareSoundEasy(string &in asParent, string &in asChild, int alState){
+	PGS("scare_brute_easy.ogg");
+}
+
+void playScareSoundEasyIf(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("collectedCellarItems") == 4){
+		if (GetLocalVarInt("hasHeard") == 0){
+			PGS("scare_brute_easy.ogg");
+			SetLocalVarInt("hasHeard", 1);
+			CompleteQuest("pickupNote", "pickupNote");
+		}
+	}
+}
+
+void interactChangeVar(string &in entity){
+	AddLocalVarInt("collectedCellarItems", 1);
+}
+
+void disableHighlight(string &in entity){
+	SetLightVisible("highlight_1", false);
+	SetLightVisible("highlight_2", false);
+	AddLocalVarInt("collectedCellarItems", 1);
+}
+
+void spawnBrute_1(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("brute_1", true);
+	GiveSanityDamage(25, true);
+	SetMessage("Messages", "defend", 0);
+	for(int i = 1; i <11; i++){
+		AddEnemyPatrolNode("brute_1", "PathNodeArea_"+i, 0.001f, "");
+	}
+}
+
+void hitBrute_1Short_1(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingHammer("brute_1", "short_1", "brute_attack.snt", "bruteHealth");
+}
+
+void hitBrute_1Long_1_1(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_1", "long_1_1", "brute_attack.snt", "bruteHealth");
+}
+
+void hitBrute_1Long_1_2(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_1", "long_1_2", "brute_attack.snt", "bruteHealth");
+}
+
+void hitBrute_1Short_2(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingHammer("brute_1", "short_2", "brute_attack.snt", "bruteHealth");
+}
+
+void hitBrute_1Long_2_1(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_1", "long_2_1", "brute_attack.snt", "bruteHealth");
+}
+
+void hitBrute_1Long_2_2(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_1", "long_2_2", "brute_attack.snt", "bruteHealth");
+}
+
+void despawnBrute_1(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("brute_1", false);
+}
+
+void spawnBrute_2(string &in entity){
+	SetEntityActive("brute_2", true);
+	GiveSanityDamage(25, true);
+	AddLocalVarInt("collectedCellarItems", 1);
+	SetMessage("Messages", "defend", 0);
+	for(int i = 11; i <18; i++){
+		AddEnemyPatrolNode("brute_2", "PathNodeArea_"+i, 0.001f, "");
+	}
+}
+
+void despawnBrute_2(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("brute_2", false);
+}
+
+void hitBrute_2Short_1(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingHammer("brute_2", "short_1", "brute_attack.snt", "bruteHealth_2");
+}
+
+void hitBrute_2Long_1_1(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_2", "long_1_1", "brute_attack.snt", "bruteHealth_2");
+}
+
+void hitBrute_2Long_1_2(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_2", "long_1_2", "brute_attack.snt", "bruteHealth_2");
+}
+
+void hitBrute_2Short_2(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingHammer("brute_2", "short_2", "brute_attack.snt", "bruteHealth_2");
+}
+
+void hitBrute_2Long_2_1(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_2", "long_2_1", "brute_attack.snt", "bruteHealth_2");
+}
+
+void hitBrute_2Long_2_2(string &in asParent, string &in asChild, int alState){
+	HurtEnemyUsingBrick("brute_2", "long_2_2", "brute_attack.snt", "bruteHealth_2");
+}

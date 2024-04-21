@@ -1,0 +1,192 @@
+void OnStart()
+{
+	SetEntityPlayerInteractCallback("lever_simple01_22", "needs_a_greaseing", false);
+	AddUseItemCallback("", "glass_container_1", "place_jar_areaoil", "placejar_collectzaoil", true);
+	AddUseItemCallback("", "glass_container_oil_1", "lever_simple01_22", "fixlever_oiledup", true);
+	AddUseItemCallback("", "key_study_1", "prison_section_1", "unlock_oilcell_room", true);
+	AddQuest("mem2", "memento2");
+	AddQuest("mem3", "memento3");
+	SetLocalVarInt("islever_unoiled", 0);
+	AddUseItemCallback("", "stone_hammer_1", "wooden_boards_block_1", "breakboards_exitdoorbruteforce", false);
+	SetEntityPlayerInteractCallback("level_celler_1", "startcredits_escaped_bruteforce", false);
+	CheckPoint("DeathfromBruteman", "PlayerStartArea_2", "removeonelife_respawn", "DeathHint", "DHint1");
+	SetLocalVarInt("livescount_tillgameover", 0);
+	AddEntityCollideCallback("bastard_1", "servant_brute_1", "killthebrute_runner", true, 0);
+	AddEntityCollideCallback("servant_brute_1", "brute_moan_scarecloset1", "brute_moan_scarecloset_event", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "brute_moan_scarecloset2", "brute_moan_scarecloset_event", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "brute_moan_scarecloset3", "brute_moan_scarecloset_event", false, 0);
+	AddEntityCollideCallback("Player", "wall_close_off_Startroom", "wall_close_off_Startroom", false, 0);
+}
+
+void OnEnter()
+{
+	PlayMusic("soma01_03_oceanbottom", true, 1.0f, 3.0f, 1, false);
+}
+
+void OnLeave()
+{
+
+}
+
+/////////////////////////////////////////
+////////////////OIL/PUZZLE///////////////
+/////////////////////////////////////////
+
+void needs_a_greaseing(string &in asEntity)
+{
+		if(GetLocalVarInt("islever_unoiled") == 0)
+		{
+			SetMessage("Messages", "Levelmusthavegrease_bruteforce", 0.0f);
+			AddQuest("mem1", "memento1");
+		}
+}
+
+void placejar_collectzaoil(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("glass_container_static", true);
+	SetMessage("Messages", "itwilltakesometime_tofilloil", 0.0f);
+	AddTimer("finishoil_jarfill_item", 30.0f, "finishoil_jarfill_item");
+}
+
+void finishoil_jarfill_item(string &in asTimer)
+{
+	SetEntityActive("glass_container_oil_1", true);
+	SetEntityActive("glass_container_static", false);
+}
+
+void fixlever_oiledup(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetLeverStuckState("lever_simple01_22", 0, true);
+	CreateParticleSystemAtEntity("oil_production", "ps_oil_grease.ps", "oilsplash_sourcearea", true);
+	SetLocalVarInt("islever_unoiled", 1);
+	CompleteQuest("mem1", "memento1");
+}
+
+void lever_dooropener(string &in asEntity, int LeverState)
+{
+		if(LeverState == 1)
+		{
+		
+				SetEntityActive("safety_normal_vert_2", true);
+				SetEntityActive("safety_normal_vert_1", false);
+				SetLeverStuckState("lever_simple01_22", 1, false);
+				PlaySoundAtEntity("pull_lever_gatedoor", "unlock_door", "Player", 0, false);
+				CompleteQuest("mem3", "memento3");
+				GiveSanityDamage(25.0f, false);
+				GiveSanityBoost();
+				StartInsanityEvent("Bugs_Many");
+		
+		}
+}
+
+void unlock_oilcell_room(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("prisonbars_door_way_1", false);
+	SetEntityActive("prison_section_1", false);
+	PlaySoundAtEntity("unlockoildoor_cell", "unlock_door", "Player", 0, false);
+}
+
+
+//////////////////////////////////////////
+////////////////BOARDS/DOOR///////////////
+//////////////////////////////////////////
+
+
+void breakboards_exitdoorbruteforce(string &in asItem, string &in asEntity)
+{
+	SetPropHealth("wooden_boards_block_1", 0.0f);
+	CompleteQuest("mem2", "memento2");
+	GiveSanityDamage(25.0f, false);
+	GiveSanityBoost();
+}
+
+//////////////////////////////////////////
+////////////////CREDITS/WIN///////////////
+//////////////////////////////////////////
+
+
+void startcredits_escaped_bruteforce(string &in asEntity)
+{
+	StartCredits("", false, "Credits", "EndingEscape", 3);
+}
+
+
+//////////////////////////////////////////
+////////////////BRUTE/SPAWN///////////////
+//////////////////////////////////////////
+
+void wall_close_off_Startroom(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("default_1_fakewall", true);	
+	SetEntityActive("servant_brute_1", true);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_3", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_5", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_7", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_8", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_9", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_10", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_11", 0.001, "");
+}
+
+////////////////////////////////////////////
+////////////////DEATH/RESPAWN///////////////
+////////////////////////////////////////////
+
+void removeonelife_respawn(string &in asName, int alCount)
+{
+	SetEntityActive("servant_brute_1", true);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_3", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_5", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_7", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_8", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_9", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_10", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_11", 0.001, "");
+	PlayMusic("soma01_03_oceanbottom", true, 1.0f, 3.0f, 1, false);
+	AddLocalVarInt("livescount_tillgameover", 1);
+	
+		if(GetLocalVarInt("livescount_tillgameover") == 3)
+		{
+			StartCredits("", false, "Credits", "EndingDeath", 3);
+		}
+}
+
+/////////////////////////////////////////////
+////////////////KILL/THE/BRUTE///////////////
+/////////////////////////////////////////////
+
+
+void killthebrute_runner(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("ps_orb_room_portal_open", "ps_orb_room_portal_open.ps", "servant_brute_1", false);
+	FadeEnemyToSmoke("servant_brute_1", true);
+	StartScreenShake(0.05, 5.0f, 0.5f, 2.0f);
+	FadeOut(5.0f);
+	AddTimer("rollcredits_killedbrute", 5.0f, "rollcredits_killedbrute");
+	PlaySoundAtEntity("brutedeathsound", "guardian_activated.snt", "Player", 0, false);
+}
+
+void rollcredits_killedbrute(string &in asTimer)
+{
+	StartCredits("", false, "Credits", "EndingKillBrute", 3);
+}
+
+//////////////////////////////////////////////////
+////////////////SIMPLE/SCARE/EVENTS///////////////
+//////////////////////////////////////////////////
+
+void brute_moan_scarecloset_event(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("Bruterun_scare_sfx", "Bruterun_attack_launch.snt", "servant_brute_1", 0, false);
+}

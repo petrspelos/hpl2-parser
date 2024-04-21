@@ -1,0 +1,498 @@
+void OnStart()
+{ 
+  AddUseItemCallback("", "key_1", "locked_door1", "UsedKeyOnDoor", true);
+  AddUseItemCallback("", "bucket_water", "coal_fire", "FireOFF", true);
+  AddUseItemCallback("", "key_stash", "stash_painting", "UsedKeyOnStash", true);
+  AddUseItemCallback("", "crowbar_1", "locked_door2", "UsedCrowbarOnDoor", true);
+  AddUseItemCallback("", "potion_rat_poison_1", "Player", "PotionDrink", true);
+  AddUseItemCallback("", "crowbar_2", "treasure_chest_1", "UsedCrowbarOnChest", true);
+  AddEntityCollideCallback("crowbar_joint", "AreaBreak", "BreakDoor", true, 1);
+  AddEntityCollideCallback("crowbar_joint_1", "AreaBreak_1", "BreakChest", true, 1);
+  AddEntityCollideCallback("Player", "Area_StartTimers", "StartTimers", true, 1);
+  AddEntityCollideCallback("Player", "helmet_scare_area", "Scare_Event_2", true, 1);
+  AddEntityCollideCallback("Player", "Area_Scare_3", "Scare_Event_3", true, 1);
+  AddEntityCollideCallback("Player", "area_scare_event_4", "Scare_Event_4", true, 1);
+  AddEntityCollideCallback("Player", "area_lookstream", "LookStream", true, 1);
+  AddEntityCollideCallback("Player", "area_lookstream_2", "LookStream2", true, 1);
+  SetEntityCallbackFunc("key_1", "OnPickup");
+  SetEntityCallbackFunc("potion_rat_poison_1", "OnPickup");
+  SetEntityPlayerInteractCallback("note_secret", "Scare_Event_1", true);
+  SetEntityPlayerInteractCallback("key_1", "autosave2", true);
+  SetEntityPlayerInteractCallback("crowbar_1", "autosave3", true);
+  SetEntityPlayerInteractCallback("key_mansion", "autosave4", true);
+  SetLocalVarInt("EndSpam", 0);
+  SetLocalVarInt("EndSpam2", 0);
+  SetLocalVarInt("EndSpam3", 0);
+  SetLocalVarInt("KeyExtinguish", 0);
+}
+
+void OnEnter()
+{
+PreloadSound("moonlightsonata.snt");
+AddTimer("", 1, "StartMusic");
+SetEntityInteractionDisabled("ceremony_knife_1", true);
+if(GetLocalVarInt("KeyExtinguish") == 0)
+{
+PlaySoundAtEntity("coal_sound", "15_fire.snt", "coal_fire", 0, false);
+SetEntityInteractionDisabled("key_1", true);
+}
+}
+
+void LookStream(string &in asParent, string &in asChild, int alState)
+{
+	StartPlayerLookAt("area_part_1", 2, 2, "");
+	SetMessage("Message", "Message_StreamWhat", 3);
+	DestroyParticleSystem("stream_1");
+	AddTimer("", 1.5, "StopLooking");
+}
+
+void LookStream2(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 0.5, "RemoveStream");
+}
+
+void StopLooking(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void RemoveStream(string &in asTimer)
+{
+	DestroyParticleSystem("stream_2");
+}
+
+void autosave2(string &in asEntity)
+{
+	AutoSave();
+	CompleteQuest("q2quest", "WaterKeyQuest");
+}
+
+void autosave3(string &in asEntity)
+{
+	AutoSave();
+}
+
+void autosave4(string &in asEntity)
+{
+	AutoSave();
+}
+
+void StartMusic(string &in asTimer)
+{
+	PlayMusic("amb_creepy_01.ogg", true, 0.6, 1, 1, true);
+}
+void OnLeave()
+{
+	StopMusic(0.1, 1);
+	if(HasItem("potion_rat_poison_1") == true)
+	{
+	RemoveItem("potion_rat_poison_1");
+	}
+}
+void StateChangePhono(string &in asEntity, int alState)
+{
+AddTimer(asEntity, 0.2, "PhonoMusic");
+}
+void PhonoMusic(string &in asTimer)
+{
+PlaySoundAtEntity("phono_scrape", "moonlightsonata.snt", asTimer, 0.9, false);
+}
+void FireOFF(string &in asItem, string &in asEntity)
+{
+  CreateParticleSystemAtEntity("", "ps_extinguish.ps", "coal_fire", false);
+  AddLocalVarInt("KeyExtinguish", 1);
+  SetPropEffectActive("coal_fire", false, false);
+  SetLampLit("fire_part", true, true);
+  SetEntityActive("fire_part", false);
+  SetEntityInteractionDisabled("key_1", false);
+  PlaySoundAtEntity("", "water_hissing.snt", "coal_fire", 0, false);
+  StopSound("coal_sound", 0.2);
+  RemoveItem("bucket_water"); 
+}
+void StartTimers(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Message", "Message_wtf", 2);
+PlaySoundAtEntity("", "00_faint.snt", "Player", 0, false);
+GiveSanityDamage(5.0, true);
+if(GetEntityExists("potion_rat_poison_1") == true)
+{
+for (int i = 0; i <1000; i++)
+{  
+RemoveTimer("potion_timer" + i);
+}
+for (int i = 0; i <1000; i++)
+{  
+AddTimer("potion_timer" + i, i, "DamagePotion");
+}
+}	
+}
+void DamagePotion(string &in asTimer)
+{
+	if(GetPlayerHealth() == 74)
+	{
+	SetPlayerSanity(0);
+	GivePlayerDamage(5.0, "Slash", false, false);
+	GiveSanityDamage(5.0, true);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+	for (int i = 0; i <10; i++)
+	{  
+	AddTimer("", i, "PotionDrink");
+	}
+	for (int i = 0; i <1000; i++)
+	{  
+	RemoveTimer("potion_timer" + i);
+	}
+	AddTimer("", 1, "voice_breath");
+	AddTimer("", 2.2, "voice_breath");
+	AddTimer("", 3.4, "voice_breath");
+	AddTimer("", 4.5, "voice_pant");
+	AddTimer("", 5.5, "voice_breath");
+	AddTimer("", 6.7, "voice_breath");
+	AddTimer("", 7.9, "voice_pant");
+	AddTimer("", 14, "PotionMessage");
+	AddTimer("", 1.5, "fadeout_timer");
+	AddTimer("", 6, "fadein_timer");
+	}
+}
+void PotionDrink(string &in asTimer)
+{
+  	GivePlayerDamage(5.0, "Slash", false, false);
+	GiveSanityDamage(5.0, true);
+}
+void PotionMessage(string &in asTimer)
+{
+	SetMessage("Message", "Message_Poison", 3);
+}
+void voice_breath(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+}
+void voice_pant(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+}
+void fadeout_timer(string &in asTimer)
+{
+	FadeOut(2);
+}
+void fadein_timer(string &in asTimer)
+{
+	FadeIn(4);
+}
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+  SetSwingDoorLocked("locked_door1", false, true);
+  PlaySoundAtEntity("", "unlock_door.snt", "locked_door1", 0, false);
+  RemoveItem("key_1");
+}
+void UsedCrowbarOnDoor(string &in asItem, string &in asEntity)
+{
+  RemoveItem(asItem); 
+  PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+  AddTimer(asEntity, 0.2, "TimerPlaceCrowbar");
+}
+void TimerPlaceCrowbar(string &in asTimer)
+{
+  SetEntityActive("crowbar_joint", true);
+  PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0, false);
+}
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("crowbar_joint", false);
+  SetEntityActive("crowbar_2", true);
+  SetSwingDoorLocked("locked_door2", false, false);
+  SetSwingDoorClosed("locked_door2", false, false);
+  SetSwingDoorDisableAutoClose("locked_door2", true);
+  AddPropImpulse("locked_door2", 0, 0, 3, "world");
+  CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaEffect", false);
+  PlaySoundAtEntity("", "break_wood_metal.snt", "AreaEffect", 0, false);
+  AddTimer("", 0.1, "TimerPushDoor");
+  CompleteQuest("q3quest", "DoorStuckQuest");
+}
+void TimerPushDoor(string &in asTimer)
+{
+  AddPropImpulse("locked_door2", -4, 2, 1, "world");
+  AddTimer("", 0.1, "TimerDoorCanClose");
+}
+void TimerDoorCanClose(string &in asTimer)
+{
+  SetSwingDoorDisableAutoClose("locked_door2", false);
+}
+void UsedCrowbarOnChest(string &in asItem, string &in asEntity)
+{
+  RemoveItem(asItem); 
+  PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+  AddTimer(asEntity, 0.2, "TimerPlaceCrowbarChest");
+}
+void TimerPlaceCrowbarChest(string &in asTimer)
+{
+  SetEntityActive("crowbar_joint_1", true);
+  PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0, false);
+}
+void BreakChest(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("crowbar_joint_1", false);
+  SetEntityActive("crowbar_4", true);
+  SetEntityActive("treasure_chest_1", false);
+  SetEntityActive("treasure_chest_2", true);
+  AddPropImpulse("treasure_chest_1", 0, 0, 3, "world");
+  CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaEffect_1", false);
+  GiveSanityBoost();
+  PlaySoundAtEntity("", "break_wood_metal.snt", "AreaEffect_1", 0, false);
+  PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+  AddTimer("", 0.1, "TimerPushDoorChest");
+}
+void TimerPushDoorChest(string &in asTimer)
+{
+  AddPropImpulse("treasure_chest_1", 0, 2, 4, "world");
+}
+void UsedKeyOnStash(string &in asItem, string &in asEntity)
+{
+  SetPropStaticPhysics("stash_painting", false);
+  AddPropForce("stash_painting", 80.0, 0.0, 0.0, "world");
+  PlaySoundAtEntity("", "door_sewer_unlock.snt", "stash_painting", 0, false);
+  RemoveItem("key_stash");
+}
+void OnPickup(string &in asEntity, string &in type)
+{
+	if(asEntity == "key_1")
+	{
+	SetMessage("Message", "Message_KeyLibrary", 3);
+	}
+	else
+	{
+	SetPlayerHealth(99.0);
+	}
+}
+void Water_Message(string &in asEntity)
+{
+	if(GetLocalVarInt("EndSpam") == 0)
+	{
+	AddLocalVarInt("EndSpam", 1);
+	SetMessage("Message", "Message_WaterKey", 3);
+	}
+	if(QuestIsAdded("q2quest") == false)
+	{
+	AddQuest("q2quest", "WaterKeyQuest");
+	}
+}
+void DoorMessage1(string &in asEntity)
+{
+	if(GetLocalVarInt("EndSpam2") == 0 && GetSwingDoorLocked("locked_door1") == true)
+	{
+	AddLocalVarInt("EndSpam2", 1);
+	AddTimer(asEntity, 3.5, "FixTimer");
+	SetMessage("Message", "Message_LibraryRoom", 3);
+	}
+}
+void DoorMessage2(string &in asEntity)
+{
+	if(GetLocalVarInt("EndSpam3") == 0 && GetSwingDoorLocked("locked_door2") == true)
+	{
+	AddLocalVarInt("EndSpam3", 1);
+	AddTimer(asEntity, 3.5, "FixTimer");
+	SetMessage("Message", "Message_ButlerLastRoom", 3);
+	}
+	if(GetSwingDoorLocked("locked_door2"))
+	{
+	if(QuestIsAdded("q3quest") == false)
+	{
+	AddQuest("q3quest", "DoorStuckQuest");
+	}
+	}
+}
+void ChestMessage(string &in asEntity)
+{
+	if(GetLocalVarInt("EndSpam4") == 0)
+	{
+	AddLocalVarInt("EndSpam4", 1);
+	AddTimer(asEntity, 3.5, "FixTimer");
+	SetMessage("Message", "Message_Chest", 3);
+	}
+}
+void FixTimer(string &in asTimer)
+{
+	if(asTimer == "locked_door1")
+	{
+	AddLocalVarInt("EndSpam2", -1);
+	}
+	else if(asTimer == "locked_door2")
+	{
+	AddLocalVarInt("EndSpam3", -1);
+	}
+	else
+	{
+	AddLocalVarInt("EndSpam4", -1);
+	}
+}
+
+// Scare Event 1
+void Scare_Event_1(string &in asEntity)
+{
+	StopMusic(0, 1);
+	SetPlayerActive(false);
+	TeleportPlayer("PlayerStartArea_2");
+
+	AddTimer("", 3.3, "MoveHead");
+	AddTimer("", 4.3, "Scare_End_Event");
+	
+	AddTimer("", 1, "step_1");
+	AddTimer("", 1.5, "step_2");
+	AddTimer("", 2, "step_3");
+	AddTimer("", 2.5, "step_4");
+	AddTimer("", 3, "step_5");
+	
+	SetEntityActive("area_lookstream", true);
+	SetEntityActive("area_lookstream_2", true);
+	CreateParticleSystemAtEntity("stream_1", "ps_orb_absorb_stream.ps", "area_part_1", true);
+	CreateParticleSystemAtEntity("stream_2", "ps_orb_absorb_stream.ps", "area_part_5", true);
+}
+void step_1(string &in asTimer)
+{
+	PlaySoundAtEntity("event_terror", "event_terror.snt", "Player", 0, false);
+	PlaySoundAtEntity("", "leather_run.snt", "step_1", 0, false);
+	FadeImageTrailTo(0.5, 0.5);
+	FadeRadialBlurTo(0.04, 0.5);
+}
+void step_2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "leather_run.snt", "step_2", 0, false);
+}
+void step_3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "leather_run.snt", "step_3", 0, false);
+}
+void step_4(string &in asTimer)
+{
+	PlaySoundAtEntity("", "leather_run.snt", "step_4", 0, false);
+}
+void step_5(string &in asTimer)
+{
+	PlaySoundAtEntity("", "leather_run.snt", "step_5", 0, false);
+}
+void MoveHead(string &in asTimer)
+{
+	StartPlayerLookAt("player_look_at", 8, 8, "");
+	
+	GiveSanityDamage(5.0, true);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+}
+void Scare_End_Event(string &in asTimer)
+{
+	FadeImageTrailTo(0, 1);
+	FadeRadialBlurTo(0, 1);
+	AddTimer("", 1, "StartMusic");
+	SetPlayerActive(true);
+	
+	StopPlayerLookAt();
+	StopSound("event_terror",0);
+	AddTimer("", 0.5, "StartMusic");
+}
+
+// Scare Event 2
+void Scare_Event_2(string &in asParent, string &in asChild, int alState)
+{
+	AddPropImpulse("helmet_scare", 0, 0, 3, "world");
+	GiveSanityDamage(5.0, true);
+}
+
+// Scare Event 3
+void Scare_Event_3(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(0.5, 1);
+	SetPlayerActive(false);
+	StartPlayerLookAt("area_scare_sound_1", 1, 1, "");
+	AddTimer("", 0.5, "play_sound_scare");
+	AddTimer("", 8.5, "unfreeze_player");
+}
+void play_sound_scare(string &in asTimer)
+{
+	PlaySoundAtEntity("", "04_big_feet.snt", "area_scare_sound_1", 0, false);
+}
+void unfreeze_player(string &in asTimer)
+{
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	AddTimer("", 1.5, "StartMusic");
+}
+
+// Scare Event 4
+void Scare_Event_4(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "24_bush.snt", "area_scare_event4_1", 0, false);
+	AddTimer("", 0.4, "play_sound_scare_2");
+	AddTimer("", 0.8, "play_sound_scare_3");
+	AddTimer("", 1.2, "play_sound_scare_4");
+	AddTimer("", 1.6, "play_sound_scare_5");
+	AddTimer("", 2.1, "play_sound_scare_6");
+	AddTimer("", 2.5, "play_sound_scare_7");
+	AddTimer("", 2.9, "play_sound_scare_8");
+	AddTimer("", 3.3, "play_sound_scare_9");
+	AddTimer("", 3.7, "play_sound_scare_10");
+	AddTimer("", 4.1, "play_sound_scare_11");
+	AddTimer("", 4.5, "play_sound_scare_12");
+	AddTimer("", 4.9, "play_sound_scare_13");
+	AddTimer("", 5.3, "play_sound_scare_14");
+}
+void play_sound_scare_2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_2", 0, false);
+}
+void play_sound_scare_3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_3", 0, false);
+}
+void play_sound_scare_4(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_4", 0, false);
+}
+void play_sound_scare_5(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_5", 0, false);
+}
+void play_sound_scare_6(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_6", 0, false);
+}
+void play_sound_scare_7(string &in asTimer)
+{
+	PlaySoundAtEntity("", "24_bush.snt", "area_scare_event4_7", 0, false);
+}
+void play_sound_scare_8(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_8", 0, false);
+}
+void play_sound_scare_9(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_9", 0, false);
+}
+
+void play_sound_scare_10(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_10", 0, false);
+}
+
+void play_sound_scare_11(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_11", 0, false);
+}
+
+void play_sound_scare_12(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_12", 0, false);
+}
+void play_sound_scare_13(string &in asTimer)
+{
+	PlaySoundAtEntity("", "insanity_step_slime_sneak.snt", "area_scare_event4_13", 0, false);
+}
+
+void play_sound_scare_14(string &in asTimer)
+{
+	PlaySoundAtEntity("", "24_bush.snt", "area_scare_event4_14", 0, false);
+}
+
+
+
+
+
+// sounds 24_bush.snt insanity_step_slime_sneak.snt

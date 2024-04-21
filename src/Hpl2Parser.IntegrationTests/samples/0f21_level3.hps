@@ -1,0 +1,473 @@
+//  ___  _         _            _           _   _            ______ _ _ _       
+// / _ \| |       | |          | |         | | | |           | ___ (_) | |      
+/// /_\ \ |__   __| |_   _  ___| |_ ___  __| | | |__  _   _  | |_/ /_| | |_   _ 
+//|  _  |  _ \ / _  | | | |/ __| __/ _ \/ _  | |  _ \| | | | | ___ \ | | | | | |
+//| | | | |_) | (_| | |_| | (__| ||  __/ (_| | | |_) | |_| | | |_/ / | | | |_| |
+//\_| |_/____/ \__,_|\__,_|\___|\__\___|\__,_| |____/ \__, | \____/|_|_|_|\__, |
+//                                                     __/ |               __/ |
+//                                                    |___/               |___/   
+//													
+//													By: Nick Debergue
+//													
+//****IF YOU'RE READING: Good luck understanding this gibberish :)
+//****Contact: perceptionist420@ymail.com
+//****Or message me or comment at Mod/Indie DB! I'm always looking for collaborations!
+//****
+//****CHEATS: Search the code for "hax" (CAUTION: YOU MUST COMMENT/UNCOMMENT THESE SEGMENTS CORRECTLY FOR THE DESIRED EFFECT!)
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////---BEGINNING---//////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void startArea(string &in asEntity, int alState){
+	if(GetGlobalVarInt("fromLvl3") == 0){
+		SetGlobalVarInt("fromLvl3", 1);
+		SetMapDisplayNameEntry("LVL3");
+		
+		if(GetGlobalVarInt("lvl3FirstRun") == 0){
+			AddEntityCollideCallback("Player", "scare1", "hangingMan", true, 1);
+			AddEntityCollideCallback("Player", "scare2", "splashScare", true, 1);
+			SetEntityPlayerInteractCallback("door2", "checkifLocked", false);
+			SetEntityPlayerInteractCallback("door3", "checkifLocked", false);
+			SetEntityPlayerInteractCallback("door4", "checkifLocked", false);
+			SetEntityPlayerInteractCallback("gate", "checkifLockedP", false);
+			//
+			AddGlobalVarInt("lvl3FirstRun", 1);
+		}
+		
+		//SHOW PERCENT
+		if((HasItem("hammer"))&&((HasItem("handDrillC1"))||(HasItem("handDrill")))){
+			SetMessage("Messages", "lvl2_100percent", 3);
+		}else if((HasItem("hammer"))&&((HasItem("handDrillP1"))||(HasItem("handDrillP2")))){
+			SetMessage("Messages", "lvl2_95percent", 3);
+		}else if(HasItem("hammer")){
+			SetMessage("Messages", "lvl2_85percent", 3);
+		}else{
+			SetMessage("Messages", "lvl2_75percent", 3);
+		}
+		
+		if((HasItem("hammer"))&&(!HasItem("handDrillP3"))&&(!HasItem("handDrill"))){
+			AddUseItemCallback("hammer1", "hammer", "brickPush1_1", "useHammer", false);
+			AddUseItemCallback("hammer2", "hammer", "brickPush1_2", "useHammer", false);
+			AddUseItemCallback("hammer3", "hammer", "brickPush1_3", "useHammer", false);
+			AddUseItemCallback("hammer4", "hammer", "brickPush1_4", "useHammer", false);
+			AddUseItemCallback("hammer5", "hammer", "brickPush1_5", "useHammer", false);
+			AddUseItemCallback("hammer6", "hammer", "brickPush1_6", "useHammer", false);
+			AddUseItemCallback("hammer7", "hammer", "brickPush1_7", "useHammer", false);
+			AddUseItemCallback("hammer8", "hammer", "brickPush1_8", "useHammer", false);
+			AddUseItemCallback("hammer9", "hammer", "brickPush1_9", "useHammer", false);
+			AddUseItemCallback("hammer10", "hammer", "brickPush1_10", "useHammer", false);
+			AddUseItemCallback("hammer11", "hammer", "brickPush1_11", "useHammer", false);
+			AddUseItemCallback("hammer12", "hammer", "brickPush1_12", "useHammer", false);
+			SetEntityPlayerInteractCallback("handDrillP3", "gotDrillBit", true);
+		}
+		
+		if(HasItem("hammer")){
+			AddUseItemCallback("hammer13", "hammer", "padlock_1", "useHammerPadlock", false);
+			AddUseItemCallback("drill", "handDrill", "padlock_1", "useHandDrill", true);
+		}
+		
+		SetPlayerJumpDisabled(false);
+		
+		SetMapDisplayNameEntry("LVL3");
+		
+		SetEntityInteractionDisabled("book02_1", true);
+		SetEntityInteractionDisabled("book03_1", true);
+		SetEntityInteractionDisabled("book_bible_1", true);
+		
+		
+		PlayMusic("ambient3.ogg", true, 1, 2, 1, false);
+		
+		//HAXE
+		//GiveItem("handDrill", "Puzzle", "handDrill", "hand_drill.tga", 1);////////////////////////
+		//AddUseItemCallback("drill", "handDrill", "padlock_1", "useHandDrill", true);//////////////////
+		
+		//
+		AutoSave();
+	}
+}
+
+void died(string &in asName, int alCount){
+	if(asName == "splashChase"){
+		ClearSavedMaps();
+		RemoveItem("hammer");
+		FadeOut(0);
+		AddTimer("wakeUp", 2, "wakeUp");
+		FadePlayerRollTo(90, 100, 100);
+		FadeRadialBlurTo(0.06, 1);
+		FadeImageTrailTo(0.7, 1);
+		MovePlayerHeadPos(0, -1.5, 0, 50, 1);
+		SetPlayerActive(false);
+		SetPlayerCrouching(false);
+		SetPlayerMoveSpeedMul(0.6);
+		SetPlayerRunSpeedMul(0.4);
+		SetPlayerLookSpeedMul(0.6);
+		SetSanityDrainDisabled(true);
+		SetEntityActive("handDrillWheel", false);
+		StopMusic(0, 1);
+		AutoSave();
+	}
+}
+
+void gotDrillBit(string &in asEntity){
+	if(HasItem("handDrillC1")){
+		RemoveItem("handDrillC1");
+		RemoveItem("handDrillP3");
+		GiveItem("handDrill", "Puzzle", "handDrill", "hand_drill.tga", 1);
+		PlayGuiSound("12_make_drill", 1);
+	}
+	
+	AutoSave();
+}
+
+void hangingMan(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("hangingMan", true);
+	StartPlayerLookAt("hangingMan", 8, 8, "releaseLook");
+	PlaySoundAtEntity("hangingMan", "coughing_man.snt", "hangingMan", 0, false);
+}
+
+void splashScare(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("splashScare", true);
+	AddTimer("splashScare", 2, "removeSplashBox");
+}
+
+void useHammer(string &in asItem, string &in asEntity){
+	SetEntityActive(asEntity, false);
+	
+	//
+	PlayGuiSound("impact_metal_high.snt", 100.0f);
+	//
+	
+	if(asEntity == "brickPush1_1"){
+		SetEntityActive("brickPush1_24", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_24", false);
+		AddPropForce("brickPush1_24", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_5"){
+		SetEntityActive("brickPush1_23", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_23", false);
+		AddPropForce("brickPush1_23", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_3"){
+		SetEntityActive("brickPush1_20", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_20", false);
+		AddPropForce("brickPush1_20", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_2"){
+		SetEntityActive("brickPush1_21", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_21", false);
+		AddPropForce("brickPush1_21", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_4"){
+		SetEntityActive("brickPush1_22", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_22", false);
+		AddPropForce("brickPush1_22", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_7"){
+		SetEntityActive("brickPush1_19", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_19", false);
+		AddPropForce("brickPush1_19", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_6"){
+		SetEntityActive("brickPush1_18", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_18", false);
+		AddPropForce("brickPush1_18", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_10"){
+		SetEntityActive("brickPush1_15", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_15", false);
+		AddPropForce("brickPush1_15", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_9"){
+		SetEntityActive("brickPush1_16", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_16", false);
+		AddPropForce("brickPush1_16", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_8"){
+		SetEntityActive("brickPush1_17", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_17", false);
+		AddPropForce("brickPush1_17", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_11"){
+		SetEntityActive("brickPush1_14", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_14", false);
+		AddPropForce("brickPush1_14", 0, 0, -1000, "world");
+	}else if(asEntity == "brickPush1_12"){
+		SetEntityActive("brickPush1_13", true);
+		CreateParticleSystemAtEntity("brickBreak", "ps_hit_rock.ps", "brickPush1_13", false);
+		AddPropForce("brickPush1_13", 0, 0, -1000, "world");
+	}
+	
+}
+
+void useHammerPadlock(string &in asItem, string &in asEntity){
+	CreateParticleSystemAtEntity("hitLock", "ps_hit_metal.ps", "padlock_1", false);
+	PlayGuiSound("impact_metal_high.snt", 100.0f);
+	SetMessage("Messages", "ineffective", 4);
+}
+
+void useHandDrill(string &in asItem, string &in asEntity){
+	CheckPoint("splashChase", "startAreaChase", "died", "deathHints", "splashChase");
+	PlayGuiSound("puzzle_place_jar.ogg", 100.0f);
+	RemoveItem("handDrill");
+	SetEntityActive("handDrillWheel", true);
+	SetPropStaticPhysics("padlock_1", true);
+	CreateEntityAtArea("splashChaseB_1", "invisible_box_mass_2.ent", "splashChase_1", false);
+	AddEntityCollideCallback("Player", "splashChaseA_1", "monsterHit", true, 1);
+	RemoveUseItemCallback("hammer13");
+	AddLocalVarInt("splashChase", 1);
+	AddTimer("splashChaseB_1", 2, "removeSplashBox");
+	AddTimer("splashChase", 1, "splashChase");
+}
+
+void splashChase(string &in asTimer){
+	if(GetLocalVarInt("splashChase") == 1){
+		PlayGuiSound("react_pant", 100.0f);
+		StartPlayerLookAt("downTheHall", 8, 8, "releaseLook");
+		SetMessage("Messages", "openQuickly", 6);
+		PlayMusic("handDrill_susp.ogg", false, 1, 0, 1, false);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 2){
+		CreateEntityAtArea("splashChaseB_2", "invisible_box_mass_2.ent", "splashChase_2", false);
+		AddTimer("splashChaseB_2", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_1");
+		AddEntityCollideCallback("Player", "splashChaseA_2", "monsterHit", true, 1);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 3){
+		CreateEntityAtArea("splashChaseB_3", "invisible_box_mass_2.ent", "splashChase_3", false);
+		AddTimer("splashChaseB_3", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_2");
+		AddEntityCollideCallback("Player", "splashChaseA_3", "monsterHit", true, 1);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 4){
+		CreateEntityAtArea("splashChaseB_4", "invisible_box_mass_2.ent", "splashChase_4", false);
+		AddTimer("splashChaseB_4", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_3");
+		AddEntityCollideCallback("Player", "splashChaseA_4", "monsterHit", true, 1);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 5){
+		CreateEntityAtArea("splashChaseB_5", "invisible_box_mass_2.ent", "splashChase_5", false);
+		AddTimer("splashChaseB_5", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_4");
+		AddEntityCollideCallback("Player", "splashChaseA_5", "monsterHit", true, 1);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 6){
+		CreateEntityAtArea("splashChaseB_6", "invisible_box_mass_2.ent", "splashChase_6", false);
+		AddTimer("splashChaseB_6", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_5");
+		AddEntityCollideCallback("Player", "splashChaseA_6", "monsterHit", true, 1);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 7){
+		CreateEntityAtArea("splashChaseB_7", "invisible_box_mass_2.ent", "splashChase_7", false);
+		AddTimer("splashChaseB_7", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_6");
+		AddEntityCollideCallback("Player", "splashChaseA_7", "monsterHit", true, 1);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 8){
+		CreateEntityAtArea("splashChaseB_8", "invisible_box_mass_2.ent", "splashChase_8", false);
+		AddTimer("splashChaseB_8", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_7");
+		AddEntityCollideCallback("Player", "splashChaseA_8", "monsterHit", true, 1);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 1.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 9){
+		CreateEntityAtArea("splashChaseB_9", "invisible_box_mass_2.ent", "splashChase_9", false);
+		AddTimer("splashChaseB_9", 2, "removeSplashBox");
+		RemoveEntityCollideCallback("Player", "splashChaseA_8");
+		AddEntityCollideCallback("Player", "splashChaseA_9", "monsterHit", true, 1);
+		PlaySoundAtEntity("monsterThere", "notice.snt", "splashChaseA_9", 0, false);
+		
+		SetLocalVarInt("splashChase", GetLocalVarInt("splashChase")+1);
+		AddTimer("splashChase", 2.5, "splashChase");
+	}else if(GetLocalVarInt("splashChase") == 10){
+		RemoveEntityCollideCallback("Player", "splashChaseA_9");
+		AddEntityCollideCallback("Player", "splashChaseA_10", "monsterHit", true, 1);
+	}
+}
+
+void monsterHit(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("attack_claw_hit", 1);
+	RemoveEntityCollideCallback("Player", "splashChaseA_1");
+	RemoveEntityCollideCallback("Player", "splashChaseA_2");
+	RemoveEntityCollideCallback("Player", "splashChaseA_3");
+	RemoveEntityCollideCallback("Player", "splashChaseA_4");
+	RemoveEntityCollideCallback("Player", "splashChaseA_5");
+	RemoveEntityCollideCallback("Player", "splashChaseA_6");
+	RemoveEntityCollideCallback("Player", "splashChaseA_7");
+	RemoveEntityCollideCallback("Player", "splashChaseA_8");
+	RemoveEntityCollideCallback("Player", "splashChaseA_9");
+	RemoveEntityCollideCallback("Player", "splashChaseA_10");
+	RemoveTimer("splashChase");
+	SetPlayerHealth(0);
+	SetPlayerActive(false);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////WAKE UP//////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wakeUp(string &in asTimer){
+	SetLightVisible("strobeLight1", false);
+	SetLampLit("elevator_lamp_1", false, false);
+	SetLampLit("elevator_lamp_2", false, false);
+	SetLampLit("elevator_lamp_3", false, false);
+	SetLampLit("elevator_lamp_4", false, false);
+	FadeIn(6);
+	SetEntityActive("block1", false);
+	SetEntityPlayerInteractCallback("gate", "checkifLockedB", false);
+	AddEntityCollideCallback("Player", "startCrickets1", "startCricketsInit", true, 1);
+	AddEntityCollideCallback("Player", "startMonsterGrave", "startMonsterGrave", true, 1);
+	AddEntityCollideCallback("Player", "startSounds1", "startSounds1", true, 1);
+	AddEntityCollideCallback("Player", "startSounds2", "startSounds2", true, 1);
+	AddEntityCollideCallback("Player", "startMonster2", "startMonster2", true, 1);
+	AddEntityCollideCallback("Player", "wakeUp", "wakeUp2", true, 1);
+	PlayGuiSound("sanity_heartbeat.snt", 1);
+	PlayGuiSound("react_breath_slow.snt", 1);
+	AddTimer("startDream", 5, "startDream");
+	AddTimer("beats", 2, "beats");
+	AddTimer("breaths", 2, "breaths");
+}
+
+void startDream(string &in asTimer){
+	FadePlayerRollTo(0, 75, 75);
+	MovePlayerHeadPos(0, 0, 0, 6, 2);
+	PlayGuiSound("player_climb1.ogg", 1);
+	AddTimer("getUp", 2, "getUp");
+}
+
+void getUp(string &in asTimer){
+	SetPlayerActive(true);
+}
+
+void beats(string &in asTimer){
+	PlayGuiSound("sanity_heartbeat.snt", 1);
+	AddTimer("beats", 3, "beats");
+}
+
+void breaths(string &in asTimer){
+	PlayGuiSound("react_breath_slow.snt", 1);
+	AddTimer("breaths", 6, "breaths");
+}
+
+void startCricketsInit(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("block1", true);
+	SetLightVisible("light1", false);
+	SetLightVisible("light2", false);
+	SetLightVisible("light3", false);
+	SetLightVisible("light4", false);
+	SetLightVisible("light5", false);
+	SetLightVisible("light6", false);
+	SetLightVisible("light7", false);
+	SetLightVisible("light8", false);
+	SetLightVisible("light9", false);
+	PlayMusic("crickets.ogg", true, 0.5, 4, 1, true);
+}
+
+void startSounds1(string &in asParent, string &in asChild, int alState){
+	PlaySoundAtEntity("rustling", "rustling_leaves.snt", "rustling", 0.1, false);
+}
+
+void startSounds2(string &in asParent, string &in asChild, int alState){
+	PlaySoundAtEntity("rustling2", "rustling_leaves2.snt", "rustling2", 0.1, false);
+}
+
+void startMonsterGrave(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_grunt_1", true);
+	SetEnemyDisableTriggers("servant_grunt_1", true);
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 0, "walk");
+	AddEntityCollideCallback("servant_grunt_1", "stopMonsterGrave", "stopMonsterGrave", true, 1);
+	AddEntityCollideCallback("servant_grunt_1", "startStrobe", "startStrobe", true, 1);
+}
+
+void startStrobe(string &in asParent, string &in asChild, int alState){
+	StartPlayerLookAt("servant_grunt_1", 8, 8, "releaseLook");
+	SetLightVisible("strobeLight1", true);
+	PlaySoundAtEntity("monsterSound", "notice_long.snt", "monsterSound", 0.1, false);
+}
+
+void stopMonsterGrave(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_grunt_1", false);
+	SetLightVisible("strobeLight1", false);
+}
+
+void startMonster2(string &in asParent, string &in asChild, int alState){
+	StartPlayerLookAt("monsterSound2", 8, 8, "releaseLook");
+	SetLampLit("elevator_lamp_1", true, true);
+	SetLampLit("elevator_lamp_2", true, true);
+	SetLampLit("elevator_lamp_3", true, true);
+	SetLampLit("elevator_lamp_4", true, true);//fatruelse?
+	AddTimer("startGrunt2", 1, "startGrunt2");
+	PlayGuiSound("general_bat.snt", 1);
+	SetPlayerMoveSpeedMul(0.3);
+	SetPlayerRunSpeedMul(0.2);
+}
+
+void startGrunt2(string &in asTimer){
+	SetEntityActive("grunt2", true);
+	SetEnemyDisableTriggers("grunt2", true);
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_2", 0, "walk");
+	PlaySoundAtEntity("monsterSound2", "notice_long.snt", "monsterSound2", 0.1, false);
+	
+	AddEntityCollideCallback("grunt2", "closeDoor4", "closeDoor4", true, 1);
+	AddEntityCollideCallback("grunt2", "wakeUp", "stopMonster2", true, 1);
+}
+
+void closeDoor4(string &in asParent, string &in asChild, int alState){
+	SetSwingDoorLocked("door4", true, true);
+	SetSwingDoorLocked("door4", true, true);
+}
+
+void stopMonster2(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("grunt2", false);
+	SetPlayerMoveSpeedMul(0.6);
+	SetPlayerRunSpeedMul(0.6);
+}
+
+void wakeUp2(string &in asParent, string &in asChild, int alState){
+	SetPlayerActive(false);
+	FadeOut(3);
+	StopMusic(4, 1);
+	AddTimer("wakeUp3", 4, "wakeUp3");
+	PlayGuiSound("insanity_imageflash01.ogg", 1);
+}
+
+void wakeUp3(string &in asTimer){
+	ChangeMap("level4", "PlayerStartArea_1", "", "");
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////MISC FUNCTIONS///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void checkifLocked(string &in asEntity){
+	if(GetSwingDoorLocked(asEntity)){
+		SetMessage("Messages", "lockedDoor", 2);
+	}
+}
+
+void checkifLockedB(string &in asEntity){
+	if(GetSwingDoorLocked(asEntity)){
+		SetMessage("Messages", "lockedDoorB", 2);
+	}
+}
+
+void checkifLockedP(string &in asEntity){
+	if(GetSwingDoorLocked(asEntity)){
+		SetMessage("Messages", "padLocked", 3);
+	}
+}
+
+void removeSplashBox(string &in asTimer){
+	SetEntityActive(asTimer, false);
+}
+
+void releaseLook(){
+	StopPlayerLookAt();
+}

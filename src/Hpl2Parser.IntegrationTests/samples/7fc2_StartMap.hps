@@ -1,0 +1,66 @@
+void OnStart()
+{
+SetEntityPlayerInteractCallback("StairDoor", "PlayerInteractDoor", true);
+AddUseItemCallback("", "StairKey", "StairDoor", "UnlockDoor", true);
+///AddQuest("GoToKitchen", "GoToKitchen");
+AddEntityCollideCallback("Player", "WifeScreamArea", "WifeScream", true, 1);
+SetMessage("Dialogue", "KyleeDialogue", 8);
+}
+
+
+
+void PlayerInteractDoor(string &in asEntity)
+{
+   if(HasItem("StairKey"))
+   {
+          SetMessage("StartMap", "InteractDoorHaveKey", 0);
+   }
+   else if(GetSwingDoorLocked("StairDoor")==true)
+   {
+   SetMessage("StartMap", "LevelDoorLocked", 0);
+   }
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity)
+{
+         PlaySoundAtEntity("unlocked", "unlock_door", asEntity, 0.0f, false);
+         SetSwingDoorLocked(asEntity, false, true);
+         RemoveItem(asItem);
+}
+
+void WifeScream(string &in asParent, string &in asChild, int alState)
+{
+      PlaySoundAtEntity("WifeScream", "12_girl_scream.snt", "Player", 0, false);
+      AddTimer("servantsound", 0, "ServantAttacking");
+      
+}
+
+void ServantAttacking(string &in asTimer)
+{
+      PlaySoundAtEntity("idle", "amb_idle.snt", "Player", 0.0f, false);
+      AddTimer("", 2, "StressfulMusic");
+}
+
+void StressfulMusic(string &in asTimer)
+{
+      PlayMusic("11_event_dog.ogg", true, 1, 4, 1, true);
+      AddTimer("KyleeDialogue1", 0, "KyleeDialogue1");
+}
+
+void KyleeDialogue1(string &in asTimer)
+{
+      SetMessage("Dialogue", "KyleeDialogue1", 0);
+}
+
+void OnEnter()
+{
+    PlayMusic("02_amb_safe.ogg", true, 1, 4, 0, true);
+    PreloadSound("12_girl_scream.snt");
+    PreloadSound("amb_idle.snt");
+}
+ 
+
+void OnLeave()
+{
+    CompleteQuest("GoToKitchen", "GoToKitchen");
+}

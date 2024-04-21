@@ -1,0 +1,1294 @@
+void OnStart()
+{
+	FadeIn(2);
+	ShowPlayerCrossHairIcons(true);
+	PlayMusic("soma01_02_exploring", true, 0.5, 4, 0, true);
+	SetPlayerLampOil(80);
+	SetPlayerSanity(70);
+	
+	SetLocalVarInt("poison_fungis_count", 0);
+	SetLocalVarInt("pincersused", 0);
+	SetLocalVarInt("leverused", 0);
+	SetLocalVarInt("seenbuffy", 0);
+	
+	SetLightVisible("SpotLight_1", false);
+	SetEntityCallbackFunc("sewer_arched_8", "BreakCrowbarDoor");
+
+	AddUseItemCallback("usecrowbar", "crowbar_1", "sewer_arched_8", "UseCrowbar", true);
+	AddUseItemCallback("usehammer", "stone_hammer_1", "ladderinplace_1", "UseHammer", true);
+	AddUseItemCallback("useknife", "ceremony_knife_1", "pig_corpse_hanging_1", "UseKnife", true);
+	AddUseItemCallback("usekey", "key_door2", "Door_2", "UseKey", true);
+	AddUseItemCallback("usesub", "glass_container_finalsub", "AreaUseSub", "UseSub", true);
+		
+	AddEntityCollideCallback("Player", "FallArea_1", "FallToDeath", false, 1);
+	AddEntityCollideCallback("Player", "FallArea_2", "FallToDeath", false, 1);
+	AddEntityCollideCallback("Player", "AreaMonster_1", "Monster_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaMonster_2", "Monster_2", true, 1);
+	AddEntityCollideCallback("Player", "QuestLadder_Area", "QuestLadder", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_1", "Event_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaMonster_3", "Monster_3", true, 1);
+	AddEntityCollideCallback("Player", "AreaMonster_4", "Monster_4", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_3", "Event_3", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_4", "Event_4", true, 1);
+	AddEntityCollideCallback("Player", "FallArea_2_Deact", "Fall2Deact", true, 1);
+	AddEntityCollideCallback("Player", "AreaMonster_5", "Monster_5", true, 1);
+	AddEntityCollideCallback("Player", "NoLadder_Area", "NoLadder", true, 1);
+	AddEntityCollideCallback("Player", "Area_Runforest", "Runforest", false, 1);
+	AddEntityCollideCallback("Player", "Area_Youmadeit", "Youmadeit", true, 1);
+	AddEntityCollideCallback("Player", "AreaMonster_6", "Monster_6", true, 1);
+	
+	//SetPropStaticPhysics("door_barricade_1", true);
+	SetPropStaticPhysics("prison_1", true);
+	SetEntityInteractionDisabled("fresh_meat_2", true);
+	
+	SetEntityConnectionStateChangeCallback("lever_small_1", "PushLever");
+	
+	AddUseItemCallback("usebloodcomb", "glass_container_blood", "CombineArea", "UseBloodComb", true);
+	AddUseItemCallback("useglandscomb", "fungi3x", "glass_container_blood_comb_static", "UseGlandsComb", true);
+	AddUseItemCallback("usebonecomb", "item_bone_1", "CombineArea", "UseBoneComb", true);
+	AddUseItemCallback("usepincerscomb1", "item_pincers_1", "human_bone_comb", "UsePincersComb1", true);
+	AddUseItemCallback("usemeatcomb", "fresh_meat_1", "CombineArea", "UseMeatComb", true);
+	AddUseItemCallback("usepincerscomb2", "item_pincers_1", "fresh_meat_2", "UsePincersComb2", true);
+	
+	// poison gland interactions
+	SetEntityInteractionDisabled("poison_gland_1", true);
+	SetEntityInteractionDisabled("poison_gland_2", true);
+	SetEntityInteractionDisabled("poison_gland_3", true);
+	SetEntityCallbackFunc("poison_fungi_breakable_1", "BreakFungi1");
+	SetEntityCallbackFunc("poison_fungi_breakable_2", "BreakFungi2");
+	SetEntityCallbackFunc("poison_fungi_breakable_3", "BreakFungi3");
+	AddUseItemCallback("usehammergland1", "stone_hammer_1", "poison_fungi_breakable_1", "BreakFungi1Hammer", false);
+	AddUseItemCallback("usehammergland2", "stone_hammer_1", "poison_fungi_breakable_2", "BreakFungi2Hammer", false);
+	AddUseItemCallback("usehammergland3", "stone_hammer_1", "poison_fungi_breakable_3", "BreakFungi3Hammer", false);
+	
+	//small stove interactions
+	AddUseItemCallback("usemeat_wrong2", "fresh_meat_1", "bonfire_2", "UseSmallStove", false);
+	AddUseItemCallback("usemeat_wrong3", "pincersmeat", "bonfire_2", "UseSmallStove", false);
+	AddUseItemCallback("usebone_wrong2", "item_bone_1", "bonfire_2", "UseSmallStove", false);
+	AddUseItemCallback("usebone_wrong3", "pincersbone", "bonfire_2", "UseSmallStove", false);
+	
+	AddTimer("customicons", 0.5f, "CustomIcons");
+}
+
+void CustomIcons(string &in asTimer)
+{
+	SetEntityCustomFocusCrossHair("CombineArea", "LevelDoor");
+	for (int i = 2; i <= 17; i++) {
+		SetEntityCustomFocusCrossHair("ScriptArea_"+i, "LevelDoor");
+	}
+	SetEntityCustomFocusCrossHair("FirePlace", "LevelDoor");
+	SetEntityCustomFocusCrossHair("DeskSaw", "LevelDoor");
+	SetEntityCustomFocusCrossHair("ScriptArea_1", "Push");
+	AddTimer("customicons", 3, "CustomIcons");
+}
+
+// Poison gland functions
+
+void BreakFungi1(string &in asEntity, string &in type) {
+	if (type == "Break") {
+		PlayGuiSound("slime_create", 1.0f);
+		SetEntityInteractionDisabled("poison_gland_1", false);
+		RemoveUseItemCallback("usehammergland1");
+	}
+}
+
+void BreakFungi2(string &in asEntity, string &in type) {
+	if (type == "Break") {
+		PlayGuiSound("slime_create", 1.0f);
+		SetEntityInteractionDisabled("poison_gland_2", false);
+		RemoveUseItemCallback("usehammergland2");
+	}
+}
+
+void BreakFungi3(string &in asEntity, string &in type) {
+	if (type == "Break") {
+		PlayGuiSound("slime_create", 1.0f);
+		SetEntityInteractionDisabled("poison_gland_3", false);
+		RemoveUseItemCallback("usehammergland3");
+	}
+}
+
+void BreakFungi1Hammer(string &in asItem, string &in asEntity) {
+	SetPropHealth("poison_fungi_breakable_1", 0);
+}
+
+void BreakFungi2Hammer(string &in asItem, string &in asEntity) {
+	SetPropHealth("poison_fungi_breakable_2", 0);
+}
+
+void BreakFungi3Hammer(string &in asItem, string &in asEntity) {
+	SetPropHealth("poison_fungi_breakable_3", 0);
+}
+
+// small stove, cannot burn
+
+void UseSmallStove(string &in asItem, string &in asEntity) {
+	SetMessage("kiraimmortal", "firetoosmall", 4);
+}
+
+
+/// examine areas
+
+void ExamineInfestation(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "infesteggs", 4);
+}
+
+void ExamineDeadCultist(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "deadcultist", 4);
+}
+
+void Examine1(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "combineplace", 4);
+}
+
+void Examine2(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "firesides", 4);
+}
+
+void Examine3(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "fireplace", 4);
+}
+
+void Examine4(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "levermissing", 5);
+}
+
+void Examine5(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "leverback", 3);
+	SetEntityActive("ScriptArea_4", false);
+}
+
+void Examine6(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "treeladder", 6);
+	SetEntityActive("ScriptArea_5", false);
+}
+
+void Examine7(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "twobirdsonestone", 6);
+	SetEntityActive("ScriptArea_6", false);
+}
+
+void Examine8(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "grinding", 5);
+}
+
+void Examine9(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "bloodbar", 3);
+}
+
+void Examine10(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "pigpic", 4);
+}
+
+void Examine11(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "ancientknow", 5);
+}
+
+void Examine12(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "deadpriest", 7);
+}
+
+void Examine13(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "brutal1", 4);
+}
+
+void Examine14(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "brutal2", 4);
+}
+
+void Examine15(string &in asEntity)
+{
+	SetMessage("kiraimmortal", "dyingsun", 7);
+}
+
+void MovePicture(string &in asEntity)
+{
+	PlayMusic("music_cellar_infection_event.ogg", false, 1, 0, 10, false);
+	SetEntityActive("ScriptArea_8", true);
+}
+
+
+void UseBloodComb(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("puzzle_place_jar", 1);
+	SetEntityActive("glass_container_blood_comb_static", true);
+	RemoveItem("glass_container_blood");
+	SetEntityActive("CombineArea", false);
+}
+void UseGlandsComb(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("puzzle_add_chemical", 2);
+	SetEntityActive("glass_container_blood_comb_static", false);
+	RemoveItem("fungi3x");
+	GiveItem("glass_container_substance_half", "Puzzle", "KISubstanceHalf", "glass_container_mix_done.tga", 1);
+	GiveSanityBoostSmall();
+	RemoveUseItemCallback("UseCharBoneWrong");
+	SetEntityActive("CombineArea", true);
+}
+void UseBoneComb(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("impact_generic_hard_low", 1);
+	SetEntityActive("human_bone_comb", true);
+	RemoveItem("item_bone_1");
+	SetEntityActive("CombineArea", false);
+}
+void UsePincersComb1(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("human_bone_comb", false);
+	RemoveItem("item_pincers_1");
+	GiveItem("pincersbone", "Puzzle", "KIPincersBone", "held_bone.tga", 1);
+	PlayGuiSound("pick_orb_piece", 0.7);
+	SetEntityActive("CombineArea", true);
+}
+void UseMeatComb(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("impact_organic_high", 1);
+	SetEntityActive("fresh_meat_2", true);
+	RemoveItem("fresh_meat_1");
+	SetEntityActive("CombineArea", false);
+}
+void UsePincersComb2(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("fresh_meat_2", false);
+	RemoveItem("item_pincers_1");
+	GiveItem("pincersmeat", "Puzzle", "KIPincersMeat", "held_meat.tga", 1);
+	PlayGuiSound("pick_orb_piece", 0.7);
+	SetEntityActive("CombineArea", true);
+}
+
+void KICheckpoint1(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	PlayMusic("soma01_02_exploring", true, 0.5, 0, 0, true);
+}
+
+void KICheckpoint2(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	PlayMusic("soma01_01_enterdarkness", true, 0.9, 0, 0, true);
+	AddTimer("monster3_2", 4, "Monster3_2");
+}
+
+void KICheckpoint3(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	PlayMusic("soma01_02_tunnel", true, 0.7, 0, 0, true);
+	SetPropHealth("Door_5", 0);
+	SetEntityActive("rl_monster_chubby_silent_2", true);
+	SetEnemyDisableTriggers("rl_monster_chubby_silent_2", false);
+	AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_168", 3, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_165", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_164", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_177", 0, "");
+	for (int i = 0; i < 2; i++)
+	{
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_186", 2, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_192", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_183", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_203", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_205", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_206", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_209", 1, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_211", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_215", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_211", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_209", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_206", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_205", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_203", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_183", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_179", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_177", 0, "");
+	}
+	SetEntityActive("rl_monster_chubby_silent_maxdist_1", true);
+	for (int i = 0; i < 99; i++)
+	{
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_164", 2, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_179", 4, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_161", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_158", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_57", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_59", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_23", 2, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_59", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_57", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_158", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_161", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_164", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_166", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_168", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_171", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_169", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_167", 0, "");
+	}
+}
+
+void KICheckpoint4(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	PlayMusic("soma01_01_thick_air", true, 1.2, 0, 0, true);
+	PlaySoundAtEntity("","20_waterwheel_impact_highest", "deformed_man_noHead_19", 0, false);
+	PlaySoundAtEntity("","20_waterwheel_impact_highest", "deformed_man_26", 0, false);
+	AddTimer("monster5_2", 2.5,"Monster5_2");
+}
+
+void KICheckpoint5(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	AddTimer("monster6_2", 7, "Monster6_2");
+}
+
+void KICheckpoint6(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	AddTimer("lastmonster", 1, "LastMonster");
+}
+
+void KICheckpoint7(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	AddTimer("closecheck", 0.5, "CloseCheck");
+	PlayMusic("soma05_02_ark_reveal", true, 1, 0, 0, true);
+}
+
+void KICheckpoint8(string &in asName, int alCount)
+{
+	RemoveTimer("customicons");
+	AddTimer("customicons", 0.5f, "CustomIcons");
+	PlayMusic("soma01_01_enterdarkness_w_lute", true, 0.8, 0, 0, true);
+}
+
+void QuestMain(string &in asEntity)
+{
+	AddQuest("mainquest", "KIMain");
+	SetEntityActive("nail_static_1", false);
+	SetPropStaticPhysics("sewer_arched_4", false);
+}
+
+void FallToDeath(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(0.5);
+	PlayGuiSound("ki_death_screams", 2);
+	AddTimer("falldeath2", 1, "FallDeath2");
+}
+void FallDeath2(string &in asTimer)
+{
+	GivePlayerDamage(100, "BloodSplat", true, true);
+}
+
+void Monster_1(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("kicheck_1", "PlayerStartArea_3", "KICheckpoint1", "kiraimmortal", "deathhint1");
+}
+
+void MinorSanityDamage(string &in asEntity, int alState) 
+{
+	GiveSanityDamage(10, true);
+}
+
+void Monster_2(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("monster2_2", 1, "Monster2_2");
+	SetEntityActive("flesher_female_1", true);
+	AddEnemyPatrolNode("flesher_female_1", "PathNodeArea_98", 4, "");
+	AddEnemyPatrolNode("flesher_female_1", "PathNodeArea_82", 0, "");
+	AddEnemyPatrolNode("flesher_female_1", "PathNodeArea_78", 2, "");
+	AddEnemyPatrolNode("flesher_female_1", "PathNodeArea_75", 0, "");
+	AddEnemyPatrolNode("flesher_female_1", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("flesher_female_1", "PathNodeArea_5", 0, "");
+}
+void Monster2_2(string &in asTimer)
+{
+	PlayMusic("soma01_01_door_smashed.ogg", false, 1, 0, 10, false);
+	PlayMusic("soma01_02_tunnel", true, 0.5, 0, 0, true);
+}
+
+void Event_4(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("soma01_02_torturecarl.ogg", false, 1, 0, 10, false);
+}
+
+void QuestWeakDoor(string &in asEntity)
+{
+	AddQuest("weakdoorquest", "KIWeakDoor");
+}
+
+void UseCrowbar(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("sewer_arched_8", false, true);
+	PlaySoundAtEntity("", "break_wood_metal", "sewer_arched_8", 0, false);
+	SetPropHealth("sewer_arched_8", 0);
+	AddPropForce("sewer_arched_8", 500, 0, 500, "world");
+	CreateParticleSystemAtEntity("","ps_door_damage_wood","DustBreakArea", false);
+}
+
+void BreakCrowbarDoor(string &in asEntity, string &in type)
+{
+	if (type == "Break") {
+		AddDebugMessage("Crowbar door broke", false);
+		SetEntityActive("AreaMonster_3", true);
+		CompleteQuest("weakdoorquest", "KIWeakDoor");
+		AutoSave();
+	}
+}
+
+void LightBonfire(string &in asEntity, string &in type) 
+{
+	if (type == "OnIgnite")
+	{
+		AddTimer("firestart", 0.7f, "FireStart");
+	}
+}
+void FireStart(string &in asTimer)
+{
+	SetLightVisible("SpotLight_1", true);
+	SetEntityActive("FirePlace", true);
+	AddUseItemCallback("usemeat_wrong", "fresh_meat_1", "bonfire_1", "UseFire", false);
+	AddUseItemCallback("usemeat", "pincersmeat", "bonfire_1", "UseMeat", true);
+	AddUseItemCallback("usebone_wrong", "item_bone_1", "bonfire_1", "UseFire", false);
+	AddUseItemCallback("usebone", "pincersbone", "bonfire_1", "UseBone", true);
+	SetEntityActive("tinderbox_bonus", false);
+}
+
+void BonusTinderbox(string &in asEntity)
+{
+	SetEntityActive("tinderbox_bonus", true);
+}
+
+void UseFire(string &in asItem, string &in asEntity)
+{
+	SetMessage("kiraimmortal", "burnmyhands", 5);
+}
+
+void UseMeat(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetMessage("kiraimmortal", "dinnerisdone", 8);
+	AddPlayerHealth(25);
+	AddPlayerSanity(15);
+	PlayGuiSound("21_meat_long", 1);
+	if (GetLocalVarInt("pincersused") >= 2)
+	{
+		SetEntityActive("pincers_static", true);
+	}
+	else
+	{
+		SetEntityActive("ScriptArea_2", false);
+		GiveItemFromFile("item_pincers_1", "item_pincers.ent");
+		SetLocalVarInt("pincersused", GetLocalVarInt("pincersused")+1);
+	}
+}
+
+void QuestLadder(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("ladderquest", "KILadder");
+}
+
+void Event_1(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("soma00_00_office.ogg", false, 1, 0, 6, false);
+	PlayMusic("soma01_01_enterdarkness", true, 0.9, 0, 0, true);
+	SetSwingDoorDisableAutoClose("cellar_wood01_1", true);
+	SetSwingDoorClosed("cellar_wood01_1", false, false);
+	PlaySoundAtEntity("", "01_door", "cellar_wood01_1", 0, false);
+	for (int i = 0; i < 15; i++)
+	{
+		AddTimer("cellar_wood01_1", i * 0.1, "GhostDoor");
+	}
+}
+void GhostDoor(string &in door_name)
+{
+	AddPropForce(door_name, 0, 0, 80, "world"); 
+}
+
+void Event_2(string &in asEntity)
+{
+	PlayMusic("soma01_02_catwalk_collapse.ogg", false, 2, 0, 10, false);
+	SetEntityActive("rl_monster_chubby_silent_1", true);
+	AddEnemyPatrolNode("rl_monster_chubby_silent_1", "PathNodeArea_166", 7, "Monster Tutorial Attack");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_1", "PathNodeArea_166", 0, "");
+	SetEntityActive("rl_monster_chubby_silent_2", true);
+	AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_170", 4, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_2", "PathNodeArea_169", 0, "");
+	AddTimer("event2_2", 0.8, "Event2_2");
+	AddTimer("event2_3", 3.5, "Event2_3");
+	AddTimer("event2_4", 6, "Event2_4");
+}
+void Event2_2(string &in asTimer)
+{
+	PlayGuiSound("lurker_hit_wood", 1);
+	GiveSanityDamage(30, true);
+	AddPropImpulse("Door_1", -2,0,0,"World");
+	CreateParticleSystemAtEntity("pound_dust","ps_hit_wood","PoundDoor", false);
+}
+void Event2_3(string &in asTimer)
+{
+	PlayGuiSound("lurker_hit_wood", 1);
+	AddPropImpulse("Door_1", -2,0,0,"World");
+	CreateParticleSystemAtEntity("pound_dust","ps_hit_wood","PoundDoor", false);
+}
+void Event2_4(string &in asTimer)
+{
+	ClearEnemyPatrolNodes("rl_monster_chubby_silent_1");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_1", "PathNodeArea_168", 2, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_1", "PathNodeArea_171", 4, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_1", "PathNodeArea_173", 0, "");
+}
+
+void Monster_3(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaMonster_2", false);
+	if (GetLocalVarInt("seenbuffy") == 0)
+	{
+		AddTimer("monster3_2", 2, "Monster3_2");
+	}
+	SetEntityActive("AreaMonster_6", false);
+	CheckPoint("kicheck_2", "PlayerStartArea_2", "KICheckpoint2", "kiraimmortal", "deathhint1");
+}
+void Monster3_2(string &in asTimer)
+{
+	SetEntityActive("ScriptArea_11", false);
+	SetEntityActive("ScriptArea_12", false);
+	SetEntityActive("fp_monster_servant_buffy_silent_1", true);
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_1", "PathNodeArea_189", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_1", "PathNodeArea_177", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_1", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_1", "PathNodeArea_161", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_1", "PathNodeArea_158", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_1", "PathNodeArea_57", 0, "");
+}
+
+void UseHammer(string &in asItem, string &in asEntity)
+{
+	AddTimer("hammer1", 0.1, "Hammer1");
+	AddTimer("hammer2", 1, "Hammer2");
+	PlaySoundAtEntity("", "hit_wood", "ladder_static_1", 0, false);
+	CompleteQuest("ladderquest", "KILadder");
+	GiveSanityBoostSmall();
+}
+void Hammer1(string &in asTimer)
+{
+	SetPlayerActive(false);
+	FadeOut(0.5);
+}
+void Hammer2(string &in asTimer)
+{
+	SetEntityActive("ScriptArea_3", false);
+	PlayGuiSound("16_ladder_down", 3);
+	FadeIn(1);
+	SetPlayerActive(true);
+	SetEntityActive("ladderinplace_*", false);
+	SetEntityActive("ladderunfold_*", true);
+	SetEntityActive("LadderArea_2", true);
+	SetEntityActive("FallArea_1", false);
+	SetEntityActive("fp_monster_servant_buffy_silent_1", false);
+}
+
+void Event_3(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("soma01_03_oceanbottom", true, 0.6, 0, 0, true);
+}
+
+void UseKnife(string &in asItem, string &in asEntity)
+{
+	ResetProp("pig_corpse_hanging_1");
+	RemoveItem("ceremony_knife_1");
+	FadeEnemyToSmoke("fp_monster_servant_buffy_silent_1", false);
+	FadeEnemyToSmoke("fp_monster_servant_buffy_silent_maxdist_1", false);
+	AddTimer("knife1", 0.1, "Knife1");
+	AddTimer("knife2", 1, "Knife2");
+	PlaySoundAtEntity("cutting", "24_cut", "pig_corpse_hanging_1", 0, false);
+}
+void Knife1(string &in asTimer)
+{
+	SetPlayerActive(false);
+	FadeOut(0.5);
+	SetPropStaticPhysics("pig_corpse_hanging_1", true);
+	SetEntityActive("ceremony_knife_static", true);
+	SetEntityInteractionDisabled("ceremony_knife_static", true);
+	CreateParticleSystemAtEntityExt("", "ps_blood_tiny_splash.ps", "ceremony_knife_static", false, 1, 1, 1, 1, false, 0, 0, 100, 110);
+}
+void Knife2(string &in asTimer)
+{
+	SetEntityActive("key_door2", true);
+	PlayGuiSound("25_drop_key", 2);
+	FadeIn(1);
+	SetPlayerActive(true);
+	StopSound("cutting", 1);
+	SetEntityActive("ScriptArea_8", false);
+}
+
+void UseKey(string &in asItemA, string &in asItemB)
+{
+	GiveSanityBoostSmall();
+	SetSwingDoorLocked("Door_2", false, true);
+	PlaySoundAtEntity("", "unlock_door", "Door_2", 0, false);
+	RemoveItem(asItemA);
+	CompleteQuest("mainquest", "KIMain");
+	AddTimer("opendoorslightly", 0.1, "OpenDoorSlightly");
+	AutoSave();
+}
+void OpenDoorSlightly(string &in door_name)
+{
+	SetSwingDoorDisableAutoClose("Door_2", true);
+	SetSwingDoorClosed("Door_2", false, false);
+	PlayMusic("soma05_02_city_reveal", false, 1, 0, 2, false);
+	SetEntityPlayerLookAtCallback("plaguedoctor_corpse_1", "MinorSanityDamage", true);
+	for (int i = 0; i < 10; i++)
+	{
+		AddTimer("Door_2", i * 0.1, "OpenDoorSlightly2");
+	}
+}
+void OpenDoorSlightly2(string &in door_name)
+{
+	AddPropForce(door_name, 0, 0, 100, "world");
+}
+
+void NoteFormula(string &in asEntity)
+{
+	AddQuest("subquest", "KISubstance");
+	SetEntityActive("AreaEvent_3", true);
+	SetEntityPlayerInteractCallback("DeskSaw", "Examine8", false);
+	SetEntityActive("AreaMonster_4", true);
+	SetEntityActive("Door_1", false);
+	SetEntityActive("Door_5", true);
+	PlayMusic("soma00_03_apartment_PIANO", false, 0.8, 0, 2, false);
+	AddUseItemCallback("usecontainer", "glass_container_1", "ScriptArea_7", "UseContainer", true);
+	AddUseItemCallback("usecharbone", "charredbone", "DeskSaw", "UseCharBone", false);
+}
+
+void Monster_4(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("kicheck_3", "PlayerStartArea_4", "KICheckpoint3", "kiraimmortal", "deathhint2");
+	StopMusic(0, 2);
+	PlayMusic("soma01_02_tunnel", true, 0.7, 0, 0, true);
+	PlayMusic("soma01_01_lightsout", false, 1, 0, 2, false);
+	SetPropHealth("Door_5", 0);
+	SetEntityActive("rl_monster_chubby_1", true);
+	AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_168", 3, "");
+	AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_165", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_164", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_177", 0, "");
+	for (int i = 0; i < 2; i++)
+	{
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_186", 2, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_192", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_183", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_203", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_205", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_206", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_209", 1, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_211", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_215", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_211", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_209", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_206", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_205", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_203", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_183", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_179", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_1", "PathNodeArea_177", 0, "");
+	}
+	SetEntityActive("rl_monster_chubby_silent_maxdist_1", true);
+	for (int i = 0; i < 99; i++)
+	{
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_164", 2, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_179", 4, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_161", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_158", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_57", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_59", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_23", 2, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_59", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_57", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_158", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_161", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_164", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_166", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_168", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_171", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_169", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_silent_maxdist_1", "PathNodeArea_167", 0, "");
+	}
+}
+
+void Fall2Deact(string &in asParent, string &in asChild, int alState)
+{
+	AddEntityCollideCallback("stone_small01_brown_*", "AreaBreakBridge",  "CollideBreakBridge", true, 1);
+	AddEntityCollideCallback("stone_small01_brown_*", "AreaBreakBridge_2",  "CollideBreakBridge2", true, 1);
+	SetEntityActive("ScriptArea_11", false);
+	SetEntityActive("ScriptArea_12", false);
+	SetEntityActive("FallArea_2", false);
+	SetEntityActive("AreaMonster_2", false);
+	SetEntityActive("LadderArea_3", true);
+	SetEntityActive("LadderArea_4", true);
+	SetEntityActive("ladderunfold_*", false);
+	SetEntityActive("ladderinplace_*", true);
+	SetEntityActive("LadderArea_2", false);
+	SetEntityActive("FallArea_1", true);
+	SetEntityActive("lever_small_mount_1", false);
+	SetEntityActive("lever_small_1", true);
+	SetEntityActive("ScriptArea_4", true);
+	SetEntityActive("AreaMonster_5", true);
+	SetEntityActive("AreaMonster_6", true);
+	SetEntityActive("ScriptArea_6", true);
+	SetEntityActive("rl_monster_chubby_1", false);
+	SetEntityActive("rl_monster_chubby_silent_maxdist_1", false);
+}
+
+void PickUpFungi(string &in asEntity)
+{
+	RemoveItem(asEntity);
+	switch(GetLocalVarInt("poison_fungis_count"))
+	{
+	case 0:
+		GiveItem("fungi1x", "Puzzle", "PoisonGland", "poison_gland.tga", 1);
+		SetLocalVarInt("poison_fungis_count", 1);
+	break;
+	case 1:
+		RemoveItem("fungi1x");
+		GiveItem("fungi2x", "Puzzle", "PoisonGland", "poison_gland_x2.tga", 1);
+		SetLocalVarInt("poison_fungis_count", 2);
+	break;
+	case 2:
+		RemoveItem("fungi2x");
+		GiveItem("fungi3x", "Puzzle", "PoisonGland", "poison_gland_x3.tga", 1);
+		SetLocalVarInt("poison_fungis_count", 3);
+	break;
+	}
+}
+
+void Monster_5(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("soma01_01_thick_air", true, 1.2, 0, 0, true);
+	PlayGuiSound("20_waterwheel_impact_highest", 1);
+	SetEntityActive("NoLadder_Area", true);
+	CheckPoint("kicheck_4", "PlayerStartArea_5", "KICheckpoint4", "kiraimmortal", "deathhint3");
+	AddTimer("monster5_2", 1.5,"Monster5_2");	
+}
+void Monster5_2(string &in asTimer)
+{
+	SetEnemyDisableTriggers("flesher_female_maxdist_*", true);
+	SetEntityActive("flesher_female_maxdist_1", true);
+	SetEntityActive("flesher_female_maxdist_2", true);
+	TeleportEnemyToNode("flesher_female_maxdist_1", "PathNodeArea_334", true);
+	TeleportEnemyToNode("flesher_female_maxdist_2", "PathNodeArea_349", true);
+	ClearEnemyPatrolNodes("flesher_female_maxdist_1");
+	ClearEnemyPatrolNodes("flesher_female_maxdist_2");
+	for (int i = 0; i < 99; i++)
+	{
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_326", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_325", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_340", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_359", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_370", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_397", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_295", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_294", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_1", "PathNodeArea_334", 0, "");
+	}
+	AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_340", 0, "");
+	AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_321", 0, "");
+	AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_364", 0, "");
+	AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_371", 0, "");
+	for (int i = 0; i < 99; i++)
+	{
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_375", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_387", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_393", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_330", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_280", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_277", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_275", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_284", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_292", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_300", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_304", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_309", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_317", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_342", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_348", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_353", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_362", 0, "");
+		AddEnemyPatrolNode("flesher_female_maxdist_2", "PathNodeArea_372", 0, "");
+	}
+	AddTimer("monster5_3", 8, "Monster5_3");
+}
+void Monster5_3(string &in asTimer)
+{
+	SetEnemyDisableTriggers("flesher_female_maxdist_*", false);
+}
+
+void NoLadder(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("ladder2quest", "KILadder2");
+	AddEntityCollideCallback("Player", "FallArea_2_Deact", "LookAtTree", true, 1);
+	SetEntityActive("ScriptArea_5", true);
+}
+
+void LookAtTree(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0.5);
+	SetPlayerRunSpeedMul(0.5);
+	StartPlayerLookAt("LadderArea_3", 1, 3, "");
+	AddTimer("stoplookingtree", 3, "StopLookingTree");
+}
+void StopLookingTree(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+}
+
+void CollideBreakBridge(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ScriptArea_6", false);
+	SetEntityActive("ScriptArea_5", false);
+	RemoveEntityCollideCallback("stone_small01_brown_*", "AreaBreakBridge");
+	CreateParticleSystemAtEntity("BreakBridge", "ps_break_wood_small", "AreaBreakBridge", false);
+	PlaySoundAtEntity("BreakBridge","break_wood_metal", "AreaBreakBridge", 0, false);
+	BreakJoint("bridge_chained_1_BallJoint_1");	
+	AddTimer("ChainForce",0.3f,"TimerChainForce");
+	PlayMusic("soma05_01_phi_power_on", false, 1, 0, 10, false);
+	CompleteQuest("ladder2quest", "KILadder2");
+	SetEntityActive("AreaMonster_5", false);
+	SetEntityActive("FallArea_2_Deact", false);
+	SetEntityActive("AreaMonster_5", true);
+	TeleportEnemyToNode("flesher_female_maxdist_*", "OutofMap", true);
+	GiveSanityBoost();
+	CheckPoint("kicheck_5", "PlayerStartArea_6", "KICheckpoint5", "kiraimmortal", "deathhint2");
+}
+void TimerChainForce(string &in asTimer)
+{
+	AddBodyImpulse("bridge_chained_1_chain", 1,0.5,-2, "World");
+	PlaySoundAtEntity("creak", "18_bridge_fall", "bridge_chained_1", 0.0f, false);
+	FadeEnemyToSmoke("flesher_female_maxdist_*", false);
+}
+
+void CollideBreakBridge2(string &in asParent, string &in asChild, int alState)
+{
+	RemoveEntityCollideCallback("stone_small01_brown_*", "AreaBreakBridge_2");
+	CreateParticleSystemAtEntity("BreakBridge", "ps_break_wood_small", "AreaBreakBridge_2", false);
+	PlaySoundAtEntity("BreakBridge2","break_wood_metal", "AreaBreakBridge_2", 0, false);
+	BreakJoint("bridge_chained_2_BallJoint_1");	
+	AddTimer("ChainForce2",0.3f,"TimerChainForce2");
+}
+void TimerChainForce2(string &in asTimer)
+{
+	PlaySoundAtEntity("creak", "18_bridge_fall", "bridge_chained_2", 0.0f, false);
+}
+
+void Monster_6(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("graveyard_corpse03_1", true);
+	SetEntityActive("priest_robe_3", true);
+	SetEntityActive("ScriptArea_17", true);
+	PlayGuiSound("15_the_big_scream", 1.0f);
+	SetSwingDoorClosed("sewer_arched_3", true, true);
+	SetEntityActive("AreaMonster_3", false);
+	SetLocalVarInt("seenbuffy", 1);
+	AddTimer("monster6_3", 1.5f, "Monster6_3");
+	AddTimer("monster6_2", 3.5f, "Monster6_2");
+	AutoSave();
+}
+
+void Monster6_3(string &in asTimer)
+{
+	SetPropHealth("sewer_arched_3", 0);
+}
+
+void Monster6_2(string &in asTimer)
+{
+	PlayMusic("soma01_04_spookytunnel", true, 1, 0, 0, true);
+	SetEntityActive("flesher_female_maxdist_1", false);
+	SetEntityActive("flesher_female_maxdist_2", false);
+	SetEntityActive("rl_monster_chubby_1", false);
+	SetEntityActive("rl_monster_chubby_silent_maxdist_1", false);
+	SetEntityActive("fp_monster_servant_buffy_silent_maxdist_1", true);
+	for (int i = 0; i < 99; i++)
+	{
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_76", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_82", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_90", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_82", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_76", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_16", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_9", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_102", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_108", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_112", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_116", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_108", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_6", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_44", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_122", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_130", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_136", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_147", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_149", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_222", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_232", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_242", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_248", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_255", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_242", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_239", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_221", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_136", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_128", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_46", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_9", 0, "");
+	AddEnemyPatrolNode("fp_monster_servant_buffy_silent_maxdist_1", "PathNodeArea_17", 0, "");
+	}
+}
+
+void PushLever(string &in asEntity, int alState)
+{
+	if (alState == 1 && GetLocalVarInt("leverused") == 0)
+	{
+		AddTimer("hammer1", 0.1, "Hammer1");
+		AddTimer("hammer2", 1, "Hammer2");
+		SetEntityActive("NoLadderArea", false);
+		SetEntityInteractionDisabled("lever_small_1", true);
+		SetLocalVarInt("leverused", 1);
+	}
+}
+
+void UseContainer(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "04_water_puff", "blood_container_1", 0, false);
+	SetEntityActive("ScriptArea_7", false);
+	RemoveItem("glass_container_1");
+	GiveItem("glass_container_blood", "Puzzle", "KIBloodCont", "glass_container_blood.tga", 1);	
+}
+
+void UseBone(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlayGuiSound("15_player_burn", 2);
+	GiveItem("charredbone", "Puzzle", "KIcharredbone", "fresh_meat_remains.tga", 1);
+	SetLocalVarInt("pincersused", GetLocalVarInt("pincersused")+1);
+	if (GetLocalVarInt("pincersused") >= 2)
+	{
+		SetEntityActive("pincers_static", true);
+	}
+	else
+	{
+		SetEntityActive("ScriptArea_2", false);
+		GiveItemFromFile("item_pincers_1", "item_pincers.ent");
+		SetLocalVarInt("pincersused", GetLocalVarInt("pincersused")+1);
+	}
+}
+
+void UseCharBone(string &in asItem, string &in asEntity)
+{
+	if (HasItem("glass_container_substance_half") == true)
+	{
+		TeleportEnemyToNode("fp_monster_servant_buffy_silent_maxdist_1", "OutofMap", true);
+		RemoveItem("charredbone");
+		RemoveItem("glass_container_substance_half");
+		SetEntityActive("DeskSaw", false);
+		SetPlayerMoveSpeedMul(0);
+		SetPlayerRunSpeedMul(0);
+		SetPlayerJumpDisabled(true);
+		SetPlayerCrouchDisabled(true);
+		SetEntityActive("glass_container_mix_done_static_1", true);
+		PlaySoundAtEntity("", "puzzle_place_jar", "glass_container_mix_done_static_1", 0, false);
+		FadeOut(2);
+		AddTimer("grind1", 1.8, "Grind1");
+		AddTimer("grind2", 6, "Grind2");
+	}
+	else
+	{
+		SetMessage("kiraimmortal", "wrongchar", 6);
+	}
+}
+void Grind1(string &in asTimer)
+{
+	PlaySoundAtEntity("sawing", "26_saw", "DeskSaw", 0, false);
+}
+void Grind2(string &in asTimer)
+{
+	FadeIn(1.5);
+	SetEntityActive("DeskSaw", false);
+	GiveItem("bonedust", "Puzzle", "KIBoneDust", "bonedust.tga", 1);
+	AddUseItemCallback("usedust", "bonedust", "glass_container_mix_done_static_1", "UseDust", true);
+	SetMessage("kiraimmortal", "adddustnow", 6);
+}
+
+void UseDust(string &in asItem, string &in asEntity)
+{
+	PlayMusic("soma01_01_talking_door", false, 1, 0, 10, false);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	SetEntityActive("glass_container_mix_done_static_1", false);
+	SetEntityActive("glass_container_almostdone", true);
+	SetEntityInteractionDisabled("glass_container_almostdone", true);
+	RemoveItem("bonedust");
+	CreateParticleSystemAtEntityExt("", "ps_poison_fungi_break.ps", "glass_container_almostdone", false, 1, 1, 1, 1, false, 0, 0, 100, 110);
+	PlaySoundAtEntity("", "puzzle_acid", "glass_container_almostdone", 0, false);
+	AddTimer("canpickupnow", 2, "CanPickUpNow");
+	AutoSave();
+}
+void CanPickUpNow(string &in asTimer)
+{
+	SetEntityInteractionDisabled("glass_container_almostdone", false);
+	AddUseItemCallback("putonfire", "glass_container_almostdone", "FirePlace", "PutOnFire", true);
+}
+
+void PickUpGlassJar(string &in asEntity) {
+	if (HasItem("bucket_of_tar_1") == true)
+	{
+		CheckPoint("kicheck_6", "PlayerStartArea_7", "KICheckpoint6", "kiraimmortal", "deathhint4");
+		AddTimer("lastmonster", 1.5f, "LastMonster");
+		FadeEnemyToSmoke("fp_monster_servant_buffy_silent_maxdist_1", false);
+		FadeEnemyToSmoke("rl_monster_chubby_silent_maxdist_1", false);
+	}
+	else
+	{
+		SetEntityPlayerInteractCallback("bucket_of_tar_1", "WeNeedTar", true);
+	}
+}
+
+void LastMonster(string &in asTimer)
+{	
+	SetPropHealth("sewer_arched_2", 0);
+	SetEntityActive("Area_Runforest", true);
+	SetEntityActive("Area_Youmadeit", true);
+	SetEntityActive("rl_monster_chubby_2", true);
+	for (int i = 0; i < 99; i++)
+	{
+	AddEnemyPatrolNode("rl_monster_chubby_2", "PathNodeArea_123", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_2", "PathNodeArea_128", 0, "");
+	AddEnemyPatrolNode("rl_monster_chubby_2", "PathNodeArea_120", 0, "");
+	}
+	SetSwingDoorDisableAutoClose("sewer_arched_6", true);
+	SetSwingDoorClosed("sewer_arched_6", false, false);
+	for (int i = 0; i < 10; i++)
+	{
+		AddTimer("sewer_arched_6", i * 0.1, "GhostDoor2");
+	}
+}
+void GhostDoor2(string &in door_name)
+{
+	AddPropForce(door_name, 0, 0, 120, "world"); 
+}
+
+void Runforest(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaRunforest", false);
+	TeleportEnemyToNode("rl_monster_chubby_2", "PathNodeArea_130", true);
+	ClearEnemyPatrolNodes("rl_monster_chubby_2");
+	ShowEnemyPlayerPosition("rl_monster_chubby_2");
+}
+
+void Youmadeit(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("kicheck_7", "PlayerStartArea_8", "KICheckpoint7", "", "");
+	FadeOut(0);
+	FadeEnemyToSmoke("rl_monster_chubby_2", true);
+	SetEntityActive("prison_1", false);
+	SetEntityActive("prison_2", true);
+	SetEntityActive("block_box_6", true);
+	SetEntityActive("rl_monster_chubby_silent_3", true);;
+	AddTimer("youmadeit1", 0.4, "YouMadeIt1");
+	AddTimer("youmadeit2", 2, "YouMadeIt2");
+	AddTimer("closecheck", 4.5, "CloseCheck");
+}
+void YouMadeIt1(string &in asTimer)
+{
+	PlaySoundAtEntity("", "door_prison_close", "prison_2", 0, false);
+	PlayGuiSound("lurker_hit_wood", 1);
+	AddPropImpulse("prison_2", -2,0,0,"World");
+	CreateParticleSystemAtEntity("pound_dust","ps_hit_wood","PoundDoor2", false);
+}
+void YouMadeIt2(string &in asTimer)
+{
+	SetEntityActive("door_barricade_2", false);
+	SetEntityActive("door_barricade_3", true);
+	PlayMusic("soma01_01_awaken", false, 1, 0, 10, false);
+	FadeIn(2);
+	PlayGuiSound("lurker_hit_wood", 1);
+	AddPropImpulse("prison_2", -2,0,0,"World");
+	CreateParticleSystemAtEntity("pound_dust","ps_hit_wood","PoundDoor2", false);
+}
+
+void CloseCheck(string &in asTimer)
+{
+		AddEnemyPatrolNode("rl_monster_chubby_silent_3", "PathNodeArea_147", 0, "");
+		AddEnemyPatrolNode("rl_monster_chubby_silent_3", "PathNodeArea_135", 0, "");
+		SetEntityActive("block_box_6", false);
+		PlayMusic("soma05_02_ark_reveal", true, 1, 0, 0, true);
+		AddTimer("poof", 12, "Poof");
+}
+void Poof(string &in asTimer)
+{
+	FadeEnemyToSmoke("rl_monster_chubby_silent_3", false);
+}
+
+void WeNeedTar(string &in asEntity)
+{
+	SetEntityActive("AreaEvent_3", true);
+	AddEntityCollideCallback("Player", "AreaEvent_3", "MonsterChaseAlt", true, 1);
+}
+
+void MonsterChaseAlt(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("kicheck_6", "PlayerStartArea_7", "KICheckpoint6", "kiraimmortal", "deathhint4");
+	AddTimer("lastmonster", 0.5, "LastMonster");
+}
+
+void PutOnFire(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "26_place_glass", "FirePlace", 0, false);
+	SetEntityActive("glass_container_almost_static", true);
+	SetEntityActive("FirePlace", false);
+	RemoveItem("glass_container_almostdone");
+	AddUseItemCallback("finalingredient", "bucket_of_tar_1", "glass_container_almost_static", "FinalIngredient", true);
+}
+
+void FinalIngredient(string &in asItem, string &in asEntity)
+{
+	RemoveItem("bucket_of_tar_1");
+	CreateParticleSystemAtEntityExt("", "ps_fire_smoke_epoxy.ps", "glass_container_almost_static", false, 1, 1, 1, 1, false, 0, 0, 100, 110);
+	PlaySoundAtEntity("fire_burning", "burn_substance", "FirePlace", 1, false);
+	AddTimer("firestops", 4, "FireStops");
+	AddTimer("itsdone", 5.5, "Itsdone");
+}
+void FireStops(string &in asTimer)
+{
+	StopSound("fire_burning", 1);
+}
+void Itsdone(string &in asTimer)
+{
+	PlayMusic("soma05_01_alone", false, 1, 0, 0, false);
+	SetEntityActive("glass_container_almost_static", false);
+	SetEntityActive("glass_container_finalsub", true);
+	CompleteQuest("subquest", "KISubstance");
+	CompleteQuest("mainquest", "KIMain");
+	CompleteQuest("ladderquest", "KILadder");
+	CompleteQuest("ladder2quest", "KILadder2");
+	CompleteQuest("weakdoorquest", "KIWeakDoor");
+	GiveSanityBoost();
+	SetMessage("kiraimmortal", "timetofinish", 5);
+	SetEntityActive("AreaUseSub", true);
+	SetEntityActive("monster_substance", true);
+	AddEnemyPatrolNode("monster_substance", "PathNodeArea_122", 9999, "");
+	AddEnemyPatrolNode("monster_substance", "PathNodeArea_122", 0, "");
+	SetEntityActive("door_barricade_3", false);
+	SetEntityActive("door_barricade_1", true);
+	SetSwingDoorLocked("prison_2", false, false);
+	SetEntityActive("block_box_7", true);
+}
+
+void UseSub(string &in asItemA, string &in asItemB)
+{
+	SetPlayerActive(false);
+	RemoveItem(asItemA);
+	GiveItemFromFile("glass_container_1", "glass_container.ent");
+	FadeOut(0);
+	PlayGuiSound("gameplay_acid_web", 1);
+	AddTimer("works", 4.5, "Works");
+}
+
+void Works(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("","ps_acid_web_dissolve","corpse_male_1", false);
+	FadeIn(1);
+	SetPlayerActive(true);
+	SetEntityActive("AreaUseSub", false);
+	SetEntityActive("monster_substance", false);
+	SetEntityActive("corpse_male_1", true);
+	SetEntityActive("block_box_7", false);
+	AddQuest("finall", "KIFinal");
+	SetLevelDoorLockedText("level_celler_1", "", "");
+	SetLevelDoorLockedText("level_celler_2", "", "");
+	SetEntityActive("ScriptArea_1", true);
+	SetEntityPlayerInteractCallback("ScriptArea_1", "Leave", false);
+	SetEntityActive("AreaMonster_4", true);
+	AddEntityCollideCallback("Player", "AreaMonster_4", "VeryLastMonster", true, 1);
+	SetEntityActive("torch_static01_7", false);
+	SetEntityActive("cell_breakable_wall_1", false);
+	SetEntityActive("cell_breakable_wall_fragment02_1", false);
+	SetEntityActive("cell_breakable_wall_broken_1", true);
+	SetEntityActive("cell_breakable_wall_fragment01_1", true);
+	SetEntityActive("cell_breakable_wall_fragment02_2", true);
+	SetEntityActive("cell_breakable_wall_fragment03_1", true);
+	SetEntityActive("torch_static01_9", true);
+	PlayGuiSound("gameplay_acid_web", 0.8);
+	PlayMusic("soma01_01_enterdarkness_w_lute", true, 1.1f, 2, 0, true);
+	CheckPoint("kicheck_8", "PlayerStartArea_3", "KICheckpoint8", "", "");
+	AutoSave();
+}
+
+void VeryLastMonster(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_grunt_1", true);
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_401", 0, "");
+	for (int i = 0; i < 99; i++)
+	{
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_204", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_205", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_206", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_207", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_209", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_207", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_206", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_203", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_183", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_181", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_179", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_181", 0, "");
+		AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_183", 0, "");
+	}
+}
+
+void Leave(string &in asEntity)
+{
+	SetPlayerActive(false);
+	FadeOut(3);
+	AddTimer("end1", 1, "End1");
+	AddTimer("end2", 3.5, "End2");
+}
+
+void End1(string &in asTimer)
+{
+	PlayGuiSound("door_level_cistern_open", 1);
+}
+
+void End2(string &in asTimer)
+{
+	StartCredits("impervious_lute_ending", false, "Ending", "KiraCredits", 3);
+}

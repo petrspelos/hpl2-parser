@@ -1,0 +1,166 @@
+void OnStart()
+{
+
+	SetLanternLitCallback("lanternColor");
+	AddTimer("lanternTimer", 0.1f, "changeLanternColor");
+	
+	SetLocalVarInt("red_lantern", 1);	
+	AddTimer("RainbowLantern_Red", 1.5f, "RainbowLantern_Red");
+	
+	AddTimer("lanternTimer", 0.001f, "changeLanternColor");
+
+	SetLocalVarFloat("lantern_change_rate_local", 0.75f);
+
+	AddEntityCollideCallback("Player", "trigger_end", "trigger_end", true, 0);	
+	AddEntityCollideCallback("servant_brute_1", "stoppath", "stoppath", true, 0);	
+	
+	SetLightVisible("PointLight_2", false);
+	SetLightVisible("PointLight_1", false);
+	
+	SetLocalVarFloat("lantern_change_rate_local", 0.75f);
+	
+	StopMusic(0.0f, 1);
+}
+
+void OnEnter()
+{
+
+}
+
+void OnLeave()
+{
+
+}
+
+void trigger_end(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("safety_normal_vert_noauto_1", 1.0f);
+	StartPlayerLookAt("lookattt", 5.0f, 6.0f, "");
+	
+	SetEntityActive("servant_brute_1", true);
+	
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 1.0f, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001f, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_3", 0.001f, "");
+	
+	SetPlayerActive(false);
+	
+	SetLocalVarFloat("lantern_change_rate_local", 0.25f);
+}
+
+void stoppath(string &in asParent, string &in asChild, int alState)
+{
+	ClearEnemyPatrolNodes("servant_brute_1");
+	
+	AddTimer("present_appear", 2.0f, "present_appear");
+}
+
+void present_appear(string &in asTimer)
+{
+	SetEntityActive("present3_1", true);
+	SetLightVisible("PointLight_2", true);
+	SetLightVisible("PointLight_1", true);
+	
+	SetLampLit("green_christmas_torch_static01_3", true, true);
+	SetLampLit("red_torch_static01_3", true, true);
+	SetLampLit("green_christmas_torch_static01_4", true, true);
+	SetLampLit("red_torch_static01_4", true, true);
+	
+	SetMessage("Messages", "happyholidaymessage", 5.0f);
+	AddTimer("attack_player", 5.5f, "attack_player");
+	
+	SetLocalVarFloat("lantern_change_rate_local", 0.75f);
+	
+	PlayMusic("JingleBells.ogg", true, 1.0f, 2.0f, 1, false);
+}
+
+void attack_player(string &in asTimer)
+{
+	SetEnemyDisableTriggers("servant_brute_1", false);
+	ShowEnemyPlayerPosition("servant_brute_1");
+	AddTimer("endgame", 1.65f, "endgame");
+	
+	AddTimer("throwbox", 1.0f, "throwbox");
+	
+	SetLocalVarFloat("lantern_change_rate_local", 0.15f);
+}
+
+void throwbox(string &in asTimer)
+{
+	AddPropForce("present3_1", -250.0f, 50.0f, 0.0f, "world");
+}
+
+void endgame(string &in asTimer)
+{
+	SetEntityActive("servant_brute_1", false);
+	StartCredits("", true, "Credits", "EndingSantaHouse", 0);
+}
+
+////////////////////////////////////////////
+////////////////LANTERN/COLOR///////////////
+////////////////////////////////////////////
+
+void lanternColor(bool abLit)
+{
+	
+	if(GetLocalVarInt("red_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 1, 0, 0, 0.7, 6.5, 0.3f);
+		FadeLightTo("PlayerHands_PointLight_2", 0.25, 0, 0, 0, 0.5, 0.3f);
+	}
+}
+
+void changeLanternColor(string &in asTimer)
+{
+
+	AddTimer("lanternTimer", 0.1f, "changeLanternColor");
+	
+	///////RED
+	if(GetLocalVarInt("red_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 1, 0, 0, 0.7, 6.5, 0.1f);
+		FadeLightTo("PlayerHands_PointLight_2", 0.25, 0, 0, 0, 0.5, 0.1f);
+		AddDebugMessage("red", false);
+	}
+	
+	///////GREEN
+	if(GetLocalVarInt("green_lantern")==1)
+	{	
+		FadeLightTo("PlayerHands_PointLight_1", 0, 1, 0, 0.7, 6.5, 0.1f);
+		FadeLightTo("PlayerHands_PointLight_2", 0, 0.25, 0, 0, 0.5, 0.1f);
+		AddDebugMessage("green", false);
+	}
+	
+
+	
+}
+
+//////////////////////////////////////////////////
+////////////////LANTERN/COLOR/TIMER///////////////
+//////////////////////////////////////////////////
+
+void RainbowLantern_Red(string &in asTimer)
+{
+	if(GetLanternActive())
+	{
+	SetLocalVarInt("green_lantern", 0);
+	SetLocalVarInt("red_lantern", 1);
+	AddDebugMessage("loop_red", false);
+	PlaySoundAtEntity("lanterncolorflicker", "christmas_lantern_flicker.snt", "Player", 0.0f, false);
+	}
+
+	AddTimer("RainbowLantern_Green", GetLocalVarFloat("lantern_change_rate_local"), "RainbowLantern_Green");
+}
+
+void RainbowLantern_Green(string &in asTimer)
+{
+	if(GetLanternActive())
+	{
+	SetLocalVarInt("red_lantern", 0);
+	SetLocalVarInt("green_lantern", 1);
+	AddDebugMessage("loop_green", false);
+	PlaySoundAtEntity("lanterncolorflicker", "christmas_lantern_flicker.snt", "Player", 0.0f, false);
+	}
+
+	AddTimer("RainbowLantern_Red", GetLocalVarFloat("lantern_change_rate_local"), "RainbowLantern_Red");
+}

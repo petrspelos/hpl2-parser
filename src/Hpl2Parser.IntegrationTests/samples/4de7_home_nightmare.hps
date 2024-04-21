@@ -1,0 +1,257 @@
+void OnStart()
+{
+	StopMusic(0, 2);
+	StopMusic(0, 10);
+	SetSanityDrainDisabled(false);
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerLookSpeedMul(0.5f);
+	SetPlayerCrouching(true);
+	FadeOut(0.0f);
+	FadeIn(5.0f);
+	SetPlayerSanity(40);
+	SetPlayerHealth(100);
+	AddTimer("", 7.0f, "henki");
+	AddEntityCollideCallback("Player", "area", "tapahtuu", true, 0);
+	AddEntityCollideCallback("Player", "area2", "tapahtuu2", true, 0);
+	AddEntityCollideCallback("Player", "end", "tapahtuu3", true, 0);
+	SetLightVisible("valo", false);
+	SetLightVisible("point", false);
+	SetLightVisible("pointf", false);
+	SetPlayerJumpDisabled(true);
+
+}
+
+void phono(string &in asEntity, int alState)
+{
+	PlaySoundAtEntity("phono", "kebab_nightmare.snt", "phono", 0, false);
+}
+
+void tapahtuu(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_slam_door", "mansion", 0, false);
+	SetSwingDoorLocked("mansion", true, true);
+	PlaySoundAtEntity("", "lock_door", "mansion", 0, false);
+	GiveSanityDamage(5, true);
+	PlayMusic("22_event_trapped.ogg", true, 0.9f, 1.0f, 1, true);
+}
+
+void tapahtuu2(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("lan", false, true);
+	SetEntityActive("mad2", true);
+	SetLightVisible("point", true);
+	PlayGuiSound("beat.ogg", 1.0f);
+	AddTimer("", 1.0f, "lookmad");
+	SetPlayerLookSpeedMul(1.0f);
+	StopMusic(1, 1);
+}
+
+void lookmad(string &in asTimer)
+{
+	StartPlayerLookAt("look", 0.9f, 0.9f, "");
+	AddTimer("", 5.0f, "off");
+}
+
+void off(string &in asTimer)
+{
+	FadeOut(0.0f);
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	SetLightVisible("point", false);
+	SetLightVisible("pointf", true);
+	TeleportPlayer("PlayerStartArea_2");
+	AddTimer("", 2.0f, "flick");
+	StartPlayerLookAt("look", 2.0f, 2.0f, "");
+	SetPlayerSanity(100);
+	SetSanityDrainDisabled(true);
+}
+
+void flick(string &in asTimer)
+{
+	FadeIn(0.0f);
+	AddTimer("", 3.5f, "end");
+	PlayGuiSound("scare_tingeling_rev2.ogg", 1.0f);
+	FadePlayerFOVMulTo(0.35f, 1.5f);
+	FadeSepiaColorTo(0.6f, 1.5f);
+}
+
+void end(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	FadeSepiaColorTo(0.0f, 1.0f);
+	FadeOut(0.0f);
+	AddTimer("", 2.5f, "wakeup");
+	StopPlayerLookAt();
+}
+
+void wakeup(string &in asTimer)
+{
+	ChangeMap("captured.map", "PlayerStartArea_1", "", "");
+}
+
+void henki(string &in asTimer)
+{
+	PlayMusic("shortie.ogg", false, 0.9f, 1.0f, 5, false);
+	SetEntityActive("mad", true);
+	PlayGuiSound("beat.ogg", 1.0f);
+	GiveSanityDamage(5, true);
+	AddTimer("", 5.0f, "henkipois");
+	SetLightVisible("valo", true);
+	PlayGuiSound("react_scare3.ogg", 1.0f);
+}
+
+void henkipois(string &in asTimer)
+{
+	PlayGuiSound("enemy_hallucination_disappear.ogg", 1.0f);
+	SetEntityActive("mad", false);
+	SetPlayerJumpDisabled(false);
+	AddTimer("", 2.0f, "opendoor");
+	SetLightVisible("p1", false);
+	SetLightVisible("p3", false);
+	SetLightVisible("p4", false);
+	SetLightVisible("valo", false);
+	SetPlayerJumpDisabled(false);
+	SetEntityActive("b_1", true);
+	SetEntityActive("b_2", true);
+	SetEntityActive("b_3", true);
+	SetEntityActive("b_4", true);
+	SetEntityActive("b_5", true);
+	SetEntityActive("b_6", true);
+	AddTimer("", 2.0f, "vapaus");
+}
+
+void vapaus(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0.6f);
+	SetPlayerRunSpeedMul(0.6f);
+	SetPlayerLookSpeedMul(1.0f);
+}
+
+void opendoor(string &in asTimer)
+{
+	AddPropImpulse("mansion", 0.7f, 0.0f, 0.3f, "world");
+	PlayGuiSound("door_mansion_open.ogg", 1.0f);
+	AddTimer("", 0.6f, "walk");
+}
+
+void walk(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 1.0f);
+	AddTimer("", 0.4f, "walk2");
+}
+
+void walk2(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 1.0f);
+	AddTimer("", 0.4f, "walk3");
+}
+
+void walk3(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.9f);
+	AddTimer("", 0.4f, "walk4");
+}
+
+void walk4(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.9f);
+	AddTimer("", 0.4f, "walk5");
+}
+
+void walk5(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.8f);
+	AddTimer("", 0.4f, "walk6");
+}
+
+void walk6(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.8f);
+	AddTimer("", 0.4f, "walk7");
+}
+
+void walk7(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.7f);
+	AddTimer("", 0.4f, "walk8");
+}
+
+void walk8(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.7f);
+	AddTimer("", 0.4f, "walk9");
+}
+
+void walk9(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.6f);
+	AddTimer("", 0.4f, "walk10");
+}
+
+void walk10(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.6f);
+	AddTimer("", 0.4f, "walk11");
+}
+
+void walk11(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.5f);
+	AddTimer("", 0.4f, "walk12");
+}
+
+void walk12(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.5f);
+	AddTimer("", 0.4f, "walk13");
+}
+
+void walk13(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.4f);
+	AddTimer("", 0.4f, "walk14");
+}
+
+void walk14(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.4f);
+	AddTimer("", 0.4f, "walk15");
+}
+
+void walk15(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.3f);
+	AddTimer("", 0.4f, "walk16");
+}
+
+void walk16(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.3f);
+	AddTimer("", 0.4f, "walk17");
+}
+
+void walk17(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.2f);
+	AddTimer("", 0.4f, "walk18");
+}
+
+void walk18(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.2f);
+	AddTimer("", 0.4f, "walk19");
+}
+
+void walk19(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock1.ogg", 0.1f);
+	AddTimer("", 0.4f, "walk20");
+}
+
+void walk20(string &in asTimer)
+{
+	PlayGuiSound("step_walk_rock2.ogg", 0.1f);
+}
+

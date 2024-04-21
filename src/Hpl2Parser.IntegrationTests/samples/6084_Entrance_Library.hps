@@ -1,0 +1,211 @@
+////////////////////////////
+// Run when starting map
+void OnStart()
+{
+CompleteQuest("LELEXDLOL", "LELEXDLOL");
+AddUseItemCallback("", "BarnCrowbar", "hatch_large_1", "UseCrowbarOnDoor", true);
+AddUseItemCallback("", "FirstQuestKey", "EastWingDoor", "FirstDoorUnlocked", true);
+AddUseItemCallback("", "key_torture_chamber_1", "level_wood_3", "FirstDoorUnlocked2", true);
+AddUseItemCallback("", "archiveskey", "level_wood_1", "LastDoorXD", true);
+AddUseItemCallback("", "waxroll1", "nowax", "UseWaxroll", true);
+SetInventoryDisabled(false);
+StopPlayerLookAt();
+SetPlayerActive(false);
+FadeOut(0);
+AddTimer("activate_player", 2, "FadeIn");
+AddEntityCollideCallback("Player", "AtticArea", "ATTIC", false, 1);
+AddEntityCollideCallback("JointBar", "CrowArea_1", "ATTICOPEN", true, 1);
+AddEntityCollideCallback("JointBar", "FirstDiaryACT2", "Diary", true, 1);
+}
+
+void nogoingback(string &in asEntity)
+{
+		SetMessage("ScreenText", "alreadycame", 2);
+}
+
+void noneed(string &in asEntity)
+{
+		SetMessage("ScreenText", "noneedXD", 2);
+}
+
+void LastDoorXD(string &in asItem, string &in asEntity)
+{
+		GiveSanityBoost();
+		SetEntityActive("archivesdoor", true);
+		SetEntityActive("level_wood_1", false);
+        RemoveItem(asItem);
+        PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+		PlayMusic("15_puzzle_hole.ogg", false, 2, 2, 6, false);
+}
+
+void musicWTF(string &in asEntity)
+{
+	SetMessage("ScreenText", "interesting", 6);
+	AddTimer("backXD", 30, "backXD");
+	PlayMusic("10_paper_daniel02.ogg", false, 2, 2, 6, false);
+}
+
+void musicWTF2(string &in asEntity)
+{
+	AddTimer("backXD", 30, "backXD");
+	PlayMusic("05_paper_transformation.ogg", false, 2, 2, 6, false);
+}
+
+void musicWTF3(string &in asEntity)
+{
+	SetMessage("ScreenText", "interesting", 6);
+}
+
+void backXD(string &in asTimer)
+{
+	PlayMusic("16_amb.ogg", true, 2, 4, 0, false); 
+}
+
+void back2XD(string &in asTimer)
+{
+	PlayMusic("16_amb.ogg", true, 2, 4, 0, false); 
+        SetEntityPlayerInteractCallback("note_generic_2", "musicWTF2", false);
+        SetEntityPlayerInteractCallback("note_generic_1", "musicWTF", false);
+}
+
+void FadeIn(string &in asTimer)
+{
+	PlayMusic("16_amb.ogg", true, 2, 4, 0, false);
+    SetPlayerActive(true);
+	FadeIn(5);
+	SetMessage("ScreenText", "WTFXDLOLLOL", 6);
+}
+
+void MainQuestArchives(string &in entity)
+{
+	AddQuest("MainQuestACT2", "MainQuestACT2");
+	SetEntityActive("level_hub_3", true);
+	SetEntityActive("noneeddoor", false);
+}
+
+void hatchbudge(string &in entity)
+{
+	SetMessage("ScreenText", "hatchXD", 0);
+	PlaySoundAtEntity("", "17_attach_crank.snt", "Player", 0, false);
+	AddQuest("AtticACT2", "AtticACT2");
+}
+
+void OnEnter()
+{
+	SetPlayerMoveSpeedMul(0.89f);
+	PlayMusic("16_amb.ogg", true, 2, 4, 0, false);
+        AutoSave();
+}
+
+void TimerStopRoll(string &in asTimer)
+{
+	StopSound("laddermove", 0.5f);
+	StopSound("laddermove2", 0.5f);
+	PlaySoundAtEntity("stopmove", "L01_ladder", "AreaLadderSounds", 0.0, false);
+	SetEntityActive("LadderArea_1", true);
+	SetEntityActive("block_box_24", false);
+}
+
+void ATTIC(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("Attic.map", "PlayerStartArea_1", "","");
+}
+
+void UseCrowbarOnDoor(string &in asItem, string &in asEntity)
+{
+		SetEntityActive("JointBar", true);
+		StartPlayerLookAt("CrowArea", 3.2f, 3.2f, "");
+		SetPlayerActive(false);
+        RemoveItem(asItem);
+        PlaySoundAtEntity("", "puzzle_place_jar.snt", "Player", 0, false);
+        AddTimer("TimerPlaceCrowbar", 0.4f, "TimerPlaceCrowbar");
+}
+
+void TimerPlaceCrowbar(string &in asTimer)
+{
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	SetEntityActive("CrowArea_1", true);
+}
+
+void ATTICOPEN(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityBoost();
+	SetEntityActive("JointBar", false);
+	SetEntityActive("hatch_large_1", false);
+	SetEntityActive("hatch_large_2", true);
+	SetEntityActive("ladder_grab_1", true);
+	CreateParticleSystemAtEntity("", "ps_break_pot_plant", "ScriptArea_1", false);
+	CreateParticleSystemAtEntity("", "ps_break_pot_plant", "ScriptArea_2", false);
+	PlayMusic("23_puzzle.ogg", false, 2, 2, 0, false);
+	PlaySoundAtEntity("","break_wood.snt","Player", 0,false);
+	AddTimer("continue", 16, "continue");
+	SetMoveObjectState("ladder_move_object_1", -0.5f);
+	AddTimer("TimerStopRoll", 4.0f, "TimerStopRoll");
+	PlaySoundAtEntity("laddermove", "L01_ladder_move", "AreaLadderSounds", 1.0, false);
+	PlaySoundAtEntity("laddermove2", "L01_ladder_move02", "AreaLadderSounds", 1.0, false);
+	PlaySoundAtEntity("beingmove", "L01_ladder", "AreaLadderSounds", 0.0, false);
+	SetEntityActive("crowbar_broken_1", true);
+	CompleteQuest("AtticACT2", "AtticACT2");
+}
+
+void Diary(string &in asParent, string &in asChild, int alState)
+{
+	AddDiary("FirstACT2", "FirstACT2");
+}
+
+void FirstDoorUnlocked(string &in asItem, string &in asEntity)
+{
+		SetEntityActive("FirstDoor", true);
+		SetEntityActive("EastWingDoor", false);
+		PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+        RemoveItem(asItem);
+}
+
+void FirstDoorUnlocked2(string &in asItem, string &in asEntity)
+{
+		SetEntityActive("level_wood_4", true);
+		SetEntityActive("level_wood_3", false);
+		PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+        RemoveItem(asItem);
+		GiveSanityBoostSmall();
+}
+
+void locked(string &in entity)
+{
+	SetMessage("ScreenText", "msgname", 0);
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+SetEntityConnectionStateChangeCallback("phono", "phono");
+}
+
+void phono(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+      PlayMusic("TempleOfTime.ogg", false, 2, 4, 0, false);
+      SetEntityPlayerInteractCallback("note_generic_2", "", false);
+      SetEntityPlayerInteractCallback("note_generic_1", "musicWTF3", false);
+      RemoveTimer("backXD");
+      AddTimer("back2XD", 140, "back2XD");
+          return;
+     }
+}
+
+void nowax(string &in asEntity)
+{
+SetMessage("ScreenText", "nowax", 4);
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	StopMusic(2, 0);
+}
+

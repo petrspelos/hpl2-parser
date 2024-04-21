@@ -1,0 +1,189 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "fallkill", "fallkill", false, 1);
+	AddEntityCollideCallback("Player", "deathnotenormal", "deathnotenormal", false, 0);
+	AddUseItemCallback("", "stone_hammer_1", "wooden_boards_block_1", "breakboards", true);
+	AddUseItemCallback("", "hollow_needle_1", "prison_section_3", "unlockcell", true);	
+	SetEntityPlayerInteractCallback("areaboards", "areaboards", true);
+	AddUseItemCallback("", "key_torture_chamber_1", "prison_2", "exroom", true);
+	SetEntityPlayerInteractCallback("orbpiece_indigo_1", "pickorb", true);
+	SetEntityPlayerInteractCallback("note_generic_2", "deaddelma", true);
+	SetEntityPlayerInteractCallback("orbpiece_indigo_2", "removebox", true);
+	AddEntityCollideCallback("Player", "firstmon", "firstmon", false, 1);
+	AddEntityCollideCallback("Player", "monstercome2", "monstercome2", false, 1);
+	AddEntityCollideCallback("Player", "noboard", "noboard", false, 1);
+	AddEntityCollideCallback("Player", "chainscare", "chainscare", true, 1);
+}
+
+void OnEnter()
+{
+	PlayMusic("07_amb", true, 0.6f, 4.0f, 0, true);
+	SetDeathHint("DeathHint", "DHint1");
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "load05", 1, "");
+}
+
+///////////////////////////////////
+////////////ABYSSSSSSSS////////////
+///////////////////////////////////
+
+void fallkill(string &in asParent, string &in asChild, int alState)
+{
+	SetDeathHint("DeathHint", "DHint2");
+	SetPlayerHealth(0);
+}	
+
+void deathnotenormal(string &in asParent, string &in asChild, int alState)
+{
+	SetDeathHint("DeathHint", "DHint1");
+}
+
+///////////////////////////////////
+////////////KEYYYYYYYYY////////////
+///////////////////////////////////
+
+void doortoalastor(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked(asEntity, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+void unlockcell(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+
+void exroom(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+
+////////////////////////////////////
+////////////BOARDS/BREAK////////////
+////////////////////////////////////
+
+void breakboards(string &in asItem, string &in asEntity)
+{
+	SetPropHealth("wooden_boards_block_1", 0);
+	SetEntityActive("areaboards", false);
+	CompleteQuest("mem4", "memento4");
+	AutoSave();
+}
+
+void areaboards(string &in asEntity)
+{
+	SetMessage("Messages", "boards", 0);
+	AddQuest("mem4", "memento4");
+}
+
+////////////////////////////////////
+////////////ORB/EFFECTSS////////////
+////////////////////////////////////
+
+void pickorb(string &in asEntity)
+{
+	SetLightVisible("PointLight_1", false);
+	AddTimer("orbgrab", 2, "orbgrab");
+    SetPlayerActive(false);   
+	SetLanternActive(false, false);
+}
+
+void orbgrab(string &in asTimer)
+{
+    SetPlayerCrouching(true); 
+    FadeOut(0.5);  
+	AddTimer("taketocell", 5, "taketocell");
+	FadePlayerRollTo( 40, 40, 40);
+	PlaySoundAtEntity("slash", "attack_claw_hit.snt", "Player", 0, false);
+	StopMusic(0.5f, 0);
+}
+
+void taketocell(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_3");
+	AddTimer("wakeonup", 3, "wakeonup");
+}
+
+void wakeonup(string &in asTimer)
+{
+	FadeIn(1); 
+    FadePlayerRollTo( 0, 40, 40);
+	RemoveItem("orbpiece_indigo_1");
+	RemoveItem("lantern_1");
+    SetPlayerActive(true);   
+	SetLanternActive(true, false);
+	GiveSanityDamage(5.0f, false);
+	PlayMusic("07_amb", true, 0.6f, 4.0f, 0, true);
+	SetEntityActive("orbpiece_indigo_2", true);
+	SetEntityActive("lantern_2", true);
+	SetPlayerLampOil(0);
+	PlaySoundAtEntity("reacttowake", "react_breath.snt", "Player", 0.0f, false);
+	SetEntityActive("note_generic_1", true);
+	SetEntityActive("preventnoorb", true);
+	SetEntityActive("firstmon", true);
+	SetEntityActive("monstercome2", true);
+	AutoSave();
+}
+
+void deaddelma(string &in asEntity)
+{
+	AddQuest("mem5", "memento5");
+	SetMessage("Messages", "delmaoof", 0);
+	CompleteQuest("mem2", "memento2");
+}
+
+void removebox(string &in asEntity)
+{
+	SetEntityActive("preventnoorb", false);
+	AutoSave();
+}
+
+void noboard(string &in asParent, string &in asChild, int alState) 
+{
+	SetEntityActive("wooden_boards_block_1", false);
+}
+
+////////////////////////////////////
+////////////OUT/CHASE/AH////////////
+////////////////////////////////////
+
+void firstmon(string &in asParent, string &in asChild, int alState)
+{
+	AddEnemyPatrolNode("monster1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("monster1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("monster1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("monster1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("monster1", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("monster1", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("monster1", "PathNodeArea_7", 0, "");
+	SetEntityActive("monster1", true);
+	GiveSanityDamage(5.0f, true);
+}
+
+void monstercome2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("monster2", true);
+	SetPropHealth("cellar_wood01_2", 0);
+}
+
+////////////////////////////////////
+////////////////X/TRA///////////////
+////////////////////////////////////
+
+void chainscare(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("chainwalkscare", "chainedwalkscare.snt", "sourceofwalksound", 0.0f, false);
+}

@@ -1,0 +1,207 @@
+/*
+void OnUpdate(float afStep) {
+	SetEntityCustomFocusCrossHair("PrayArea_*", "Ladder");
+}
+*/
+
+///// move to Include HPS
+
+void ResumeNormalSpeed() {
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+
+void DisableCandles(bool abDisabled) {
+	SetEntityInteractionDisabled("candle_floor_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick01_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick02_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_floor_*", abDisabled);
+	SetEntityInteractionDisabled("torch_*", abDisabled);
+	SetEntityInteractionDisabled("hanging_lantern_ceiling_*", abDisabled);
+	SetEntityInteractionDisabled("elevator_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_tri_*", abDisabled);
+	
+	SetEntityInteractionDisabled("lamp_wall_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("ki_lampion_*", abDisabled);
+	SetEntityInteractionDisabled("lamp_gas_*", abDisabled);
+	SetEntityInteractionDisabled("LampBarrelsTake_*", abDisabled);
+}
+
+void PrayingEffect(float crouchInterval) {
+	SetPlayerCrouching(true);
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerLookSpeedMul(0);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	AddTimer("praying_end", crouchInterval, "Praying_end");
+}
+
+void Praying_end(string &in asTimer) {
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	SetPlayerCrouching(false);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	ResumeNormalSpeed();
+}
+
+//////////
+
+void OnStart() {
+	SetGlobalVarInt("NumOfDeaths", 0);
+	
+	DisableCandles(true);
+
+	if (ScriptDebugOn()) {
+		PlayMusic("sonorant_overgrowth_pax_imperatoris", true, 0.8f, 4, 0, true);
+		if (!HasItem("lantern_1")) {
+			GiveItemFromFile("lantern_1", "lantern.ent");
+		}
+	} else {
+		IntroSequence();
+	}
+	
+	SetInDarknessEffectsActive(false);
+	
+	for (int i = 1; i <=5; i++) {
+		AddEntityCollideCallback("Player", "area_divinelight_"+i, "FadeDivineLight", true, 0);
+	}
+	AddEntityCollideCallback("Player", "ScriptArea_Quest1", "QuestLight", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_Quest2", "QuestLeave", true, 0);
+	
+	// move this to update
+	SetEntityCustomFocusCrossHair("PrayArea_*", "Ladder");
+}
+
+/// Intro cutscene
+
+void IntroSequence() {
+	FadeOut(0);
+	SetPlayerActive(false);
+	
+	AddTimer("cardinal_intro", 3, "Cardinal_intro");
+	AddTimer("cardinal_intro1", 6, "Cardinal_intro1");
+}
+
+void Cardinal_intro(string &in asTimer)
+{
+	PlayMusic("sonorant_overgrowth_pax_imperatoris", true, 0.6f, 4, 0, true);
+}
+
+void Cardinal_intro1(string &in asTimer)
+{
+	SetPlayerCrouching(true);
+	StartPlayerLookAt("arab_candle_holder_table_4", 1.0f, 2.0f, "");
+	SetEffectVoiceOverCallback("Cardinal_intro2");
+	AddEffectVoice("01_intro_bath1.ogg", "", "Voice", "01_intro_bath1", false, "", 0, 0);
+	AddEffectVoice("01_intro_bath2.ogg", "", "Voice", "01_intro_bath2", false, "", 0, 0);
+	AddEffectVoice("01_intro_bath3.ogg", "", "Voice", "01_intro_bath3", false, "", 0, 0);
+	AddEffectVoice("01_intro_bath4.ogg", "", "Voice", "01_intro_bath4", false, "", 0, 0);
+}
+
+void Cardinal_intro2()
+{
+	FadeIn(3);
+	StartPlayerLookAt("castle_arched01_1", 0.5f, 1.0f, "");
+	AddEffectVoice("01_intro_bath5.ogg", "", "Voice", "01_intro_bath5", false, "", 0, 0);
+	AddEffectVoice("01_intro_bath6.ogg", "", "Voice", "01_intro_bath6", false, "", 0, 0);
+	AddEffectVoice("01_intro_bath7.ogg", "", "Voice", "01_intro_bath7", false, "", 0, 0);
+	AddTimer("cardinal_intro3", 4.5f, "Cardinal_intro3");
+	AddTimer("cardinal_intro4", 11, "Cardinal_intro4");
+	AddTimer("cardinal_intro5", 14, "Cardinal_intro5");
+}
+
+void Cardinal_intro3(string &in asTimer)
+{
+	FadeOut(2);
+	SetPlayerCrouching(false);
+}
+
+void Cardinal_intro4(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_3");
+	StopPlayerLookAt();
+	FadeIn(2);
+}
+
+void Cardinal_intro5(string &in asTimer)
+{
+	SetPlayerActive(true);
+	AddDiary("Gospel_Level1", "diary_page");
+}
+
+//////////
+
+//// Basic events
+
+void QuestLight(string &in asParent, string &in asChild, int alState) {
+	AddTimer("questLight_Timer", 10, "QuestLight_Timer");
+}
+
+void QuestLight_Timer(string &in asTimer) {
+	AddQuest("01_lightquest", "01light");
+}
+
+void FadeDivineLight(string &in asParent, string &in asChild, int alState) {
+	DestroyParticleSystem("ps_" + asChild);
+}
+
+void PrayAtGraves(string &in asEntity) {
+	PrayingEffect(3.0f);
+	StartPlayerLookAt(asEntity, 1.2f, 2.2f, "");
+	if (GetEffectVoiceActive()) {
+		StopAllEffectVoices(0.5f);
+	}
+	AddEffectVoice("01_blessedsaints.ogg", "", "Voice", "01_blessedsaints", false, "", 0, 0);
+	SetEntityActive("PrayArea_1", false);
+	SetEntityActive("PrayArea_2", false);
+}
+
+void PrayAtAltar(string &in asEntity) {
+	PrayingEffect(8.0f);
+	StartPlayerLookAt("PrayArea_3", 1.2f, 2.2f, "");
+	if (GetEffectVoiceActive()) {
+		StopAllEffectVoices(0.5f);
+	}
+	AddEffectVoice("01_slumber1.ogg", "", "Voice", "01_slumber1", false, "", 0, 0);
+	AddEffectVoice("01_slumber2.ogg", "", "Voice", "01_slumber2", false, "", 0, 0);
+	AddEffectVoice("01_slumber3.ogg", "", "Voice", "01_slumber3", false, "", 0, 0);
+	SetEntityActive("PrayArea_3", false);
+	SetEntityActive("PrayArea_4", false);
+}
+
+void QuestLeave(string &in asParent, string &in asChild, int alState) {
+	CompleteQuest("01_lightquest", "01light");
+	AddQuest("01_leavequest", "01leave");
+	if (GetEffectVoiceActive()) {
+		StopAllEffectVoices(0.5f);
+	}
+	SetEffectVoiceOverCallback("ResumeNormalSpeed");
+	AddEffectVoice("01_return1.ogg", "", "Voice", "01_return1", false, "", 0, 0);
+	AddEffectVoice("01_return2.ogg", "", "Voice", "01_return2", false, "", 0, 0);
+	AddEffectVoice("01_return3.ogg", "", "Voice", "01_return3", false, "", 0, 0);
+	SetPlayerMoveSpeedMul(0.8f);
+	SetPlayerRunSpeedMul(0.8f);
+}
+
+void LevelDoorTouch(string &in asEntity){
+	if (GetEffectVoiceActive()) {
+		StopAllEffectVoices(0.5f);
+	}
+	CompleteQuest("01_leavequest", "01leave");
+	PlayGuiSound("00_transition_01.ogg", 1.0f);
+	ResumeNormalSpeed();
+}
+
+void OnLeave() {
+	SetupLoadScreen("Voice", "00_transition_01", 0, "eso_loading_II.jpg");
+	
+	DestroyDataCache();
+	ClearSavedMaps();
+}

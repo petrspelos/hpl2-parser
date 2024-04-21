@@ -1,0 +1,413 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaSurvivor", "Survivor", true, 1);
+AddEntityCollideCallback("Player", "AreaRoaches", "Roaches", true, 1);
+AddEntityCollideCallback("Player", "AreaFight", "Fight", true, 1);
+AddEntityCollideCallback("Player", "AreaLeak", "GasLeak", true, 1);
+AddEntityCollideCallback("Player", "AreaSewer", "EnterSewer", true, 1);
+AddEntityCollideCallback("Player", "AreaZombie", "Zombie", true, 1);
+AddEntityCollideCallback("Player", "AreaEl", "ElDeath", false, 1);
+AddEntityCollideCallback("Player", "AreaElQuest", "ElQuest", true, 1);
+AddEntityCollideCallback("pipe", "DamageArea_1", "Impact1", false, 1);
+AddEntityCollideCallback("pipe", "DamageArea", "Impact2", false, 1);
+AddEntityCollideCallback("rock", "DamageArea_1", "Impact1", false, 1);
+AddEntityCollideCallback("rock", "DamageArea", "Impact2", false, 1);
+AddEntityCollideCallback("rock2", "DamageArea_1", "Impact1", false, 1);
+AddEntityCollideCallback("rock2", "DamageArea", "Impact2", false, 1);
+AddUseItemCallback("", "key", "door", "UsedKeyOnDoor", true);
+CheckPoint("Checkpoint", "PlayerStartArea_1", "DeathSettings", "DeathHints", "Stupid");
+SetMapDisplayNameEntry("Pool");
+SetPlayerActive(false);
+PlaySoundAtEntity("","CarStop.snt","Player", 0,false);
+FadeOut(0);
+SetPlayerCrouching(true);
+AddTimer("intro", 4, "intro");
+AutoSave();
+}
+
+void intro(string &in asTimer)
+{
+StartPlayerLookAt("Look2", 1, 2.0f, "");
+FadeIn(2);
+AddTimer("intro2", 4, "intro2");	
+}
+
+void intro2(string &in asTimer)
+{
+StartPlayerLookAt("Look3", 1, 2.0f, "");
+FadeOut(4);
+AddTimer("intro3", 4, "intro3");	
+}
+
+void intro3(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_1");	
+FadeIn(2);
+SetPlayerActive(true);
+SetPlayerJumpDisabled(false);
+SetPlayerCrouchDisabled(false);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+StopPlayerLookAt();
+PlayMusic("Suspense", true, 1, 5, 0, true);
+}
+
+void Survivor(string &in asParent, string &in asChild, int alState) 
+{
+AddEffectVoice("survivor1.ogg", "", "Voice", "00_Survivor1", false, "", 0, 0 );	
+StartPlayerLookAt("Look", 1, 2.0f, "");
+SetPlayerActive(false);
+AddTimer("survivor2", 10, "survivor2");	
+}
+
+void survivor2(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+SetEntityActive("grunthand_1", false);
+SetEntityActive("grunthand_2", false);
+SetEntityActive("grunthand_3", true);
+SetEntityActive("grunthand_4", true);
+}
+
+void EnterSewer(string &in asParent, string &in asChild, int alState) 
+{
+PlayMusic("AsylumAmb", true, 1, 5, 0, true);
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("door",false, true);
+PlaySoundAtEntity("","unlock_door","door", 0,false);
+RemoveItem("key");
+}
+
+void ElQuest(string &in asParent, string &in asChild, int alState) 
+{
+AddQuest("ElQuest", "ElQuest");
+}
+
+void Computer(string &in asEntity)
+{
+PlaySoundAtEntity("", "Computer.snt", "Player", 0, false);
+DestroyParticleSystem("El");
+DestroyParticleSystem("El2");
+StopSound("El3", 0.5f);
+StopSound("El4", 0.5f);
+SetEntityActive("AreaEl", false);
+SetEntityActive("AreaEl2", false);
+SetMessage("Messages", "poweroff", 5);
+SetEntityActive("AreaElQuest", false);
+CompleteQuest("ElQuest", "ElQuest");
+}
+
+void ElDeath(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("", "Electric2.snt", "AreaEl", 0, false);
+GivePlayerDamage(200, "BloodSplat", true, true);
+}
+
+float Distance = 0.25f;
+
+void TooLight(string &in asParent , string &in asChild , int alState)
+{
+    SetMessage("Messages", "toolight", 0);
+}
+
+void Impact1(string &in asParent , string &in asChild , int alState)
+{
+    AddTimer("ImpactTime" , 1.0f , "HitTime"); // This doesnt need to call anything
+}
+
+void Impact2(string &in asParent, string &in asChild, int alState)
+{
+    float Time = (1.05f - GetTimerTimeLeft("ImpactTime")); // Get's the time taken to impact
+    float Speed = (Distance / Time); // Gets the speed
+    if(Speed >= 1.8f) // Minimum necessary speed
+    {
+        if (GetPropHealth("bar1") == 100)
+		{
+                        PlaySoundAtEntity("", "20_pipe_reject.snt", "Player", 0, false);
+                        CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DamageArea_1", false);
+                        SetEntityActive("bar", false);
+                        SetEntityActive("bar2", true);
+                        SetEntityActive("DamageArea", false);
+                        SetEntityActive("DamageArea_1", false);
+		}
+		else
+		{
+                        PlaySoundAtEntity("", "20_pipe_stuck.snt", "Player", 0, false);
+                        CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DamageArea_1", false);
+                        SetEntityActive("bar", false);
+                        SetEntityActive("bar2", true);
+                        SetEntityActive("DamageArea", false);
+                        SetEntityActive("DamageArea_1", false);
+			for(int i=1;i<=10;i++)
+			{
+			}
+			RemoveEntityCollideCallback("pipe", "DamageArea_1");
+			RemoveEntityCollideCallback("pipe", "DamageArea");
+			RemoveEntityCollideCallback("rock", "DamageArea_1");
+			RemoveEntityCollideCallback("rock", "DamageArea");
+			RemoveEntityCollideCallback("rock2", "DamageArea_1");
+			RemoveEntityCollideCallback("rock2", "DamageArea");
+		}
+    }
+    else
+    {
+        SetMessage("Messages", "backaway", 0);
+    }
+}
+
+void FuncValve(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaPipe2", false);
+        SetEntityActive("pole1", false);
+        SetEntityActive("pole2", false);
+        PlaySoundAtEntity("", "13_rod_out.snt", "valve", 0.0f, false);
+        SetEntityConnectionStateChangeCallback("valve", "");
+        SetEntityInteractionDisabled("valve", true);
+        AddLocalVarInt("VarIntValve", 1);
+	Dooropen();
+	return;
+} 
+	if (alState == -1) 
+	
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaPipe2", false);
+        SetEntityActive("pole1", false);
+        SetEntityActive("pole2", false);
+        PlaySoundAtEntity("", "13_rod_out.snt", "valve", 0.0f, false);
+        SetEntityConnectionStateChangeCallback("valve", "");
+        SetEntityInteractionDisabled("valve", true);
+        AddLocalVarInt("VarIntValve", 1);
+	Dooropen();
+}
+
+void FuncValve2(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaPipe3", false);
+        SetEntityActive("pole3", false);
+        SetEntityActive("pole4", false);
+        PlaySoundAtEntity("", "13_rod_out.snt", "valve2", 0.0f, false);
+        SetEntityConnectionStateChangeCallback("valve2", "");
+        SetEntityInteractionDisabled("valve2", true);
+        AddLocalVarInt("VarIntValve", 1);
+	Dooropen();
+	return;
+} 
+	if (alState == -1) 
+	
+        CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaPipe3", false);
+        SetEntityActive("pole3", false);
+        SetEntityActive("pole4", false);
+        PlaySoundAtEntity("", "13_rod_out.snt", "valve2", 0.0f, false);
+        SetEntityConnectionStateChangeCallback("valve2", "");
+        SetEntityInteractionDisabled("valve2", true);
+        AddLocalVarInt("VarIntValve", 1);
+	Dooropen();
+}
+
+void Dooropen(){
+
+	if(GetLocalVarInt("VarIntValve") == 2){
+		SetLevelDoorLocked("exit", false);
+                SetEntityPlayerInteractCallback("exit", "Goingback", false);
+	}
+}
+
+void Goingback(string &in asEntity)
+{
+SetEntityActive("door", false);
+SetEntityActive("door2", false);
+SetEntityActive("AreaZombie", true);
+SetEntityActive("AreaExit", true);
+}
+
+void Zombie(string &in asParent, string &in asChild, int alState) 
+{
+CheckPoint("Checkpoint2", "PlayerStartArea_2", "DeathSettings", "DeathHints", "Wait");
+SetEntityActive("zombie", true);
+AddEnemyPatrolNode("zombie","node_1",2,"");	
+AddEnemyPatrolNode("zombie","node_2",0,"");	
+AddEnemyPatrolNode("zombie","node_3",0,"");	
+AddEnemyPatrolNode("zombie","node_4",0,"");
+AddEnemyPatrolNode("zombie","node_5",3,"");
+AddEnemyPatrolNode("zombie","node_4",0,"");
+AddEnemyPatrolNode("zombie","node_3",0,"");
+AddEnemyPatrolNode("zombie","node_2",0,"");
+AddEnemyPatrolNode("zombie","node_1",0,"");
+AddEnemyPatrolNode("zombie","node_6",0,"");
+AddEnemyPatrolNode("zombie","node_7",2,"");
+AddEnemyPatrolNode("zombie","node_6",0,"");
+AddEnemyPatrolNode("zombie","node_1",0,"");	
+AddEnemyPatrolNode("zombie","node_28",0,"");
+AddEnemyPatrolNode("zombie","node_29",0,"");
+AddEnemyPatrolNode("zombie","node_28",0,"");
+AddEnemyPatrolNode("zombie","node_1",0,"");
+AddEnemyPatrolNode("zombie","node_31",0,"");
+AddEnemyPatrolNode("zombie","node_32",0,"");
+AddEnemyPatrolNode("zombie","node_33",0,"");	
+AddEnemyPatrolNode("zombie","node_31",0,"");
+}
+
+void Exit(string &in asEntity)
+{
+ChangeMap("AsylumEP.map", "PlayerStartArea_1", "","");
+}
+
+//---- Etc events ----//
+
+void Roaches(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("coc1", true);
+SetEntityActive("coc2", true);
+SetEntityActive("coc3", true);
+SetEntityActive("coc4", true);
+SetEntityActive("coc5", true);
+}
+
+void Fight(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("", "FightDistance.snt", "AreaFight2", 0, false);
+}
+
+void GasLeak(string &in asParent, string &in asChild, int alState) 
+{
+CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaPipe", false);
+CreateParticleSystemAtEntity("", "ps_steam", "AreaPipe", false);
+PlaySoundAtEntity("", "17_break_wheel.snt", "AreaPipe", 0.0f, false);
+PlaySoundAtEntity("", "13_steam.snt", "AreaPipe", 0.0f, false);
+}
+
+void powerup(string &in asEntity)
+{
+SetMessage("Messages", "powerup2", 7);
+AddGlobalVarInt("Powerup2", 1);
+RemoveItem("syringe_1");
+}
+
+//--- Showers ----//
+
+void shower(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+DestroyParticleSystem("showerps");
+StopSound("showersound", 0.5f);
+}
+     if (alState == 1)
+     {
+PlaySoundAtEntity("showersound","16_water_stream_low.snt", "shower", 0, true);
+CreateParticleSystemAtEntity("showerps", "ps_childsnake_water_stream", "shower", false);
+          return;
+     }
+}
+
+void shower2(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+DestroyParticleSystem("shower2ps");
+StopSound("showersound2", 0.5f);
+}
+     if (alState == 1)
+     {
+PlaySoundAtEntity("showersound2","16_water_stream_low.snt", "shower2", 0, true);
+CreateParticleSystemAtEntity("shower2ps", "ps_childsnake_water_stream", "shower2", false);
+          return;
+     }
+}
+
+void shower3(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+DestroyParticleSystem("shower3ps");
+StopSound("showersound3", 0.5f);
+RemoveTimer("scare");
+}
+     if (alState == 1)
+     {
+PlaySoundAtEntity("showersound3","16_water_stream_low.snt", "shower3", 0, true);
+CreateParticleSystemAtEntity("shower3ps", "ps_childsnake_blood_stream", "shower3", false);
+          return;
+     }
+}
+
+void shower4(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+DestroyParticleSystem("shower4ps");
+StopSound("showersound4", 0.5f);
+}
+     if (alState == 1)
+     {
+PlaySoundAtEntity("showersound4","16_water_stream_low.snt", "shower4", 0, true);
+CreateParticleSystemAtEntity("shower4ps", "ps_childsnake_water_stream", "shower4", false);
+          return;
+     }
+}
+
+//---- Messages ----//
+
+void Hardobject(string &in asEntity)
+{
+PlaySoundAtEntity("", "17_attach_crank.snt", "Player", 0, false);
+SetMessage("Messages", "hardobject", 0);
+}
+
+void AyaDisgusted(string &in asEntity)
+{
+PlaySoundAtEntity("", "AyaDisgusted.snt", "Player", 0, false);
+SetMessage("Messages", "uack", 3);
+}
+
+void Lockedtight(string &in asEntity)
+{
+SetMessage("Messages", "lockedtight", 4);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+}
+
+void OnEnter()
+{	
+PlayMusic("AsylumAmb", true, 1, 5, 0, true);
+PreloadSound("Generator");
+
+if(GetGlobalVarInt("Powerup2")==1)
+	{
+SetPlayerSanity(100);
+	}
+
+if(GetGlobalVarInt("Powerup7")==1)
+	{
+AddPlayerSanity(30);
+	}
+
+if(GetGlobalVarInt("Powerup8")==1)
+	{
+SetSanityDrainDisabled(true);
+	}
+
+if(GetGlobalVarInt("Powerup9")==1)
+	{
+AddPlayerHealth(30);
+	}
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

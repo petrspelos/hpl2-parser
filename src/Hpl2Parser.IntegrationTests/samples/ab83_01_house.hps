@@ -1,0 +1,162 @@
+void OnStart()
+{
+	SetEntityPlayerInteractCallback("windowinteractone", "seewindow", false);
+	SetEntityPlayerInteractCallback("windowinteracttwo", "seewindow", false);
+	SetEntityPlayerInteractCallback("inthatch", "hatchneedlader", false);
+	SetEntityPlayerInteractCallback("getinbed", "getinbed", true);
+	FadeOut(0.0f); 
+	SetPlayerActive(false);	
+	AddTimer("fadein", 3, "fadein");
+	AddEntityCollideCallback("Player", "seesanta", "seesantaboth", true, 1);
+	AddUseItemCallback("", "ladder_item_1", "inthatch", "leavetoattic", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("JingleBells.ogg", true, 1.0f, 2.0f, 1, true);
+}
+
+void OnLeave()
+{
+
+}
+
+////////////////////////////////////
+////////////////START///////////////
+////////////////////////////////////
+
+void fadein(string &in asTimer)
+{
+	FadeIn(0.5f); 
+	AddTimer("lookattree", 2, "lookattree");
+}
+
+void lookattree(string &in asTimer)
+{
+	StartPlayerLookAt("looktree", 1, 2, "");
+	AddTimer("lookbacknow", 7, "lookbacknow");
+	SetMessage("Messages", "itstimeforchrist", 0);
+}
+
+void lookbacknow(string &in asTimer)
+{
+	StartPlayerLookAt("lookatchimneynow", 1, 2, "");
+	AddTimer("befree", 7, "befree");
+	SetMessage("Messages", "fatguychim", 0);
+}
+
+void befree(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);	
+	SetMessage("Messages", "gotothebedsike", 0);
+}
+
+////////////////////////////////////
+/////////////INTERACT///////////////
+////////////////////////////////////
+
+void seewindow(string &in asEntity)
+{
+	SetMessage("Messages", "cantseewindow", 0);
+}
+
+void hatchneedlader(string &in asEntity)
+{
+	SetMessage("Messages", "needladder", 0);
+}
+
+////////////////////////////////////
+/////////////SLEEPING///////////////
+////////////////////////////////////
+
+void getinbed(string &in asEntity)
+{
+	FadeOut(0.5f); 
+	SetPlayerActive(false);	
+	AddTimer("inbedteleportone", 1, "inbedteleportone");
+	SetPlayerCrouching(true);
+}
+
+void inbedteleportone(string &in asTimer)
+{
+	FadeIn(0.5f); 
+	TeleportPlayer("PlayerStartArea_2");
+    FadePlayerRollTo( 40, 40, 40);
+	AddTimer("fallasleep", 1, "fallasleep");
+}
+
+void fallasleep(string &in asTimer)
+{
+	FadeOut(5.0f); 
+	AddTimer("hearsanta", 5.1f, "hearsanta");
+	StopMusic(5.0f, 1);
+}
+
+void hearsanta(string &in asTimer)
+{
+	FadeIn(0.2f); 
+	PlaySoundAtEntity("", "break_wood_metal.snt", "breaksource", 0, false);
+	SetPropHealth("wooden_boards_block_1", 0.0f);
+    FadePlayerRollTo( 0, 40, 40);
+	AddTimer("whatwasineedcheck", 2.0f, "whatwasineedcheck");
+}
+
+void whatwasineedcheck(string &in asTimer)
+{
+	SetPlayerActive(true);	
+	SetMessage("Messages", "hearsantaneedcheck", 0);
+	SetEntityActive("seesantatwo", true);
+	SetEntityActive("seesanta", true);
+	SetEntityActive("ladder_item_1", true);
+	SetEntityActive("servant_grunt_1", true);
+	PlayMusic("darkbells.ogg", true, 1.0f, 2.0f, 3, true);
+	AutoSave();
+	SetEntityActive("nogootherdoor", true);
+}
+
+////////////////////////////////////
+//////////////SANTA/////////////////
+////////////////////////////////////
+
+void seesantaboth(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);	
+	StartPlayerLookAt("santahoho", 1, 2, "");
+	PlaySoundAtEntity("", "SantaGrunt.snt", "santahoho", 0, false);
+	AddTimer("chase", 3, "chase");
+}
+
+void chase(string &in asTimer)
+{
+	SetPlayerActive(true);	
+	SetEntityActive("servant_grunt_1", false);
+	SetEntityActive("monster", true);
+	ShowEnemyPlayerPosition("monster");
+	AddEnemyPatrolNode("monster", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_9", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_11", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_13", 0.001, "");
+	StopPlayerLookAt();
+	SetMessage("Messages", "santachase", 0);
+	SetEntityActive("nogootherdoor", false);
+}
+
+////////////////////////////////////
+//////////////LADDER////////////////
+////////////////////////////////////
+
+void leavetoattic(string &in asItem, string &in asEntity)
+{
+	RemoveItem("ladder_item_1");
+	ChangeMap("02_attic.map", "PlayerStartArea_1", "", "");
+}

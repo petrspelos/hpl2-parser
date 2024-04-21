@@ -1,0 +1,83 @@
+void OnStart()
+{
+AddUseItemCallback("UseBottle", "Acid_Bottle", "Acid_Container", "UseBottle", true);
+AddEntityCollideCallback("Player", "AcidArea", "CollideAcidDamage", false, 1);
+AddEntityCollideCallback("Acid_Grunt", "Despawn_Acid_grunt", "DespawnAcidGrunt", true, 1);
+}
+
+void UseBottle(string &in asItem, string &in asEntity)
+{
+      if(asItem == "Acid_Bottle"){
+             PlaySoundAtEntity("fillbottle", "puzzle_acid_success", asEntity, 1.0f, false);
+
+             RemoveItem(asItem);
+             GiveItemFromFile("glass_container_filled", "glass_container_filled.ent");
+
+             SetMessage("FoodStorageMap", "AcidInBottle", 0);
+             
+             GiveSanityBoostSmall();
+
+             AddTimer("activateacidgrunt", 1.0f, "ActivateAcidGrunt");
+       }
+       else if(asItem == "glass_container_filled"){
+              SetMessage("FoodStorageMap", "AlreadyGotTheAcid", 0);
+       }
+
+}
+
+void ActivateAcidGrunt(string &in asTimer)
+{
+       ClearEnemyPatrolNodes("Acid_Grunt");
+       SetEntityActive("Acid_Grunt", true);
+       AddEnemyPatrolNode("Acid_Grunt", "PathNodeArea_1", 0, "");
+       AddEnemyPatrolNode("Acid_Grunt", "PathNodeArea_2", 0, "");
+       AddEnemyPatrolNode("Acid_Grunt", "PathNodeArea_3", 3, "");
+       AddEnemyPatrolNode("Acid_Grunt", "PathNodeArea_4", 0, "");
+       AddEnemyPatrolNode("Acid_Grunt", "PathNodeArea_5", 0, "");
+       AddEnemyPatrolNode("Acid_Grunt", "PathNodeArea_6", 0, "");
+}
+
+void DespawnAcidGrunt(string &in asParent , string &in asChild , int alState)
+{
+       SetEntityActive("Acid_Grunt", false);
+}
+
+void CollideAcidDamage(string &in asParent, string &in asChild, int alState)
+{
+     InteractTouchAcid(asChild);
+}
+
+void InteractTouchAcid(string &in asEntity)
+{
+      PlaySoundAtEntity("acid_burn", "puzzle_acid", "Player", 0.2f, false);
+
+      AddTimer("acidmess", 9.3f, "TimerAcidDamageMess");
+      AddTimer("acidmessoff", 1.5f, "TimerAcidDamageMess");
+}
+
+void TimerAcidDamageMess(string &in asTimer)
+{
+       if(asTimer == "acidmessoff"){
+               FadeRadialBlurTo(0, 0.1f);
+               return;
+       }
+
+       SetMessage("FoodStorageMap", "AcidHurt", 0);
+
+       GivePlayerDamage(10.0f, "BloodSplat", false, false);
+
+       FadeRadialBlurTo(0.1f, 1);
+       SetRadialBlurStartDist(0.2f);
+ }
+
+ 
+void OnEnter()
+{
+      PlayMusic("01_amb_darkness", true, 1, 4, 2, true);
+}
+ 
+
+void OnLeave()
+{
+
+}

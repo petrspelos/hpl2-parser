@@ -1,0 +1,146 @@
+void OnStart()
+{
+	AutoSave();
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerSanity(100.0f);
+	AddTimer("lockedin", 1, "lockedin");
+	AddEntityCollideCallback("door_barricade_1", "lockthedoor", "lockthedoor", true, 0);
+	AddEntityCollideCallback("door_barricade_1", "unlockthedoor", "unlockthedoor", true, 0);
+	AddEntityCollideCallback("lever_small_lever_1", "putleverinhole", "putleverinhole", true, 0);
+	AddEntityCollideCallback("Player", "makelantercome", "makelantercome", true, 0);
+	SetPlayerLampOil(0.0f);
+	SetEntityPlayerInteractCallback("note_generic_1", "memgetoutclockman", false);
+	SetEntityPlayerInteractCallback("touchdoormem", "touchdoormem", false);
+	AddEntityCollideCallback("lever_small_lever_1", "trigger_clockslave", "trigger_clockslave", true, 0);
+}
+
+void OnEnter()
+{
+	PlayMusic("22_amb", true, 1.0f, 2.0f, 0, true);
+}
+
+void OnLeave()
+{
+
+}
+
+////////////////////////////////////
+////////////////START///////////////
+////////////////////////////////////
+
+void lockedin(string &in asTimer)
+{
+	PlaySoundAtEntity("cellartrapped", "lock_door.snt", "level_celler_1", 0.0f, false);
+}
+
+////////////////////////////////////
+////////////////DOORS///////////////
+////////////////////////////////////
+
+void lockthedoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("cellar_wood01_4", true, false);
+}
+
+void unlockthedoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("cellar_wood01_4", false, false);
+}
+
+/////////////////////////////////////
+////////////////PUZZLE///////////////
+/////////////////////////////////////
+
+void putleverinhole(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("lever_small_lever_1", false);
+	SetEntityActive("lever_small_mount_1", false);
+	SetEntityActive("lever_small_1", true);
+	PlaySoundAtEntity("place_lever", "puzzle_place_jar.snt", "Player", 0.0f, false);
+}
+
+void opendoortrigclockmon(string &in asEntity, int LeverState)
+{
+        if(LeverState == 1) {
+				SetEntityActive("stop_barrel_trick", false);
+				SetEntityActive("safety_normal_vert_1", false);
+				SetEntityActive("safety_normal_vert_2", true);
+				SetLeverStuckState(asEntity, LeverState, true);
+				PlaySoundAtEntity("", "unlock_door", "lever_small_1", 0, false);
+				SetEntityActive("touchdoormem", false);
+				CompleteQuest("mem3", "memento3");
+				AutoSave();
+        }
+}
+
+/////////////////////////////////////
+////////////////EVENTS///////////////
+/////////////////////////////////////
+
+void makelantercome(string &in asParent, string &in asChild, int alState)
+{
+	AddPropImpulse("lantern_1", 0, 0, -2, "world");
+	PlaySoundAtEntity("", "afx_spooky_metal_grind_01.snt", "Player", 0, false);
+}
+
+void trigger_clockslave(string &in asParent, string &in asChild, int alState)
+{
+	AutoSave();
+	PlaySoundAtEntity("pipe_tremble", "afx_sewer_pipetremor_01.snt", "Player", 0, false);
+	AddTimer("herehecomes", 3, "herehecomes");
+	StartScreenShake(0.01f, 6.0f, 1.0f, 1.0f);
+}
+
+void herehecomes(string &in asTimer)
+{
+	AutoSave();
+	SetDeathHint("DeathHint", "DHint1");
+	SetEntityActive("monster", true);
+	AddEnemyPatrolNode("monster", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_4", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_6", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_9", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_11", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_13", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_14", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_15", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_16", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_18", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_19", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_20", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_21", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_22", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_23", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_24", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_25", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_26", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_27", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_28", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_29", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_30", 0.001, "");
+}
+
+//////////////////////////////////////
+////////////////JOURNAL///////////////
+//////////////////////////////////////
+
+void memgetoutclockman(string &in asEntity)
+{
+	AddQuest("mem2", "memento2");
+	CompleteQuest("mem1", "memento1");
+	PlaySoundAtEntity("sample_enemy_heart", "shortscaretock.snt", "heartclock_sound_s", 0, false);
+}
+
+void touchdoormem(string &in asEntity)
+{
+	AddQuest("mem3", "memento3");
+	SetMessage("Messages", "whatisthismechdoor", 0.0f);
+}

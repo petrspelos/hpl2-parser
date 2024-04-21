@@ -1,0 +1,153 @@
+void OnStart()
+	{
+		AddUseItemCallback("", "stone_hammer_chipper", "obsidian_door", "break_obsidian_door", true);
+		AddEntityCollideCallback("Player", "script_obsidian_introduce", "obsidian_introduce", true, 1);
+		AddEntityCollideCallback("obsidian_book", "script_book_area", "read_obsidian_book", true, 1);
+		AddEntityCollideCallback("Player", "KillArea", "Player_kill", false, 1);
+		SetEntityPlayerInteractCallback("script_obsidian_interact", "obsidian_not_read", false);
+		SetEntityPlayerInteractCallback("eastwingnote2", "orbdecisionquest", true);
+	}
+
+void OnEnter()
+	{
+		PlayMusic("16_amb.ogg", true, 1, 1, 1, true);
+	}
+
+void break_obsidian_door(string &in asItem, string &in asEntity)
+	{
+		CreateParticleSystemAtEntity("", "ps_hit_wood", "ScriptEffect1", false);
+		SetSwingDoorLocked("obsidian_door", false, true);
+		AddPropImpulse("obsidian_door", -50, 0, 0, "World");
+		SetSwingDoorDisableAutoClose("obsidian_door", true);
+		SetSwingDoorClosed("obsidian_door", false, false);
+		SetMoveObjectState("obsidian_door", 1);
+		PlaySoundAtEntity("", "break_wood_metal", "ScriptEffect1", 0, false);
+		CreateParticleSystemAtEntity("", "ps_hit_wood", "ScriptEffect1", false);
+		SetLocalVarInt("Door", 1);
+		RemoveItem("stone_hammer_chipper");
+		CompleteQuest("eastwing_door_blocked_quest", "eastwingdoorblocked");
+	}
+
+void Player_kill(string &in asParent, string &in asChild, int alState)
+	{
+		FadeOut(1);
+		AddTimer("trig1", 3.0f, "kill_player_timer");
+	}
+
+void kill_player_timer(string &in asTimer)
+	{
+		GivePlayerDamage(100, "BloodSplat", false, true);
+		SetPlayerHealth(0);
+	}
+
+/////Obsidian Introduce Sequence/////
+
+void obsidian_introduce(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("orbpiece_obsidian_1", 5, 5, "");
+		AddTimer("trig1", 1.0f, "begin_obsidian_intro");
+	}
+
+void begin_obsidian_intro(string &in asTimer)
+	{
+		SetMessage("Messages", "obsidian_introduce1", 4);
+		AddTimer("trig1", 5.0f, "continue_obsidian_intro1");
+	}
+
+void continue_obsidian_intro1(string &in asTimer)
+	{
+		SetMessage("Messages", "obsidian_introduce2", 6);
+		AddTimer("trig1", 7.0f, "continue_obsidian_intro2");
+	}
+
+void continue_obsidian_intro2(string &in asTimer)
+	{
+		SetMessage("Messages", "obsidian_introduce3", 8);
+		AddTimer("trig1", 9.0f, "finish_obsidian_introduce");
+	}
+
+void finish_obsidian_introduce(string &in asTimer)
+	{
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+		SetEntityActive("obsidian_book", true);
+		AddQuest("obsidian_read_quest", "obsidianquest");
+	}
+
+/////End Obsidian Introduce Sequence/////
+
+void obsidian_not_read(string &in asEntity)
+	{
+		SetMessage("Messages", "obsidian_interact1", 3);
+	}
+
+/////Read Book to Obsidian Sequence/////
+
+void read_obsidian_book(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("orbpiece_obsidian_1", 5, 5, "");
+		SetMessage("Messages", "obsidian_interact2", 4);
+		FadeOut(2);
+		AddTimer("trig1", 5.0f, "continue_obsidian_interact1");
+	}
+
+void continue_obsidian_interact1(string &in asTimer)
+	{
+		SetEntityActive("obsidian_book", false);
+		SetEntityActive("obsidian_book2", true);
+		SetEntityActive("potion_oil_large_1", true);
+		SetEntityActive("potion_oil_large_2", true);
+		FadeIn(2);
+		SetMessage("Messages", "obsidian_interact3", 4);
+		AddTimer("trig1", 5.0f, "finish_obsidian_interact");
+	}
+
+void finish_obsidian_interact(string &in asTimer)
+	{
+		SetMessage("Messages", "obsidian_interact4", 4);
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+		SetPlayerLampOil(100);
+		SetEntityActive("script_obsidian_interact", false);
+		CompleteQuest("obsidian_read_quest", "obsidianquest");
+	}
+
+/////End Read Book to Obsidian Sequence/////
+
+void locked1(string &in asEntity)
+	{
+		SetMessage("Messages", "locked_ew1", 2);
+	}
+
+void locked2(string &in asEntity)
+	{
+		SetMessage("Messages", "locked_ew2", 3);
+	}
+
+void locked3(string &in asEntity)
+	{
+		SetMessage("Messages", "locked_ew3", 3);
+	}
+
+void locked4(string &in asEntity)
+	{
+		SetMessage("Messages", "locked_ew4", 3);
+	}
+
+void obsidian_blocked(string &in asEntity)
+	{
+		SetMessage("Messages", "obsidian_door_blocked", 5);
+		AddQuest("eastwing_door_blocked_quest", "eastwingdoorblocked");
+	}
+
+void orbdecisionquest(string &in asEntity)
+	{
+		AddQuest("orb_decision_quest", "orbdecision");
+	}
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

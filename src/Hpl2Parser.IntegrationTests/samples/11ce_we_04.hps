@@ -1,0 +1,315 @@
+void OnStart()
+{
+	//Keys with particles
+
+	FadeOut(0);
+	FadeIn(2);
+	StopMusic(0, 10);
+	SetLocalVarInt("keysobtained", 0);
+	SetLocalVarInt("keysplaced", 0);
+	
+	CreateParticleSystemAtEntityExt("key1ps", "ps_electro_charge.ps", "Key_Mechanical_1", true, 0.379, 1, 0, 1, false, 0, 0, 100, 110);
+	CreateParticleSystemAtEntityExt("key2ps", "ps_electro_charge.ps", "Key_Mechanical_2", true, 0.379, 1, 0, 1, false, 0, 0, 100, 110);
+	
+	RotatePropToSpeed("Key_Mechanical_1", 1, 1, .4,	1, -0.4, false , "");
+	RotatePropToSpeed("Key_Mechanical_2", 1, 1, .4,	1, -0.4, false , "");
+	
+	// Player stats
+	
+	SetPlayerJumpForceMul(1.4);
+	SetPlayerMoveSpeedMul(1.2);
+	SetPlayerRunSpeedMul(1.35);
+	SetPlayerFallDamageDisabled(true);
+	
+	// Callback, other
+	
+	PlayMusic("Penumbra_BP_A1", true, 0.8, 0, 0, true);
+	AddQuest("gravity", "Gravity");
+	
+	AddEntityCollideCallback("Player", "Teleport_1", "Teleport1", false, 1);
+	AddEntityCollideCallback("Player", "Teleport_2", "Teleport2", false, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_2", "QuestGravity3", true, 1);
+	AddEntityCollideCallback("Player", "FinalEvent", "Final_Event", true, 1);
+	AddEntityCollideCallback("Player", "EndArea", "EndFade", false, 1);
+	
+	SetEntityPlayerInteractCallback("Key_Mechanical_1", "KeyCounter", true);
+	SetEntityPlayerInteractCallback("Key_Mechanical_2", "KeyCounter", true);
+	
+	AddUseItemCallback("", "Key_Mechanical_1", "usekey_area", "UseKey1", true);
+	AddUseItemCallback("", "Key_Mechanical_2", "usekey_area", "UseKey2", true);
+	
+	SetEntityInteractionDisabled("Key_Mechanical_4", true);
+	SetEntityInteractionDisabled("Key_Mechanical_3", true);
+	
+	CheckPoint("check01","PlayerStartArea_1", "CheckPoint01", "", "");
+}
+
+void CheckPoint01(string &in asName, int alCount)
+{
+	PlayMusic("Penumbra_BP_A1", true, 0.8, 0, 0, true);
+	SetEntityActive("tesla_nomusic_NoTeleport_1", true);
+	SetEntityActive("tesla_nomusic_NoTeleport_2", true);
+	SetEntityActive("tesla_nomusic_NoTeleport_3", true);
+}
+
+void KeyCounter(string &in asEntity)
+{
+	if (GetLocalVarInt("keysobtained") == 1)
+	{
+		if (HasItem("Key_Mechanical_1"))
+		{
+			DestroyParticleSystem("key1ps");
+			SetEntityActive("waterlurker_silent_1", true);
+		}
+		if (HasItem("Key_Mechanical_2"))
+		{
+			DestroyParticleSystem("key2ps");
+		}
+		SetPlayerActive(false);
+		FadeOut(2);
+		AddTimer("keyteleport", 3, "KeyTeleport");
+		AddTimer("keyfreeplayer", 5, "KeyFreePlayer");
+		SetPlayerJumpForceMul(3);
+		SetPlayerMoveSpeedMul(1.5);
+		SetPlayerRunSpeedMul(2);
+	}
+	else
+	{
+		CompleteQuest("gravity", "Gravity");
+		AddQuest("gravity2", "Gravity2");
+		if (HasItem("Key_Mechanical_1"))
+		{
+			DestroyParticleSystem("key1ps");
+			SetEntityActive("waterlurker_silent_1", true);
+		}
+		if (HasItem("Key_Mechanical_2"))
+		{
+			DestroyParticleSystem("key2ps");
+		}
+		SetLocalVarInt("keysobtained", (GetLocalVarInt("keysobtained") + 1));
+		SetPlayerJumpForceMul(2.3);
+		SetPlayerMoveSpeedMul(1.35);
+		SetPlayerRunSpeedMul(1.75);
+	}
+}
+
+void KeyTeleport(string &in asTimer)
+{
+	SetEntityActive("waterlurker_silent_1", false);
+	TeleportPlayer("PlayerStartArea_4");
+	FadeIn(2);
+	for (int i=1; i<=15; i++)
+	{
+		SetEntityActive("tesla_nomusic_NoTeleport_"+i, true);
+	}
+}
+void KeyFreePlayer(string &in asTimer)
+{
+	StopMusic(2, 0);
+	SetEnemySanityDecreaseActive("tesla_nomusic_NoTeleport_*", false);
+	PlayMusic("mooncastle", false, 1, 0, 0, true);
+	AddTimer("resumemusic", 190, "ResumeMusic");
+	SetPlayerActive(true);
+	for (int i=1; i<=15; i++)
+	{
+		ShowEnemyPlayerPosition("tesla_nomusic_NoTeleport_"+i);
+		SetEnemySanityDecreaseActive("tesla_nomusic_NoTeleport_"+i, false);
+	}
+	CheckPoint("check02","PlayerStartArea_4", "CheckPoint02", "", "");
+}
+
+void ResumeMusic(string &in asTimer)
+{
+	PlayMusic("Penumbra_BP_A1", true, 0.8, 0, 0, true);
+}
+
+void CheckPoint02(string &in asName, int alCount)
+{
+	PlayMusic("Penumbra_BP_A1", true, 0.8, 0, 0, true);
+	SetPlayerJumpForceMul(3);
+	SetPlayerMoveSpeedMul(1.5);
+	SetPlayerRunSpeedMul(2);
+	for (int i=1; i<=15; i++)
+	{
+		SetEntityActive("tesla_nomusic_NoTeleport_"+i, true);
+	}
+	AddTimer("keyfreeplayer", 2, "KeyFreePlayer");
+}
+
+void Teleport1(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("overgrown_gravityfield", true, 1, 5, 0, true);
+	RemoveTimer("resumemusic");
+	TeleportPlayer("PlayerStartArea_2");
+	CheckPoint("check03","PlayerStartArea_2", "CheckPoint03", "", "");
+	for (int i=1; i<=15; i++)
+	{
+		SetEntityActive("tesla_nomusic_NoTeleport_"+i, false);
+	}
+	SetPlayerJumpForceMul(1.25);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	PlayGuiSound("29_touch_pillar.snt", 1.0f);
+	SetEntityActive("waterlurker_silent_2", true);
+	SetEntityActive("waterlurker_silent_3", true);
+	SetEntityActive("waterlurker_silent_4", true);
+	SetEntityActive("waterlurker_silent_5", true);
+	SetEntityActive("waterlurker_silent_6", true);
+}
+
+void CheckPoint03(string &in asName, int alCount)
+{
+	SetPlayerJumpForceMul(1.25);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	StopMusic(0, 10);
+	PlayMusic("overgrown_gravityfield", true, 1, 0, 0, true);
+	SetEntityActive("waterlurker_silent_2", true);
+	SetEntityActive("waterlurker_silent_3", true);
+	SetEntityActive("waterlurker_silent_4", true);
+	SetEntityActive("waterlurker_silent_5", true);
+	SetEntityActive("waterlurker_silent_6", true);
+}
+
+void QuestGravity3(string &in asParent, string &in asChild, int alState)
+{
+	CompleteQuest("gravity2", "Gravity2");
+	AddQuest("gravityReset", "GravityReset");
+}
+
+void UseKey1(string &in asItemA, string &in asItemB)
+{
+	RemoveItem("Key_Mechanical_1");
+	if (GetLocalVarInt("keysplaced") == 1)
+	{
+		SetEntityActive("Key_Mechanical_4", true);
+		SetEntityActive("FinalEvent", true);
+		SetLampLit("pigmentlamp_5", true, true);
+		SetLampLit("pigmentlamp_6", true, true);
+		SetLampLit("pigmentlamp_7", true, true);
+		SetLampLit("pigmentlamp_8", true, true);
+		SetEntityActive("note_tutorial_1", true);
+		SetEntityActive("TARDIS_1", true);
+		CreateParticleSystemAtEntity("", "ps_orb_room_agrippa_end_effect.ps", "TARDIS_1", false);
+		SetEntityActive("alexander_1", true);
+		SetEntityActive("alexander_2", true);
+		SetEntityActive("alexander_3", true);
+		SetEntityActive("alexander_4", true);
+		PlayGuiSound("lights_on_test.snt", 0.5f);
+	}
+	else
+	{
+		SetEntityActive("Key_Mechanical_3", true);
+		SetLocalVarInt("keysplaced", (GetLocalVarInt("keysplaced") + 1));
+	}
+}
+void UseKey2(string &in asItemA, string &in asItemB)
+{
+	RemoveItem("Key_Mechanical_2");
+	if (GetLocalVarInt("keysplaced") == 1)
+	{
+		SetEntityActive("Key_Mechanical_4", true);
+		SetEntityActive("FinalEvent", true);
+		SetLampLit("pigmentlamp_5", true, true);
+		SetLampLit("pigmentlamp_6", true, true);
+		SetLampLit("pigmentlamp_7", true, true);
+		SetLampLit("pigmentlamp_8", true, true);
+		for (int i = 0; i < 15; i++) {
+			SetLampLit("MiningLight01_"+i, true, false);
+		}
+		SetEntityActive("note_tutorial_1", true);
+		SetEntityActive("TARDIS_1", true);
+		CreateParticleSystemAtEntity("", "ps_orb_room_agrippa_end_effect.ps", "TARDIS_1", false);
+		SetEntityActive("alexander_1", true);
+		SetEntityActive("alexander_2", true);
+		SetEntityActive("alexander_3", true);
+		SetEntityActive("alexander_4", true);
+		PlayGuiSound("lights_on_test.snt", 0.5f);
+	}
+	else
+	{
+		SetEntityActive("Key_Mechanical_3", true);
+		SetLocalVarInt("keysplaced", (GetLocalVarInt("keysplaced") + 1));
+	}
+}
+
+void Teleport2(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStartArea_3");
+	CompleteQuest("gravityReset", "GravityReset");
+	SetPlayerJumpForceMul(3);
+	SetPlayerMoveSpeedMul(1.5);
+	SetPlayerRunSpeedMul(2);
+	PlayGuiSound("29_touch_pillar.snt", 1.0f);
+}
+
+void Final_Event(string &in asParent, string &in asChild, int alState)
+{
+	RemoveTimer("resumemusic");
+	PlayMusic("girei_theme", true, 1, 3, 0, false);
+	SetEntityActive("tesla_final", true);
+	SetEntityActive("Teleport_1", false);
+	AddEnemyPatrolNode("tesla_final", "teslafinal_node", 0, "");
+	SetEnemySanityDecreaseActive("tesla_final", false);
+	SetPlayerJumpForceMul(0.4);
+	SetPlayerMoveSpeedMul(0.7);
+	SetPlayerRunSpeedMul(0.7);
+	AddTimer("tesladisappear", 13, "TeslaDisappear");
+}
+void TeslaDisappear(string &in asTimer)
+{
+	SetEntityActive("tesla_final", false);
+}
+
+void EndFadeOut(string &in asEntity)
+{
+	SetPlayerActive(false);
+	FadeOut(4);
+	AddTimer("preCredits1", 5, "PreCredits1");
+	AddTimer("preCredits2", 5.5f, "PreCredits2");
+	AddTimer("preCredits3", 6.5f, "PreCredits3");
+}
+
+void PreCredits1(string &in asTimer) {
+	TeleportPlayer("PlayerStartArea_Final");
+	SetSkyBoxTexture("de_skybox.dds");
+}
+
+void PreCredits2(string &in asTimer) {
+	FadeIn(3);
+}
+
+void PreCredits3(string &in asTimer) {
+	StartPlayerLookAt("", 2, 4, "");
+	AddTimer("automove", 0.1, "TimerMoveForward");
+}
+
+void TimerMoveForward(string &in asTimer)
+{
+	MovePlayerForward(2);
+	AddTimer("automove", 0, "TimerMoveForward");
+}
+
+void EndFade(string &in asParent, string &in asChild, int alState)
+{
+	StopPlayerLookAt();
+	StartEffectFlash(8, 1.0, 8);
+	AddTimer("creditsroll", 6, "Credits");
+}
+
+void Credits(string &in asTimer)
+{
+	StartCredits("wake_up.ogg", false, "Ending", "WECredits", 3);
+}
+
+//Save game
+
+void Save(string &in asEntity)
+{
+	AddEffectVoice("silence3_sec.ogg", "", "Voice", "00_gamesaved", false, "", 0, 0);
+	SetEntityActive("ScriptArea_1", false);
+	SetEntityActive("Pumpkin_save_deact", true);
+	SetEntityActive("Pumpkin_save_1", false);
+	PlayGuiSound("save_game.snt", 0.5f);
+	AutoSave();
+}

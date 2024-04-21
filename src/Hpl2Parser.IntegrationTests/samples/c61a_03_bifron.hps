@@ -1,0 +1,134 @@
+void OnStart()
+{
+	SetEntityPlayerInteractCallback("interactivy", "interactivy", true);
+	AddUseItemCallback("", "chemical_container_1", "usejar", "usejar", true);
+	AddUseItemCallback("", "flask01_cuprite_1", "placecontainer", "addcuprite", true);
+	AddUseItemCallback("", "bucketwater", "cupriteacid", "addwater", true);
+	AddUseItemCallback("", "flask01_orpiment_1", "cupriteacid_1", "addorpiment", true);
+	AddUseItemCallback("", "orpimentacid_1", "useredacidonweb", "redacidburn", true);
+	SetEntityPlayerInteractCallback("orpimentacid_1", "buffyenter", true);
+	AddEntityCollideCallback("Player", "nowebaftercome", "nowebaftercome", false, 1);
+	CompleteQuest("mem2", "memento2");
+}
+
+void OnEnter()
+{
+	PlayMusic("06_amb", true, 0.6f, 4.0f, 0, true);
+	CreateParticleSystemAtEntity("labfire", "ps_fire_lab_burner.ps", "firearea", true);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "load03", 1, "");
+}
+
+////////////////////////////////////////////
+///////////////INTERACT/AREAS///////////////
+////////////////////////////////////////////
+
+void interactivy(string &in asEntity)
+{
+	AddQuest("mem5", "memento5");
+	SetMessage("Messages", "ivyblock", 0);
+}
+
+void nowebaftercome(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("blockivy", false);
+	SetEntityActive("web_1", false);
+}
+
+////////////////////////////////////////////
+////////////////MAKE/POTION/////////////////
+////////////////////////////////////////////
+
+void usejar(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("placecontainer", true);
+	PlaySoundAtEntity("puzzle_place_jar", "puzzle_place_jar.snt", "usejar", 0.0f, false);
+	RemoveItem(asItem);
+	AutoSave();
+	SetEntityActive("usejar", false);
+}
+
+void addcuprite(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("placecontainer", false);
+	SetEntityActive("cupriteacid", true);
+	PlaySoundAtEntity("puzzle_add_chemical", "puzzle_add_chemical.snt", "cupriteacid", 0.0f, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+void addwater(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("cupriteacid_1", true);
+	SetEntityActive("cupriteacid", false);
+	PlaySoundAtEntity("puzzle_add_chemical", "puzzle_add_chemical.snt", "cupriteacid_1", 0.0f, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+void addorpiment(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("orpimentacid", true);
+	SetEntityActive("cupriteacid_1", false);
+	PlaySoundAtEntity("puzzle_add_chemical", "puzzle_add_chemical.snt", "orpimentacid", 0.0f, false);
+	RemoveItem(asItem);
+	AutoSave();
+	AddTimer("acidcomplete", 2, "acidcomplete");
+}
+
+void acidcomplete(string &in asTimer)
+{
+	SetEntityActive("orpimentacid_1", true);
+	SetEntityActive("orpimentacid", false);
+	AutoSave();
+}
+
+////////////////////////////////////////////
+/////////////////USE/POTION/////////////////
+////////////////////////////////////////////
+
+void redacidburn(string &in asItem, string &in asEntity)
+{
+	SetPropHealth("web_1", 0);
+	SetEntityActive("blockivy", false);
+	PlaySoundAtEntity("add_red_acid", "puzzle_acid.snt", "Player", 0.0f, false);
+	CompleteQuest("mem5", "memento5");
+	RemoveItem("orpimentacid_1");
+	AutoSave();
+}
+
+void buffyenter(string &in asEntity)
+{
+	AddTimer("buffycome", 2, "buffycome");
+}
+
+void buffycome(string &in asTimer)
+{
+	PlaySoundAtEntity("buffydooropen", "door_level_wood_close.snt", "dooropensound", 0.0f, false);
+	PlaySoundAtEntity("scareofbuffy", "react_breath.snt", "Player", 0.0f, false);
+	GiveSanityDamage(5.0f, true);
+	AddEnemyPatrolNode("monster", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_9", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_11", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_13", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_14", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_15", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_16", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_17", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_18", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_19", 0, "");
+	SetEntityActive("monster", true);
+}

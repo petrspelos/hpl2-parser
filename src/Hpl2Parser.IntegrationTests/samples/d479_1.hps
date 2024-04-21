@@ -1,0 +1,159 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+{
+	
+}
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+	AddEntityCollideCallback("Player", "lookatthedoors", "LookAtDoors", true, -1);
+	SetEntityPlayerInteractCallback("button", "opendeskdoor", true);
+	SetEntityActive("spawnSteveArea", false);
+	SetEntityPlayerInteractCallback("resetTimer", "ResetTimer", true);
+	SetEntityPlayerLookAtCallback("resetTimer", "ResetTimerText", false);
+	CheckPoint("", "PlayerStartArea_1", "Reset", "", "");
+}
+
+void LookAtDoors(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("ScreenMessages", "realization", 0);
+	AddTimer("Time", 300, "spawnSteve");
+	AddTimer("Warn", 240, "Warning");
+	StartPlayerLookAt("door1", 2, 5, "LookAt2");
+	SetPlayerActive(false);
+	SetEntityActive("resetTimer", true);
+}
+
+void Reset(string &in asName, int alCount)
+{
+	ResetProp("steve");
+	SetMessage("ScreenMessages", "TimerActivated4", 0);
+	AddTimer("Time", 300, "spawnSteve");
+	AddTimer("Warn", 240, "Warning");
+	SetEntityActive("resetTimer", true);
+}
+
+	void LookAt2()
+	{
+		StartPlayerLookAt("door2", 2, 5, "stopLookAt1");
+	}
+		
+		void stopLookAt1()//(string &in asEntityName, float afSpeedMul, float afMaxSpeed, string &in asAtTargetCallback)
+		{
+			StartPlayerLookAt("lookhere", 2, 5, "stopLookAt2");
+		}
+				void stopLookAt2()
+			{
+				StopPlayerLookAt();
+				SetPlayerActive(true);
+			}
+
+	void spawnSteve(string &in asTimer)
+	{
+		SetEntityActive("steve", true);
+			for (int i=1; i<=9; i++) AddEnemyPatrolNode("steve", "PathNodeArea_"+i, 0.1, "");
+	}
+	
+	void Warning(string &in asTimer)
+	{
+		SetMessage("ScreenMessages", "Warning", 0);
+	}
+	
+	void opendeskdoor(string &in asEntity)
+	{
+		RemoveTimer("Warn");
+		RemoveTimer("Time");
+		FadePlayerFOVMulTo(0.5, 2);
+		SetPlayerActive(false);
+		StartPlayerLookAt("deskdoor", 4, 4, "stopthelookat");
+		SetSwingDoorLocked("deskdoor", false, true);
+		SetSwingDoorClosed("deskdoor", false, false);
+		AddTimer("", 1.5, "open");
+		AddTimer("", 2.5, "resetFOV");
+		SetEntityActive("exitkey1", true);
+		SetEntityActive("someoil", true);
+		SetMoveObjectState("deskdoor", 1);
+		AddUseItemCallback("", "exitkey1", "door1", "spawnSteve2", false);
+		AddUseItemCallback("", "exitkey1", "door2", "freedom", true);
+		SetEntityActive("spawnSteveArea", true);
+		SetEntityCallbackFunc("exitkey1", "ActivateArea");
+		PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, false);
+		SetEntityActive("resetTimer", false);
+	}
+	
+		void open(string &in asTimer)
+			{
+					for(int i=0; i<5; i++)AddTimer("", i*0.1, "open2");
+					//AddPropForce("deskdoor", 0, 0, -300, "world"); 
+					AddDebugMessage("Desk door opened.", true);
+					PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+			}
+	
+		void open2(string &in asTimer)
+			{
+				AddPropForce("deskdoor", 0, 0, -2000, "world"); 
+				AddDebugMessage("Desk door opened2.", true);
+			}
+	
+		void resetFOV(string &in asTimer)
+			{
+				FadePlayerFOVMulTo(1, 1);
+				StopPlayerLookAt();
+				SetPlayerActive(true);
+			}
+	
+		void stopthelookat()
+		{
+		}
+		
+		void spawnSteve2(string &in asItem, string &in asEntity)
+		{
+			SetEntityActive("steve", true);
+			for (int i=1; i<=9; i++) AddEnemyPatrolNode("steve", "PathNodeArea_"+i, 0.1, "");
+		}
+
+		void freedom(string &in asItem, string &in asEntity)
+		{
+			SetSwingDoorLocked("door2", false, true);
+			PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+			RemoveItem("exitkey1");
+		}
+		
+		void ActivateArea(string& asName, string& asCallback)
+		{
+			AddEntityCollideCallback("Player", "spawnSteveArea", "spawnSteve3", true, 0);
+		}
+		
+		void spawnSteve3(string &in asParent, string &in asChild, int alState)
+		{
+			SetEntityActive("steve", true);
+			for (int i=1; i<=9; i++) AddEnemyPatrolNode("steve", "PathNodeArea_"+i, 0.1, "");
+		}
+		
+	void ResetTimer(string &in asEntity)
+	{
+		RemoveTimer("Warn");
+		RemoveTimer("Time");
+		AddTimer("Warn", 240, "Warning");
+		AddTimer("Time", 300, "spawnSteve");
+		SetMessage("ScreenMessages", "Confirm_resetTimer", 0);
+		SetEntityActive("resetTimer", false);
+	}
+	
+	void ResetTimerText(string &in asEntity, int alState)
+	{
+		if (alState ==1)
+		{
+			SetMessage("ScreenMessages", "resetTimer", 0);
+		}
+	}
+		
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

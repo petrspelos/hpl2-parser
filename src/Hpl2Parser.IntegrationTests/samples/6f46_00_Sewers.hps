@@ -1,0 +1,395 @@
+void OnStart()
+{
+	//Torch for loop
+	for(int i = 0; i < 30; i++)
+	{
+		AddUseItemCallback("", "torch", "torch_"+i, "UseTorch", false);
+		AddEntityCollideCallback("torch", "light_torch_"+i, "LightTorch", false, 0);
+		AddEntityCollideCallback("torch", "AreaExtinguish_"+i, "ExtinguishTorch", false, 0);
+		AddEntityCollideCallback("torch", "AreaWater_"+i, "ExtinguishTorch", false, 0);
+		AddEntityCollideCallback("Player", "safe_torch_"+i, "CollideSafe", false, 0);
+		AddEntityCollideCallback("Player", "AreaSafe_"+i, "CollideSafe", false, 0);
+	}
+	
+	AddEntityCollideCallback("Player", "AreaSafe", "CollideSafe", false, 0);
+	
+	//Ambience
+	for(int i = 0; i < 30; i++)
+	{
+		AddEntityCollideCallback("Player", "ambience_hollow_tinker_"+i, "CollideAmbience", false, 1);
+		AddEntityCollideCallback("Player", "15_amb_metal_"+i, "CollideAmbience", false, 1);
+		AddEntityCollideCallback("Player", "ambience_haunting_"+i, "CollideAmbience", false, 1);
+		AddEntityCollideCallback("Player", "ambience_sewer_drip_no3d_"+i, "CollideAmbience", false, 1);
+	}
+	
+	//Doors
+	AddUseItemCallback("", "key_sewer", "door_sewer", "UnlockDoor", true);
+	
+	//Exit door
+	InteractConnectPropWithMoveObject("CrankExit", "CrankExit", "DoorExit", true, false, 0);
+	SetEntityCustomFocusCrossHair("AreaExit", "LevelDoor");
+	
+	//Bridge & Levers
+	AddEntityCollideCallback("lever_missing", "AreaLeverMount", "ColliderMountLever", true, 1);
+}
+
+void OnEnter()
+{
+	SetEntityActive("torch", false);
+}
+
+void OnLeave()
+{
+	
+}
+
+void DoorLocked(string &in asEntity)
+{
+	if(GetSwingDoorLocked(asEntity)) SetMessage("Messages", "Locked", 2);
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetSwingDoorLocked(asEntity, false, true);
+}
+
+void TouchExit(string &in asEntity)
+{
+	SetPlayerActive(false);
+	StartCredits("15_paper_daniel01", false, "Ending", "Credits", 0);
+}
+
+////////////////////////AMBIENCE///////////////////////////////////
+void CollideAmbience(string &in asParent, string &in asChild, int alState)
+{
+	string amb = "";
+	if(StringContains(asChild, "ambience_sewer_drip_no3d")) amb = "ambience_sewer_drip_no3d";
+	else if(StringContains(asChild, "ambience_hollow_tinker")) amb = "ambience_hollow_tinker";
+	else if(StringContains(asChild, "15_amb_metal")) amb = "15_amb_metal";
+	else if(StringContains(asChild, "ambience_haunting")) amb = "ambience_haunting";
+	
+	SetAmbience(amb);
+}
+
+void SetAmbience(string amb)
+{
+	if(GetLocalVarString("amb") == amb) return;
+	
+	float t = 2.0f;
+	
+	StopSound("amb", t);
+	PlaySoundAtEntity("amb", amb, "Player", t, true);
+	if(amb == "ambience_sewer_drip_no3d") PlaySoundAtEntity("amb", "ambience_water_no3d.snt", "Player", t, true);
+	
+	SetLocalVarString("amb", amb);
+	AddDebugMessage("AMB: " + amb, false);
+}
+
+
+///////////////////////////TORCH////////////////////////////////
+bool IsHoldingTorch()
+{
+	return GetPropIsInteractedWith("torch");
+}
+
+void PickTorch(string &in asEntity)
+{
+	if(!HasItem("torch"))
+	{
+		DisableTorch();
+		SetMessage("Messages", "PickTorch", 2);
+		PlaySoundAtEntity("PickTorch", "pick_generic", "Player", 0.0f, true);
+		
+		AddQuest("LightTorch", "LightTorch");
+	}
+	else
+	{
+		SetMessage("Messages", "HasTorch", 2);
+	}
+}
+
+void DisableTorch()
+{
+	PlaceEntityAtEntity("AreaSafe", "AreaOutside", "", false);
+	PlaceEntityAtEntity("torch", "AreaOutside", "", false);
+	//ResetProp("torch");
+	if(!HasItem("torch")) GiveItem("torch", "Puzzle", "torch", "lantern.tga", 1);
+}
+
+void UseTorch(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaceEntityAtEntity("torch", "spawn_"+asEntity, "", true);
+	SetEntityActive("torch", true);
+	SetEntityActive("AreaSafe", true);
+	
+	CompleteQuest("LightTorch", "LightTorch");
+	AddQuest("LightTorches", "LightTorches");
+}
+
+void TouchTorch(string &in asEntity)
+{
+	PlaceEntityAtEntity("AreaSafe", "AreaOutside", "", false);
+}
+
+void ExtinguishTorch(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("steam", "18_burn_steam.snt", "torch", 0.0f, true);
+	DisableTorch();
+	SetMessage("Messages", "DropTorch", 0);
+}
+
+void LightTorch(string &in asParent, string &in asChild, int alState)
+{
+	string torch = "torch_" + GetIntInString(asChild, 12);
+	
+	if(GetLocalVarInt("lit_"+torch) == 1) return;
+	
+	if(alState == 1)
+	{
+		float time = RandFloat(1.0f, 2.0f);
+		AddTimer(torch, time, "TimerLightTorch");
+	}
+	else if(alState == -1)
+	{
+		RemoveTimer(torch);
+	}
+}
+
+void TimerLightTorch(string &in asTimer)
+{
+	string torch = asTimer;
+	
+	SetEntityActive("light_"+torch, false);
+	SetEntityActive(torch, true);
+	SetEntityActive("safe_"+torch, true);
+	SetLampLit("lamp_"+torch, true, true);
+	
+	for(int i = 0; i < 10; i++)
+	{
+		FadeLightTo(torch+"_point_A_"+i, 0.3f, 0.2f, 0.1f, 1.0f, -1, 2);
+		FadeLightTo(torch+"_point_B_"+i, 0.25f, 0.15f, 0.05f, 1.0f, -1, 2);
+	}
+	
+	SetLocalVarInt("lit_"+torch, 1);
+	
+	CompleteQuest("LightTorches", "LightTorches");
+}
+
+int GetIntInString(string s, int subLength)
+{
+	return StringToInt(StringSub(s, subLength, 10));
+}
+
+/////////////////////////SAFETY/////////////////////////////////
+void CollideSafe(string &in asParent, string &in asChild, int alState)
+{
+	AddLocalVarInt("safe", alState);
+	int safe = GetLocalVarInt("safe");
+	//AddDebugMessage("Safety: " + safe, false);
+	
+	if(safe > 0) StopSanityDecrease();
+	else StartSanityDecrease();
+}
+
+void StartSanityDecrease()
+{
+	AddTimer("sanity_decrease", 1.0f, "TimerSanityDecrease");
+}
+
+void StopSanityDecrease()
+{
+	RemoveTimer("sanity_decrease");
+	SetPlayerSanity(100.0f);
+	SetDarknessEffectActive(false);
+}
+
+void SetDarknessEffectActive(bool active)
+{
+	if(!active)
+	{
+		FadeRadialBlurTo(0.0f, 0.1f);
+		FadeImageTrailTo(0.0f, 1.0f);
+	}
+	else
+	{
+		FadeRadialBlurTo(0.03f, 0.02f);
+		FadeImageTrailTo(2.0f, 0.5f);
+	}
+}
+
+void TimerSanityDecrease(string &in asTimer)
+{	
+	if(!IsHoldingTorch()) 
+	{
+		GiveSanityDamage(10.0f, false);
+		StopSound("breath", 0.5f);
+		PlaySoundAtEntity("breath", "react_breath", "Player", 0.0f, true);
+		SetDarknessEffectActive(true);
+		PlaceEntityAtEntity("AreaSafe", "torch", "", false);
+	}
+	else
+	{
+		if(GetPlayerSanity() < 100.0f) SetPlayerSanity(GetPlayerSanity() + 5.0f);
+		SetDarknessEffectActive(false);
+		PlaceEntityAtEntity("AreaSafe", "AreaOutside", "", false);
+	}
+	
+	if(GetPlayerSanity() < 10.0f)
+	{
+		FadeOut(1.0f);
+		
+		SetPlayerActive(false);
+		SetEntityActive("torch", false);
+		
+		//Effects
+		FadeGlobalSoundSpeed(0.1f, 4.0f);
+		FadeGlobalSoundVolume(0.2f, 4.0f);
+		FadePlayerFOVMulTo(1.5f, 4.0f);
+		FadePlayerRollTo(30.0f, 4.0f, 4.0f);
+		
+		AddTimer("respawn", 4.0f, "TimerRespawn");
+	}
+	else
+	{
+		AddTimer("sanity_decrease", 1.5f, "TimerSanityDecrease");	
+	}
+}
+
+void TimerRespawn(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_1");
+	SetPlayerActive(true);
+	SetPlayerSanity(100.0f);
+	FadeIn(4.0f);
+	
+	//Effects
+	FadeGlobalSoundSpeed(1.0f, 4.0f);
+	FadeGlobalSoundVolume(1.0f, 4.0f);
+	FadePlayerFOVMulTo(1.0f, 2.0f);
+	FadePlayerRollTo(0.0f, 2.0f, 2.0f);
+}
+
+////////////////////////////////BRIDGE////////////////////////////////////////////
+void OnPhonographSons(string &in asEntity, int alState)
+{
+	if(GetEffectVoiceActive()) return;
+	
+	AddEffectVoice("phonograph_sons_1", "", "Voice", "sons_1", false, "", 0.0f, 0.0f);
+	AddEffectVoice("phonograph_sons_2", "", "Voice", "sons_2", false, "", 0.0f, 0.0f);
+	AddEffectVoice("phonograph_sons_3", "", "Voice", "sons_3", false, "", 0.0f, 0.0f);
+	AddEffectVoice("phonograph_sons_4", "", "Voice", "sons_4", false, "", 0.0f, 0.0f);
+	
+	SetEntityInteractionDisabled("phonograph", true);
+	AddTimer("", 21.0f, "TimerPhonographSons");
+}
+
+void TimerPhonographSons(string &in asTimer)
+{
+	SetWheelAngle("phonograph", -180, false);
+	SetEntityInteractionDisabled("phonograph", false);
+}
+
+void OnLeverDispenser(string &in asEntity, int alState)
+{
+	bool solved = GetLocalVarInt("lever_mount_solved") == 1;
+	if(solved)
+	{
+		SetLeverStuckState("lever_dispenser", 1, true);
+		return;
+	}
+	
+	SetPropActiveAndFade("lever_missing", false, 2.0f);
+	AddTimer("sound", 2.0f, "TimerLeverDispenser");
+	AddTimer("reset", 3.0f, "TimerLeverDispenser");
+}
+
+void ColliderMountLever(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asParent, false);
+	SetEntityActive(asChild, false);
+	SetEntityActive("lever_mount", false);
+	SetEntityActive("lever_6", true);
+	SetLocalVarInt("lever_mount_solved", 1);
+	SetLeverStuckState("lever_dispenser", 1, true);
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", "lever_6", 0.0f, false);
+}
+
+void TimerLeverDispenser(string &in asTimer)
+{
+	if(asTimer == "sound") PlaySoundAtEntity("", "16_lever_stuck", "lever_dispenser", 0.0f, true);
+	else if(asTimer == "reset") 
+	{
+		ResetProp("lever_missing");
+		SetEntityActive("lever_missing", true);
+	}
+}
+
+
+void OnLeverBridge(string &in asEntity, int alState)
+{
+	SetLeverStuckState(asEntity, alState, true);
+	SetLocalVarInt(asEntity, alState);
+	
+	//Check the levers
+	for(int i = 1; i < 8; i++)
+	{
+		if(GetLocalVarInt("lever_"+i) == 0) return; //Not all levers pulled
+	}
+	
+	if(GetLocalVarInt("lever_1") == 1
+	&& GetLocalVarInt("lever_2") == 1
+	&& GetLocalVarInt("lever_3") == 1
+	&& GetLocalVarInt("lever_4") == -1
+	&& GetLocalVarInt("lever_5") == 1
+	&& GetLocalVarInt("lever_6") == -1
+	&& GetLocalVarInt("lever_7") == -1)
+	{
+		AddTimer("", 6.0f, "LowerBridge");
+	}
+	else
+	{
+		AddTimer("", 4.0f, "ResetBridgeLevers");
+	}
+	
+	AddTimer("", 2.0f, "TimerLeverBridge");
+}
+
+void TimerLeverBridge(string &in asTimer)
+{
+	PlaySoundAtEntity("", "16_lever_stuck.snt", "lever_4", 0.0f, true);
+}
+
+void ResetBridgeLevers(string &in asTimer)
+{
+	for(int i = 1; i < 8; i++)
+	{
+		string lever = "lever_"+i;
+		SetLeverStuckState(lever, 0, true);
+		SetLocalVarInt(lever, 0);
+	}
+	
+	PlaySoundAtEntity("", "17_pipe_attach.snt", "lever_4", 0.0f, true);
+}
+
+void LowerBridge(string &in asTimer)
+{
+	SetMoveObjectState("bridge", 1.4f);
+	PlaySoundAtEntity("", "16_bridge_unstuck.snt", "bridge", 0.0f, false);
+	PlaySoundAtEntity("bridge", "16_winch_bridge.snt", "bridge", 0.0f, false);
+	
+	AddTimer("", 4.5f, "TimerLowerBridge");
+}
+
+void TimerLowerBridge(string &in asTimer)
+{
+	PlaySoundAtEntity("", "16_bridge_stuck.snt", "bridge", 0.0f, false);
+	StopSound("bridge", 0.0f);
+}
+
+////////////////////////////////////EXIT///////////////////////////
+void CrankExitDoor()
+{
+	
+}

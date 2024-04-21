@@ -1,0 +1,205 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+{ 
+	MovePlayerHeadPos(0, -1.036f, 0, 2, 1);
+	StartPlayerLookAt("lookup", 15, 15, "");
+	AutoSave();
+	AddUseItemCallback("", "realscrew", "hatchlocked", "LockUsedOnHatchXD", true);
+	PlaySoundAtEntity("","break_wood_metal", "Player", 0, false);
+	SetPlayerActive(false); 
+	FadeOut(0);
+	AddTimer("start", 15, "start");
+	AddTimer("startfade", 8, "startfade");
+	AddTimer("healthup", 2, "healthup");
+	AddTimer("fallsound", 1.2f, "fallsound");
+    SetPlayerRunSpeedMul(0.89f);
+    SetEntityPlayerInteractCallback("secondbook", "ActivateMonster", true);
+    AddEntityCollideCallback("Player", "PlayerEnterJumpScare", "Cyka", true, 1);
+	AddEntityCollideCallback("enemie", "EnemyRIP", "Blyat", true, 1);
+	AddEntityCollideCallback("enemie", "REACTBOX", "REACTION", true, 1);
+	AddEntityCollideCallback("Player", "SHELFAPPEAR", "Shelf", true, 1);
+	AddEntityCollideCallback("Player", "LIGHTSOUT", "Paperlight", true, 1);
+}
+
+void LockUsedOnHatchXD(string &in asItem, string &in asEntity)
+{
+	GiveSanityBoost();
+	SetEntityActive("hatchunlocked", true);
+	SetEntityActive("hatchlocked", false);
+    PlaySoundAtEntity("", "06_break_wood.snt", "Player", 0, false);
+    //PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+}
+
+void fallsound(string &in asTimer)
+{
+	SetPlayerCrouching(true);
+    PlaySoundAtEntity("", "player_bodyfall.snt", "Player", 0, false);
+}
+
+void healthup(string &in asTimer)
+{
+    SetPlayerHealth(76);
+}
+
+void startfade(string &in asTimer)
+{
+    FadeIn(2.1f);
+    PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 0, false);
+    AddTimer("eyesclose", 2, "eyesclose");
+}
+
+void eyesclose(string &in asTimer)
+{
+	FadeOut(0.47f);
+	PlaySoundAtEntity("", "react_sigh.snt", "Player", 0, false);
+	AddTimer("cough", 4, "cough");
+}
+
+void cough(string &in asTimer)
+{
+	FadeIn(2.1f);
+	PlaySoundAtEntity("", "player_cough.snt", "Player", 0, false);
+	StartPlayerLookAt("lookup_1", 2, 6, "");
+	AddTimer("newlook", 1.2f, "newlook");
+	AddTimer("lastlook", 2, "lastlook");
+	FadePlayerRollTo(-36, 10, 12);
+}
+
+void newlook(string &in asTimer)
+{
+	StartPlayerLookAt("lookup_2", 1, 3, "");
+	MovePlayerHeadPos(0, 0, 0, 3, 1.6f);
+	AddTimer("stoplookxd", 2.47f, "stoplookxd");
+	FadePlayerRollTo(16, 10, 14);
+}
+
+void lastlook(string &in asTimer)
+{
+	StartPlayerLookAt("lookup_3", 1, 3, "");
+	FadePlayerRollTo(0, 11, 13);
+	SetPlayerCrouching(false);
+}
+
+void stoplookxd(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	AddTimer("writeup", 3.6f, "writeup");
+	PlaySoundAtEntity("", "player_cough.snt", "Player", 0, false);
+}
+
+void writeup(string &in asTimer)
+{
+	SetMessage("ScreenText", "AddDiary", 0);
+	AddDiary("landing", "landing");
+    PlaySoundAtEntity("","ui_add_quest.snt","Player", 0, false);
+}
+
+
+
+
+void start(string &in asTimer)
+{
+	PlayMusic("RealUnderground.ogg", true, 0.76f, 3.6f, 1, true);
+    SetPlayerActive(true);
+}
+
+void xdbudge(string &in asEntity)
+{
+	SetMessage("ScreenText", "msgname", 0);
+}
+
+////////////////////////////////////////////////
+////HatchEvent
+
+void PickUpNoteTwo(string &in asEntity, string &in type)
+{
+    AddQuest("notetwo", "PickUpNoteQUEST");
+    SetSwingDoorLocked("door1", false, false);	
+}
+
+void Cyka(string &in asParent, string &in asChild, int alState)
+{
+    AddEnemyPatrolNode("enemie","PathNodeArea_1",0,"");
+    SetEntityActive("enemie", true);
+	SetPlayerMoveSpeedMul(0.1f);
+	AddTimer("finallymoving", 6.36f, "finallymoving");
+}
+
+void Blyat(string &in asParent, string &in asChild, int alState)
+{
+    SetEntityActive("enemie", false);
+	SetPlayerMoveSpeedMul(0.21f);
+	AddTimer("leavesound", 3.6f, "leavesound");
+}
+
+void finallymoving(string &in asTimer)
+{
+    SetPlayerMoveSpeedMul(0.8f);
+}
+
+void leavesound(string &in asTimer)
+{
+    PlaySoundAtEntity("","door_prison_open.snt","soundbox", 0, false); 
+    AddTimer("leavesound2", 1.6f, "leavesound2");
+}
+
+void leavesound2(string &in asTimer)
+{
+    PlaySoundAtEntity("","door_prison_close.snt","soundbox", 0, false); 
+    AddQuest("ReactTEXT", "ReactTEXT");
+}
+
+void REACTION(string &in asParent, string &in asChild, int alState)
+{
+    PlaySoundAtEntity("","react_pant.snt","Player", 0, false); 
+    GiveSanityDamage(45, true);
+	PlayMusic("FirstReact.ogg", false, 0.9, 1.0, 1, false);
+	AddTimer("MusicTimer", 13, "MusicTimer");
+}
+
+void MusicTimer(string &in asTimer)
+{
+    PlayMusic("RealUnderground.ogg", true, 0.9, 1.0, 1, true);
+}
+
+void Shelf(string &in asParent, string &in asChild, int alState)
+{
+    SetEntityActive("shelffake", false);
+	SetEntityActive("shelfreal", true);
+}
+
+void Paperlight(string &in asParent, string &in asChild, int alState)
+{
+    SetLampLit("candle_floor_1", true, true);
+	SetLampLit("candle_floor_2", true, true);
+	SetEntityActive("secondbook", true);
+	SetLampLit("candle_floor_3", true, true);
+    PlaySoundAtEntity("","react_pant.snt","Player", 0, false);
+    StartPlayerLookAt("Arealook2", 2.4f, 2.4f, "");	
+	AddTimer("LookTimer", 3, "LookTimer");
+	GiveSanityDamage(25, true);
+	SetPlayerMoveSpeedMul(0.2f);
+}
+
+
+void LookTimer(string &in asTimer)
+{
+    StopPlayerLookAt();
+	SetPlayerMoveSpeedMul(0.81f);
+}
+
+void ActivateMonster(string &in item)
+{
+    SetEntityActive("door1", false);
+	SetEntityActive("door1_1", true);
+	CompleteQuest("ReactTEXT", "ReactTEXT");
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	SetupLoadScreen("LoadingText", "loadingscreen2", 1, "game_loading_well.jpg");
+}

@@ -1,0 +1,255 @@
+void OnStart()
+{  
+		AutoSave();
+		SetEntityPlayerInteractCallback("KeyDoor", "ActivateArea", true);
+		AddEntityCollideCallback("Player", "AreaCollide_1", "WaterLurker1", true, 1);
+		AddEntityCollideCallback("Player", "AreaCollide_2", "WaterLurker2", true, 1);
+		AddEntityCollideCallback("Player", "AreaCollide_3", "CaveIn", true, 1);
+		AddEntityCollideCallback("Player", "AreaCollide_4", "PlayerLook", true, 1);
+		AddEntityCollideCallback("Player", "AreaCollide_5", "SupportBreak", true, 1);
+		AddEntityCollideCallback("Player", "AreaCollide_6", "Shake", true, 1);
+		AddEntityCollideCallback("lever", "AreaLever_1", "PutLever", true, 1);
+		AddUseItemCallback("", "KeyDoor", "DoorKey", "usekey", true);
+}
+
+
+
+
+
+void OnEnter()
+{ 
+		PlayMusic("Basement", true, 0.3, 0.1, 10, false);
+		AddTimer("PlayerCough", 30, "TimerCough");
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen6", 0, "game_loading_rose.jpg");
+}
+
+
+/////////////////////////Picks up key///////////////////////////////////
+
+void ActivateArea(string &in item)
+{
+	SetEntityActive("AreaCollide_1", true);
+}
+
+///////////////////////Water Lurker Appears/////////////////////////////
+
+void WaterLurker1(string &in asParent, string &in asChild, int alState)
+{
+		SetEntityActive("waterlurker_1", true);
+		
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+	
+	CheckPoint("Water Lurker Appears", "PlayerStartArea_1", "LurkerRespawn", "", "");
+}
+
+void TimerPlayerreact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+}
+
+void LurkerRespawn(string &in asName, int alCount)
+{
+	SetEntityActive("waterlurker_1", true);
+}
+
+/////////////////////Second Water Lurker Appears////////////////////////
+
+void WaterLurker2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("waterlurker_2", true);
+	CheckPoint("Second Water Lurker Appears", "PlayerStartArea_2", "LurkerRespawn2", "", "");
+}
+
+	
+	
+void LurkerRespawn2(string &in asName, int alCount)
+{
+	SetEntityActive("waterlurker_3", true);
+	SetEntityActive("waterlurker_2", true);
+}
+
+/////////////////////Basement Door//////////////////////////////////////
+
+void usekey(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("DoorKey", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	
+	
+}
+
+///////////////////////////Support Break////////////////////////////////
+
+void SupportBreak(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "hit_wood.snt", "cell_breakable_wall_support_1", 0, false);
+	SetEntityActive("cell_breakable_wall_support_1", false);
+	SetEntityActive("cell_breakable_wall_support_broken_1", true);
+	
+}
+
+////////////////////////////Shake///////////////////////////////////////
+void Shake(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.1, 0.3, 0.3, 1);
+	CreateParticleSystemAtEntity("","ps_dust_falling_hole.ps","DustArea_5", false);
+	CreateParticleSystemAtEntity("","ps_dust_falling_hole.ps","DustArea_4", false);
+	CreateParticleSystemAtEntity("","ps_dust_falling_hole.ps","DustArea_3", false);
+}
+///////////////////////////Cave In//////////////////////////////////////
+
+void PlayerLook(string &in asParent, string &in asChild, int alState)
+{
+	StartPlayerLookAt("barrel01_4", 3, 3, "");
+	SetEntityActive("waterlurker_1", false);
+	SetEntityActive("waterlurker_2", false);
+	SetEntityActive("waterlurker_3", false);
+	AddPlayerBodyForce(0, 20000, 30000, false);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+	PlayMusic("05_event_falling", false, 0.3, 0.1, 10, false);
+	CreateParticleSystemAtEntity("","ps_dust_falling_rumble.ps","DustArea_1", false);
+	CreateParticleSystemAtEntity("","ps_dust_falling_rumble.ps","DustArea_2", false);
+	
+	
+}
+
+void CaveIn(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(60, "BloodSplat", false, false);
+	StartScreenShake(1, 2, 1, 3);
+	PlaySoundAtEntity("", "player_falldamage_min.snt", "Player", 0, false);
+	SetPlayerActive(false);
+	PlaySoundAtEntity("", "break_stairs.snt", "Player", 0, false);
+	SetPlayerCrouching(true);
+	CheckPoint("Cave In", "PlayerStartArea_3", "string& asCallback", "", "");
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	AddTimer("movehead1", 4, "Timermovehead");
+	AddTimer("movehead2", 6, "Timermovehead");
+	AddTimer("StandUp", 8, "Timermovehead");
+	
+	
+}
+
+void Timermovehead(string &in asTimer)
+{
+	if(asTimer == "movehead1") {
+	StartPlayerLookAt("chair_wood02_1", 1, 1, "");
+	PlaySoundAtEntity("", "react_sigh.snt", "Player", 0, false);
+	}
+	
+	else if(asTimer == "movehead2") {
+	SetEntityActive("castle_3", false);
+	SetEntityActive("CaveIn", true);
+	StartPlayerLookAt("vase02_1", 1, 1, "");
+	PlaySoundAtEntity("", "player_cough.snt", "Player", 0, false);
+	}
+		
+		else if(asTimer == "StandUp") {
+		StopPlayerLookAt();
+		SetPlayerActive(true);
+		SetPlayerCrouching(false);
+		SetPlayerJumpDisabled(false);
+		SetPlayerCrouchDisabled(false);
+		SetEntityActive("block_box_1", true);
+		PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 0, false);
+		PlayMusic("Basement", true, 0.3, 0.1, 10, false);
+		
+		
+		
+	}
+	
+	
+}
+
+//////////////////////////////////Lever puzzle//////////////////////////
+
+void PutLever(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("lever", false);
+	SetEntityActive("leverempty", false);
+	SetEntityActive("leverinsert", true);
+	PlaySoundAtEntity("", "impact_wood_low.snt", "player", 1, false);
+		
+}
+
+void UnlockDoor(string &in asEntity, int LeverState)
+{
+	if(LeverState == 1) {
+		SetSwingDoorLocked("doorlever", false, false);
+		PlaySoundAtEntity("", "unlock_door.snt", "doorlever", 1, false);
+		SetLeverStuckState("leverinsert", 1, true);
+	}
+}
+
+///////////////////////////////Cough////////////////////////////////////
+
+void TimerCough(string &in asTimer)
+{
+		if(asTimer == "PlayerCough") {
+	
+		SetLocalVarInt("RandomInt", RandInt(1,4));
+		
+		GetLocalVarInt("RandomInt");
+		
+		}
+		
+		
+		if(GetLocalVarInt("RandomInt") == 1) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 16, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 2) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 35, "TimerCough");
+		}
+		
+		
+		else if(GetLocalVarInt("RandomInt") == 3) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 23, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 4) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 25, "TimerCough");
+		}
+		
+
+		
+}
+
+/////////////////////////////////Messgaes///////////////////////////////
+
+void messagelocked(string &in asEntity) {
+	SetMessage("Message", "CellarLocked", 3);
+}
+
+void messagelocked2(string &in asEntity) {
+	SetMessage("Message", "CellarLocked", 3);
+}
+
+///////////////////////////////////End23////////////////////////////////
+
+void End23(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	
+}

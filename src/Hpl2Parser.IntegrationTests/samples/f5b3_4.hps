@@ -1,0 +1,249 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+
+{
+          if(ScriptDebugOn())
+          {
+               GiveItemFromFile("lantern", "lantern.ent");
+               SetPlayerLampOil(100.0f);
+               for(int i = 0;i < 10;i++)
+               {
+                    GiveItemFromFile("tinderbox", "tinderbox.ent");
+               }
+               for (int o=0; o<=10; o++)
+               {
+				   GiveItemFromFile("potion_sanity", "potion_sanity.ent");
+			   } 
+          }
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+	PlaySoundAtEntity("", "03_amb.snt", "Player", 4.0f, true);
+	CheckPoint("", "PlayerStartArea_1", "Reset", "", "");
+	SetEntityConnectionStateChangeCallback("lever", "UnlockDoor");
+	AddEntityCollideCallback("Player", "TimerStart", "StartTimer", true, 0); 
+	AddEntityCollideCallback("Player", "spawnSteve2", "spawnSteve2", true, 0); 
+	AddEntityCollideCallback("Player", "spawnSteveTest", "spawnSteveTest", true, 0); 
+	for (int b=1; b<=4; b++)AddEntityCollideCallback("box_"+b, "forBox_"+b, "BoxInPlace"+b, true, 1); 
+	for (int i=1; i<=4; i++)SetEntityPlayerLookAtCallback("box_"+i, "DisplayNumber"+i, false);
+	for (int a=1; a<=4; a++)SetEntityPlayerLookAtCallback("pedText_"+a, "DisplayNumber"+a, false);
+	SetEntityPlayerInteractCallback("resetTimer", "ResetTimer", true);
+	SetEntityPlayerLookAtCallback("resetTimer", "ResetTimerText", false);
+}
+
+	void Reset(string &in asName, int alCount)
+	{
+		ResetProp("steve");
+		SetMessage("ScreenMessages", "TimerActivated4", 0);
+		AddTimer("Time", 300, "spawnSteve");
+		AddTimer("Warn", 240, "Warning");
+		SetEntityActive("resetTimer", true);
+	}
+
+	void UnlockDoor(string &in asEntity, int alState)
+	{
+		if (GetLeverState("lever") == -1)
+		{
+			SetSwingDoorLocked("roomdoor", false, true);
+			PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+			AddDebugMessage("Door is unlocked.", true);
+			SetLeverStuckState("lever", -1, true);
+		}
+	}
+	
+	void StartTimer(string &in asParent, string &in asChild, int alState)
+	{
+		CheckPoint("", "PlayerStartArea_1", "StartTimer", "", "");
+		SetMessage("ScreenMessages", "TimerActivated3", 0);
+		AddTimer("Warn", 240, "Warning");
+		AddTimer("Time", 300, "spawnSteve");
+		SetEntityActive("resetTimer", true);
+	}
+		
+		void Warning(string &in asTimer)
+		{
+			SetMessage("ScreenMessages", "Warning", 0);
+		}
+			
+		void spawnSteve(string &in asTimer)
+		{
+			SetEntityActive("steve", true);
+			SetEntityActive("resetTimer", false);
+			for (int c=1; c<=14; c++)AddEnemyPatrolNode("steve", "PathNodeArea_"+c, 0.1, "");
+			if (GetSwingDoorLocked("roomdoor") == false)
+			{
+				for (int d=15; d<=29; d++)AddEnemyPatrolNode("steve", "PathNodeArea_"+d, 0.1, "");
+			}
+		}
+		
+		
+		void spawnSteve2(string &in asParent, string &in asChild, int alState)
+		{
+			SetEntityActive("steve2", true);
+			ShowEnemyPlayerPosition("steve2");
+		}
+	
+	//Display numbers on boxes and pedistals
+	
+	void DisplayNumber1(string &in asEntity, int alState)
+	{
+		if (alState ==1)
+		{
+			SetMessage("ScreenMessages", "box_1", 0);
+		}
+	}
+		
+	void DisplayNumber2(string &in asEntity, int alState)
+	{
+		if (alState ==1)
+		{
+			SetMessage("ScreenMessages", "box_2", 0);
+		}
+	}
+		
+	void DisplayNumber3(string &in asEntity, int alState)
+	{
+		if (alState ==1)
+		{
+			SetMessage("ScreenMessages", "box_3", 0);
+		}
+	}
+		
+	void DisplayNumber4(string &in asEntity, int alState)
+	{
+		if (alState == 1)
+		{
+			SetMessage("ScreenMessages", "box_4", 0);
+		}
+	}
+	
+	void BoxInPlace1(string &in asParent, string &in asChild, int alState)
+	{
+		AddLocalVarInt("var"+asParent, 1);
+		SetEntityActive("placedbox_1", true);
+		SetEntityActive("box_1", false);
+		PlaySoundAtEntity("", "impact_wood_med.snt", "Player", 0, false);
+		if (GetLocalVarInt("varbox_1") == 1 && GetLocalVarInt("varbox_2") == 1 && GetLocalVarInt("varbox_3") == 1 && GetLocalVarInt("varbox_4") == 1)
+		{
+			SetEntityActive("resetTimer", false);
+			RemoveTimer("Warn");
+			RemoveTimer("Time");
+			SetSwingDoorDisableAutoClose("exitdoor", true);
+			SetPlayerActive(false);
+			AddTimer("", 1.5, "CrackOpen");
+			AddTimer("", 4, "StopLookAt");
+			StartPlayerLookAt("LookatDoor", 2, 2, "");
+			PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, false);
+		}  
+	}
+	
+	void BoxInPlace2(string &in asParent, string &in asChild, int alState)
+	{
+		AddLocalVarInt("var"+asParent, 1);
+		SetEntityActive("placedbox_2", true);
+		SetEntityActive("box_2", false);
+		PlaySoundAtEntity("", "impact_wood_med.snt", "Player", 0, false); 
+		if (GetLocalVarInt("varbox_1") == 1 && GetLocalVarInt("varbox_2") == 1 && GetLocalVarInt("varbox_3") == 1 && GetLocalVarInt("varbox_4") == 1)
+		{
+			SetEntityActive("resetTimer", false);
+			RemoveTimer("Warn");
+			RemoveTimer("Time");
+			SetSwingDoorDisableAutoClose("exitdoor", true);
+			SetPlayerActive(false);
+			AddTimer("", 1.5, "CrackOpen");
+			AddTimer("", 4, "StopLookAt");
+			StartPlayerLookAt("LookatDoor", 2, 2, "");
+			PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, false);
+		} 
+	}
+	
+	void BoxInPlace3(string &in asParent, string &in asChild, int alState)
+	{
+		AddLocalVarInt("var"+asParent, 1);
+		SetEntityActive("placedbox_3", true);
+		SetEntityActive("box_3", false);
+		PlaySoundAtEntity("", "impact_wood_med.snt", "Player", 0, false);  
+		if (GetLocalVarInt("varbox_1") == 1 && GetLocalVarInt("varbox_2") == 1 && GetLocalVarInt("varbox_3") == 1 && GetLocalVarInt("varbox_4") == 1)
+		{
+			SetEntityActive("resetTimer", false);
+			RemoveTimer("Warn");
+			RemoveTimer("Time");
+			SetSwingDoorDisableAutoClose("exitdoor", true);
+			SetPlayerActive(false);
+			AddTimer("", 1.5, "CrackOpen");
+			AddTimer("", 4, "StopLookAt");
+			StartPlayerLookAt("LookatDoor", 2, 2, "");
+			PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, false);
+		}
+	}
+	
+		void BoxInPlace4(string &in asParent, string &in asChild, int alState)
+	{
+		AddLocalVarInt("var"+asParent, 1);
+		SetEntityActive("placedbox_4", true);
+		SetEntityActive("box_4", false);
+		PlaySoundAtEntity("", "impact_wood_med.snt", "Player", 0, false);  
+		if (GetLocalVarInt("varbox_1") == 1 && GetLocalVarInt("varbox_2") == 1 && GetLocalVarInt("varbox_3") == 1 && GetLocalVarInt("varbox_4") == 1)
+		{
+			SetEntityActive("resetTimer", false);
+			RemoveTimer("Warn");
+			RemoveTimer("Time");
+			SetSwingDoorDisableAutoClose("exitdoor", true);
+			SetPlayerActive(false);
+			AddTimer("", 1.5, "CrackOpen");
+			AddTimer("", 4, "StopLookAt");
+			StartPlayerLookAt("LookatDoor", 2, 2, "");
+			PlaySoundAtEntity("", "WW_Secret.snt", "Player", 0, false);
+		}
+	}
+	
+		void CrackOpen(string &in asTimer)
+		{
+			SetSwingDoorLocked("exitdoor", false, false);
+			SetSwingDoorClosed("exitdoor", false, false);
+			for (int i = 0; i < 10; i++)
+					{
+						AddTimer("", i * 0.1, "OpenDoor");
+					}
+		}
+					
+			void OpenDoor(string &in asTimer)
+			{
+				AddPropForce("exitdoor", 0, 0, 130, "world"); 
+			}
+		
+		void StopLookAt(string &in asTimer)
+		{
+			SetPlayerActive(true);
+			StopPlayerLookAt(); 
+		}
+		
+	void ResetTimer(string &in asEntity)
+	{
+		RemoveTimer("Warn");
+		RemoveTimer("Time");
+		AddTimer("Warn", 240, "Warning");
+		AddTimer("Time", 300, "spawnSteve");
+		SetMessage("ScreenMessages", "Confirm_resetTimer", 0);
+		SetEntityActive("resetTimer", false);
+	}
+	
+	void ResetTimerText(string &in asEntity, int alState)
+	{
+		if (alState ==1)
+		{
+			SetMessage("ScreenMessages", "resetTimer", 0);
+		}
+	}
+		
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

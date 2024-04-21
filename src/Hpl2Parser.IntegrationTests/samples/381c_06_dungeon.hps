@@ -1,0 +1,244 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaGruntSound", "GruntSound", true, 1);
+	AddEntityCollideCallback("wretch_1", "sewer_arched_2", "DoorBreak", true, 1);
+	AddEntityCollideCallback("servant_grunt_1", "AreaGrunt_1", "DisappearGrunt", true, 1);
+	AddUseItemCallback("", "key_torture_chamber_1", "level_dungeon_2", "UnlockDoor", true);
+	AddUseItemCallback("", "key_tomb_1", "level_orb_room_door_1", "UnlockDoor_1", true);
+	AddUseItemCallback("", "jar_vitae", "AreaPlaceVitae", "GetBoiledLiquid", true);
+	AddUseItemCallback("", "chemical_container_1", "AreaPotPlace", "PlacePot", true);
+	AddEntityCollideCallback("Player", "AreaHub", "HubMusic", true, 1);
+	AddEntityCollideCallback("Player", "AreaHubJim", "HubJim", true, 1);
+	AddEntityCollideCallback("Player", "AreaHubStop", "HubMusicStop", true, 1);
+	AddUseItemCallback("", "waxroll_record_5", "phonograph_5", "UseWaxroll", true);
+	SetupLoadScreen("LoadingText", "Load9", 1, "");
+}
+
+void OnEnter()
+{ 
+	PlaySoundAtEntity("", "ambience_voice.snt", "Player", 1.0 / 2, false);
+	AddEntityCollideCallback("Player", "AreaHub", "HubMusic", true, 1);
+	AddEntityCollideCallback("Player", "AreaHubStop", "HubMusicStop", true, 1);
+}
+
+void OnLeave()
+{ 
+	
+}
+
+void HubJim(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "jim_so_pretty.snt", "Player", 2.0, false);
+	AddEffectVoice("jim_so_pretty", "", "Voice", "JimPretty", true, "Player", 1, 10);
+}
+
+void HubMusic(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("A2_3_3_HQ_Amb.ogg", true, 1, 3, 3, false);
+	AddEntityCollideCallback("Player", "AreaHubStop", "HubMusicStop", true, 1);
+}
+
+void HubMusicStop(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(4.0, 3);
+	AddEntityCollideCallback("Player", "AreaHub", "HubMusic", true, 1);
+}
+
+///////////////////////////////////////////
+//Player opens a door and sees the grunt from Amnesia - TDD.
+
+void DoorGrunt_1(string &in asEntity)
+{
+	SetEntityActive("servant_grunt_1", true);
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeGrunt_1", 0, "");
+	AddTimer("TimerEWTH", 3.5f, "TimerEWTH");
+}
+
+void DisappearGrunt(string &in asParent, string &in asChild, int alState)
+{
+	FadeEnemyToSmoke("servant_grunt_1", false);
+	PlaySoundAtEntity("", "jim_wwtt.snt", "Player", 1.0, false);
+	AddEffectVoice("jim_wwtt", "", "Voice", "JimWwtt", true, "Player", 1, 10);
+}
+
+///////////////////////////////////////////
+//Player hears a growl as they're climbing down a ladder.
+
+void GruntSound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "ghoul_scare.snt", "Player", 1.0 / 2, false);
+}
+
+void TimerEWTH(string &in asTimer)
+{
+	AddEffectVoice("jim_wwtt", "", "Voice", "JimWwtt", true, "Player", 50, 100);
+}
+
+///////////////////////////////////////////
+//Player unlocks door to the torture chamber.
+
+void UnlockDoor(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("level_dungeon_2", false);
+	PlaySoundAtEntity("", "unlock_door.snt", "level_dungeon_2", 0.0f, false);
+	RemoveItem(asItem);
+}
+
+void UnlockDoor_1(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("level_orb_room_door_1", false);
+	PlaySoundAtEntity("", "unlock_door.snt", "level_orb_room_door_1", 0.0f, false);
+	RemoveItem(asItem);
+}
+
+///////////////////////////////////////////
+//Player boils special liquid.
+
+void GetBoiledLiquid(string &in asItem, string &in asEntity)
+{
+	SetLocalVarInt("BloodPlacedUnderOven", 1);
+
+	SetEntityActive("glass_container_blood_static_1", true);
+	PlaySoundAtEntity("", "26_place_glass.snt", "Player", 1, false);
+	RemoveItem(asItem);
+	
+	if(GetLocalVarInt("BloodPlacedUnderOven")==1 && GetLocalVarInt("PotPlacedUnderOven")==1){
+			SetLeverStuckState("extaction_oven_lever_1", 0, false);
+			SetSwingDoorClosed("extaction_oven_1", true, true);
+			SetSwingDoorLocked("extaction_oven_1", true, true);
+		}
+}
+
+void PlacePot(string &in asItem, string &in asEntity)
+{
+	SetLocalVarInt("PotPlacedUnderOven", 1);
+		
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", "Player", 1, false);
+	SetEntityActive("chemical_container_static_1", true);
+	RemoveItem(asItem);
+	
+	if(GetLocalVarInt("BloodPlacedUnderOven")==1 && GetLocalVarInt("PotPlacedUnderOven")==1){
+			SetLeverStuckState("extaction_oven_lever_1", 0, false);
+			SetSwingDoorClosed("extaction_oven_1", true, true);
+			SetSwingDoorLocked("extaction_oven_1", true, true);
+		}
+}
+
+///////////////////////////////////////////
+//Player activates lever.
+
+void OvenFurnace(string &in asEntity, int alState)
+{
+	if(alState == 1) {
+		PlaySoundAtEntity("", "26_oven_on.snt", "Player", 1, false);
+		PlaySoundAtEntity("OvenRun", "26_oven_run.snt", "AreaPlaceVitae", 1, false);
+		AddTimer("TimerEOven", 5.0f, "TimerEOven");
+		SetLeverStuckState("extaction_oven_lever_1", 1, false);
+	}
+}
+
+void TimerEOven(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_acid_machine_bubble_end.ps", "AreaVitaeParticle", false);
+	AddTimer("TimerEOven1", 2.0f, "TimerEOven1");
+	AddTimer("TimerEOvenPour", 1.5f, "TimerEOvenPour");
+}
+
+void TimerEOvenPour(string &in asTimer)
+{
+	PlaySoundAtEntity("", "12_epoxy_fill.snt", "Player", 0, false);
+	StopSound("OvenRun", 0.5f);
+}
+
+void TimerEOven1(string &in asTimer)
+{
+	SetEntityActive("chemical_container_static_1", false);
+	SetEntityActive("strange_liquid_1", true);
+	SetEntityActive("AreaPotPlace", false);
+}
+
+void StrangeLiquid(string &in asEntity)
+{
+	FadeOut(0.5f);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	AddTimer("TimerECont", 5.0f, "TimerECont");
+	GiveSanityDamage(10, true);
+	SetLevelDoorLocked("level_hub_1", false);
+	RemoveItem("strange_liquid_1");
+	FadePlayerRollTo(85, 1, 1); 
+	AddEntityCollideCallback("Player", "AreaPigSpawn", "PigSpawn", true, 1);
+}
+
+void TimerECont(string &in asTimer)
+{
+	FadeIn(4.0f);
+	SetPlayerCrouching(false);
+	SetPlayerActive(true);
+	GiveSanityBoostSmall();
+	PlaySoundAtEntity("", "29_scream.snt", "Player", 0, false);
+	FadePlayerRollTo(0, 10, 60); 
+}
+
+void PigSpawn(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("TimerEJimAnnoyed_1", 1.5f, "TimerEJimAnnoyed_1");
+	AddEntityCollideCallback("wretch_1", "AreaPigGone", "PigGone", true, 1);
+	AddEntityCollideCallback("Player", "AreaPigFlee", "PigChaseFlee", true, 1);
+	SetEntityActive("wretch_1", true);
+	ShowEnemyPlayerPosition("wretch_1");
+	SetEntityActive("sewer_arched_1", false);
+	SetEntityActive("sewer_arched_broken_1", true);
+	CreateParticleSystemAtEntity("", "ps_break_wood.ps", "AreaDoorExplode", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "AreaDoorExplode", 0, false);
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_4", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_6", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_18", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_19", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_20", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_21", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_22", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_23", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_24", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_25", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_26", 0, "");
+}
+
+void PigChaseFlee(string &in asParent, string &in asChild, int alState)
+{
+	SetNPCFollowPlayer("wretch_1", false);
+}
+
+void TimerEJimAnnoyed_1(string &in asTimer)
+{
+	AddEffectVoice("jim_ygbkm", "", "Voice", "JimAnn1", true, "Player", 50, 100);
+}
+
+void DoorBreak(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("sewer_arched_2", false);
+	SetEntityActive("sewer_arched_broken_2", true);
+	CreateParticleSystemAtEntity("", "ps_break_wood.ps", "AreaDoorExplode_1", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "AreaDoorExplode_1", 0, false);
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("phonograph_5", 0, false);
+	PlaySoundAtEntity("", "lever_metal_min_max.snt", "Player", 0, false);
+	RemoveItem(asItem);
+	SetEntityPlayerInteractCallback("phonograph_5", "", false);
+}
+
+void Phono_1(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		AddEffectVoice("phono_jim_final", "", "Voice", "JimPhonF", true, "phonograph_5", 1, 10);
+	}
+}

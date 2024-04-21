@@ -1,0 +1,193 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaCreepy1", "EvenCreepy", true, 1);
+	AddEntityCollideCallback("Player", "AreaClock", "EvenClock", true, 1);
+	AddEntityCollideCallback("Player", "AreaHinge", "EvenHinge", true, 1);
+	AddEntityCollideCallback("Player", "AreaKnock", "EvenKnock", true, 1);
+	AddEntityCollideCallback("Player", "AreaCreak", "EvenCreak", true, 1);
+	AddEntityCollideCallback("Player", "AreaSeeDoll", "EvenDoll", true, 1);
+	AddUseItemCallback("", "waxroll_record_1", "phonograph_1", "UseWaxroll1", true);
+	AddUseItemCallback("", "waxroll_record_2", "phonograph_1", "UseWaxroll", true);
+	AddUseItemCallback("", "waxroll_record_3", "phonograph_1", "UseWaxroll2", true);
+	SetDeathHint("Death_Hints", "DHint1");
+	SetupLoadScreen("LoadingText", "Load2", 1, "");
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("", "amb_mansion_small_hallway.snt", "Player", 1, true);
+}
+
+void OnLeave()
+{
+
+}
+
+///////////////////////////////////////////
+//Creaks are heard from above.
+
+void EvenCreepy(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_spooky_hallway_hits.snt", "Player", 1, false);
+}
+
+///////////////////////////////////////////
+//Clock randomly goes off and something moves upstairs.
+
+void EvenClock(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_mansion_gallery_clock_ring_3D.snt", "ChimeSounds", 1, false);
+	AddTimer("TimerEClock", 5.0f, "TimerEClock");
+}
+
+void TimerEClock(string &in asTimer)
+{
+	PlaySoundAtEntity("", "attic_smash.snt", "BangSound", 1, false);
+	AddTimer("TimerEGasp", 0.9f, "TimerEGasp");
+}
+
+void TimerEGasp(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 1, false);
+	GiveSanityDamage(5, true);
+}
+
+///////////////////////////////////////////
+//Player picks up lantern.
+
+void Lantern(string &in asEntity)
+{
+	SetEntityActive("lamp1", false);
+	SetEntityActive("lamp2", true);
+	SetSwingDoorLocked("mansion_5", false, true);
+	
+	SetSwingDoorClosed("mansion_5", false, false);
+    SetSwingDoorDisableAutoClose("mansion_5", true);
+	
+    AddTimer("mansion_5", 0, "TimerMoveDoor");
+}
+
+void TimerMoveDoor(string &in asTimer)
+{
+    if(GetLocalVarInt("VarDoor") == 10) return;
+    AddLocalVarInt("VarDoor", 1);
+
+    AddTimer(asTimer, 0.03, "TimerMoveDoor");
+	
+    AddPropForce(asTimer, 75, 0, 0, "world");
+}
+
+///////////////////////////////////////////
+//AtticDoor.
+
+void AtticDoor(string &in asEntity)
+{
+	SetSwingDoorLocked("attic_floor_ladderhatch_1", false, true);
+	SetSwingDoorClosed("attic_floor_ladderhatch_1", false, true);
+	SetEntityInteractionDisabled("attic_floor_ladderhatch_1", true);
+	PlaySoundAtEntity("", "door_mansion_open.snt", "Player", 1, false);
+	SetEntityActive("LadderArea_1", true);
+	CreateParticleSystemAtEntity("", "ps_dust_falling_small.ps", "AreaDustAttic", false);
+}
+
+///////////////////////////////////////////
+//Attic noise knock.
+
+void EvenKnock(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "door_knock_far.snt", "BangSound3", 0, false);
+}
+
+///////////////////////////////////////////
+//Paranormal door event.
+
+void EvenCreak(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("mansion_2", false, true);
+	
+	SetSwingDoorClosed("mansion_2", false, false);
+    SetSwingDoorDisableAutoClose("mansion_2", true);
+	
+    AddTimer("mansion_2", 0, "TimerMoveDoor1");
+}
+
+void TimerMoveDoor1(string &in asTimer)
+{
+    if(GetLocalVarInt("VarDoor") == 15) return;
+    AddLocalVarInt("VarDoor", 1);
+
+    AddTimer(asTimer, 0.03, "TimerMoveDoor1");
+	
+    AddPropForce(asTimer, -80, 0, 0, "world");
+}
+
+///////////////////////////////////////////
+//Crowbar opens door.
+
+void crowbard_door(string &in asEntity)
+{
+	SetLevelDoorLocked("level_wood_1", false);
+	AddEntityCollideCallback("Player", "AreaWisp", "EvenWisp", true, 1);
+}
+
+///////////////////////////////////////////
+//Waxroll used on phonograph.
+
+void PhonoLocked_1(string &in asEntity)
+{
+	SetMessage("Messages", "PhonoMessage_1", 0);
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("phonograph_1", 0, false);
+	PlaySoundAtEntity("", "lever_metal_min_max.snt", "Player", 0, false);
+	RemoveItem(asItem);
+	SetEntityPlayerInteractCallback("phonograph_1", "", false);
+}
+
+///////////////////////////////////////////
+//Phono Jim.
+
+void Phono_2(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		AddEffectVoice("phono_jim_02", "", "Voice", "JimPhon2", true, "phonograph_1", 1, 10);
+	}
+}
+
+void EvenWisp(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "Wisp.snt", "AreaWispSound", 1, false);
+}
+
+void SecretDoor_2(string &in asEntity, int alState)
+{
+	if(alState == 1) {
+		SetEntityActive("secret_door02_1", false);
+		SetEntityActive("secret_door02_3", true);
+		SetLeverStuckState("lever_small01_1", 1, false);
+		SetMessage("Messages", "LeverMessage_1", 0);
+	}
+}
+
+void EvenDoll(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "A2_2_4_GhoulScare.snt", "Player", 1, false);
+}
+
+void NoteS2(string &in asEntity)
+{
+	AddTimer("TimerCandleGoOut", 1.5, "TimerCandleGoOut");
+}
+
+void TimerCandleGoOut(string &in asTimer)
+{
+	SetLampLit("candle_floor_3", false, true);
+	SetLightVisible("SpotLight_39", false);
+	SetLightVisible("SpotLight_40", false);
+	SetLightVisible("SpotLight_41", false);
+	SetLightVisible("SpotLight_42", false);
+	PlaySoundAtEntity("", "18_blow_wind.snt", "Player", 1, false);
+}

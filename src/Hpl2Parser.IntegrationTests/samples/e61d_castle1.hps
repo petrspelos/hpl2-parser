@@ -1,0 +1,52 @@
+void OnStart()
+{
+    PlayMusic("25_amb.ogg", true, 1.0f, 0.0f, 1, false);
+    SetMessage("Messages", "message01", 5.0f);
+    AddEntityCollideCallback("Player", "traparea", "lockdoor", true, 0);
+    AddEntityCollideCallback("Player", "dungeonmusic", "changemusic", true, 0);
+}
+
+void lockdoor(string parent, string child, int state)
+{
+    SetEntityActive("closedgate", true);
+    PlaySoundAtEntity("", "close_gate.snt", "gatesound", 0.0f, false);
+    StartPlayerLookAt("gatesound", 5.0f, 8.0f, "");
+    SetMessage("Messages", "message02", 3.0f);
+    AddTimer("", 3.0f, "stoplook");
+    CheckPoint ("", "respawn", "", "Messages", "message01");
+}
+
+void stoplook(string timer)
+{
+    StartPlayerLookAt("doorarea", 5.0f, 8.0f, "");
+    SetPropHealth("door", 0.0f);
+    SetEntityActive("grunt", true);
+    ShowEnemyPlayerPosition("grunt");
+    AddTimer("", 4.0f, "notlook");
+}
+
+void notlook(string timer)
+{
+    StopPlayerLookAt();
+}
+
+void changemusic(string parent, string child, int state)
+{
+    PlayMusic("amb_extra02.ogg", true, 1.0f, 0.0f, 1, false);
+    SetLampLit("candle", true, true);
+    PlayGuiSound("ui_use_tinderbox.ogg", 1.0f);
+}
+
+void pushchair(string entity, string type)
+{
+    AddTimer("", 0.1f, "pushchair2");
+}
+
+void pushchair2(string timer)
+{
+    SetPropStaticPhysics("chair", false);
+    AddPropForce("chair", 0.0f, 0.0f, -5000.0f, "world");
+    GiveSanityDamage(5.0f, true);
+    PlayGuiSound("react_pant4.ogg", 1.0f);
+    PlayGuiSound("player_react_guardian2.ogg", 1.0f);
+}

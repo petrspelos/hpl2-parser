@@ -1,0 +1,266 @@
+
+
+void OnStart()
+	{
+		
+	}
+
+void OnEnter()
+	{
+		//SetInDarknessEffectsActive(false);
+		//SetPlayerSanity(60.0f);
+		SetPlayerLampOil(100.0f);
+		SetPlayerHealth(60.0f);
+		
+		//StartPlayerSpawnPS("dkf_fog.sps"); //Testing the global particle
+		
+		SetUpFlashlight("FlashlightArea");
+		SetUpInsanity();
+		
+		SetEntityPlayerInteractCallback("Door_1", "KnockOnDoor", true);
+		AddBodyImpulse("Door_1_Lantern" + "_Body_3", 0, 0, -0.65f, "world");
+		
+		
+		//StartPhoneRing("phone_1", "daniel_phone", 0);
+		
+		AddEntityCollideCallback("Hours", "Twelve", "ClockCheck", false, 1);
+		AddEntityCollideCallback("Minutes", "Twelve", "ClockCheck", false, 1);
+		
+		SetMoveObjectState("door_air_right_1", -1.0f);
+		SetMoveObjectState("door_air_right_2", 1.0f);
+		
+		AddUseItemCallback("", "Vase_item", "Barrel", "KeyTest", false);
+	 
+	}
+
+void OnLeave()
+{
+	
+}
+
+void KeyTest(string &in asItem, string &in asEntity)
+{
+	AddDebugMessage("It worked!", false);
+}
+	
+void ClockCheck(string &in asParent, string &in asChild, int alState)
+{
+	if(GetEntitiesCollide("Hours", asChild) == true && GetEntitiesCollide("Minutes", asChild) == true)
+	{
+		PlayMusic("01_puzzle_passage.ogg", false, 1.0f, 1.0f, 2 , false);
+		PlaySoundAtEntity("", "lock_door.snt", asChild, 0.0f , false);
+		GiveSanityBoostSmall();
+		ChangePlayerStateToNormal();
+		SetPropStaticPhysics("Hours", true);
+		SetPropStaticPhysics("Minutes", true);
+		RemoveEntityCollideCallback("Hours", asChild);
+		RemoveEntityCollideCallback("Minutes", asChild);
+		
+	}
+}
+ 
+void Timer(string &in asTimer)
+{
+	AddTimer("", 0.3f, "Timer");
+	StartRandomInsanityEvent();
+}
+
+///////////////////////KNOCKING///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+/* Full setup is: Door or area, Lantern */
+
+void SetUpKnockingAndLanterns() // for neatness' sake
+{
+
+}
+
+void KnockOnDoor(string &in asEntity)
+{
+	PlaySoundAtEntity("", "door_knock_dkf.snt", asEntity, 0.0f , false);
+	AddTimer(asEntity, 1.0f, "Talk");
+}
+void Talk(string &in asTimer)
+{
+		AddEffectVoice("get_out", "", "Dialogues", "get_out", true, asTimer, 0.0f, 15.0f);
+		SetEffectVoiceOverCallback("AfterKnocking");
+}
+void AfterKnocking()
+{
+	SetLampLit("Door_1_Lantern", false,true);
+}
+
+
+
+
+
+///////////////END KNOCK///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+///////////////////////PHONE///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+string FileName;
+string Phone;
+int FileCount;
+
+ /* Entity = the phone to be played at, if files are "File_01.ogg" and "File_02.ogg", then asFileName = File and asFileCount = 2.
+ All sound files from 1 through the given number are be played.
+ If count = 0, "File" (without the underscore and numbers) is assumed.
+ For best effect use mono sound files.
+ Lang subtitle entries should be titled same as the file and placed in "Dialogues" category. */
+ 
+void StartPhoneRing(string &in asEntity, string asFileName, int asFileCount) 
+{
+	FileName = asFileName;
+	FileCount = asFileCount;
+	Phone = asEntity;
+	PlaySoundAtEntity("phonering", "phone_ring_loop.snt", asEntity, 0.0f , false);
+	SetEntityPlayerInteractCallback( asEntity, "PickUpPhone", true);
+}
+void PickUpPhone(string &in asEntity)
+{
+	StopSound("phonering", 0.5f);
+	PlaySoundAtEntity("", "phone_up.snt", asEntity, 0.0f , false);
+	AddTimer("", 0.5f, "StartTalking");
+	
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerRunSpeedMul(0.0f);
+}
+void StartTalking(string &in asTimer)
+{
+	PlaySoundAtEntity("phonestatic", "phone_static_loop.snt", Phone, 0.0f , false);
+	
+	if(FileCount == 0)
+	{
+		AddEffectVoice(FileName, "", "Dialogues", FileName, true, Phone, 0.0f, 15.0f);
+	}
+	else if (FileCount > 0)
+	{
+		string tmp;
+		for(int i = 1; i <= FileCount; i++ )
+		{
+			if(i <10)
+			{
+				tmp = FileName + "_0" + i;
+			}
+			else { tmp = FileName + "_" + i; }
+		
+		AddEffectVoice(tmp, "", "Dialogues", tmp, true, Phone, 0.0f, 15.0f);
+		}
+	}
+	
+	SetEffectVoiceOverCallback("HangUp");
+}
+
+void HangUp()
+{
+	PlaySoundAtEntity("", "phone_down.snt", Phone, 0.0f , false);
+	StopSound("phonestatic", 0.3f);
+	
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerJumpDisabled(false);
+}
+
+///////////////END PHONE///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+	
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+	
+	if(GetPlayerSanity() == 0.0f) SetPlayerSanity(29.0f);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+	
+//////////////////////FLASHLIGHT//////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
+void SetUpFlashlight(string &in asArea)  //Area to create the object at. Should be placed out of player's view
+	{	
+	
+		/////////Gets rid of a bug that occurs the first time the flashlight is used/////////
+		GiveItemFromFile("oldlantern", "lantern.ent");			
+		SetLanternActive(true, false);
+		SetLanternActive(false, false);
+		RemoveItem("oldlantern");
+		////////////////////////////////////////////////////////////////////////////////////
+		
+		AddDebugMessage("Setting up a flashlight...", false);
+		
+		
+		SetLocalVarInt("FlashLightVar", 0);
+		SetLanternLitCallback("FlashlightFunction");
+		
+		CreateEntityAtArea("flashlight_playerhands", "experimental_flashlight.ent", asArea, false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", false);
+		
+		AddTimer("FlickerTimer", 1.0f, "FlickerScript");
+	}
+
+void FlashlightFunction(bool abLit)
+{
+
+	if(GetLocalVarInt("FlashLightVar") == 1)
+	{
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", false);
+		PlaySoundAtEntity("", "flashlight_off.snt", "Player", 0, false);
+		SetLocalVarInt("FlashLightVar", 0);
+		
+	}
+	else if(GetLocalVarInt("FlashLightVar") == 0)
+	{
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", true);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", true);
+		PlaySoundAtEntity("", "flashlight_on.snt", "Player", 0, false);
+		SetLocalVarInt("FlashLightVar", 1);
+		
+	}
+	
+	
+}
+
+void FlickerScript(string &in asTimer)  //looping timer, sets flicker to flashlight if player has one
+{
+	
+	if(GetPlayerLampOil() >= 10.0f || GetPlayerLampOil() == 0.0f || GetLocalVarInt("FlashLightVar") == 0)
+	{
+		SetLightFlickerActive("flashlight_playerhands_Flashlight_Spot", false);
+	}
+	else if(GetLocalVarInt("FlashLightVar") == 1 && GetPlayerLampOil() < 10.0f && GetPlayerLampOil() != 0.0f)
+	{
+		SetLightFlickerActive("flashlight_playerhands_Flashlight_Spot", true);
+	}
+	
+		AddTimer("FlickerTimer", 1.0f, "FlickerScript");
+}
+
+//////////////////////////////END FLASHLIGHT///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+
+

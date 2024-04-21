@@ -1,0 +1,570 @@
+void OnStart(){
+	AddEntityCollideCallback("Player", "ScriptArea_5", "waterpressure", false, 0);
+	for(int i=1; i<=3; i++)		AddEntityCollideCallback("Player", "ScriptArea_8_"+i, "fallpressure", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_6", "rocksEject", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_8", "wallEject", true, 1);
+	//AddEntityCollideCallback("Player", "ScriptArea_15", "enterBedNextMap", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_7", "deepwaterpressure", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_22", "ambPool", false, 0);
+	for(int i=1; i<=4; i++)		AddEntityCollideCallback("Player", "lossLantern_"+i, "lostitemEvent"+i, true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_9", "agnusdeiStage01", true, 1);	
+	AddEntityCollideCallback("Player", "ScriptArea_10", "agnusdeiStage02", true, 1);	
+	AddEntityCollideCallback("Player", "ScriptArea_11", "agnusdeiStage03", true, 1);	
+	AddEntityCollideCallback("Player", "ScriptArea_12", "agnusdeiStage04", true, 1);	
+	AddEntityCollideCallback("Player", "ScriptArea_13", "agnusdeiStage05", true, 1);
+	AddEntityCollideCallback("Player", "shadowArea_60", "pathbreak", true, 1);
+	AddEntityCollideCallback("Player", "shadowArea_69", "pathbreak", true, 1);	
+	AddEntityCollideCallback("Player", "shadowArea_75", "darklPath", true, 1);	
+	
+	PlaySoundAtEntity("", "laststand_water_stream", "ParticleArea_1", 0, false);
+	 FadeImageTrailTo(0.2f, 0.5f);
+	SetEntityPlayerInteractCallback("treasure_1", "boldE", false);
+	SetEntityPlayerInteractCallback("bed_simple_movable_1", "BedInteraction", false);
+	//SetEntityPlayerInteractCallback("bed_simple_movable_1", "BedDemo", false);
+	
+	for (int i=1; i<=1; i++)	{	int R =  RandFloat(1, 7);	AddUseItemCallback("", "hand_drill_part03_1", "treasure_"+i, "picklock_"+R, false);		AddUseItemCallback("", "hollow_needle_1", "treasure_"+i, "picklockD_"+R, false);	SetEntityActive("gear"+i+"_"+R, true);	}
+	CheckPoint("checkpoint3","PlayerStartArea_2","doom", "Hints", "DeathDarkCave");	
+	
+	SetPlayerMoveSpeedMul(0.45f);	SetPlayerRunSpeedMul(1);
+	
+	AddTimer("guardianCall", 12, "TimerList");
+	AddTimer("guardianAmb", 20, "TimerList");
+	for(int i=0; i<=119; i++)		AddTimer("shadowpan"+i, 15 + ( i * ( 2 - ( i * 0.008f ))), "TimerList");		// 1.95f - 2.2f
+	AddTimer("escapeRun", 30, "TimerList");
+	AddTimer("escapeRun2", 45, "TimerList");
+	AddTimer("poolPartic1", 0, "TimerList");
+	//AddTimer("injuredPerspect1", 0, "TimerList");
+	
+	FadeOut(0);	FadePlayerFOVMulTo(2, 15);	AddTimer("firstV", 0.4f, "TimerList");
+	FadeLightTo("BoxLight_Global", 0, 0, 0, 0, -1, 32);
+	SetPlayerCrouchDisabled(true);
+	
+	SetFogActive(true);		SetFogColor(0, 0, 0, 0);
+	FadePlayerAspectMulTo(1.3f, 0.012f);
+	for(int i=0; i<=2; i++)	SummonChaser();
+}
+
+void TimerList(string &in asTimer){
+	if(asTimer == "firstV"){		FadeIn(5);	FadePlayerFOVMulTo(1, 0.1f);
+	}
+	if(asTimer == "restingMusic"){
+		PlayMusic("agnusdei06.ogg", false, 1.0f, 0, 1, true);
+		AddTimer("changingMap", 45, "TimerList");
+	}
+	if(asTimer == "poolPartic1")	{	CreateParticleSystemAtEntity("", "laststand_splash.ps", "ParticleArea_1", true);		AddTimer("poolPartic1", 13, "TimerList");	}
+	if(asTimer == "escapeRun")	{	SetPlayerMoveSpeedMul(0.55f);	for(int i=0; i<=119; i++)	AddTimer("fallDust"+i, RandFloat(0, 5), "TimerList");	}
+	if(asTimer == "escapeRun2")	SetPlayerMoveSpeedMul(0.75f);
+	if(asTimer == "changingMap"){
+		StopMusic(0, 0);
+		PlayGuiSound("stoppingGrammopfone.ogg", 1);		StartCredits("", "Ending", "UpdateCredits", 1);
+		//AddTimer("changingMap2", 4, "TimerList");
+	}
+	if(asTimer == "changingMap2"){	ChangeMap("artificialsun.map", "PlayerStartArea_1", "", "");
+			}
+	if(asTimer == "guardianAmb"){
+		StopMusic(3, 5);	PlayMusic("guardianHunt02.ogg", true, 1.4f, 8, 5, true);
+		FadeLightTo("BoxLight_Global", 0.12f, 0.12f, 0.4f, 0, -1, 32);
+		}
+	if(asTimer == "enterBed")	{
+		AddLocalVarInt("nextMap", 1);
+		if(GetLocalVarInt ("nextMap") == 2)	{
+			ChangeMap("artificialsun.map", "PlayerStartArea_1", "", "");
+		}
+	}
+	if(asTimer == "guardianCall"){
+		PlaySoundAtEntity("", "guardian_activated", "Player", 4, true);
+		StartScreenShake(RandFloat(0.03f, 0.06f), 0.4f, 3, 8);
+		FadeRadialBlurTo(0.07f, 0.01f);
+		FadePlayerAspectMulTo(1.3f, 0.08f);
+		FadePlayerFOVMulTo(1.3f, 0.08f);
+			AddTimer("guardianCall2", 9, "TimerList");
+			AddTimer("guardianCall", 15, "TimerList");
+	}
+	if(asTimer == "guardianCall2"){
+		FadeRadialBlurTo(0, 0.007f);
+		PlaySoundAtEntity("", "guardian_distant", "Player", 4, true);
+		StartScreenShake(0.02f, 1, 3, 3);
+		FadePlayerAspectMulTo(1, 0.08f);
+		FadePlayerFOVMulTo(1, 0.08f);
+	}
+	
+	for(int i=0; i<=119; i++)	{
+		if(asTimer == "shadowpan"+i){
+			CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "shadow"+i+"_1", true);
+			StartScreenShake(RandFloat(0.05f, 0.09f), 0.4f, 0.15f, 0.8f);
+			for(int d=0; d<=5; d++)	SetPropActiveAndFade("shadow"+i+"_"+d, true, 1.5f);
+			PlaySoundAtEntity("", "25_guardian_slime_appear", "shadow"+i+"_1", 0, true);
+			PlaySoundAtEntity("", "echo", "Player", RandFloat(0, 0.5f), true);
+			FadeLightTo("ShadowPoint_"+i, 1, 0, 0.2f, 0.6f, -1, 1);
+			AddEntityCollideCallback("Player", "shadowArea_"+i, "inshadowed", true, 1);
+		}
+	}
+	if(asTimer == "rumble"){
+		StopSound("rumble", 1);
+		PlaySoundAtEntity("", "explosion_rock_large", "Player", 0, false);
+		for(int i=20; i<=21; i++)	CreateParticleSystemAtEntity("", "ps_dust_break_25.ps", "ScriptArea_"+i, true);
+		
+		if(GetLocalVarInt("intergateRocks") == 0){
+			StopMusic(3, 5);	
+			PlayMusic("guardianHunt03.ogg", true, 1.6f, 8, 5, true);
+			SetPlayerMoveSpeedMul(1);
+			SetLocalVarInt("intergateRocks", 1);
+		}
+	}
+	if(asTimer == "sos")	{	PlayMusic("29_amb_end_soft", false, 1, 0, 1, false);	SetPlayerJumpDisabled(true);	}
+	if(asTimer == "headDirec")	{	FadePlayerRollTo(RandFloat(70, -70), 25, 25); AddTimer("headDirec", 0.3f, "TimerList");	}
+	if(asTimer == "reDirec")	FadePlayerRollTo(0, 5, 5); 
+	if(asTimer == "injuredPerspect1")	{	AddTimer("injuredPerspect2", 4, "TimerList");	MovePlayerHeadPos(0, 0, 0, 17.0f, 1);	}
+	if(asTimer == "injuredPerspect2")	{	AddTimer("injuredPerspect1", 4, "TimerList");	MovePlayerHeadPos(0, -1.3f, 0, 10.0f, 1);	FadePlayerRollTo(RandFloat(20, -60), 10, 10);}
+	for(int i=0; i<=119; i++)	{	if(asTimer == "fallDust"+i)	CreateParticleSystemAtEntityExt("", "ps_dust_falling_door_quick.ps", "shadowArea_"+i, true, 0.4f, 0.45f, 0.8f, RandFloat(0, 1), false, 1, 6, 20, 30);	}	
+	if(asTimer == "shake")	StartScreenShake(0.03, 6, 5, 5);
+	for(int i=0; i<=9; i++)	if(asTimer == "dustC"+i)	CreateParticleSystemAtEntityExt("", "ps_debris_tunnel.ps", "ParticleArea2_"+i, true, 0.4f, 0.45f, 0.4f, RandFloat(0.1f, 1), false, 1, 6, 20, 30);
+	if(asTimer == "bonfireSequence")	{	FadeLightTo("SpotLight_42", RandFloat(0.8f, 0.8f), RandFloat(0.7f, 0.3f), RandFloat(0.1f, 0), RandFloat(1, 0), -1, 0.4f);	AddTimer("bonfireSequence", RandFloat(0.2f, 0.7f), "TimerList");	}
+	if(asTimer == "plenisBonfire")	{	RemoveTimer("bonfireSequence"); FadeLightTo("SpotLight_42", 0, 0, 0, 0, -1, 1);	DestroyParticleSystem("fire");	}
+	if(asTimer == "waterD")	PlayGuiSound("splashdrop.ogg", 1);
+}
+void SummonChaser(){
+	int i=RandInt(1, 5);
+	SetLocalVarInt("EnemyDice", i);
+
+	if(GetLocalVarInt("EnemyDice") == 1)	AddEntityCollideCallback("Player", "shadowArea_36", "GruntOne", true, 1);
+	if(GetLocalVarInt("EnemyDice") == 2)	AddEntityCollideCallback("Player", "shadowArea_23", "GruntTwo", true, 1);
+	if(GetLocalVarInt("EnemyDice") == 3)	AddEntityCollideCallback("Player", "ScriptArea_13", "BruteOne", true, 1);
+	if(GetLocalVarInt("EnemyDice") == 4)	AddEntityCollideCallback("Player", "shadowArea_8", "BruteTwo", true, 1);
+	if(GetLocalVarInt("EnemyDice") == 5)	AddEntityCollideCallback("Player", "shadowArea_24", "BruteThree", true, 1);
+}
+void GruntOne(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_grunt_1", true);
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_34", 0, "");
+}
+void GruntTwo(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_grunt_2", true);
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_152", 0, "");
+	AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_116", 0, "");
+}
+void BruteOne(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_brute_1", true);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_3", 0, "");
+}
+void BruteTwo(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_brute_2", true);
+	AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_67", 0, "");
+}
+void BruteThree(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_brute_3", true);
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_121", 0, "");
+}
+void boldE(string &in asEntity){
+	AddTimer("shake", 2, "TimerList");
+	for (int i=0; i<=2; i++)	CreateParticleSystemAtEntityExt("", "ps_area_fog_falling.ps", "ParticleArea3_"+i, true, 0.4f, 0.45f, 0.8f, RandFloat(0.3f, 1), false, 1, 6, 20, 30);
+}
+void darklPath(string &in asParent, string &in asChild, int alState)
+{	FadeLightTo("BoxLight_Global", 0, 0, 0, 0, -1, 24);
+}
+void bonfire(string &in asEntity, string asType)	{
+	AddTimer("bonfireSequence", 0, "TimerList");
+	CreateParticleSystemAtEntity("fire", "ps_torch_fire_calm.ps", "bonfire_1", true);
+	CreateParticleSystemAtEntity("fire", "ps_light_dust.ps", "ScriptArea_23", true);
+	}
+void waterpressure(string &in asParent, string &in asChild, int alState){
+	CreateParticleSystemAtEntity("", "ps_impact_water_high.ps", "Player", true);
+	if(alState == 1)	{	AddTimer("stream", 0, "waterforce");	
+							PlaySoundAtEntity("", "splash", "Player", 0, true);		
+							//PlaySoundAtEntity("river", "amb_river", "Player", 1, true);	
+							StopMusic(1, 5);	
+							RemoveTimer("guardianCall");
+							AddTimer("headDirec", 0, "TimerList");
+							MovePlayerHeadPos(0, -1.4, 0, 12.0f, 1);
+							for(int i=0; i<=2; i++)	RemoveTimer("injuredPerspect"+i);
+							PlaySoundAtEntity("waStr", "laststand_water_stream", "ParticleArea_2", 0, false);
+							FadePlayerAspectMulTo(1, 1);
+							}
+	else				{	RemoveTimer("stream");	//StopSound("river", 3);	
+							RemoveTimer("headDirec");
+							AddTimer("reDirec", 0, "TimerList");
+							MovePlayerHeadPos(0, 0, 0, 2.0f, 2);
+							}
+}
+void BedInteraction(string &in asEntity){
+	AddTimer("clip1", 0, "BedTimer");
+	AddTimer("clip1M", 0.3, "BedTimer");
+	AddTimer("clip2", 0.5, "BedTimer");
+	AddTimer("clip3", 2, "BedTimer");
+	AddTimer("clip4", 4.5, "BedTimer");
+	AddTimer("clip5", 5, "BedTimer");
+	AddTimer("clip6", 6, "BedTimer");
+	AddTimer("clip7", 7, "BedTimer");
+	AddTimer("clip10", 28.5, "BedTimer");
+	
+	AddTimer("clip81", 17, "BedTimer");
+	AddTimer("clip82", 22.5, "BedTimer");
+	AddTimer("clip83", 28, "BedTimer");
+	AddTimer("clip9", 36, "BedTimer");
+	AddTimer("clip11", 40, "BedTimer");
+	AddTimer("clip12", 44, "BedTimer");
+	AddTimer("clip13", 50, "BedTimer");
+}
+void BedDemo(string &in asEntity){
+	AddTimer("clip2", 0, "BedTimer");
+	AddTimer("clip9", 0.5, "BedTimer");
+}
+
+void BedTimer(string &in asTimer){
+	if(asTimer == "stop"){	StopPlayerLookAt();	}
+	if(asTimer == "clip1")	FadeOut(0.3f);	
+	if(asTimer == "clip1M")	StartPlayerLookAt("bed_simple_movable_1", 2, 1, "");
+	if(asTimer == "clip2"){	TeleportPlayer("PlayerStartArea_6");	FadeIn(0.5f);	SetPlayerActive(false);	SetSanityDrainDisabled(true);	}
+	if(asTimer == "clip3"){	StartPlayerLookAt("chair_wood02_broken_1", 1, 2, "");}
+	if(asTimer == "clip4"){	MovePlayerHeadPos(0.2, -1, -0.5, 2, 2);	}
+	if(asTimer == "clip5"){	StartPlayerLookAt("candlestick01_1", 1, 2, "");	}
+	if(asTimer == "clip6")	MovePlayerHeadPos(0.45, -1, -1.25, 0.5, 2);
+	if(asTimer == "clip7")	{	MovePlayerHeadPos(0.45, -1.1, -1, 3, 2);	FadePlayerFOVMulTo(0.85f, 0.2f);	}
+	if(asTimer == "clip81")	FadeOut(5.5f);	
+	if(asTimer == "clip82")	{	MovePlayerHeadPos(0, -1.7, 0.35, 15, 2);	TeleportPlayer("PlayerStartArea_7");	}
+	if(asTimer == "clip83"){	FadeIn(0.5f);	SetLampLit("bonfire_1", false, true);	AddTimer("plenisBonfire", 0, "TimerList");	}
+	if(asTimer == "clip9")	{	StartPlayerLookAt("ScriptArea_26", 0.3, 2, "");	
+								MovePlayerHeadPos(0, -1.4, 0, 1, 2);	
+								FadePlayerRollTo(-18, 5, 12);	
+									FadePlayerFOVMulTo(1, 0.2f);
+								}
+	if(asTimer == "clip10")	StartPlayerLookAt("bonfire_1", 1, 2, "");
+	if(asTimer == "clip11")	{	StartPlayerLookAt("ScriptArea_26", 4, 2, "");		StartScreenShake(0.03, 0, 1, 1);}
+	if(asTimer == "clip12")	{	FadePlayerAspectMulTo(1.15f, 0.1f);	FadeImageTrailTo(0.6f, 0.1f);}
+	if(asTimer == "clip13")	FadeOut(5);
+	
+	if(asTimer == "check")	SetPlayerActive(true);
+}
+
+void deepwaterpressure(string &in asParent, string &in asChild, int alState){
+	CreateParticleSystemAtEntity("", "ps_impact_water_high.ps", "Player", true);
+	if(alState == 1)	{	if(GetGlobalVarInt("poolpressure")==0)	{		AddTimer("pool", 0, "waterforce");		
+																			PlaySoundAtEntity("", "splash", "Player", 0, true);		
+																					FadePlayerFOVMulTo(1.2f, 0.07f);
+																					FadeImageTrailTo(0, 0);
+																				StopSound("soundpool", 0.2f);
+																			PlaySoundAtEntity("abyss", "abysspad", "Player", 8, true);	
+																			AddTimer("sos", 7, "TimerList");	AddTimer("sos", 30, "TimerList");	
+																			
+																			FadeImageTrailTo(1.8f, 0.5f);
+																			SetFogProperties(0, 200, 0.75, true);
+																			SetFogColor(0.1, 0.3, 0.7, 1);
+																			}
+							if(GetGlobalVarInt("poolpressure")==1)	{		AddTimer("pool2", 0, "waterforce");	}
+						}
+	else				{	
+							if(GetGlobalVarInt("poolpressure")==0)	{ RemoveTimer("pool");	SetGlobalVarInt("poolpressure", 1);		PlaySoundAtEntity("", "surfaceSplash", "Player", 0, true);	StopSound("abyss", 0.2f);	
+																		SetEntityActive("block_box_1", true);	PlaySoundAtEntity("soundpool", "amb_pool", "Player", 0.4f, true);	DestroyParticleSystem("waStr");
+																		FadeImageTrailTo(0, 0.4f);	
+																				SetFogProperties(0, 200, 1, true);
+																				SetFogColor(0, 0, 0, 0);	}
+							if(GetGlobalVarInt("poolpressure")==1)	{ RemoveTimer("pool2");	AddTimer("waterD", RandFloat(1, 4), "TimerList");	}
+						}
+}
+
+void ambPool(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	{	if(GetGlobalVarInt("poolpressure") == 0)	PlaySoundAtEntity("soundpool", "amb_pool", "Player", 0.4f, true);
+							if(GetGlobalVarInt("poolpressure") == 1)	PlaySoundAtEntity("soundpool", "amb_pool", "Player", 8, true);
+							//PlaySoundAtEntity("soundpool", "amb_pool", "Player", 8, true);
+			}
+	else					StopSound("soundpool", 8);
+}
+
+void waterforce(string &in asTimer){
+	if(asTimer == "pool")	{	AddPlayerBodyForce(0, 10000, 0, false);		AddTimer("pool", 0.1f, "waterforce");}
+	if(asTimer == "pool2")	{	AddPlayerBodyForce(0, 15000, 0, false);		AddTimer("pool2", 0.1f, "waterforce");}
+	if(asTimer == "stream")	{	AddPlayerBodyForce(-4000, 0, 0, false);		AddTimer("stream", 0.1f, "waterforce");}
+	if(asTimer == "stoplookat")	{	StopPlayerLookAt();		for(int i=1; i<=4; i++)		{	FadeLightTo("ItemLight_"+i, 0, 0, 0, 0, -1, 6);	}		}
+}
+
+
+void fallpressure(string &in asParent, string &in asChild, int alState){
+	AddPlayerBodyForce(0, 50000, 0, false);	
+	}
+
+void rocksEject(string &in asParent, string &in asChild, int alState){
+	AddPlayerBodyForce(0, 15000, 0, false);
+}
+
+void wallEject(string &in asParent, string &in asChild, int alState){
+	AddPlayerBodyForce(30000, 0, 0, false);
+}
+
+void pathbreak(string &in asParent, string &in asChild, int alState){
+	StartScreenShake(0.05f, 0, 1, 2.8f);
+	AddTimer("rumble", 1, "TimerList");
+	PlaySoundAtEntity("rumble", "general_rock_rumble", "Player", 8, true);
+}
+
+void inshadowed(string &in asParent, string &in asChild, int alState){
+	MovePlayerHeadPos(0, -1.6f, 0, 0.15f, 0);
+	for(int i=0; i<=2; i++)		RemoveTimer("injuredPerspect"+i);
+	GivePlayerDamage(15, "BloodSpat", true, false);
+	SetPlayerMoveSpeedMul(0.05f);
+	SetPlayerLookSpeedMul(0.7f);
+		AddTimer("event1", 3, "inshadowEvent");
+		AddTimer("event2", 6, "inshadowEvent");
+		AddTimer("event3", 11, "inshadowEvent");
+}
+
+void inshadowEvent(string &in asTimer){
+	if(asTimer == "event1") PlaySoundAtEntity("defeat", "guardiandefeat", "Player", 11, true);
+	if(asTimer == "event2")	StartScreenShake(0.02, 0, 5, 0);
+	if(asTimer == "event3")	{	SetPlayerActive(false);	GivePlayerDamage(15, "BloodSpat", true, false);		FadePlayerAspectMulTo(2, 0.2f);	FadePlayerFOVMulTo(1.5f, 0.2f);	FadeOut(6);	FadeGlobalSoundVolume(0, 4);	StopSound("defeat", 0);	StopMusic(0, 5);}
+}
+
+void lostitemEvent1(string &in asParent, string &in asChild, int alState){
+	FadeLightTo("ItemLight_1", 0, 0.5, 0.5, 1, -1, 2);
+	RemoveEntityCollideCallback("Player", "lossLantern_*");
+	SetPropActiveAndFade("static_lantern_1", true, 1);
+	StartPlayerLookAt("static_lantern_1", 2, 2, "");
+	AddTimer("stoplookat", 2.7f, "waterforce");
+	RemoveItem("lantern_1");	SetPlayerLampOil(0);
+}
+void lostitemEvent2(string &in asParent, string &in asChild, int alState){
+	FadeLightTo("ItemLight_2", 0, 0.5, 0.5, 1, -1, 2);
+	RemoveEntityCollideCallback("Player", "lossLantern_*");
+	SetPropActiveAndFade("static_lantern_2", true, 1);
+	StartPlayerLookAt("static_lantern_2", 2, 2, "");
+	AddTimer("stoplookat", 2.7f, "waterforce");
+	RemoveItem("lantern_1");	SetPlayerLampOil(0);
+}
+void lostitemEvent3(string &in asParent, string &in asChild, int alState){
+	FadeLightTo("ItemLight_3", 0, 0.5, 0.5, 1, -1, 2);
+	RemoveEntityCollideCallback("Player", "lossLantern_*");
+	SetPropActiveAndFade("static_lantern_3", true, 1);
+	StartPlayerLookAt("static_lantern_3", 2, 2, "");
+	AddTimer("stoplookat", 2.7f, "waterforce");
+	RemoveItem("lantern_1");	SetPlayerLampOil(0);
+}
+void lostitemEvent4(string &in asParent, string &in asChild, int alState){
+	FadeLightTo("ItemLight_4", 0, 0.5, 0.5, 1, -1, 2);
+	RemoveEntityCollideCallback("Player", "lossLantern_*");
+	SetPropActiveAndFade("static_lantern_4", true, 1);
+	StartPlayerLookAt("static_lantern_4", 2, 2, "");
+	AddTimer("stoplookat", 2.7f, "waterforce");
+	RemoveItem("lantern_1");	SetPlayerLampOil(0);
+}
+void agnusdeiStage01(string &in asParent, string &in asChild, int alState){
+		//PlayMusic("sequence.ogg", true, 1.0f, 0, 0, true);
+		SetPlayerMoveSpeedMul(0.6f);
+		SetPlayerRunSpeedMul(0.6f);
+		FadeGlobalSoundVolume(0.1f, 20);
+		SetSanityDrainDisabled(true);
+}
+void agnusdeiStage02(string &in asParent, string &in asChild, int alState){
+	PlayMusic("agnusdei01.ogg", false, 1.0f, 0, 1, true);
+	FadeLightTo("SpotLight_34", 0, 0, 0, 0, -1, 8);
+	
+	AddTimer("shake", 5, "TimerList");
+	for(int i=0; i<=9; i++)	AddTimer("dustC"+i, 5+RandFloat(1, 4), "TimerList");
+}
+void agnusdeiStage03(string &in asParent, string &in asChild, int alState){
+	PlayMusic("agnusdei02.ogg", false, 1.0f, 2, 1, true);
+}
+void agnusdeiStage04(string &in asParent, string &in asChild, int alState){
+	PlayMusic("agnusdei03.ogg", false, 1.0f, 2, 1, true);
+}
+void agnusdeiStage05(string &in asParent, string &in asChild, int alState){
+	PlayMusic("agnusdei04.ogg", false, 1.0f, 2, 1, true);
+	AddTimer("restingMusic", 72, "TimerList");
+}
+
+void enterBedNextMap(string &in asParent, string &in asChild, int alState){
+		SetPlayerActive(false);
+		FadeOut(10);
+		AddTimer("enterBed", 10, "TimerList");
+	}
+
+void enterMap(string &in asParent, string &in asChild, int alState){
+	ChangeMap("arche.map", "PlayerStartArea_3", "", "");
+}
+
+void warploot(){
+	SetEntityActive("clay_tablet_1", true);
+	SetEntityActive("GoldenPowerPod", true);
+	SetEntityActive("book_pile01_1", true);
+	SetEntityActive("book_pile02_1", true);
+	SetEntityActive("treasure_chest_1", true);
+	SetEntityActive("wood_box02_3", true);	SetEntityActive("wood_box01_1", false);
+	SetEntityActive("wood_box01_2", false);
+	SetEntityActive("wood_box02_2", false);
+}
+
+
+
+///SETUP PICKLOCKING SYSTEM
+
+void picklock_1(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){	
+	if(GetLocalVarInt("Chest"+i) == 0){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 1){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;	}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;	}
+	if(GetLocalVarInt("Chest"+i) == 3){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 4){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.7f, "pickComplete");	
+										if(asEntity == "treasure_14")	{	SetEntityActive(asEntity, false); 	return;	}	
+										SetSwingDoorLocked(asEntity, false, false);			SetLeverStuckState(asEntity, 0, false);						return;	}
+	}
+}
+void picklockD_1(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){			
+	if(GetLocalVarInt("Chest"+i) == 0){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	if(GetLocalVarInt("Chest"+i) == 1){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 2){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 3){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	if(GetLocalVarInt("Chest"+i) == 4){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	}
+}
+
+void picklock_2(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){			
+	if(GetLocalVarInt("Chest"+i) == 0){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;	}
+	if(GetLocalVarInt("Chest"+i) == 1){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;	}
+	}
+}
+void picklockD_2(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){			
+	if(GetLocalVarInt("Chest"+i) == 0){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 1){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.7f, "pickComplete");	
+										if(asEntity == "treasure_14")	{	SetEntityActive(asEntity, false); 	return;	}	
+										SetSwingDoorLocked(asEntity, false, false);			SetLeverStuckState(asEntity, 0, false);						return;	}
+}
+}
+
+void picklock_3(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){			
+	if(GetLocalVarInt("Chest"+i) == 0){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 1){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;	}
+	if(GetLocalVarInt("Chest"+i) == 3){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;	}
+	}
+}
+void picklockD_3(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	if(GetLocalVarInt("Chest"+i) == 1){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	if(GetLocalVarInt("Chest"+i) == 2){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 3){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.7f, "pickComplete");	
+										if(asEntity == "treasure_14")	{	SetEntityActive(asEntity, false); 	return;	}	
+										SetSwingDoorLocked(asEntity, false, false);			SetLeverStuckState(asEntity, 0, false);						return;	}
+	}
+}
+
+void picklock_4(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 1){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;	}
+	}
+}
+void picklockD_4(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	if(GetLocalVarInt("Chest"+i) == 1){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.7f, "pickComplete");	
+										if(asEntity == "treasure_14")	{	SetEntityActive(asEntity, false); 	return;	}	
+										SetSwingDoorLocked(asEntity, false, false);			SetLeverStuckState(asEntity, 0, false);						return;	}
+	}
+}
+
+void picklock_5(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;	}
+	if(GetLocalVarInt("Chest"+i) == 1){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;	}
+	if(GetLocalVarInt("Chest"+i) == 3){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;	}
+	if(GetLocalVarInt("Chest"+i) == 4){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.7f, "pickComplete");	
+										if(asEntity == "treasure_14")	{	SetEntityActive(asEntity, false); 	return;	}	
+										SetSwingDoorLocked(asEntity, false, false);			SetLeverStuckState(asEntity, 0, false);						return;	}
+	}
+}
+void picklockD_5(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 1){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;}
+	if(GetLocalVarInt("Chest"+i) == 2){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 3){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 4){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	}
+}
+
+void picklock_6(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 1){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;	}
+	}
+}
+void picklockD_6(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;}
+	if(GetLocalVarInt("Chest"+i) == 1){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.7f, "pickComplete");	
+										if(asEntity == "treasure_14")	{	SetEntityActive(asEntity, false); 	return;	}	
+										SetSwingDoorLocked(asEntity, false, false);			SetLeverStuckState(asEntity, 0, false);						return;	}
+	}
+}
+	
+void picklock_7(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;	}
+	if(GetLocalVarInt("Chest"+i) == 1){	AddLocalVarInt("Chest"+i, 1);	return;	}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.7f, "pickComplete");		
+										if(asEntity == "treasure_14")	{	SetEntityActive(asEntity, false); 	return;	}	
+										SetSwingDoorLocked(asEntity, false, false);			SetLeverStuckState(asEntity, 0, false);						return;	}
+	}
+}
+void picklockD_7(string &in asItem, string &in asEntity){
+	PlayGuiSound("picklock.ogg", 1);
+		for(int i=1; i<=6; i++){		
+	if(GetLocalVarInt("Chest"+i) == 0){	AddLocalVarInt("Chest"+i, 1);	return;}
+	if(GetLocalVarInt("Chest"+i) == 1){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");	return;}
+	if(GetLocalVarInt("Chest"+i) == 2){	SetLocalVarInt("Chest"+i, 0);	AddTimer("", 0.5f, "pickFail");		return;}
+	}
+}
+void antilock(string &in asItem, string &in asEntity){	PlayGuiSound("picklock.ogg", 1);	AddTimer("", 0.5f, "pickFail");	}
+
+void pickComplete(string &in asTimer){	PlayGuiSound("pickComplete.ogg", 1);	}
+void pickFail(string &in asTimer){	PlaySoundAtEntity("Pfail", "faillock.snt", "Player", 0, true);	AddTimer("", 1.8f, "pickFailStop");}
+void pickFailStop(string &in asTimer)	{	StopSound("Pfail", 0);	}
+
+	
+void doom(string &in asName, int alCount)
+{	AddGlobalVarInt("LimitedLife", 1);
+	ChangeMap("cranny.map", "PlayerStartArea_2", "", "");
+}
+
+
+
+
+void OnEnter(){
+		
+		if(GetGlobalVarInt ("detour")==1){
+			SetEntityActive("cave_in_destroyed_1", true);
+			SetEntityActive("cave_in_2", false);
+			AddEntityCollideCallback("Player", "ScriptArea_17", "enterMap", false, 1);
+			SetPlayerMoveSpeedMul(1);	SetPlayerRunSpeedMul(0.7f);
+			SetSwingDoorLocked("treasure_1", false, false);
+			SetPlayerLookSpeedMul(1);
+		}
+		
+		SetMapDisplayNameEntry("grave");
+		AutoSave();
+}
+
+void OnLeave(){
+}

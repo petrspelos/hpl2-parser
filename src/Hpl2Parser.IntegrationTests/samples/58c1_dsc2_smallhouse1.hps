@@ -1,0 +1,106 @@
+//////////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+SetSkyBoxTexture("SkyBox.dds");
+SetSkyBoxActive(true);
+AddUseItemCallback("KeyHatch", "key_study_1", "hatch_ceiling_1", "UsedKeyOnHatch", true);
+AddUseItemCallback("CrowbarHatch", "crowbar_1", "hatch_ceiling_1", "UsedCrowbarOnHatch", true);
+AddEntityCollideCallback("Player", "thoughts", "LeftInHurry", true, 1);
+AddEntityCollideCallback("Player", "gobacktimer", "GoBackTimer", true, 1);
+AddEntityCollideCallback("Player", "OpenHatchIfStuck", "OpenHatchIfStuck", false, 1);
+}
+
+    void hatchquest(string &in asEntity)
+    {
+    AddQuest("hatchquest", "HatchQuest");
+	PlaySoundAtEntity("", "door_level_metal_locked.snt", "hatch_ceiling_1", 0, false);
+    }
+
+void searchpot(string &in asEntity)
+{
+SetEntityActive("key_study_1", true);
+PlaySoundAtEntity("", "player_crouch.snt", "Player", 0, false);
+SetMessage("Level2", "FindKey", 4);
+}
+
+
+    void UsedKeyOnHatch(string &in asItem, string &in asEntity) 
+    {
+	SetSwingDoorLocked("hatch_ceiling_1", false, true);
+    PlaySoundAtEntity("", "lock_door.snt", "hatch_ceiling_1", 0, false);
+    RemoveItem("key_study_1");
+	CompleteQuest("hatchquest", "HatchQuest");
+	AddPlayerSanity(25.0f);
+	SetEntityActive("carpet_moveable_1", false);
+	SetEntityActive("carpet_moveable_2", true);
+	RemoveUseItemCallback("CrowbarHatch");
+    }
+	
+	void UsedCrowbarOnHatch(string &in asItem, string &in asEntity) 
+    {
+    PlaySoundAtEntity("", "impact_metal_high.snt", "hatch_ceiling_1", 0, false);
+	SetEntityActive("crowbar_joint_1", true);
+    RemoveItem("crowbar_1");
+	CompleteQuest("hatchquest", "HatchQuest");
+	AddEntityCollideCallback("crowbar_joint_1", "OpenDoor", "HatchBreakOpen", true, 1);
+	SetEntityActive("carpet_moveable_1", false);
+	SetEntityActive("carpet_moveable_2", true);
+	RemoveUseItemCallback("KeyHatch");
+    }
+	
+    void HatchBreakOpen(string &in asParent, string &in asChild, int alState)
+	{
+	PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+	SetSwingDoorLocked("hatch_ceiling_1", false, true);
+	    SetSwingDoorDisableAutoClose("hatch_ceiling_1", true);
+        SetSwingDoorClosed("hatch_ceiling_1", false, false);
+	PlaySoundAtEntity("break", "joint_break_metal.snt", "hatch_ceiling_1", 0, false);
+	PlaySoundAtEntity("break2", "impact_wood_heavy_high.snt", "hatch_ceiling_1", 0, false);
+	PlaySoundAtEntity("break3", "hit_wood.snt", "hatch_ceiling_1", 0, false);
+	SetEntityActive("crowbar_joint_1", false);
+	SetEntityActive("crowbar_2", true);
+    AddPlayerSanity(25.0f);
+	AddPropImpulse("hatch_ceiling_1", 0, 35, 25, "world");
+	CreateParticleSystemAtEntity("", "ps_hit_metal.ps", "PSarea", false);
+	}
+
+void LeftInHurry(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Level2", "LeftInHurry", 4);
+}
+
+void OpenHatchIfStuck(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("hatch_ceiling_2", true);
+SetEntityActive("hatch_ceiling_1", false);
+}
+
+void GoBackTimer(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("goback", 60, "GoBack");
+}
+
+    void GoBack(string &in asTimer)
+	{
+	AddTimer("gobackmessage", 3, "GoBackMessage");
+	SetEntityPlayerInteractCallback("DoorExit", "AllowGoBack", false);
+	PlaySoundAtEntity("", "break_stairs.snt", "NoiseArea", 0, false);
+	}
+	
+	void GoBackMessage(string &in asTimer)
+	{
+	SetMessage("Level2", "GoBack", 5);
+	}
+	
+	    void AllowGoBack(string &in asEntity)
+        {
+		ChangeMap("dsc2_outside2.map", "PlayerStartArea_1", "open_door.ogg", "close_door.ogg");
+		}
+		
+//////////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

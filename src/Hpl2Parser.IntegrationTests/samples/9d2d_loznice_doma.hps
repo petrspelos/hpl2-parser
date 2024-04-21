@@ -1,0 +1,103 @@
+void OnStart(){
+SetPlayerCrouching(true);GiveSanityDamage(15.5f, true);SetPlayerSanity(0.1f);AddUseItemCallback("", "KlicHlavnidvere", "DvereHlavnidvere", "OdemknoutHlavnidvere", true);
+SetEntityCallbackFunc("DopisLoznice", "sok");
+AddEntityCollideCallback("Player", "leknuti_bordel", "bordel_sanity_damage", true, 1);
+AddEntityCollideCallback("Player", "VazaBum", "BumVaza", true, 1);	
+AddEntityCollideCallback("Player", "KoukniNaPostel", "ohlednuti_na_postel", true, 1);	
+AddEntityCollideCallback("Player", "Probuzeni", "ProbuzeniScript", true, 1);	
+}
+
+void OdemknoutHlavnidvere(string &in asItem, string &in asEntity)
+{
+     SetLevelDoorLocked("DvereHlavnidvere", false);
+     PlaySoundAtEntity("", "unlock_door", "DvereHlavnidvere", 0, false);
+     RemoveItem("KlicHlavnidvere");
+}
+
+void sok(string &in asEntity, string &in type)
+{
+	GiveSanityDamage(9.0f, true);
+	
+}
+
+void bordel_sanity_damage(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(10.0f, true);
+	PlaySoundAtEntity("", "24_iron_maiden.snt", "Player", 0, false);
+	SetMessage("TheVoice", "Loznice2", 5.0);
+ 	SetPlayerSanity(0.0f);	
+}
+
+void BumVaza(string &in asParent, string &in asChild, int alState)
+{
+
+SetPropHealth("Vaza", 0);}void ohlednuti_na_postel(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 5, "PrestanCivet");
+	StartPlayerLookAt("bed_nice_1", 5, 5, "");
+	SetMessage("TheVoice", "Loznice1", 5.0);
+	
+}
+
+void PrestanCivet(string &in asEntity)
+{
+	StopPlayerLookAt();
+}
+
+void ProbuzeniScript(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+StartPlayerLookAt("Vaza", 1, 1, "");
+FadeOut(0);
+SetPlayerCrouching(true);
+AddTimer("", 5, "OtevriOci1");
+FadePlayerFOVMulTo(-1, 1);
+PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+}
+
+void OtevriOci1(string &in asEntity)
+{
+FadeIn(5);
+AddTimer("", 5, "ZavriOci2");
+PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+}
+
+void ZavriOci2(string &in asEntity)
+{
+FadeOut(5);
+AddTimer("", 5, "OtevriOci3");
+}
+
+void OtevriOci3(string &in asEntity)
+{
+SetPlayerSanity(0);
+FadeIn(5);
+AddTimer("", 5, "ZavriOci4");
+PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+}
+
+void ZavriOci4(string &in asEntity)
+{
+FadeOut(5);
+AddTimer("", 5, "OtevriOci5");
+}
+
+void OtevriOci5(string &in asEntity)
+{
+FadeIn(5);
+SetPlayerSanity(100);
+StopPlayerLookAt();
+SetPlayerActive(true);
+FadePlayerFOVMulTo(1, 1);
+}
+
+void OnEnter()
+{
+	PlayMusic("07_amb.ogg", true, 1, 1, 1, true);
+}
+
+
+void OnLeave()
+{
+	StopMusic(0, 1);
+}

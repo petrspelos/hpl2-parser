@@ -1,0 +1,145 @@
+void OnStart()
+{
+	if(ScriptDebugOn() == true)
+		GiveItem("lantern_1", "Lantern", "lantern", "lantern.tga", 100.0f);
+	//Movements//
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerMoveSpeedMul(0.5f);
+	//Visuals//
+	FadeImageTrailTo(0.7f, 0.5f);
+	//Entity Collide Callbacks//
+	StopMusic(0.0f, 1.0f);
+	AddEntityCollideCallback("Player", "AreaDoorOpen_1", "OpenDoor", true, 0);
+	AddEntityCollideCallback("Player", "AreaDoorOpen_2", "ShutDoorMansion", true, 0);
+	AddEntityCollideCallback("Player", "AreaCandlesOut", "AreaCandlesOut", true, 0);
+	AddEntityCollideCallback("Player", "AreaTeleportPlayer", "TerrifyPlayer", true, 0);
+	//Vars//
+	SetLocalVarInt("scares", 0);
+}	
+
+//Collide Callbacks//
+
+void OpenDoor(string &in asParent, string &in aschild, int alState)
+{
+	FadePlayerFOVMulTo(1.5f,0.2f);
+	
+	AddPropImpulse("mansion_1", 0.0f, 0.0f, -2.0f, "world");
+	
+	SetPlayerMoveSpeedMul(1.0f);
+	
+	SetSwingDoorClosed("mansion_1", false, true);
+	SetSwingDoorDisableAutoClose("mansion_1", true);
+	
+	CreateParticleSystemAtEntity("scare_door_begin", "ps_dust_impact.ps", "AreaDoorDust", true);
+	CreateParticleSystemAtEntity("scare_door_begin", "ps_dust_paper_blow.ps", "AreaBlow", true);
+	
+	PlaySoundAtEntity("scare_hit", "scare_wall_stomp", "Player", 0.0f, false);
+	PlaySoundAtEntity("scare_blow", "general_wind_whirl", "Player", 0.0f, false);
+	
+	GiveSanityDamage(1.0f, true);
+	
+	PlayMusic("01_amb_darkness", true, 1.0f, 0.0f, 1.0f, false);
+	
+	FadePlayerFOVMulTo(1.0f,1.0f);
+}
+
+void ShutDoorMansion(string &in asParent, string &in aschild, int alState)
+{
+	AddPropImpulse("mansion_3", 10.0f, 0.0f, 0.0f, "world");
+	
+	CreateParticleSystemAtEntity("scare_door_begin", "ps_dust_impact.ps", "AreaDoorDust_1", true);
+	
+	GiveSanityDamage(1.0f, true);
+	
+	PlaySoundAtEntity("scare_shut_sound", "lurker_hit_wood", "Player", 0.0f, false);
+}
+
+void AreaCandlesOut(string &in asParent, string &in aschild, int alState)
+{
+	SetLampLit("candlestick_floor_1", false, false);
+	SetLampLit("candlestick02_1", false, false);
+	SetPlayerRunSpeedMul(1.0f);
+	//Sets only the two candle out
+	AddTimer("candles_out", 0.2f, "TimerCandlesOut");
+}
+
+void TerrifyPlayer(string &in asParent, string &in aschild, int alState)
+{
+	PlaySoundAtEntity("player_scare", "react_pant", "Player", 0.0f,  true);
+	
+	FadeOut(1.0f);
+	
+	SetPlayerActive(false);
+	
+	AddTimer("PlayerTeleport", 2.0f, "TelePlayer");
+	
+	SetEntityPlayerInteractCallback( "cabinet_simple_1", "open_door", true);
+}
+
+void ShutDoor(string &in asParent, string &in aschild, int alState)
+{
+	SetSwingDoorClosed("prison_1", true, true);
+	SetSwingDoorLocked("prison_1", true, true);
+}
+
+//Interact Callbacks//
+void open_door(string &in asEntity)
+{
+	GiveSanityDamage(5.0f, true);
+
+	for(int i=1; i<=10; ++i)	PlaySoundAtEntity("player_react_door", "lurker_hit_wood", "Player", 0.0f, false); 
+	PlaySoundAtEntity("player_react_scare", "react_scare", "Player", 0.0f, false);
+	PlaySoundAtEntity("amb_scare", "10_event_coming", "Player", 0.0f, false);
+	
+	SetSwingDoorLocked(asEntity, false, false);
+	SetSwingDoorClosed(asEntity, false, false);
+	SetSwingDoorDisableAutoClose("mansion_1", true);
+	
+	AddPropImpulse(asEntity, 10.0f, 0.0f, 0.0f, "world");
+	
+	CreateParticleSystemAtEntity("cabinet_scare_smoke", "ps_dust_impact.ps", "AreaCabinetSmoke", false);
+	
+	FadePlayerFOVMulTo(2.0f, 0.5f);
+	AddTimer("reset_FOV", 0.3f, "ResetFOV");
+	
+	AddEntityCollideCallback("Player", "AreaShutDoor", "ShutDoor", true, 0);
+	
+	AddLocalVarInt("scares", 1);
+	
+	AddTimer("checkfortwoscares", 0.1f, "unlockdoor");
+}
+
+//Timers//
+void TimerCandlesOut(string &in asTimer)
+{
+	GiveSanityDamage(10, true);
+	AddLocalVarInt("scares", 1);
+	AddTimer("checkfortwoscares", 0.1f, "unlockdoor");
+}
+
+void TelePlayer(string &in asTimer)
+{
+	if(asTimer == "PlayerTeleport")
+	{
+		PlayGuiSound("react_pant3", 1.0f);
+		TeleportPlayer("PlayerStartArea_2");
+		FadeIn(2.0f);
+		AddTimer("setplayeractive", 2.0f, "TelePlayer");
+	}
+	else
+		SetPlayerActive(true);
+}
+
+void ResetFOV(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1.0f, 0.5f);
+}
+
+void unlockdoor(string &in asTimer)
+{
+	if(GetLocalVarInt("scares") == 2)
+	{
+		SetLevelDoorLocked("level_wood_1", false);
+		AddQuest("p52_unlock", "52");
+	}
+}

@@ -1,0 +1,388 @@
+////////////////////////////
+//Run when enteing map
+void OnStart()
+{ 
+AddEntityCollideCallback("Player", "AreaRocks", "Rocks", true, 1);
+AddEntityCollideCallback("Player", "AreaPlank", "Plank", true, 1);
+AddEntityCollideCallback("Player", "AreaCave", "Cavein", true, 1);
+AddEntityCollideCallback("Player", "AreaGhost", "Ghost", true, 1);
+AddEntityCollideCallback("Player", "AreaGhost2", "Hallway", true, 1);
+AddEntityCollideCallback("ghost2", "AreaGhost3", "Hallway2", true, 1);
+AddEntityCollideCallback("ghost3", "AreaGhost4", "Hallway3", true, 1);
+AddEntityCollideCallback("Player", "AreaPanic", "Panic", true, 1);
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaGround2", "CollideAreaGround2", false, 1);
+AddEntityCollideCallback("Player", "AreaGround3", "CollideAreaGround3", false, 1);
+AddEntityCollideCallback("Player", "AreaRock", "CollideAreaRock", false, 1);
+AddEntityCollideCallback("Player", "AreaRock2", "CollideAreaRock", false, 1);
+AddEntityCollideCallback("Player", "AreaRock3", "CollideAreaRock", false, 1);
+AddEntityCollideCallback("Player", "AreaRock4", "CollideAreaRock", false, 1);
+AddEntityCollideCallback("Player", "AreaEnd", "LevelEnd", true, 1);
+AddEntityCollideCallback("Player", "AreaMorality", "Morality", true, 1);
+AddEntityCollideCallback("Player","LanternOn","LanternOn",false,1);
+AddEntityCollideCallback("Player","LanternOff","LanternOff",false,1);
+SetEntityInteractionDisabled("grunt", true);
+CheckPoint ("", "", "DeathSettings", "DeathHints", "Fall");
+AddTimer("cavesounds", 50, "cavesounds");
+AddTimer("wind", 8, "wind");
+AddTimer("talk", 4, "talk");
+PlayMusic("Mines", true, 1.0f, 4.0f, 0, true);
+SetMapDisplayNameEntry("HauntedMines");
+SetPlayerJumpDisabled(true);
+SetPlayerRunSpeedMul(0.0f);
+SetLanternDisabled(false);
+AutoSave();
+}
+
+void talk(string &in asTimer)
+{
+AddEffectVoice("almamine1.ogg", "", "Voice", "00_Almamine1", false, "", 0, 0 );
+AddTimer("talk2", 1, "talk2");
+}
+
+void talk2(string &in asTimer)
+{
+AddEffectVoice("leemine1.ogg", "", "Voice", "00_Leemine1", false, "", 0, 0 );
+AddTimer("talk3", 1, "talk3");
+}
+
+void talk3(string &in asTimer)
+{
+AddEffectVoice("almamine2.ogg", "", "Voice", "00_Almamine2", false, "", 0, 0 );
+AddTimer("talk4", 1, "talk4");
+}
+
+void talk4(string &in asTimer)
+{
+AddEffectVoice("leemine2.ogg", "", "Voice", "00_Leemine2", false, "", 0, 0 );
+AddTimer("talk5", 1, "talk5");
+}
+
+void Plank(string &in asParent, string &in asChild, int alState)
+{	
+StartPlayerLookAt("Look", 5, 50, "");
+SetPlayerActive(false);
+AddTimer("plank2", 2, "plank2");
+AddEffectVoice("leemine3.ogg", "", "Voice", "00_Leemine3", false, "", 0, 0 );
+}
+
+void plank2(string &in asTimer)
+{
+SetPlayerCrouching(true);
+SetEntityActive("alma", true);
+SetEntityActive("block", true);
+AddTimer("plank3", 2, "plank3");
+}
+
+void plank3(string &in asTimer)
+{
+SetPlayerCrouching(false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.0f);
+}
+
+void Cavein(string &in asParent, string &in asChild, int alState)
+{	
+StartPlayerLookAt("Look2", 5, 50, "");
+SetPlayerActive(false);
+AddTimer("cavein2", 2, "cavein2");
+SetEntityActive("rock", true);
+SetEntityActive("rock2", true);
+SetEntityActive("rock3", true);
+SetEntityActive("rock4", true);
+PlaySoundAtEntity("","explosion_rock_large.snt","rock", 0,false);
+}
+
+void cavein2(string &in asTimer)
+{
+AddEffectVoice("leemine4.ogg", "", "Voice", "00_Leemine4", false, "", 0, 0 );
+AddTimer("cavein3", 1, "cavein3");
+}
+
+void cavein3(string &in asTimer)
+{
+AddEffectVoice("almamine3.ogg", "", "Voice", "00_Almamine3", false, "", 0, 0 );
+AddTimer("cavein4", 4, "cavein4");
+}
+
+void cavein4(string &in asTimer)
+{
+SetPlayerActive(true);
+SetSanityDrainDisabled(false);
+StopPlayerLookAt();
+}
+
+void Ghost(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("ghost", true);
+AddEnemyPatrolNode("ghost","node_ghost",0,"");
+AddTimer("ghost2", 2, "ghost2");
+}
+
+void ghost2(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_cloud_thing01", "ghost", false);
+FadeEnemyToSmoke("ghost", false);
+}
+
+void Hallway(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("ghost2", true);
+AddEnemyPatrolNode("ghost2","node_ghost2",0,"");
+SetPlayerRunSpeedMul(0.1f);
+SetPlayerMoveSpeedMul(0.2f);
+}
+
+void Hallway2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("ghost3", true);
+SetEntityActive("ghost2", false);
+AddEnemyPatrolNode("ghost3","node_ghost2",0,"");
+}
+
+void Hallway3(string &in asParent, string &in asChild, int alState)
+{	
+FadeEnemyToSmoke("ghost3", false);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+}
+
+void Panic(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("cavein", true);
+SetEntityActive("cavein2", true);
+SetEntityActive("cavein3", true);
+SetEntityActive("cavein4", true);
+StartScreenShake(0.4f,0.4f, 0.4f,8.5f);
+PlaySoundAtEntity("","explosion_rock_large.snt", "Player", 0, true);
+CreateParticleSystemAtEntity("", "ps_break_cavein", "cavein", false);
+CheckPoint ("Checkpoint5", "PlayerStartArea_4", "DeathSettings2", "DeathHints", "Ch4run");
+StartPlayerLookAt("AreaGhost3", 5, 50, "");
+AddTimer("panic2", 3, "panic2");
+SetPlayerActive(false);
+SetLanternDisabled(false);
+}
+
+void panic2(string &in asTimer)
+{
+StartPlayerLookAt("lamp", 5, 50, "");
+SetLampLit("lamp", false, true);
+PlaySoundAtEntity("","general_wind_whirl.snt", "lamp", 0, true);
+CreateParticleSystemAtEntity("", "ps_dust_whirl", "lamp", false);
+AddTimer("panic3", 3, "panic3");
+SetEntityActive("enemie", true);
+AddEnemyPatrolNode("enemie","node_1",0,"");
+AddEnemyPatrolNode("enemie","node_2",0,"");
+AddEnemyPatrolNode("enemie","node_3",0,"");
+}
+
+void panic3(string &in asTimer)
+{
+StartPlayerLookAt("AreaLook", 5, 50, "");
+AddTimer("panic4", 2, "panic4");
+AddEffectVoice("harrymines.ogg", "", "Voice", "00_Harrymines", false, "", 0, 0 );
+AddTimer("panictimer", 1, "panictimer");
+}
+
+void panic4(string &in asTimer)
+{
+StartPlayerLookAt("AreaLook2", 5, 50, "");
+SetPlayerActive(true);
+AddTimer("panic5", 1, "panic5");
+}
+
+void panic5(string &in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerRunSpeedMul(1.2f);
+SetMessage("Messages", "ch5run", 4);
+}
+
+void panictimer(string &in asTimer)
+{
+ShowEnemyPlayerPosition("enemie");
+AddTimer("panictimer", 1, "panictimer");
+}
+
+void panictimer2(string &in asTimer)
+{
+ShowEnemyPlayerPosition("enemie2");
+AddTimer("panictimer2", 1, "panictimer2");
+}
+
+//---- Etc ----//
+
+void LanternOn(string &in asParent, string &in asChild, int alState)
+{
+SetLanternDisabled(false);
+}
+
+void LanternOff(string &in asParent, string &in asChild, int alState)
+{
+SetLanternDisabled(true);
+}
+
+void Morality(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+void Rocks(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("stone", true);
+SetEntityActive("stone2", true);
+SetEntityActive("stone3", true);
+SetEntityActive("stone4", true);
+SetEntityActive("stone5", true);
+SetEntityActive("stone6", true);
+PlaySoundAtEntity("","04_rock.snt", "Player", 0, false);
+}
+
+void spiders(string &in asEntity)
+{
+SetEntityActive("spider_6", true);
+SetEntityActive("spider_7", true);
+SetEntityActive("spider_8", true);
+SetEntityActive("spider_9", true);
+SetEntityActive("spider_10", true);
+SetEntityActive("spider_11", true);
+StartPlayerLookAt("spider_6", 5, 50, "");
+AddTimer("spiders2", 1, "spiders2");
+}
+
+void spiders2(string &in asTimer)
+{
+StopPlayerLookAt();
+GiveSanityDamage(10, true);
+}
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+void cavesounds(string &in asTimer)
+{
+AddTimer("cavesounds", 50, "cavesounds");
+PlaySoundAtEntity("","04_rock.snt", "Player", 0, false);
+StartScreenShake(0.03f,0.35f, 0.03f,4.5f);
+}
+
+void wind(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_dust_whirl", "AreaWind", false);
+CreateParticleSystemAtEntity("", "ps_dust_whirl", "AreaWind2", false);
+AddTimer("wind", 55, "wind");
+}
+
+void LevelEnd(string &in asParent, string &in asChild, int alState)
+{	
+FadeOut(2.0f);
+ChangeMap("Darkwarehouse.map", "PlayerStartArea_1", "","");
+}
+
+//---- Collide ground ----//
+//If player hits the ground too hard
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint2", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+}
+
+void CollideAreaGround2(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint", "PlayerStartArea_2", "DeathSettings", "DeathHints", "Fall");
+}
+
+void CollideAreaGround3(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+}
+
+void CollideAreaRock(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+        GivePlayerDamage(0, "BloodSplat", true, true);
+        GivePlayerDamage(0, "BloodSplat", true, true);
+        GivePlayerDamage(0, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint2", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+        MovePlayerHeadPos(0.0f, -1.1f, 0.0f, 1.0f, 0.5f);
+        CreateParticleSystemAtEntity("", "blood", "Player", false);
+        CreateParticleSystemAtEntity("", "ps_slime_attack_normal", "Player", false);	
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+MovePlayerHeadPos(0.0, 0, 0, 1.0f, 0.5f);
+PlayMusic("Hauntedmines", true, 1.0f, 4.0f, 0, true);
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+SetEntityActive("enemie2", true);
+AddTimer("panictimer2", 3, "panictimer2");
+SetPlayerRunSpeedMul(1.2f);
+CheckPoint ("Checkpoint6", "PlayerStartArea_4", "DeathSettings3", "DeathHints", "Ch4run");
+}
+
+//If the player dies twice, make the event a little easier to survive
+
+void DeathSettings3(string &in asName, int alCount)
+{
+SetPlayerHealth(80);
+SetPlayerSanity(80);
+SetEntityActive("enemie2", true);
+AddTimer("panictimer2", 3, "panictimer2");
+SetPlayerRunSpeedMul(1.4f);
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+SetPlayerJumpDisabled(true);
+SetPlayerRunSpeedMul(0.0f);
+SetLanternDisabled(false);  
+PlayMusic("Mines", true, 1.0f, 4.0f, 0, true);        
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{ 
+SetupLoadScreen("loadscreentext", "...", 1, "load_mine.png");
+}
+
+
+

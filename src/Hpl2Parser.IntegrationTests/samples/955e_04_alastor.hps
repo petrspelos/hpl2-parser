@@ -1,0 +1,94 @@
+void OnStart()
+{
+	SetEntityPlayerInteractCallback("seemslikepress", "seemslikepress", true);
+	SetEntityPlayerInteractCallback("orbnote", "orbnote", true);
+	AddEntityCollideCallback("sledge", "seemslikepress", "placesledge", true, 1);
+	AddUseItemCallback("", "key_tomb_rusty_1", "chest_small_1", "keytochest", true);
+	AddUseItemCallback("", "orbpiece_indigo_2", "orb_pedestal_1", "placeorbped", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("06_amb", true, 0.6f, 4.0f, 0, true);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "load04", 1, "");
+}
+
+///////////////////////////////////
+////////////PUZZEL/STUF////////////
+///////////////////////////////////
+
+void seemslikepress(string &in asEntity)
+{
+	SetMessage("Messages", "pressplate", 0);
+	AddQuest("mem3", "memento3");
+	AutoSave();
+}
+
+void placesledge(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("sledge", false);
+	SetEntityActive("placedsledge", true);
+	SetEntityActive("dooropen", true);
+	SetEntityActive("doorshut", false);
+	SetEntityActive("doorblock", false);
+	PlaySoundAtEntity("placesledge", "puzzle_place_jar.snt", "Player", 0.0f, false);
+	PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+	CompleteQuest("mem3", "memento3");
+	AutoSave();
+}
+
+///////////////////////////////////
+////////////KEY/STUFFSS////////////
+///////////////////////////////////
+
+void keytochest(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("chest_small_1", 0, false);
+	SetLeverStuckState("chest_small_1", 0, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+	SetEntityActive("stone_hammer_1", true);
+}
+
+///////////////////////////////////
+////////////ORB/PLACE//////////////
+///////////////////////////////////
+
+void placeorbped(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("orb_1_of_7", true);
+	AddTimer("fadeouttras", 2, "fadeouttras");
+	StartScreenShake(0.01, 2, 1, 2);
+	PlaySoundAtEntity("general_rock_rumble_nolooper", "general_rock_rumble_nolooper.snt", "Player", 2.0f, false);
+	PlayMusic("03_event_books", false, 0.6f, 4.0f, 1, true);
+	RemoveItem(asItem);
+}
+
+void fadeouttras(string &in asTimer)
+{
+    FadeOut(2);  
+	AddTimer("teleport", 2.1f, "teleport");
+	SetupLoadScreen("LoadingScreen", "load04", 0, "");
+	PlaySoundAtEntity("reacttoorb", "react_breath.snt", "Player", 0.0f, false);
+	FadePlayerRollTo( 40, 40, 40);
+    SetPlayerCrouching(true); 
+	PlaySoundAtEntity("falltoflo", "player_bodyfall.snt", "Player", 0.0f, false);
+	SetLanternActive(false, false);
+}
+
+void teleport(string &in asTimer)
+{
+	ChangeMap("07_thelair.map", "PlayerStartArea_1", "", "");
+	StopMusic(0.5f, 0);
+}
+
+void orbnote(string &in asEntity)
+{
+	AddQuest("mem6", "memento6");
+}

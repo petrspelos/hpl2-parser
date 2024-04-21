@@ -1,0 +1,216 @@
+void OnStart()
+{
+	StopMusic(1.5f, 0);
+	CompleteQuest("Memento0", "M0");
+	SetMapDisplayNameEntry("InnerSanctum");
+	PlayMusic("27_puzzle_passage.ogg", false, 0.9f, 0.5f, 0, false);
+	SetInDarknessEffectsActive(false);
+	
+	GiveItemFromFile("", "lantern.ent");
+	
+	SetPlayerActive(false);
+	AddEntityCollideCallback("grunt", "AreaEndMonster", "EndMonster", true, 1);
+	AddEntityCollideCallback("brute", "AreaEndMonster", "EndMonster", true, 1);
+	AddEntityCollideCallback("Player", "AreaFinishMap", "BeginCredits", true, 1);
+	AddEntityCollideCallback("Player", "AreaGate", "OpenGate", true, 1);
+	AddEntityCollideCallback("Player", "AreaEndingMono", "StartMono", true, 1);
+	AddEntityCollideCallback("Player", "AreaSpawnSlime", "SpawnSlime", true, 1);
+	AddEntityCollideCallback("Player", "AreaEventMonster", "SpawnEventMonster", true, 1);
+	ClearSavedMaps();
+	FadeOut(0);
+	FadeIn(3.5f);
+	StartPlayerLookAt("pillar1", 1.5f, 1.5f, "");
+	AddTimer("", 3.25f, "LookPillar2");
+	PlayGuiSound("24_rock", 0.9f);
+}
+
+void OpenGate(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	FadeOut(1.5f);
+	AddTimer("", 2, "TimerGate");
+}
+
+void TimerGate(string &in asTimer)
+{
+	PlayGuiSound("joint_metal_gate", 0.8f);
+	SetEntityActive("gateopen", true);
+	SetEntityActive("gateclosed", false);
+	SetPlayerActive(true);
+	FadeIn(1.5f);
+}
+
+void BeginCredits(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	PlayGuiSound("00_faint", 0.8f);
+	FadeOut(4.5f);
+	AddTimer("", 5, "RollCredits");
+}
+
+void RollCredits(string &in asTimer)
+{
+	StopAllEffectVoices(5.5f);
+	StopMusic(5.5f, 10);
+	StartCredits("MusicTimeCredits.ogg", false, "LoadingScreen", "Credits", -1);	
+}
+
+void SpawnEventMonster(string &in asParent, string &in asChild, int alState)
+{
+	FadePlayerRollTo(-12, 1, 1);
+	FadePlayerAspectMulTo(1.25f, 0.1f);
+	
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "slime1", false);
+	SetPropActiveAndFade("slime1", true, 2.5f);
+	StartScreenShake(0.05f, 3.5f, 2, 2);
+	PlaySoundAtEntity("", "guardian_distant", "Player", 0.1f, false);
+	SetEnemySanityDecreaseActive("brute", false);
+	SetEnemySanityDecreaseActive("grunt", false);
+	
+	SetEntityActive("brute", true);
+	SetEntityActive("grunt", true);
+	
+	AddEnemyPatrolNode("grunt", "GNode_1", 0.001f, "");
+	AddEnemyPatrolNode("grunt", "GNode_2", 0.001f, "");
+	AddEnemyPatrolNode("grunt", "GNode_3", 0.001f, "");
+	AddEnemyPatrolNode("grunt", "GNode_4", 0.001f, "");
+	AddEnemyPatrolNode("brute", "GNode_2", 0.001f, "");
+	AddEnemyPatrolNode("brute", "GNode_3", 0.001f, "");
+	AddEnemyPatrolNode("brute", "BNode", 0.001f, "");
+	AddEnemyPatrolNode("brute", "GNode_4", 0.001f, "");
+}
+
+void SpawnSlime(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.05f, 3.5f, 2, 2);
+	PlaySoundAtEntity("", "guardian_ontop", "Player", 0.1f, false);
+	SetPropActiveAndFade("slime2", true, 2.5f);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "slime2", false);
+}
+
+void EndMonster(string &in asParent, string &in asChild, int alState)
+{
+	FadePlayerAspectMulTo(1, 0.1f);
+	FadePlayerRollTo(0, 1, 1);
+		
+	AddEffectVoice("CH02L20_Alexander_01", "", "Voice", "CH02L20_Alexander_01", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Alexander_ArriveNoHead_01", "", "Voice", "CH03L29_Alexander_ArriveNoHead_01", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Alexander_ArriveNoHead_02", "", "Voice", "CH03L29_Alexander_ArriveNoHead_02", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Alexander_ArriveNoHead_03", "", "Voice", "CH03L29_Alexander_ArriveNoHead_03", false, "", 0,0 );
+	
+	StartScreenShake(0.05f, 3.5f, 2, 2);
+	SetPropActiveAndFade("slimesanctum", true, 2.5f);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "slimesanctum", false);
+	PlaySoundAtEntity("", "guardian_activated", "Player", 0.1f, false);
+	FadeEnemyToSmoke("brute", true);
+	FadeEnemyToSmoke("grunt", true);
+}
+
+void TouchOrb(string &in asEntity)
+{
+	ShowPlayerCrossHairIcons(false);
+	DestroyParticleSystem("orblight");
+	CreateParticleSystemAtEntity("","ps_orb_light_fade.ps", "orb", false);
+	StartPlayerLookAt("AreaOrbEffect", 0.5f, 0.5f, "");
+	SetPlayerActive(false);
+	SetPropActiveAndFade("orb", false, 1.5f);
+	SetPropActiveAndFade("orb_1", true, 1.5f);
+	SetPropActiveAndFade("orb_2", true, 1.5f);
+	SetPropActiveAndFade("orb_3", true, 1.5f);
+	PlayGuiSound("03_orb", 1);
+	PlaySoundAtEntity("", "guardian_ontop", "Player", 0.1f, false);
+	StartScreenShake(0.05f, 3.5f, 2, 2);
+	AddTimer("", 8.25f, "TimerEnding");
+	AddEffectVoice("CH03L29_Alexander_Interrupt02_01", "", "Voice", "CH03L29_Alexander_Interrupt02_01", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Alexander_Interrupt03_01", "", "Voice", "CH03L29_Alexander_Interrupt03_01", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Alexander_Interrupt03_02", "", "Voice", "CH03L29_Alexander_Interrupt03_02", false, "", 0,0 );
+}
+
+void TimerEnding(string &in asTimer)
+{
+	PlayGuiSound("03_in_a_bottle", 0.9f);
+	PlaySoundAtEntity("", "break_stairs", "orb", 0.1f, false);
+	StartPlayerLookAt("orb", 0.5f, 0.5f, "");
+	SetLanternDisabled(true);
+	SetLanternActive(false, true);
+	AddTimer("", 4.5f, "StartEnding");
+	FadeOut(3.5f);
+}
+
+void StartEnding(string &in asTimer)
+{
+	StopPlayerLookAt();
+	PlaySoundAtEntity("", "03_rock_move", "Player", 0.1f, false);
+	SetPlayerRunSpeedMul(0);
+	FadeIn(3.5f);
+	SetPlayerActive(true);
+	TeleportPlayer("EndSpawn");
+	AddEffectVoice("CH03L29_Ending_Daniel_01", "", "Voice", "CH03L29_Ending_Daniel_01", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Ending_Daniel_02", "", "Voice", "CH03L29_Ending_Daniel_02", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Ending_Daniel_03", "", "Voice", "CH03L29_Ending_Daniel_03", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Ending_Daniel_04", "", "Voice", "CH03L29_Ending_Daniel_04", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Ending_Daniel_05", "", "Voice", "CH03L29_Ending_Daniel_05", false, "", 0,0 );
+	AddEffectVoice("CH03L29_Ending_Daniel_06", "", "Voice", "CH03L29_Ending_Daniel_06", false, "", 0,0 );
+}
+
+void LookPillar2(string &in asTimer)
+{
+	AddTimer("", 3.75f, "EndLookPillar");
+	StartPlayerLookAt("pillar2", 1.5f, 1.5f, "");
+}
+
+void EndLookPillar(string &in asTimer)
+{
+	AddTimer("", 3.5f, "EndLookBridge");
+	StartPlayerLookAt("bridge", 1.5f, 1.5f, "");
+	SetLanternActive(true, true);
+	SetPlayerActive(true);
+}
+
+void EndLookBridge(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void StartMono(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("slimefirst", true, 2.5f);
+	FadePlayerRollTo(12, 1, 1);
+	SetPlayerLampOil(100);
+	StartScreenShake(0.05f, 3.5f, 2, 2);
+	PlayGuiSound("guardian_activated", 0.8f);
+	FadeOut(1.5f);
+	StopMusic(1.5f, 0);
+	SetPlayerMoveSpeedMul(0.4f);
+	SetPlayerRunSpeedMul(0.15f);
+	SetPlayerLookSpeedMul(0.4f);
+	SetPlayerJumpDisabled(true);
+	SetInventoryDisabled(true);
+	AddTimer("", 1.5f, "TimerTime");
+}
+
+void TimerTime(string &in asTimer)
+{
+	FadePlayerAspectMulTo(0.75f, 0.1f);
+	FadeIn(2.5f);
+	FadeImageTrailTo(0.5f, 0.5f);
+	
+	FadeRadialBlurTo(0.25f, 0.5f);
+	SetRadialBlurStartDist(0.15f);
+	FadeSepiaColorTo(0.5f, 0.5f);
+	AddTimer("", 0.5f, "TimerMono");
+	PlayMusic("MusicTime2.ogg", true, 1, 0, 10, false);
+}
+
+void TimerMono(string &in asTimer)
+{
+	AddEffectVoice("CH02L24_Alexander_01", "", "Voice", "CH02L24_Alexander_01", false, "", 0,0 );
+	AddEffectVoice("CH02L24_Alexander_02", "", "Voice", "CH02L24_Alexander_02", false, "", 0,0 );
+	AddEffectVoice("CH02L24_Alexander_03", "", "Voice", "CH02L24_Alexander_03", false, "", 0,0 );
+	AddEffectVoice("CH02L24_Alexander_04", "", "Voice", "CH02L24_Alexander_04", false, "", 0,0 );
+}
+
+void OnLeave()
+{
+
+}

@@ -1,0 +1,227 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+{
+	SetEnemySanityDecreaseActive("demon", false);
+	SetLightVisible("PointLight_6", false);
+	SetLightVisible("PointLight_4", false);
+	AddEntityCollideCallback("Player", "Forest", "ForestAmbiencePls", true, 1);
+	AddEntityCollideCallback("Player", "lookatwell", "beautiful", true, 1);
+	AddEntityCollideCallback("demon", "leldead", "ripdemon", true, 1);
+	AddEntityCollideCallback("Player", "message", "itsdone", true, 1);
+	AddEntityCollideCallback("Player", "knockout", "PassOut", true, 1);
+	PlayMusic("Silence.ogg", true, 2.0f, 0, 22, false);
+	CheckPoint("", "PlayerStartArea_1", "EndGame", "DeathHints", "NoText");
+}
+
+void ForestAmbiencePls(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("RainyForest.ogg", true, 2, 4, 23, true);
+}
+
+void beautiful(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	StartPlayerLookAt("wellarea", 1.0f, 1.0f, "");
+	AddTimer("say", 1, "say");
+	AddTimer("look", 4, "look");
+	AddEntityCollideCallback("Player", "ohno", "notagain", true, 1);
+	AddTimer("stop", 6, "stop");
+}
+
+void stop(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+
+void look(string &in asTimer)
+{
+	StartPlayerLookAt("wellarea_1", 2.5f, 2.6f, "");
+}
+
+void say(string &in asTimer)
+{
+	SetMessage("ScreenText", "beautiful", 4);
+}
+
+
+////////////////////////////////////////////////////////////////////////SCRIPTFOREVENT
+
+void notagain(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	PlaySoundAtEntity("","door_large_castle_open","ScriptArea_8", 0, false);
+	SetEntityActive("castle_gate_arched01_1", false);
+	SetEntityActive("castle_gate_arched01_2", true);
+	AddTimer("lookat", 1, "lookat");
+	CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ScriptArea_2", false);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl_large.ps", "ScriptArea_2", false);
+}
+
+void lookat(string &in asTimer)
+{
+	StartPlayerLookAt("ScriptArea_1", 2.6f, 2.6f, "");
+	AddTimer("roar", 1.6f, "roar");
+	AddTimer("closing", 3.0f, "closing");
+	AddTimer("gate", 2.5f, "gate");
+	AddTimer("back", 5.0f, "back");
+	AddTimer("active", 6.0f, "active");
+}
+
+void roar(string &in asTimer)
+{
+	AddTimer("demonspawn", 2, "demonspawn");
+	SetLightVisible("PointLight_6", true);
+	SetLightVisible("PointLight_4", true);
+	PlayMusic("DemonRoar.ogg", false, 3, 0, 22, false);
+	StartScreenShake(0.21f, 0.21f, 0.2f, 3.0f);
+	GiveSanityDamage(16, true);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+	CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "ScriptArea_2", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "ScriptArea_3", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "ScriptArea_2", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "ScriptArea_3", false);
+	CreateParticleSystemAtEntity("", "ps_orb_room_portal_open.ps", "ScriptArea_7", false);
+}
+
+void demonspawn(string &in asTimer)
+{
+	SetPropActiveAndFade("demon", true, 1);
+	SetEntityActive("demon", true);
+}
+void closing(string &in asTimer)
+{
+	StartPlayerLookAt("ScriptArea_4", 4.2f, 4.2f, "");
+	SetMessage("ScreenText", "nonopls", 3.6f);
+}
+
+void gate(string &in asTimer)
+{
+	SetMoveObjectState("brokengate", -0.36f);
+	SetEntityActive("brokengate", true);
+	
+}
+
+void back(string &in asTimer)
+{
+	StartPlayerLookAt("ScriptArea_1", 2.6f, 2.6f, "");
+	PlayMusic("Fight.ogg", true, 2.0f, 0, 22, false);
+	SetPlayerMoveSpeedMul(0.16f);
+}
+
+void active(string &in asTimer)
+{
+	SetPlayerActive(true);
+	ShowEnemyPlayerPosition("demon");
+	StopPlayerLookAt();
+}
+
+void ripdemon(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	SetEntityActive("demon", false);
+	SetEntityActive("rocks", true);
+	SetEntityActive("rocks_1", true);
+	StartScreenShake(0.6f, 0.6f, 0.2f, 4.0f);
+	AddPlayerBodyForce(-24000, 0, 0, false);
+	PlayMusic("Silence.ogg", true, 2.0f, 0, 22, false);
+	PlaySoundAtEntity("","explosion_rock_large","Player", 0, false);
+	StartPlayerLookAt("ScriptArea_9", 3.6f, 3.6f, "");
+	AddTimer("fade", 0.69f, "fade");
+	AddTimer("wakeup", 6.69f, "wakeup");
+	AddTimer("wat", 10, "wat");
+}
+
+void fade(string &in asTimer)
+{
+	FadeOut(0.69f);
+	SetPlayerCrouching(true);
+}
+
+void wakeup(string &in asTimer)
+{
+	FadeIn(0.36f);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+	SetEntityActive("ScriptArea_10", true);
+}
+
+void wat(string &in asTimer)
+{
+	StartPlayerLookAt("ScriptArea_1", 1.6f, 1.6f, "");
+	SetPlayerCrouching(false);
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(0.47f);
+	AddTimer("nolook", 1.6f, "nolook");
+}
+
+void nolook(string &in asTimer)
+{
+	FadeIn(0.36f);
+	StopPlayerLookAt();
+	SetPlayerJumpDisabled(true);
+}
+
+void PassOut(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.01f, false);
+	PlaySoundAtEntity("", "player_bodyfall.snt", "Player", 0.01f, false);
+	SetPlayerCrouching(true);
+	MovePlayerHeadPos(-0.2f, -1.0f, 0, 5, 0.3f);
+	StartPlayerLookAt("endlook", 1.6f, 1.6f, "");
+	FadeOut(3.6f);
+	AddTimer("ripstory", 6.0f, "ripstory");
+	AddTimer("ripstory2", 10.0f, "ripstory2");
+	SetPlayerActive(false);
+}
+
+void ripstory(string &in asTimer)
+{
+	FadeGlobalSoundVolume(0, 3);
+	StopMusic(3, 0);
+}
+
+void ripstory2(string &in asTimer)
+{
+	StartCredits("OptionalEnding.ogg", false, "Credits", "Ending", 5);
+}
+
+void cango(string &in asEntity)
+{
+	FadeOut(0.69f);
+	AddTimer("sound", 2.0f, "sound");
+	AddTimer("nice", 4.0f, "nice");
+	SetPlayerActive(false);
+}
+
+void sound(string &in asEntity)
+{
+	PlaySoundAtEntity("", "player_jump.snt", "Player", 0.01f, false);
+	TeleportPlayer("PlayerStartArea_3");
+}
+
+void nice(string &in asEntity)
+{
+	FadeIn(1);
+	SetPlayerActive(true);
+}
+
+void itsdone(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("ScreenText", "imout", 4);
+	GiveSanityBoostSmall();
+}
+
+
+void EndGame(string &in asName, int alCount)
+{
+	StartCredits("OptionalEnding.ogg", false, "Credits", "Ending", 5);
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+ 
+}
+

@@ -1,0 +1,820 @@
+
+
+//"JulieInTouristCentre" - GlobalVarInt which is 1 if she should appear in the centre
+// "Insight" - GlobalVarInt which determines how crazy the world looks
+
+void OnStart()
+{
+	ClearSavedMaps();
+	SetUpKnockingAndLanterns();	
+	SetEntityPlayerLookAtCallback("BlockArea", "DontLeave", true); //Blocks the initial entrance to EC if the player looks at it
+	
+	//item callbacks
+	AddUseItemCallback("", "Key2", "ApartmentsDoor", "OpenLevelDoor",true);
+	AddUseItemCallback("", "Vase_item", "SecondHubDoor", "OpenLevelDoor",true);
+	
+	AddUseItemCallback("a", "LockPick", "JulieInteractArea", "GiveLockPick", true);
+	AddUseItemCallback("b", "LockPick", "JulieInteractArea2", "GiveLockPick", true);
+	AddUseItemCallback("c", "LockPick", "GiveLPArea", "GiveLockPick", true);
+	for(int i =0; i < 20; i++) AddUseItemCallback("idk", "LockPick", "DummyDoor_"+i, "CantPickLocks", false);
+	
+	//collide callbacks
+	AddEntityCollideCallback("Player", "AreaAddLanternHint", "ActivateDoorMemo", true, 1);
+	AddEntityCollideCallback("Player", "AreaOpenTrash", "OpenTrashChute", true, 1); //Opens trash chute door when spawned in there
+	AddEntityCollideCallback("Player", "Area_LeaveDialogue", "LeaveDialogue", true, 1);  //"leave dialogue" callback
+	AddEntityCollideCallback("Player", "Area_LockBDialogue", "PostOpenDialogue", true, 1); //lockpick B dialogue
+	
+	//Julie collide callbacks.
+	/*A list of throwable entities in the tourist centre:*/
+	string[] Throwables = {"Player", "office_pen_4", "office_pen_3", "office_pen_2", 
+	"office_pen_1", "book01_4", "plastic_cup_4", "plastic_cup_5", "mug_coffee_1", 
+	"storage_box2_1", "mug_coffee_6", "mug_coffee_5", "mug_coffee_3", "mug_coffee_4",
+	"office_pen_8"}; 
+	
+	for(int i = 0; i <= Throwables.length() ; i++)
+	{
+		AddEntityCollideCallback(Throwables[i], "Julie_Walk", "PlayOuchVoice", false, 1);
+		AddEntityCollideCallback(Throwables[i], "JulieInteractArea2", "PlayOuchVoice", false, 1);
+	}
+}
+
+void OnEnter()
+{
+	if(ScriptDebugOn()) 
+	{
+		AddDebugMessage("----Script debug is on!----", false);
+		SetGlobalVarInt("JulieInTouristCentre", 1);
+
+		GiveItemFromFile("LockPick", "lockpick_dkf.ent");
+		//GiveItemFromFile("Vase_item", "lockpick_dkf.ent");
+		
+		//SetPlayerSanity(52.0f);
+		//SetGlobalVarInt("Insight", 1);
+		//SetWeatherEvening("BoxLight_1");
+	}	
+	
+	//General set-ups
+	StartPlayerSpawnPS("null.sps");
+	SaveGameUtil();
+	StartPlayerSpawnPS("dkf_fog.sps");
+	SetUpInsanity();
+	DeactivateAllJulieEntities(); //just to make sure nothing spawns when she isn't supposed to be there
+	
+	AddEntityCollideCallback("Player", "Area_JulieLook", "SaveGame", true, -1); //saves when player leaves tourist centre, once per map visit
+	
+	SetLightVisible("RedLight", false); //keypad effects
+	SetLightVisible("GreenLight", false);
+	
+	//Game-progression set-ups; includes Julie setup
+	CheckGameProgression();
+	
+	//enables dialogue collission area after picking up the vase key:
+	if(GetGlobalVarInt("LeaveDialogueEnabled") == 1) SetEntityActive("Area_LeaveDialogue", true);
+}
+
+void OnLeave()
+{
+	StopMusic(1.0f, 1);
+	StopMusic(1.0f, 2);
+}
+	
+void DontLeave(string &in asEntity, int alState) //blocks the road next to where the player first arrives
+{
+	SetPropActiveAndFade("Obstacle", true, 1.0f);
+}
+
+void SaveGame(string &in asParent, string &in asChild, int alState)
+{
+	SaveGameUtil();
+}
+
+void SaveGameUtil()
+{
+	SetMapDisplayNameEntry("EC A");
+	AutoSave();	
+	AddDebugMessage("Saving...", false);
+	CheckPoint ("TC_checkpoint", "SaveStation", "RespawnCallback", "Hints", "DefaultDeath");
+}
+void RespawnCallback(string &in asName, int alCount)
+{
+	AddDebugMessage("Respawning...", false);
+	SetUpInsanity();
+	CheckGameProgression();
+}
+
+void AddDoorMemo(string &in asEntity, int &in alState)  //points player's attention to the NPC door
+{
+	AddQuest("KnockDoor", "KnockDoor");
+}
+void ActivateDoorMemo(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("LanterHint", true);
+}
+
+void CantPickLocks(string &in asItem, string &in asEntity)
+{
+	SetMessage("Messages", "CantPick", 0);
+}
+
+void FinishBalconyQuest(string &in asEntity)
+{
+	AddDebugMessage("Removing balcony quest", false);
+	CompleteQuest("Balcony", "Balcony");
+}
+
+void OpenLevelDoor(string &in asItem, string &in asEntity) //generic function for opening level doors
+{
+	SetLevelDoorLocked(asEntity, false);
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "unlock_modern.snt", asEntity, 0.0f , false);
+}
+
+void OpenTrashChute(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("trash_door", false, false);
+}
+
+void CheckGameProgression()
+{
+	PlayMusic("EC_amb_fog_calm.ogg", true, 1.0f, 1.0f, 1 , true);	
+
+	
+	if(GetGlobalVarInt("JulieInTouristCentre") == 1)
+	{
+		AddDebugMessage("Julie should appear", false);
+		SetUpJulie();
+		
+		if(GetEntitiesCollide("Player", "Area_JulieActivate")) //so that she spawns when the player starts from the basement map
+		{
+			AddDebugMessage("Player within Julie's spawn area", false);
+			
+			SetEntityPlayerInteractCallback("JulieInteractArea", "InteractWithJulie", false);
+			SetEntityPlayerInteractCallback("JulieInteractArea2", "InteractWithJulie", false);
+			SpawnRandomJulie("unused", "unused too", 1);
+		}
+	}
+	
+	if(GetGlobalVarInt("Insight") > 0) //After library
+	{
+		SetLampLit("lamp_wall_lamp_6", true, false);
+		SetLampLit("lamp_wall_lamp_10", false, false);
+		
+		if(GetPlayerSanity() < 52.0f)
+		{
+			SetEntityActive("Doll_*", true);
+			PlayMusic("EC_amb_fog_unnerved.ogg", true, 1.0f, 1.0f, 2 , true);
+		}
+	}
+	if(GetGlobalVarInt("Insight") > 1) //After apartments
+	{
+		SetLevelDoorLockedText("ApartmentsDoor", "Messages", "NoNeed");
+		SetLevelDoorLocked("ApartmentsDoor", true);
+		SetLevelDoorLockedSound("ApartmentsDoor", "");
+		
+		SetLampLit("lamp_wall_lamp_6", false, false);
+		SetLampLit("lamp_wall_lamp_12", true, false);
+	}
+	if(GetGlobalVarInt("Insight") > 2) //After tourist centre
+	{
+		SetLampLit("lamp_wall_lamp_12", false, false);
+		SetLampLit("lamp_wall_lamp_11", true, false);
+	}
+}
+
+///////////////////////PHONE CALL QUEST///////////////////////////////////////
+void PrePhonecallQuest(string &in asEntity)
+{
+	SetEntityActive("SecondHubDoor", false);
+}
+
+void PhonecallQuest(string &in asEntity)
+{
+	AddDebugMessage("Starting phonecall script", false);
+	AddTimer("", 3.0, "StartCalling");
+	SetEntityActive("SecondHubDoor", true);
+}
+
+void StartCalling(string &in asTimer)
+{
+	AddDebugMessage("Ringing", false);
+	if(!ScriptDebugOn())  StartPhoneRing("PassagePhone", "Dkf_Centre", 12);
+	else StartPhoneRing("PassagePhone", "Dkf_Centre", 1); //playing only one file when testing
+}
+
+void AfterPhoneCall() //executes after phone call ends
+{
+	AddDebugMessage("After phone call...", false);
+	SetGlobalVarInt("OpenTouristCentre", 1);
+}
+
+///////////////////////END PHONE QUEST///////////////////////////////////////
+
+
+
+
+///////////////////////JULIE///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+string Julie1 = "Julie_Sit";
+string Julie2 = "Julie_Walk";
+string cJulie; //current Julie AREA!
+
+void SetUpJulie()
+{
+	AddEntityCollideCallback("Player", "Area_JulieActivate", "SpawnRandomJulie", false, 0); 
+	/*This despawns Julie after leaving the fog culling distance from her. Spawns
+	a "random" variant of her when the area is re-entered.*/
+	
+	SetEntityPlayerInteractCallback("JulieInteractArea", "InteractWithJulie", false);
+	SetEntityPlayerInteractCallback("JulieInteractArea2", "InteractWithJulie", false);
+	
+	/*Since both NPC and Enemy entities lack bodies, they can't be interacted with.
+	Hence a ScriptArea used for interaction is placed at those entities. 
+	
+	Player can interact at any moment, but dialogue will only be added if she isn't already talking.
+	
+	The sitting variant requires no further action. The walking variant is moving,
+	so the ScriptArea needs to be moved as well - this is done by the "TeleportInteractArea"
+	function, which is a looping timer.*/
+	
+	
+	//Lockpick sidequest's useItemCallback is located in OnStart.
+	
+}
+
+void InteractWithJulie(string &in asEntity) //called upon interacting with her
+{
+	AddDebugMessage("Interacted", true);
+	if( !GetEffectVoiceActive() ) //if she isn't talking
+	{
+		RandomBanterHandler(asEntity);
+	}
+}
+
+
+void RandomBanterHandler(string &in asJulie)
+{
+	int rand_a = RandInt(1, 5); //handles which of the 5 misc dialogues to play
+	AddDebugMessage("Misc dialogue number "+ rand_a, false);
+	
+	int rand_b = 0; //init; the variable handles which version of the chosen dialogue to play
+	
+	if(rand_a == 1) rand_b = RandInt(1, 2);
+	if(rand_a == 2) rand_b = RandInt(1, 3);
+	if(rand_a == 3) rand_b = RandInt(1, 4);
+	if(rand_a == 4) rand_b = RandInt(1, 2);
+	if(rand_a == 5) rand_b = RandInt(1, 4);
+
+	AddEffectVoice("JMisc_0" + rand_a + "-0" +rand_b + ".ogg", "", "Dialogues", "JMisc_0" + rand_a, true, asJulie, 0.0f, 15.0f);
+	//e.g. JMisc_05-04
+}
+
+void PlayOuchVoice(string &in asParent, string &in asChild, int alState) //played when player throws smth at her
+{
+	if(GetEffectVoiceActive() == false)
+	{
+		AddDebugMessage("Owwiee voice should play", false);
+		int rand_a = RandInt(1, 3);
+		AddEffectVoice("JStop-0"+ rand_a +".ogg", "", "Dialogues", "JStop", true, asChild, 0.0f, 15.0f);
+	}
+	else AddDebugMessage("Voice already playing", false);
+}
+
+
+/*Spawns her either on a chair or as enemy with random walk cycle. 
+
+Leaving the area turns off all variants.
+The variants change every time the player leaves the area,
+hence spawning a different one from the previous one - every time.
+
+Also stops looping timers on leave.
+*/
+void DeactivateAllJulieEntities()
+{
+	SetEntityActive(Julie1, false);
+	SetEntityActive(Julie2, false);
+	SetEntityActive("JulieInteractArea", false);
+	SetEntityActive("JulieInteractArea2", false);
+	SetEntityActive("JulieSittingBody", false);
+}
+
+
+void SpawnRandomJulie(string &in asParent, string &in asChild, int alState) 
+{
+	DeactivateAllJulieEntities();
+
+	RemoveTimer("TeleportInteractArea");
+	RemoveTimer("AddRandomPathNodes");
+	
+	//enables dialogue collission area after lockpicking by Julie:
+	if(GetGlobalVarInt("OpenTouristCentre") == 1 ) SetEntityActive("Area_LockBDialogue", true);
+	
+	if(alState == 1) //if the player entered the area where they can see her
+	{
+	
+		if(GetGlobalVarInt("JulieVariant") == 1) SetGlobalVarInt("JulieVariant", 0);
+		else if(GetGlobalVarInt("JulieVariant") == 0) SetGlobalVarInt("JulieVariant", 1);
+		
+		int rand = GetGlobalVarInt("JulieVariant"); /*JulieVariant is the integer that
+		decides which Julie will spawn. The rand integer is just for the sake of code clarity*/
+		
+		//spawn the sitting variant for dialogues
+		if(HasItem("LockPick")) rand = 0;
+		if(GetGlobalVarInt("OpenTouristCentre") == 1 ) rand = 0;
+		if(GetGlobalVarInt("LeaveDialogueEnabled") == 1 ) rand = 0;
+	
+		if(rand == 0) //Sitting variant
+		{
+			cJulie = "JulieInteractArea2";
+			SetEntityActive(Julie1, true);
+			SetEntityActive("JulieInteractArea2", true);
+			SetEntityActive("JulieSittingBody", true);
+		
+		}
+		if(rand == 1) //Walking variant
+		{
+			cJulie = "JulieInteractArea";
+			SetEnemySanityDecreaseActive(Julie2, false);
+			SetEntityActive(Julie2, true);
+			SetEntityActive("JulieInteractArea", true);
+			AddTimer("TeleportInteractArea", 1.0f, "TeleportInteractArea");  //looping timers: important!
+			AddTimer("AddRandomPathNodes", 1.0f, "AddRandomPathNodes"); 
+		}
+		
+		//Opens tourist centre door:
+		if(GetGlobalVarInt("OpenTouristCentre") == 1)
+		{
+			SetEntityActive("TC_locked", false);
+			SetEntityActive("TC_open", true);
+		}
+	}
+	
+}
+
+
+void GiveLockPick(string &in asItem, string &in asEntity)
+/* Plays some dialogue about the lockpick, does the item effects,
+and will enable "SpawnRandomJulie" to open the second door in 
+the tourist centre and add an appropriate dialogue. */
+{
+	SetGlobalVarInt("DialogueJulie_LockPick", 1);
+	CompleteQuest("VisitTouristCentre", "VisitTouristCentre");
+	RemoveItem(asItem);
+	
+	AddEffectVoice("JLockpick_A_01.ogg", "", "Dialogues", "JLockpick_A_01", true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JLockpick_A_02.ogg", "", "Dialogues", "JLockpick_A_02", false, "Player", 0.0f, 15.0f);
+	for(int i = 3; i <= 6; i++)AddEffectVoice("JLockpick_A_0"+i+".ogg", "", "Dialogues", "JLockpick_A_0"+i, true, asEntity, 0.0f, 15.0f);
+	
+	//change the above for loop limit to 7 for full dialogue; the below was cut because of how awkward it is
+	//AddEffectVoice("JLockpick_A_08.ogg", "", "Dialogues", "JLockpick_A_08", false, "Player", 0.0f, 15.0f);
+	//AddEffectVoice("JLockpick_A_09.ogg", "", "Dialogues", "JLockpick_A_09", false, "Player", 0.0f, 15.0f);
+	
+	SetEffectVoiceOverCallback("GiveKeypadMemo");
+}
+
+void GiveKeypadMemo()
+{
+	AddDiary("KeypadHint", "old_note.tga");
+	SetMessage("Messages","KeypadHint", 0);
+	PlaySoundAtEntity("","ui_add_quest", "Player", 0, false);
+}
+
+//Dialogue after opening the door:
+void LeaveDialogue(string &in asParent, string &in asChild, int alState) 
+{
+	AddDebugMessage("Collided with dialogue area", true);
+	if(GetGlobalVarInt("LeaveDialogueEnabled") == 1 )
+	{
+		AddDebugMessage("Leave dialogue should play", true);
+	
+		AddEffectVoice("JLeave_01.ogg", "", "Dialogues", "JLeave_01", false, "Player", 0.0f, 15.0f);
+		AddEffectVoice("JLeave_02.ogg", "", "Dialogues", "JLeave_02", true, "JulieInteractArea2", 0.0f, 15.0f);	
+		AddEffectVoice("JLeave_03.ogg", "", "Dialogues", "JLeave_03", true, "JulieInteractArea2", 0.0f, 15.0f);
+		AddEffectVoice("JLeave_04.ogg", "", "Dialogues", "JLeave_04", false, "Player", 0.0f, 15.0f);
+		
+		SetGlobalVarInt("LeaveDialogueEnabled", 0);
+	}
+}
+
+//Dialogue after opening the door:
+void PostOpenDialogue(string &in asParent, string &in asChild, int alState) 
+{
+	AddDebugMessage("Picked the locked dialogue", false);
+	if(GetGlobalVarInt("DialogueJulie_LockPick") == 1)
+	{
+		AddDebugMessage("Lock pick dialogue should play", true);
+		
+		for(int i = 1; i <= 6; i++)AddEffectVoice("JLockpick_B_0"+i+".ogg", "", "Dialogues", "JLockpick_B_0"+i, true, cJulie, 0.0f, 15.0f);
+		AddEffectVoice("JLockpick_B_07.ogg", "", "Dialogues", "JLockpick_B_07", false, "Player", 0.0f, 15.0f);
+		AddEffectVoice("JLockpick_B_08.ogg", "", "Dialogues", "JLockpick_B_08", true, cJulie, 0.0f, 15.0f);
+		AddEffectVoice("JLockpick_B_09.ogg", "", "Dialogues", "JLockpick_B_09", false, "Player", 0.0f, 15.0f);
+		AddEffectVoice("JLockpick_B_10.ogg", "", "Dialogues", "JLockpick_B_10", false, "Player", 0.0f, 15.0f);
+		AddEffectVoice("JLockpick_B_11.ogg", "", "Dialogues", "JLockpick_B_11", true, cJulie, 0.0f, 15.0f);
+		
+		SetGlobalVarInt("DialogueJulie_LockPick", 0);
+	}
+}
+
+///////////////////////Julie: scripts related only to walking//////////////
+
+void TeleportInteractArea(string &in asTimer)
+/*Continuously teleports the interaction area to the moving Julie variant. */
+{
+	PlaceEntityAtEntity("JulieInteractArea", Julie2, "", true);
+	AddTimer("TeleportInteractArea", 0.7f, "TeleportInteractArea");
+}
+
+void AddRandomPathNodes(string &in asTimer) 
+/* Makes her walk towards one of the desired nodes
+ and stay there for some time.
+ 
+ Based on the randomized integer, chooses which node to go to.
+ Most remove the path upon colliding with a small area which is
+ placed at the node, one of them also adds another node ("ContinuePathA")
+ which serves as a replacement for turning away from the wall.
+ 
+ The function is a looped timer, which changes the current node 
+ every now and then */
+{
+	int rand = RandInt(0, 3);
+	ClearEnemyPatrolNodes(Julie2);
+	AddTimer("AddRandomPathNodes", RandFloat(15.0f, 40.0f), "AddRandomPathNodes");
+	
+	if(rand == 1)
+	{
+		AddEnemyPatrolNode(Julie2, "PathNodeArea_3", 0.0f, "");
+		AddEntityCollideCallback("Area_JulieStand_1", Julie2, "RemovePath", true, 1);
+	}
+	else if(rand == 0)
+	{
+		AddEnemyPatrolNode(Julie2, "PathNodeArea_4", 0.0f, "");
+		//turn around node: PathNodeArea_5
+		AddEntityCollideCallback("Area_JulieStand_3", Julie2, "ContinuePathA", true, 1);
+	}
+	else if(rand == 2)
+	{
+		AddEnemyPatrolNode(Julie2, "PathNodeArea_14", 0.0f, "");
+		AddEntityCollideCallback("Area_JulieStand_5", Julie2, "RemovePath", true, 1);
+	}
+	else if(rand == 3)
+	{
+		AddEnemyPatrolNode(Julie2, "PathNodeArea_15", 0.0f, "");
+		AddEntityCollideCallback("Area_JulieStand_4", Julie2, "RemovePath", true, 1);
+	}
+	
+
+}
+
+void RemovePath(string &in asParent, string &in asChild, int alState)
+//Removes the patrol path when Julie collides with one of the nodes from above, to make her turn around but stop walking.
+{	
+	if(ScriptDebugOn()) Print("Clearing nodes..."); //DEBUG
+	ClearEnemyPatrolNodes(asChild);
+	if(ScriptDebugOn()) Print("Finished!"); //debug
+}
+
+void ContinuePathA(string &in asParent, string &in asChild, int alState)
+/*Upon collision with one of the nodes, adds another node to path, 
+so that Julie doesn't face the wall */
+{
+	Print("Reached ContinuePathA \n");
+	ClearEnemyPatrolNodes(asChild);
+	Print("Cleared pathnodes \n");
+	AddEnemyPatrolNode(Julie2, "PathNodeArea_5", 0.0f, "");
+	Print("Added patrolnode \n");
+	AddEntityCollideCallback("Area_JulieStand_2", Julie2, "RemovePath", true, 1);
+	Print("Added callback \n");
+}
+
+
+
+///////////////////////KNOCKING///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+/* Full setup is: Door or area, Lantern */
+
+void SetUpKnockingAndLanterns() // for neatness' sake
+{
+	SetEntityPlayerInteractCallback("Door_1", "KnockOnDoor", true);
+	AddBodyImpulse("Door_1_Lantern" + "_Body_3", 0, 0, -0.65f, "world");
+	
+	SetEntityPlayerInteractCallback("Door_2", "KnockOnDoor", true);
+	AddBodyImpulse("Door_2_Lantern" + "_Body_3", 0, 0, -0.65f, "world");
+	
+	SetEntityPlayerInteractCallback("Door_3", "KnockOnDoor", true);
+	AddBodyImpulse("Door_3_Lantern" + "_Body_3", -0.65f, 0, 0, "world");
+}
+
+void KnockOnDoor(string &in asEntity)
+{
+	PlaySoundAtEntity("", "door_knock_dkf.snt", asEntity, 0.0f , false);
+	AddTimer(asEntity, 1.0f, "Talk");
+	
+}
+void Talk(string &in asTimer)
+{
+	if(asTimer == "Door_2")
+	{
+		AddEffectVoice("get_out", "", "Dialogues", "get_out", true, asTimer, 0.0f, 15.0f);
+		SetEffectVoiceOverCallback("AfterKnocking2");
+	}
+	if(asTimer == "Door_1")
+	{
+		AddEffectVoice("Door1_1", "", "Dialogues", "Door1_1", true, asTimer, 0.0f, 15.0f);
+		AddEffectVoice("Door1_2", "", "Dialogues", "Door1_2", true, asTimer, 0.0f, 15.0f);
+		AddEffectVoice("Door1_3", "", "Dialogues", "Door1_3", true, asTimer, 0.0f, 15.0f);
+		AddEffectVoice("Door1_4", "", "Dialogues", "Door1_4", true, asTimer, 0.0f, 15.0f);
+		AddEffectVoice("Door1_5", "", "Dialogues", "Door1_5", true, asTimer, 0.0f, 15.0f);
+		AddEffectVoice("Door1_6", "", "Dialogues", "Door1_6", true, asTimer, 0.0f, 15.0f);
+		AddEffectVoice("Door1_7", "", "Dialogues", "Door1_7", true, asTimer, 0.0f, 15.0f);
+		SetEffectVoiceOverCallback("AfterKnocking");
+	}
+	if(asTimer == "Door_3")
+	{
+		AddEffectVoice("come_in_muffled", "", "Dialogues", "come_in_muffled", true, asTimer, 0.0f, 15.0f);
+		SetEffectVoiceOverCallback("AfterKnocking3");
+		
+		SetEntityActive(asTimer, false);
+
+	}
+}
+void AfterKnocking()
+{
+	SetLampLit("Door_1_Lantern", false,true);
+}
+void AfterKnocking2()
+{
+	SetLampLit("Door_2_Lantern", false,true);
+}
+void AfterKnocking3()
+{
+
+		SetSwingDoorLocked("door_mining_room_6", false, true);
+		SetPropStaticPhysics( "corpse_1", false);
+		PlaySoundAtEntity("", "unlock_modern.snt", "door_mining_room_6", 0.0f , false);
+		SetLampLit("Door_3_Lantern", false,true);
+		
+		AddTimer("", 5.0f, "StopCorpse");
+}
+void StopCorpse(string &in asTimer)
+{
+	SetPropStaticPhysics( "corpse_1", true);
+}
+
+///////////////END KNOCK///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////KEYPAD///////////////////////
+/////////////////////////////////////////////////////////////////
+
+string Current;
+string tmp;
+void StartKeypad(string &in asEntity) //This is put in the entity's InteractCallback
+{
+	SetPlayerActive(false );
+	FadeOut(1.0f);
+	AddTimer("", 1.5f, "StartKeypadCont");
+	
+	SetMessage("Messages","KeypadExit", 0);
+
+	Current = "";
+	SetLocalVarInt("CurrentCount", 0);
+}
+void StartKeypadCont(string &in asTimer)
+{
+	SetFogActive(false);
+	SetPlayerCrouching(true);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerMoveSpeedMul(0);
+	SetLanternDisabled(true);
+	TeleportPlayer("Keypad");
+	
+	AddTimer("", 0.5f, "FadeIn");
+}
+void FadeIn(string &in asTimer)
+{
+	SetPlayerActive(true);
+	FadeIn(1.0f);
+}
+
+void Exit()
+{
+	SetPlayerActive(false );
+	FadeOut(1.0f);
+	AddTimer("", 1.5f, "ExitCont");
+}
+void ExitCont(string &in asTimer)
+{
+	SetFogActive(true);
+	SetPlayerCrouching(false);
+	SetPlayerCrouchDisabled(false);
+	SetPlayerJumpDisabled(false);
+	SetPlayerMoveSpeedMul(1);
+	SetLanternDisabled(false);
+	TeleportPlayer("KeypadSpawn");
+	
+	AddTimer("", 0.5f, "FadeIn");
+}
+
+void PressKeypad(string &in asEntity)
+{
+	AddLocalVarInt("CurrentCount", 1);
+	PlaySoundAtEntity("","button_dkf", "Player", 0, false);
+
+	if(asEntity != "Asterisk" && asEntity != "Hashtag")
+	Current += asEntity;
+	
+	if( GetLocalVarInt("CurrentCount") == 4)
+	{
+		CheckPassword();
+		SetLocalVarInt("CurrentCount", 0);
+		Current = "";
+	}
+	
+}
+
+void CheckPassword()
+{
+	if (Current == "2137")
+	{
+		PlaySoundAtEntity("","access_granted_dkf", "Player", 0, false);
+		PlaySoundAtEntity("","unlock_modern", "Player", 0, false);
+		SetSwingDoorLocked("HubDoor_1", false, false);
+		
+		SetLightVisible("GreenLight", true);
+		AddTimer("GreenLight", 0.5f, "TurnOffLight");
+		
+		Exit();
+		SetEntityInteractionDisabled("Security_Panel", true);
+	}
+	else
+	{
+		PlaySoundAtEntity("","access_denied_dkf", "Player", 0, false);
+		SetLightVisible("RedLight", true);
+		AddTimer("RedLight", 0.5f, "TurnOffLight");
+	}
+}
+void TurnOffLight(string &in asTimer)
+{
+	SetLightVisible(asTimer, false);
+}
+
+void Hashtag(string &in asEntity)
+{
+	PlaySoundAtEntity("","button_dkf", "Player", 0, false);
+	Exit();
+}
+
+///////////////////END KEYPAD//////////////////////////	
+
+///////////////////////PHONE///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+/* Entity = the phone to be played at, if files are "File_01.ogg" and "File_02.ogg", then asFileName = File and asFileCount = 2.
+ All sound files from 1 through the given number are be played.
+ If count = 0, "File" (without the underscore and numbers) is assumed.
+ For best effect use mono sound files.
+ Lang subtitle entries should be titled same as the file and placed in "Dialogues" category. */
+
+void StartPhoneRing(string &in asEntity, string asFileName, int asFileCount)
+{
+	SetLocalVarString("FileName", asFileName); // GetLocalVarString("FileName");
+	SetLocalVarInt("FileCount", asFileCount); // GetLocalVarInt("FileCount");
+	SetLocalVarString("Phone", asEntity);  // GetLocalVarString("Phone");
+	
+	PlaySoundAtEntity("phonering", "phone_ring_loop.snt", asEntity, 0.0f, false);
+	SetEntityPlayerInteractCallback(asEntity, "PickUpPhone", true);
+}
+void PickUpPhone(string &in asEntity)
+{
+	StopSound("phonering", 0.5f);
+	PlaySoundAtEntity("", "phone_up.snt", asEntity, 0.0f, false);
+	AddTimer("", 0.5f, "StartTalking");
+
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerRunSpeedMul(0.0f);
+}
+void StartTalking(string &in asTimer)
+{
+	PlaySoundAtEntity("phonestatic", "phone_static_loop.snt", GetLocalVarString("Phone"), 0.0f, false);
+
+	if (GetLocalVarInt("FileCount") == 0)
+	{
+		AddEffectVoice(GetLocalVarString("FileName"), "", "Dialogues", GetLocalVarString("FileName"), true, GetLocalVarString("Phone"), 0.0f, 15.0f);
+	}
+	else if (GetLocalVarInt("FileCount") > 0)
+	{
+		for (int i = 1; i <= GetLocalVarInt("FileCount"); i++)
+		{
+			if (i < 10)
+			{
+				SetLocalVarString("tmp", GetLocalVarString("FileName")+"_0" + i); 
+			}
+			else
+			{
+				SetLocalVarString("tmp", GetLocalVarString("FileName")+"_" + i); 
+			}
+
+			AddEffectVoice(GetLocalVarString("tmp"), "", "Dialogues", GetLocalVarString("tmp"), true, GetLocalVarString("Phone"), 0.0f, 15.0f);
+		}
+	}
+	SetEffectVoiceOverCallback("HangUp");
+}
+
+void HangUp()
+{
+	PlaySoundAtEntity("", "phone_down.snt", GetLocalVarString("Phone"), 0.0f, false);
+	StopSound("phonestatic", 0.3f);
+
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerJumpDisabled(false);
+
+	AddTimer("phoneOverTimer", 2.0f, "PhoneCallOverCallback");
+	AfterPhoneCall();
+}
+
+
+
+
+
+///////////////END PHONE///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+	
+
+
+///////////////////////WEATHER///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetWeatherDay(string &in asEntity) //input: maps boxlight
+{
+	SetFogActive(true);
+	SetFogColor( 0.4f , 0.4f , 0.4f,  1.0f);
+	SetFogProperties( 0.0f , 20.0f , 1.0f, true);
+	
+	SetSkyBoxActive(true);
+	SetSkyBoxColor( 0.4f , 0.4f , 0.4f,  1.0f);
+	//SetSkyBoxTexture(string& asTexture);
+	
+	FadeLightTo(asEntity, 0.4f , 0.4f , 0.4f , 1.0f , -1, 0.0f);
+	
+}
+
+void SetWeatherEvening(string &in asEntity)
+{
+	SetFogActive(true);
+	SetFogColor( 0.186f , 0.25f , 0.368f,  1.0f);
+	SetFogProperties( 0.0f , 20.0f , 1.0f, true);
+	
+	SetSkyBoxActive(true);
+	SetSkyBoxColor( 0.186f , 0.25f , 0.368f,  1.0f);
+	//SetSkyBoxTexture(string& asTexture);
+	
+	FadeLightTo(asEntity, 0.186f , 0.25f , 0.368f, 1.0f , -1, 0.0f);
+	
+}
+
+void SetWeatherNight(string &in asEntity)
+{
+	SetFogActive(true);
+	SetFogColor( 0.1f , 0.1f , 0.1f,  1.0f);
+	SetFogProperties( 0.0f , 20.0f , 1.0f, true);
+	
+	SetSkyBoxActive(true);
+	SetSkyBoxColor( 0.1f , 0.1f , 0.1f,  1.0f);
+	//SetSkyBoxTexture(string& asTexture);
+	
+	FadeLightTo(asEntity, 0.1f , 0.1f , 0.1f , 1.0f , -1, 0.0f);
+}
+
+
+
+///////////////END WEATHER///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////

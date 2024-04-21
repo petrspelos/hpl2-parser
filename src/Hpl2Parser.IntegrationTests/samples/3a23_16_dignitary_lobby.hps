@@ -1,0 +1,466 @@
+void OnStart()
+{
+	AutoSave();
+	
+	if(ScriptDebugOn() == false)
+	{
+	FadeOut(0);
+	SetPlayerActive(false);
+	}
+	SetMapDisplayNameEntry("LevelDigLobby");
+	
+	SetDeathHint("DeathHint", "DHint1");
+	AddEntityCollideCallback("Ghoul1", "AreaCreatureDoor", "Add2BreakTimer", true, 1);
+	AddEntityCollideCallback("Player", "AreaDoorBreak", "DoorBreakEvent", true, 1);
+	AddEntityCollideCallback("Player", "AreaDoorShut", "SafeEvent", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_5", "EndRoar", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_6", "LastBruteChase", true, 1);
+	AddEntityCollideCallback("Player", "AreaForceMem", "MementoForce", true, 1);
+	AddEntityCollideCallback("BruteStairs", "ScriptArea_9", "BruteDestroyInstant", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_9", "BruteStairNow", true, 1);
+	
+	InteractConnectPropWithMoveObject("d_l_1", "SlideDoorLever", "Door_1", true, false, 1);
+	InteractConnectPropWithMoveObject("d_v_1", "DoorValve", "Door_2", true, false, 1);
+	InteractConnectPropWithMoveObject("d_v_2", "DoorValve2", "Door_2", true, false, 1);
+	
+	//Collide for begin chase
+	AddEntityCollideCallback("Player", "AreaEventDoor", "BeginChase", true, 1);
+	
+	//Key for desk
+	AddUseItemCallback("", "DeskKey", "DeskDoor", "Unlock", true);
+	//Lever
+	AddEntityCollideCallback("Lever", "AreaLever", "FixLever", true, 1);
+	
+	StopMusic(0, 1);
+	AddTimer("in", 2, "TimerFadeIn");
+	
+	//Door
+	SetSwingDoorClosed("DoorThe", false, true);
+	SetSwingDoorDisableAutoClose("DoorThe", true);
+	AddPropForce("DoorThe", 0, 0, 1000, "world");
+		}
+	
+void OnEnter()
+{
+	StopMusic(1.0f, 10);
+	StopMusic(1.0f, 0);
+	SetPlayerMoveSpeedMul(1);
+		}
+//////////////////////
+//Unlock desk door////
+/////////////////////
+void Unlock(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("DeskDoor", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+		}
+
+/////////////////
+//Attach Lever//
+////////////////
+void FixLever(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "puzzle_place_jar", "AreaLever", 0.0f, false);
+	SetEntityActive("LeverAttached", true);
+	SetEntityActive("Mount", false);
+	SetEntityActive("Lever", false);
+	
+		}
+	
+void ActiveWheel(string &in asEntity, int alState)
+{
+	if(GetLeverState("LeverAttached") == 1)
+	{
+		PlaySoundAtEntity("", "unlock_door.snt", "DoorValve", 0, false);
+		SetWheelStuckState("DoorValve", 0, true);
+	}
+		}
+//////////////////
+/////////////////
+
+//Event Door + Monster Chase Script
+
+/////////////////
+void BeginChase(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("DoorClosed", true);
+	SetEntityActive("Door_1", false);
+	SetEntityActive("Ghoul1", true);
+	PlaySoundAtEntity("", "door_level_wood_close", "DoorClosed", 0, false);
+	SetMessage("TextOne", "Monster", 2.0f);
+	
+		AddEnemyPatrolNode("Ghoul1", "Node_1", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul1", "Node_2", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul1", "Node_3", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul1", "Node_4", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul1", "Node_5", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul1", "Node_6", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul1", "Node_7", 0.0f, "");
+		
+	AddTimer("timerbang", 5.0f, "TimerBangDoor");
+	
+	
+	CheckPoint("Chase", "CheckChase", "DiesB4Open", "", "");
+		}
+
+
+	
+
+/////////////////////////////////////
+/////////////////////////////////////
+
+///TIMERS FOR BANG DOOR///
+
+////////////////////////////////////
+////////////////////////////////////
+
+
+
+void TimerBangDoor(string &in asTimer)
+{
+	/*
+	CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+	PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+	AddTimer("", 7.0f, "TimerBangDoor2");
+	*/
+	
+	//PlayMusic("20_event_darkness.ogg", false, 0.7f, 0.0f, 0, false);
+	//AddTimer("", 17.0f, "TimerChaseMusic");
+	AddLocalVarInt("TimeBang", 1);
+	float fEventSpeed = 3.5f;
+
+	switch(GetLocalVarInt("TimeBang")) 
+	{
+		case 1:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+			PlayMusic("20_event_darkness.ogg", false, 0.7f, 0.0f, 0, false);
+			PlayMusic("20_event_darkness.ogg", false, 0.7f, 0.0f, 0, false);
+			AddTimer("", 17.0f, "TimerChaseMusic");
+		break;
+		case 2:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+			 fEventSpeed = 1.0f;
+		break;
+		case 3:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+		break;
+		case 4:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+			 fEventSpeed = 4.0f;
+		break;
+		case 5:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+		break;
+		case 6:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+			 fEventSpeed = 2.5f;
+		break;
+		case 7:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+		break;
+		case 8:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "BangEffects", 0.0f, false);
+			 fEventSpeed = 3.5f;
+		break;
+		case 9:
+			SetEntityActive("DoorClosed", false);
+			SetEntityActive("Destroyed1", true);
+			CreateParticleSystemAtEntity("", "ps_break_wood.ps", "BangEffects", false);
+			PlaySoundAtEntity("", "break_wood_metal", "BangEffects", 0.0f, false);
+			ShowEnemyPlayerPosition("Ghoul1");
+			SetEntityActive("Ghoul1", true);
+		break;
+	}
+	
+	if(GetLocalVarInt("TimeBang") <= 9) AddTimer("", fEventSpeed, "TimerBangDoor");
+}
+
+//////////////////////////////////
+/////////////////////////////////
+
+//Make Sure Door
+void WheelChange(string &in asEntity, int alState)
+{
+	if(alState == -1)
+	{
+		RemoveTimer("second");
+	}
+		}
+////////////////////////
+
+////////music////////
+void TimerChaseMusic(string &in asTimer)
+{
+	PlayMusic("att_suitor.ogg", true, 1.0f, 1.0f, 10, false);
+		}
+		
+		
+/////////////////////////////////////
+//Second door breaks
+
+void DoorBreakEvent(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Door_2", false);
+	SetEntityActive("Destroyed2", true);
+	
+	SetEntityActive("Ghoul1", false);
+	SetEntityActive("Ghoul2", true);
+	ShowEnemyPlayerPosition("Ghoul2");
+	
+	PlayMusic("att_suitor.ogg", true, 1.0f, 1.0f, 10, false);
+	//Effects
+	CreateParticleSystemAtEntity("", "ps_break_wood.ps", "BangEffect2s", false);
+	PlaySoundAtEntity("", "break_wood_metal", "BangEffects2", 0.0f, false);
+	GiveSanityDamage(1, true);
+	
+		AddEnemyPatrolNode("Ghoul2", "Node_3", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul2", "Node_4", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul2", "Node_5", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul2", "Node_6", 0.0f, "");
+		AddEnemyPatrolNode("Ghoul2", "Node_7", 0.0f, "");
+		
+	ShowEnemyPlayerPosition("Ghoul2");
+		}
+		
+
+void TimerFadeIn(string &in asTimer)
+{
+	FadeIn(1);
+	SetPlayerActive(true);
+}
+
+//////////////////
+//Last Brute
+void LastBruteChase(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("LastBrute", true);
+	SetEntityActive("BruteStairs", false);
+	ShowEnemyPlayerPosition("LastBrute");
+	
+	AddEnemyPatrolNode("LastBrute", "LNode_1", 0.001f, "");
+	AddEnemyPatrolNode("LastBrute", "LNode_2", 0.001f, "");
+	AddEnemyPatrolNode("LastBrute", "LNode_3", 0.001f, "");
+}
+
+void BruteStairNow(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("BruteStairs", true);
+	SetEntityActive("Ghoul2", false);
+	
+	AddEnemyPatrolNode("BruteStairs", "Node_7", 0.0f, "");
+	AddEnemyPatrolNode("BruteStairs", "SNode_1", 0.0f, "");
+	AddEnemyPatrolNode("BruteStairs", "SNode_2", 0.0f, "");
+	AddEnemyPatrolNode("BruteStairs", "SNode_3", 0.0f, "");
+	
+	ShowEnemyPlayerPosition("BruteStairs");
+	
+	SetDeathHint("DeathHint", "DHint5");
+}
+//////////////////
+//Destroy door
+void BruteDestroyInstant(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth("castle_1", 0);
+	
+	GiveSanityDamage(10, true);
+}
+
+//////////////////////////////////
+//---------SAFE event--------//
+/////////////////////////////////
+
+void SafeEvent(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("DoorThe", true, true);
+	SetSwingDoorDisableAutoClose("DoorThe", false);
+	AddPropForce("DoorThe", 0, 0, -5000, "world");
+	SetSwingDoorLocked("DoorThe", true, true);
+	StartPlayerLookAt("ScriptArea_1", 5, 10, "");
+	SetPlayerMoveSpeedMul(0.3f);
+	
+	AddTimer("timerdoor", 1, "TimerBruteSafe");
+}
+
+void MementoForce(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("16Force", "16Force");
+}
+
+//Switch variable timer
+void TimerBruteSafe(string &in asTimer)
+{
+	AddLocalVarInt("TimeSafe", 1);
+	float fEventSpeed = 1.5f;
+
+	switch(GetLocalVarInt("TimeSafe")) 
+	{
+		case 1:
+			//PlayMusic("16_brute_safe_begin.ogg", false, 1, 1, 10, true);
+			PlayMusic("att_suitor.ogg", false, 1, 1, 10, true);
+			
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "ScriptArea_1", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "ScriptArea_1", 0.0f, false);
+			
+			PlaySoundAtEntity("", "ptest/enemy/suitor/attack_launch", "ScriptArea_2", 0.0f, false);
+			
+			PlaySoundAtEntity("", "24_rock_move", "ScriptArea_8", 0.0f, false);
+			
+			SetEntityActive("LastBrute", false);
+			
+			StartScreenShake(0.08f, 0.5f, 0.0f, 0.0f);
+			
+			GiveSanityDamage(10, true);
+			
+			FadeImageTrailTo(2, 1);
+			FadePlayerFOVMulTo(1.3f, 1);
+			FadeSepiaColorTo(1.2, 1);
+		break;
+		case 2:
+		/*
+			GiveSanityBoost();
+			StopPlayerLookAt();
+			*/
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "ScriptArea_1", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "ScriptArea_1", 0.0f, false);
+			
+			PlaySoundAtEntity("", "ptest/enemy/suitor/enabled", "ScriptArea_2", 0.0f, false);
+			PlayGuiSound("insanity_monster_roar02.ogg", 1.0f);
+			
+			PlaySoundAtEntity("", "ptest/enemy/suitor/amb_idle_whimp", "ScriptArea_4", 0.0f, false);
+			StartInsanityEvent("Steps_SlimeySneak01");
+			
+			StartScreenShake(0.08f, 0.5f, 0.0f, 0.0f);
+			StartScreenShake(0.03f, 2.5f, 1.0f, 1.0f);
+			
+			FadeImageTrailTo(2, 1);
+		break;
+		case 3:
+			PlaySoundAtEntity("", "15_body_impact", "ScriptArea_3", 0.0f, false);
+			PlaySoundAtEntity("", "ptest/enemy/suitor/attack_launch", "ScriptArea_4", 0.0f, false);
+			
+			PlaySoundAtEntity("", "24_rock_move", "ScriptArea_8", 0.0f, false);
+		break;
+		case 4:
+			PlaySoundAtEntity("", "enemy/brute/attack_claw_hit", "ScriptArea_4", 0.0f, false);
+			GiveSanityDamage(10, true);
+		break;
+		case 5:
+			CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "ScriptArea_1", false);
+			PlaySoundAtEntity("", "lurker_hit_wood", "ScriptArea_1", 0.0f, false);
+			PlayGuiSound("insanity_monster_roar03.ogg", 1.0f);
+			StartInsanityEvent("Steps_SlimeyRun01");
+			
+			StartScreenShake(0.08f, 0.5f, 0.0f, 0.0f);
+			StartScreenShake(0.03f, 2.5f, 1.0f, 1.0f);
+			
+			FadeImageTrailTo(1.5, 1);
+			
+			fEventSpeed = 0.5f;
+		break;
+		case 6:
+			PlaySoundAtEntity("", "enemy/brute/attack_claw_hit", "ScriptArea_3", 0.0f, false);
+		break;
+		case 7:
+			PlaySoundAtEntity("", "enemy/brute/attack_claw", "ScriptArea_3", 0.0f, false);
+		break;
+		case 8:
+			PlaySoundAtEntity("", "enemy/brute/attack_claw_hit", "ScriptArea_3", 0.0f, false);
+			PlayGuiSound("insanity_monster_roar01.ogg", 1.0f);
+			StartScreenShake(0.03f, 2.5f, 1.0f, 1.0f);
+			fEventSpeed = 3.5f;
+			
+			FadeImageTrailTo(1.5, 1);
+		break;
+		case 9:
+			PlaySoundAtEntity("", "player_bodyfall", "ScriptArea_3", 0.0f, false);
+			PlaySoundAtEntity("", "23_pyramid", "ScriptArea_3", 0.0f, false);
+			PlaySoundAtEntity("", "enemy/brute/attack_claw_hit", "ScriptArea_3", 0.0f, false);
+			PlaySoundAtEntity("", "ptest/enemy/suitor/enabled", "ScriptArea_3", 0.0f, false);
+			GiveSanityDamage(10, true);
+			
+			fEventSpeed = 5.5f;
+		break;
+		case 10:
+			PlayMusic("16_brute_safe_begin.ogg", false, 1, 1, 10, true);
+			GiveSanityBoost();
+			
+			SetSwingDoorLocked("DoorThe", false, false);
+			StopPlayerLookAt();
+			
+			SetEntityActive("grate1", false);
+			SetEntityActive("grate2", true);
+			SetEntityActive("Blood_*", true);
+			
+			FadeImageTrailTo(1.5, 1);
+			FadeSepiaColorTo(0, 1);
+			
+			AutoSave();
+		break;
+	}
+	
+	if(GetLocalVarInt("TimeSafe") <= 10) AddTimer("", fEventSpeed, "TimerBruteSafe");
+}
+//After..
+void EndRoar(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(0, 0);
+	StopMusic(0, 1);
+	StopMusic(0, 2);
+	StopMusic(0, 3);
+	StopMusic(0, 4);
+	StopMusic(0, 5);
+	StopMusic(0, 6);
+	StopMusic(0, 7);
+	StopMusic(0, 8);
+	StopMusic(0, 9);
+	StopMusic(0, 10);
+	StopMusic(0, 11);
+	StopMusic(0, 12);
+	StopMusic(0, 13);
+	StopMusic(0, 14);
+	StopMusic(0, 15);
+	
+
+	PlayGuiSound("insanity_monster_roar03.ogg", 1.0f);
+	StartScreenShake(0.08f, 0.5f, 2.0f, 4.0f);
+	
+	SetupLoadScreen("TextOne", "Load18", 0, "int_loading_beast.jpg");
+	
+	CompleteQuest("16Force", "16Force");
+}
+
+//////////////////////////////////
+//---------miscy misc--------//
+/////////////////////////////////
+
+
+/* Player dies before safe room
+*/
+void DiesB4Open(string &in asName, int alCount)
+{
+	//...
+}
+
+
+//////////////////////////////////
+//---------LANG related--------//
+/////////////////////////////////
+void InteractMes(string &in asEntity)
+{
+	SetMessage("TextOne", "ValveStuck", 1.0f);
+		}
+		
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load18", 0, "int_loading_beast.jpg");
+}
+	

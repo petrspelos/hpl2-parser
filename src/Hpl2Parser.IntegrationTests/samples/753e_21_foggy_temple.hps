@@ -1,0 +1,425 @@
+void OnStart()
+{
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	
+	SetDeathHint("DeathHint", "DHint1");
+	StopMusic(1.0f, 0);
+	StopMusic(1.0f, 10);
+	PlayMusic("amb_extra02", true, 0.3f, 1.0f, 0, false);
+	
+	AddUseItemCallback("", "KeyBar", "bar", "BU", true);
+	
+	//--USE ITEM CALLBACKS--//
+	for(int i=1;i<=3;i++)
+	AddUseItemCallback("", "guiding_rod0"+i, "AreaInsert", "UseRod", false);
+
+	//AddUseItemCallback("", "HammerChipper", "SDoor1", "UseChipper", false);
+	
+	//--COLLIDE CALLBACKS--//
+	AddEntityCollideCallback("Player", "AreaLookPipe", "LookPipe", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_4", "SanityPipe", true, 1);
+	AddEntityCollideCallback("Player", "AreaBottleScare", "BottleScare", true, 1);
+	AddEntityCollideCallback("Player", "AreaShake", "Shake", true, 1);
+	
+	if(ScriptDebugOn())
+	{
+		SetPlayerLampOil(100.0f);
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+		GiveItem("HammerChipper", "Puzzle", "", "stone_hammer_chipper.tga", 1.0f);
+	}
+	
+	//Amb soundscape
+	AddTimer("TimerManCry", 10, "TimerManCry");
+	AddTimer("TimerBird", RandInt(15, 55), "TimerBird");
+	
+	//Test
+	AddEntityCollideCallback("Player", "AreaInsanityEffect", "CollideTerrorArea", false, 0);
+	
+	//Display
+	
+	SetMapDisplayNameEntry("LevelTemple");
+	
+	CheckPoint("foggytemple1", "PlayerStartArea_1", "", "DeathHint", "Dhint1");
+	
+	}
+
+void OnEnter()
+{
+	AutoSave();
+	}
+
+///////////
+//door key
+void BU(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0.0f, false);
+	RemoveItem(asItem);
+	}
+/////////////////////
+//Rods
+void UseRod(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "13_rod_in", "AreaInsert", 0, false);
+	
+	if(asItem == "guiding_rod01")
+	{
+		CreateEntityAtArea(asItem, asItem, "AR1", true);
+		SetEntityInteractionDisabled(asItem, true);
+		RemoveItem(asItem);
+		
+		SetLocalVarString(asItem, "AR1_correct");
+	}
+
+	if(asItem == "guiding_rod02")
+	{
+		CreateEntityAtArea(asItem, asItem, "AR2", true);
+		SetEntityInteractionDisabled(asItem, true);
+		RemoveItem(asItem);
+		
+		SetLocalVarString(asItem, "AR2_correct");
+	}
+	
+	if(asItem == "guiding_rod03")
+	{
+		CreateEntityAtArea(asItem, asItem, "AR3", true);
+		SetEntityInteractionDisabled(asItem, true);
+		RemoveItem(asItem);
+		
+		SetLocalVarString(asItem, "AR3_correct");
+	}
+	
+	if(GetLocalVarString("guiding_rod01") == "AR1_correct" && GetLocalVarString("guiding_rod02") == "AR2_correct" && GetLocalVarString("guiding_rod03") == "AR3_correct")
+	{
+		SetLocalVarInt("RodsOK", 1);
+		
+		PlaySoundAtEntity("", "13_press_done", "AreaInsert", 0, false);
+		
+		GiveSanityBoost();
+		
+		SetLeverStuckState("LS1", 0, true);
+		CompleteQuest("lever", "21Lever");
+		
+		ConnectEntities("", "LS1", "SDoor", false, 1, "");
+		ConnectEntities("", "LS1", "SDoor1", false, 1, "");
+	}
+}
+//////////////////////////////////////////
+//Rusty door
+/*
+void Rusty(string &in asEntity)
+{
+	if(GetLocalVarInt("RustyOK") == 0)
+	{
+		SetMessage("TextOne", "RustyText", 2);
+	}
+	
+	if(GetLocalVarInt("RustyOK") == 1)
+	{
+		SetMessage("TextOne", "RustyText2", 2);
+	}
+	}
+
+void UseChipper(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "15_hammer", asEntity, 0, false);
+	
+	CreateParticleSystemAtEntity("", "ps_dust_impact.ps", "AP1", false);
+	CreateParticleSystemAtEntity("", "ps_dust_impact.ps", "AP2", false);
+	
+	ConnectEntities("", "LS1", "SDoor1", false, 1, "");
+	SetLocalVarInt("RustOK", 1);
+	
+	AddLocalVarInt("RustUse", 1);
+	
+	if(GetLocalVarInt("RustUse") < 2)
+	{
+		SetMessage("TextOne", "21RustOK", 2);
+	}
+	else
+	{
+		SetMessage("TextOne", "21RustOK2", 2);
+	}
+	
+	}
+	*/
+///////////////////////////
+//Disabling wheels
+void IntWheel1(string &in asEntity, int alState)
+{
+	if(alState != 1) return;
+	
+	PlaySoundAtEntity("", "18_valve_off", "Player", 0.0f, false);
+	PlaySoundAtEntity("", "14_elevator_clank", "Player", 0.0f, false);
+	AddLocalVarInt("WheelsOK", 1);
+	AddTimer("", 0.5f, "TimerDelayWheel");
+	}
+
+void IntWheel2(string &in asEntity, int alState)
+{
+	if(alState != 1) return;
+	
+	PlaySoundAtEntity("", "18_valve_off", "Player", 0.0f, false);
+	PlaySoundAtEntity("", "14_elevator_clank", "Player", 0.0f, false);
+	AddLocalVarInt("WheelsOK", 1);
+	AddTimer("", 0.5f, "TimerDelayWheel");
+	}
+
+void TimerDelayWheel(string &in asEntity)
+{
+	if(GetLocalVarInt("WheelsOK") > 1)
+	{
+		StopMusic(1.0f, 0);
+		
+		PlayMusic("25_puzzle_escape.ogg", false, 0.7f, 1.0f, 10, false);
+		SetEntityActive("deformed_man_1", false);
+		
+		SetLampLit("L1", false, true);
+		SetLampLit("L2", false, true);
+		
+		GiveSanityBoost();
+		
+		
+		StartScreenShake(0.02f,1, 0.5f,0.5f);
+		PlaySoundAtEntity("rock", "03_rock_move.snt", "Player", 1.0f, false);
+		
+		FadeLightTo("PointLight_1", 0, 0, 0, 0, 5, 5);
+		FadeLightTo("PointLight_2", 0, 0, 0, 0, 5, 5);	
+		
+		////Global
+		SetGlobalVarInt("FT", 2);
+		
+		AutoSave();
+	}
+	}
+	
+//-------------------!
+
+///////////////////////
+//EFFECTS
+//////////////////////
+
+//------------------!
+
+void IntBigDoor(string &in asEntity)
+{
+	PlaySoundAtEntity("", "close_gate", "DoorClosed", 0.0f, false);
+	PlaySoundAtEntity("", "general_bat", "DoorClosed", 0.0f, false);
+	GiveSanityDamage(10, true);
+}
+
+void BottleScare(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("wine01_7", 200, 0, 0, "World");
+	PlaySoundAtEntity("scare", "react_breath.snt", "Player", 1.0 / 0.7f,false);
+}
+
+/* Weeping
+ */
+ void TimerManCry(string &in asTimer)
+ {
+	PlaySoundAtEntity("AreaManCryS", "15_man0"+RandInt(1,2)+"_whimp", "AreaManCry_"+RandInt(1,6), 0.0, false);
+	
+	AddTimer("TimerManCry", RandInt(10, 0), "TimerManCry");
+ }
+ 
+ /* Sound
+ */
+void TimerBird(string &in asTimer)
+{
+	PlaySoundAtEntity("AreaBirdS", "24_wing.snt", "AreaWing_"+RandInt(1,4), 0.0, false);
+	
+	AddTimer("TimerBird", RandInt(15, 55), "TimerBird");
+}
+
+/* Shake
+*/
+
+void Shake(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.11f, 1.5, 0.1, 0.1);
+	FadeImageTrailTo(1.5f, 1.0f);
+	PlaySoundAtEntity("shake", "27_break", "AreaBreak", 0.0, false);
+	SetPlayerMoveSpeedMul(0.3f);
+	
+	AddTimer("speed1", 2.0f, "SpeedUp");
+	AddTimer("speed2", 2.5f, "SpeedUp");
+	AddTimer("ends", 4.5f, "SpeedUp");
+	
+	//SWING
+	
+	AddPropForce("L1", 0, 0, -4000, "World");
+	AddPropForce("L2", 0, 0, 4000, "World");
+	
+	//LIGHTS
+	
+	SetLampLit("L1", false, true);
+	SetLampLit("L2", false, true);
+	
+	FadeLightTo("PointLight_1", 0, 0, 0, 0, 5, 5);
+	FadeLightTo("PointLight_2", 0, 0, 0, 0, 5, 5);
+	
+	//SOUND
+	
+	PlaySoundAtEntity("chain", "general_chain_rattle.snt", "Chain_1", 1, false);
+}
+
+//----------------------------------------------------
+
+void SpeedUp(string &in asTimer)
+{
+	if(asTimer == "speed1")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		FadeImageTrailTo(0.0f, 1.0f);
+		PlaySoundAtEntity("breath", "react_scare.snt", "Player", 1, false);
+		PlaySoundAtEntity("chain", "general_chain_rattle.snt", "Chain_2", 1, false);
+	}
+	
+	if(asTimer == "speed2")
+	{
+		StartScreenShake(0.05f, 0.2, 0.1, 0.1);
+		PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.7f,false);
+		
+		//LIGHTS
+		
+		FadeLightTo("PointLight_1", 0.3, 0.05, 0.01, 0.0, 15, 5);
+		FadeLightTo("PointLight_2", 0.3, 0.05, 0.01, 0.0, 15, 5);
+		
+		SetLampLit("L1", true, true);
+		SetLampLit("L2", true, true);
+		
+		//SOUND 
+		
+		PlaySoundAtEntity("chain", "general_chain_rattle.snt", "Chain_1", 1, false);
+	}
+	
+	if(asTimer == "ends")
+	{
+		StopSound("chain", 3);
+	}
+}
+
+//---------------------------------------------	
+
+/////////////////////////////
+// HINTS
+/////////////////////////////
+
+//---------------------------------------------	
+
+void LeverMes(string &in asEntity)
+{
+	SetMessage("TextOne", "NotWorking", 2);
+	
+	AddQuest("lever", "21Lever");
+}
+
+void IntDoorFirst(string &in asEntity)
+{
+	SetMessage("TextOne", "18TooHeavy", 2);
+}
+
+void RodsMes(string &in asEntity)
+{
+	SetMessage("TextOne", "21Three", 2);
+}
+
+//--BEGIN LOOK PIPE--//
+
+void LookPipe(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	StartPlayerLookAt("ScriptArea_2", 1, 2, "");
+	SetMessage("TextOne", "21Pipe", 2);
+	
+	
+	AddTimer("lookpart1", 3, "TimerLookPipe");
+	AddTimer("lookpart2", 5, "TimerLookPipe");
+}
+
+void TimerLookPipe(string &in asTimer)
+{
+	if(asTimer == "lookpart1")
+	{
+		StartPlayerLookAt("ScriptArea_3", 1, 2, "");
+	}
+	else
+	{
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+	}
+}
+
+//Sanity Boost
+void SanityPipe(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityBoostSmall();
+}
+/////////////////////////////
+
+//--LOCKED DOOR--//
+
+void LockText(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2);
+}
+
+void LockText2(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor2", 2);
+}
+
+//////////////////////////////
+
+//--JUST A TEST--//
+void CollideTerrorArea(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Terror area: "+asChild+" State: "+alState, false);
+		
+	////////////////////////
+	// Enter
+	if(alState == 1)
+	{
+		PlaySoundAtEntity(asChild+"terror", "ui_torture.ent", asChild, 10, true);
+		AddTimer(asChild+"terror", 2, "TimerTerrorDrain");
+		
+		FadeImageTrailTo(1.0f, 0.5f);
+		
+		//////////////////
+		// A bit of extra ambient track if been in contact with all terror rooms machines
+		if(GetLocalVarInt(asChild) != 2) SetLocalVarInt(asChild, 1);
+		
+		if(GetLocalVarInt("AreaInsanityEffect_1") == 1 && GetLocalVarInt("AreaInsanityEffect_2") == 1 && 
+			GetLocalVarInt("AreaInsanityEffect_3") == 1){
+			PlaySoundAtEntity("amb_out", "24_amb_out.snt", "AreaPlant_2", 4.0f, true);
+			SetLocalVarInt(asChild, 2);
+			
+			AddDebugMessage(asChild, false);
+		}
+	}
+	////////////////////////
+	// Leave
+	else
+	{
+		FadeImageTrailTo(0.0f, 0.5f);
+		StopSound(asChild+"terror", 3);
+		RemoveTimer(asChild+"terror");
+	}
+	
+}
+
+//------------------------------------------
+
+void TimerTerrorDrain(string & asTimer)
+{
+	if(GetPlayerSanity() < 35)
+		GiveSanityDamage(0.05f*0.15f, false);
+	else
+		GiveSanityDamage(0.05f*0.5f, false);
+		
+	AddTimer(asTimer, 0.05f, "TimerTerrorDrain");
+}
+
+// I LIKE THIS I THINK I WILL KEEP IT..

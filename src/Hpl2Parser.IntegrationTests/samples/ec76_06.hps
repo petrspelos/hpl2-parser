@@ -1,0 +1,91 @@
+void OnStart()
+{
+    FadeOut(0);  
+    FadeIn(6.0f);  
+    AddTimer("text", 1.0f, "text");   
+    SetPlayerActive(false);
+	PlayGuiSound("elevator_stop", 100);
+	AddUseItemCallback("", "firstkey", "cellar_wood01_1", "newunlock", true);
+	AddEntityCollideCallback("Player", "monstertime", "monstertime", true, 1);
+	AddEntityCollideCallback("Player", "totrigger", "totrigger", true, 1);
+	AddEntityCollideCallback("Player", "shakey", "shakey", true, 1);
+}
+
+void OnEnter()
+{
+	PlayMusic("04_amb", true, 1, 5, 0, true);
+}
+
+void OnLeave()
+{
+
+}
+
+/////////////
+
+////INTRO////
+
+void text(string &in asTimer)
+{
+	SetMessage("Messages", "out", 0.0f); 
+    SetPlayerActive(true);   
+}
+
+/////////////
+
+////DOORS////
+
+void lockedboyo(string &in entity)
+ 
+{
+    if(GetSwingDoorLocked("cellar_wood01_1") == true)
+    {
+ 
+        SetMessage("Messages", "locked", 0.0f);
+ 
+    }
+}
+
+void newunlock(string &in item, string &in door)
+{
+	SetSwingDoorLocked("cellar_wood01_1", false, true);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem("firstkey");
+}
+
+/////////////////
+
+////MONSTERS////
+
+void monstertime(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(5.0f, true);
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_3", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_5", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_7", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_8", 0.001, "");
+	AddEnemyPatrolNode("boyo_mcgee", "PathNodeArea_9", 0, "");
+	SetEntityActive("boyo_mcgee", true);
+    PlayMusic("11_event_dog.ogg", false, 1.0f, 0.0f, 1, false);
+    SetMessage("Messages", "ohno", 0.0f);
+}
+
+void totrigger(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("monstertime", true);
+}
+
+///////////////
+
+////EVENTS////
+
+void shakey(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("amb_cave_rumble.snt", 100);
+	StartScreenShake(0.03f, 1.0f, 1.0f, 1.0f);
+}
+

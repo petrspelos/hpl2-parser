@@ -1,0 +1,294 @@
+void OnStart()
+{
+	PlaySoundAtEntity("BarrierSound", "27_tunnel_elec.snt", "AreaBarrierSound", 1, true);
+	SetMoveObjectStateExt("bridge_2", 0, 20, 20, 0, true);
+	
+	AddEntityCollideCallback("Player", "AreaFall", "TpTime", false, 1);
+	AddEntityCollideCallback("Player", "AreaAddQuest", "addBarrierQuest", true, 1);
+	AddEntityCollideCallback("Player", "AreaBarrierShock", "barrierShock", false, 1);
+	SetEntityPlayerInteractCallback("AreaBarrierShock", "barrierTouch", false);
+	SetEntityCallbackFunc("note_test2start", "clearAfterNote");
+	SetEntityCallbackFunc("test_3_key", "testEnd");
+	AddUseItemCallback("jamLL", "test2rodLeft", "AreaJamLeft", "JamCogsLeft", true);
+	AddUseItemCallback("jamRL", "test2rodRight", "AreaJamLeft", "JamCogsLeft", true);
+	AddUseItemCallback("jamLR", "test2rodLeft", "AreaJamRight", "JamCogsRight", true);
+	AddUseItemCallback("jamRR", "test2rodRight", "AreaJamRight", "JamCogsRight", true);
+	
+	RotatePropToSpeed("cogRight_1", 1, 3, -999999999, 0, 0, false, "AreaCogRight1Rotate");
+	RotatePropToSpeed("cogRight_2", 1, 3, 999999999, 0, 0, false, "AreaCogRight2Rotate");
+	RotatePropToSpeed("cogLeft_1", 1, 3, 999999999, 0, 0, false, "AreaCogLeft1Rotate");
+	RotatePropToSpeed("cogLeft_2", 1, 3, -999999999, 0, 0, false, "AreaCogLeft2Rotate");
+	PlaySoundAtEntity("SoundLeft", "21_cog_wheel01.snt", "AreaSoundLeft", 1, true);
+	PlaySoundAtEntity("SoundRight", "21_cog_wheel01.snt", "AreaSoundRight", 1, true);
+	
+	FadeLightTo("GeneratorLightLeft", 1, 0.5, 0, 1, 0, 0.01);
+	FadeLightTo("GeneratorLightRight", 1, 0.5, 0, 1, 0, 0.01);
+	
+	SetEntityCustomFocusCrossHair("easter_egg_5", "Pick");
+	SetEntityPlayerInteractCallback("easter_egg_5", "CollectEasterEgg", true);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("test-2");
+	PlayMusic("22_amb.ogg", true, 1, 1, 1, false);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(1, 1);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+////////////////levers/////////////////////////////
+
+//right
+void Lever1(string &in asEntity, int alState)
+{
+	if(alState==1)
+	{
+		SetLeverStuckState(asEntity, 1, true);
+		SetEntityActive("AreaJamRight", true);
+		FadeLightTo("GeneratorLightRight", 1, 0.5, 0, 1, 1.5, 0.5);
+		for(int i=1; i<4; i++)
+		{
+			RotatePropToSpeed("rotor_"+i, 0.5, 0.5, 0, 999999999, 0, false, "joint_"+i);
+			PlaySoundAtEntity("cogsSound_"+i, "21_cog_wheel_big.snt", "joint_"+i, 1, true);
+		}
+		PlaySoundAtEntity("GeneratorRight", "13_machine_run.snt", "AreaGeneratorRight", 0.2, true);
+		PlayGuiSound("17_piston_move.snt", 1);
+		AddTimer("", 0.1, "change1");
+	}
+}
+
+//left
+void Lever2(string &in asEntity, int alState)
+{
+	if(alState==1)
+	{
+		SetLeverStuckState(asEntity, 1, true);
+		SetEntityActive("AreaJamLeft", true);
+		FadeLightTo("GeneratorLightLeft", 1, 0.5, 0, 1, 1.5, 0.5);
+		RotatePropToSpeed("rotor_4", 0.5, 0.5, 0, 999999999, 0, false, "joint_4");
+		PlaySoundAtEntity("cogsSound_4", "21_cog_wheel_big.snt", "joint_4", 1, true);
+		RotatePropToSpeed("rotor_5", 0.5, 0.5, 0, 999999999, 0, false, "joint_5");
+		PlaySoundAtEntity("cogs", "21_cog_wheel_big.snt", "rotor_5", 0.2, false);
+		PlaySoundAtEntity("GeneratorLeft", "13_machine_run.snt", "AreaGeneratorLeft", 0.2, true);
+		PlayGuiSound("17_piston_done.snt", 1);
+	}
+}
+
+//////////////////sounds and moving objects//////////////////////////////////
+
+void change1(string &in asTimer)
+{
+	AddTimer("", 7, "change2");
+	AddTimer("", 5.5, "stopBridgeSound");
+	SetMoveObjectStateExt("bridge_1", 0, 0.3, 1, 1, true);
+	SetMoveObjectStateExt("bridge_2", 1, 0.3, 1, 1, true);
+	PlaySoundAtEntity("b1_go", "joint_metal_chain.snt", "AreaBridge_1", 1.5, true);
+	PlaySoundAtEntity("b2_go", "joint_metal_chain.snt", "AreaBridge_2", 1.5, true);
+}
+
+void change2(string &in asTimer)
+{
+	AddTimer("", 7, "change1");
+	AddTimer("", 5.5, "stopBridgeSound");
+	SetMoveObjectStateExt("bridge_1", 1, 0.3, 1, 1, true);
+	SetMoveObjectStateExt("bridge_2", 0, 0.3, 1, 1, true);
+	PlaySoundAtEntity("b1_go", "joint_metal_chain.snt", "AreaBridge_1", 1.5, true);
+	PlaySoundAtEntity("b2_go", "joint_metal_chain.snt", "AreaBridge_2", 1.5, true);
+}
+
+void stopBridgeSound(string &in asTimer)
+{
+	StopSound("b1_go", 0.6);
+	StopSound("b2_go", 0.6);
+	AddTimer("", 0.6, "startBridgeSound");
+}
+
+void startBridgeSound(string &in asTimer)
+{
+	PlaySoundAtEntity("b1_start", "joint_large_wood_min_max.snt", "bridge_1", 0, false);
+	PlaySoundAtEntity("b2_start", "joint_large_wood_min_max.snt", "bridge_2", 0, false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+///////////////////teleporting the player when he falls//////////////////////////////////
+
+void TpTime(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 0.6, "TpBack");
+	PlayGuiSound("react_scare.snt", 1);
+	FadeOut(0.5);
+	SetLocalVarFloat("healthBefore", GetPlayerHealth());
+}
+
+void TpBack(string &in asTimer)
+{
+	TeleportPlayer("TP_Fail");
+	AddPlayerBodyForce(0, 20000, 0, false);
+	AddTimer("", 0.7, "TpHealth");
+	AddTimer("", 0.2, "TpFade");
+}
+
+void TpHealth(string &in asTimer)
+{
+	SetPlayerHealth(GetLocalVarFloat("healthBefore"));
+}
+
+void TpFade(string &in asTimer)
+{
+	FadeIn(0.4);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////breaking the mechanism/////////////////////////////////////////////
+
+void JamCogsLeft(string &in asItem, string &in asEntity)
+{
+	RemoveUseItemCallback("jamLL");
+	RemoveUseItemCallback("jamRL");
+	StopSound("SoundLeft", 0.2);
+	PlaySoundAtEntity("", "27_jam.snt", "AreaSoundLeft", 0.1, false);
+	SetEntityActive("cogLeft_1", false);
+	SetEntityActive("cogLeft_2", false);
+	SetEntityActive("cogLeftStop_1", true);
+	SetEntityActive("cogLeftStop_2", true);
+	SetEntityActive("test2rodStuckLeft", true);
+	CreateParticleSystemAtEntity("StuckLeft_spark", "ps_cog_stone.ps", "AreaSoundLeft", false);
+	CreateParticleSystemAtEntity("StuckLeft_smoke", "ps_break_mansionbase_wall.ps", "AreaDustLeft", false);
+	StartScreenShake(0.03, 3, 0.2, 2);
+	StartPlayerLookAt("AreaSoundLeft", 5, 7, "");
+	AddTimer("", 2, "StopLooking");
+	AddLocalVarInt("Done", 1);
+	checkDone();
+	RemoveItem(asItem);
+	StopSound("GeneratorLeft", 0.1);
+	AutoSave();
+}
+
+void JamCogsRight(string &in asItem, string &in asEntity)
+{
+	RemoveUseItemCallback("jamRR");
+	RemoveUseItemCallback("jamLR");
+	StopSound("SoundRight", 0.2);
+	PlaySoundAtEntity("", "27_jam.snt", "AreaSoundRight", 0.1, false);
+	SetEntityActive("cogRight_1", false);
+	SetEntityActive("cogRight_2", false);
+	SetEntityActive("cogRightStop_1", true);
+	SetEntityActive("cogRightStop_2", true);
+	SetEntityActive("test2rodStuckRight", true);
+	CreateParticleSystemAtEntity("StuckRight_spark", "ps_cog_stone.ps", "AreaSoundRight", false);
+	CreateParticleSystemAtEntity("StuckRight_smoke", "ps_break_mansionbase_wall.ps", "AreaDustRight", false);
+	StartScreenShake(0.03, 3, 0.2, 2);
+	StartPlayerLookAt("AreaSoundRight", 5, 7, "");
+	AddTimer("", 2, "StopLooking");
+	AddLocalVarInt("Done", 1);
+	StopSound("GeneratorRight", 0.1);
+	RemoveItem(asItem);
+	checkDone();
+	AutoSave();
+}
+
+void StopLooking(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void checkDone()
+{
+	if(GetLocalVarInt("Done") == 1)
+	{
+		SetEntityActive("barrier_a_1", false);
+		SetEntityActive("barrier_a_2", false);
+		SetEntityActive("barrier_b_1", true);
+		SetEntityActive("barrier_b_2", true);
+		SetLightVisible("PointLight_20", false);
+		SetLightVisible("PointLight_21", false);
+	}
+	
+	if(GetLocalVarInt("Done") == 2)
+	{
+		SetPropEffectActive("barrier_b_1", false, false);
+		SetPropEffectActive("barrier_b_2", false, false);
+		SetEntityActive("barrier_block", false);
+		SetEntityActive("AreaBarrierShock", false);
+		StopSound("BarrierSound", 0.1);
+		SetLightVisible("PointLight_22", false);
+		SetLightVisible("PointLight_23", false);
+		SetLightVisible("GeneratorLightLeft", false);
+		SetLightVisible("GeneratorLightRight", false);
+		RemoveEntityCollideCallback("Player", "AreaAddQuest");
+		SetEntityActive("AreaAddQuest", false);
+		SetEntityActive("test_3_key", true);
+		SetEntityActive("potion_oil_1", true);
+		SetEntityActive("note_test2end", true);
+	}
+	AddTimer("", 0.8, "checkTimer");
+}
+
+void checkTimer(string &in asTimer)
+{
+	SetPlayerSanity(GetPlayerSanity() - 0.1);
+	GiveSanityBoost();
+	if(GetLocalVarInt("Done") == 1) SetMessage("Messages", "barrierWeak", 5);
+	if(GetLocalVarInt("Done") == 2)
+	{
+		CompleteQuest("barrierQuest", "barrierQuest");
+		SetMessage("Messages", "barrierSafe", 5);
+		PlayMusic("02_puzzle.ogg", false, 1, 0.2, 3, true);
+	}
+}
+
+void addBarrierQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("barrierQuest", "barrierQuest");
+	SetMessage("Messages", "barrierNotSafe", 3);
+	//AutoSave();
+}
+
+void barrierShock(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("react_scare.snt", 1);
+	PlayGuiSound("ui_elec_damage.snt", 1);
+	GiveSanityDamage(10, false);
+	GivePlayerDamage(10, "BloodSplat", true, false);
+	AddPlayerBodyForce(0, 20000, -30000, false);
+}
+
+void barrierTouch(string &in asEntity)
+{
+	PlayGuiSound("react_scare.snt", 1);
+	PlayGuiSound("ui_elec_damage.snt", 1);
+	GiveSanityDamage(10, false);
+	GivePlayerDamage(10, "BloodSplat", true, false);
+	AddPlayerBodyForce(0, 20000, -30000, false);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////beggining & end///////////////////////////////////////
+
+void clearAfterNote(string &in asEntity, string &in type)
+{
+	/*
+	SetPropActiveAndFade("display_broken", false, 2);
+	SetPropActiveAndFade("candle_floor_1", false, 2);
+	SetPropActiveAndFade("potion_oil_start", true, 2);
+	SetEntityActive("block_start", false);
+	*/
+}
+
+void testEnd(string &in asEntity, string &in type)
+{
+	SetLevelDoorLocked("level_celler_2", false);
+	SetGlobalVarInt("test", 2);
+}

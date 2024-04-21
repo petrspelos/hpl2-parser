@@ -1,0 +1,399 @@
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\OS_Lerp.hps"
+
+bool insideGruntHitArea = false;
+bool PlayerInsideWindArea = false;
+bool BlockInsideWindArea = false;
+bool SuitorInsideWindArea = false;
+bool InterpKey = false;
+bool InterpFog = false;
+bool hasIceBlockPuzzleSolved = false;
+
+
+void OnStart()
+{
+	AutoSave();
+	PlayPropAnimation("grunt_Shivering_Char_1", "Shiver", 0.1f, true, "");
+	
+	
+	
+	AddEntityCollideCallback("OS_bonfire_Prop_1", "area_BonfireCollide", "area_BonfireCollide", true, 1);
+	AddEntityCollideCallback("OS_bonfire_Prop_1", "area_TryExtinguishFire", "area_TryExtinguishFire", false, 1);
+	
+	AddEntityCollideCallback("Player", "area_GruntSlashPlayer", "area_GruntSlashPlayer", false, 0);
+	
+	SetLocalVarInt("GruntIsWarm", 0);
+	SetLocalVarInt("HasPlayerBeganWindySec", 0);
+	SetNPCFollowPlayer("grunt_Shivering_Char_1", true);
+	
+	AddEntityCollideCallback("Player", "area_RegionalArea_Bearen", "area_RegionalArea_Bearen", false, 1);
+	AddEntityCollideCallback("Player", "area_RegionalArea_WindyCliff", "area_RegionalArea_WindyCliff", false, 1);
+	AddEntityCollideCallback("Player", "area_BearSpawnEvent", "area_BearSpawnEvent", true, 1);
+
+	AddUseItemCallback("UnlockWindyCliffs", "key_study_1", "prison_1", "UnlockWindyCliffs", true);
+
+	AddEntityCollideCallback("Player", "area_WindZone_1", "area_WindZone", false, 0);
+	AddEntityCollideCallback("Player", "area_WindZone_2", "area_WindZone", false, 0);
+	AddEntityCollideCallback("Player", "area_WindZone_3", "area_WindZone", false, 0);
+	AddEntityCollideCallback("Player", "area_WindZone_4", "area_WindZone", false, 0);
+	AddEntityCollideCallback("Player", "area_WindZone_5", "area_WindZone", false, 0);
+	AddEntityCollideCallback("Player", "area_WindZone_6", "area_WindZone", false, 0);
+	
+	AddEntityCollideCallback("enemy_suitor_1", "area_WindZone_6", "area_WindZone_Suitor", false, 0);
+	AddEntityCollideCallback("enemy_suitor_1", "area_suitorHasFallen", "area_suitorHasFallen", false, 1);
+	
+	AddEntityCollideCallback("OS_iceBlock_Pushable_1", "area_WindZone_1", "area_WindZoneBlock", false, 0);
+	AddEntityCollideCallback("OS_iceBlock_Pushable_1", "area_WindZone_2", "area_WindZoneBlock", false, 0);
+	AddEntityCollideCallback("OS_iceBlock_Pushable_1", "area_WindZone_3", "area_WindZoneBlock", false, 0);
+	AddEntityCollideCallback("OS_iceBlock_Pushable_1", "area_WindZone_4", "area_WindZoneBlock", false, 0);
+	AddEntityCollideCallback("OS_iceBlock_Pushable_1", "area_WindZone_5", "area_WindZoneBlock", false, 0);
+	
+	AddEntityCollideCallback("OS_iceBlock_Pushable_1", "area_blockHitButton", "area_blockHitButton", true, 1);
+	
+	AddEntityCollideCallback("Player", "area_BeginSuitorSeq", "area_BeginSuitorSeq", true, 1);
+	
+	AddEntityCollideCallback("Player", "Fall_WindyCliff_1", "Fall_WindyCliff_1", false, 1);
+	AddEntityCollideCallback("Player", "Fall_WindyCliff_2", "Fall_WindyCliff_2", false, 1);
+	
+	AddEntityCollideCallback("OS_iceBlock_Pushable_1", "Fall_WindyCliff_1", "IceBlock_FallOffCliff", false, 1);
+	
+	PlaySoundAtEntity("GruntChatterTeethSFX", "OS_FreezingGruntChatter.snt", "grunt_Shivering_Char_1", 0.0f, false);
+}
+
+
+void OnEnter()
+{
+SetPlayerFallDamageDisabled(true);
+	PlayMusic("WindyCliffsBearenWastesMusic", true, 0.75f, 1.0f, 0, false);
+}
+
+void OnLeave()
+{
+
+}
+
+void OnUpdate(float afStep)
+{
+	UpdateTickSystem(afStep);
+	
+	// Lerps:
+	LERP_MagicKey();
+	LERP_FogDown();
+	
+	//
+	WindLogic();
+}
+
+
+void IceBlock_FallOffCliff(string &in asParent, string &in asChild, int alState)
+{
+if(hasIceBlockPuzzleSolved == false){
+	SetEntityPos("OS_iceBlock_Pushable_1", GetEntityPosX("area_returnIceBlockLoc"), GetEntityPosY("area_returnIceBlockLoc"), GetEntityPosZ("area_returnIceBlockLoc"));
+	ResetProp("OS_iceBlock_Pushable_1");
+}
+}
+
+
+void Fall_WindyCliff_1(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStart_CP_Windy");
+	PlayGuiSound("SlipOffIceRinkSFX.snt", 1.0f);
+}
+
+void Fall_WindyCliff_2(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStart_CP_Windy_2");
+	PlayGuiSound("SlipOffIceRinkSFX.snt", 1.0f);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// RANDOM MESSAGE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+void area_TryExtinguishFire(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Messages", "Message_FireCantBeExtinguished",  0.0f);
+}
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// WIND STUFFS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+void area_BeginSuitorSeq(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("enemy_suitor_1", true);
+SetPlayerActive(false);
+StartPlayerLookAt("area_SuitorLookAt", 5.0f, 10.0f, "");
+SetPropHealth("castle_1", 0.0f);
+ShowEnemyPlayerPosition("enemy_suitor_1");
+PlaySoundAtEntity("", "break_wood.snt", "area_breakDoorSFX", 0.0f, false);
+}
+
+
+
+
+void area_suitorHasFallen(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "OS_ScreamSuitorFall.snt", "enemy_suitor_1", 0.0f, false);
+AddTimer("", 1.0f, "removeSuitorAfterFall");
+}
+
+void removeSuitorAfterFall(string &in asTimer){
+	SetEntityActive("enemy_suitor_1", false);
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+}
+
+
+
+
+void areaButtonTooBigInteract(string &in asEntity)
+{
+
+SetMessage("Messages", "Message_ButtonCantPushNeecdBlock",  0.0f);
+}
+
+void area_blockHitButton(string &in asParent, string &in asChild, int alState)
+{
+SetMoveObjectState("safety_normal_vert_noauto_1", -1.0f);
+SetEntityActive("area_blockHitButton", false);
+hasIceBlockPuzzleSolved = true;
+}
+
+
+void area_WindZone(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1){
+		PlayerInsideWindArea=true;
+		PlaySoundAtEntity("LoudWindSFX", "29_WindyCliffsWind.snt", "Player", 0.5f, false);
+		StopSound("CalmWindSFX", 0.5f);
+	}
+	if(alState == -1){
+		PlayerInsideWindArea=false;
+		StopSound("LoudWindSFX", 0.5f);
+		PlaySoundAtEntity("CalmWindSFX", "29_WindyCliffsWind_Softer.snt", "Player", 0.5f, false);
+	}
+}
+
+void area_WindZoneBlock(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1){
+		BlockInsideWindArea=true;
+	}
+	if(alState == -1){
+		BlockInsideWindArea=false;
+	}
+}
+
+void area_WindZone_Suitor(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1){
+		SuitorInsideWindArea=true;
+	}
+	if(alState == -1){
+		SuitorInsideWindArea=false;
+	}
+}
+
+void WindLogic(){
+
+if(PlayerInsideWindArea == true){
+
+SetPlayerPos(GetPlayerPosX(), GetPlayerPosY(), GetPlayerPosZ()+0.05f);
+
+}
+
+if(BlockInsideWindArea == true){
+SetEntityPos("OS_iceBlock_Pushable_1",GetEntityPosX("OS_iceBlock_Pushable_1"), GetEntityPosY("OS_iceBlock_Pushable_1"), GetEntityPosZ("OS_iceBlock_Pushable_1")+0.05f);
+
+}
+
+if(SuitorInsideWindArea == true){
+SetEntityPos("enemy_suitor_1",GetEntityPosX("enemy_suitor_1"), GetEntityPosY("enemy_suitor_1"), GetEntityPosZ("enemy_suitor_1")+0.1f);
+
+}
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// DOOR UNLOCKS //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void UnlockWindyCliffs(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("prison_1", false, true);
+	PlayGuiSound("unlock_door.snt", 1.0f);
+	RemoveItem(asItem);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// CHECKPOINTS //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CP_BearSpawn(string &in asName, int alCount)
+{
+	AddEntityCollideCallback("Player", "area_BearSpawnEvent", "area_BearSpawnEvent", true, 1);
+	ResetProp("OS_bonfire_Prop_1");
+}
+
+void CP_WindyCliffCP(string &in asName, int alCount)
+{
+SetEntityActive("area_BearSpawnEvent", false);
+SetEntityActive("OS_bonfire_Prop_1", false);
+	SetLocalVarInt("HasPlayerBeganWindySec", 1);
+	SetFogColor(191.0f, 191.0f, 191.0f, 0.5f);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// BEAR SPAWN EVENT //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_BearSpawnEvent(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Wild_Polar_Bear_1", true);
+	for(int i =1; i< 52;i++){
+	AddEnemyPatrolNode("Wild_Polar_Bear_1", "PathNodeBear_"+i, 0.001f, "");
+	}
+	
+	CheckPoint ("CP_BearSpawn", "CP_Start_BearSpawn", "CP_BearSpawn", "", "");
+	AutoSave();
+}
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// REGIONAL MESSAGES /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_RegionalArea_Bearen(string &in asParent, string &in asChild, int alState)
+{
+	ShowScreenImage("OS_RegionalMessage_BearenWastes.png", -250.0f, 200.0f, 500.0f, false, 5.0f, 1.0f, 1.0f);
+}
+
+void area_RegionalArea_WindyCliff(string &in asParent, string &in asChild, int alState)
+{
+	ShowScreenImage("OS_RegionalMessage_WindyCliffs.png", -250.0f, 200.0f, 500.0f, false, 5.0f, 1.0f, 1.0f);
+	
+	if(GetLocalVarInt("HasPlayerBeganWindySec") == 0){
+	SetLocalVarInt("HasPlayerBeganWindySec", 1);
+	InterpKey = false;
+	InterpFog = true;
+	fInterpTo(0.8f, 0.50f, -0.05f);
+	PlaySoundAtEntity("CalmWindSFX", "29_WindyCliffsWind_Softer.snt", "Player", 2.0f, false);
+	AutoSave();
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// GRUNT ANGRY ATTACK ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_GruntSlashPlayer(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1){
+	
+	insideGruntHitArea = true;
+
+	if(GetLocalVarInt("GruntIsWarm") == 1){
+	PlayPropAnimation("grunt_Shivering_Char_1", "SlashPlayer", 0.1f, false, "GruntBackToIdleAnim");
+	AddTimer("SlashPlayerHitback", 0.75f, "SlashPlayerHitback");
+	PlaySoundAtEntity("", "/enemy/grunt/attack_claw.snt", "grunt_Shivering_Char_1", 0.0f, false);
+	}
+	
+	}
+	
+	if(alState == -1){
+	
+	
+	insideGruntHitArea = false;
+	
+	}
+	
+}
+
+void SlashPlayerHitback(string &in asTimer)
+{
+
+if( insideGruntHitArea == true){
+AddPlayerBodyForce(100000.0f, 0.0f, 0.0f, false);
+PlaySoundAtEntity("", "/enemy/grunt/attack_claw_hit.snt", "grunt_Shivering_Char_1", 0.0f, false);
+}
+
+
+}
+
+void GruntBackToIdleAnim(string &in asProp)
+{
+	PlayPropAnimation("grunt_Shivering_Char_1", "IdleWarm", 0.1f, true, "");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// BONFIRE COMPLETE //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_BonfireCollide(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("OS_bonfire_Prop_1", false);
+	SetEntityActive("bonfire_1", true);
+	PlayPropAnimation("grunt_Shivering_Char_1", "IdleWarm", 0.1f, true, "");
+	SetLocalVarInt("GruntIsWarm", 1);
+	InterpKey = true;
+	fInterpTo(GetEntityPosY("key_study_1"), 1.0, -2.0f);
+
+	FadeEnemyToSmoke("Wild_Polar_Bear_1", false);
+
+	StopSound("GruntChatterTeethSFX", 0.1f);
+
+	CheckPoint ("CP_windycliffs", "PlayerStart_CP_Windy", "CP_WindyCliffCP", "", "");
+	
+	AutoSave();
+}
+
+void LERP_MagicKey(){
+if(InterpKey == true){
+if(isInterpolating == true){
+	SetEntityPos("key_study_1", GetEntityPosX("key_study_1"), current, GetEntityPosZ("key_study_1"));
+}
+}
+}
+
+void LERP_FogDown()
+{
+if(InterpFog == true){
+if(isInterpolating == true){
+	SetFogColor(191.0f, 191.0f, 191.0f, current);
+}
+}
+}

@@ -1,0 +1,127 @@
+//You find the string in here
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelLiving");
+	AutoSave();
+	
+	StopMusic(0.0f, 0);
+	SetPropHealth("DoorBreak", 20);
+	
+	AddEntityCollideCallback("Player", "AreaCollidePush", "EventDustPush", true, 1);
+	AddEntityCollideCallback("Player", "AreaReactEnemy", "ReactEnemy", true, 1);
+	
+	AddTimer("", 0.1f, "Node");
+	AddTimer("swing", 1, "TimerSwing");
+}
+
+void OnEnter()
+{
+	PlayMusic("03_amb", true, 0.2f, 3, 0, false);
+}
+
+/////////////////////
+//Button door
+void PressButton(string &in asEntity)
+{
+	SetSwingDoorDisableAutoClose("KeyDoor", true);
+	AddPropForce("KeyDoor", 0, 0, 300, "world");
+	SetSwingDoorLocked("KeyDoor", false, true);
+	PlaySoundAtEntity("", "impact_book_high", "Player", 0.0f, false);
+
+	SetMessage("TextOne", "03Push", 2);
+}
+
+void StopLook(string &in asTimer)
+{
+	PlaySoundAtEntity("", "scrape_wood", "Player", 0.0f, false);
+	StopPlayerLookAt();
+}
+//End shelf sequence//
+/////////////////////
+////////////////
+//
+//EFFECTS
+
+void CauseEvent(string &in asEntity)
+{
+	GiveSanityBoostSmall();
+	
+	AddEntityCollideCallback("Player", "AreaLightOut", "EventScaryLight", true, 1);
+	
+	CompleteQuest("rot", "rot");
+	}
+	
+void EventScaryLight(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(1, true);
+	SetLampLit("Light4Out", false, true);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_1", false);
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_1", 0.0f, false);
+	PlayMusic("11_event_tree.ogg", false, 0.7, 0.1, 10, false);
+	AddPropForce("wine01_1", 0, 0, 500, "world");
+	AddPropForce("wine02_1", -500, 0, 0, "world");
+	}
+	
+void EventDustPush(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_paper_blow.ps", "WindPushParticle", false);
+	PlaySoundAtEntity("", "scare_wind", "WindPushParticle", 0.0f, false);
+	}
+	
+void Node(string &in asTimer)
+{
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_1", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_2", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_3", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_4", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_5", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_6", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_7", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_8", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_9", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_10", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_11", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_12", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_13", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_14", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_15", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_16", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_17", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_18", 0.001f, "");
+	AddEnemyPatrolNode("Grunt", "PathNodeArea_19", 0.001f, "");
+	}
+	
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load3", 0, "int_loading_knights.jpg");
+	}
+	
+//--LIGHT SWINGS SOMETIMES--//
+void TimerSwing(string &in asTimer)
+{
+	float iSwing = RandFloat(600, -600);
+	
+	PlaySoundAtEntity("chain", "general_chain_rattle_single", "Light4Out", 0.0f, false);
+	
+	AddPropForce("Light4Out", iSwing, iSwing, iSwing, "World");
+	
+	AddTimer("swing", RandFloat(10.5, 15.5), "TimerSwing");
+}
+
+//--DOOR TEXT--//
+void DoorText(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2);
+}
+
+//--PLAYER REACTS TO GRUNT--//
+void ReactEnemy(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("pant", "react_pant.snt", "Player", 2, false);
+}
+
+//--PLAYER INTERRACT SCARY DOOR--//
+void IntBadDoor(string &in asEntity)
+{
+	SetMessage("TextOne", "03Door", 2);
+}

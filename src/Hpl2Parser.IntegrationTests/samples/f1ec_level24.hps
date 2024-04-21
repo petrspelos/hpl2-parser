@@ -1,0 +1,222 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "ServantsComing", "ServantsComing", true, 1);
+PlayMusic("amb_extra02.ogg", true, 1, 4.0f, 0, true);
+AddPlayerSanity(100);
+AutoSave();
+}
+
+void ServantsComing(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+StartPlayerLookAt("AreaLook1", 1, 1, "");
+AddEntityCollideCallback("Grunt1", "ServantsInRoom", "ServantsInRoom", true, 1);
+AddEntityCollideCallback("Brute1", "ServantsInRoom", "ServantsInRoom", true, 1);
+SetEntityActive("Brute1", true);
+SetEntityActive("Grunt1", true);
+AddEnemyPatrolNode("Brute1", "PathNodeArea_1", 0.001f, "Idle");
+AddEnemyPatrolNode("Grunt1", "PathNodeArea_1", 0.001f, "Idle");
+}
+
+void ServantsInRoom(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Brute1", false);
+SetEntityActive("Grunt1", false);
+SetEntityActive("Door1", true);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddEntityCollideCallback("Player", "ServantsFighting", "ServantsFighting1", true, 1);
+}
+
+void ServantsFighting1(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("27_event_bang.ogg", false, 1, 0.5f, 9, false);
+PlaySoundAtEntity("","react_scared","Player", 0,false);
+StartPlayerLookAt("Door1", 1, 1, "");
+SetPlayerActive(false);
+GiveSanityDamage(15, true);
+PlaySoundAtEntity("","grunt_alert","Door1", 0,false);
+PlaySoundAtEntity("","suitor_alert","Door1", 0,false);
+PlaySoundAtEntity("","brute_enabled","Door1", 0,false);
+PlaySoundAtEntity("","03_break_wall","Door1", 0,false);
+AddTimer("", 2.0, "ServantsFighting2");
+}
+
+void ServantsFighting2(string& in asTimer)
+{
+PlaySoundAtEntity("","03_break_wall","Door1", 0,false);
+PlaySoundAtEntity("","suitor_claw_hit","Door1", 0,false);
+PlaySoundAtEntity("","break_wood_metal","Door1", 0,false);
+PlaySoundAtEntity("","19_inject","Door1", 0,false);
+PlaySoundAtEntity("","brute_claw","Door1", 0,false);
+PlaySoundAtEntity("","grunt_alert","Door1", 0,false);
+AddTimer("", 1.7, "ServantsFighting3");
+}
+
+void ServantsFighting3(string& in asTimer)
+{
+PlaySoundAtEntity("","grunt_alert","Door1", 0,false);
+PlaySoundAtEntity("","grunt_generic","Door1", 0,false);
+PlaySoundAtEntity("","15_body_impact","Door1", 0,false);
+PlaySoundAtEntity("","15_ripp_door","Door1", 0,false);
+PlaySoundAtEntity("","suitor_alert","Door1", 0,false);
+PlaySoundAtEntity("","brute_alert","Door1", 0,false);
+AddTimer("", 2.3, "ServantsFighting4");
+}
+
+void ServantsFighting4(string& in asTimer)
+{
+PlaySoundAtEntity("","suitor_alert","Door1", 0,false);
+PlaySoundAtEntity("","player_bodyfall","Door1", 0,false);
+PlaySoundAtEntity("","brute_alert","Door1", 0,false);
+PlaySoundAtEntity("","grunt_alert","Door1", 0,false);
+AddTimer("", 1.5, "ServantsFighting5");
+}
+
+void ServantsFighting5(string& in asTimer)
+{
+PlaySoundAtEntity("","player_bodyfall","Door1", 0,false);
+PlaySoundAtEntity("","15_drag_body","Door1", 0,false);
+AddTimer("", 3.0, "ServantsFighting6");
+}
+
+void ServantsFighting6(string& in asTimer)
+{
+PlaySoundAtEntity("","suitor_alert","Door1", 0,false);
+AddTimer("", 4.5, "SpawnSuitor");
+}
+
+void SpawnSuitor(string& in asTimer)
+{
+SetEntityActive("PathNodeArea_1", false);
+SetEntityActive("PathNodeArea_2", true);
+SetEntityActive("PathNodeArea_3", true);
+SetPlayerActive(true);
+StopPlayerLookAt();
+SetEntityActive("Suitor", true);
+AddEnemyPatrolNode("Suitor", "PathNodeArea_2", 0.001f, "Idle");
+AddEnemyPatrolNode("Suitor", "PathNodeArea_3", 0.001f, "Idle");
+AddEntityCollideCallback("Suitor", "DespawnSuitor", "DespawnSuitor", true, 1);
+}
+
+void DespawnSuitor(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Suitor", false);
+AddEntityCollideCallback("Player", "Release1", "Release1", true, 1);
+}
+
+void Release1(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("PathNodeArea_5", true);
+SetEntityActive("PathNodeArea_4", true);
+SetEntityActive("PathNodeArea_3", false);
+SetEntityActive("PathNodeArea_2", false);
+SetEntityActive("Grunt2", true);
+SetEntityActive("Brute2", true);
+SetSwingDoorClosed("Door2", true, true);
+SetSwingDoorLocked("Door2", true, true);
+FadeOut(1);
+SetPlayerActive(false);
+SetPlayerLampOil(0.0f);
+AddTimer("", 1.5, "Release2");
+}
+
+void Release2(string& in asTimer)
+{
+SetSwingDoorClosed("Door2", true, true);
+FadeIn(1);
+SetPlayerActive(true);
+SetPlayerMoveSpeedMul(0.0f);
+TeleportPlayer("PlayerStartArea_2");
+SetInventoryDisabled(true);
+StartPlayerLookAt("Door3", 1, 1, "");
+}
+
+void LookAtServants(string &in asEntity)
+{
+StartPlayerLookAt("AreaLook2", 1, 1, "");
+AddTimer("", 5.5, "LookDown");
+}
+
+void LookDown(string& in asTimer)
+{
+StartPlayerLookAt("AreaLook3", 1, 1, "");
+FadeOut(2);
+AddTimer("", 2.5, "UnlockCellDoor");
+}
+
+void UnlockCellDoor(string& in asTimer)
+{
+SetPlayerActive(false);
+SetEntityActive("Grunt2", false);
+SetEntityActive("Brute2", false);
+SetEntityActive("Grunt3", true);
+SetEntityActive("Brute3", true);
+PlaySoundAtEntity("","unlock_door","CellDoor", 0,false);
+SetSwingDoorClosed("CellDoor", false, true);
+SetSwingDoorLocked("CellDoor", false, true);
+StartPlayerLookAt("AreaLook4", 1, 1, "");
+TeleportPlayer("PlayerStartArea_3");
+AddTimer("", 1.5, "Release3");
+}
+
+void Release3(string& in asTimer)
+{
+PlayMusic("13_puzzle_machine.ogg", false, 1.0f, 0.5f, 10, false);
+FadeIn(1);
+AddTimer("", 7.5, "FadeOut");
+}
+
+void FadeOut(string& in asTimer)
+{
+StartPlayerLookAt("Door2", 1, 1, "");
+PlaySoundAtEntity("","break_wood","Door2", 0,false);
+PlaySoundAtEntity("","suitor_alert","Door2", 0,false);
+FadeOut(3);
+AddTimer("", 3.5, "DisableServants3");
+}
+
+void DisableServants3(string& in asTimer)
+{
+SetEntityActive("Grunt3", false);
+SetEntityActive("Brute3", false);
+AddTimer("", 1.5, "Release4");
+}
+
+void Release4(string& in asTimer)
+{
+SetEntityActive("Grunt4", true);
+SetEntityActive("Brute4", true);
+FadeIn(1);
+StartPlayerLookAt("Grunt4", 0, 1, "");
+TeleportPlayer("PlayerStartArea_4");
+AddTimer("", 2.0, "Break");
+}
+
+void Break(string& in asTimer)
+{
+PlaySoundAtEntity("","break_wood","Door3Ded", 0,false);
+SetEntityActive("Door3", false);
+SetEntityActive("Door3Ded", true);
+AddTimer("", 2.0, "GoOn");
+}
+
+void GoOn(string& in asTimer)
+{
+FadeOut(1);
+AddTimer("", 2.0, "MoveOn");
+}
+
+void MoveOn(string& in asTimer)
+{
+TeleportPlayer("PlayerStartArea_5");
+FadeIn(1);
+SetPlayerActive(true);
+SetPlayerMoveSpeedMul(1.0f);
+SetInventoryDisabled(false);
+}
+
+void OnLeave()
+{
+StopMusic(5, 0);
+}

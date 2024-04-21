@@ -1,0 +1,83 @@
+void OnStart()
+{
+	FadeOut(0.0); 
+	FadeIn(2.0); 
+	SetPlayerActive(true);	
+	PlaySoundAtEntity("", "general_wind_whirl.snt", "Player", 0, false);
+	AddEntityCollideCallback("Player", "backupteleport", "backupteleport", false, 1);
+	SetMessage("Messages", "whatisthislair", 10);
+	StartScreenShake(0.1, 1, 0.5f, 1);
+	SetEntityPlayerInteractCallback("level_celler_1", "badendclick", true);
+	SetEntityPlayerInteractCallback("orbpiece_crimson_1", "goodendclicktofreedom", true);
+	AddUseItemCallback("", "key_to_cell_at_maw", "prison_section_1", "cellopengoodend", true);
+	RemoveItem("orbpiece_emerald_1");
+	AutoSave();
+}
+
+void OnEnter()
+{
+	PlayMusic("18_amb", true, 0.6f, 4.0f, 0, true);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "", 1, "");
+}
+
+void backupteleport(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStartArea_2");
+}
+
+void badendclick(string &in asEntity)
+{
+	StopMusic(0.0f, 0);
+	FadeOut(0.0); 
+	PlayMusic("05_paper_transformation", true, 0.6f, 4.0f, 1, true);
+	AddTimer("textofbadending", 3, "textofbadending");
+	PlaySoundAtEntity("badenddooropen", "door_level_wood_open.snt", asEntity, 0, false);
+}
+
+void textofbadending(string &in asTimer)
+{
+	SetMessage("Messages", "badendmess01", 10);
+	AddTimer("textofbadendingsecond", 12, "textofbadendingsecond");
+}
+
+void textofbadendingsecond(string &in asTimer)
+{
+	SetMessage("Messages", "badendmess02", 10);
+	AddTimer("badendingend", 13, "badendingend");
+}
+
+///////////////////////////////////////////////
+//////////////////CREDIT/STUFF/////////////////
+///////////////////////////////////////////////
+
+void badendingend(string &in asTimer)
+{
+	StartCredits("Beware The Friendly Stranger.ogg", false, "Credits", "EndingBad", 0);
+}
+
+void cellopengoodend(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("prison_section_1", false, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+void goodendclicktofreedom(string &in asEntity)
+{
+	FadeOut(0.0); 
+	SetPlayerActive(false);	
+	PlaySoundAtEntity("redorbgrab", "guardian_activated.snt", "Player", 0.0f, false);
+	AddTimer("gotoexitandfreedom", 10, "gotoexitandfreedom");
+	StopMusic(1.0f, 0);
+	SetLanternActive(false, false);
+}
+
+void gotoexitandfreedom(string &in asTimer)
+{
+	ChangeMap("11_goodendingruins", "PlayerStartArea_1", "", "");
+}

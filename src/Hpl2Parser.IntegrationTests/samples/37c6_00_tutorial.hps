@@ -1,0 +1,6507 @@
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------START GLOBAL CODE-------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+
+//START GLOBAL CONSTANTS
+//EXTRAMODES CONSTANTS:
+string gsFunnyEasySuffix = "_funny_weak";
+string gsFunnyToughSuffix = "_funny_tough";
+string gsFunnySuffix = "_funny";
+string gsEasySuffix = "_weak";
+string gsToughSuffix = "_tough";
+//ENTRIES CONSTANTS:
+string gsHintCat = "Hints";
+string gsDeathHintCat = "DeathHints";
+string gsEndCreditsCat = "EndingTexts";
+string gsEndCreditsDefaultEntry = "MainCredits";
+string gsEmotionFlashCat = "EmotionFlashbacks";
+string gsInventoryCat = "Inventory";
+string gsLoadScreenImgPrefix = "game_loading_";
+string gsLoadScreenCat = "LoadingTexts";
+//ENTITIES CONSTANTS:
+string gsHealthPotionPrefix = "potion_health_";
+string gsLargeOilPotionPrefix = "potion_oil_large_";
+string gsLightPrefix = "Light_";
+string gsOilPotionPrefix = "potion_oil_";
+string gsPathNodeAreaPrefix = "PathNodeArea_";
+string gsPlayerStartAreaPrefix = "PlayerStartArea_";
+string gsSanityPotionPrefix = "potion_sanity_";
+string gsTinderboxPrefix = "tinderbox_";
+//SCRIPT ONLY CONSTANTS:
+string gsSoundNameSuffix = "_snt";
+string gsParticleNameSuffix = "_ps";
+string gsLevelDoorLockedTextPrefix = "lockedtext_";
+string gsEmotionFlashNameSuffix = "_emotionflashtext";
+string gsHarmlessEnemyNameSuffix = "_harmless";
+string gsEnemyPathNodeCodePrefix = "node_";
+string gsTimerNameSuffix = "_timer";
+//END GLOBAL CONSTANTS
+
+//START STRING MANAGEMENT FUNCTIONS
+int GetSubStringIndex(string asString, string asSubString, int aiOffset) //RETURNS THE STARTING POINT/INDEX OF A DEFINED SUBSTRING CONTAINED IN A STRING, IF THE DEFINED SUBSTRING COULD NOT BE FOUND IT RETURNS THE NEGATIVE VALUE -1. THE THIRD ARGUMENT DEFINES THE STARTING POINT/INDEX OF THE STRING DEFINED AS THE FIRST ARGUMENT, TO START THE SEARCH OF THE SUBSTRING.
+{
+	if(aiOffset >= asString.length() || aiOffset < 0)
+	{
+		return -1;
+	}
+	
+	string sExaminedString = StringSub(asString, aiOffset, asString.length() - aiOffset);
+	int iStringLength = sExaminedString.length();
+	int iSubStringLength = asSubString.length();
+	
+	if(iStringLength == iSubStringLength)
+	{
+		if(sExaminedString == asSubString)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else if(iSubStringLength > iStringLength)
+	{
+		return -1;
+	}
+	else
+	{
+		int iFirstMatchIndex = 0;
+		int iLastMatchIndex = 0;
+		int iMatchCount = 0;
+		
+		for(int i=0; i<iStringLength; i++)
+		{
+			if(sExaminedString[i] == asSubString[iMatchCount])
+			{
+				iLastMatchIndex = i;
+				
+				if(iMatchCount < iSubStringLength)
+				{
+					iMatchCount = iMatchCount + 1;
+					
+					if(iMatchCount == 1)
+					{
+						iFirstMatchIndex = i;
+					}
+					
+					if(iMatchCount == iSubStringLength)
+					{
+						break;
+					}
+				}
+			}
+			else if(iMatchCount > 0)
+			{
+				iMatchCount = 0;
+			}
+		}
+		
+		if(iMatchCount == iSubStringLength)
+		{
+			return iFirstMatchIndex;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+}
+
+int GetSubStringIndex(string asString, string asSubString) //RETURNS THE STARTING POINT/INDEX OF A DEFINED SUBSTRING CONTAINED IN A STRING, IF THE DEFINED SUBSTRING COULD NOT BE FOUND IT RETURNS THE NEGATIVE VALUE -1.
+{
+	int iStringLength = asString.length();
+	int iSubStringLength = asSubString.length();
+	
+	if(iStringLength == iSubStringLength)
+	{
+		if(asString == asSubString)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else if(iSubStringLength > iStringLength)
+	{
+		return -1;
+	}
+	else
+	{
+		int iFirstMatchIndex = 0;
+		int iLastMatchIndex = 0;
+		int iMatchCount = 0;
+		
+		for(int i=0; i<iStringLength; i++)
+		{
+			if(asString[i] == asSubString[iMatchCount])
+			{
+				iLastMatchIndex = i;
+				
+				if(iMatchCount < iSubStringLength)
+				{
+					iMatchCount = iMatchCount + 1;
+					
+					if(iMatchCount == 1)
+					{
+						iFirstMatchIndex = i;
+					}
+					
+					if(iMatchCount == iSubStringLength)
+					{
+						break;
+					}
+				}
+			}
+			else if(iMatchCount > 0)
+			{
+				iMatchCount = 0;
+			}
+		}
+		
+		if(iMatchCount == iSubStringLength)
+		{
+			return iFirstMatchIndex;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+}
+
+string GetStringWithReplacedSubString(string asString, string asSearchedSubString, string asReplacedSubString) //RETURNS THE ORIGINAL STRING BUT IT HAS DEFINED SUBSTRINGS REPLACED, IF NO DEFINED SUBSTRINGS ARE FOUND THEN IT RETURNS JUST THE ORIGINAL STRING. FIRST ARGUMENT: ORIGINAL STRING, SECOND ARGUMENT: SUBSTRING THAT MUST BE CONTAINED INSIDE THE ORIGINAL STRING, THIRD ARGUMENT: STRING THAT WILL REPLACE ALL THE SECOND ARGUMENT SUBSTRINGS INSIDE THE ORIGINAL STRING.
+{
+	string sUnchangedFirstMatchSection = "";
+	string sOriginalFirstMatchSection = "";
+	string sReplacedFirstMatchSection = "";
+	int iFirstMatchIndex = GetSubStringIndex(asString, asSearchedSubString);
+	
+	if(iFirstMatchIndex == -1)
+	{
+		return asString;
+	}
+	else if(iFirstMatchIndex == 0)
+	{
+		sUnchangedFirstMatchSection = "";
+	}
+	else
+	{
+		sUnchangedFirstMatchSection = StringSub(asString, 0, iFirstMatchIndex);
+	}
+	
+	sOriginalFirstMatchSection = sUnchangedFirstMatchSection + asSearchedSubString;
+	sReplacedFirstMatchSection = sUnchangedFirstMatchSection + asReplacedSubString;
+	
+	if(sOriginalFirstMatchSection.length() < asString.length())
+	{
+		return sReplacedFirstMatchSection + GetStringWithReplacedSubString(StringSub(asString, sOriginalFirstMatchSection.length(), asString.length() - sOriginalFirstMatchSection.length()), asSearchedSubString, asReplacedSubString);
+	}
+	else
+	{
+		return sReplacedFirstMatchSection;
+	}
+}
+
+string GetStringWithoutSubString(string asString, string asSubString) //RETURNS THE REMAINING STRING WITHOUT THE SUBSTRING DEFINED AS THE SECOND ARGUMENT.
+{
+	return GetStringWithReplacedSubString(asString, asSubString, "");
+}
+
+string GetOriginalString(string asString) //RETURNS THE STRING WITHOUT THE SUFFIX "_suffix" OR THE PREFIX "prefix" OR "prefix_" + 1/2/3/4/5/6/7/8/9/+infinite/NULL.
+{
+	if(StringContains(asString, "prefix"))
+	{
+		int i = 5;
+		int iTemp = 0;
+		
+		do
+		{
+			i = i + 1;
+			iTemp = StringToInt(StringSub(asString, i, 1));
+		}
+		while(iTemp != 0);
+		
+		if(i == 6)
+		{
+			if(StringContains(asString, "prefix_"))
+			{
+				return GetStringWithoutSubString(asString, "prefix_");
+			}
+			else
+			{
+				return GetStringWithoutSubString(asString, "prefix");
+			}
+		}
+		else
+		{
+			int iPrefixLength = (7 + (i - 6));
+			return StringSub(asString, iPrefixLength, asString.length() - iPrefixLength);
+		}
+	}
+	else if(StringContains(asString, "_suffix"))
+	{
+		return StringSub(asString, 0, GetSubStringIndex(asString, "_suffix"));
+	}
+	else
+	{
+		return asString;
+	}
+}
+
+string GetSubString(string asString, int aiOffset) //RETURNS THE REMAINING SUBSTRING STARTING FROM THE OFFSET DEFINED AS THE SECOND ARGUMENT.
+{
+	int iLength = asString.length() - aiOffset;
+	
+	if(iLength <= 0)
+	{
+		return asString;
+	}
+	else
+	{
+		return StringSub(asString, aiOffset, iLength);
+	}
+}
+
+string GetSubStringWithoutPrefix(string asString) //RETURNS THE STRING WITHOUT THE PREFIX WHICH HAS LENGTH DEFINED BY THE INTEGER RIGHT AFTER "prefix" AT THE END OF THE FULL ARGUMENT.
+{
+	if(StringContains(asString, "prefix"))
+	{
+		if(asString.length() <= 9)
+		{
+			return "";
+		}
+		else
+		{
+			int i = 5;
+			int iTemp = 0;
+			
+			do
+			{
+				i = i + 1;
+				iTemp = StringToInt(StringSub(asString, i, 1));
+			}
+			while(iTemp != 0);
+			
+			if(i == 6)
+			{
+				if(StringContains(asString, "prefix_"))
+				{
+					return GetStringWithoutSubString(asString, "prefix_");
+				}
+				else
+				{
+					return GetStringWithoutSubString(asString, "prefix");
+				}
+			}
+			else
+			{
+				int iAmount = StringToInt(StringSub(asString, 6, i - 6));
+				int iPrefixLength = (7 + (i - 6) + iAmount);
+				return StringSub(asString, iPrefixLength, asString.length() - iPrefixLength);
+			}
+		}
+	}
+	else
+	{
+		return asString;
+	}
+}
+
+string GetSubStringWithoutSuffix(string asString) //RETURNS THE STRING WITHOUT THE SUFFIX WHICH HAS LENGTH DEFINED BY THE INTEGER RIGHT AFTER "_suffix" AT THE END OF THE FULL ARGUMENT.
+{
+	if(StringContains(asString, "_suffix"))
+	{
+		int iIndex = GetSubStringIndex(asString, "_suffix");
+		
+		if(iIndex == asString.length() - 7)
+		{
+			return GetStringWithoutSubString(asString, "_suffix");
+		}
+		else
+		{
+			int iSuffixLength = 0;
+			int iAmount = 0;
+			iIndex = iIndex + 7;
+			iSuffixLength = asString.length() - iIndex;
+			iAmount = StringToInt(StringSub(asString, iIndex, iSuffixLength));
+			iSuffixLength = iSuffixLength + 7 + iAmount;
+			return StringSub(asString, 0, asString.length() - iSuffixLength);
+		}
+	}
+	else
+	{
+		return asString;
+	}
+}
+
+string GetObjectName(string asName) //RETURNS THE RELATED OBJECT NAME.
+{
+	if(StringContains(asName, "Area"))
+		return GetSubStringWithoutSuffix(asName);
+	else if(StringContains(asName, "head"))
+		return "Head";
+	else if(StringContains(asName, "saw"))
+		return "Saw";
+	else if(StringContains(asName, "tar"))
+		return "Tar";
+	else if(StringContains(asName, "knife"))
+		return "Knife";
+	else if(StringContains(asName, "epoxy_container"))
+		return "EpoxyContainer";
+	else if(StringContains(asName, "epoxy"))
+		return "Epoxy";
+	else if(StringContains(asName, "chemical"))
+		return "Chemical";
+	else if(StringContains(asName, "tube_and_needle"))
+		return "TubeNeedle";
+	else if(StringContains(asName, "tube"))
+		return "Tube";	
+	else if(StringContains(asName, "crowbar"))
+		return "Crowbar";	
+	else if(StringContains(asName, "meat"))
+		return "Meat";	
+	else if(StringContains(asName, "acid_container"))
+		return "AcidContainer";
+	else if(StringContains(asName, "container_blood"))
+		return "ContainerBlood";	
+	else if(StringContains(asName, "container_filled"))
+		return "ContainerFull";	
+	else if(StringContains(asName, "container_mix_done"))
+		return "ContainerMixDone";	
+	else if(StringContains(asName, "container_mix_notdone"))
+		return "ContainerMixNotDone";	
+	else if(StringContains(asName, "container_oil"))
+		return "ContainerOil";	
+	else if(StringContains(asName, "container_string_filled"))
+		return "ContainerStringFull";	
+	else if(StringContains(asName, "container_string"))
+		return "ContainerString";
+	else if(StringContains(asName, "container"))
+		return "Container";
+	else if(StringContains(asName, "guiding_rod"))
+		return "Rod";	
+	else if(StringContains(asName, "drill_part"))
+		return "DrillPart";	
+	else if(StringContains(asName, "drill"))
+		return "Drill";		
+	else if(StringContains(asName, "needle"))
+		return "Needle";		
+	else if(StringContains(asName, "orbpiece"))
+		return "Orbpiece";		
+	else if(StringContains(asName, "pipe"))
+		return "Pipe";		
+	else if(StringContains(asName, "gland"))
+		return "Gland";		
+	else if(StringContains(asName, "hammer_chipper"))
+		return "HammerAndChipper";
+	else if(StringContains(asName, "chipper"))
+		return "Chipper";		
+	else if(StringContains(asName, "hammer"))
+		return "Hammer";		
+	else if(StringContains(asName, "string_pile"))
+		return "StringPile";		
+	else if(StringContains(asName, "bucket_onrope_filled"))
+		return "BucketOnropeFull";		
+	else if(StringContains(asName, "bucket_filled"))
+		return "BucketFull";		
+	else if(StringContains(asName, "bucket"))
+		return "Bucket";	
+	else if(StringContains(asName, "coins"))
+		return "Coins";
+	else if(StringContains(asName, "key"))
+		return "Key";
+	else if(StringContains(asName, "lantern"))
+		return "Lantern";
+	else if(StringContains(asName, "potion"))
+		return "Potion";
+	else if(StringContains(asName, "tinderbox"))
+		return "Tinderbox";
+	else if(StringContains(asName, "diary_paper") || StringContains(asName, "note"))
+		return "Note";
+	else if(StringContains(asName, "shelf"))
+		return "Shelf";
+	else if(StringContains(asName, "door"))
+		return "Door";
+	else if(StringContains(asName, "grunt"))
+		return "Grunt";
+	else if(StringContains(asName, "brute"))
+		return "Brute";
+	else if(StringContains(asName, "waterlurker"))
+		return "Waterlurker";
+	else if(StringContains(asName, "suitor"))
+		return "Suitor";
+	else if(StringContains(asName, "enemy"))
+		return "Enemy";
+	else if(StringContains(asName, "bottle"))
+		return "Bottle";
+	else if(StringContains(asName, "wine"))
+		return "Wine";
+	else if(StringContains(asName, "alexander"))
+		return "Alexander";
+	else if(StringContains(asName, "prisoner"))
+		return "Prisoner";
+	else if(StringContains(asName, "shirt"))
+		return "Shirt";
+	else if(StringContains(asName, "barrel"))
+		return "Barrel";
+	else if(StringContains(asName, "vase"))
+		return "Vase";
+	else if(StringContains(asName, "wood_box"))
+		return "WoodBox";
+	else if(StringContains(asName, "broom"))
+		return "Broom";
+	else if(StringContains(asName, "chair"))
+		return "Chair";
+	else if(StringContains(asName, "bed"))
+		return "Bed";
+	else if(StringContains(asName, "cabinet"))
+		return "Closet";
+	else if(StringContains(asName, "piano"))
+		return "Piano";
+	else if(StringContains(asName, "stove"))
+		return "Stove";
+	else if(StringContains(asName, "table"))
+		return "Table";
+	else if(StringContains(asName, "book") || StringContains(asName, "tome"))
+		return "Book";
+	else if(StringContains(asName, "button"))
+		return "Button";
+	else if(StringContains(asName, "ladder"))
+		return "Ladder";
+	else if(StringContains(asName, "lever"))
+		return "Lever";
+	else if(StringContains(asName, "rock"))
+		return "Rock";
+	else if(StringContains(asName, "tongs"))
+		return "Tongs";
+	else if(StringContains(asName, "bonfire"))
+		return "Bonfire";
+	else if(StringContains(asName, "torch"))
+		return "Torch";
+	else if(StringContains(asName, "candle"))
+		return "Candle";
+	else if(StringContains(asName, "chandelier"))
+		return "Chandelier";
+	else if(StringContains(asName, "goblet"))
+		return "Goblet";
+	else if(StringContains(asName, "painting"))
+		return "Painting";
+	else if(StringContains(asName, "statue"))
+		return "Statue";
+	else if(StringContains(asName, "stencil"))
+		return "Stencil";
+	else if(StringContains(asName, "violin"))
+		return "Violin";
+	else if(StringContains(asName, "waxroll_record"))
+		return "WaxrollRecord";
+	else if(StringContains(asName, "bag"))
+		return "Bag";
+	else if(StringContains(asName, "bread"))
+		return "Bread";
+	else if(StringContains(asName, "pig"))
+		return "Pig";
+	else if(StringContains(asName, "carcass"))
+		return "Carcass";
+	else if(StringContains(asName, "apple"))
+		return "Apple";
+	else if(StringContains(asName, "corpse"))
+		return "Corpse";
+	else if(StringContains(asName, "tree"))
+		return "Tree";
+	else if(StringContains(asName, "orbpedestal"))
+		return "OrbPedestal";
+	else if(StringContains(asName, "orb"))
+		return "Orb";
+	else if(StringContains(asName, "slime"))
+		return "Slime";
+	else if(StringContains(asName, "basket"))
+		return "Basket";
+	else if(StringContains(asName, "storage_box_wood"))
+		return "WoodBoxStorage";
+	else
+		return GetSubStringWithoutSuffix(asName);
+}
+//END STRING MANAGEMENT FUNCTIONS
+
+//START TIMER FUNCTIONS
+void SetTimerReady(string asTimer) //HELPER FUNCTION. IT'S ESSENTIAL TO MAKE THE AddTimer OVERLOADS FUNCTIONS WORK.
+{
+	string sInputB = GetLocalVarString(asTimer + "_InputB");
+	string sInputC = GetLocalVarString(asTimer + "_InputC");
+	string sInputD = GetLocalVarString(asTimer + "_InputD");
+	string sInputE = GetLocalVarString(asTimer + "_InputE");
+	string sInputF = GetLocalVarString(asTimer + "_InputF");
+	
+	if(sInputF.length() <= 0)
+	{
+		AddDebugMessage("ERROR: No function found related to timer " + asTimer, false);
+	}
+	else if(sInputE.length() > 0)
+	{
+		AddTimer(asTimer, "", "", "", "", 0.001f, "");
+	}
+	else if(sInputD.length() > 0)
+	{
+		AddTimer(asTimer, "", "", "", 0.001f, "");
+	}
+	else if(sInputC.length() > 0)
+	{
+		AddTimer(asTimer, "", "", 0.001f, "");
+	}
+	else if(sInputB.length() > 0)
+	{
+		AddTimer(asTimer, "", 0.001f, "");
+	}
+	else if(asTimer.length() > 0)
+	{
+		if(asTimer == "AutoSave")
+			AutoSave();
+		else if(asTimer == "ClearSavedMaps")
+			ClearSavedMaps();
+		else if(asTimer == "CreateDataCache")
+			CreateDataCache();
+		else if(asTimer == "DestroyDataCache")
+			DestroyDataCache();
+		else if(asTimer == "StopPlayerSpawnPS")
+			StopPlayerSpawnPS();
+		else if(asTimer == "StartRandomInsanityEvent")
+			StartRandomInsanityEvent();
+		else if(asTimer == "StopCurrentInsanityEvent")
+			StopCurrentInsanityEvent();
+		else if(asTimer == "ChangePlayerStateToNormal")
+			ChangePlayerStateToNormal();
+		else if(asTimer == "GiveSanityBoost")
+			GiveSanityBoost();
+		else if(asTimer == "GiveSanityBoostSmall")
+			GiveSanityBoostSmall();
+		else if(asTimer == "StopPlayerLookAt")
+			StopPlayerLookAt();
+		else if(asTimer == "DisableDeathStartSound")
+			DisableDeathStartSound();
+		else if(asTimer == "SetActiveEnemyDisabled")
+			SetActiveEnemyDisabled();
+		else if(asTimer == "SetupExtraModesGoodies")
+			SetupExtraModesGoodies();
+		else if(asTimer == "SetupExtraModes")
+			SetupExtraModes();
+		else if(asTimer == "OnStart")
+			OnStart();
+		else if(asTimer == "OnEnter")
+			OnEnter();
+		else if(asTimer == "OnLeave")
+			OnLeave();
+		else
+			AddDebugMessage("ERROR: All the arguments for the timer " + asTimer + " are null or no function pattern recognized!", false);
+	}
+	else
+	{
+		AddDebugMessage("ERROR: A null timer has been passed to SetTimerReady function!", false);
+	}
+}
+
+void AddTimer(string asInputA, string asInputB, string asInputC, string asInputD, string asInputE, float afTime, string asFunction) //OVERLOADS AddTimer FUNCTION TO HAVE 5 ARGUMENTS.
+{
+	if(StringContains(asInputA, gsTimerNameSuffix) == false)
+	{
+		string sVarName = asInputA + gsTimerNameSuffix;
+		int i = 0;
+		
+		while(GetLocalVarInt(sVarName + i) == 1)
+		{
+			i = i + 1;
+		}
+		
+		sVarName = sVarName + i;
+		SetLocalVarInt(sVarName, 1);
+		SetLocalVarString(sVarName + "_InputB", asInputB);
+		SetLocalVarString(sVarName + "_InputC", asInputC);
+		SetLocalVarString(sVarName + "_InputD", asInputD);
+		SetLocalVarString(sVarName + "_InputE", asInputE);
+		SetLocalVarString(sVarName + "_InputF", asFunction);
+		AddTimer(sVarName, afTime, "SetTimerReady");
+	}
+	else
+	{
+		string sInputA = StringSub(asInputA, 0, GetSubStringIndex(asInputA, gsTimerNameSuffix));
+		string sInputB = GetLocalVarString(asInputA + "_InputB");
+		string sInputC = GetLocalVarString(asInputA + "_InputC");
+		string sInputD = GetLocalVarString(asInputA + "_InputD");
+		string sInputE = GetLocalVarString(asInputA + "_InputE");
+		string sInputF = GetLocalVarString(asInputA + "_InputF");
+		
+		if(sInputF == "PlaySoundAtEntity")
+			PlaySoundAtEntity(sInputA, sInputB, sInputC, StringToFloat(sInputD), StringToBool(sInputE));
+		else if(sInputF == "StartCredits")
+			StartCredits(sInputA, StringToBool(sInputB), sInputC, sInputD, StringToInt(sInputE));
+		else if(sInputF == "CheckPoint")
+			CheckPoint(sInputA, sInputB, sInputC, sInputD, sInputE);
+		else if(sInputF == "MovePlayerHeadPos")
+			MovePlayerHeadPos(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD), StringToFloat(sInputE));
+		else if(sInputF == "GiveItem")
+			GiveItem(sInputA, sInputB, sInputC, sInputD, StringToFloat(sInputE));
+		else if(sInputF == "AddCombineCallback")
+			AddCombineCallback(sInputA, sInputB, sInputC, sInputD, StringToBool(sInputE));
+		else if(sInputF == "AddUseItemCallback")
+			AddUseItemCallback(sInputA, sInputB, sInputC, sInputD, StringToBool(sInputE));
+		else if(sInputF == "ReplaceEntity")
+			ReplaceEntity(sInputA, sInputB, sInputC, sInputD, StringToBool(sInputE));
+		else if(sInputF == "AddEntityCollideCallback")
+			AddEntityCollideCallback(sInputA, sInputB, sInputC, StringToBool(sInputD), StringToInt(sInputE));
+		else if(sInputF == "PlayPropAnimation")
+			PlayPropAnimation(sInputA, sInputB, StringToFloat(sInputC), StringToBool(sInputD), sInputE);
+		else if(sInputF == "AddPropForce")
+			AddPropForce(sInputA, StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD), sInputE);
+		else if(sInputF == "AddPropImpulse")
+			AddPropImpulse(sInputA, StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD), sInputE);
+		else if(sInputF == "AddBodyForce")
+			AddBodyForce(sInputA, StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD), sInputE);
+		else if(sInputF == "AddBodyImpulse")
+			AddBodyImpulse(sInputA, StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD), sInputE);
+		else
+			AddDebugMessage("ERROR: No timer function pattern " + sInputF + " recognized!", false);
+		
+		SetLocalVarInt(asInputA, 0);
+		SetLocalVarString(asInputA + "_InputB", "");
+		SetLocalVarString(asInputA + "_InputC", "");
+		SetLocalVarString(asInputA + "_InputD", "");
+		SetLocalVarString(asInputA + "_InputE", "");
+		SetLocalVarString(asInputA + "_InputF", "");
+	}
+}
+
+void AddTimer(string asInputA, string asInputB, string asInputC, string asInputD, float afTime, string asFunction) //OVERLOADS AddTimer FUNCTION TO HAVE 4 ARGUMENTS.
+{
+	if(StringContains(asInputA, gsTimerNameSuffix) == false)
+	{
+		string sVarName = asInputA + gsTimerNameSuffix;
+		int i = 0;
+		
+		while(GetLocalVarInt(sVarName + i) == 1)
+		{
+			i = i + 1;
+		}
+		
+		sVarName = sVarName + i;
+		SetLocalVarInt(sVarName, 1);
+		SetLocalVarString(sVarName + "_InputB", asInputB);
+		SetLocalVarString(sVarName + "_InputC", asInputC);
+		SetLocalVarString(sVarName + "_InputD", asInputD);
+		SetLocalVarString(sVarName + "_InputF", asFunction);
+		AddTimer(sVarName, afTime, "SetTimerReady");
+	}
+	else
+	{
+		string sInputA = StringSub(asInputA, 0, GetSubStringIndex(asInputA, gsTimerNameSuffix));
+		string sInputB = GetLocalVarString(asInputA + "_InputB");
+		string sInputC = GetLocalVarString(asInputA + "_InputC");
+		string sInputD = GetLocalVarString(asInputA + "_InputD");
+		string sInputF = GetLocalVarString(asInputA + "_InputF");
+		
+		if(sInputF == "SetCombineCallback")
+			SetCombineCallback(sInputA, sInputB, sInputC, StringToBool(sInputD));
+		else if(sInputF == "SetEntitiesCollideCallback")
+			SetEntitiesCollideCallback(sInputA, sInputB, sInputC, sInputD);
+		else if(sInputF == "SetUseItemCallback")
+			SetUseItemCallback(sInputA, sInputB, sInputC, StringToBool(sInputD));
+		else if(sInputF == "SetLightState")
+			SetLightState(sInputA, sInputB, StringToFloat(sInputC), StringToFloat(sInputD));
+		else if(sInputF == "PlayParticleSystem")
+			PlayParticleSystem(sInputA, sInputB, sInputC, StringToInt(sInputD));
+		else if(sInputF == "PlaySound")
+			PlaySound(sInputA, sInputB, sInputC, StringToInt(sInputD));
+		else if(sInputF == "SetEntitiesActive")
+			SetEntitiesActive(sInputA, StringToFloat(sInputB), StringToInt(sInputC), StringToInt(sInputD));
+		else if(sInputF == "SetEntitiesAndEffectsInactive")
+			SetEntitiesAndEffectsInactive(sInputA, sInputB, StringToInt(sInputC), StringToInt(sInputD));
+		else if(sInputF == "SetEntitiesInactive")
+			SetEntitiesInactive(sInputA, StringToFloat(sInputB), StringToInt(sInputC), StringToInt(sInputD));
+		else if(sInputF == "SetEntityAndEffectsActive")
+			SetEntityAndEffectsActive(sInputA, sInputB, sInputC, sInputD);
+		else if(sInputF == "SetFogState")
+			SetFogState(sInputA, StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD));
+		else if(sInputF == "CreateParticleSystemAtEntity")
+			CreateParticleSystemAtEntity(sInputA, sInputB, sInputC, StringToBool(sInputD));
+		else if(sInputF == "ChangeMap")
+			ChangeMap(sInputA, sInputB, sInputC, sInputD);
+		else if(sInputF == "SetSkyBoxColor")
+			SetSkyBoxColor(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD));
+		else if(sInputF == "SetFogColor")
+			SetFogColor(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD));
+		else if(sInputF == "SetFogProperties")
+			SetFogProperties(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC), StringToBool(sInputD));
+		else if(sInputF == "SetupLoadScreen")
+			SetupLoadScreen(sInputA, sInputB, StringToInt(sInputC), sInputD);
+		else if(sInputF == "StartScreenShake")
+			StartScreenShake(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD));
+		else if(sInputF == "AddPlayerBodyForce")
+			AddPlayerBodyForce(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC), StringToBool(sInputD));
+		else if(sInputF == "GivePlayerDamage")
+			GivePlayerDamage(StringToFloat(sInputA), sInputB, StringToBool(sInputC), StringToBool(sInputD));
+		else if(sInputF == "StartPlayerLookAt")
+			StartPlayerLookAt(sInputA, StringToFloat(sInputB), StringToFloat(sInputC), sInputD);
+		else if(sInputF == "GiveHint")
+			GiveHint(sInputA, sInputB, sInputC, StringToFloat(sInputD));
+		else if(sInputF == "CreateEntityAtArea")
+			CreateEntityAtArea(sInputA, sInputB, sInputC, StringToBool(sInputD));
+		else if(sInputF == "PlaceEntityAtEntity")
+			PlaceEntityAtEntity(sInputA, sInputB, sInputC, StringToBool(sInputD));
+		else if(sInputF == "SetEntityPos")
+			SetEntityPos(sInputA, StringToFloat(sInputB), StringToFloat(sInputC), StringToFloat(sInputD));
+		else if(sInputF == "AddEnemyPatrolNode")
+			AddEnemyPatrolNode(sInputA, sInputB, StringToFloat(sInputC), sInputD);
+		else if(sInputF == "TeleportEnemyToEntity")
+			TeleportEnemyToEntity(sInputA, sInputB, sInputC, StringToBool(sInputD));
+		else
+			AddDebugMessage("ERROR: No timer function pattern " + sInputF + " recognized!", false);
+		
+		SetLocalVarInt(asInputA, 0);
+		SetLocalVarString(asInputA + "_InputB", "");
+		SetLocalVarString(asInputA + "_InputC", "");
+		SetLocalVarString(asInputA + "_InputD", "");
+		SetLocalVarString(asInputA + "_InputE", "");
+		SetLocalVarString(asInputA + "_InputF", "");
+	}
+}
+
+void AddTimer(string asInputA, string asInputB, string asInputC, float afTime, string asFunction) //OVERLOADS AddTimer FUNCTION TO HAVE 3 ARGUMENTS.
+{
+	if(StringContains(asInputA, gsTimerNameSuffix) == false)
+	{
+		string sVarName = asInputA + gsTimerNameSuffix;
+		int i = 0;
+		
+		while(GetLocalVarInt(sVarName + i) == 1)
+		{
+			i = i + 1;
+		}
+		
+		sVarName = sVarName + i;
+		SetLocalVarInt(sVarName, 1);
+		SetLocalVarString(sVarName + "_InputB", asInputB);
+		SetLocalVarString(sVarName + "_InputC", asInputC);
+		SetLocalVarString(sVarName + "_InputF", asFunction);
+		AddTimer(sVarName, afTime, "SetTimerReady");
+	}
+	else
+	{
+		string sInputA = StringSub(asInputA, 0, GetSubStringIndex(asInputA, gsTimerNameSuffix));
+		string sInputB = GetLocalVarString(asInputA + "_InputB");
+		string sInputC = GetLocalVarString(asInputA + "_InputC");
+		string sInputF = GetLocalVarString(asInputA + "_InputF");
+		
+		if(sInputF == "PlayEndCredits")
+			PlayEndCredits(sInputA, sInputB, StringToBool(sInputC));
+		else if(sInputF == "PlayParticleSystem")
+			PlayParticleSystem(sInputA, sInputB, sInputC);
+		else if(sInputF == "PlaySound")
+			PlaySound(sInputA, sInputB, sInputC);
+		else if(sInputF == "SetCheckPoint")
+			SetCheckPoint(sInputA, sInputB, sInputC);
+		else if(sInputF == "SetCombineCallback")
+			SetCombineCallback(sInputA, sInputB, StringToBool(sInputC));
+		else if(sInputF == "SetEnemyPatrolNode")
+			SetEnemyPatrolNode(sInputA, StringToInt(sInputB), StringToInt(sInputC));
+		else if(sInputF == "SetEntitiesCollideCallback")
+			SetEntitiesCollideCallback(sInputA, sInputB, sInputC);
+		else if(sInputF == "SetEntityPlayerCollideCallback")
+			SetEntityPlayerCollideCallback(sInputA, sInputB, sInputC);
+		else if(sInputF == "SetEntityPlayerInteractCallback")
+			SetEntityPlayerInteractCallback(sInputA, sInputB, StringToBool(sInputC));
+		else if(sInputF == "SetUseItemCallback")
+			SetUseItemCallback(sInputA, sInputB, StringToBool(sInputC));
+		else if(sInputF == "SetLightState")
+			SetLightState(sInputA, sInputB, StringToFloat(sInputC));
+		else if(sInputF == "SetEntitiesActive")
+			SetEntitiesActive(sInputA, StringToInt(sInputB), StringToInt(sInputC));
+		else if(sInputF == "SetEntitiesInactive")
+			SetEntitiesInactive(sInputA, StringToInt(sInputB), StringToInt(sInputC));
+		else if(sInputF == "SetEntitiesInvisible")
+			SetEntitiesInvisible(sInputA, StringToInt(sInputB), StringToInt(sInputC));
+		else if(sInputF == "SetEntitiesVisible")
+			SetEntitiesVisible(sInputA, StringToInt(sInputB), StringToInt(sInputC));
+		else if(sInputF == "SetPlayerLookAt")
+			SetPlayerLookAt(sInputA, sInputB, StringToFloat(sInputC));
+		else if(sInputF == "SetMessage")
+			SetMessage(sInputA, sInputB, StringToFloat(sInputC));
+		else if(sInputF == "FadeInSound")
+			FadeInSound(sInputA, StringToFloat(sInputB), StringToBool(sInputC));
+		else if(sInputF == "StartEffectFlash")
+			StartEffectFlash(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC));
+		else if(sInputF == "StartEffectEmotionFlash")
+			StartEffectEmotionFlash(sInputA, sInputB, sInputC);
+		else if(sInputF == "FadePlayerRollTo")
+			FadePlayerRollTo(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC));
+		else if(sInputF == "SetPlayerPos")
+			SetPlayerPos(StringToFloat(sInputA), StringToFloat(sInputB), StringToFloat(sInputC));
+		else if(sInputF == "SetInventoryMessage")
+			SetInventoryMessage(sInputA, sInputB, StringToFloat(sInputC));
+		else if(sInputF == "SetEntityPlayerLookAtCallback")
+			SetEntityPlayerLookAtCallback(sInputA, sInputB, StringToBool(sInputC));
+		else if(sInputF == "SetPropEffectActive")
+			SetPropEffectActive(sInputA, StringToBool(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetPropActiveAndFade")
+			SetPropActiveAndFade(sInputA, StringToBool(sInputB), StringToFloat(sInputC));
+		else if(sInputF == "SetLampLit")
+			SetLampLit(sInputA, StringToBool(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetSwingDoorLocked")
+			SetSwingDoorLocked(sInputA, StringToBool(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetSwingDoorClosed")
+			SetSwingDoorClosed(sInputA, StringToBool(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetLevelDoorLockedText")
+			SetLevelDoorLockedText(sInputA, sInputB, sInputC);
+		else if(sInputF == "SetWheelStuckState")
+			SetWheelStuckState(sInputA, StringToInt(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetLeverStuckState")
+			SetLeverStuckState(sInputA, StringToInt(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetWheelAngle")
+			SetWheelAngle(sInputA, StringToFloat(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetMultiSliderStuckState")
+			SetMultiSliderStuckState(sInputA, StringToInt(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetButtonSwitchedOn")
+			SetButtonSwitchedOn(sInputA, StringToBool(sInputB), StringToBool(sInputC));
+		else if(sInputF == "SetNPCAwake")
+			SetNPCAwake(sInputA, StringToBool(sInputB), StringToBool(sInputC));
+		else if(sInputF == "TeleportEnemyToNode")
+			TeleportEnemyToNode(sInputA, sInputB, StringToBool(sInputC));
+		else
+			AddDebugMessage("ERROR: No timer function pattern " + sInputF + " recognized!", false);
+		
+		SetLocalVarInt(asInputA, 0);
+		SetLocalVarString(asInputA + "_InputB", "");
+		SetLocalVarString(asInputA + "_InputC", "");
+		SetLocalVarString(asInputA + "_InputD", "");
+		SetLocalVarString(asInputA + "_InputE", "");
+		SetLocalVarString(asInputA + "_InputF", "");
+	}
+}
+
+void AddTimer(string asInputA, string asInputB, float afTime, string asFunction) //OVERLOADS AddTimer FUNCTION TO HAVE 2 ARGUMENTS.
+{
+	if(StringContains(asInputA, gsTimerNameSuffix) == false)
+	{
+		string sVarName = asInputA + gsTimerNameSuffix;
+		int i = 0;
+		
+		while(GetLocalVarInt(sVarName + i) == 1)
+		{
+			i = i + 1;
+		}
+		
+		sVarName = sVarName + i;
+		SetLocalVarInt(sVarName, 1);
+		SetLocalVarString(sVarName + "_InputB", asInputB);
+		SetLocalVarString(sVarName + "_InputF", asFunction);
+		AddTimer(sVarName, afTime, "SetTimerReady");
+	}
+	else
+	{
+		string sInputA = StringSub(asInputA, 0, GetSubStringIndex(asInputA, gsTimerNameSuffix));
+		string sInputB = GetLocalVarString(asInputA + "_InputB");
+		string sInputF = GetLocalVarString(asInputA + "_InputF");
+		
+		if(sInputF == "ChangeMap")
+			ChangeMap(sInputA, StringToInt(sInputB));
+		else if(sInputF == "PlayEndCredits")
+			PlayEndCredits(sInputA, sInputB);
+		else if(sInputF == "PlayMusic")
+			PlayMusic(sInputA, sInputB);
+		else if(sInputF == "PlayParticleSystem")
+			PlayParticleSystem(sInputA, sInputB);
+		else if(sInputF == "StopParticleSystem")
+			StopParticleSystem(sInputA, sInputB);
+		else if(sInputF == "PlaySound")
+			PlaySound(sInputA, sInputB);
+		else if(sInputF == "PlayGuiSound")
+			PlayGuiSound(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "StopSound")
+			StopSound(sInputA, sInputB);
+		else if(sInputF == "SetCheckPoint")
+			SetCheckPoint(sInputA, sInputB);
+		else if(sInputF == "SetEnemyPatrolNode")
+			SetEnemyPatrolNode(sInputA, StringToInt(sInputB));
+		else if(sInputF == "SetEntitiesCollideCallback")
+			SetEntitiesCollideCallback(sInputA, sInputB);
+		else if(sInputF == "SetEntityPlayerCollideCallback")
+			SetEntityPlayerCollideCallback(sInputA, sInputB);
+		else if(sInputF == "SetEntityPlayerInteractCallback")
+			SetEntityPlayerInteractCallback(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetEntityPlayerLookAtCallback")
+			SetEntityPlayerLookAtCallback(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetLoadScreen")
+			SetLoadScreen(sInputA, sInputB);
+		else if(sInputF == "SetMessage")
+			SetMessage(sInputA, sInputB);
+		else if(sInputF == "SetLightState")
+			SetLightState(sInputA, sInputB);
+		else if(sInputF == "SetEntityActive")
+			SetEntityActive(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetEntityAndEffectsInactive")
+			SetEntityAndEffectsInactive(sInputA, sInputB);
+		else if(sInputF == "SetEntityHealth")
+			SetEntityHealth(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetEntityInactive")
+			SetEntityInactive(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetEntityState")
+			SetEntityState(sInputA, sInputB);
+		else if(sInputF == "SetDoorState")
+			SetDoorState(sInputA, sInputB);
+		else if(sInputF == "SetQuestState")
+			SetQuestState(sInputA, sInputB);
+		else if(sInputF == "SetEnemyState")
+			SetEnemyState(sInputA, sInputB);
+		else if(sInputF == "SetPlayerLookAt")
+			SetPlayerLookAt(sInputA, sInputB);
+		else if(sInputF == "SetPlayerRollTo")
+			SetPlayerRollTo(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetGlobalSoundSpeed")
+			SetGlobalSoundSpeed(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetGlobalSoundVolume")
+			SetGlobalSoundVolume(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "AddLocalVarInt")
+			AddLocalVarInt(sInputA, StringToInt(sInputB));
+		else if(sInputF == "SetLocalVarInt")
+			SetLocalVarInt(sInputA, StringToInt(sInputB));
+		else if(sInputF == "AddGlobalVarInt")
+			AddGlobalVarInt(sInputA, StringToInt(sInputB));
+		else if(sInputF == "SetGlobalVarInt")
+			SetGlobalVarInt(sInputA, StringToInt(sInputB));
+		else if(sInputF == "AddLocalVarFloat")
+			AddLocalVarFloat(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetLocalVarFloat")
+			SetLocalVarFloat(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "AddGlobalVarFloat")
+			AddGlobalVarFloat(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetGlobalVarFloat")
+			SetGlobalVarFloat(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "AddLocalVarString")
+			AddLocalVarString(sInputA, sInputB);
+		else if(sInputF == "SetLocalVarString")
+			SetLocalVarString(sInputA, sInputB);
+		else if(sInputF == "AddGlobalVarString")
+			AddGlobalVarString(sInputA, sInputB);
+		else if(sInputF == "SetGlobalVarString")
+			SetGlobalVarString(sInputA, sInputB);
+		else if(sInputF == "StopMusic")
+			StopMusic(StringToFloat(sInputA), StringToInt(sInputB));
+		else if(sInputF == "FadeGlobalSoundVolume")
+			FadeGlobalSoundVolume(StringToFloat(sInputA), StringToFloat(sInputB));
+		else if(sInputF == "FadeGlobalSoundSpeed")
+			FadeGlobalSoundSpeed(StringToFloat(sInputA), StringToFloat(sInputB));
+		else if(sInputF == "SetLightVisible")
+			SetLightVisible(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetLightFlickerActive")
+			SetLightFlickerActive(sInputA, StringToBool(sInputB));
+		else if(sInputF == "FadeImageTrailTo")
+			FadeImageTrailTo(StringToFloat(sInputA), StringToFloat(sInputB));
+		else if(sInputF == "FadeSepiaColorTo")
+			FadeSepiaColorTo(StringToFloat(sInputA), StringToFloat(sInputB));
+		else if(sInputF == "FadeRadialBlurTo")
+			FadeRadialBlurTo(StringToFloat(sInputA), StringToFloat(sInputB));
+		else if(sInputF == "SetInsanitySetEnabled")
+			SetInsanitySetEnabled(sInputA, StringToBool(sInputB));
+		else if(sInputF == "GiveSanityDamage")
+			GiveSanityDamage(StringToFloat(sInputA), StringToBool(sInputB));
+		else if(sInputF == "FadePlayerFOVMulTo")
+			FadePlayerFOVMulTo(StringToFloat(sInputA), StringToFloat(sInputB));
+		else if(sInputF == "FadePlayerAspectMulTo")
+			FadePlayerAspectMulTo(StringToFloat(sInputA), StringToFloat(sInputB));
+		else if(sInputF == "SetLanternActive")
+			SetLanternActive(StringToBool(sInputA), StringToBool(sInputB));
+		else if(sInputF == "SetDeathHint")
+			SetDeathHint(sInputA, sInputB);
+		else if(sInputF == "AddNote")
+			AddNote(sInputA, sInputB);
+		else if(sInputF == "AddDiary")
+			AddDiary(sInputA, sInputB);
+		else if(sInputF == "AddQuest")
+			AddQuest(sInputA, sInputB);
+		else if(sInputF == "CompleteQuest")
+			CompleteQuest(sInputA, sInputB);
+		else if(sInputF == "GiveItemFromFile")
+			GiveItemFromFile(sInputA, sInputB);
+		else if(sInputF == "SetEntityVisible")
+			SetEntityVisible(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetEntityCustomFocusCrossHair")
+			SetEntityCustomFocusCrossHair(sInputA, sInputB);
+		else if(sInputF == "SetEntityCallbackFunc")
+			SetEntityCallbackFunc(sInputA, sInputB);
+		else if(sInputF == "SetEntityConnectStateChangeCallback" || sInputF == "SetEntityConnectionStateChangeCallback")
+			SetEntityConnectStateChangeCallback(sInputA, sInputB);
+		else if(sInputF == "SetEntityInteractionDisabled")
+			SetEntityInteractionDisabled(sInputA, StringToBool(sInputB));
+		else if(sInputF == "RemoveEntityCollideCallback")
+			RemoveEntityCollideCallback(sInputA, sInputB);
+		else if(sInputF == "SetBodyMass")
+			SetBodyMass(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetPropStaticPhysics")
+			SetPropStaticPhysics(sInputA, StringToBool(sInputB));
+		else if(sInputF == "RemoveAttachedPropFromProp")
+			RemoveAttachedPropFromProp(sInputA, sInputB);
+		else if(sInputF == "SetPropHealth")
+			SetPropHealth(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "AddPropHealth")
+			AddPropHealth(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetSwingDoorDisableAutoClose")
+			SetSwingDoorDisableAutoClose(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetLevelDoorLocked")
+			SetLevelDoorLocked(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetLevelDoorLockedSound")
+			SetLevelDoorLockedSound(sInputA, sInputB);
+		else if(sInputF == "SetMoveObjectState")
+			SetMoveObjectState(sInputA, StringToFloat(sInputB));
+		else if(sInputF == "SetPropObjectStuckState")
+			SetPropObjectStuckState(sInputA, StringToInt(sInputB));
+		else if(sInputF == "SetWheelInteractionDisablesStuck")
+			SetWheelInteractionDisablesStuck(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetLeverInteractionDisablesStuck")
+			SetLeverInteractionDisablesStuck(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetMultiSliderCallback")
+			SetMultiSliderCallback(sInputA, sInputB);
+		else if(sInputF == "AttachPropToStickyArea")
+			AttachPropToStickyArea(sInputA, sInputB);
+		else if(sInputF == "AttachBodyToStickyArea")
+			AttachBodyToStickyArea(sInputA, sInputB);
+		else if(sInputF == "SetNPCFollowPlayer")
+			SetNPCFollowPlayer(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetEnemyDisabled")
+			SetEnemyDisabled(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetEnemyIsHallucination")
+			SetEnemyIsHallucination(sInputA, StringToBool(sInputB));
+		else if(sInputF == "FadeEnemyToSmoke")
+			FadeEnemyToSmoke(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetEnemyDisableTriggers")
+			SetEnemyDisableTriggers(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetEnemySanityDecreaseActive")
+			SetEnemySanityDecreaseActive(sInputA, StringToBool(sInputB));
+		else if(sInputF == "ChangeManPigPose")
+			ChangeManPigPose(sInputA, sInputB);
+		else if(sInputF == "SetTeslaPigFadeDisabled")
+			SetTeslaPigFadeDisabled(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetTeslaPigSoundDisabled")
+			SetTeslaPigSoundDisabled(sInputA, StringToBool(sInputB));
+		else if(sInputF == "SetTeslaPigEasyEscapeDisabled")
+			SetTeslaPigEasyEscapeDisabled(sInputA, StringToBool(sInputB));
+		else if(sInputF == "ProgLog")
+			ProgLog(sInputA, sInputB);
+		else if(sInputF == "AddDebugMessage")
+			AddDebugMessage(sInputA, StringToBool(sInputB));
+		else
+			AddDebugMessage("ERROR: No timer function pattern " + sInputF + " recognized!", false);
+		
+		SetLocalVarInt(asInputA, 0);
+		SetLocalVarString(asInputA + "_InputB", "");
+		SetLocalVarString(asInputA + "_InputC", "");
+		SetLocalVarString(asInputA + "_InputD", "");
+		SetLocalVarString(asInputA + "_InputE", "");
+		SetLocalVarString(asInputA + "_InputF", "");
+	}
+}
+
+void AddTimer(float afTime, string asFunction) //OVERLOADS AddTimer FUNCTION TO HAVE NO ARGUMENT.
+{
+	AddTimer(asFunction, afTime, "SetTimerReady");
+}
+//END TIMER FUNCTIONS
+
+//START PLAYER STATE FUNCTIONS
+void SetPlayerHealth(string asType) //CHANGES PLAYER HEALTH VALUE. POSSIBLE ARGUMENTS PATTERNS: damage, boost, lethal, shake, effect, min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fHealth = GetPlayerHealth();
+	float fAmount = 0.0f;
+	
+	if(StringContains(asType, "min"))
+	{
+		fAmount = 1.0f;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		fAmount = RandFloat(2.5f, 5.0f);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		fAmount = RandFloat(10.0f, 20.0f);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		fAmount = RandFloat(5.0f, 10.0f);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		fAmount = RandFloat(40.0f, 55.0f);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		fAmount = 30.0f;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		fAmount = RandFloat(75.0f, 100.0f);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		fAmount = RandFloat(55.0f, 75.0f);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		fAmount = 100.0f;
+	}
+	else
+	{
+		fAmount = 1.0f;
+	}
+	
+	bool bShake = false;
+	bool bLethal = false;
+	
+	if(StringContains(asType, "shake") || StringContains(asType, "effect"))
+	{
+		bShake = true;
+	}
+	
+	if(StringContains(asType, "lethal"))
+	{
+		bLethal = true;
+	}
+	
+	if(StringContains(asType, "damage"))
+	{
+		if(StringContains(asType, "grunt"))
+		{
+			GivePlayerDamage(fAmount, "Claws", bShake, bLethal);
+		}
+		else if(StringContains(asType, "brute"))
+		{
+			GivePlayerDamage(fAmount, "Slash", bShake, bLethal);
+		}
+		else if(StringContains(asType, "blood"))
+		{
+			GivePlayerDamage(fAmount, "BloodSplat", bShake, bLethal);
+		}
+		else
+		{
+			GivePlayerDamage(fAmount, "", bShake, bLethal);
+		}
+	}
+	else if(StringContains(asType, "boost"))
+	{
+		if((fHealth + fAmount) <= 100)
+		{
+			AddPlayerHealth(fAmount);
+		}
+		else
+		{
+			SetPlayerHealth(100.0f);
+		}
+	}
+	else
+	{
+		SetPlayerHealth(100.0f);
+	}
+}
+
+void SetPlayerSanity(string asType) //CHANGES PLAYER SANITY VALUE. POSSIBLE ARGUMENTS PATTERNS: damage, boost, lethal, effect, min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fSanity = GetPlayerSanity();
+	float fAmount = 0.0f;
+	
+	if(StringContains(asType, "min"))
+	{
+		fAmount = 1.0f;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		fAmount = RandFloat(2.5f, 5.0f);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		fAmount = RandFloat(10.0f, 20.0f);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		fAmount = RandFloat(5.0f, 10.0f);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		fAmount = RandFloat(40.0f, 55.0f);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		fAmount = 30.0f;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		fAmount = RandFloat(75.0f, 100.0f);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		fAmount = RandFloat(55.0f, 75.0f);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		fAmount = 100.0f;
+	}
+	else
+	{
+		fAmount = 1.0f;
+	}
+	
+	bool bUseEffects = false;
+	bool bLethal = false;
+	
+	if(StringContains(asType, "effect"))
+	{
+		bUseEffects = true;
+	}
+	
+	if(StringContains(asType, "lethal"))
+	{
+		bLethal = true;
+	}
+	
+	if(StringContains(asType, "damage"))
+	{
+		if(bLethal || fSanity - fAmount >= 5)
+		{
+			GiveSanityDamage(fAmount, bUseEffects);
+		}
+		else
+		{
+			GiveSanityDamage(fSanity - (fSanity - 5), bUseEffects);
+		}
+	}
+	else if(StringContains(asType, "boost"))
+	{
+		if(fSanity <= 15)
+		{
+			fAmount = fAmount + fAmount;
+			
+			if(fAmount > 80)
+			{
+				fAmount = 80.0f;
+			}
+			
+			if(bUseEffects)
+			{
+				AddPlayerSanity(fAmount);
+			}
+			else
+			{
+				SetPlayerSanity(fSanity + fAmount);
+			}
+		}
+		else if(fSanity <= 30)
+		{
+			fAmount = fAmount + (fAmount / 2);
+			
+			if(fAmount > 70)
+			{
+				fAmount = 70.0f;
+			}
+			
+			if(bUseEffects)
+			{
+				AddPlayerSanity(fAmount);
+			}
+			else
+			{
+				SetPlayerSanity(fSanity + fAmount);
+			}
+		}
+		else if((fSanity + fAmount) <= 100)
+		{
+			if(bUseEffects)
+			{
+				AddPlayerSanity(fAmount);
+			}
+			else
+			{
+				SetPlayerSanity(fSanity + fAmount);
+			}
+		}
+		else if(fSanity >= 100)
+		{
+			if(bUseEffects)
+			{
+				SetPlayerSanity(75.0f);
+				AddPlayerSanity(fAmount);
+				AddTimer("100.0f", 0.001f, "SetPlayerSanity");
+			}
+			else
+			{
+				SetPlayerSanity(100.0f);
+			}
+		}
+		else if(bUseEffects)
+		{
+			AddPlayerSanity(fAmount);
+			AddTimer("100.0f", 0.001f, "SetPlayerSanity");
+		}
+		else
+		{
+			SetPlayerSanity(100.0f);
+		}
+	}
+	else
+	{
+		SetPlayerSanity(100.0f);
+	}
+}
+
+void SetPlayerState(string asType)	//CHANGES PLAYER STATE VALUE. POSSIBLE ARGUMENTS PATTERNS: activeoff, activeon, drop, crosshairoff, crosshairon, inventoryoff, inventoryon, maxhealth, medhealth, lowhealth, maxsanity, medsanity, lowsanity, crouchoff, crouchon, crouch, stand, jumpverybig, jumpbig, jumpnormal, jumpoff, jumpon, falldamageoff, falldamageon, darknessoff, darknesson, sanitydrainoff, sanitydrainon, force-x, force-y, force-z, forcex, forcey, forcez, impulse-x, impulse-y, impulse-z, impulsex, impulsey, impulsez, min, verysmall, small, medsmall, med, medbig, big, verybig, max, runoff, speednormal, speedquick, speedslow, speedveryquick, speedveryslow.
+{
+	float fX = 0.0f;
+	float fY = 0.0f;
+	float fZ = 0.0f;
+	float fAmount = 0.0f;
+	
+	if(StringContains(asType, "min"))
+	{
+		fAmount = 2000.0f;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		fAmount = 9000.0f;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		fAmount = 18000.0f;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		fAmount = 15000.0f;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		fAmount = 24000.0f;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		fAmount = 21000.0f;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		fAmount = 33000.0f;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		fAmount = 27000.0f;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		fAmount = 40000.0f;
+	}
+	else
+	{
+		fAmount = 5000.0f;
+	}
+	
+	if(StringContains(asType, "speedveryquick"))
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		
+		if(StringContains(asType, "runoff") == false)
+		{
+			SetPlayerRunSpeedMul(1.35f);
+		}
+	}
+	else if(StringContains(asType, "speedquick"))
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		
+		if(StringContains(asType, "runoff") == false)
+		{
+			SetPlayerRunSpeedMul(1.175f);
+		}
+	}
+	else if(StringContains(asType, "speednormal"))
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		
+		if(StringContains(asType, "runoff") == false)
+		{
+			if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+				SetPlayerRunSpeedMul(1.175f);
+			else
+				SetPlayerRunSpeedMul(1.0f);
+		}
+	}
+	else if(StringContains(asType, "speedslow"))
+	{
+		SetPlayerMoveSpeedMul(0.5f);
+		SetPlayerLookSpeedMul(0.75f);
+		
+		if(StringContains(asType, "runoff") == false)
+		{
+			SetPlayerRunSpeedMul(0.5f);
+		}
+	}
+	else if(StringContains(asType, "speedveryslow"))
+	{
+		SetPlayerMoveSpeedMul(0.1f);
+		SetPlayerLookSpeedMul(0.5f);
+		
+		if(StringContains(asType, "runoff") == false)
+		{
+			SetPlayerRunSpeedMul(0.1f);
+		}
+	}
+	
+	if(StringContains(asType, "runoff"))
+	{
+		SetPlayerRunSpeedMul(0.0f);
+	}
+	
+	if(StringContains(asType, "force") || StringContains(asType, "impulse"))
+	{
+		if(StringContains(asType, "-x"))
+		{
+			fX = -fAmount;
+		}
+		else if(StringContains(asType, "x"))
+		{
+			fX = fAmount;
+		}
+		
+		if(StringContains(asType, "-y"))
+		{
+			fY = -fAmount;
+		}
+		else if(StringContains(asType, "y"))
+		{
+			fY = fAmount;
+		}
+		
+		if(StringContains(asType, "-z"))
+		{
+			fZ = -fAmount;
+		}
+		else if(StringContains(asType, "z"))
+		{
+			fZ = fAmount;
+		}
+		
+		AddPlayerBodyForce(fX, fY, fZ, true);
+	}
+	
+	if(StringContains(asType, "sanitydrainon"))
+	{
+		SetSanityDrainDisabled(false);
+	}
+	else if(StringContains(asType, "sanitydrainoff"))
+	{
+		SetSanityDrainDisabled(true);
+	}
+	
+	if(StringContains(asType, "darknesson"))
+	{
+		SetInDarknessEffectsActive(true);
+	}
+	else if(StringContains(asType, "darknessoff"))
+	{
+		SetInDarknessEffectsActive(false);
+	}
+	
+	if(StringContains(asType, "falldamageon"))
+	{
+		SetPlayerFallDamageDisabled(false);
+	}
+	else if(StringContains(asType, "falldamageoff"))
+	{
+		SetPlayerFallDamageDisabled(true);
+	}
+	
+	if(StringContains(asType, "jumpverybig"))
+	{
+		SetPlayerJumpForceMul(1.35f);
+	}
+	else if(StringContains(asType, "jumpbig"))
+	{
+		SetPlayerJumpForceMul(1.175f);
+	}
+	else if(StringContains(asType, "jumpnormal"))
+	{
+		SetPlayerJumpForceMul(1.0f);
+	}
+	else if(StringContains(asType, "jumpon"))
+	{
+		SetPlayerJumpDisabled(false);
+	}
+	else if(StringContains(asType, "jumpoff"))
+	{
+		SetPlayerJumpDisabled(true);
+	}
+	
+	if(StringContains(asType, "crouchon"))
+	{
+		SetPlayerCrouchDisabled(false);
+	}
+	else if(StringContains(asType, "crouchoff"))
+	{
+		SetPlayerCrouchDisabled(true);
+	}
+	else if(StringContains(asType, "crouch"))
+	{
+		SetPlayerCrouching(true);
+	}
+	else if(StringContains(asType, "stand"))
+	{
+		SetPlayerCrouching(false);
+	}
+	
+	if(StringContains(asType, "maxhealth"))
+	{
+		SetPlayerHealth(100.0f);
+	}
+	else if(StringContains(asType, "medhealth"))
+	{
+		SetPlayerHealth(50.0f);
+	}
+	else if(StringContains(asType, "lowhealth"))
+	{
+		SetPlayerHealth(1.0f);
+	}
+	
+	if(StringContains(asType, "maxsanity"))
+	{
+		SetPlayerSanity(100.0f);
+	}
+	else if(StringContains(asType, "medsanity"))
+	{
+		SetPlayerSanity(50.0f);
+	}
+	else if(StringContains(asType, "lowsanity"))
+	{
+		SetPlayerSanity(1.0f);
+	}
+	
+	if(StringContains(asType, "crosshairon"))
+	{
+		ShowPlayerCrossHairIcons(true);
+	}
+	else if(StringContains(asType, "crosshairoff"))
+	{
+		ShowPlayerCrossHairIcons(false);
+	}
+	
+	if(StringContains(asType, "inventoryon"))
+	{
+		SetInventoryDisabled(false);
+	}
+	else if(StringContains(asType, "inventoryoff"))
+	{
+		ExitInventory();
+		SetInventoryDisabled(true);
+	}
+	
+	if(StringContains(asType, "drop"))
+	{
+		ChangePlayerStateToNormal();
+	}
+
+	if(StringContains(asType, "activeon"))
+	{
+		SetPlayerActive(true);
+		ShowPlayerCrossHairIcons(true);
+		SetInventoryDisabled(false);
+	}
+	else if(StringContains(asType, "activeoff"))
+	{
+		SetPlayerActive(false);
+		ShowPlayerCrossHairIcons(false);
+		ExitInventory();
+		SetInventoryDisabled(true);
+	}
+}
+
+void TeleportPlayer(int aiPlayerStartPosCode) //HELPER FUNCTION.
+{
+	TeleportPlayer(gsPlayerStartAreaPrefix + aiPlayerStartPosCode);
+}
+//END PLAYER STATE FUNCTIONS
+
+//START OVERLOAD FUNCTIONS
+void ChangeMap(string asMap, int aiPlayerStartPosCode) //OVERLOADS A BASE FUNCTION.
+{
+	ChangeMap(asMap, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, "", "");
+}
+
+bool GetEntityPlayerCollide(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	return GetEntitiesCollide("Player", GetOriginalString(asEntity));
+}
+
+void SetHint(string asEntry) //OVERLOADS A BASE FUNCTION.
+{
+	GiveHint(asEntry, gsHintCat, asEntry, 0.0f);
+}
+
+void GiveItem(string asItem, string asEntry, string asImage) //OVERLOADS A BASE FUNCTION.
+{
+	string sItemName = GetOriginalString(asItem);
+	string sImageSuffix = "";
+	string sImage = "";
+	
+	if(StringContains(asImage, ".tga") == false)
+	{
+		sImageSuffix = ".tga";
+	}
+	
+	sImage = asImage + sImageSuffix;
+	
+	if(HasItem(sItemName) == false)
+	{
+		GiveItem(sItemName, "Puzzle", asEntry, sImage, 1);
+	}
+	else
+	{
+		AddDebugMessage("ERROR: Could not give item " + sItemName + "! There's already an item with the same name inside the inventory!", false);
+		return;
+	}
+}
+
+void GiveItem(string asItem, string asEntry) //OVERLOADS A BASE FUNCTION.
+{
+	string sItemName = GetOriginalString(asItem);
+	
+	if(HasItem(sItemName) == false)
+	{
+		GiveItem(sItemName, "Puzzle", asEntry, sItemName + ".tga", 1);
+	}
+	else
+	{
+		AddDebugMessage("ERROR: Could not give item " + sItemName + "! There's already an item with the same name inside the inventory!", false);
+		return;
+	}
+}
+
+void GiveItem(string asItem) //OVERLOADS A BASE FUNCTION.
+{
+	string sItemName = GetOriginalString(asItem);
+	
+	if(HasItem(sItemName) == false)
+	{
+		GiveItem(sItemName, "Puzzle", "", sItemName + ".tga", 1);
+	}
+	else
+	{
+		AddDebugMessage("ERROR: Could not give item " + sItemName + "! There's already an item with the same name inside the inventory!", false);
+		return;
+	}
+}
+
+void GiveItemFromFile(string asItem) //OVERLOADS A BASE FUNCTION.
+{
+	string sItemName = "";
+	
+	if(StringContains(asItem, ".ent"))
+	{
+		sItemName = GetStringWithoutSubString(asItem, ".ent");
+	}
+	else
+	{
+		sItemName = asItem;
+	}
+	
+	int i = 0;
+	
+	do
+	{
+		i = i + 1;
+	}
+	while(HasItem(sItemName + "_" + i));
+	
+	GiveItemFromFile(sItemName + "_" + i, sItemName + ".ent");
+}
+
+void PlayEndCredits(string asEntry, string asMusic, bool abLoop) //OVERLOADS A BASE FUNCTION.
+{
+	FadeGlobalSoundVolume(0.0f, 0.0f);
+	StartCredits(asMusic, abLoop, gsEndCreditsCat, asEntry, 3);
+}
+
+void PlayEndCredits(string asEntry, string asMusic) //OVERLOADS A BASE FUNCTION.
+{
+	FadeGlobalSoundVolume(0.0f, 0.0f);
+	StartCredits(asMusic, false, gsEndCreditsCat, asEntry, 3);
+}
+
+void PlayEndCredits(string asMusic) //OVERLOADS A BASE FUNCTION.
+{
+	FadeGlobalSoundVolume(0.0f, 0.0f);
+	StartCredits(asMusic, false, gsEndCreditsCat, gsEndCreditsDefaultEntry, 3);
+}
+
+void RemoveCombineCallback(string asItemA, string asItemB) //OVERLOADS A BASE FUNCTION.
+{
+	RemoveCombineCallback(GetOriginalString(asItemA) + "_" + GetOriginalString(asItemB));
+}
+
+void RemoveEntityConnectStateChangeCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityConnectionStateChangeCallback(GetOriginalString(asEntity), "");
+}
+
+void RemoveEntityPlayerCollideCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	RemoveEntityCollideCallback("Player", GetOriginalString(asEntity));
+}
+
+void RemoveEntityPlayerInteractCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityPlayerInteractCallback(GetOriginalString(asEntity), "", false);
+}
+
+void RemoveEntityPlayerLookAtCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityPlayerLookAtCallback(GetOriginalString(asEntity), "", false);
+}
+
+void RemoveEntityStateChangeCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityCallbackFunc(GetOriginalString(asEntity), "");
+}
+
+void RemoveEntitiesCollideCallback(string asEntityA, string asEntityB) //OVERLOADS A BASE FUNCTION.
+{
+	RemoveEntityCollideCallback(GetOriginalString(asEntityA), GetOriginalString(asEntityB));
+}
+
+void RemoveUseItemCallback(string asItem, string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	RemoveUseItemCallback(GetOriginalString(asItem) + "_" + GetOriginalString(asEntity));
+}
+
+void SetCombineCallback(string asItemA, string asItemB, string asFunction, bool abAutoRemove) //OVERLOADS A BASE FUNCTION.
+{
+	if(asItemA == asItemB || asItemA.length() == 0 || asItemB.length() == 0)
+	{
+		AddDebugMessage("ERROR: Could not create a combine callback between " + asItemA + " and " + asItemB + "!", false);
+		return;
+	}
+	
+	string sItemAName = GetOriginalString(asItemA);
+	string sItemBName = GetOriginalString(asItemB);
+	AddCombineCallback(sItemAName + "_" + sItemBName, sItemAName, sItemBName, asFunction, abAutoRemove);
+}
+
+void SetCombineCallback(string asItemA, string asItemB, bool abAutoRemove) //OVERLOADS A BASE FUNCTION.
+{
+	if(asItemA == asItemB || asItemA.length() == 0 || asItemB.length() == 0)
+	{
+		AddDebugMessage("ERROR: Could not create a combine callback between " + asItemA + " and " + asItemB + "!", false);
+		return;
+	}
+	
+	string sItemAName = GetOriginalString(asItemA);
+	string sItemBName = GetOriginalString(asItemB);
+	AddCombineCallback(sItemAName + "_" + sItemBName, sItemAName, sItemBName, "Combine" + GetObjectName(sItemAName) + "And" + GetObjectName(sItemBName), abAutoRemove);
+}
+
+void SetDeathHint(string asEntry) //OVERLOADS A BASE FUNCTION.
+{
+	if(asEntry == "Default")
+	{
+		SetDeathHint("Hints", "DefaultDeath");
+	}
+	else
+	{
+		SetDeathHint(gsDeathHintCat, asEntry);
+	}
+}
+
+void SetDeathHint(string[] avsEntriesArray) //OVERLOADS A BASE FUNCTION.
+{
+	int iRand = RandInt(0, avsEntriesArray.length() - 1);
+	
+	if(avsEntriesArray[iRand] == "Default")
+	{
+		SetDeathHint("Hints", "DefaultDeath");
+	}
+	else
+	{
+		SetDeathHint(gsDeathHintCat, avsEntriesArray[iRand]);
+	}
+}
+
+void SetDebugMessage(string asMessage) //OVERLOADS A BASE FUNCTION.
+{
+	AddDebugMessage(asMessage, false);
+}
+
+void SetEntitiesCollideCallback(string asParent, string asChild, string asFunction, string asType) //OVERLOADS A BASE FUNCTION.
+{
+	int iEnter = 0;
+	bool bRemove = false;
+	
+	if(StringContains(asType, "enter"))
+	{
+		iEnter = 1;
+	}
+	
+	if(StringContains(asType, "remove"))
+	{
+		bRemove = true;
+	}
+	
+	AddEntityCollideCallback(GetOriginalString(asParent), GetOriginalString(asChild), asFunction, bRemove, iEnter);
+}
+
+void SetEntitiesCollideCallback(string asParent, string asChild, string asFunction) //OVERLOADS A BASE FUNCTION.
+{
+	AddEntityCollideCallback(GetOriginalString(asParent), GetOriginalString(asChild), asFunction, false, 0);
+}
+
+void SetEntitiesCollideCallback(string asParent, string asChild) //OVERLOADS A BASE FUNCTION.
+{
+	AddEntityCollideCallback(GetOriginalString(asParent), GetOriginalString(asChild), "Collide" + GetObjectName(asParent) + "And" + GetObjectName(asChild), false, 0);
+}
+
+void SetEntityConnectStateChangeCallback(string asEntity, string asFunction) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityConnectionStateChangeCallback(GetOriginalString(asEntity), asFunction);
+}
+
+void SetEntityConnectStateChangeCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityConnectionStateChangeCallback(GetOriginalString(asEntity), "ConnectStateChangeOf" + GetObjectName(asEntity));
+}
+
+void SetEntityPlayerCollideCallback(string asEntity, string asFunction, string asType) //OVERLOADS A BASE FUNCTION.
+{
+	int iEnter = 0;
+	bool bRemove = false;
+	
+	if(StringContains(asType, "enter"))
+	{
+		iEnter = 1;
+	}
+	
+	if(StringContains(asType, "remove"))
+	{
+		bRemove = true;
+	}
+	
+	AddEntityCollideCallback("Player", GetOriginalString(asEntity), asFunction, bRemove, iEnter);
+}
+
+void SetEntityPlayerCollideCallback(string asEntity, string asFunction) //OVERLOADS A BASE FUNCTION.
+{
+	AddEntityCollideCallback("Player", GetOriginalString(asEntity), asFunction, false, 0);
+}
+
+void SetEntityPlayerCollideCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	AddEntityCollideCallback("Player", GetOriginalString(asEntity), "CollidePlayerAnd" + GetObjectName(asEntity), false, 0);
+}
+
+void SetEntityPlayerInteractCallback(string asEntity, bool abAutoRemove) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityPlayerInteractCallback(GetOriginalString(asEntity), "PlayerInteractWith" + GetObjectName(asEntity), abAutoRemove);
+}
+
+void SetEntityPlayerInteractDisablesStuck(string asEntity) //OVERLOADS A BASE FUNCTION. ALLOWS THE PLAYER TO MAKE THE ENTITY UNSTUCK WHEN INTERACTED WITH. THE ENTITY MUST BE A WHEEL OR A LEVER TO WORK PROPERLY!
+{
+	string sEntityName = GetOriginalString(asEntity);
+	SetLeverInteractionDisablesStuck(sEntityName, true);
+	SetWheelInteractionDisablesStuck(sEntityName, true);
+}
+
+void SetEntityPlayerInteractOff(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityInteractionDisabled(GetOriginalString(asEntity), true);
+}
+
+void SetEntityPlayerInteractOn(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityInteractionDisabled(GetOriginalString(asEntity), false);
+}
+
+void SetEntityPlayerLookAtCallback(string asEntity, bool abAutoRemove) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityPlayerLookAtCallback(GetOriginalString(asEntity), "PlayerLookAt" + GetObjectName(asEntity), abAutoRemove);
+}
+
+void SetEntityPlayerLookAtCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityPlayerLookAtCallback(GetOriginalString(asEntity), "PlayerLookAt" + GetObjectName(asEntity), false);
+}
+
+void SetEntityStateChangeCallback(string asEntity) //OVERLOADS A BASE FUNCTION.
+{
+	SetEntityCallbackFunc(GetOriginalString(asEntity), "StateChangeOf" + GetObjectName(asEntity));
+}
+
+void SetInventoryMessage(string asEntry) //OVERLOADS A BASE FUNCTION.
+{
+	SetInventoryMessage(gsInventoryCat, asEntry, 0);
+}
+
+void SetLoadScreen(string asEntry, string asImage) //OVERLOADS A BASE FUNCTION.
+{
+	if(StringContains(asImage, ".jpg"))
+	{
+		SetupLoadScreen(gsLoadScreenCat, asEntry, 0, gsLoadScreenImgPrefix + asImage);
+	}
+	else
+	{
+		SetupLoadScreen(gsLoadScreenCat, asEntry, 0, gsLoadScreenImgPrefix + asImage + ".jpg");
+	}
+}
+
+void SetMessage(string asCategory, string asEntry) //OVERLOADS A BASE FUNCTION.
+{
+	SetMessage(asCategory, asEntry, 0);
+}
+
+void SetMessage(string asEntry, float afTime) //OVERLOADS A BASE FUNCTION.
+{
+	SetMessage(gsHintCat, asEntry, afTime);
+}
+
+void SetMessage(string asEntry) //OVERLOADS A BASE FUNCTION.
+{
+	SetMessage(gsHintCat, asEntry, 0);
+}
+
+void SetUseItemCallback(string asItem, string asEntity, string asFunction, bool abAutoRemove) //OVERLOADS A BASE FUNCTION.
+{
+	AddUseItemCallback(GetOriginalString(asItem) + "_" + GetOriginalString(asEntity), GetOriginalString(asItem), GetOriginalString(asEntity), asFunction, abAutoRemove);
+}
+
+void SetUseItemCallback(string asItem, string asEntity, bool abAutoRemove) //OVERLOADS A BASE FUNCTION.
+{
+	AddUseItemCallback(GetOriginalString(asItem) + "_" + GetOriginalString(asEntity), GetOriginalString(asItem), GetOriginalString(asEntity), "Use" + GetObjectName(asItem) + "On" + GetObjectName(asEntity), abAutoRemove);
+}
+//END OVERLOAD FUNCTIONS
+
+//START CHECKPOINT FUNCTIONS
+void SetCheckPoint(string asEntry, string asFunction, string asPlayerStartPosName) //SETS A CHECKPOINT.
+{
+	int iPlayerStartPosCode = StringToInt(GetStringWithoutSubString(asPlayerStartPosName, gsPlayerStartAreaPrefix));
+	
+	if(iPlayerStartPosCode == 0)
+	{
+		AddDebugMessage("ERROR: " + asPlayerStartPosName + " is not named properly to set a new CheckPoint!", false);
+		return;
+	}
+	
+	if(asEntry == "Default" || asEntry == "CPDefault")
+	{
+		CheckPoint("CPDefault" + "_" + iPlayerStartPosCode, gsPlayerStartAreaPrefix + iPlayerStartPosCode, asFunction, "Hints", "DefaultDeath");
+	}
+	else if(StringContains(asEntry, "CP"))
+	{
+		CheckPoint(asEntry + "_" + iPlayerStartPosCode, gsPlayerStartAreaPrefix + iPlayerStartPosCode, asFunction, gsDeathHintCat, asEntry);
+	}
+	else
+	{
+		CheckPoint("CP" + asEntry + "_" + iPlayerStartPosCode, gsPlayerStartAreaPrefix + iPlayerStartPosCode, asFunction, gsDeathHintCat, asEntry);
+	}
+}
+
+void SetCheckPoint(string asEntry, string asFunction, int aiPlayerStartPosCode) //SETS A CHECKPOINT.
+{
+	if(asEntry == "Default" || asEntry == "CPDefault")
+	{
+		CheckPoint("CPDefault" + "_" + aiPlayerStartPosCode, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, asFunction, "Hints", "DefaultDeath");
+	}
+	else if(StringContains(asEntry, "CP"))
+	{
+		CheckPoint(asEntry + "_" + aiPlayerStartPosCode, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, asFunction, gsDeathHintCat, asEntry);
+	}
+	else
+	{
+		CheckPoint("CP" + asEntry + "_" + aiPlayerStartPosCode, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, asFunction, gsDeathHintCat, asEntry);
+	}
+}
+
+void SetCheckPoint(string asEntry, string asPlayerStartPosName) //SETS A CHECKPOINT.
+{
+	int iPlayerStartPosCode = StringToInt(GetStringWithoutSubString(asPlayerStartPosName, gsPlayerStartAreaPrefix));
+	
+	if(iPlayerStartPosCode == 0)
+	{
+		AddDebugMessage("ERROR: " + asPlayerStartPosName + " is not named properly to set a new CheckPoint!", false);
+		return;
+	}
+	
+	if(asEntry == "Default" || asEntry == "CPDefault")
+	{
+		CheckPoint("CPDefault" + "_" + iPlayerStartPosCode, gsPlayerStartAreaPrefix + iPlayerStartPosCode, "CPDefault", "Hints", "DefaultDeath");
+	}
+	else if(StringContains(asEntry, "CP"))
+	{
+		CheckPoint(asEntry + "_" + iPlayerStartPosCode, gsPlayerStartAreaPrefix + iPlayerStartPosCode, asEntry, gsDeathHintCat, asEntry);
+	}
+	else
+	{
+		CheckPoint("CP" + asEntry + "_" + iPlayerStartPosCode, gsPlayerStartAreaPrefix + iPlayerStartPosCode, "CP" + asEntry, gsDeathHintCat, asEntry);
+	}
+}
+
+void SetCheckPoint(string asEntry, int aiPlayerStartPosCode) //SETS A CHECKPOINT.
+{
+	if(asEntry == "Default" || asEntry == "CPDefault")
+	{
+		CheckPoint("CPDefault" + "_" + aiPlayerStartPosCode, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, "CPDefault", "Hints", "DefaultDeath");
+	}
+	else if(StringContains(asEntry, "CP"))
+	{
+		CheckPoint(asEntry + "_" + aiPlayerStartPosCode, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, asEntry, gsDeathHintCat, asEntry);
+	}
+	else
+	{
+		CheckPoint("CP" + asEntry + "_" + aiPlayerStartPosCode, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, "CP" + asEntry, gsDeathHintCat, asEntry);
+	}
+}
+
+void SetCheckPoint(string asPlayerStartPosName) //SETS A CHECKPOINT.
+{
+	int iPlayerStartPosNameDim = asPlayerStartPosName.length();
+	int iPlayerStartPosPrefixDim = gsPlayerStartAreaPrefix.length();
+	
+	if(iPlayerStartPosNameDim <= iPlayerStartPosPrefixDim || StringContains(asPlayerStartPosName, gsPlayerStartAreaPrefix) == false)
+	{
+		AddDebugMessage("ERROR: " + asPlayerStartPosName + " is not valid for creating a new check point!", false);
+		return;
+	}
+	
+	int iPlayerStartPosCode = StringToInt(StringSub(asPlayerStartPosName, iPlayerStartPosPrefixDim, iPlayerStartPosNameDim - iPlayerStartPosPrefixDim));
+	CheckPoint("CPDefault" + "_" + iPlayerStartPosCode, gsPlayerStartAreaPrefix + iPlayerStartPosCode, "CPDefault", "Hints", "DefaultDeath");
+}
+
+void SetCheckPoint(int aiPlayerStartPosCode) //SETS A CHECKPOINT.
+{
+	CheckPoint("CPDefault" + "_" + aiPlayerStartPosCode, gsPlayerStartAreaPrefix + aiPlayerStartPosCode, "CPDefault", "Hints", "DefaultDeath");
+}
+//END CHECKPOINT FUNCTIONS
+
+//START FOG STATE FUNCTIONS
+void SetFogState(string asType, float afStart, float afEnd, float afFalloffExp) //CHANGES THE STATE OF THE GLOBAL FOG. POSSIBLE ARGUMENTS PATTERNS: on, off, culling, skybox.
+{
+	float[] vfColorCodesArray = {0.0f, 0.0f, 0.0f, 1.0f};
+	vfColorCodesArray = GetColorCodesArray(asType);
+	bool bCulling = StringContains(asType, "culling");
+	bool bColor = GetStringContainsColorPattern(asType);
+	bool bSkyBox = StringContains(asType, "skybox");
+	bool bOn = StringContains(asType, "on");
+	
+	if(bColor)
+	{
+		SetFogColor(vfColorCodesArray[0], vfColorCodesArray[1], vfColorCodesArray[2], vfColorCodesArray[3]);
+		
+		if(bSkyBox)
+		{
+			SetSkyBoxColor(vfColorCodesArray[0], vfColorCodesArray[1], vfColorCodesArray[2], vfColorCodesArray[3]);
+		}
+	}
+	
+	if((afStart + afEnd + afFalloffExp) > 0)
+	{
+		SetFogProperties(afStart, afEnd, afFalloffExp, bCulling);
+	}
+	
+	if(bSkyBox)
+	{
+		SetSkyBoxActive(bOn);
+	}
+	
+	SetFogActive(bOn);
+}
+
+void SetFogState(string asType) //HELPER FUNCTION.
+{
+	SetFogState(asType, 0.0f, 0.0f, 0.0f);
+}
+//END FOG STATE FUNCTIONS
+
+//START GLOBAL SOUND FUNCTIONS
+void SetGlobalSoundSpeed(string asType, float afTime) //CHANGES THE SPEED OF THE GLOBAL SOUND, BIGGER SPEED MEANS CHIPMUNK MODE, LOWER SPEED MEANS FAT MODE. POSSIBLE ARGUMENTS PATTERNS: min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fAmount = 0.1f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 0;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 10;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	
+	FadeGlobalSoundSpeed(fAmount, afTime);
+}
+
+void SetGlobalSoundSpeed(string asType) //CHANGES THE SPEED OF THE GLOBAL SOUND, BIGGER SPEED MEANS CHIPMUNK MODE, LOWER SPEED MEANS FAT MODE. POSSIBLE ARGUMENTS PATTERNS: min, verysmall, small, medsmall, med, medbig, big, verybig, max, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	float fAmount = 0.1f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 0;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 10;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	
+	float fSpeed = 0.125f;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	FadeGlobalSoundSpeed(fAmount, fSpeed);
+}
+
+void SetGlobalSoundVolume(string asType, float afTime) //CHANGES THE VOLUME OF THE GLOBAL SOUND. POSSIBLE ARGUMENTS PATTERNS: min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fAmount = 0.1f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 0;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 10;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	
+	FadeGlobalSoundVolume(fAmount, afTime);
+}
+
+void SetGlobalSoundVolume(string asType) //CHANGES THE VOLUME OF THE GLOBAL SOUND. POSSIBLE ARGUMENTS PATTERNS: min, verysmall, small, medsmall, med, medbig, big, verybig, max, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	float fAmount = 0.1f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 0;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 10;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	
+	float fSpeed = 0.125f;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	FadeGlobalSoundVolume(fAmount, fSpeed);
+}
+//END GLOBAL SOUND FUNCTIONS
+
+//START LIGHT STATE FUNCTIONS
+float[] GetColorCodesArray(string asType) //RETURNS A FLOATING POINTS ARRAY CONTAINING THE RGBA CODES RELATED TO THE ARGUMENT WHICH INDICATES THE DESIRED COLOR.
+{
+	float[] vfColorCodesArray = {0.0f, 0.0f, 0.0f, 1.0f};
+	
+	if(StringContains(asType, "white"))
+	{
+		vfColorCodesArray[0] = 1.0f;
+		vfColorCodesArray[1] = 1.0f;
+		vfColorCodesArray[2] = 1.0f;
+	}
+	else if(StringContains(asType, "grey"))
+	{
+		vfColorCodesArray[0] = 0.5f;
+		vfColorCodesArray[1] = 0.5f;
+		vfColorCodesArray[2] = 0.5f;
+	}
+	else if(StringContains(asType, "red"))
+	{
+		vfColorCodesArray[0] = 1.0f;
+		vfColorCodesArray[1] = 0.0f;
+		vfColorCodesArray[2] = 0.0f;
+	}
+	else if(StringContains(asType, "green"))
+	{
+		vfColorCodesArray[0] = 0.0f;
+		vfColorCodesArray[1] = 1.0f;
+		vfColorCodesArray[2] = 0.0f;
+	}
+	else if(StringContains(asType, "outsideblue"))
+	{
+		vfColorCodesArray[0] = 0.7f;
+		vfColorCodesArray[1] = 0.77f;
+		vfColorCodesArray[2] = 0.77f;
+	}
+	else if(StringContains(asType, "blue"))
+	{
+		vfColorCodesArray[0] = 0.0f;
+		vfColorCodesArray[1] = 0.0f;
+		vfColorCodesArray[2] = 1.0f;
+	}
+	else if(StringContains(asType, "yellow"))
+	{
+		vfColorCodesArray[0] = 1.0f;
+		vfColorCodesArray[1] = 1.0f;
+		vfColorCodesArray[2] = 0.0f;
+	}
+	else if(StringContains(asType, "cyan"))
+	{
+		vfColorCodesArray[0] = 0.0f;
+		vfColorCodesArray[1] = 1.0f;
+		vfColorCodesArray[2] = 1.0f;
+	}
+	else if(StringContains(asType, "magenta"))
+	{
+		vfColorCodesArray[0] = 1.0f;
+		vfColorCodesArray[1] = 0.0f;
+		vfColorCodesArray[2] = 1.0f;
+	}
+	else if(StringContains(asType, "torchfiremystic"))
+	{
+		vfColorCodesArray[0] = 0.2f;
+		vfColorCodesArray[1] = 0.8f;
+		vfColorCodesArray[2] = 0.88f;
+	}
+	else if(StringContains(asType, "torchfire"))
+	{
+		vfColorCodesArray[0] = 0.8f;
+		vfColorCodesArray[1] = 0.6f;
+		vfColorCodesArray[2] = 0.4f;
+	}
+	else if(StringContains(asType, "candleorange"))
+	{
+		vfColorCodesArray[0] = 0.75f;
+		vfColorCodesArray[1] = 0.5f;
+		vfColorCodesArray[2] = 0.25f;
+	}
+	else if(StringContains(asType, "candle"))
+	{
+		vfColorCodesArray[0] = 0.85f;
+		vfColorCodesArray[1] = 0.75f;
+		vfColorCodesArray[2] = 0.4f;
+	}
+	else if(StringContains(asType, "hanginglantern"))
+	{
+		vfColorCodesArray[0] = 1.0f;
+		vfColorCodesArray[1] = 0.7f;
+		vfColorCodesArray[2] = 0.45f;
+	}
+	else
+	{
+		vfColorCodesArray[0] = 0.0f;
+		vfColorCodesArray[1] = 0.0f;
+		vfColorCodesArray[2] = 0.0f;
+		vfColorCodesArray[3] = 0.0f;
+	}
+	
+	if(StringContains(asType, "dark"))
+	{
+		vfColorCodesArray[0] = vfColorCodesArray[0] * 0.5f;
+		vfColorCodesArray[1] = vfColorCodesArray[1] * 0.5f;
+		vfColorCodesArray[2] = vfColorCodesArray[2] * 0.5f;
+		vfColorCodesArray[3] = vfColorCodesArray[3] * 0.5f;
+	}
+	
+	return vfColorCodesArray;
+}
+
+bool GetStringContainsColorPattern(string asString) //RETURNS TRUE IF THE STRING CONTAINS A COLOR PATTERN, THIS FUNCTION HAS DEPENDENCY ON float[] GetColorCodesArray(string asType).
+{
+	float[] vfColorCodesArray = {0.0f, 0.0f, 0.0f, 1.0f};
+	vfColorCodesArray = GetColorCodesArray(asString);
+	
+	if((vfColorCodesArray[0] + vfColorCodesArray[1] + vfColorCodesArray[2] + vfColorCodesArray[3]) == 0)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+void SetLightInvisible(string asLight) //MAKES A LIGHT INVISIBLE.
+{
+	SetLightVisible(asLight, false);
+}
+
+void SetLightState(string asLight, string asType, float afRadius, float afTime) //CHANGE THE STATE OF A LIGHT OR A LAMP. POSSIBLE ARGUMENTS PATTERNS: lamp, offquick, off, onquick, on, flicker.
+{
+	string sLightName = GetOriginalString(asLight);
+	float[] vfColorCodesArray = {0.0f, 0.0f, 0.0f, 1.0f};
+	vfColorCodesArray = GetColorCodesArray(asType);
+	bool bFlicker = false;
+	
+	if(StringContains(asType, "lamp"))
+	{
+		if(StringContains(asType, "onquick"))
+		{
+			SetLampLit(sLightName, true, false);
+		}
+		else if(StringContains(asType, "on"))
+		{
+			SetLampLit(sLightName, true, true);
+		}
+		else if(StringContains(asType, "offquick"))
+		{
+			SetLampLit(sLightName, false, false);
+		}
+		else if(StringContains(asType, "off"))
+		{
+			SetLampLit(sLightName, false, true);
+		}
+	}
+	else
+	{
+		if(StringContains(asType, "onquick"))
+		{
+			SetLightVisible(sLightName, true);
+			bFlicker = true;
+		}
+		else if(StringContains(asType, "on"))
+		{
+			SetLightVisible(sLightName, true);
+			bFlicker = true;
+			
+			if(GetStringContainsColorPattern(asType))
+			{
+				FadeLightTo(sLightName, vfColorCodesArray[0], vfColorCodesArray[1], vfColorCodesArray[2], vfColorCodesArray[3], afRadius, afTime);
+			}
+			else
+			{
+				FadeLightTo(sLightName, 1.0f, 1.0f, 1.0f, 1.0f, afRadius, afTime);
+			}
+		}
+		else if(StringContains(asType, "offquick"))
+		{
+			SetLightVisible(sLightName, false);
+			bFlicker = false;
+		}
+		else if(StringContains(asType, "off"))
+		{
+			bFlicker = false;
+			FadeLightTo(sLightName, 0.0f, 0.0f, 0.0f, 0.0f, afRadius, afTime);
+		}
+		else if(GetStringContainsColorPattern(asType))
+		{
+			FadeLightTo(sLightName, vfColorCodesArray[0], vfColorCodesArray[1], vfColorCodesArray[2], vfColorCodesArray[3], afRadius, afTime);
+		}
+		
+		if(StringContains(asType, "flicker"))
+		{
+			SetLightFlickerActive(sLightName, bFlicker);
+		}
+	}
+}
+
+void SetLightState(string asLight, string asType, float afTime) //CHANGE THE STATE OF A LIGHT OR A LAMP. POSSIBLE ARGUMENTS PATTERNS: lamp, offquick, off, onquick, on.
+{
+	SetLightState(asLight, asType, -1, afTime);
+}
+
+void SetLightState(string asLight, string asType) //CHANGE THE STATE OF A LIGHT OR A LAMP. POSSIBLE ARGUMENTS PATTERNS: lamp, offquick, off, onquick, on.
+{
+	SetLightState(asLight, asType, -1, 2.0f);
+}
+
+void SetLightVisible(string asLight) //MAKES A LIGHT VISIBLE.
+{
+	SetLightVisible(asLight, true);
+}
+//END LIGHT STATE FUNCTIONS
+
+//START PARTICLE SYSTEM FUNCTIONS
+void PlayParticleSystem(string asParticle, string asEntity, string asType, int aiSuffixCode) //PLAYS A PARTICLE SYSTEM TO AN ENTITY. POSSIBLE ARGUMENTS PATTERNS: save.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	string sParticleName = sEntityName + gsParticleNameSuffix + aiSuffixCode;
+	float[] vfColorCodesArray = {0.0f, 0.0f, 0.0f, 1.0f};
+	vfColorCodesArray = GetColorCodesArray(asType);
+	bool bSave = false;
+	
+	if(StringContains(asType, "save"))
+	{
+		bSave = true;
+	}
+	
+	if(GetStringContainsColorPattern(asType))
+	{
+		CreateParticleSystemAtEntityExt(sParticleName, asParticle, sEntityName, bSave, vfColorCodesArray[0], vfColorCodesArray[1], vfColorCodesArray[2], vfColorCodesArray[3], true, 0.0f, 0.0f, 50.0f, 60.0f);
+	}
+	else
+	{
+		CreateParticleSystemAtEntity(sParticleName, asParticle, sEntityName, bSave);
+	}
+}
+
+void PlayParticleSystem(string asParticle, string asEntity, string asType) //PLAYS A PARTICLE SYSTEM TO AN ENTITY. POSSIBLE ARGUMENTS PATTERNS: save.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	string sParticleName = sEntityName + gsParticleNameSuffix;
+	float[] vfColorCodesArray = {0.0f, 0.0f, 0.0f, 1.0f};
+	vfColorCodesArray = GetColorCodesArray(asType);
+	bool bSave = false;
+	
+	if(StringContains(asType, "save"))
+	{
+		bSave = true;
+	}
+	
+	if(GetStringContainsColorPattern(asType))
+	{
+		CreateParticleSystemAtEntityExt(sParticleName, asParticle, sEntityName, bSave, vfColorCodesArray[0], vfColorCodesArray[1], vfColorCodesArray[2], vfColorCodesArray[3], true, 0.0f, 0.0f, 50.0f, 60.0f);
+	}
+	else
+	{
+		CreateParticleSystemAtEntity(sParticleName, asParticle, sEntityName, bSave);
+	}
+}
+
+void PlayParticleSystem(string asParticle, string asEntity) //PLAYS A PARTICLE SYSTEM TO AN ENTITY.
+{
+	CreateParticleSystemAtEntity(GetOriginalString(asEntity) + gsParticleNameSuffix, asParticle, GetOriginalString(asEntity), false);
+}
+
+void PlayParticleSystem(string asParticle) //PLAYS A PARTICLE SYSTEM TO THE PLAYER.
+{
+	CreateParticleSystemAtEntity("Player" + gsParticleNameSuffix, asParticle, "Player", false);
+}
+
+void PreloadParticleSystems(string[] avsPSArray) //PRELOADS SOME PARTICLE SYSTEMS.
+{
+	for(int i=0; i<avsPSArray.length(); i++)
+	{
+		PreloadParticleSystem(avsPSArray[i]);
+	}
+}
+
+void StopParticleSystem(string asParticleName, string asType) //STOPS A PARTICLE SYSTEM. POSSIBLE ARGUMENTS PATTERNS: suffix, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	string sSuffix = "";
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(StringContains(asType, "suffix"))
+	{
+		sSuffix = gsParticleNameSuffix;
+	}
+	
+	if(fSpeed > 0)
+	{
+		AddTimer(asParticleName + sSuffix, fSpeed, "DestroyParticleSystem");
+	}
+	else
+	{
+		DestroyParticleSystem(asParticleName + sSuffix);
+	}
+}
+
+void StopParticleSystem(string asParticleName) //STOPS A PARTICLE SYSTEM.
+{
+	DestroyParticleSystem(asParticleName);
+}
+//END PARTICLE SYSTEM FUNCTIONS
+
+//START SOUND FUNCTIONS
+void PlaySound(string asSound, string asEntity, string asType, int aiSuffixCode) //PLAYS A SOUND TO AN ENTITY. POSSIBLE ARGUMENTS PATTERNS: save, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	string sSoundName = sEntityName + gsSoundNameSuffix + aiSuffixCode;
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	bool bSave = false;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(StringContains(asType, "save"))
+	{
+		bSave = true;
+	}
+	
+	PlaySoundAtEntity(sSoundName, asSound, sEntityName, fSpeed, bSave);
+}
+
+void PlaySound(string asSound, string asEntity, string asType) //PLAYS A SOUND TO AN ENTITY. POSSIBLE ARGUMENTS PATTERNS: save, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	string sSoundName = sEntityName + gsSoundNameSuffix;
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	bool bSave = false;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(StringContains(asType, "save"))
+	{
+		bSave = true;
+	}
+	
+	PlaySoundAtEntity(sSoundName, asSound, sEntityName, fSpeed, bSave);
+}
+
+void PlaySound(string asSound, string asEntity) //PLAYS A SOUND TO AN ENTITY.
+{
+	PlaySoundAtEntity(GetOriginalString(asEntity) + gsSoundNameSuffix, asSound, GetOriginalString(asEntity), 0.0f, false);
+}
+
+void PlaySound(string asSound) //PLAYS A SOUND.
+{
+	PlayGuiSound(asSound, 1.0f);
+}
+
+void PreloadSounds(string[] avsSNTArray) //PRELOADS SOME SOUNDS.
+{
+	for(int i=0; i<avsSNTArray.length(); i++)
+	{
+		PreloadSound(avsSNTArray[i]);
+	}
+}
+
+void StopSound(string asSoundName, string asType) //STOPS A SOUND. POSSIBLE ARGUMENTS PATTERNS: suffix, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	string sSuffix = "";
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(StringContains(asType, "suffix"))
+	{
+		sSuffix = gsSoundNameSuffix;
+	}
+	
+	StopSound(asSoundName + sSuffix, fSpeed);
+}
+
+void StopSound(string asSoundName) //STOPS A SOUND.
+{
+	StopSound(asSoundName, 0.0f);
+}
+//END SOUND FUNCTIONS
+
+//START MUSIC FUNCTIONS
+void PlayMusic(string asMusic, string asType) //PLAYS A MUSIC. POSSIBLE ARGUMENTS PATTERNS: event, loop, save, min, verysmall, small, medsmall, med, medbig, big, verybig, max, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	float fAmount = 0.1f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 0;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 8;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	float fSpeed = 0.125f;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	int iType = 0;
+	bool bLoop = false;
+	bool bSave = false;
+	
+	if(StringContains(asType, "event"))
+	{
+		iType = 10;
+	}
+	else
+	{
+		iType = 0;
+	}
+	
+	if(StringContains(asType, "loop"))
+	{
+		bLoop = true;
+	}
+	else
+	{
+		bLoop = false;
+	}
+	
+	if(StringContains(asType, "save"))
+	{
+		bSave = true;
+	}
+	else
+	{
+		bSave = false;
+	}
+	
+	PlayMusic(asMusic, bLoop, fAmount, fSpeed, iType, bSave);
+}
+
+void PlayMusic(string asMusic) //PLAYS A MUSIC.
+{
+	PlayMusic(asMusic, false, 0.8f, 0.0f, 10, false);
+}
+
+void StopMusic(string asType, float afTime) //STOPS A MUSIC. POSSIBLE ARGUMENTS PATTERNS: event.
+{
+	if(StringContains(asType, "event"))
+	{
+		StopMusic(afTime, 10);
+	}
+	else
+	{
+		StopMusic(afTime, 0);
+	}
+}
+
+void StopMusic(string asType) //STOPS A MUSIC. POSSIBLE ARGUMENTS PATTERNS: event, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(StringContains(asType, "event"))
+	{
+		StopMusic(fSpeed, 10);
+	}
+	else
+	{
+		StopMusic(fSpeed, 0);
+	}
+}
+//END MUSIC FUNCTIONS
+
+//START ENTITY STATE FUNCTIONS
+float GetEntityHealth(string asEntity) //RETURNS THE FLOAT HEALTH VALUE OF AN ENTITY.
+{
+	return GetPropHealth(GetOriginalString(asEntity));
+}
+
+bool GetEntityIsBroken(string asEntity) //RETURNS TRUE IF THE ENTITY IS BROKEN, FALSE OTHERWISE.
+{
+	if(GetPropHealth(GetOriginalString(asEntity)) <= 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void SetEntitiesActive(string asEntityPrefix, float afTime, int aiMinSuffix, int aiMaxSuffix) //ENABLES, USING THE EFFECTS, MORE THAN ONE ENTITY.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+	{
+		SetPropActiveAndFade(asEntityPrefix + i, true, afTime);
+	}
+}
+
+void SetEntitiesActive(string asEntityPrefix, int aiMinSuffix, int aiMaxSuffix) //ENABLES MORE THAN ONE ENTITY.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+	{
+		SetEntityActive(asEntityPrefix + i, true);
+	}
+}
+
+void SetEntitiesAndEffectsActive(string asEntityPrefix, string asParticleSystem, string asSound, string asType, int aiMinSuffix, int aiMaxSuffix) //ENABLES THE ENTITIES, CREATES A PARTICLE SYSTEMS ON THEM, PLAYS A SOUND ON THEM, ACTIVATES A LIGHT ON THEM.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(fSpeed > 0)
+	{
+		for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+		{
+			SetPropActiveAndFade(asEntityPrefix + i, true, fSpeed);
+		}
+	}
+	else
+	{
+		for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+		{
+			SetEntityActive(asEntityPrefix + i, true);
+		}
+	}
+	
+	if(asParticleSystem.length() > 0)
+	{
+		for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+		{
+			PlayParticleSystem(asParticleSystem, asEntityPrefix + i, asType);
+		}
+	}
+	
+	if(asSound.length() > 0)
+	{
+		for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+		{
+			PlaySound(asSound, asEntityPrefix + i, asType);
+		}
+	}
+	
+	if(GetStringContainsColorPattern(asType))
+	{
+		for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+		{
+			SetLightState(gsLightPrefix + asEntityPrefix + i, "on_" + asType);
+		}
+	}
+}
+
+void SetEntitiesAndEffectsInactive(string asEntityPrefix, string asType, int aiMinSuffix, int aiMaxSuffix) //NOT ONLY DISABLES THE ENTITIES BUT ALSO REMOVES ANY SOUNDS OR PARTICLE SYSTEMS OR LIGHTS ON THEM.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+	{
+		DestroyParticleSystem(asEntityPrefix + i + gsParticleNameSuffix);
+		StopSound(asEntityPrefix + i + gsSoundNameSuffix, fSpeed);
+		SetLightState(gsLightPrefix + asEntityPrefix + i, "off", fSpeed);
+	}
+	
+	if(fSpeed > 0)
+	{
+		for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+		{
+			SetPropActiveAndFade(asEntityPrefix + i, false, fSpeed);
+		}
+	}
+	else
+	{
+		for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+		{
+			SetEntityActive(asEntityPrefix + i, false);
+		}
+	}
+}
+
+void SetEntitiesInactive(string asEntityPrefix, float afTime, int aiMinSuffix, int aiMaxSuffix) //DISABLES, USING THE EFFECTS, MORE THAN ONE ENTITY.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+	{
+		SetPropActiveAndFade(asEntityPrefix + i, false, afTime);
+	}
+}
+
+void SetEntitiesInactive(string asEntityPrefix, int aiMinSuffix, int aiMaxSuffix) //DISABLES MORE THAN ONE ENTITY.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+	{
+		SetEntityActive(asEntityPrefix + i, false);
+	}
+}
+
+void SetEntitiesInvisible(string asEntityPrefix, int aiMinSuffix, int aiMaxSuffix) //MAKES INVISIBLE MORE THAN ONE ENTITY.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+	{
+		SetEntityVisible(asEntityPrefix + i, false);
+	}
+}
+
+void SetEntitiesVisible(string asEntityPrefix, int aiMinSuffix, int aiMaxSuffix) //MAKES VISIBLE MORE THAN ONE ENTITY.
+{
+	if(GetEntityExists(asEntityPrefix + aiMinSuffix) == false)
+	{
+		AddDebugMessage("ERROR: Entity with prefix " + asEntityPrefix + " and suffix " + aiMinSuffix + " does not exist!", false);
+		return;
+	}
+	
+	for(int i=aiMinSuffix; i<=aiMaxSuffix; i++)
+	{
+		SetEntityVisible(asEntityPrefix + i, true);
+	}
+}
+
+void SetEntityActive(string asEntity, float afTime) //ENABLES, USING THE EFFECTS, ONE ENTITY.
+{
+	SetPropActiveAndFade(GetOriginalString(asEntity), true, afTime);
+}
+
+void SetEntityActive(string asEntity) //ENABLES ONE ENTITY.
+{
+	SetEntityActive(GetOriginalString(asEntity), true);
+}
+
+void SetEntityAndEffectsActive(string asEntity, string asParticleSystem, string asSound, string asType) //ENABLES THE ENTITY, CREATES A PARTICLE SYSTEMS ON IT, PLAYS A SOUND ON IT, ACTIVATES A LIGHT ON IT.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	
+	if(GetEntityExists(sEntityName) == false)
+	{
+		AddDebugMessage("ERROR: Entity " + sEntityName + " does not exist!", false);
+		return;
+	}
+	
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(fSpeed > 0)
+	{
+		SetPropActiveAndFade(sEntityName, true, fSpeed);
+	}
+	else
+	{
+		SetEntityActive(sEntityName, true);
+	}
+	
+	if(asParticleSystem.length() > 0)
+	{
+		PlayParticleSystem(asParticleSystem, sEntityName, asType);
+	}
+	
+	if(asSound.length() > 0)
+	{
+		PlaySound(asSound, sEntityName, asType);
+	}
+	
+	if(GetStringContainsColorPattern(asType))
+	{
+		SetLightState(gsLightPrefix + sEntityName, "on_" + asType);
+	}
+}
+
+void SetEntityAndEffectsInactive(string asEntity, string asType) //NOT ONLY DISABLES THE ENTITY BUT ALSO REMOVES ANY SOUNDS OR PARTICLE SYSTEMS OR LIGHTS ON IT.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	
+	if(GetEntityExists(sEntityName) == false)
+	{
+		AddDebugMessage("ERROR: Entity " + sEntityName + " does not exist!", false);
+		return;
+	}
+	
+	float fSpeed = 0.125f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	DestroyParticleSystem(sEntityName + gsParticleNameSuffix);
+	StopSound(sEntityName + gsSoundNameSuffix, fSpeed);
+	SetLightState(gsLightPrefix + sEntityName, "off", fSpeed);
+	
+	if(fSpeed > 0)
+	{
+		SetPropActiveAndFade(sEntityName, false, fSpeed);
+	}
+	else
+	{
+		SetEntityActive(sEntityName, false);
+	}
+}
+
+void SetEntityHealth(string asEntity, float afAmount) //SET THE FLOAT HEALTH VALUE OF AN ENTITY.
+{
+	SetPropHealth(GetOriginalString(asEntity), afAmount);
+}
+
+void SetEntityInactive(string asEntity, float afTime) //DISABLES, USING THE EFFECTS, ONE ENTITY.
+{
+	SetPropActiveAndFade(GetOriginalString(asEntity), false, afTime);
+}
+
+void SetEntityInactive(string asEntity) //ENABLES ONE ENTITY.
+{
+	SetEntityActive(GetOriginalString(asEntity), false);
+}
+
+void SetEntityInvisible(string asEntity) //MAKES INVISIBLE ONE ENTITY.
+{
+	SetEntityVisible(GetOriginalString(asEntity), false);
+}
+
+void SetEntityState(string asEntity, string asType) //CHANGES THE ENTITY STATE. POSSIBLE ARGUMENTS PATTERNS: reset, broken, health, staticoff, staticon, interactoff, interacton, focusgrab, crosshairgrab, focuspush, crosshairpush, focusmove, crosshairmove, focusignite, crosshairignite, focuslamp, crosshairlamp, focuspick, crosshairpick, focusitem, crosshairitem, focuslevel, crosshairlevel, focusdoor, crosshairdoor, focusladder, crosshairladder, focusdefault, crosshairdefault, visibleoff, visibleon, psoff, particleoff, sntoff, soundoff, off, on, force-x, force-y, force-z, forcex, forcey, forcez, impulse-x, impulse-y, impulse-z, impulsex, impulsey, impulsez, min, verysmall, small, medsmall, med, medbig, big, verybig, max, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	float fAmount = 0.1f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 0;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	float fSpeed = 0.25f;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(StringContains(asType, "focus") || StringContains(asType, "crosshair"))
+	{
+		if(StringContains(asType, "grab"))
+		{
+			SetEntityCustomFocusCrossHair(sEntityName, "Grab");
+		}
+		else if(StringContains(asType, "push") || StringContains(asType, "move"))
+		{
+			SetEntityCustomFocusCrossHair(sEntityName, "Push");
+		}
+		else if(StringContains(asType, "ignite") || StringContains(asType, "lamp"))
+		{
+			SetEntityCustomFocusCrossHair(sEntityName, "Ignite");
+		}
+		else if(StringContains(asType, "pick") || StringContains(asType, "item"))
+		{
+			SetEntityCustomFocusCrossHair(sEntityName, "Pick");
+		}
+		else if(StringContains(asType, "level") || StringContains(asType, "door"))
+		{
+			SetEntityCustomFocusCrossHair(sEntityName, "LevelDoor");
+		}
+		else if(StringContains(asType, "ladder"))
+		{
+			SetEntityCustomFocusCrossHair(sEntityName, "Ladder");
+		}
+		else
+		{
+			SetEntityCustomFocusCrossHair(sEntityName, "Default");
+		}
+	}
+	else if(StringContains(asType, "reset"))
+	{
+		ResetProp(sEntityName);
+	}
+	else if(StringContains(asType, "broken"))
+	{
+		SetPropHealth(sEntityName, 0.0f);
+	}
+	else if(StringContains(asType, "health"))
+	{
+		SetPropHealth(sEntityName, fAmount);
+	}
+	else if(StringContains(asType, "staticoff"))
+	{
+		SetPropStaticPhysics(sEntityName, false);
+	}
+	else if(StringContains(asType, "staticon"))
+	{
+		SetPropStaticPhysics(sEntityName, true);
+	}
+	else if(StringContains(asType, "interactoff"))
+	{
+		SetEntityInteractionDisabled(sEntityName, true);
+	}
+	else if(StringContains(asType, "interacton"))
+	{
+		SetEntityInteractionDisabled(sEntityName, false);
+	}
+	else if(StringContains(asType, "visibleoff"))
+	{
+		SetEntityVisible(sEntityName, false);
+	}
+	else if(StringContains(asType, "visibleon"))
+	{
+		SetEntityVisible(sEntityName, true);
+	}
+	else if(StringContains(asType, "psoff") || StringContains(asType, "particleoff"))
+	{
+		DestroyParticleSystem(sEntityName + gsParticleNameSuffix);
+	}
+	else if(StringContains(asType, "sntoff") || StringContains(asType, "soundoff"))
+	{
+		StopSound(sEntityName + gsSoundNameSuffix, fSpeed);
+	}
+	else if(StringContains(asType, "ltoff") || StringContains(asType, "lightoff"))
+	{
+		SetLightState(gsLightPrefix + sEntityName, "off", fSpeed);
+	}
+	else if(StringContains(asType, "off"))
+	{
+		if(fSpeed != 0)
+		{
+			SetPropActiveAndFade(sEntityName, false, fSpeed);
+		}
+		else
+		{
+			SetEntityActive(sEntityName, false);
+		}
+	}
+	else if(StringContains(asType, "on"))
+	{
+		if(fSpeed != 0)
+		{
+			SetPropActiveAndFade(sEntityName, true, fSpeed);
+		}
+		else
+		{
+			SetEntityActive(sEntityName, true);
+		}
+	}
+	
+	float fX = 0.0f;
+	float fY = 0.0f;
+	float fZ = 0.0f;
+	bool bForce = StringContains(asType, "force");
+	bool bImpulse = StringContains(asType, "impulse");
+	
+	if(bForce || bImpulse)
+	{
+		if(fAmount == 0)
+		{
+			fAmount = 0.5f;
+		}
+		
+		if(bForce)
+		{
+			fAmount = fAmount * 300.0f;
+		}
+		else if(bImpulse)
+		{
+			fAmount = fAmount * 20.0f;
+		}
+		
+		if(StringContains(asType, "-x"))
+		{
+			fX = -fAmount;
+		}
+		else if(StringContains(asType, "x"))
+		{
+			fX = fAmount;
+		}
+		
+		if(StringContains(asType, "-y"))
+		{
+			fY = -fAmount;
+		}
+		else if(StringContains(asType, "y"))
+		{
+			fY = fAmount;
+		}
+		
+		if(StringContains(asType, "-z"))
+		{
+			fZ = -fAmount;
+		}
+		else if(StringContains(asType, "z"))
+		{
+			fZ = fAmount;
+		}
+		
+		if(bForce)
+		{
+			AddPropForce(sEntityName, fX, fY, fZ, "World");
+		}
+		else if(bImpulse)
+		{
+			AddPropImpulse(sEntityName, fX, fY, fZ, "World");
+		}
+	}
+}
+
+void SetEntityUnstuck(string asEntity) //MAKES ANY KIND OF ENTITY UNSTUCK.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	SetPropObjectStuckState(sEntityName, 0);
+	SetLeverStuckState(sEntityName, 0, true);
+	SetWheelStuckState(sEntityName, 0, true);
+}
+
+void SetEntityVisible(string asEntity) //MAKES VISIBLE ONE ENTITY.
+{
+	SetEntityVisible(GetOriginalString(asEntity), true);
+}
+//END ENTITY STATE FUNCTIONS
+
+//START DOOR STATE FUNCTIONS
+string GetDoorState(string asEntity) //RETURNS THE STATE OF A DOOR. POSSIBLE RETURN PATTERNS: lock, unlock, close, open, broken.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	string sDoorState = "";
+	
+	if(GetSwingDoorLocked(sEntityName))
+	{
+		sDoorState = "lock";
+	}
+	else
+	{
+		sDoorState = "unlock";
+	}
+	
+	if(GetSwingDoorClosed(sEntityName))
+	{
+		sDoorState = sDoorState + "_close";
+	}
+	else
+	{
+		sDoorState = sDoorState + "_open";
+	}
+	
+	if(GetPropHealth(sEntityName) <= 0)
+	{
+		sDoorState = sDoorState + "_broken";
+	}
+	
+	return sDoorState;
+}
+
+void SetDoorState(string asEntity, string asType) //CHANGES THE STATE OF A DOOR. POSSIBLE ARGUMENTS PATTERNS: level, explode, broken, lock, unlock, close, open, silent, force-x, force-y, force-z, forcex, forcey, forcez, impulse-x, impulse-y, impulse-z, impulsex, impulsey, impulsez.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	string sClosedSoundPrefix = "01";
+	string sLockedSoundPrefix = "unlock";
+	string sDoorSoundSuffix = "_door.snt";
+	float fAmount = 0.1f;
+	int iMultiplier = 0;
+	bool bOpen = true;
+	bool bClosed = false;
+	bool bLocked = false;
+	bool bSilent = false;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 0;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	
+	if(StringContains(asType, "close"))
+	{
+		bOpen = false;
+		bClosed = true;
+		sClosedSoundPrefix = "scare_slam";
+	}
+	
+	if(StringContains(asType, "unlock"))
+	{
+		bLocked = false;
+		sLockedSoundPrefix = "unlock";
+	}
+	else if(StringContains(asType, "lock"))
+	{
+		bLocked = true;
+		sLockedSoundPrefix = "lock";
+	}
+	
+	if(StringContains(asType, "silent"))
+	{
+		bSilent = true;
+	}
+	
+	if(StringContains(asType, "level"))
+	{
+		SetLevelDoorLocked(sEntityName, bLocked);
+		SetLevelDoorLockedSound(sEntityName, "locked_door.snt");
+		
+		if(bSilent == false)
+		{
+			PlaySoundAtEntity(sEntityName + gsSoundNameSuffix, sLockedSoundPrefix + sDoorSoundSuffix, sEntityName, 0.0f, false);
+		}
+		
+		if(StringContains(asType, gsLevelDoorLockedTextPrefix))
+		{
+			int iIndex = GetSubStringIndex(asType, gsLevelDoorLockedTextPrefix) + gsLevelDoorLockedTextPrefix.length();
+			SetLevelDoorLockedText(sEntityName, gsHintCat, StringSub(asType, iIndex, asType.length() - iIndex));
+		}
+		else
+		{
+			SetLevelDoorLockedText(sEntityName, "LevelDoors", "LockedForever");
+		}
+	}
+	else if(StringContains(asType, "explode") || StringContains(asType, "broken"))
+	{
+		if(GetPropHealth(sEntityName) <= 0)
+		{
+			ResetProp(sEntityName);
+		}
+		
+		SetPropHealth(sEntityName, 0);
+		StartScreenShake(0.025f, 0.75f, 0.5f, 1.0f);
+	}
+	else
+	{
+		if(StringContains(asType, "close") || StringContains(asType, "open"))
+		{
+			SetSwingDoorClosed(sEntityName, bClosed, false);
+			SetSwingDoorDisableAutoClose(sEntityName, bOpen);
+			
+			if(bSilent == false)
+			{
+				PlaySoundAtEntity(sEntityName + gsSoundNameSuffix, sClosedSoundPrefix + sDoorSoundSuffix, sEntityName, 0.0f, false);
+			}
+		}
+		
+		if(StringContains(asType, "lock"))
+		{
+			SetSwingDoorLocked(sEntityName, bLocked, false);
+			
+			if(bSilent == false)
+			{
+				PlaySoundAtEntity(sEntityName + gsSoundNameSuffix, sLockedSoundPrefix + sDoorSoundSuffix, sEntityName, 0.0f, false);
+			}
+		}
+	}
+	
+	float fX = 0.0f;
+	float fY = 0.0f;
+	float fZ = 0.0f;
+	bool bForce = StringContains(asType, "force");
+	bool bImpulse = StringContains(asType, "impulse");
+	
+	if(bForce || bImpulse)
+	{
+		if(fAmount == 0)
+		{
+			fAmount = 0.5f;
+		}
+		
+		if(bForce)
+		{
+			fAmount = fAmount * 300.0f;
+		}
+		else if(bImpulse)
+		{
+			fAmount = fAmount * 20.0f;
+		}
+		
+		if(StringContains(asType, "-x"))
+		{
+			fX = -fAmount;
+		}
+		else if(StringContains(asType, "x"))
+		{
+			fX = fAmount;
+		}
+		
+		if(StringContains(asType, "-y"))
+		{
+			fY = -fAmount;
+		}
+		else if(StringContains(asType, "y"))
+		{
+			fY = fAmount;
+		}
+		
+		if(StringContains(asType, "-z"))
+		{
+			fZ = -fAmount;
+		}
+		else if(StringContains(asType, "z"))
+		{
+			fZ = fAmount;
+		}
+		
+		if(bForce)
+		{
+			AddPropForce(sEntityName, fX, fY, fZ, "World");
+		}
+		else if(bImpulse)
+		{
+			AddPropImpulse(sEntityName, fX, fY, fZ, "World");
+		}
+	}
+}
+//END DOOR STATE FUNCTIONS
+
+//START LANTERN STATE FUNCTIONS
+void TimerCheckLanternOil(string asTimer) //USED AS A TIMER TO CHECK AND ADJUST PLAYER LANTERN OIL VALUE.
+{
+	AddTimer(asTimer, 2.0f, "TimerCheckLanternOil");
+	
+	if(asTimer == "oilspeed_slow")
+	{
+		if(GetPlayerLampOil() < 99)
+		{
+			AddPlayerLampOil(0.2f);
+		}
+	}
+	else if(asTimer == "oilspeed_quick")
+	{
+		if(GetPlayerLampOil() > 1)
+		{
+			AddPlayerLampOil(-0.2f);
+		}
+	}
+	else if(asTimer == "oilspeed_off")
+	{
+		SetPlayerLampOil(100.0f);
+	}
+}
+
+void LanternLitOilSpeedSlow(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SLOWS DOWN PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeed_slow", 2.0f, "TimerCheckLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeed_slow");
+	}
+}
+
+void LanternLitOilSpeedQuick(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SPEEDS UP PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeed_quick", 2.0f, "TimerCheckLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeed_quick");
+	}
+}
+
+void LanternLitOilSpeedOff(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT MAKES PLAYER LANTERN OIL CONSUMPTION NULL.
+{
+	SetPlayerLampOil(100.0f);
+	
+	if(abLit)
+	{
+		AddTimer("oilspeed_off", 2.0f, "TimerCheckLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeed_off");
+	}
+}
+
+void RemoveLanternLitCallback() //LANTERNLITCALLBACK SET TO DEFAULT (NOTHING HAPPENS WHEN THE PLAYER IS USING THE LANTERN).
+{
+	SetLanternLitCallback("");
+	RemoveTimer("oilspeed_slow");
+	RemoveTimer("oilspeed_quick");
+	RemoveTimer("oilspeed_off");
+}
+
+void SetLanternState(string asType) //CHANGES THE STATE OF THE LANTERN. POSSIBLE ARGUMENTS PATTERNS: oilspeed_off, oilspeed_on, oilspeed_quick, oilspeed_slow, enabled, disabled, remove, on, off, silent.
+{
+	bool bActive = GetLanternActive();
+	bool bPlaySound = true;
+	bool bOn = false;
+	
+	if(StringContains(asType, "oilspeed_slow"))
+	{
+		SetLanternLitCallback("LanternLitOilSpeedSlow");
+		return;
+	}
+	else if(StringContains(asType, "oilspeed_quick"))
+	{
+		SetLanternLitCallback("LanternLitOilSpeedQuick");
+		return;
+	}
+	else if(StringContains(asType, "oilspeed_on"))
+	{
+		RemoveLanternLitCallback();
+		return;
+	}
+	else if(StringContains(asType, "oilspeed_off"))
+	{
+		SetLanternLitCallback("LanternLitOilSpeedOff");
+		SetPlayerLampOil(100.0f);
+		return;
+	}
+	
+	if(StringContains(asType, "silent"))
+	{
+		bool bPlaySound = false;
+	}
+	
+	if(StringContains(asType, "on"))
+	{
+		if(bActive == false)
+		{
+			SetLanternActive(true, bPlaySound);
+		}
+	}
+	else if(StringContains(asType, "off"))
+	{
+		if(bActive)
+		{
+			SetLanternActive(false, bPlaySound);
+		}
+	}
+	
+	if(StringContains(asType, "enabled"))
+	{
+		SetLanternDisabled(false);
+	}
+	else if(StringContains(asType, "disabled"))
+	{
+		SetLanternDisabled(true);
+		SetLanternActive(false, bPlaySound);
+	}
+	else if(StringContains(asType, "remove"))
+	{
+		SetLanternDisabled(true);
+		RemoveItem("lantern");
+		RemoveItem("lantern_1");
+		
+		if(bActive)
+		{
+			SetLanternActive(false, bPlaySound);
+		}
+	}
+}
+//END LANTERN STATE FUNCTIONS
+
+//START QUEST STATE FUNCTIONS
+int GetQuestState(string asEntry) //RETURNS THE STATE OF A QUEST AS AN INTEGER.
+{
+	if(QuestIsCompleted(asEntry))
+	{
+		return 2;
+	}
+	else if(QuestIsAdded(asEntry))
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+void SetQuestAdded(string asEntry) //ADDS A QUEST.
+{
+	if(QuestIsAdded(asEntry) == false && QuestIsCompleted(asEntry) == false) 
+	{
+		AddQuest(asEntry, asEntry);
+	}
+}
+
+void SetQuestCompleted(string asEntry) //SET A QUEST AS COMPLETED.
+{
+	CompleteQuest(asEntry, asEntry);
+}
+
+void SetQuestState(string asEntry, string asType) //CHANGES THE STATE OF A QUEST. POSSIBLE ARGUMENTS PATTERNS: add, complete, min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	string sUseEffects = "_";
+	
+	if(StringContains(asType, "add"))
+	{
+		if(QuestIsAdded(asEntry) == false && QuestIsCompleted(asEntry) == false) 
+		{
+			AddQuest(asEntry, asEntry);
+		}
+	}
+	else if(StringContains(asType, "complete"))
+	{
+		CompleteQuest(asEntry, asEntry);
+	}
+	
+	if(StringContains(asType, "effect"))
+	{
+		sUseEffects = "_effect";
+	}
+	
+	if(StringContains(asType, "min"))
+	{
+		SetPlayerSanity("boost_min" + sUseEffects);
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		SetPlayerSanity("boost_verysmall" + sUseEffects);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		SetPlayerSanity("boost_medsmall" + sUseEffects);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		SetPlayerSanity("boost_small" + sUseEffects);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		SetPlayerSanity("boost_medbig" + sUseEffects);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		SetPlayerSanity("boost_med" + sUseEffects);
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		SetPlayerSanity("boost_verybig" + sUseEffects);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		SetPlayerSanity("boost_big" + sUseEffects);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		SetPlayerSanity("boost_max" + sUseEffects);
+	}
+}
+//END QUEST STATE FUNCTIONS
+
+//START PLAYER LOOK AT FUNCTIONS
+void StopPlayerLookAt(string asType) //WHEN CALLED THE PLAYER STOPS LOOKING AT AN ENTITY. POSSIBLE ARGUMENTS PATTERNS: speed, active.
+{
+	StopPlayerLookAt();
+	
+	if(StringContains(asType, "speed"))
+	{
+		SetPlayerState("speednormal");
+	}
+	else if(StringContains(asType, "active"))
+	{
+		SetPlayerState("activeon");
+	}
+}
+
+void SetPlayerLookAt(string asEntity, string asType, float afTime) //WHEN CALLED THE PLAYER WILL START LOOKING AT THE ENTITY DEFINED AS THE FIRST ARGUMENT. POSSIBLE ARGUMENTS PATTERNS: activeoff, activeon, playerspeednormal, playerspeedquick, playerspeedslow, playerspeedveryquick, playerspeedveryslow, min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fAmount = 0.0f;
+	
+	if(StringContains(asType, "min"))
+	{
+		fAmount = 0.01f;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		fAmount = RandFloat(0.25f, 0.5f);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		fAmount = RandFloat(1.25f, 1.5f);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		fAmount = RandFloat(0.75f, 1.0f);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		fAmount = RandFloat(2.25f, 2.5f);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		fAmount = RandFloat(1.75f, 2.0f);
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		fAmount = RandFloat(3.25f, 3.5f);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		fAmount = RandFloat(2.75f, 3.0f);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		fAmount = 4.0f;
+	}
+	else
+	{
+		fAmount = 1.5f;
+	}
+	
+	if(StringContains(asType, "playerspeedveryslow"))
+	{
+		SetPlayerState("speedveryslow");
+	}
+	else if(StringContains(asType, "playerspeedslow"))
+	{
+		SetPlayerState("speedslow");
+	}
+	else if(StringContains(asType, "playerspeednormal"))
+	{
+		SetPlayerState("speednormal");
+	}
+	else if(StringContains(asType, "playerspeedveryquick"))
+	{
+		SetPlayerState("speedveryquick");
+	}
+	else if(StringContains(asType, "playerspeedquick"))
+	{
+		SetPlayerState("speedquick");
+	}
+	else if(StringContains(asType, "activeoff"))
+	{
+		SetPlayerState("activeoff_drop");
+	}
+	else if(StringContains(asType, "activeon"))
+	{
+		SetPlayerState("activeon");
+	}
+	
+	StartPlayerLookAt(GetOriginalString(asEntity), fAmount, fAmount + 0.25f, "");
+
+	if(afTime > 0)
+	{
+		AddTimer(asType, afTime, "StopPlayerLookAt");
+	}
+}
+
+void SetPlayerLookAt(string asEntity, string asType) //WHEN CALLED THE PLAYER WILL START LOOKING AT THE ENTITY DEFINED AS THE FIRST ARGUMENT. POSSIBLE ARGUMENTS PATTERNS: activeoff, activeon, playerspeednormal, playerspeedquick, playerspeedslow, playerspeedveryquick, playerspeedveryslow, min, verysmall, small, medsmall, med, medbig, big, verybig, max, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	float fAmount = 0.0f;
+	
+	if(StringContains(asType, "min"))
+	{
+		fAmount = 0.01f;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		fAmount = RandFloat(0.25f, 0.5f);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		fAmount = RandFloat(1.25f, 1.5f);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		fAmount = RandFloat(0.75f, 1.0f);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		fAmount = RandFloat(2.25f, 2.5f);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		fAmount = RandFloat(1.75f, 2.0f);
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		fAmount = RandFloat(3.25f, 3.5f);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		fAmount = RandFloat(2.75f, 3.0f);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		fAmount = 4.0f;
+	}
+	else
+	{
+		fAmount = 1.5f;
+	}
+	
+	if(StringContains(asType, "playerspeedveryslow"))
+	{
+		SetPlayerState("speedveryslow");
+	}
+	else if(StringContains(asType, "playerspeedslow"))
+	{
+		SetPlayerState("speedslow");
+	}
+	else if(StringContains(asType, "playerspeednormal"))
+	{
+		SetPlayerState("speednormal");
+	}
+	else if(StringContains(asType, "playerspeedveryquick"))
+	{
+		SetPlayerState("speedveryquick");
+	}
+	else if(StringContains(asType, "playerspeedquick"))
+	{
+		SetPlayerState("speedquick");
+	}
+	else if(StringContains(asType, "activeoff"))
+	{
+		SetPlayerState("activeoff_drop");
+	}
+	else if(StringContains(asType, "activeon"))
+	{
+		SetPlayerState("activeon");
+	}
+	
+	StartPlayerLookAt(GetOriginalString(asEntity), fAmount, fAmount + 0.25f, "");
+	float fSpeed = 0.25f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		if(StringContains(asType, "playerspeedveryquick"))
+		{
+			iMultiplier = 0;
+		}
+		else
+		{
+			iMultiplier = 2;
+		}
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		if(StringContains(asType, "playerspeedquick"))
+		{
+			iMultiplier = 0;
+		}
+		else
+		{
+			iMultiplier = 8;
+		}
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		if(StringContains(asType, "playerspeedveryslow"))
+		{
+			iMultiplier = 0;
+		}
+		else
+		{
+			iMultiplier = 78;
+		}
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		if(StringContains(asType, "playerspeedslow"))
+		{
+			iMultiplier = 0;
+		}
+		else
+		{
+			iMultiplier = 72;
+		}
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+	}
+	else
+	{
+		iMultiplier = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	
+	if(fSpeed > 0)
+	{
+		AddTimer(asType, fSpeed, "StopPlayerLookAt");
+	}
+}
+
+void SetPlayerLookAt(string asEntity) //WHEN CALLED THE PLAYER WILL START LOOKING AT THE ENTITY DEFINED AS THE ARGUMENT.
+{
+	StartPlayerLookAt(GetOriginalString(asEntity), 1.0f, 1.25f, "");
+}
+//END PLAYER LOOK AT FUNCTIONS
+
+//START PLAYER ROLL TO FUNCTIONS
+void StopPlayerRollTo(string asType) //WHEN CALLED THE PLAYER CAMERA WILL ROLL TO THE LEFT OR TO THE RIGHT UNTIL THE CAMERA BECOMES NORMAL AGAIN. POSSIBLE ARGUMENTS PATTERNS: active, off, fall, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	float fSpeed = 0.0f;
+	
+	if(StringContains(asType, "sloth"))
+	{
+		fSpeed = RandFloat(2.5f, 5.0f);
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		fSpeed = RandFloat(10.0f, 20.0f);
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		fSpeed = RandFloat(37.5f, 42.5f);
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		fSpeed = RandFloat(25.0f, 30.0f);
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		fSpeed = RandFloat(47.5f, 52.5f);
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		fSpeed = RandFloat(45.0f, 50.0f);
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		fSpeed = RandFloat(60.0f, 65.0f);
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		fSpeed = RandFloat(50.0f, 55.0f);
+	}
+	else if(StringContains(asType, "bolt"))
+	{
+		fSpeed = RandFloat(70.0f, 75.0f);
+	}
+	else
+	{
+		fSpeed = 1.0f;
+	}
+	
+	if(StringContains(asType, "fall"))
+	{
+		StopSound("ear_ring" + gsSoundNameSuffix, 3.0f);
+		SetPlayerCrouching(false);
+		SetPlayerCrouchDisabled(false);
+		SetPlayerState("speedslow");
+		AddTimer("speednormal", RandFloat(1.75f, 2.25f), "SetPlayerState");
+	}
+	
+	if(StringContains(asType, "active"))
+	{
+		SetPlayerState("activeon");
+	}
+	
+	FadePlayerRollTo(0.0f, fSpeed, fSpeed + 1.25f);
+}
+
+void SetPlayerRollTo(string asType, float afTime) //WHEN CALLED THE PLAYER CAMERA WILL START ROLLING TO THE LEFT OR TO THE RIGHT. POSSIBLE ARGUMENTS PATTERNS: active, off, fall, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt, min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fAmount = 0.0f;
+	
+	if(StringContains(asType, "min"))
+	{
+		fAmount = 1.0f;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		fAmount = RandFloat(5.0f, 10.0f);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		fAmount = RandFloat(20.0f, 25.0f);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		fAmount = RandFloat(10.0f, 20.0f);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		fAmount = RandFloat(45.0f, 75.0f);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		fAmount = RandFloat(30.0f, 60.0f);
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		fAmount = RandFloat(100.0f, 150.0f);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		fAmount = RandFloat(60.0f, 90.0f);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		fAmount = 360.0f;
+	}
+	else
+	{
+		fAmount = 45.0f;
+	}
+	
+	float fSpeed = 0.0f;
+	
+	if(StringContains(asType, "sloth"))
+	{
+		fSpeed = RandFloat(2.5f, 5.0f);
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		fSpeed = RandFloat(10.0f, 20.0f);
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		fSpeed = RandFloat(37.5f, 42.5f);
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		fSpeed = RandFloat(25.0f, 30.0f);
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		fSpeed = RandFloat(47.5f, 52.5f);
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		fSpeed = RandFloat(45.0f, 50.0f);
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		fSpeed = RandFloat(60.0f, 65.0f);
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		fSpeed = RandFloat(50.0f, 55.0f);
+	}
+	else if(StringContains(asType, "bolt"))
+	{
+		fSpeed = RandFloat(70.0f, 75.0f);
+	}
+	else
+	{
+		fSpeed = 1.0f;
+	}
+	
+	if(RandInt(0, 1) == 0)
+	{
+		FadePlayerRollTo(fAmount, fSpeed, fSpeed + 1.25f);
+	}
+	else
+	{
+		FadePlayerRollTo(-fAmount, fSpeed, fSpeed + 1.25f);
+	}
+	
+	if(StringContains(asType, "fall"))
+	{
+		PlayGuiSound("player_bodyfall.snt", 0.9f);
+		PlayGuiSound("step_sneak_rock_rev.snt", 0.8f);
+		PlaySoundAtEntity("ear_ring" + gsSoundNameSuffix, "insanity_ear_ring.snt", "Player", 0.5f, false);
+		SetPlayerCrouching(true);
+		SetPlayerCrouchDisabled(true);
+		SetPlayerState("speedveryslow_drop");
+	}
+	
+	if(StringContains(asType, "active"))
+	{
+		SetPlayerState("activeoff_drop");
+	}
+	
+	if(afTime > 0)
+	{
+		AddTimer(asType, afTime, "StopPlayerRollTo");
+	}
+}
+
+void SetPlayerRollTo(string asType) //WHEN CALLED THE PLAYER CAMERA WILL START ROLLING TO THE LEFT OR TO THE RIGHT. POSSIBLE ARGUMENTS PATTERNS: active, off, fall, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt, min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fAmount = 0.0f;
+	
+	if(StringContains(asType, "min"))
+	{
+		fAmount = 1.0f;
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		fAmount = RandFloat(5.0f, 10.0f);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		fAmount = RandFloat(20.0f, 25.0f);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		fAmount = RandFloat(10.0f, 20.0f);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		fAmount = RandFloat(45.0f, 75.0f);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		fAmount = RandFloat(30.0f, 60.0f);
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		fAmount = RandFloat(100.0f, 150.0f);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		fAmount = RandFloat(60.0f, 90.0f);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		fAmount = 360.0f;
+	}
+	else
+	{
+		fAmount = 45.0f;
+	}
+	
+	float fSpeed = 0.0f;
+	
+	if(StringContains(asType, "sloth"))
+	{
+		fSpeed = RandFloat(2.5f, 5.0f);
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		fSpeed = RandFloat(10.0f, 20.0f);
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		fSpeed = RandFloat(37.5f, 42.5f);
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		fSpeed = RandFloat(25.0f, 30.0f);
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		fSpeed = RandFloat(47.5f, 52.5f);
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		fSpeed = RandFloat(45.0f, 50.0f);
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		fSpeed = RandFloat(60.0f, 65.0f);
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		fSpeed = RandFloat(50.0f, 55.0f);
+	}
+	else if(StringContains(asType, "bolt"))
+	{
+		fSpeed = RandFloat(70.0f, 75.0f);
+	}
+	else
+	{
+		fSpeed = 1.0f;
+	}
+	
+	if(RandInt(0, 1) == 0)
+	{
+		FadePlayerRollTo(fAmount, fSpeed, fSpeed + 1.25f);
+	}
+	else
+	{
+		FadePlayerRollTo(-fAmount, fSpeed, fSpeed + 1.25f);
+	}
+	
+	if(StringContains(asType, "fall"))
+	{
+		PlayGuiSound("player_bodyfall.snt", 0.9f);
+		PlayGuiSound("step_sneak_rock_rev.snt", 0.8f);
+		PlaySoundAtEntity("ear_ring" + gsSoundNameSuffix, "insanity_ear_ring.snt", "Player", 0.5f, false);
+		SetPlayerCrouching(true);
+		SetPlayerCrouchDisabled(true);
+		SetPlayerState("speedveryslow_drop");
+	}
+	
+	if(StringContains(asType, "active"))
+	{
+		SetPlayerState("activeoff_drop");
+	}
+}
+//END PLAYER ROLL TO FUNCTIONS
+
+//START PLAYER REACTIONS FUNCTIONS
+void SetPlayerReact(string asType, float afTime) //HELPER FUNCTION.
+{
+	AddTimer(asType, afTime, "SetPlayerReact");
+}
+
+void SetPlayerReact(string asType) //MAKES THE PLAYER GET SCARED. POSSIBLE ARGUMENTS PATTERNS: scare, pant, breath, breathslow, sigh, effect, min, verysmall, small, medsmall, med, medbig, big, verybig, max, 1.
+{
+	string sTypeA = "";
+	string sTypeB = "";
+	string sUseEffects = "_effect";
+	int iTypeLength = 0;
+	
+	if(StringContains(asType, "pant") || StringContains(asType, "scare"))
+	{
+		if(StringContains(asType, "pant"))
+		{
+			sTypeA = "pant";
+		}
+		else
+		{
+			sTypeA = "scare";
+		}
+		
+		iTypeLength = sTypeA.length() - 10;
+		PlayGuiSound("react_" + sTypeA + ".snt", RandFloat(0.8f, 1.0f));
+		float fTime = RandFloat(2.5f, 5.0f);
+		
+		if(StringContains(asType, "breath") || StringContains(asType, "sigh"))
+		{
+			if(StringContains(asType, "breathslow"))
+			{
+				sTypeB = "breathslow";
+			}
+			else if(StringContains(asType, "breath"))
+			{
+				sTypeB = "breath";
+			}
+			else
+			{
+				sTypeB = "sigh";
+			}
+		}
+		
+		if(StringContains(asType, "effect"))
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			sUseEffects = "_";
+			
+			if(sTypeB.length() > 0)
+			{
+				AddTimer(sTypeB + "_effect", fTime, "SetPlayerReact");
+				AddTimer(sTypeB + "_effect" + 1, fTime + RandFloat(2.0f, 3.0f), "SetPlayerReact");
+			}
+		}
+		else if(sTypeB.length() > 0)
+		{
+			AddTimer(sTypeB, fTime, "SetPlayerReact");
+			AddTimer(sTypeB + 1, fTime + RandFloat(2.0f, 3.0f), "SetPlayerReact");
+		}
+	}
+	else if(StringContains(asType, "breath") || StringContains(asType, "sigh"))
+	{
+		sUseEffects = "_";
+		float fAmount = 0.0f;
+		
+		if(StringContains(asType, "1"))
+		{
+			fAmount = RandFloat(0.3f, 0.4f);
+		}
+		else
+		{
+			fAmount = RandFloat(0.65f, 0.85f);
+		}
+		
+		if(StringContains(asType, "breathslow"))
+		{
+			PlayGuiSound("react_breath_slow.snt", fAmount);
+		}
+		else if(StringContains(asType, "breath"))
+		{
+			PlayGuiSound("react_breath.snt", fAmount);
+		}
+		else
+		{
+			PlayGuiSound("react_sigh.snt", fAmount);
+		}
+		
+		if(StringContains(asType, "effect"))
+		{
+			FadeSepiaColorTo(0.0f, 0.1f);
+			FadeRadialBlurTo(0.0f, 0.1f);
+		}
+	}
+	
+	if(StringContains(asType, "min"))
+	{
+		SetPlayerSanity("damage_min_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		SetPlayerSanity("damage_verysmall_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		SetPlayerSanity("damage_medsmall_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "small"))
+	{
+		SetPlayerSanity("damage_small_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		SetPlayerSanity("damage_medbig_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "med"))
+	{
+		SetPlayerSanity("damage_med_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		SetPlayerSanity("damage_verybig_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "big"))
+	{
+		SetPlayerSanity("damage_big_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "max"))
+	{
+		SetPlayerSanity("damage_max_lethal" + sUseEffects);
+	}
+	else if(StringContains(asType, "pant") || StringContains(asType, "scare"))
+	{
+		if(StringContains(asType, "effect"))
+		{
+			GiveSanityDamage(10.0f, false);
+		}
+		else
+		{
+			GiveSanityDamage(10.0f, true);
+		}
+	}
+	else if(StringContains(asType, "breath") || StringContains(asType, "sigh"))
+	{
+		GiveSanityDamage(1.0f, false);
+	}
+}
+//END PLAYER REACTIONS FUNCTIONS
+
+//START SCREEN EFFECTS FUNCTIONS
+void SetScreenEffect(string asType, float afTime) //PLAYS AN EFFECT ON THE SCREEN. POSSIBLE ARGUMENTS PATTERNS: activeoff, activeon, fadein, fadeout, zoomin, zoomout, zoomnormal, shake, white, blur, sepia, trail, allnormal, whitetoblack, flashbackoff, flashbackon, min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	string sProfile = "";
+	float fAmount = 0.1f;
+	float fAmountAlt = 0.01f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 1;
+		sProfile = "min";
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+		sProfile = "verysmall";
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+		sProfile = "medsmall";
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+		sProfile = "small";
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+		sProfile = "medbig";
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+		sProfile = "med";
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+		sProfile = "verybig";
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+		sProfile = "big";
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+		sProfile = "max";
+	}
+	else
+	{
+		iMultiplier = 8;
+		sProfile = "normal";
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	fAmountAlt = fAmountAlt * iMultiplier;
+	
+	if(StringContains(asType, "shake"))
+	{
+		if(afTime != 0)
+		{
+			StartScreenShake(fAmountAlt, afTime, 0.5f, afTime);
+		}
+		else
+		{
+			AddTimer("shake_" + sProfile, 0.001f, "TimerScreenShakeLoop");
+		}	
+	}
+	else if(StringContains(asType, "flashbackon"))
+	{
+		PlayGuiSound("flashback_flash.snt", 0.8f);
+		StartEffectFlash(0.75f, 1.0f, 0.5f);
+		FadeImageTrailTo(0.3f, 0.3f);
+		SetRadialBlurStartDist(0.3f);
+		FadeRadialBlurTo(0.1f, 1.0f);
+		FadeSepiaColorTo(0.5f, 0.25f);
+	}
+	else if(StringContains(asType, "flashbackoff"))
+	{
+		StartEffectFlash(0.5f, 1.0f, 0.75f);
+		FadeImageTrailTo(0.0f, 2.0f);
+		FadeSepiaColorTo(0.0f, 2.0f);
+		FadeRadialBlurTo(0.0f, 2.0f);
+	}
+	else if(StringContains(asType, "whitetoblack"))
+	{
+		PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+		StartScreenShake(0.075f, 4.5f, 0.055f, 0.5f);
+		StartEffectFlash(0.2f, 0.1f, 0.3f);
+		FadeOut(0.3f);
+		FadePlayerFOVMulTo(0.5f, 0.5f);
+		SetRadialBlurStartDist(0.1f);
+		FadeRadialBlurTo(1.0f, 0.5f);
+	}
+	else if(StringContains(asType, "allnormal"))
+	{
+		FadeImageTrailTo(0.0f, afTime);
+		FadeSepiaColorTo(0.0f, afTime);
+		FadeRadialBlurTo(0.0f, afTime);
+		FadePlayerFOVMulTo(1.0f, afTime);
+		FadePlayerAspectMulTo(1.0f, afTime);
+	}
+	else if(StringContains(asType, "trail"))
+	{
+		FadeImageTrailTo(fAmount, afTime);
+	}
+	else if(StringContains(asType, "sepia"))
+	{
+		FadeSepiaColorTo(fAmount, afTime);
+	}
+	else if(StringContains(asType, "blur"))
+	{
+		if(fAmount != 0)
+		{
+			SetRadialBlurStartDist(fAmount / 2);
+		}
+		
+		FadeRadialBlurTo(fAmount, afTime);
+	}
+	else if(StringContains(asType, gsEmotionFlashNameSuffix))
+	{
+		if(asType.length() > gsEmotionFlashNameSuffix.length())
+		{
+			StartEffectEmotionFlash(gsEmotionFlashCat, GetStringWithoutSubString(asType, gsEmotionFlashNameSuffix), "");
+		}
+		else
+		{
+			AddDebugMessage("ERROR! " + asType + " not valid for an emotion flashback text!", false);
+		}
+		
+		return;
+	}
+	else if(StringContains(asType, "white"))
+	{
+		StartEffectFlash(afTime, fAmount, afTime + 0.5f);
+	}
+	else if(StringContains(asType, "zoomin"))
+	{
+		FadePlayerFOVMulTo(1.0f - fAmount, afTime);
+		FadePlayerAspectMulTo(1.0f - fAmount, afTime);
+	}
+	else if(StringContains(asType, "zoomout"))
+	{
+		FadePlayerFOVMulTo(1.0f + fAmount, afTime);
+		FadePlayerAspectMulTo(1.0f + fAmount, afTime);
+	}
+	else if(StringContains(asType, "zoomnormal"))
+	{
+		FadePlayerFOVMulTo(1.0f, afTime);
+		FadePlayerAspectMulTo(1.0f, afTime);
+	}
+	else if(StringContains(asType, "fadein"))
+	{
+		FadeIn(afTime);
+	}
+	else if(StringContains(asType, "fadeout"))
+	{
+		FadeOut(afTime);
+	}
+	
+	if(StringContains(asType, "crosshairon"))
+	{
+		ShowPlayerCrossHairIcons(true);
+	}
+	else if(StringContains(asType, "crosshairoff"))
+	{
+		ShowPlayerCrossHairIcons(false);
+	}
+	
+	if(StringContains(asType, "activeon"))
+	{
+		SetPlayerState("activeon");
+	}
+	else if(StringContains(asType, "activeoff"))
+	{
+		SetPlayerState("activeoff");
+	}
+}
+
+void SetScreenEffect(string asType) //PLAYS AN EFFECT ON THE SCREEN. POSSIBLE ARGUMENTS PATTERNS: activeoff, activeon, fadein, fadeout, zoomin, zoomout, zoomnormal, shake, white, blur, sepia, trail, allnormal, whitetoblack, flashbackoff, flashbackon, min, verysmall, small, medsmall, med, medbig, big, verybig, max, sloth, veryslow, slow, midslow, mid, midquick, quick, veryquick, bolt.
+{
+	string sProfile = "";
+	float fAmount = 0.1f;
+	float fAmountAlt = 0.01f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asType, "min"))
+	{
+		iMultiplier = 1;
+		sProfile = "min";
+	}
+	else if(StringContains(asType, "verysmall"))
+	{
+		iMultiplier = 2;
+		sProfile = "verysmall";
+	}
+	else if(StringContains(asType, "medsmall"))
+	{
+		iMultiplier = 4;
+		sProfile = "medsmall";
+	}
+	else if(StringContains(asType, "small"))
+	{
+		iMultiplier = 3;
+		sProfile = "small";
+	}
+	else if(StringContains(asType, "medbig"))
+	{
+		iMultiplier = 6;
+		sProfile = "medbig";
+	}
+	else if(StringContains(asType, "med"))
+	{
+		iMultiplier = 5;
+		sProfile = "med";
+	}
+	else if(StringContains(asType, "verybig"))
+	{
+		iMultiplier = 8;
+		sProfile = "verybig";
+	}
+	else if(StringContains(asType, "big"))
+	{
+		iMultiplier = 7;
+		sProfile = "big";
+	}
+	else if(StringContains(asType, "max"))
+	{
+		iMultiplier = 10;
+		sProfile = "max";
+	}
+	else
+	{
+		iMultiplier = 8;
+		sProfile = "normal";
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	fAmountAlt = fAmountAlt * iMultiplier;
+	float fSpeed = 0.125f;
+	float fSpeedReverse = 0.125f;
+	int iMultiplierReverse = 0;
+	
+	if(StringContains(asType, "bolt"))
+	{
+		iMultiplier = 1;
+		iMultiplierReverse = 80;
+	}
+	else if(StringContains(asType, "veryquick"))
+	{
+		iMultiplier = 2;
+		iMultiplierReverse = 78;
+	}
+	else if(StringContains(asType, "midquick"))
+	{
+		iMultiplier = 24;
+		iMultiplierReverse = 56;
+	}
+	else if(StringContains(asType, "quick"))
+	{
+		iMultiplier = 8;
+		iMultiplierReverse = 72;
+	}
+	else if(StringContains(asType, "midslow"))
+	{
+		iMultiplier = 56;
+		iMultiplierReverse = 24;
+	}
+	else if(StringContains(asType, "mid"))
+	{
+		iMultiplier = 40;
+		iMultiplierReverse = 40;
+	}
+	else if(StringContains(asType, "veryslow"))
+	{
+		iMultiplier = 78;
+		iMultiplierReverse = 2;
+	}
+	else if(StringContains(asType, "slow"))
+	{
+		iMultiplier = 72;
+		iMultiplierReverse = 8;
+	}
+	else if(StringContains(asType, "sloth"))
+	{
+		iMultiplier = 80;
+		iMultiplierReverse = 1;
+	}
+	else
+	{
+		iMultiplier = 0;
+		iMultiplierReverse = 0;
+	}
+	
+	fSpeed = fSpeed * iMultiplier;
+	fSpeedReverse = fSpeedReverse * iMultiplierReverse;
+	
+	if(StringContains(asType, "shake"))
+	{
+		if(fSpeed != 0)
+		{
+			StartScreenShake(fAmountAlt, fSpeed, 0.5f, fSpeed);
+		}
+		else
+		{
+			AddTimer("shake_" + sProfile, 0.001f, "TimerScreenShakeLoop");
+		}	
+	}
+	else if(StringContains(asType, "flashbackon"))
+	{
+		PlayGuiSound("flashback_flash.snt", 0.8f);
+		StartEffectFlash(0.75f, 1.0f, 0.5f);
+		FadeImageTrailTo(0.3f, 0.3f);
+		SetRadialBlurStartDist(0.3f);
+		FadeRadialBlurTo(0.1f, 1.0f);
+		FadeSepiaColorTo(0.5f, 0.25f);
+	}
+	else if(StringContains(asType, "flashbackoff"))
+	{
+		StartEffectFlash(0.5f, 1.0f, 0.75f);
+		FadeImageTrailTo(0.0f, 2.0f);
+		FadeSepiaColorTo(0.0f, 2.0f);
+		FadeRadialBlurTo(0.0f, 2.0f);
+	}
+	else if(StringContains(asType, "whitetoblack"))
+	{
+		PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+		StartScreenShake(0.075f, 4.5f, 0.055f, 0.5f);
+		StartEffectFlash(0.2f, 0.1f, 0.3f);
+		FadeOut(0.3f);
+		FadePlayerFOVMulTo(0.5f, 0.5f);
+		SetRadialBlurStartDist(0.1f);
+		FadeRadialBlurTo(1.0f, 0.5f);
+	}
+	else if(StringContains(asType, "allnormal"))
+	{
+		FadeImageTrailTo(0.0f, fSpeed);
+		FadeSepiaColorTo(0.0f, fSpeed);
+		FadeRadialBlurTo(0.0f, fSpeed);
+		FadePlayerFOVMulTo(1.0f, fSpeedReverse);
+		FadePlayerAspectMulTo(1.0f, fSpeedReverse);
+	}
+	else if(StringContains(asType, "trail"))
+	{
+		FadeImageTrailTo(fAmount, fSpeed);
+	}
+	else if(StringContains(asType, "sepia"))
+	{
+		FadeSepiaColorTo(fAmount, fSpeed);
+	}
+	else if(StringContains(asType, "blur"))
+	{
+		if(fAmount != 0)
+		{
+			SetRadialBlurStartDist(fAmount / 2);
+		}
+		
+		FadeRadialBlurTo(fAmount, fSpeed);
+	}
+	else if(StringContains(asType, gsEmotionFlashNameSuffix))
+	{
+		if(asType.length() > gsEmotionFlashNameSuffix.length())
+		{
+			StartEffectEmotionFlash(gsEmotionFlashCat, GetStringWithoutSubString(asType, gsEmotionFlashNameSuffix), "");
+		}
+		else
+		{
+			AddDebugMessage("ERROR! " + asType + " not valid for an emotion flashback text!", false);
+		}
+		
+		return;
+	}
+	else if(StringContains(asType, "white"))
+	{
+		StartEffectFlash(fSpeed, fAmount, fSpeed + 0.5f);
+	}
+	else if(StringContains(asType, "zoomin"))
+	{
+		FadePlayerFOVMulTo(1.0f - fAmount, fSpeedReverse);
+		FadePlayerAspectMulTo(1.0f - fAmount, fSpeedReverse);
+	}
+	else if(StringContains(asType, "zoomout"))
+	{
+		FadePlayerFOVMulTo(1.0f + fAmount, fSpeedReverse);
+		FadePlayerAspectMulTo(1.0f + fAmount, fSpeedReverse);
+	}
+	else if(StringContains(asType, "zoomnormal"))
+	{
+		FadePlayerFOVMulTo(1.0f, fSpeedReverse);
+		FadePlayerAspectMulTo(1.0f, fSpeedReverse);
+	}
+	else if(StringContains(asType, "fadein"))
+	{
+		FadeIn(fSpeed);
+	}
+	else if(StringContains(asType, "fadeout"))
+	{
+		FadeOut(fSpeed);
+	}
+	
+	if(StringContains(asType, "crosshairon"))
+	{
+		ShowPlayerCrossHairIcons(true);
+	}
+	else if(StringContains(asType, "crosshairoff"))
+	{
+		ShowPlayerCrossHairIcons(false);
+	}
+	
+	if(StringContains(asType, "activeon"))
+	{
+		SetPlayerState("activeon");
+	}
+	else if(StringContains(asType, "activeoff"))
+	{
+		SetPlayerState("activeoff");
+	}
+}
+
+void TimerScreenShakeLoop(string asTimer) //USED AS A TIMER TO PLAY A LOOPING SCREEN SHAKE EFFECT. POSSIBLE ARGUMENTS PATTERNS: min, verysmall, small, medsmall, med, medbig, big, verybig, max.
+{
+	float fAmount = 0.01f;
+	int iMultiplier = 0;
+	
+	if(StringContains(asTimer, "min"))
+	{
+		iMultiplier = 1;
+	}
+	else if(StringContains(asTimer, "verysmall"))
+	{
+		iMultiplier = 2;
+	}
+	else if(StringContains(asTimer, "medsmall"))
+	{
+		iMultiplier = 4;
+	}
+	else if(StringContains(asTimer, "small"))
+	{
+		iMultiplier = 3;
+	}
+	else if(StringContains(asTimer, "medbig"))
+	{
+		iMultiplier = 6;
+	}
+	else if(StringContains(asTimer, "med"))
+	{
+		iMultiplier = 5;
+	}
+	else if(StringContains(asTimer, "verybig"))
+	{
+		iMultiplier = 8;
+	}
+	else if(StringContains(asTimer, "big"))
+	{
+		iMultiplier = 7;
+	}
+	else if(StringContains(asTimer, "max"))
+	{
+		iMultiplier = 10;
+	}
+	else
+	{
+		iMultiplier = 8;
+	}
+	
+	fAmount = fAmount * iMultiplier;
+	StartScreenShake(fAmount, 1.0f, 0.5f, 1.0f);
+	AddTimer(asTimer, 1.0f, "TimerScreenShakeLoop");
+}
+//END SCREEN EFFECTS FUNCTIONS
+
+//START DISTANCES FUNCTIONS
+float GetEntitiesDistance(string asEntityA, string asEntityB) //RETURNS A FLOATING POINT WHICH REPRESENTS THE EUCLIDEAN DISTANCE BETWEEN TWO ENTITIES.
+{
+	string sEntityAName = GetOriginalString(asEntityA);
+	string sEntityBName = GetOriginalString(asEntityB);
+	
+	if(GetEntityExists(sEntityAName) == false || GetEntityExists(sEntityBName) == false)
+	{
+		AddDebugMessage("ERROR: Could not find " + sEntityAName + " and " + sEntityBName + " when trying to get their distance!", false);
+		return -1.0f;
+	}
+	
+	float fEntityAPosX = GetEntityPosX(sEntityAName);
+	float fEntityAPosY = GetEntityPosY(sEntityAName);
+	float fEntityAPosZ = GetEntityPosZ(sEntityAName);
+	float fEntityBPosX = GetEntityPosX(sEntityBName);
+	float fEntityBPosY = GetEntityPosY(sEntityBName);
+	float fEntityBPosZ = GetEntityPosZ(sEntityBName);
+	float fDistance = MathSqrt(MathPow((fEntityBPosX - fEntityAPosX), 2.0f) + MathPow((fEntityBPosY - fEntityAPosY), 2.0f) + MathPow((fEntityBPosZ - fEntityAPosZ), 2.0f));
+	//AddDebugMessage("WARNING: Current distance between " + sEntityAName + " and " + sEntityBName + " = " + fDistance, false);
+	return fDistance;
+}
+
+float GetEntityPlayerDistance(string asEntity) //RETURNS A FLOATING POINT WHICH REPRESENTS THE EUCLIDEAN DISTANCE BETWEEN THE PLAYER AND THE ENTITY.
+{
+	string sEntityName = GetOriginalString(asEntity);
+	
+	if(GetEntityExists(sEntityName) == false)
+	{
+		AddDebugMessage("ERROR: Could not find " + sEntityName + " when trying to get the distance between the entity and the player!", false);
+		return -1.0f;
+	}
+	
+	float fPlayerPosX = GetPlayerPosX();
+	float fPlayerPosY = GetPlayerPosY();
+	float fPlayerPosZ = GetPlayerPosZ();
+	float fEntityPosX = GetEntityPosX(sEntityName);
+	float fEntityPosY = GetEntityPosY(sEntityName);
+	float fEntityPosZ = GetEntityPosZ(sEntityName);
+	float fDistance = MathSqrt(MathPow((fEntityPosX - fPlayerPosX), 2.0f) + MathPow((fEntityPosY - fPlayerPosY), 2.0f) + MathPow((fEntityPosZ - fPlayerPosZ), 2.0f));
+	//AddDebugMessage("WARNING: Current distance between Player and " + sEntityName + " = " + fDistance, false);
+	return fDistance;
+}
+//END DISTANCES FUNCTIONS
+
+//START ENEMY STATE FUNCTIONS
+int GetEnemyState(string asEnemy) //RETURNS THE STATE OF AN ENEMY AS AN INTEGER.
+{
+	string sEnemyName = GetOriginalString(asEnemy);
+	string sEnemyStateName = GetEnemyStateName(sEnemyName);
+	
+	if(StringContains(sEnemyStateName, "Hunt") || StringContains(sEnemyStateName, "Alert") || StringContains(sEnemyStateName, "Attack"))
+	{
+		return 5;
+	}
+	else if(sEnemyStateName == "Hurt")
+	{
+		return 4;
+	}
+	else if(sEnemyStateName == "BreakDoor")
+	{
+		return 3;
+	}
+	else if(sEnemyStateName == "Search" || sEnemyStateName == "Investigate")
+	{
+		return 2;
+	}
+	else if(sEnemyStateName == "Wait" || sEnemyStateName == "Patrol")
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+bool GetActiveEnemyIsAround() //RETURNS TRUE IF THE ACTIVE ENEMY IS STILL AROUND THE MAP.
+{
+	if(GetGlobalVarString("ActiveEnemyName") != "")
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool GetActiveEnemyIsNear(int aiMinDistance, int aiMaxDistance) //RETURNS TRUE IF THE ACTIVE ENEMY IS STILL IN RANGE, THE RANGE IS DETERMINATED BY THE TWO ARGUMENTS BUT ALSO BY THE STATE NAME OF THE ACTIVE ENEMY.
+{
+	string sCurrentActiveEnemy = GetGlobalVarString("ActiveEnemyName");
+	float fDistance = GetEntityPlayerDistance(sCurrentActiveEnemy);
+	int iEnemyState = GetEnemyState(sCurrentActiveEnemy);
+	
+	if((aiMaxDistance < aiMinDistance) || (aiMaxDistance < 0) || (aiMinDistance < 0))
+	{
+		AddDebugMessage("ERROR: Function GetActiveEnemyIsNear did not work! Max distance and min distance are not set properly!", false);
+		return false;
+	}
+	
+	if((sCurrentActiveEnemy == "") || (iEnemyState == 5 && fDistance >= aiMaxDistance) || (iEnemyState <= 4 && fDistance >= aiMinDistance))
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+string GetActiveEnemyName() //RETURNS THE NAME OF THE ACTIVE ENEMY.
+{
+	return GetGlobalVarString("ActiveEnemyName");
+}
+
+void SetActiveEnemyName(string asEnemy) //SETS THE NAME OF THE ACTIVE ENEMY.
+{
+	SetGlobalVarString("ActiveEnemyName", asEnemy);
+}
+
+void SetEnemyPatrolNode(string asEnemy, int aiPatrolNodeCode, int aiMultiplier) //ADDS AN ENEMY PATROL NODE.
+{
+	float fMinEnemyIdleTime = 0.0f;
+	
+	if(aiMultiplier <= 0)
+	{
+		AddEnemyPatrolNode(GetOriginalString(asEnemy), gsPathNodeAreaPrefix + aiPatrolNodeCode, 0.001f, "");
+	}
+	else
+	{
+		fMinEnemyIdleTime = GetGlobalVarFloat("MinEnemyIdleTime") * aiMultiplier;
+		AddEnemyPatrolNode(GetOriginalString(asEnemy), gsPathNodeAreaPrefix + aiPatrolNodeCode, RandFloat(fMinEnemyIdleTime, fMinEnemyIdleTime + fMinEnemyIdleTime), "");
+	}
+} 
+
+void SetEnemyPatrolNode(string asEnemy, int aiPatrolNodeCode) //ADDS AN ENEMY PATROL NODE.
+{
+	AddEnemyPatrolNode(GetOriginalString(asEnemy), gsPathNodeAreaPrefix + aiPatrolNodeCode, RandFloat(GetGlobalVarFloat("MinEnemyIdleTime"), GetGlobalVarFloat("MinEnemyIdleTime") + 2), "");
+}
+
+void SetEnemyPatrolNodes(string asEnemy, string[] avsPatrolNodeCodesArray, int aiMultiplier) //ADDS SOME ENEMY PATROL NODES.
+{
+	float fMinEnemyIdleTime = 0.0f;
+	ClearEnemyPatrolNodes(GetOriginalString(asEnemy));
+	
+	if(aiMultiplier <= 0)
+	{
+		fMinEnemyIdleTime = 0.001f;
+	}
+	else
+	{
+		fMinEnemyIdleTime = GetGlobalVarFloat("MinEnemyIdleTime") * aiMultiplier;
+	}
+	
+	for(int i=0; i<avsPatrolNodeCodesArray.length(); i++)
+	{
+		if(StringContains(avsPatrolNodeCodesArray[i], "_idle"))
+		{
+			AddEnemyPatrolNode(GetOriginalString(asEnemy), gsPathNodeAreaPrefix + StringSub(avsPatrolNodeCodesArray[i], 0, avsPatrolNodeCodesArray[i].length() - 5), RandFloat(fMinEnemyIdleTime, fMinEnemyIdleTime + fMinEnemyIdleTime), "");
+		}
+		else
+		{
+			AddEnemyPatrolNode(GetOriginalString(asEnemy), gsPathNodeAreaPrefix + avsPatrolNodeCodesArray[i], 0.001f, "");
+		}
+	}
+}
+
+void SetEnemyPatrolNodes(string asEnemy, string[] avsPatrolNodeCodesArray) //ADDS SOME ENEMY PATROL NODES.
+{
+	ClearEnemyPatrolNodes(GetOriginalString(asEnemy));
+	
+	for(int i=0; i<avsPatrolNodeCodesArray.length(); i++)
+	{
+		if(StringContains(avsPatrolNodeCodesArray[i], "_idle"))
+		{
+			AddEnemyPatrolNode(GetOriginalString(asEnemy), gsPathNodeAreaPrefix + StringSub(avsPatrolNodeCodesArray[i], 0, avsPatrolNodeCodesArray[i].length() - 5), RandFloat(GetGlobalVarFloat("MinEnemyIdleTime"), GetGlobalVarFloat("MinEnemyIdleTime") + 2), "");
+		}
+		else
+		{
+			AddEnemyPatrolNode(GetOriginalString(asEnemy), gsPathNodeAreaPrefix + avsPatrolNodeCodesArray[i], 0.001f, "");
+		}
+	}
+}
+
+void SetEnemyState(string asEnemy, string asType) //CHANGES THE ENEMY STATE. POSSIBLE ARGUMENTS PATTERNS: poof, silent, fakeoff, fakeon, friendoff, friendon, sanitydrainoff, sanitydrainon, chase, alert, reset, enabled, disabled.
+{
+	string sEnemyName = GetOriginalString(asEnemy);
+	string sActiveEnemyName = GetActiveEnemyName();
+	int iLength = asType.length();
+	int iUnharmful = GetLocalVarInt(sEnemyName + gsHarmlessEnemyNameSuffix);
+	bool bPlaySound = true;
+	
+	if(StringContains(asType, "silent"))
+	{
+		bPlaySound = false;
+	}
+	
+	if(StringContains(asType, "poof"))
+	{
+		if(sActiveEnemyName == sEnemyName)
+		{
+			SetActiveEnemyName("");
+		}
+		
+		SetEntityActive(sEnemyName, false);
+		FadeEnemyToSmoke(sEnemyName, bPlaySound);
+	}
+	
+	if(StringContains(asType, "fakeon"))
+	{
+		if(sActiveEnemyName == sEnemyName)
+		{
+			SetActiveEnemyName("");
+		}
+		
+		SetLocalVarInt(sEnemyName + gsHarmlessEnemyNameSuffix, 1);
+		SetEnemyIsHallucination(sEnemyName, true);
+	}
+	else if(StringContains(asType, "fakeoff"))
+	{
+		SetLocalVarInt(sEnemyName + gsHarmlessEnemyNameSuffix, 0);
+		SetEnemyIsHallucination(sEnemyName, false);
+	}
+	
+	if(StringContains(asType, "friendon"))
+	{
+		if(sActiveEnemyName == sEnemyName)
+		{
+			SetActiveEnemyName("");
+		}
+		
+		SetLocalVarInt(sEnemyName + gsHarmlessEnemyNameSuffix, 1);
+		SetEnemyDisableTriggers(sEnemyName, true);
+	}
+	else if(StringContains(asType, "friendoff"))
+	{
+		SetLocalVarInt(sEnemyName + gsHarmlessEnemyNameSuffix, 0);
+		SetEnemyDisableTriggers(sEnemyName, false);
+	}
+	
+	if(StringContains(asType, "sanitydrainon"))
+	{
+		SetEnemySanityDecreaseActive(sEnemyName, true);
+	}
+	else if(StringContains(asType, "sanitydrainoff"))
+	{
+		SetEnemySanityDecreaseActive(sEnemyName, false);
+	}
+	
+	if(StringContains(asType, "chase"))
+	{
+		ShowEnemyPlayerPosition(sEnemyName);
+	}
+	else if(StringContains(asType, "alert"))
+	{
+		AlertEnemyOfPlayerPresence(sEnemyName);
+	}
+	
+	if(StringContains(asType, "reset"))
+	{
+		if(iUnharmful == 0)
+		{
+			SetActiveEnemyName(sEnemyName);
+		}
+		
+		ClearEnemyPatrolNodes(sEnemyName);
+		SetEntityActive(sEnemyName, false);
+		SetEntityActive(sEnemyName, true);
+	}
+	else if(StringContains(asType, "enabled"))
+	{
+		if(iUnharmful == 0)
+		{
+			SetActiveEnemyName(sEnemyName);
+		}
+		
+		ClearEnemyPatrolNodes(sEnemyName);
+		SetEntityActive(sEnemyName, true);
+	}
+	else if(StringContains(asType, "disabled"))
+	{
+		if(sActiveEnemyName == sEnemyName)
+		{
+			SetActiveEnemyName("");
+		}
+		
+		SetEntityActive(sEnemyName, false);
+	}
+	
+	if(StringContains(asType, gsEnemyPathNodeCodePrefix))
+	{
+		int iIndex = GetSubStringIndex(asType, gsEnemyPathNodeCodePrefix) + gsEnemyPathNodeCodePrefix.length();
+		TeleportEnemyToNode(sEnemyName, gsPathNodeAreaPrefix + StringSub(asType, iIndex, asType.length() - iIndex), true);
+	}
+}
+
+void SetActiveEnemyDisabled(string asType) //DISABLES THE CURRENT ACTIVE ENEMY. POSSIBLE ARGUMENTS PATTERNS: poof, silent.
+{
+	string sEnemyName = GetGlobalVarString("ActiveEnemyName");
+	
+	if(sEnemyName != "")
+	{
+		if(StringContains(asType, "silent"))
+		{
+			SetEnemyState(sEnemyName, "poof_silent");
+		}
+		else if(StringContains(asType, "poof"))
+		{
+			SetEnemyState(sEnemyName, "poof");
+		}
+		else
+		{
+			SetEnemyState(sEnemyName, "disabled");
+		}
+		
+		SetGlobalVarString("ActiveEnemyName", "");
+		AddDebugMessage("Active enemy " + sEnemyName + " has been disabled.", false);
+	}
+	else
+	{
+		AddDebugMessage("WARNING: Tried to disable the active enemy but there aren't any around!", false);
+	}
+}
+
+void SetActiveEnemyDisabled() //HELPER FUNCTION.
+{
+	SetActiveEnemyDisabled("disabled");
+}
+//END ENEMY STATE FUNCTIONS
+
+//START EXTRAMODES FUNCTIONS
+bool GetEasyModeOn() //RETURNS TRUE IF THE EASY MODE IS ENABLED.
+{
+	if(GetGlobalVarInt("EasyModeOn") == 1)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+string GetExtraModesSuffix() //RETURNS THE SUFFIX OF THE EXTRAMODES AS A STRING. POSSIBLE RETURNS VALUES: "", gsFunnySuffix, gsEasySuffix, gsFunnyEasySuffix, gsToughSuffix, gsFunnyToughSuffix.
+{
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 4);
+	
+	switch(iChecker)
+	{
+		case 1:
+			return gsFunnySuffix;
+		break;
+		case 2:
+			return gsEasySuffix;
+		break;
+		case 3:
+			return gsFunnyEasySuffix;
+		break;
+		case 4:
+			return gsToughSuffix;
+		break;
+		case 5:
+			return gsFunnyToughSuffix;
+		break;
+		default:
+			return "";
+		break;
+	}
+
+	return "";
+}
+
+bool GetFunnyModeOn() //RETURNS TRUE IF THE FUNNY MODE IS ENABLED.
+{
+	if(GetGlobalVarInt("FunnyModeOn") == 1)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+string GetFunnyModeString(string asString) //RETURNS A MODIFIED VERSION OF THE STRING WHEN FUNNY MODE IS ACTIVE, THE MOD IS BASED ON SOME PRE-SET DEFAULT PATTERNS.
+{
+	if(GetGlobalVarInt("FunnyModeOn") == 1)
+	{
+		if(StringContains(asString, "grunt"))
+		{
+			return GetStringWithReplacedSubString(asString, "grunt", "longo");
+		}
+		else if(StringContains(asString, "brute"))
+		{
+			return GetStringWithReplacedSubString(asString, "brute", "chiu");
+		}
+		else if(StringContains(asString, "suitor"))
+		{
+			return GetStringWithReplacedSubString(asString, "suitor", "meli");
+		}
+		else if(StringContains(asString, "waterlurker"))
+		{
+			return GetStringWithReplacedSubString(asString, "waterlurker", "malato");
+		}
+		else if(StringContains(asString, "water_lurker"))
+		{
+			return GetStringWithReplacedSubString(asString, "water_lurker", "malato");
+		}
+		else
+		{
+			return asString;
+		}
+	}
+	else
+	{
+		return asString;
+	}
+}
+
+string GetStringWithExtraModesSuffix(string asString) //RETURNS THE NAME + THE EXTRAMODES SUFFIX IF SOME EXTRAMODES ARE ACTIVE.
+{
+	return GetOriginalString(asString) + GetExtraModesSuffix();
+}
+
+bool GetToughModeOn() //RETURNS TRUE IF THE TOUGH MODE IS ENABLED.
+{
+	if(GetGlobalVarInt("ToughModeOn") == 1)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void SetupExtraModesGoodies() //SET GOODIES ACTIVE BASED ON EXTRAMODES AND ALSO BASED ON GLOBAL GOODIES ARRAYS.
+{	
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 4);
+	
+	if(iChecker == 2 || iChecker == 3)
+	{
+		if(gviEasyTinderboxesCodesArray[0] != 0 && GetEntityExists(gsTinderboxPrefix + gviEasyTinderboxesCodesArray[0]))
+		{
+			for(int i=0; i<gviEasyTinderboxesCodesArray.length(); i++)
+			{
+				SetEntityActive(gsTinderboxPrefix + gviEasyTinderboxesCodesArray[i], true);
+			}
+		}
+		
+		if(gviEasyOilPotionsCodesArray[0] != 0 && GetEntityExists(gsOilPotionPrefix + gviEasyOilPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviEasyOilPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsOilPotionPrefix + gviEasyOilPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviEasyHealthPotionsCodesArray[0] != 0 && GetEntityExists(gsHealthPotionPrefix + gviEasyHealthPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviEasyHealthPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsHealthPotionPrefix + gviEasyHealthPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviEasySanityPotionsCodesArray[0] != 0 && GetEntityExists(gsSanityPotionPrefix + gviEasySanityPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviEasySanityPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsSanityPotionPrefix + gviEasySanityPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviEasyLargeOilPotionsCodesArray[0] != 0 && GetEntityExists(gsLargeOilPotionPrefix + gviEasyLargeOilPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviEasyLargeOilPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsLargeOilPotionPrefix + gviEasyLargeOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	else if(iChecker <= 1)
+	{
+		if(gviNormalTinderboxesCodesArray[0] != 0 && GetEntityExists(gsTinderboxPrefix + gviNormalTinderboxesCodesArray[0]))
+		{
+			for(int i=0; i<gviNormalTinderboxesCodesArray.length(); i++)
+			{
+				SetEntityActive(gsTinderboxPrefix + gviNormalTinderboxesCodesArray[i], true);
+			}
+		}
+		
+		if(gviNormalOilPotionsCodesArray[0] != 0 && GetEntityExists(gsOilPotionPrefix + gviNormalOilPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviNormalOilPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsOilPotionPrefix + gviNormalOilPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviNormalHealthPotionsCodesArray[0] != 0 && GetEntityExists(gsHealthPotionPrefix + gviNormalHealthPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviNormalHealthPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsHealthPotionPrefix + gviNormalHealthPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviNormalSanityPotionsCodesArray[0] != 0 && GetEntityExists(gsSanityPotionPrefix + gviNormalSanityPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviNormalSanityPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsSanityPotionPrefix + gviNormalSanityPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviNormalLargeOilPotionsCodesArray[0] != 0 && GetEntityExists(gsLargeOilPotionPrefix + gviNormalLargeOilPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviNormalLargeOilPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsLargeOilPotionPrefix + gviNormalLargeOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	else
+	{
+		if(gviToughTinderboxesCodesArray[0] != 0 && GetEntityExists(gsTinderboxPrefix + gviToughTinderboxesCodesArray[0]))
+		{
+			for(int i=0; i<gviToughTinderboxesCodesArray.length(); i++)
+			{
+				SetEntityActive(gsTinderboxPrefix + gviToughTinderboxesCodesArray[i], true);
+			}
+		}
+		
+		if(gviToughOilPotionsCodesArray[0] != 0 && GetEntityExists(gsOilPotionPrefix + gviToughOilPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviToughOilPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsOilPotionPrefix + gviToughOilPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviToughHealthPotionsCodesArray[0] != 0 && GetEntityExists(gsHealthPotionPrefix + gviToughHealthPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviToughHealthPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsHealthPotionPrefix + gviToughHealthPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviToughSanityPotionsCodesArray[0] != 0 && GetEntityExists(gsSanityPotionPrefix + gviToughSanityPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviToughSanityPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsSanityPotionPrefix + gviToughSanityPotionsCodesArray[i], true);
+			}
+		}
+		
+		if(gviToughLargeOilPotionsCodesArray[0] != 0 && GetEntityExists(gsLargeOilPotionPrefix + gviToughLargeOilPotionsCodesArray[0]))
+		{
+			for(int i=0; i<gviToughLargeOilPotionsCodesArray.length(); i++)
+			{
+				SetEntityActive(gsLargeOilPotionPrefix + gviToughLargeOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+}
+
+void SetupExtraModes() //PREPARES ALL LEVEL RELATED VARIABLES BASED ON EXTRAMODES, SUCH AS LANTERN OIL SPEED AND GOODIES.
+{
+	float fDifficultyDirectFactor = 1.0f;
+	float fDifficultyInverseFactor = 1.0f;
+	
+	if(GetGlobalVarInt("EasyModeOn") == 1)
+	{
+		fDifficultyDirectFactor = fDifficultyDirectFactor * 0.5f;
+		fDifficultyInverseFactor = fDifficultyInverseFactor * 1.5;
+		SetLanternState("oilspeed_slow");
+	}
+	else if(GetGlobalVarInt("ToughModeOn") == 1)
+	{
+		fDifficultyDirectFactor = fDifficultyDirectFactor * 1.5f;
+		fDifficultyInverseFactor = fDifficultyInverseFactor * 0.5;
+		SetLanternState("oilspeed_quick");
+	}
+	else
+	{
+		SetLanternState("oilspeed_on");
+	}
+	
+	SetGlobalVarFloat("DifficultyDirectFactor", fDifficultyDirectFactor);
+	SetGlobalVarFloat("DifficultyInverseFactor", fDifficultyInverseFactor);
+	SetGlobalVarFloat("MinEnemyIdleTime", 2 * fDifficultyDirectFactor);
+	SetupExtraModesGoodies();
+}
+//END EXTRAMODES FUNCTIONS
+
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//--------------------END GLOBAL CODE--------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//------------------START VARIABLE CODE------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+
+//START GLOBAL VARIABLES
+//EASY DIFFICULTY GOODIES ARRAYS:
+int[] gviEasyTinderboxesCodesArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+int[] gviEasyOilPotionsCodesArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+int[] gviEasyHealthPotionsCodesArray = {1, 2, 3, 4, 5, 6, 7, 8};
+int[] gviEasySanityPotionsCodesArray = {1, 2, 3, 4};
+int[] gviEasyLargeOilPotionsCodesArray = {1, 2};
+//NORMAL DIFFICULTY GOODIES ARRAYS:
+int[] gviNormalTinderboxesCodesArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+int[] gviNormalOilPotionsCodesArray = {1, 2, 3, 4, 5, 6, 7, 8};
+int[] gviNormalHealthPotionsCodesArray = {1, 2, 3, 4};
+int[] gviNormalSanityPotionsCodesArray = {1, 2};
+int[] gviNormalLargeOilPotionsCodesArray = {1};
+//TOUGH DIFFICULTY GOODIES ARRAYS:
+int[] gviToughTinderboxesCodesArray = {1, 2, 3, 4, 5, 6, 7, 8};
+int[] gviToughOilPotionsCodesArray = {1, 2, 3, 4};
+int[] gviToughHealthPotionsCodesArray = {1, 2};
+int[] gviToughSanityPotionsCodesArray = {1};
+int[] gviToughLargeOilPotionsCodesArray = {0};
+//FULL GAME SAVE VARIABLES:
+//GlobalVarString("ActiveEnemyName");
+//GlobalVarFloat("DifficultyDirectFactor");
+//GlobalVarFloat("DifficultyInverseFactor");
+//GlobalVarFloat("MinEnemyIdleTime");
+//GlobalVarInt("EasyModeOn");
+//GlobalVarInt("FunnyModeOn");
+//GlobalVarInt("ToughModeOn");
+//END GLOBAL VARIABLES
+
+//START CURRENT MAP RELATED FUNCTIONS
+void CPDefault(string asName, int aiCount)
+{
+    SetActiveEnemyDisabled("off");
+	
+	if(asName == "CPDefault_4") //NAME OF THE CP FUNCTION + _ + PLAYER START POS CODE.
+	{
+		//PUT CODE HERE!
+	}
+	
+	if(GetPlayerLampOil() < 10 && GetGlobalVarInt("ToughModeOn") == 0)
+	{
+		AddPlayerLampOil(5.0f);
+	}
+}
+
+void SetupSectionEvent(string asInput)
+{
+	string sEvent = asInput;
+	float fSpeed = 10.0f;
+	bool bPause = false;
+	
+	AddLocalVarInt(sEvent, 1);
+
+	switch(GetLocalVarInt(sEvent))
+	{
+		case 1:
+			fSpeed = 9.0f;
+			SetMessage("TutorialTexts", "Section1_1", fSpeed);
+		break;
+        case 2:
+			fSpeed = 10.0f;
+			SetMessage("TutorialTexts", "Section1_2", fSpeed);
+		break;
+		case 3:
+			bPause = true;
+			TeleportPlayer(1);
+			PlayMusic("09_amb_safe.ogg", "ambient_loop_midslow");
+			SetScreenEffect("fadein_quick_activeon");
+		break;
+		case 4:
+			fSpeed = 9.0f;
+			SetMessage("TutorialTexts", "Section2_1", fSpeed);
+		break;
+		case 5:
+			fSpeed = 7.5f;
+			SetMessage("TutorialTexts", "Section2_2", fSpeed);
+		break;
+		case 6:
+			fSpeed = 8.0f;
+			SetMessage("TutorialTexts", "Section2_3", fSpeed);
+		break;
+		case 7:
+			bPause = true;
+			TeleportPlayer(2);
+			SetMessage("TutorialTexts", "Section2_4", fSpeed);
+			SetScreenEffect("fadein_quick_activeon");
+		break;
+		case 8:
+			fSpeed = 6.5f;
+			SetMessage("TutorialTexts", "Section3_1", fSpeed);
+		break;
+		case 9:
+			fSpeed = 7.0f;
+			SetMessage("TutorialTexts", "Section3_2", fSpeed);
+		break;
+		case 10:
+			fSpeed = 12.0f;
+			SetMessage("TutorialTexts", "Section3_3", fSpeed);
+		break;
+		case 11:
+			fSpeed = 15.0f;
+			SetMessage("TutorialTexts", "Section3_4", fSpeed);
+		break;
+		case 12:
+			bPause = true;
+			TeleportPlayer(3);
+			SetMessage("TutorialTexts", "Section3_5", fSpeed);
+			SetScreenEffect("fadein_quick_activeon");
+		break;
+		case 13:
+			bPause = true;
+			TeleportPlayer(4);
+			SetMessage("TutorialTexts", "Tutorial", fSpeed);
+			SetScreenEffect("fadein_quick_activeon");
+		break;
+		default:
+			bPause = true;
+			TeleportPlayer(4);
+			SetMessage("TutorialTexts", "NoTutorial", fSpeed);
+			SetScreenEffect("fadein_quick_activeon");
+		break;
+	}
+	
+	if(bPause == false && fSpeed > 0)
+	{
+		AddTimer(sEvent, fSpeed, sEvent);
+	}
+}
+
+void CollidePlayerAndBlockBoxSection(string asParent, string asChild, int aiState)
+{
+	SetMessage("TutorialTexts", "NoButtonPressed", 5.0f);
+}
+
+void PlayerInteractWithSectionDoor(string asEntity)
+{
+	SetPlayerState("activeoff_drop");
+	FadeOut(1.0f);
+	AddTimer("SetupSectionEvent", 1.1f, "SetupSectionEvent");
+}
+
+void PlayerInteractWithNote(string asEntity)
+{
+	FadeOut(5.0f);
+	SetPlayerActive(false);
+	AddTimer("ambient_mid", 0.1f, "StopMusic");
+	AddTimer("custom_stories/xdj_tcolm/maps/01_mansion.map", "1", 5.2f, "ChangeMap");
+	
+	if(StringContains(asEntity, gsFunnySuffix))
+	{
+		SetGlobalVarInt("FunnyModeOn", 1);
+	}
+	else
+	{
+		SetGlobalVarInt("FunnyModeOn", 0);
+	}
+	
+	if(StringContains(asEntity, gsEasySuffix))
+	{
+		SetGlobalVarInt("EasyModeOn", 1);
+		SetGlobalVarInt("ToughModeOn", 0);
+	}
+	else if(StringContains(asEntity, gsToughSuffix))
+	{
+		SetGlobalVarInt("EasyModeOn", 0);
+		SetGlobalVarInt("ToughModeOn", 1);
+	}
+	else
+	{
+		SetGlobalVarInt("EasyModeOn", 0);
+		SetGlobalVarInt("ToughModeOn", 0);
+	}
+}
+
+void SetStoryStarterNotesActive(bool abActive)
+{
+	string sNote = "note";
+	string sSignAreaPrefix = "SignArea_";
+	string sBlockBoxPrefix = "block_box_";
+	SetEntityActive(sNote, abActive);
+	SetEntityActive(sSignAreaPrefix + sNote, abActive);
+	SetEntityActive(sNote + gsEasySuffix, abActive);
+	SetEntityActive(sSignAreaPrefix + sNote + gsEasySuffix, abActive);
+	SetEntityActive(sNote + gsToughSuffix, abActive);
+	SetEntityActive(sSignAreaPrefix + sNote + gsToughSuffix, abActive);
+	SetEntityActive(sNote + gsFunnySuffix, abActive);
+	SetEntityActive(sSignAreaPrefix + sNote + gsFunnySuffix, abActive);
+	SetEntityActive(sNote + gsFunnyEasySuffix, abActive);
+	SetEntityActive(sSignAreaPrefix + sNote + gsFunnyEasySuffix, abActive);
+	SetEntityActive(sNote + gsFunnyToughSuffix, abActive);
+	SetEntityActive(sSignAreaPrefix + sNote + gsFunnyToughSuffix, abActive);
+	SetLightVisible(gsLightPrefix + sNote, abActive);
+	SetLightVisible(gsLightPrefix + sNote + gsFunnySuffix, abActive);
+}
+
+void PlayerInteractWithButton(string asEntity)
+{
+	int iCode = StringToInt(GetStringWithoutSubString(asEntity, "button_"));
+	SetDebugMessage("Pressed Button " + iCode);
+	
+	string sNote = "note";
+	string sSignAreaPrefix = "SignArea_";
+	string sBlockBoxPrefix = "block_box_";
+	SetLightState(gsLightPrefix + asEntity, "on_green", 0.5f);
+	AddTimer(gsLightPrefix + asEntity, "off_black", "0.5f", 0.5f, "SetLightState");
+	PlayGuiSound("joint_break_metal.snt", 0.7f);
+	
+	switch(iCode)
+	{
+		case 1:
+			SetLocalVarInt("SetupSectionEvent", -1);
+			SetStoryStarterNotesActive(true);
+			SetEntityPlayerInteractOff("button_1");
+			SetEntityPlayerInteractOff("button_2");
+			SetScreenEffect("fadeout_quick_activeoff");
+			AddTimer("SetupSectionEvent", 1.1f, "SetupSectionEvent");
+			
+			return; //Not doing anything else!
+		break;
+		case 2:
+			SetEntityPlayerInteractOff("button_1");
+			SetEntityPlayerInteractOff("button_2");
+			SetEntityInactive("block_box_section_1");
+			SetMessage("TutorialTexts", "ButtonPressed");
+			
+			return; //Not doing anything else!
+		break;
+		case 3:
+			SetEntityInactive("block_box_section_2");
+			SetGlobalVarInt("FunnyModeOn", 1);
+			SetLightState(gsLightPrefix + sNote, "offquick");
+			SetLightState(gsLightPrefix + sNote + gsFunnySuffix, "onquick");
+			PlayGuiSound("enemy/chiu/notice_long.snt", 1.0f);
+		break;
+		case 4:
+			SetEntityInactive("block_box_section_2");
+			SetGlobalVarInt("FunnyModeOn", 0);
+			SetLightState(gsLightPrefix + sNote, "onquick");
+			SetLightState(gsLightPrefix + sNote + gsFunnySuffix, "offquick");
+			PlayGuiSound("enemy/brute/notice_long.snt", 1.0f);
+		break;
+		case 5:
+			SetEntityInactive("block_box_section_3");
+			SetStoryStarterNotesActive(false);
+			SetGlobalVarInt("ToughModeOn", 1);
+			SetGlobalVarInt("EasyModeOn", 0);
+			SetEntityActive(GetStringWithExtraModesSuffix(sNote));
+			SetEntityActive(GetStringWithExtraModesSuffix(sSignAreaPrefix + sNote));
+			if(GetFunnyModeOn())
+				SetLightState(gsLightPrefix + sNote + gsFunnySuffix, "onquick");
+			else
+				SetLightState(gsLightPrefix + sNote, "onquick");
+		break;
+		case 6:
+			SetEntityInactive("block_box_section_3");
+			SetStoryStarterNotesActive(false);
+			SetGlobalVarInt("ToughModeOn", 0);
+			SetGlobalVarInt("EasyModeOn", 0);
+			SetEntityActive(GetStringWithExtraModesSuffix(sNote));
+			SetEntityActive(GetStringWithExtraModesSuffix(sSignAreaPrefix + sNote));
+			if(GetFunnyModeOn())
+				SetLightState(gsLightPrefix + sNote + gsFunnySuffix, "onquick");
+			else
+				SetLightState(gsLightPrefix + sNote, "onquick");
+		break;
+		case 7:
+			SetEntityInactive("block_box_section_3");
+			SetStoryStarterNotesActive(false);
+			SetGlobalVarInt("ToughModeOn", 0);
+			SetGlobalVarInt("EasyModeOn", 1);
+			SetEntityActive(GetStringWithExtraModesSuffix(sNote));
+			SetEntityActive(GetStringWithExtraModesSuffix(sSignAreaPrefix + sNote));
+			if(GetFunnyModeOn())
+				SetLightState(gsLightPrefix + sNote + gsFunnySuffix, "onquick");
+			else
+				SetLightState(gsLightPrefix + sNote, "onquick");
+		break;
+		default:
+			SetLocalVarInt("SetupSectionEvent", -1);
+			return;
+		break;
+	}
+	
+	SetMessage("TutorialTexts", "ButtonPressed");
+	SetEntityPlayerInteractOff(asEntity);
+	AddTimer(asEntity, 1.0f, "SetEntityPlayerInteractOn");
+}
+//END CURRENT MAP RELATED FUNCTIONS
+
+//START MAIN FUNCTIONS
+void OnStart()
+{
+	if(ScriptDebugOn())
+	{
+		if(HasItem("lantern") == false)
+		{
+			GiveItemFromFile("lantern", "lantern.ent");
+		}
+	}
+	
+	SetEntityPlayerCollideCallback("block_box_section_1", "CollidePlayerAndBlockBoxSection", "enter");
+	SetEntityPlayerCollideCallback("block_box_section_2", "CollidePlayerAndBlockBoxSection", "enter");
+	SetEntityPlayerCollideCallback("block_box_section_3", "CollidePlayerAndBlockBoxSection", "enter");
+	SetLightVisible("Light_note", false);
+	SetLightVisible("Light_note_funny", false);
+	
+	FadeOut(0.0f);
+	SetPlayerActive(false);
+	SetupSectionEvent("SetupSectionEvent");
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("Unknown");
+	SetCheckPoint("Default", 4);
+}
+
+void OnLeave()
+{
+	SetActiveEnemyDisabled("off");
+	SetupLoadScreen(gsLoadScreenCat, "FromTutorial", 0, gsLoadScreenImgPrefix + "rose.jpg");
+	
+	if(GetPlayerLampOil() < 10 && GetGlobalVarInt("ToughModeOn") == 0)
+	{
+		AddPlayerLampOil(5.0f);
+	}
+}
+//END MAIN FUNCTIONS
+
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------END VARIABLE CODE-------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//
+//-------------------------------------------------------//

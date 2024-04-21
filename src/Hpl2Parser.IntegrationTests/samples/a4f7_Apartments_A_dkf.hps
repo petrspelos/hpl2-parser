@@ -1,0 +1,555 @@
+
+bool RodDebugActive = false; //set this to true to spawn all rods next to the machine
+
+//TODO This map needs a saving strategy to be implemented! 
+
+void OnStart()
+{
+	//Three rods:
+		for(int i=1;i<=4;i++) for(int j=1;j<=6;j++)
+		AddUseItemCallback("dkf_guiding_rod0"+i+"0"+j, "dkf_guiding_rod0"+i, "ra0"+j, "UseRod", false);
+	//Padlock:
+		AddUseItemCallback("", "PadKey", "Padlock", "OpenPadlock", false);
+	//Clock:
+		AddEntityCollideCallback("Hand_Hours", "Area_Hours", "ClockCheck", false, 1);
+		AddEntityCollideCallback("Hand_Minutes", "Area_Minutes", "ClockCheck", false, 1);
+		AddUseItemCallback("", "DirtyWatch", "LiquidScript", "CantClean", false);
+		AddUseItemCallback("", "DirtyWatch", "LiquidScript_2", "CantClean", false);
+	//Julie cutscene:
+		SetGlobalVarInt("JuliePresence", 1); //enables the encounter
+		AddEntityCollideCallback("Player", "StartCutsceneArea", "StartCutscene", true, 1);
+	//Keys
+		AddUseItemCallback("", "KeyX", "DoorX", "OpenDoor", true);
+		AddUseItemCallback("", "WingedKey", "WingedDoor", "OpenDoor", true);
+		
+	//other callbacks
+	AddEntityCollideCallback("Player", "StopBlockArea", "StopGooBlocking", true, -1); //Disables the goo block once it has been walked through 
+	AddEntityCollideCallback("Player", "StartPhoneCallArea", "PhoneTimer", true, 1); //Starts a phonecall
+	AddEntityCollideCallback("Player", "AreaChangeMap", "ChangeMap_1", false, 1);
+}
+
+void OnEnter()
+	{
+		PlayMusic("Blear_Moon_Few_survivors.ogg", true, 0.6, 0.0, 1, true);
+		AddDebugMessage("The map refreshed", false);
+		
+	//Rod debug
+		if(RodDebugActive && ScriptDebugOn())
+		{
+			for(int i=1; i < 5; i++) PlaceEntityAtEntity("dkf_guiding_rod0"+i, "DebugRodsArea", "", false);
+		}
+	
+	//Setup
+		StartPlayerSpawnPS("null.sps");
+		
+		//chair swing 
+		AddPropForce("chair_metal_1", 0, 0, 700, "world");
+		AddTimer("chair_metal_1", 0, "Timer_PushLamp");
+		
+		//SetInDarknessEffectsActive(false);
+		if(ScriptDebugOn()) SetPlayerSanity(29.0f);
+		
+	//Save system
+		SetMapDisplayNameEntry("Apartments");
+		AutoSave();
+		CheckPoint("dd", "PlayerStartArea_1", "", "DeathHint", "Entry1");
+		AddTimer("", 240.0, "SaveLooper");
+		
+		SetUpInsanity();
+		SetUpValves();
+		
+	//Julie cutscene:
+		/*enables the encounter if it hasn't been seen yet or if player reloads map*/
+		if(GetGlobalVarInt("JuliePresence") == 1 ) SetUpJulie();
+	}
+
+void OnLeave()
+	{
+		 SetPlayerFallDamageDisabled(false);
+	}
+	
+
+void Timer_PushLamp(string &in timer)
+{
+	//AddDebugMessage("chair timer", false);
+    AddPropForce("chair_metal_1", 700, 0, 700, "world");
+    AddTimer("chair_metal_1", 4.8, "Timer_PushLamp");
+}	
+	
+void SaveLooper(string &in asTimer)
+{
+	SetMapDisplayNameEntry("Apartments");
+	AutoSave();
+	CheckPoint("dd", "PlayerStartArea_1", "", "DeathHint", "Entry1");
+	AddTimer("", 240.0, "SaveLooper");
+}
+	
+void OpenDoor(string &in asItem, string &in asEntity) //Generic open door script
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "unlock_modern.snt", asEntity, 0.0f , false);
+}
+
+void Jammed(string &in asEntity) //Random message for dummy doors
+{
+	int tmp = RandInt( 0,  2);
+	if(tmp == 0)SetMessage("Messages", "Jammed1", 0.0);
+	if(tmp == 1)SetMessage("Messages", "Jammed2", 0.0);
+	if(tmp == 2)SetMessage("Messages", "Jammed3", 0.0);
+}
+	
+void StopGooBlocking(string &in asParent, string &in asChild, int alState) //Disables the goo block once it has been walked through 
+{
+	SetEntityActive("black_slime_6way_1", false);
+}
+
+
+void ButtonSound(string &in asEntity)
+{
+	//PlaySoundAtEntity("", "button_dkf.snt", asEntity, 0.0f , false);
+}
+
+
+void SetUpValves()
+{
+	float maxspeed = 2.0f;
+	float minspeed = 1.0f;
+	InteractConnectPropWithRope("conn", "Valve_Z", "RopeArea_11", false, 1.0f, minspeed, maxspeed, false, 1);
+	InteractConnectPropWithRope("conn", "Valve_Z", "RopeArea_12", false, 1.0f, minspeed, maxspeed, false, 1);
+	InteractConnectPropWithRope("conn", "Valve_Z", "RopeArea_13", false, 1.0f, minspeed, maxspeed, false, 1);
+	InteractConnectPropWithRope("conn", "Valve_Z", "RopeArea_10", false, 1.0f, minspeed, maxspeed, false, 1);
+}
+
+void PhoneTimer(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Entered the secret room", false);
+	float rand = RandFloat(1.5, 3.0);
+	AddTimer("", rand, "StartCall");
+}
+
+void StartCall(string &in asTimer)
+{
+	AddDebugMessage("Starting a call...", false);
+	StartPhoneRing("HiddenPhone", "Dkf_Apartments", 5); //currently only for testing. Replace with appropriate file names later
+}
+
+void WheelStuck(string &in asEntity)
+{
+	SetMessage("Messages", "WheelStuck", 0);
+}
+
+void ChangeMap_1(string &in asParent, string &in asChild, int alState)
+{
+	 FadeOut(0.6);
+	 SetPlayerFallDamageDisabled(true);
+	 AddTimer("", 0.65, "ChangeMap_2");
+}
+void ChangeMap_2(string &in asTimer)
+{
+	AddDebugMessage("Changing map...", false);
+	SetGlobalVarInt("Insight", 2);
+	ChangeMap("Curtain_Room.map", "PlayerStartArea_1", "transgression_dkf.snt", ""); 
+}
+
+///////////////////////CLOCK///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void WatchHint(string &in asEntity, int alState)
+{
+	AddDebugMessage("Looked at the clock", false);
+	AddQuest("ClockHint", "ClockHint");
+	SetEntityActive(asEntity, false);
+}
+
+
+void CantClean(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "impact_water_low.snt", asEntity, 0.0f , false);
+	SetMessage("Messages", "CantClean", 0.0);
+}
+
+void ClockCheck(string &in asParent, string &in asChild, int alState)
+{
+	if(GetEntitiesCollide("Hand_Hours", "Area_Hours") == true && GetEntitiesCollide("Hand_Minutes", "Area_Minutes") == true)
+	{
+		PlayMusic("01_puzzle_passage.ogg", false, 0.7f, 1.0f, 2 , true);
+		PlaySoundAtEntity("", "lock_door.snt", asChild, 0.0f , false);
+		
+		PlaySoundAtEntity("", "close_gate.snt", "WallDoor", 0.0, false);
+		SetSwingDoorLocked("WallDoor", false, true);
+		SetSwingDoorClosed("WallDoor", false, true);
+		AddPropForce("WallDoor", 15000.0f, 0.0f, 0.0f, "world");
+		
+		GiveSanityBoostSmall();
+		ChangePlayerStateToNormal();
+		SetPropStaticPhysics("Hand_Hours", true);
+		SetPropStaticPhysics("Hand_Minutes", true);
+		RemoveEntityCollideCallback("Hand_Hours", "Area_Hours");
+		RemoveEntityCollideCallback("Hand_Minutes", "Area_Minutes");
+		
+		RemoveItem("PocketWatch");
+		RemoveItem("Polish");
+		RemoveItem("DirtyWatch");
+		CompleteQuest("ClockHint", "ClockHint");
+	}
+}
+
+///////////////////////PADLOCK///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void OpenPadlock(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetSwingDoorLocked("Door", false, true);
+	PlaySoundAtEntity("", "door_sewer_unlock.snt", asEntity, 0.0f , false);
+	SetPropStaticPhysics(asEntity, false);
+	
+	AddEntityCollideCallback("PadArea", "Padlock", "ReStaticPadlock", true, 1);
+}
+
+void ReStaticPadlock(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics(asChild, true);
+}
+
+
+///////////////////////JULIE///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+void SetUpJulie()
+{
+	SetEnemySanityDecreaseActive("Julie", false);
+	//SetEntityPlayerLookAtCallback("Julie", "Cutscene", true); //old version of the script
+	AddEnemyPatrolNode("Julie", "PathNodeArea_7", 0.0f, "");
+	AddEntityCollideCallback("JulieArea_1", "Julie", "RemovePath", true, 1);
+	SetEntityInteractionDisabled("PeskyDoor", true);
+}
+
+void RemovePath(string &in asParent, string &in asChild, int alState)
+{
+	ClearEnemyPatrolNodes("Julie");
+}
+
+void StartCutscene(string &in asParent, string &in asChild, int alState)
+{
+	SetEnemySanityDecreaseActive("Julie", false); //hopefully this will fix the bug
+	AddDebugMessage("Cutscene should start", false);
+	StartPlayerLookAt("JulieLookAtArea", 1.0f, 2.0f, "StopLooking");
+	Cutscene("Julie"); //passing an argument so that the func is compatible with the old version
+}
+
+void StopLooking()
+{
+	StopPlayerLookAt();
+}
+
+void Cutscene(string &in asEntity) //asEntity is Julie
+{
+	SetEntityActive("LD_Julie", false);
+	AddEffectVoice("JApartments_01.ogg", "", "Dialogues", "JApartments_01", true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JApartments_02.ogg", "", "Dialogues", "JApartments_02", true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JApartments_03.ogg", "", "Dialogues", "JApartments_03", false, "Player", 0.0f, 15.0f);
+	for(int i = 4; i <= 9; i++)AddEffectVoice("JApartments_0"+i+".ogg", "", "Dialogues", "JApartments_0"+i, true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JApartments_10.ogg", "", "Dialogues", "JApartments_10", false, "Player", 0.0f, 15.0f);
+	AddEffectVoice("JApartments_11.ogg", "", "Dialogues", "JApartments_11", true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JApartments_12.ogg", "", "Dialogues", "JApartments_12", false, "Player", 0.0f, 15.0f);
+	AddEffectVoice("JApartments_13.ogg", "", "Dialogues", "JApartments_13", true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JApartments_14.ogg", "", "Dialogues", "JApartments_14", false, "Player", 0.0f, 15.0f);
+	AddEffectVoice("JApartments_15.ogg", "", "Dialogues", "JApartments_15", true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JApartments_16.ogg", "", "Dialogues", "JApartments_16", true, asEntity, 0.0f, 15.0f);
+	AddEffectVoice("JApartments_17.ogg", "", "Dialogues", "JApartments_17", true, asEntity, 0.0f, 15.0f);
+	
+	SetEffectVoiceOverCallback("EndCutscene");
+}
+void EndCutscene()
+{
+	GiveItem("WingedKey", "item_key01", "WingedKey", "inventory_key_modern.tga", 1.0);
+	PlaySoundAtEntity("", "pick_key.snt", "Player", 0.0 , false);
+	SetMessage("Messages", "PickKey", 0.0);
+	
+	AddEnemyPatrolNode("Julie", "PathNodeArea_7", 0.0f, "");
+	AddEnemyPatrolNode("Julie", "PathNodeArea_4", 0.0f, "");
+	AddEnemyPatrolNode("Julie", "PathNodeArea_8", 0.0f, "");
+	AddEntityCollideCallback("JulieArea_2", "Julie", "RemoveJulie", true, 1);
+	AddEntityCollideCallback("JulieArea_3", "Julie", "DoorHelp", true, 1);
+	SetSwingDoorDisableAutoClose("PeskyDoor", true);
+	
+	SetMapDisplayNameEntry("Apartments");
+	AutoSave();
+	CheckPoint ("1", "JulieRoom", "", "DeathHint", "Entry1");
+
+}
+void RemoveJulie(string &in asParent, string &in asChild, int alState)
+{
+	ClearEnemyPatrolNodes("Julie");
+	PlaySoundAtEntity("", "joint_mansion_wood_panneling_door_close_verb", "JulieArea_3", 1.0f, false);
+	FadeEnemyToSmoke("Julie", false);
+	SetGlobalVarInt("JuliePresence", 0);
+	SetGlobalVarInt("JulieInTouristCentre", 1);
+	SetEntityActive("LD_Julie", true);
+	
+	AddQuest("VisitTouristCentre", "VisitTouristCentre");
+}
+void DoorHelp(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("PeskyDoor", false, false);
+	AddBodyImpulse("PeskyDoor", -25.0f, 0, 0, "world");
+}
+
+void ReactivateJulie(string &in asEntity) //called when entering the hidden door, so that she always appears if needed
+{
+	if(GetGlobalVarInt("JuliePresence") == 1)
+	{
+		SetEntityActive("Julie", true);
+	}
+}
+///////////////////////RODS///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+/* Begin the three guiding rods */
+void UseRod(string &in asItem, string &in asEntity)
+{	
+	/*If rod in slot already, do not enter a second
+	 */
+	if(GetLocalVarInt(asEntity) == 1)
+	{
+		SetMessage("Messages", "SlotTaken", 0);	
+		 
+		PlaySoundAtEntity("clank", "impact_generic_hard_low", asEntity, 0.05f, false);
+		return;
+	}
+	
+	/*If rod and slot correct, set rod string to _correct, else _error
+	 */
+	if(asItem == "dkf_guiding_rod01" && asEntity == "ra04"){
+		SetLocalVarString(asItem, asEntity+"_correct");
+	} 
+	else if(asItem == "dkf_guiding_rod02" && asEntity == "ra01"){
+		SetLocalVarString(asItem, asEntity+"_correct");
+	} 
+	else if(asItem == "dkf_guiding_rod03" && asEntity == "ra06"){
+		SetLocalVarString(asItem, asEntity+"_correct");
+	} 
+	else if(asItem == "dkf_guiding_rod04" && asEntity == "ra02"){
+		SetLocalVarString(asItem, asEntity+"_correct");
+	} 
+	else {
+		SetLocalVarString(asItem, asEntity+"_error");
+	}
+	
+	/*Remove item from inventory, create item at position in world and set area taken
+	 */
+	RemoveItem(asItem);
+
+	CreateEntityAtArea(asItem, asItem, "magic_"+asEntity, true);
+	
+	PlaySoundAtEntity("s"+asItem, "13_rod_in", "magic_"+asEntity, 0, false);
+	
+	SetEntityCallbackFunc(asItem, "PickRod");
+	
+	SetLocalVarInt(asEntity, 1);
+	
+	AddLocalVarInt("RodsInPosition", 1);
+	
+	/*If all three rods are correct end the puzzle
+	 */
+	if(GetLocalVarString("dkf_guiding_rod01") == "ra04_correct" && GetLocalVarString("dkf_guiding_rod02") == "ra01_correct" &&
+		GetLocalVarString("dkf_guiding_rod03") == "ra06_correct" && GetLocalVarString("dkf_guiding_rod04") == "ra02_correct")
+	{
+		//stuff which happens when the rods are correct:
+		SetMessage("Messages", "SlotsCorrect", 0);
+		PlaySoundAtEntity("done"+asItem, "13_press_done", "magic_"+asEntity, 0, false);
+		
+		SetLampLit("Lamp", true, true);
+		//SetMoveObjectState("SlideDoor", 1.0f);
+		SetWheelInteractionDisablesStuck("Valve", true);
+		SetEntityPlayerInteractCallback("Valve", "", true);
+		InteractConnectPropWithMoveObject("", "Valve", "SlideDoor", true, false, 1);
+		
+		for(int i=1;i<=4;i++)
+			SetEntityInteractionDisabled("dkf_guiding_rod0"+i, true);
+			
+		return;
+	}
+	
+	/*Incorrect rod positions*/
+	if(GetLocalVarInt("RodsInPosition") == 4){
+		PlaySoundAtEntity("error1", "13_press_fail", "magic_"+asEntity, 0, false);
+		PlaySoundAtEntity("error2", "17_attach_crank.snt", "magic_"+asEntity, 0.5f, false);
+	}
+	
+	AddDebugMessage(asItem+" Value: "+GetLocalVarString(asItem), false);
+}
+void PickRod(string &in asEntity, string &in asType)
+{
+	/*If a rod is removed, set the area to empty
+	 */
+	if(StringContains(GetLocalVarString(asEntity), "ra01")){ 
+		SetLocalVarInt("ra01", 0);
+		PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra01", 0, false);
+		CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra01", false);
+	}
+	else if(StringContains(GetLocalVarString(asEntity), "ra02")){ 
+		SetLocalVarInt("ra02", 0);
+		PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra02", 0, false);
+		CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra02", false);
+	}
+	else if(StringContains(GetLocalVarString(asEntity), "ra03")){ 
+		SetLocalVarInt("ra03", 0);
+		PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra03", 0, false);
+		CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra03", false);
+	}
+	else if(StringContains(GetLocalVarString(asEntity), "ra04")){ 
+		SetLocalVarInt("ra04", 0);
+		PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra04", 0, false);
+		CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra04", false);
+	}
+	else if(StringContains(GetLocalVarString(asEntity), "ra05")){ 
+		SetLocalVarInt("ra05", 0);
+		PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra05", 0, false);
+		CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra05", false);
+	}
+	else if(StringContains(GetLocalVarString(asEntity), "ra06")){ 
+		SetLocalVarInt("ra06", 0);
+		PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra06", 0, false);
+		CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra06", false);
+	}
+	
+	AddLocalVarInt("RodsInPosition", -1);
+		
+	SetLocalVarString(asEntity, "_error");
+	
+	AddDebugMessage(asEntity+" Value: "+GetLocalVarString(asEntity), false);
+}
+
+///////////////////////KNOCKING///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+/* Full setup is: Door or area, Lantern */
+
+void SetUpKnockingAndLanterns() // for neatness' sake
+{
+	SetEntityPlayerInteractCallback("Door_1", "KnockOnDoor", true);
+	AddBodyImpulse("Door_1_Lantern" + "_Body_3", 0, 0, -0.65f, "world");
+}
+
+void KnockOnDoor(string &in asEntity)
+{
+	PlaySoundAtEntity("", "door_knock_dkf.snt", asEntity, 0.0f , false);
+	AddTimer(asEntity, 1.0f, "Talk");
+}
+void Talk(string &in asTimer)
+{
+		AddEffectVoice("get_out", "", "Dialogues", "get_out", true, asTimer, 0.0f, 15.0f);
+		SetEffectVoiceOverCallback("AfterKnocking");
+}
+void AfterKnocking()
+{
+	
+	SetLampLit("Door_1_Lantern", false,true);
+
+}
+
+
+///////////////END KNOCK///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+///////////////////////PHONE///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+/* Entity = the phone to be played at, if files are "File_01.ogg" and "File_02.ogg", then asFileName = File and asFileCount = 2.
+ All sound files from 1 through the given number are be played.
+ If count = 0, "File" (without the underscore and numbers) is assumed.
+ For best effect use mono sound files.
+ Lang subtitle entries should be titled same as the file and placed in "Dialogues" category. */
+
+void StartPhoneRing(string &in asEntity, string asFileName, int asFileCount)
+{
+	SetLocalVarString("FileName", asFileName); // GetLocalVarString("FileName");
+	SetLocalVarInt("FileCount", asFileCount); // GetLocalVarInt("FileCount");
+	SetLocalVarString("Phone", asEntity);  // GetLocalVarString("Phone");
+	
+	PlaySoundAtEntity("phonering", "phone_ring_loop.snt", asEntity, 0.0f, false);
+	SetEntityPlayerInteractCallback(asEntity, "PickUpPhone", true);
+}
+void PickUpPhone(string &in asEntity)
+{
+	StopSound("phonering", 0.5f);
+	PlaySoundAtEntity("", "phone_up.snt", asEntity, 0.0f, false);
+	AddTimer("", 0.5f, "StartTalking");
+
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerRunSpeedMul(0.0f);
+}
+void StartTalking(string &in asTimer)
+{
+	PlaySoundAtEntity("phonestatic", "phone_static_loop.snt", GetLocalVarString("Phone"), 0.0f, false);
+
+	if (GetLocalVarInt("FileCount") == 0)
+	{
+		AddEffectVoice(GetLocalVarString("FileName"), "", "Dialogues", GetLocalVarString("FileName"), true, GetLocalVarString("Phone"), 0.0f, 15.0f);
+	}
+	else if (GetLocalVarInt("FileCount") > 0)
+	{
+		for (int i = 1; i <= GetLocalVarInt("FileCount"); i++)
+		{
+			if (i < 10)
+			{
+				SetLocalVarString("tmp", GetLocalVarString("FileName")+"_0" + i); 
+			}
+			else
+			{
+				SetLocalVarString("tmp", GetLocalVarString("FileName")+"_" + i); 
+			}
+
+			AddEffectVoice(GetLocalVarString("tmp"), "", "Dialogues", GetLocalVarString("tmp"), true, GetLocalVarString("Phone"), 0.0f, 15.0f);
+		}
+	}
+	SetEffectVoiceOverCallback("HangUp");
+}
+
+void HangUp()
+{
+	PlaySoundAtEntity("", "phone_down.snt", GetLocalVarString("Phone"), 0.0f, false);
+	StopSound("phonestatic", 0.3f);
+
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerJumpDisabled(false);
+
+	AddTimer("phoneOverTimer", 2.0f, "PhoneCallOverCallback");
+}
+
+///////////////END PHONE///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+	
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+	
+	if(GetPlayerSanity() == 0.0f) SetPlayerSanity(29.0f);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+

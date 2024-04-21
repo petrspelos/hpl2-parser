@@ -1,0 +1,131 @@
+void OnStart(){	
+	//PlaySoundAtEntity("amb", "03_rock_amb.snt", "Player", 1, true);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "HatchArrive", true, 1);
+	AddEntityCollideCallback("hatch_ceiling_1", "ScriptArea_3", "HatchOpenBuffer", true, 0);
+	SetPlayerMoveSpeedMul(1); SetPlayerRunSpeedMul(0.3f);
+	PlayMusic("albertsconversastion.ogg", false, 1, 0, 0, false);
+}
+
+void TimerList(string &in asTimer){
+	if(asTimer == "conversationBox"){
+		AddEntityCollideCallback("Player", "ScriptArea_2", "collideAlbert", true, 1);
+	}
+	if(asTimer == "conversationScene01"){	PlaySoundAtEntity("", "albert_01", "ScriptArea_4", 0, false);	}
+	if(asTimer == "conversationScene02"){	PlayGuiSound("richard_01.ogg", 1);	}
+	if(asTimer == "conversationScene03"){	PlaySoundAtEntity("", "albert_02", "ScriptArea_4", 0, false);	}
+	if(asTimer == "conversationScene04"){	PlayGuiSound("richard_02.ogg", 1);	}
+	if(asTimer == "conversationScene05"){	PlaySoundAtEntity("", "albert_03", "ScriptArea_4", 0, false);	}
+	if(asTimer == "conversationScene06"){	PlayGuiSound("richard_03.ogg", 1);	}
+	if(asTimer == "conversationScene07"){	PlaySoundAtEntity("", "albert_04", "ScriptArea_4", 0, false);	}
+	if(asTimer == "conversationScene08"){	PlaySoundAtEntity("", "albert_05", "ScriptArea_4", 0, false);	PlayMusic("albertsconversastion.ogg", false, 1, 0, 0, false);}
+	if(asTimer == "conversationScene09"){	PlayGuiSound("richard_04.ogg", 1);	}
+	if(asTimer == "conversationScene10"){	PlaySoundAtEntity("", "albert_06", "ScriptArea_4", 0, false);	}
+	if(asTimer == "conversationScene11"){	PlaySoundAtEntity("", "albert_07", "ScriptArea_4", 0, false);	}
+	if(asTimer == "gaveKeyEvent")	{		PlaySoundAtEntity("", "step_walk_water", "ScriptArea_4", 0, false);	}
+	if(asTimer == "gaveKeyEvent2")	{		PlaySoundAtEntity("", "step_sneak_water", "ScriptArea_4", 0, false);	}
+}
+
+
+
+void HatchArrive(string &in asParent, string &in asChild, int alState){
+	for (int i=1; i<=5; i++)	{	AddTimer("hatch_ceiling_1", i * 1.35f, "impacthatch");	}
+	AddTimer("impactHatchMusic", 8, "hatchEvent");
+}
+
+void impacthatch(string &in door_name)	{	AddPropForce(door_name, 0, 500, 0, "world");	CreateParticleSystemAtEntity("", "ps_impact_dirt_high.ps", "hatch_ceiling_1", false);	PlaySoundAtEntity("", "impact_metal_low", "hatch_ceiling_1", 0, true);	}
+
+
+void hatchEvent(string &in asTimer){
+	if(asTimer == "impactHatchMusic"){
+		PlayMusic("music_cellar_children_walkway.ogg", false, 1, 0, 0, false);
+	}
+}
+
+void HatchOpenBuffer(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	{
+			AddTimer("conversationBox", 3, "TimerList");
+	}
+	else
+	{
+		RemoveTimer("conversationBox");
+		RefuseHatch();
+	}
+}
+
+void RefuseHatch(){
+	if(GetGlobalVarInt ("conversationAlbert") == 1){
+		StopSound("albert", 0);		return;
+	}
+	if(GetGlobalVarInt ("conversationAlbert") == 2){
+		StopSound("albert", 0);		return;
+	}
+}
+
+void HatchFocus(){
+	StartPlayerLookAt("ScriptArea_4", 1, 1, "");
+		MovePlayerHeadPos(0, -1, 0.65f, 20.0f, 20.0f);
+	SetPlayerActive(false);
+}
+void HatchDeFocus(string &in asTimer){
+	StopPlayerLookAt();
+		MovePlayerHeadPos(0, 0, 0, 20.0f, 20.0f);
+	SetPlayerActive(true);
+}
+
+void interactExitKey(string &in asItem){
+	SetGlobalVarInt("conversationAlbert", 2);
+		AddEntityCollideCallback("Player", "ScriptArea_2", "collideAlbert", true, 1);
+}
+
+void collideAlbert(string &in asParent, string &in asChild, int alState){
+	if(GetGlobalVarInt ("conversationAlbert") == 0){
+		HatchFocus();
+		AddTimer("conversationScene01", 3, "TimerList");
+		AddTimer("conversationScene02", 5, "TimerList");
+		AddTimer("conversationScene03", 7, "TimerList");
+		AddTimer("conversationScene04", 21, "TimerList");
+		AddTimer("conversationScene05", 24, "TimerList");
+		AddTimer("conversationScene06", 31, "TimerList");
+		AddTimer("conversationScene07", 38, "TimerList");
+		
+		AddTimer("", 40, "HatchDeFocus");
+		SetGlobalVarInt("conversationAlbert", 1);
+		SetEntityActive("key_tower_1", true);
+		return;
+	}
+	if(GetGlobalVarInt ("conversationAlbert") == 2){
+		HatchFocus();
+		AddTimer("conversationScene08", 1, "TimerList");
+		AddTimer("conversationScene09", 18, "TimerList");
+		AddTimer("conversationScene10", 24, "TimerList");
+		
+		AddTimer("", 135, "HatchDeFocus");
+		AddUseItemCallback("", "key_tower_1", "invisible_box_mass_3", "keygiven", false);
+		
+		return;
+	}
+	
+}
+
+void keygiven(string &in asItem, string &in asArea){
+	SetEntityActive("key_tower_2", true);
+	SetEntityActive("invisible_box_mass_3", false);
+	AddEntityCollideCallback("key_tower_2", "ScriptArea_4", "keywaterdrop", true, 1);
+	
+	AddTimer("gaveKeyEvent", 2, "TimerList");
+	AddTimer("gaveKeyEvent", 3, "TimerList");
+	AddTimer("gaveKeyEvent", 4, "TimerList");
+	AddTimer("gaveKeyEvent2", 6, "TimerList");
+	AddTimer("conversationScene11", 9, "TimerList");
+		SetGlobalVarInt("GlobalTemple", 2);
+		
+	RemoveItem(asItem);
+}
+void keywaterdrop(string &in asParent, string &in asChild, int alState)
+{	SetEntityActive("key_tower_2", false);	PlaySoundAtEntity("", "impact_water_low", "ScriptArea_4", 1, true);	}
+void OnEnter(){
+}
+
+void OnLeave(){
+
+}

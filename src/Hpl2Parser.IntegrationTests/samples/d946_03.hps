@@ -1,0 +1,87 @@
+void OnStart()
+{
+	SetLevelDoorLockedText("level_dungeon_1", "Messages", "itlocked");
+	AddEntityCollideCallback("Player", "smell", "smell", true, 1);
+	AddUseItemCallback("", "hammer", "cellar_wood01_6", "breakdoor", true);
+	AddEntityCollideCallback("Player", "monsterwalk", "monsterwalk", true, 1);
+	AddEntityCollideCallback("monster", "nomonster", "nomonster", true, 1);
+}
+
+void OnEnter()
+{
+	PlayMusic("22_amb", true, 5, 5, 0, true);
+}
+
+void OnLeave()
+{
+
+}
+
+/////////////
+
+////DOORS////
+
+void lockeddoor(string &in entity)
+ 
+{
+    if(GetSwingDoorLocked("cellar_wood01_6") == true)
+    {
+ 
+        SetMessage("Messages", "locked", 0.0f);
+ 
+    }
+}
+
+void lockeddoortwo(string &in entity)
+{
+	SetMessage("Messages", "locked", 0.0f);
+}
+
+/////////////
+
+////TEXTS////
+
+void smell(string parent, string child, int state)
+{
+	SetMessage("Messages", "smell", 0.0f);
+}
+
+/////////////
+
+////ITEMS////
+
+void breakdoor(string &in item, string &in door)
+{
+	SetPropHealth("cellar_wood01_6", 0);
+	RemoveItem("hammer");
+}
+
+///////////////
+
+////MONSTER////
+
+void monsterwalk(string &in asParent, string &in asChild, int alState)
+{
+	AddEnemyPatrolNode("monster", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_3", 0, "");
+	SetEntityActive("monster", true);
+	GiveSanityDamage(5.0f, true);
+    SetPlayerActive(false);
+	StartPlayerLookAt("tolook", 1.0f, 2.0f, "");
+    PlayMusic("11_event_dog.ogg", false, 1.0f, 0.0f, 1, false);
+    AddTimer("door", 6.0f, "doorsound");   
+}
+
+void nomonster(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("monster", false);
+    SetPlayerActive(true);
+	StopPlayerLookAt();
+	SetMessage("Messages", "who", 0.0f);
+}
+
+void doorsound(string &in asTimer)
+{
+	PlaySoundAtEntity("door_level_cistern_open", "door_level_cistern_open.snt", "nomonster", 0.0f, true);
+}

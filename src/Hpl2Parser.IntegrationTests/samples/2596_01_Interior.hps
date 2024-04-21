@@ -1,0 +1,255 @@
+void OnStart()
+{
+SetSkyBoxColor(0.13, 0.12, 0.08, 0.0);
+SetSkyBoxTexture("Sky128.dds");
+SetSkyBoxActive(true); 
+//SetEntityPlayerInteractCallback("emotion_stone_phys_1", "Voice1", true);
+SetEntityPlayerInteractCallback("examine_mach", "post_examine", false);
+SetEntityPlayerInteractCallback("examine_floor", "post_examine2", true);
+SetEntityConnectionStateChangeCallback("DoorLevel", "DoorControl");
+/*SetLightVisible("BoxLight_2", false);
+SetLightVisible("BoxLight_3", false);
+SetLightVisible("BoxLight_4", false);
+SetLightVisible("BoxLight_5", false);*/
+SetLightVisible("BoxLight_6", false);
+SetLightVisible("BoxLight_7", false);
+SetLightVisible("BoxLight_8", false);
+SetLightVisible("BoxLight_9", false);
+SetLightVisible("PointLight_7", false);
+SetLightVisible("PointLight_8", false);
+SetLightVisible("PointLight_10", false);
+SetLightVisible("ShockLight", false);
+SetLightVisible("ShockLight_1", false);
+AddEntityCollideCallback("Player", "rustle_trigger", "rustling", true, 1);
+AddEntityCollideCallback("Player", "scene_instantdeath", "InstantDeath", false, 1);
+AddEntityCollideCallback("Player", "area_fall", "end_scene1_pre", true, 1);
+AddEntityCollideCallback("Player", "MusicTrigger", "Music", true, 1);
+AddEntityCollideCallback("chisel_joint_1", "chisel_hit_area", "PlankBreaks", true, 1);
+AddUseItemCallback("", "emotion_stone_phys_1", "giveithere", "used_stone", true);
+AddUseItemCallback("", "emotion_stone_phys_1", "examine_mach", "used_stone", true);
+AddUseItemCallback("", "chisel_item_1", "ScriptArea_1", "UsedChiselOnPlanks", true);
+AddUseItemCallback("", "chisel_item_1", "examine_floor", "UsedChiselOnPlanks", true);
+FadeSepiaColorTo(0, 0);
+
+SetLocalVarInt("DoorPowered", 0);
+SetLocalVarInt("DoorOpen", 0);
+}
+
+void OnEnter()
+{
+SetMapDisplayNameEntry("Interior");
+PlayMusic("Blank.ogg", true, 0.8, 6, 0, true);
+PlaySoundAtEntity("", "ambience_wind_eerie.snt", "windsound", 0.8, true);
+PlaySoundAtEntity("", "ambience_wind_eerie.snt", "windsound_1", 0.8, true);
+PlaySoundAtEntity("", "amb_desert_small.snt", "windsound_2", 0.8, true);
+PlaySoundAtEntity("", "ambience_wind_eerie.snt", "sound_source_4", 0.4, true);
+SetPlayerLookSpeedMul(1);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetInDarknessEffectsActive(true);
+SetSanityDrainDisabled(false);
+
+//GiveItemFromFile("emotion_stone_phys_1", "item_emotion_stone.ent");
+}
+
+void rustling(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "pebbles_rustle.snt", "rustlesound", 1, true);
+}
+
+void InstantDeath(string &in asParent, string &in asChild, int alState)
+{
+GivePlayerDamage(666, "Claws", false, true);
+}
+
+void MakeALadder(string &in asStickyArea, string &in asBodyName)
+{
+SetEntityActive("LadderArea", true);
+AddTimer("", 1.14, "NoteFall");
+}
+
+void NoteFall(string &in asTimer)
+{
+	SetPropStaticPhysics("note_scroll_2", false);	
+}
+
+void UsedChiselOnPlanks(string &in asItem, string &in asEntity)
+{
+RemoveItem("chisel_item_1");
+SetEntityActive("chisel_joint_1", true);
+SetEntityActive("ScriptArea_1", false);
+SetEntityActive("examine_floor", false);
+PlaySoundAtEntity("","puzzle_place_jar.snt", "chisel_joint_1", 0, false);
+}
+
+void PlankBreaks(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("chisel_joint_1", false);
+SetEntityActive("chisel_1", true);
+SetEntityActive("boardstrong", false);
+SetEntityActive("boardbroke", true);
+CreateParticleSystemAtEntity("", "ps_door_damage_wood.ps", "break_1", true);
+CreateParticleSystemAtEntity("", "ps_door_damage_wood.ps", "break_2", true);
+PlaySoundAtEntity("","break_wood.snt", "break_1", 0, false);
+}
+
+void Music(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("event_telescope_short.ogg", false, 1.75, 0, 0, false);
+}
+
+void post_examine(string &in asEntity)
+{
+	SetLightVisible("ShockLight", true);
+	SetLightVisible("ShockLight_1", true);
+	PlaySoundAtEntity("","elec_flicker.snt", "makeonehere", 0, false);
+	AddTimer("", 0.23, "ShockLightOff");
+}
+
+void ShockLightOff(string &in asTimer)
+{
+	SetLightVisible("ShockLight", false);
+	SetLightVisible("ShockLight_1", false);
+}
+
+void post_examine2(string &in asEntity)
+{
+SetEntityActive("examine_floor", false);
+}
+
+void Voice1(string &in asEntity)
+{
+StartEffectEmotionFlash("Events", "event_1_interior", "");
+AddTimer("tilscene1_start", 5, "scene1_start");
+PlaySoundAtEntity("SceneWind", "amb_desert_low.snt", "sound_source_4", 0.7, true);
+}
+
+void scene1_start(string &in asTimer)
+{
+CheckPoint("scene1_checkpoint", "scene1_start", "end_scene1", "Events", "event_1_interior_death_hint");
+SetDeathHint("Events", "event_1_interior_death_hint");
+PlaySoundAtEntity("", "lurker_hit_wood.snt", "scene1_sound_source_2", 0.7f, true);
+SetLanternDisabled(true);
+SetInventoryDisabled(true);
+SetPlayerMoveSpeedMul(0.4);
+SetPlayerRunSpeedMul(0.2);
+FadeImageTrailTo(1, 2);
+FadePlayerRollTo(-50, 120, 120);
+  //  SetPlayerActive(false);  
+    SetPlayerCrouching(true);
+FadeIn(2);
+TeleportPlayer("scene1_start");
+StartPlayerLookAt("up_here", 1, 2, "");
+AddTimer("tellook_there", 2, "look_there");
+AddTimer("", 6, "scene1_active");
+AddTimer("tilbox_active", 20, "box_inactive");
+}
+
+void box_inactive(string &in asTimer)
+{
+SetEntityActive("scene1_blockbox", false);
+SetEnemyDisableTriggers("enemy_suitor_1", false);
+AddEnemyPatrolNode("enemy_suitor_1","PathNodeArea_1",0.0f,"");
+AddEnemyPatrolNode("enemy_suitor_1","PathNodeArea_3",0.0f,"");
+AddEnemyPatrolNode("enemy_suitor_1","PathNodeArea_5",0.0f,"");
+AddEnemyPatrolNode("enemy_suitor_1","PathNodeArea_6",0.0f,"");
+AddEnemyPatrolNode("enemy_suitor_1","PathNodeArea_8",0.0f,"");
+AddEnemyPatrolNode("enemy_suitor_1","PathNodeArea_9",0.0f,"");
+//ShowEnemyPlayerPosition("enemy_suitor_1");
+}
+
+void look_there(string &in asTimer)
+{
+PlaySoundAtEntity("PlayerScared", "react_breath.snt", "Player", 0.0f, true);
+SetEntityActive("enemy_suitor_1", true);
+SetEnemyDisableTriggers("enemy_suitor_1", true);
+StartPlayerLookAt("over_there", 1, 2, "");
+PlaySoundAtEntity("", "break_glass_bottle.snt", "scene1_sound_source_1", 0.0f, true);
+AddTimer("tellook_window", 3.2, "look_window");
+}
+
+void look_window(string &in asTimer)
+{
+StartPlayerLookAt("look_outside", 1, 2, "");
+PlaySoundAtEntity("", "lurker_hit_wood.snt", "scene1_sound_source_2", 1, true);
+}
+
+void scene1_active(string &in asTimer)
+{
+FadePlayerRollTo(0, 33, 33);
+    SetPlayerCrouching(false);
+FadeImageTrailTo(0, 0);
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+StopPlayerLookAt();
+}
+
+void end_scene1_pre(string &in asParent, string &in asChild, int alState)
+{
+FadeOut(0.75);
+PlaySoundAtEntity("", "event_scene1_outro.snt", "Player", 1, true);
+AddTimer("til_end", 5, "end_scene1");
+SetEntityActive("enemy_suitor_1", false);
+SetMessage("Events", "event_1_interior_outro", 4.5);
+}
+
+void end_scene1(string &in asTimer)
+{
+TeleportPlayer("fromscene");
+FadeIn(0.5);
+PlaySoundAtEntity("PlayerScared", "react_scare.snt", "Player", 0.0f, true);
+StopSound("SceneWind",1);
+StartScreenShake(0.01f, 0, 1, 5);
+SetLanternDisabled(false);
+SetInventoryDisabled(false);
+GiveSanityDamage(10, true);
+//SetupLoadScreen("Loading", "abstory", 1, "load_5");
+}
+
+void used_stone(string &in asItem, string &in asEntity)
+{
+RemoveItem("emotion_stone_phys_1");
+SetEntityActive("item_emotion_stone_stat_1", true);
+SetEntityActive("examine_mach", false);
+PlaySoundAtEntity("hum", "door_mach.snt", "mm", 0.9, true);
+CreateParticleSystemAtEntity("", "ps_light_dust.ps", "makeonehere", false);
+SetLightVisible("PointLight_10", true);
+SetLightVisible("BoxLight_2", true);
+SetLightVisible("BoxLight_3", true);
+SetLightVisible("BoxLight_4", true);
+SetLightVisible("BoxLight_5", true);
+SetLightVisible("BoxLight_6", true);
+SetLightVisible("BoxLight_7", true);
+SetLightVisible("BoxLight_8", true);
+SetLightVisible("BoxLight_9", true);
+SetLightVisible("PointLight_7", true);
+SetLightVisible("PointLight_8", true);
+SetEntityActive("examine_mach", false);
+AddPlayerSanity(5);
+SetLocalVarInt("DoorPowered", 1);
+PlaySoundAtEntity("Pwsh", "17_pipe_attach.snt", "makeonehere", 0, true);
+AutoSave();
+}
+
+void DoorControl(string &in asEntity, int alState)
+{
+	if (GetLocalVarInt("DoorPowered") == 1)
+	{
+		if (alState == 1 && (GetLocalVarInt("DoorOpen") == 0))
+		{
+			SetMoveObjectState("safety_normal_vert_1", 1);
+			//AddTimer("tillstatic", 4, "MakeItStop");
+			SetLocalVarInt("DoorOpen", 1);
+		}
+		else if (alState == -1 && (GetLocalVarInt("DoorOpen") == 1))
+		{
+			SetMoveObjectState("safety_normal_vert_1", 0);
+			SetLocalVarInt("DoorOpen", 0);
+		}
+	}
+}
+
+void MakeItStop(string &in asTimer)
+{
+StopPropMovement("safety_normal_vert_1");
+}

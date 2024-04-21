@@ -1,0 +1,50 @@
+void OnStart()
+{
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerMoveSpeedMul(0.65f);
+	FadeImageTrailTo(0.9f, 0.1f);
+	AddEntityCollideCallback("Player", "AreaPrisonDoor", "TriggerDoor", true, 0);
+	AddEntityCollideCallback("Player", "EndArea", "EndDuology", true, 0);
+	AddTimer("scared_male_terrified.snt", 2.0f, "TimerEvents");
+}
+
+void TriggerDoor(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(0.0f, true);
+
+	PlaySoundAtEntity("player_react", "react_pant", "Player", 0, false);
+	PlaySoundAtEntity("wind", "general_wind_whirl", "Player", 2, false);
+	
+	SetEntityActive("hanging_lantern_wall_1", false);
+	SetEntityActive("hanging_lantern_wall_flicker_1", true);
+	
+	PlayMusic("ui_torture", true, 1.0f, 0.0f, 1.0f, false);
+	
+	CreateParticleSystemAtEntity("door_paper", "ps_dust_paper_blow.ps", "PaperArea", false);
+	
+	SetSwingDoorDisableAutoClose("prison_section_1", true);
+
+	AddPropImpulse("prison_section_1", -69.0f, 0.0f, 0.0f, "world");
+	
+	SetLanternActive(false, false);
+}
+
+void EndDuology(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=10; ++i)
+		PlayGuiSound("lurker_hit_wood.snt", 1.0f);
+	AddPlayerBodyForce(150000.0f, 0.0f, 0.0f, false);
+	GivePlayerDamage(99.0f, "BloodSplat", true, false);
+	AddEntityCollideCallback("Player", "AreaEnd", "EndStory", true, 0);
+}
+
+void EndStory(string &in asParent, string &in asChild, int alState)
+{
+	StartCredits("MichaelReevesCompilationOfPains.ogg", true, "credits", "credits", RandInt(0, 2));
+}
+
+void TimerEvents(string &in asTimer)
+{
+	PlayGuiSound(asTimer, 1.0f);
+	AddTimer("scared_male_terrified.snt", RandFloat(10.0f, 20.0f), "TimerEvents");
+}

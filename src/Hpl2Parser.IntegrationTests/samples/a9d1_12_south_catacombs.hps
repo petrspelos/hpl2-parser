@@ -1,0 +1,121 @@
+void OnStart(){
+	explosiveFunctions();
+	SetLocalVarInt("dieOnExplosion", 1);
+	AddEntityCollideCallback("Player", "ScriptArea_3", "changeVarToZero", false, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_16", "changeVarToZero", false, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_5", "changeVarToOne", false, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "thisIsEnterance", false, 1);
+	AddEntityCollideCallback("Player", "exit", "goToEnding", true, 1);
+}
+
+void OnEnter(){
+
+}
+
+void OnLeave(){
+
+}
+
+void explosiveFunctions(){
+	AddUseItemCallback("", "explosive_neutral", "rocks", "placeExplosive", true);
+	AddEntityCollideCallback("trigger_1", "ScriptArea_4", "triggerWay1", true, 1);
+	AddEntityCollideCallback("trigger_2", "ScriptArea_4", "triggerWay2", true, 1);
+	AddEntityCollideCallback("trigger_3", "ScriptArea_4", "triggerWay3", true, 1);
+}
+
+void placeExplosive(string &in item, string &in entity){
+	SetEntityActive("explosive_placed", true);
+	SetEntityActive("ScriptArea_4", true);
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+}
+
+void triggerWay1(string &in asParent, string &in asChild, int alState){
+	AddTimer("", 5.0f, "explodeWay1");
+	SetEntityActive("ScriptArea_3", true);
+	SetEntityActive("ScriptArea_4", false);
+	SetEntityActive("ScriptArea_16", true);
+	SetEntityActive("explosive_placed", false);
+	SetEntityActive("explosive_set_off", true);
+	SetMessage("Messages", "backOff", 0);
+}
+
+void explodeWay1(string &in asTimer){
+	PlayGuiSound("12_epoxy_blow.snt", 1000000);
+	AddTimer("", 3.0f, "blowUp");
+	if (GetLocalVarInt("dieOnExplosion") == 1){
+		AddTimer("", 3.0f, "die");
+	}
+}
+
+void triggerWay2(string &in asParent, string &in asChild, int alState){
+	AddTimer("", 5.0f, "explodeWay2");
+	SetEntityActive("ScriptArea_3", true);
+	SetEntityActive("ScriptArea_4", false);
+	SetEntityActive("ScriptArea_16", true);
+	SetEntityActive("explosive_placed", false);
+	SetEntityActive("explosive_set_off", true);
+	SetMessage("Messages", "backOff", 0);
+}
+
+void explodeWay2(string &in asTimer){
+	PlayGuiSound("12_epoxy_blow.snt", 1000000);
+	AddTimer("", 3.0f, "blowUp");
+	if (GetLocalVarInt("dieOnExplosion") == 1){
+		AddTimer("", 3.0f, "die");
+	}
+}
+
+void triggerWay3(string &in asParent, string &in asChild, int alState){
+	AddTimer("", 5.0f, "explodeWay3");
+	SetEntityActive("ScriptArea_3", true);
+	SetEntityActive("ScriptArea_4", false);
+	SetEntityActive("ScriptArea_16", true);
+	SetEntityActive("explosive_placed", false);
+	SetEntityActive("explosive_set_off", true);
+	SetMessage("Messages", "backOff", 0);
+}
+
+void explodeWay3(string &in asTimer){
+	PlayGuiSound("12_epoxy_blow.snt", 1000000);
+	AddTimer("", 3.0f, "blowUp");
+	if (GetLocalVarInt("dieOnExplosion") == 1){
+		AddTimer("", 3.0f, "die");
+	}
+}
+
+void die(string &in asTimer){
+	GivePlayerDamage(101, "BloodSplat", false, true);
+}
+
+void blowUp(string &in asTimer){
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_2", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_6", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_7", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_8", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_9", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_10", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_11", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_12", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_13", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog", "ScriptArea_14", false);
+	CreateParticleSystemAtEntity("", "ps_dust_elevator_crash", "ScriptArea_15", false);
+	StartScreenShake(0.01, 0, 0, 2.9f);
+	SetEntityActive("rocks", false);
+	SetEntityActive("open_rocks", true);
+}
+
+void changeVarToZero(string &in asParent, string &in asChild, int alState){
+	SetLocalVarInt("dieOnExplosion", 0);
+}
+
+void changeVarToOne(string &in asParent, string &in asChild, int alState){
+	SetLocalVarInt("dieOnExplosion", 1);
+}
+
+void thisIsEnterance(string &in asParent, string &in asChild, int alState){
+	SetMessage("Messages", "noWay", 0);
+}
+
+void goToEnding(string &in asParent, string &in asChild, int alState){
+	ChangeMap("13_exit.map", "PlayerStartArea_1", "", "");
+}

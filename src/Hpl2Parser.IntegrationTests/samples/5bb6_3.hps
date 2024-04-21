@@ -1,0 +1,156 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+
+{
+          if(ScriptDebugOn())
+          {
+               GiveItemFromFile("lantern", "lantern.ent");
+               SetPlayerLampOil(100.0f);
+ 
+               for(int i = 0;i < 10;i++)
+               {
+                    GiveItemFromFile("tinderbox", "tinderbox.ent");
+               }
+          }
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+	{
+		for(int i=0; i<=7; i++) AddEntityCollideCallback("book"+i, "bookArea_"+i, "BookCollide", true, 0);
+		for(int a=0; a<=7; a++) SetLightVisible("bookLight_"+a, false);
+		//SetEntityPlayerInteractCallback("note_generic_1", "StartTimer", true); 
+		AddUseItemCallback("", "exitkey", "exitdoor", "opendoor", true);
+		SetEntityPlayerInteractCallback("resetTimer", "ResetTimer", true);
+		SetEntityPlayerLookAtCallback("resetTimer", "ResetTimerText", false);
+		AddEntityCollideCallback("Player", "TimerStart", "StartTimer", true, 0);
+	}
+
+		void StartTimer(string &in asParent, string &in asChild, int alState)
+		{
+			CheckPoint("", "PlayerStartArea_1", "Reset", "", "");
+			SetMessage("ScreenMessages", "TimerActivated3", 0);
+			AddTimer("Warn", 240, "Warning");
+			AddTimer("Time", 300, "spawnSteve");
+			SetEntityActive("resetTimer", true);
+		}
+			
+			void Reset(string &in asName, int alCount)
+			{
+				ResetProp("steve");
+				SetMessage("ScreenMessages", "TimerActivated4", 0);
+				AddTimer("Time", 300, "spawnSteve");
+				AddTimer("Warn", 240, "Warning");
+				SetEntityActive("resetTimer", true);
+			}
+			
+			void Warning(string &in asTimer)
+			{
+				SetMessage("ScreenMessages", "Warning2", 0);
+				for(int b=0; b<=7; b++) SetLightVisible("bookLight_"+b, true);
+			}
+
+			void spawnSteve(string &in asTimer)
+			{
+				SetEntityActive("steve", true);
+				ShowEnemyPlayerPosition("steve");
+				SetEntityActive("resetTimer", false);
+				AddEnemyPatrolNode("steve", "PathNodeArea_1", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_2", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_3", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_4", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_5", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_6", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_7", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_8", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_9", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_10", 0.1, "");
+				AddEnemyPatrolNode("steve", "PathNodeArea_11", 0.1, "");
+				//~ AddEnemyPatrolNode("steve", "PathNodeArea_12", 0.1, "");
+				//~ AddEnemyPatrolNode("steve", "PathNodeArea_13", 0.1, "");
+				//~ AddEnemyPatrolNode("steve", "PathNodeArea_14", 0.1, "");
+				//~ AddEnemyPatrolNode("steve", "PathNodeArea_15", 0.1, "");
+			
+			}
+				void BookCollide(string &in asParent, string &in asChild, int alState)
+				{
+					if (alState ==1)
+					{
+						PlaySoundAtEntity("", "16_lever_stuck.snt", "Player", 0, false);
+						SetPropObjectStuckState(asParent, 1);
+						SetLocalVarInt("var"+asParent, 1);
+						AddDebugMessage("Book in area: "+asChild, true);
+					}
+					
+					if(GetLocalVarInt("varbook1") == 1 && GetLocalVarInt("varbook2") == 1 &&  GetLocalVarInt("varbook3") == 1 && GetLocalVarInt("varbook4") == 1 &&  GetLocalVarInt("varbook5") == 1 && GetLocalVarInt("varbook6") == 1 && GetLocalVarInt("varbook7") == 1 )
+					{
+							PlaySoundAtEntity("", "WW_Secret.snt", "Player",  0, false);
+							AddTimer("", 0.3, "KeyShow");
+							AddDebugMessage("The key has appeared.", true);
+					}
+				
+				}
+				
+				void KeyShow(string &in asTimer)
+				{
+					SetEntityActive("StartButton", false);
+					RemoveTimer("Warn");
+					RemoveTimer("Time");
+					SetEntityActive("exitkey", true);
+					SetMessage("ScreenMessages", "KeyAppeared", 0);
+					SetEntityPlayerInteractCallback("exitkey", "OnPickup", true);
+				}
+				
+				void OnPickup(string &in asEntity)
+				{
+					SetEntityActive("steve", true);
+					AddEnemyPatrolNode("steve", "PathNodeArea_1", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_2", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_3", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_4", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_5", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_6", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_7", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_8", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_9", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_10", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_11", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_12", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_13", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_14", 0.1, "");
+					AddEnemyPatrolNode("steve", "PathNodeArea_15", 0.1, "");
+				}
+				
+				void opendoor(string &in asItem, string &in asEntity)
+				{
+					RemoveItem("exitkey");
+					SetSwingDoorLocked("exitdoor", false, true);
+					PlaySoundAtEntity("", "unlock_door.snt", "Player", 0, false);
+				}
+
+		void ResetTimer(string &in asEntity)
+	{
+		RemoveTimer("Warn");
+		RemoveTimer("Time");
+		AddTimer("Warn", 240, "Warning");
+		AddTimer("Time", 300, "spawnSteve");
+		SetMessage("ScreenMessages", "Confirm_resetTimer", 0);
+		SetEntityActive("resetTimer", false);
+	}
+	
+	void ResetTimerText(string &in asEntity, int alState)
+	{
+		if (alState ==1)
+		{
+			SetMessage("ScreenMessages", "resetTimer", 0);
+		}
+	}
+	
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

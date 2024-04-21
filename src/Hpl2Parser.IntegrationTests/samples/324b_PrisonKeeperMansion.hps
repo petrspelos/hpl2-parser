@@ -1,0 +1,292 @@
+////////////////////////////
+// Run first time starting map
+void OnStart()
+{
+PlayMusic("amb_extra01.ogg", true, 1, 1, 0, false);
+SetPlayerLampOil(0);
+SetSanityDrainDisabled(true);
+AddEntityCollideCallback("Player", "Toilet", "Toilet", true, 1);
+AddEntityCollideCallback("Player", "KitchenArea", "Kitchen", false, 1);
+AddEntityCollideCallback("bread_rotten_1", "AreaPot", "Food", false, 1);
+AddEntityCollideCallback("rotten_apple_1", "AreaPot", "Food2", false, 1);
+AddEntityCollideCallback("rotten_apple_2", "AreaPot", "Food3", false, 1);
+AddEntityCollideCallback("opium_flask_1", "AreaPot", "Food4", false, 1);
+AddEntityCollideCallback("potato_large_1", "AreaPot", "Food5", false, 1);
+AddEntityCollideCallback("potato_small_1", "AreaPot", "Food6", false, 1);
+AddEntityCollideCallback("potato_small_2", "AreaPot", "Food7", false, 1);
+AddEntityCollideCallback("bottle_absinthe_1", "AreaPot", "Food8", false, 1);
+AddEntityCollideCallback("bottle_lithium_bromide_1", "AreaPot", "Food9", false, 1);
+AddEntityCollideCallback("bottle_lithium_bromide_2", "AreaPot", "Food10", false, 1);
+AddEntityCollideCallback("wine01_1", "AreaPot", "Food11", false, 1);
+AddEntityCollideCallback("wine02_1", "AreaPot", "Food12", false, 1);
+AddEntityCollideCallback("wine02_2", "AreaPot", "Food13", false, 1);
+
+//---- BEGIN INTRO ----//
+if(!ScriptDebugOn()) Intro(); //no intro when you are testing
+else AddDebugMessage("Skipping Intro", false);
+
+
+//---- DEBUG ----//
+	if(ScriptDebugOn())
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		SetPlayerLampOil(100.0f);
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		
+	}
+
+//---- BEGIN INTRO ----//
+	if(!ScriptDebugOn()) Intro(); //no intro when you are testing
+	
+ConnectEntities("door_connection",		//Name of connection
+		"secret_lever", 	//Parent entity (Affects)
+		"secret_door",	//Child entity 	(Affected) 
+		false,		//Invert the state sent
+		1, 		//States used (0=both), checked before invertion.
+		"CreateDust");	//callback	
+		
+		ConnectEntities("shelf_connection",		//Name of connection
+		"secret_lever", 	//Parent entity (Affects)
+		"secret_shelf",	//Child entity 	(Affected) 
+		false,		//Invert the state sent
+		1, 		//States used (0=both), checked before invertion.
+		"");	//callback	
+		
+		//SetMoveObjectAngularOffsetArea("secret_shelf", "rotatearea");
+	UnBlockHint("SanityAdd"); UnBlockHint("LanternNoItem"); UnBlockHint("LanternNoOil"); UnBlockHint("LeanHint");
+	UnBlockHint("PushHint"); UnBlockHint("ThrowHint"); UnBlockHint("EntitySlide"); UnBlockHint("EntityLever"); 
+	UnBlockHint("SanityHit");
+}
+
+void Intro()
+{
+	AddDebugMessage("Begin Intro", false);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeOut(0.0f);
+	FadeIn(12.0f);
+	FadeImageTrailTo(1, 2);
+	StartPlayerLookAt("AreaLook01", 10, 100, "");
+    FadeRadialBlurTo(0.10, 2);
+    FadeRadialBlurTo(0.10, 2);
+	AddTimer("1", 3, "IntroTimer");
+	AddTimer("2", 4.5f, "IntroTimer");
+	AddTimer("3", 6.5f, "IntroTimer");
+	AddTimer("4", 9, "IntroTimer");
+	AddTimer("5", 11, "IntroTimer");
+	AddTimer("6", 14, "IntroTimer");
+}
+
+void IntroTimer(string &in asTimer)
+{
+	if(asTimer == "1"){
+		
+		StopPlayerLookAt();
+	SetMessage("Messages", "intro1", 7);
+                 }
+	else if(asTimer == "2"){
+		FadePlayerRollTo(85, 1, 1);                 // "Tilts" the players head
+		SetPlayerCrouching(true);
+	}
+	else if(asTimer == "3"){
+		StartPlayerLookAt("pot_plant_small02_1", 1, 2.0f, "");
+	}
+	else if(asTimer == "4"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("AreaLookSecond", 1, 2.0f, "");
+		
+	}
+	else if(asTimer == "5"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("AreaLook02", 1, 2.0f, "");
+	}
+	else if(asTimer == "6"){
+		StopPlayerLookAt();
+		FadeImageTrailTo(0, 1.0f);
+		FadePlayerRollTo(0, 33, 33);        // Change all settings to defaults
+		FadeRadialBlurTo(0.0, 1);
+		SetPlayerActive(true);
+		SetMessage("Message", "Hint0", 0);
+		AddDebugMessage("End Intro", false);
+		SetPlayerCrouching(false);
+	SetMessage("Messages", "intro2", 7);
+                  }
+}	
+
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+
+////////////////////////////
+
+void Toilet(string &in asParent, string &in asChild, int alState) 
+{
+FadeOut(0.0f);
+SetPlayerActive(false);
+SetMessage("Messages", "toilet", 7);
+AddTimer("ToiletEnding", 7, "ToiletEnding");
+}
+
+void ToiletEnding(string &in asTimer)
+{
+StartCredits("ending_alexander", false, "Ending", "MainCredits1", 69);
+}
+
+void Kitchen(string &in asParent, string &in asChild, int alState) 
+{
+AddQuest("Kitchen", "Kitchen");
+}
+
+void Food(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("bread_rotten_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food2(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("rotten_apple_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food3(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("rotten_apple_2", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food4(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("opium_flask_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food5(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("potato_large_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food6(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("potato_small_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food7(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("potato_small_2", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food8(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("bottle_absinthe_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food9(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("bottle_lithium_bromide_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food10(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("bottle_lithium_bromide_2", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food11(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("wine01_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food12(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("wine02_1", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Food13(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","FoodSE.snt","Player", 0,false);
+SetPropActiveAndFade("wine02_2", false, 2.5f);
+AddLocalVarInt("VarIntFood", 1);
+	Fooddone();
+}
+
+void Fooddone(){
+
+	if(GetLocalVarInt("VarIntFood") == 3){
+		SetLevelDoorLocked("level_wood_2", false);
+                SetEntityActive("AreaPot", false);
+		CompleteQuest("Kitchen", "Kitchen");
+                SetEntityPlayerInteractCallback("level_wood_2", "", false);
+                SetLightVisible("PointLight_1", false);
+                SetMessage("Messages", "done", 6);
+	}
+}
+
+void exit(string &in asEntity)
+{
+SetMessage("Messages", "exit", 6);
+}
+
+void Ending(string &in asParent, string &in asChild, int alState) 
+{
+StartPlayerLookAt("LookExit", 3, 3, "");
+SetPlayerActive(false);
+PlaySoundAtEntity("","Knocking.snt","Player", 0,false);
+AddTimer("Ending2", 3, "Ending2");
+}
+
+void Ending2(string &in asTimer)
+{
+SetMessage("Messages", "arrest", 7);
+AddTimer("Ending3", 7, "Ending3");
+}
+
+void Ending3(string &in asTimer)
+{
+StartCredits("ending_alexander", false, "Ending", "MainCredits2", 69);
+}
+
+void OnEnter()
+{	
+PlayMusic("amb_extra01.ogg", true, 1, 1, 0, false);
+AddEntityCollideCallback("Player", "Ending", "Ending", true, 1);
+if(GetGlobalVarInt("Ending")==1)
+	{
+		SetEntityActive("Ending", true);
+
+	}
+}
+
+void OnLeave()
+{
+}

@@ -1,0 +1,91 @@
+void OnStart()
+{
+	AutoSave();
+	AddEntityCollideCallback("Player", "diefromfall", "diefromfall", false, 0);
+	AddEntityCollideCallback("Player", "goodheathrespawn", "goodheathrespawn", false, 0);
+	SetEntityPlayerInteractCallback("scarenote", "scarenote", true);
+	AddTimer("breaklanternfall", 2.0f, "breaklanternfall");
+	AddUseItemCallback("", "steel_rod", "placerodinpipe", "placerodinpipe", true);
+}
+
+void OnEnter()
+{
+	SetDeathHint("DeathHint", "DHint2");
+	PlaySoundAtEntity("granddaddyclocktickbalcon", "grandfatherticking.snt", "clockinbalcon", 0.0f, false);
+	SetLightVisible("thunderflash", false);
+	StopMusic(1.5f, 0);
+}
+
+void OnLeave()
+{
+
+}
+
+////////////////////////////////////
+////////////////EVENT///////////////
+////////////////////////////////////
+
+void diefromfall(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(0.0f);
+}
+
+void goodheathrespawn(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(100.0f);
+}
+
+void breaklanternfall(string &in asTimer)
+{
+	SetMessage("Messages", "lanternfallbroken", 0.0f);
+	AddQuest("mem5", "memento5");
+	SetLanternDisabled(true);
+	SetLanternActive(false, true);
+	RemoveItem("lantern_1");
+	AutoSave();
+}
+
+/////////////////////////////////////
+////////////////SCARES///////////////
+/////////////////////////////////////
+
+void scarenote(string &in asEntity)
+{
+	SetLightVisible("thunderflash", true);
+	SetEntityActive("clock_man", true);
+	AddTimer("nomoreflashin", 0.2f, "nomoreflashin");
+	PlaySoundAtEntity("thundercrashscawy", "clockman_thunder.snt", "boomclockmansound", 0.0f, false);
+}
+
+void nomoreflashin(string &in asTimer)
+{
+	SetLightVisible("thunderflash", false);
+	SetEntityActive("clock_man", false);
+	AddTimer("nomoreflashintwo", 0.1f, "nomoreflashintwo");
+}
+
+void nomoreflashintwo(string &in asTimer)
+{
+	SetLightVisible("thunderflash", false);
+	SetEntityActive("clock_man", false);
+	AddTimer("nomoreflashinthree", 0.1f, "nomoreflashinthree");
+}
+
+void nomoreflashinthree(string &in asTimer)
+{
+	SetLightVisible("thunderflash", false);
+	SetEntityActive("clock_man", false);
+}
+
+////////////////////////////////////////
+////////////////METAL/ROD///////////////
+////////////////////////////////////////
+
+void placerodinpipe(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("placedbar", true);
+	PlaySoundAtEntity("placebarinpipe", "puzzle_place_jar.snt", "placebarsound_source", 0.0f, false);
+	SetMessage("Messages", "ineedtogobacktotimeroomwait", 0.0f);	
+	SetGlobalVarInt("electricstart", 1);	
+}

@@ -1,0 +1,518 @@
+void OnStart()
+{
+	AutoSave();
+	PlaySoundAtEntity("Player", "03_amb.snt", "Player", 0, false);
+	PlayMusic("21_amb.ogg", true, 1, 1.5f, 0, true);
+	AddEntityCollideCallback("Player", "PaintingScare1", "PaintingScare", true, 1);
+	AddEntityCollideCallback("painting03_dynamic_4", "PaintingCollide", "PaintingFalls", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea1", "Scare1", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea2", "Scare2", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea3", "Scare3", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea4", "Scare4", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea5", "Scare5", true, 1);
+	AddEntityCollideCallback("servant_grunt_2", "GruntGone1", "GruntGone1", true, 1);
+	AddEntityCollideCallback("servant_grunt_3", "GruntGone2", "GruntGone2", true, 1);
+	AddEntityCollideCallback("Player", "DeathArea", "Death", false, 1);
+	AddEntityCollideCallback("Player", "Sounds1", "Sound1", true, 1);
+	AddEntityCollideCallback("Player", "Soundss", "Soundss", true, 1);
+	AddEntityCollideCallback("Player", "Grunt1", "PatrolGrunt1", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_11", "ShitScare", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_10", "DanielScare", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_13", "GruntDoorBreaks", true, 1);
+	SetEntityCallbackFunc("cellarkey", "OnPickup333");
+	AddUseItemCallback("key_1", "key_1", "mansion_3", "UsedKeyOnDoor", true);
+	AddUseItemCallback("", "crowbar_1", "CrowbarUse", "UsedCrowbar", true);
+	SetEntityCallbackFunc("crowbar_1", "OnPickup");
+	SetEntityPlayerInteractCallback("ScriptArea_1", "ScriptInteract", false);
+	SetEntityPlayerInteractCallback("ScriptArea_9", "CantReachIt", false);
+	SetEntityPlayerInteractCallback("brick1", "DoorOpens", true);
+	SetEntityPlayerInteractCallback("mansion_17", "LightningScare", true);
+	AddUseItemCallback("cellarkey", "cellarkey", "level_celler_1", "UsedKeyOnLevelDoor", true);
+	AddEntityCollideCallback("Player", "PaintingRoomCheck", "PaintingRoomCheckPoint", true, 1);
+	AddTimer("T1", 12, "Crawl");
+	AddTimer("T1", 36, "Wings");
+}
+void PaintingRoomCheckPoint(string &in asParent, string &in asChild, int alState) 
+{ 
+	CheckPoint ("PaintingRoomCheckPoint", "PlayerStartArea_3", "Happening", "", ""); 
+} 
+void Happening(string &in asName, int alCount) 
+{ 
+		PlayMusic("21_amb.ogg", true, 1, 1.5f, 0, true);
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerSanity(55);
+		FadeRadialBlurTo(0, 3);
+		FadeImageTrailTo(0, 2);
+		SetEntityActive("servant_grunt_2", true);
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_6", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_7", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_8", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_9", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_10", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_11", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_12", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_13", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_14", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_15", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_16", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_17", 0, "");
+		AddTimer("T1", 1.1, "Scared2");
+		AddTimer("T2", 3.5, "Scared2");
+		AddTimer("T3", 7.5, "Scared2");
+		AddTimer("T4", 11.6, "Scared2");
+}
+void LightningScare (string &in asEntity)
+{
+	AddTimer("T1", 1.2, "Lightning");
+	AddTimer("T2", 2.4, "Lightning");
+}
+void Lightning(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		PlaySoundAtEntity("Player", "scare_wood_creak_scuf", "Player", 0, false);
+	}
+	else if (x == "T2")
+	{
+		GiveSanityDamage(10.0f, true);
+		PlaySoundAtEntity("Player", "scare_wall_crawl", "Player", 0, false);
+		AddPropForce("mansion_17", 0, 500, 0, "world");
+	}
+}
+void PaintingFalls (string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_ghost.ps", "ScriptArea_12", false);
+	GiveSanityDamage(10.0f, true);
+}
+void PaintingScare (string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("painting03_dynamic_4", 0, 150, 170, "world");
+}
+void UsedKeyOnLevelDoor(string &in asItem, string &in asEntity)
+{
+SetLevelDoorLocked("level_celler_1", false);
+PlaySoundAtEntity("", "unlock_door.snt", "level_celler_1", 0, false);
+RemoveItem("cellarkey");
+}
+	void DoorOpens(string &in asEntity)
+{
+	SetEntityActive("brick1", false);
+	SetEntityActive("ScriptArea_10", true);
+	PlaySoundAtEntity("Player", "joint_break_metal.snt", "Player", 0, false);
+	AddTimer("T1", 1.0, "Opendoor");
+	AddTimer("T2", 3.5, "Opendoor");
+}
+void Opendoor(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		PlayMusic("21_puzzle_door.ogg", false, 0.7, 0.1, 10, false);
+		SetSwingDoorLocked("door1", false, true);
+		PlaySoundAtEntity("", "unlock_door.snt", "door1", 0.0f, true);	
+				GiveSanityBoostSmall();	
+	}
+	else if (x == "T2")
+	{
+		
+	}
+}
+void ScriptInteract (string &in asEntity)
+{
+	SetEntityActive("block_box_1", false);
+}
+void CantReachIt (string &in asEntity)
+{
+	SetMessage("Messages", "CantReachIt", 0);
+	SetEntityActive("ScriptArea_9", false);
+}
+	void OnPickup333(string &in asEntity, string &in type)
+{
+	SetEntityActive("ScriptArea_13", true);
+}
+	void OnPickup(string &in asEntity, string &in type)
+{
+	SetEntityActive("CrowbarUse", true);
+	SetEntityActive("ExamineArea_1", false);
+}
+	void UsedCrowbar(string &in asItem, string &in asEntity)
+ {
+	SetPlayerActive(false);
+	FadeOut(1);
+	RemoveItem("crowbar_1");
+	AddTimer("T1", 1.1, "PaintingOff");
+	AddTimer("T2", 3.5, "PaintingOff");
+	AddTimer("T3", 4.3, "PaintingOff");
+	AddTimer("T4", 6.5, "PaintingOff");
+ }
+	void PaintingOff(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetEntityActive("painting03_dynamic_2", false);
+		SetEntityActive("ExamineArea_1", false);
+		SetEntityActive("CrowbarUse", false);
+		SetEntityInteractionDisabled("painting03_dynamic_3", true);
+		PlaySoundAtEntity("Player", "joint_bend_door", "Player", 0, false);
+	}
+	else if (x == "T2")
+	{
+		SetEntityActive("mansion_7", false);
+		SetEntityActive("mansion_1", false);
+		SetEntityActive("mansion_10", true);
+		SetEntityActive("mansion_9", true);
+		PlaySoundAtEntity("Player", "joint_break_metal.snt", "Player", 0, false);
+		SetEntityActive("painting03_dynamic_3", true);
+	}
+	else if (x == "T3")
+	{
+		SetPlayerActive(true);
+		FadeIn(1);
+	}
+	else if (x == "T4")
+	{
+		SetEntityActive("servant_grunt_2", true);
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_6", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_7", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_8", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_9", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_10", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_11", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_12", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_13", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_14", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_15", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_16", 0, "");
+		AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_17", 0, "");
+	AddTimer("T1", 1.1, "Scared2");
+	AddTimer("T2", 3.5, "Scared2");
+	AddTimer("T3", 7.5, "Scared2");
+	AddTimer("T4", 11.6, "Scared2");
+	}
+}
+void Scared2(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		PlaySoundAtEntity("", "react_scared.snt", "Player", 0, false);
+	}
+	else if (x == "T2")
+	{
+		PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0, false);
+	}
+	else if (x == "T3")
+	{
+		PlaySoundAtEntity("Player", "react_breath_slow.snt", "Player", 0, false);
+	}
+}
+	void GruntGone1 (string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_grunt_2", false);
+}
+	void GruntGone2 (string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_grunt_3", false);
+}
+	void Sound1 (string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "03_amb_library.snt", "Player", 0, false);
+}
+	void PatrolGrunt1 (string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("mansion_18", true);
+	SetEntityActive("mansion_16", false);
+	SetEntityActive("servant_grunt_3", true);
+	AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_18", 0, "");
+		AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_19", 0, "");
+		AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_20", 0, "");
+		AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_21", 0, "");
+		AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_22", 0, "");
+		AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_23", 0, "");
+		AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_24", 0, "");
+		AddEnemyPatrolNode("servant_grunt_3", "PathNodeArea_25", 0, "");
+	AddTimer("T1", 1.1, "Scared");
+	AddTimer("T2", 3.5, "Scared");
+	AddTimer("T3", 7.5, "Scared");
+	AddTimer("T4", 11.6, "Scared");
+}
+void Scared(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		PlaySoundAtEntity("Player", "react_pant.snt", "Player", 0, false);
+	}
+	else if (x == "T2")
+	{
+		PlaySoundAtEntity("Player", "react_scared.snt", "Player", 0, false);
+	}
+	else if (x == "T3")
+	{
+		PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0, false);
+	}
+	else if (x == "T4")
+	{
+		PlaySoundAtEntity("Player", "react_breath_slow.snt", "Player", 0, false);
+	}
+}
+void Soundss (string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "general_birds_flee.snt", "Player", 0, false);
+	AddTimer("T1", 4, "Soundsss");
+}
+void Soundsss(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		PlaySoundAtEntity("", "scare_loon.snt", "Player", 0, false);
+	}
+}
+	void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("mansion_3", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", "mansion_3", 0, false);
+	RemoveItem("key_1");
+}
+	void Ambience(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		AddTimer("T1", 15, "Ambience");
+		PlaySoundAtEntity("Player", "03_amb.snt", "Player", 0, false);
+	}
+}
+	void Wings(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		AddTimer("T1", 36, "Wings");
+		PlaySoundAtEntity("Player", "scare_wings.snt", "Player", 0, false);
+	}
+}
+	void Crawl(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		AddTimer("T1", 12, "Scared");
+		PlaySoundAtEntity("Player", "scare_wall_crawl.snt", "Player", 0, false);
+	}
+}
+	void Scare1 (string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0.6);
+	PlaySoundAtEntity("Sound1", "scare_steps_big.snt", "Sound1", 1, true);
+	AddTimer("T1", 1.9, "Steps");
+	AddTimer("T2", 3.2, "Steps");
+	AddTimer("T3", 4.5, "Steps");
+	AddTimer("T4", 5.9, "Steps");
+	AddTimer("T5", 7.2, "Steps");
+	AddTimer("T6", 8.0, "Steps");
+}
+	void Scare2 (string &in asParent, string &in asChild, int alState)
+{
+	FadeImageTrailTo(2.5, 1);
+	AddPropForce("mansion_2", 1500, 0, 0, "world");
+	AddTimer("T1", 0.6, "Wind");
+	AddTimer("T2", 1.2, "Wind");
+	AddTimer("T3", 2.6, "Wind");
+}
+	void Scare3 (string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("grunt/amb_idle01.ogg", false, 1, 0.1, 10, false);
+	SetEntityActive("ScareArea3", false);
+}
+	void Scare4 (string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "general_rock_rumble.snt", "Player", 0, false);
+	StartScreenShake(0.1, 5, 2.5, 5);
+}
+void Scare5 (string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("grunt/amb_idle02.ogg", false, 1, 0.1, 10, false);
+	SetEntityActive("ScareArea5", false);
+}
+void ShitScare (string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("Player", "scare_tingeling.snt", "Player", 1, true);
+	PlayMusic("grunt/amb_idle01.ogg", false, 1, 0.1, 10, false);
+}
+void GruntDoorBreaks (string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("mansion_11", false);	
+}
+void DanielScare (string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0.5);
+	SetEntityActive("Pointlight_11", true);
+	StartPlayerLookAt("enemy_suitor_malo_1", 2, 2, "");
+	PlaySoundAtEntity("Player", "scare_tingeling.snt", "Player", 1, true);
+	PlayMusic("scare_whine_loop3.ogg", false, 1, 0.1, 10, false);
+	StartEffectFlash(0.1, 1, 0.25);
+	AddTimer("T1", 0.15, "Daniel");
+	AddTimer("T2", 5.9, "Daniel");
+	AddTimer("T3", 6, "Daniel");
+	AddTimer("T4", 4.5, "Daniel");
+}
+void Daniel(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetEntityActive("enemy_suitor_malo_1", true);
+	}
+	else if (x == "T2")
+	{
+		StartEffectFlash(0.1, 1, 0.25);
+	}
+	else if (x == "T3")
+	{
+		SetEntityActive("enemy_suitor_malo_1", false);
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+		SetEntityActive("Pointlight_11", false);
+		SetPlayerMoveSpeedMul(1);
+	}
+	else if (x == "T4")
+	{
+		ShowEnemyPlayerPosition("enemy_suitor_malo_1");
+	}
+}
+void Death (string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerHealth(0);
+	CheckPoint ("FirstCheckpoint", "PlayerStartArea_2", "Music", "", "");
+}
+	void Music(string &in asName, int alCount)
+{
+	PlayMusic("21_amb.ogg", true, 1, 1.5f, 0, true);
+}	
+	void Wind(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ps6", false);
+		PlaySoundAtEntity("", "03_in_a_bottle.snt", "Player", 0, false);
+	}
+	else if (x == "T2")
+	{
+		AddPropForce("chandelier_simple_short_3", 0, 0, 750, "world");
+	}
+	else if (x == "T3")
+	{
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+		FadeImageTrailTo(0, 3);
+	}
+}
+	void Steps(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		CreateParticleSystemAtEntity("", "ps_dust_falling_small_thin.ps", "ps1", false);
+	}
+	else if (x == "T2")
+	{
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+		CreateParticleSystemAtEntity("", "ps_dust_falling_small_thin.ps", "ps2", false);
+	}
+	else if (x == "T3")
+	{
+		CreateParticleSystemAtEntity("", "ps_dust_falling_small_thin.ps", "ps3", false);
+	}
+	else if (x == "T4")
+	{
+		CreateParticleSystemAtEntity("", "ps_dust_falling_small_thin.ps", "ps4", false);
+	}
+	else if (x == "T5")
+	{
+		PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+		CreateParticleSystemAtEntity("", "ps_dust_falling_small_thin.ps", "ps5", false);
+	}
+	else if (x == "T6")
+	{
+		SetPlayerMoveSpeedMul(1);
+	}
+}
+void Itwillnotbudge(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("mansion_5") == true)
+    {
+ 
+        SetMessage("Messages", "Itwillnotbudge", 0);
+ 
+    }
+}
+void Lockedfirmly(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("mansion_19") == true)
+    {
+ 
+        SetMessage("Messages", "Lockedfirmly", 0);
+ 
+    }
+}
+void Locked1(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("mansion_3") == true)
+    {
+ 
+        SetMessage("Messages", "Locked1", 0);
+ 
+    }
+}
+void Lockedhaha(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("mansion_11") == true)
+    {
+ 
+        SetMessage("Messages", "Lockedhaha", 0);
+ 
+    }
+}
+void WontBudge(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("mansion_15") == true)
+    {
+ 
+        SetMessage("Messages", "WontBudge", 0);
+ 
+    }
+}
+void PaintingInteract(string &in entity)
+  
+{
+    {
+ 
+        SetMessage("Messages", "PaintingInteract", 0);
+ 
+    }
+}
+void ButtonLock(string &in entity)
+  
+{
+	if(GetSwingDoorLocked("door1") == true)
+    {
+ 
+        SetMessage("Messages", "ButtonLock", 0);
+ 
+    }
+}
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	StopMusic(2,0);
+}

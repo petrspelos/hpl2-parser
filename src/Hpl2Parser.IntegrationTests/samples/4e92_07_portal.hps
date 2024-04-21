@@ -1,0 +1,775 @@
+void OnEnter()
+{
+	if(ScriptDebugOn())
+	{
+		SetGlobalVarInt("FastSeekerAchievement", 1);
+		SetGlobalVarInt("HealthAchievement", 1);
+		SetGlobalVarInt("ItemsAchievement", 1);
+		SetGlobalVarInt("NoDeathAchievement", 1);
+		//SetGlobalVarInt("StatuesAchievement", 1);
+		SetGlobalVarInt("WardrobeAchievement", 1);
+		SetGlobalVarInt("EnemiesAchievement", 1);
+		SetGlobalVarInt("PuzzleAchievement", 1);
+		//SetGlobalVarInt("NoPuzzleAchievement", 1);
+		SetGlobalVarInt("NoStatuesAchievement", 1);
+		SetGlobalVarInt("SanityAchievement", 1);
+		SetGlobalVarInt("SlimesAchievement", 1);
+		SetGlobalVarInt("LightsAchievement", 1);
+	}
+	
+	PreloadParticleSystem("ps_orb_shockwave.ps");
+	
+	PreloadSound("07_strange_youfool.snt");
+	PreloadSound("07_strange_soulshallbemine.snt");
+	PreloadSound("07_orb.snt");
+	PreloadSound("07_orb_spark.snt");
+	PreloadSound("07_giant_orb_broke.snt");
+	PreloadSound("07_amb_2.snt");
+	PreloadSound("25_guardian_slime_appear.snt");
+
+	SetMapDisplayNameEntry("Portal");
+	
+	SetupLoadScreen("LoadingHints", "26To27", 0, "game_loading_water.jpg");	
+	
+	if(GetGlobalVarInt("HealthAchievement") == 1)
+		AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	if(GetGlobalVarInt("EnemiesAchievement") == 1)
+	{
+		SetEnemySanityDecreaseActive("water_lurker_1", false);
+		SetEnemySanityDecreaseActive("water_lurker_2", false);
+		SetEnemySanityDecreaseActive("water_lurker_3", false);
+		SetEnemySanityDecreaseActive("water_lurker_4", false);
+		SetEnemySanityDecreaseActive("water_lurker_5", false);
+		SetEnemySanityDecreaseActive("water_lurker_6", false);
+	}
+}
+
+void OnLeave()
+{
+	RemoveTimer("addhealth");
+	RemoveTimer("checkhealth");
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+}
+
+void OnStart()
+{
+	CheckPoint ("returntochurch", "PlayerStartArea_1", "CPReturnToChurch", "DeathHints", "OrbCompleted");
+	
+	AddUseItemCallback("KnifeOrbPiece", "ceremony_knife_1", "orbpiece_1", "UsedKnifeOnOrb", true);
+	AddUseItemCallback("KnifeOrbPiece", "ceremony_knife_1", "orbpiece_2", "UsedKnifeOnOrb", true);
+	AddUseItemCallback("KnifeOrbPiece", "ceremony_knife_1", "orbpiece_3", "UsedKnifeOnOrb", true);
+	AddUseItemCallback("KnifeOrbPiece", "ceremony_knife_1", "orbpiece_4", "UsedKnifeOnOrb", true);
+	AddUseItemCallback("KnifeOrbPiece", "ceremony_knife_1", "orbpiece_5", "UsedKnifeOnOrb", true);
+	AddUseItemCallback("KnifeOrbPiece", "ceremony_knife_1", "orbpiece_6", "UsedKnifeOnOrb", true);
+	
+	SetSanityDrainDisabled(true);
+	SetPlayerMoveSpeedMul(0.1f);
+	SetPlayerRunSpeedMul(0.1f);
+	SetPlayerLookSpeedMul(0.1f);
+	
+	SetMessage("62", "Jack", 5.0f);
+	
+	PlayMusic("07_amb.ogg", true, 1.0f, 1.0f, 0, false);
+	
+	AddTimer("part1", 5.7f, "BeginSetup");
+	AddTimer("panteffect", 6.2f, "TimerPlayerReactions");
+	AddTimer("breatheffect", 12.7f, "TimerPlayerReactions");
+	
+	SetLightVisible("hub1_light_1", false);
+	SetLightVisible("hub1_light_2", false);
+	SetLightVisible("hub1_light_3", false);
+	SetLightVisible("hub1_light_4", false);
+	SetLightVisible("hub1_light_5", false);
+	SetLightVisible("hub1_light_6", false);
+	SetLightVisible("WorldBoxLightBad", false);
+	
+	FadeOut(0.0f);
+	
+	FadeIn(5.0f);
+	
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	
+	if(ScriptDebugOn())
+	{
+		//if(HasItem("lantern_1") == false) GiveItemFromFile("lantern_1", "lantern.ent");
+		//if(HasItem("hollow_needle_1") == false) GiveItemFromFile("hollow_needle_1", "hollow_needle.ent");
+		if(HasItem("ceremony_knife_1") == false) GiveItemFromFile("ceremony_knife_1", "ceremony_knife.ent");
+		//SetGlobalVarInt("PianoQuestFailed", 1);
+		//SetGlobalVarInt("LabQuestFailed", 1);
+		//SetGlobalVarInt("LibraryQuestFailed", 1);
+		//SetGlobalVarInt("WineQuestFailed", 1);
+		//SetGlobalVarInt("StorageQuestFailed", 1);
+	}
+	
+	for(int i=1; i<=6; i++)
+		SetEntityPlayerInteractCallback("orbpiece_" + i, "PlayerTouchOrbPiece", false);
+}
+
+void PlayerTouchOrbPiece(string asEntity)
+{
+	GivePlayerDamage(15.0f, "BloodSplat", true, false);
+	PlayGuiSound("ui_fire_damage.ogg", 0.9f);
+	if(QuestIsAdded("DestroyOrbPieces") == false && QuestIsCompleted("DestroyOrbPieces") == false)
+		SetMessage("Jack", "TouchOrbPiece", 7.5f);
+}
+
+void TimerHealthAchievement(string &in asTimer)
+{
+	if(asTimer == "addhealth")
+	{
+		if(GetPlayerHealth() <= 98.0f)
+		{
+			AddPlayerHealth(2.0f);
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "checkhealth")
+	{
+		if(GetPlayerHealth() > 98.0f)
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "pausehealth")
+	{
+		RemoveTimer("addhealth");
+		RemoveTimer("checkhealth");
+	}
+}
+
+void CPReturnToChurch(string &in asName, int alCount)
+{
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	if(GetGlobalVarInt("NoDeathAchievement") == 1)
+		SetPlayerHealth(100.1f);
+	if(GetGlobalVarInt("SanityAchievement") == 1)
+		SetPlayerSanity(100.1f);
+	StopMusic(0.1f, 10);
+	StopMusic(0.1f, 0);
+	SetGlobalVarInt("PortalBattleFail", 1);
+	RemoveTimer("firstloop");
+	RemoveTimer("secondloop");
+	RemoveTimer("thirdloop");
+	RemoveTimer("fourthloop");
+	RemoveTimer("fifthloop");
+	RemoveTimer("sixthloop");
+	RemoveTimer("seventhloop");
+	RemoveTimer("eighthloop");
+	RemoveTimer("ninethloop");
+	RemoveTimer("shallbemine");
+		
+	SetEntityActive("waterlurker_1", false);
+	SetEntityActive("waterlurker_2", false);
+	SetEntityActive("waterlurker_3", false);
+	SetEntityActive("waterlurker_4", false);
+	SetEntityActive("waterlurker_5", false);
+	SetEntityActive("waterlurker_6", false);
+	
+	SetLightVisible("WorldBoxLightBad", true);
+	
+	CompleteQuest("DestroyOrbPieces", "DestroyOrbPieces");
+	
+	ChangeMap("07_church.map", "PlayerStartArea_4", "29_hole_open", "");
+}
+
+void UsedKnifeOnOrb(string &in asItem, string &in asEntity)
+{
+	SetEntityPlayerInteractCallback(asEntity, "", false);
+	
+	AddLocalVarInt("OrbPiecesDestroy", 1);
+
+	if(asEntity == "orbpiece_2") 
+	{
+		SetEntityActive("waterlurker_1", false);
+		SetEntityActive("waterlurker_2", true);
+		SetEntityActive("waterlurker_3", false);
+		SetEntityActive("waterlurker_4", false);
+		SetEntityActive("waterlurker_5", false);
+		SetEntityActive("waterlurker_6", false);
+	}
+	if(asEntity == "orbpiece_3") 
+	{
+		SetEntityActive("waterlurker_1", false);
+		SetEntityActive("waterlurker_2", false);
+		SetEntityActive("waterlurker_3", true);
+		SetEntityActive("waterlurker_4", false);
+		SetEntityActive("waterlurker_5", false);
+		SetEntityActive("waterlurker_6", false);
+	}
+	if(asEntity == "orbpiece_4") 
+	{
+		SetEntityActive("waterlurker_1", false);
+		SetEntityActive("waterlurker_2", false);
+		SetEntityActive("waterlurker_3", false);
+		SetEntityActive("waterlurker_4", true);
+		SetEntityActive("waterlurker_5", false);
+		SetEntityActive("waterlurker_6", false);
+	}
+	if(asEntity == "orbpiece_5") 
+	{
+		SetEntityActive("waterlurker_1", false);
+		SetEntityActive("waterlurker_2", false);
+		SetEntityActive("waterlurker_3", false);
+		SetEntityActive("waterlurker_4", false);
+		SetEntityActive("waterlurker_5", true);
+		SetEntityActive("waterlurker_6", false);
+	}
+	if(asEntity == "orbpiece_6")
+	{
+		SetEntityActive("waterlurker_1", false);
+		SetEntityActive("waterlurker_2", false);
+		SetEntityActive("waterlurker_3", false);
+		SetEntityActive("waterlurker_4", false);
+		SetEntityActive("waterlurker_5", false);
+		SetEntityActive("waterlurker_6", true);
+	}
+
+	StartScreenShake(0.1f, 3.5f, 0, 0.1f);
+	SetRadialBlurStartDist(0.2f);
+	FadeRadialBlurTo(0.07, 0.015f);
+	AddTimer("scare", 3.5f, "TimerPlayerReactions");
+	AddTimer("breatheffect", 7.0f, "TimerPlayerReactions");
+	
+	PlaySoundAtEntity("GuardHowl","25_guardian_activated.snt", "Player", 0, false);
+	PlaySoundAtEntity("KnifeOnOrb","02_attack_knife.snt", asEntity, 0, false);
+	
+	PlayerLook(asEntity, "reducespeed", 2.0f, 4.0f);
+	
+	AddTimer(asEntity, 3.5f, "TimerDestroyOrbPiece");
+	
+	if(GetLocalVarInt("OrbPiecesDestroy") == 6)
+	{
+		RemoveTimer("firstloop");
+		RemoveTimer("secondloop");
+		RemoveTimer("thirdloop");
+		RemoveTimer("fourthloop");
+		RemoveTimer("fifthloop");
+		RemoveTimer("sixthloop");
+		RemoveTimer("seventhloop");
+		RemoveTimer("eighthloop");
+		RemoveTimer("ninethloop");
+		RemoveTimer("shallbemine");
+		
+		SetEntityActive("waterlurker_1", false);
+		SetEntityActive("waterlurker_2", false);
+		SetEntityActive("waterlurker_3", false);
+		SetEntityActive("waterlurker_4", false);
+		SetEntityActive("waterlurker_5", false);
+		SetEntityActive("waterlurker_6", false);
+		
+		SetGlobalVarInt("PortalBattleSuccess", 1);
+		
+		CompleteQuest("DestroyOrbPieces", "DestroyOrbPieces");
+	}
+}
+
+void TimerDestroyOrbPiece(string &in asTimer)
+{
+	GivePlayerDamage(10.0f, "BloodSplat", false, false);
+	SetPropActiveAndFade(asTimer, false, 2.0f);
+	StartScreenShake(0.2f, 5.0f, 0.5f, 3);
+	PlaySoundAtEntity("ExplodeOrb","27_orb_implode.snt", asTimer, 0, false);
+	CreateParticleSystemAtEntity("PSOrbShockwave", "ps_orb_shockwave.ps", asTimer, false);
+	if(GetLocalVarInt("OrbPiecesDestroy") == 1)
+	{
+		AddTimer("part4", 5.0f, "BeginSetup");
+	}
+	if(GetLocalVarInt("OrbPiecesDestroy") == 6)
+	{
+		GiveSanityBoost();
+		if(GetGlobalVarInt("ShooterAchievement") == 1)
+		{
+			AddPlayerHealth(50.0f);
+			AddPlayerSanity(50.0f);
+		}
+		SetPropActiveAndFade("orbgiant_1", false, 10.0f);
+		DestroyParticleSystem("giantorb_particle_1");
+		DestroyParticleSystem("giantorb_particle_2");
+		StopSound("giantorb_sound_1", 8.0f);
+		StopSound("giantorb_sound_2", 8.0f);
+		StopSound("giantorb_sound_3", 8.0f);
+		AddTimer("giantorbbroke", 6.0f, "TimerGiantOrbBroke");
+		PlayMusic("26_event_agrippa_head.ogg", false, 0.8f, 1.0f, 10, false);
+		AddTimer("loadchurch", 16.0f, "TimerLoadChurch");
+	}
+	if(asTimer == "orbpiece_1")
+	{
+		StopSound("orbpiece1sound", 0.1f);
+		FadeLightTo("hub1_light_1", 0, 0, 0, 0, -1, 2.0f);
+		for(int y=1; y<=12; y++) SetLampLit("hub1_lamp_" + y, false, true);
+		for(int q=1; q<=22; q++) DestroyParticleSystem("hub1_particle_" + q);
+		for(int j=1; j<=5; j++)
+		{
+			SetPropActiveAndFade("slime_" + j, true, 2);
+			if(GetGlobalVarInt("SlimesAchievement") == 0)
+				SetEntityActive("SlimeDamageArea_" + j, true);
+		}
+	}
+	if(asTimer == "orbpiece_2")
+	{
+		StopSound("orbpiece2sound", 0.1f);
+		FadeLightTo("hub1_light_2", 0, 0, 0, 0, -1, 2.0f);
+		for(int y=13; y<=24; y++) SetLampLit("hub1_lamp_" + y, false, true);
+		for(int q=23; q<=44; q++) DestroyParticleSystem("hub1_particle_" + q);
+		for(int s=133; s<=136; s++) DestroyParticleSystem("hub1_particle_" + s);
+		for(int j=6; j<=10; j++)
+		{
+			SetPropActiveAndFade("slime_" + j, true, 2);
+			if(GetGlobalVarInt("SlimesAchievement") == 0)
+				SetEntityActive("SlimeDamageArea_" + j, true);
+		}
+	}
+	if(asTimer == "orbpiece_3")
+	{
+		StopSound("orbpiece3sound", 0.1f);
+		FadeLightTo("hub1_light_3", 0, 0, 0, 0, -1, 2.0f);
+		for(int y=25; y<=36; y++) SetLampLit("hub1_lamp_" + y, false, true);
+		for(int q=45; q<=66; q++) DestroyParticleSystem("hub1_particle_" + q);
+		for(int s=137; s<=142; s++) DestroyParticleSystem("hub1_particle_" + s);
+		for(int j=11; j<=16; j++)
+		{
+			SetPropActiveAndFade("slime_" + j, true, 2);
+			if(GetGlobalVarInt("SlimesAchievement") == 0)
+				SetEntityActive("SlimeDamageArea_" + j, true);
+		}
+	}
+	if(asTimer == "orbpiece_4")
+	{
+		StopSound("orbpiece4sound", 0.1f);
+		FadeLightTo("hub1_light_4", 0, 0, 0, 0, -1, 2.0f);
+		for(int y=37; y<=48; y++) SetLampLit("hub1_lamp_" + y, false, true);
+		for(int q=67; q<=88; q++) DestroyParticleSystem("hub1_particle_" + q);
+		for(int s=143; s<=147; s++) DestroyParticleSystem("hub1_particle_" + s);
+		for(int j=17; j<=22; j++)
+		{
+			SetPropActiveAndFade("slime_" + j, true, 2);
+			if(GetGlobalVarInt("SlimesAchievement") == 0)
+				SetEntityActive("SlimeDamageArea_" + j, true);
+		}
+	}
+	if(asTimer == "orbpiece_5")
+	{
+		StopSound("orbpiece5sound", 0.1f);
+		FadeLightTo("hub1_light_5", 0, 0, 0, 0, -1, 2.0f);
+		for(int y=49; y<=60; y++) SetLampLit("hub1_lamp_" + y, false, true);
+		for(int q=89; q<=110; q++) DestroyParticleSystem("hub1_particle_" + q);
+		for(int s=148; s<=156; s++) DestroyParticleSystem("hub1_particle_" + s);
+		for(int j=23; j<=29; j++)
+		{
+			SetPropActiveAndFade("slime_" + j, true, 2);
+			if(GetGlobalVarInt("SlimesAchievement") == 0)
+				SetEntityActive("SlimeDamageArea_" + j, true);
+		}
+	}
+	if(asTimer == "orbpiece_6")
+	{
+		StopSound("orbpiece6sound", 0.1f);
+		FadeLightTo("hub1_light_6", 0, 0, 0, 0, -1, 2.0f);
+		for(int y=61; y<=72; y++) SetLampLit("hub1_lamp_" + y, false, true);
+		for(int q=111; q<=132; q++) DestroyParticleSystem("hub1_particle_" + q);
+		for(int s=157; s<=163; s++) DestroyParticleSystem("hub1_particle_" + s);
+		for(int j=30; j<=36; j++)
+		{
+			SetPropActiveAndFade("slime_" + j, true, 2);
+			if(GetGlobalVarInt("SlimesAchievement") == 0)
+				SetEntityActive("SlimeDamageArea_" + j, true);
+		}
+	}
+}
+
+void TimerGiantOrbBroke(string &in asTimer)
+{
+	PlaySoundAtEntity("giantorbbrokesound", "07_giant_orb_broke.snt", "AreaGiantOrbSound", 0, false);
+	PlayerReact("", 0.01f, true, false);
+	SetPlayerMoveSpeedMul(0.2f);
+	SetPlayerRunSpeedMul(0.2f);
+	//SetPlayerLookSpeedMul(0.2f);
+}
+
+void TimerLoadChurch(string &in asTimer)
+{
+	SetInventoryDisabled(true);
+	ChangeMap("07_church.map", "PlayerStartArea_4", "29_hole_open", "");
+}
+
+void BeginSetup(string &in asTimer)
+{
+	if(asTimer == "part1")
+	{
+		SetMessage("Strange", "YouFool", 5.0f);
+		PlayGuiSound("07_strange_youfool", 1.0f);
+		
+		CreateParticleSystemAtEntity("splash1effect", "enemy/waterlurker_run_splash.ps", "AreaLookAt_1", false);
+		PlaySoundAtEntity("splash1", "impact_water_high.snt", "AreaLookAt_1", 0, false);
+		StartPlayerLookAt("AreaLookAt_1", 3.0f, 3.0f, "");
+		
+		AddTimer("resetspeedmul", 5.5f, "TimerStopLook");
+		AddTimer("part2", 5.0f, "BeginSetup");
+	}
+	if(asTimer == "part2")
+	{
+		CreateParticleSystemAtEntity("splash2effect", "enemy/waterlurker_run_splash.ps", "AreaLookAt_1", false);
+		PlaySoundAtEntity("splash2", "impact_water_high.snt", "AreaLookAt_1", 0, false);
+		
+		SetMessage("Jack", "63", 4.0f);
+		AddTimer("part3", 3.0f, "BeginSetup");
+	}
+	if(asTimer == "part3")
+	{
+		//ACTIVE WATERLURKER//
+		SetEntityActive("waterlurker_1", true);
+		
+		StartScreenShake(0.1f, RandFloat(0.15f,0.6f), 0, 0.1);
+		
+		HubSetup();
+	}
+	if(asTimer == "part4")
+	{
+		AddQuest("DestroyOrbPieces", "DestroyOrbPieces");
+		SetMessage("Jack", "64", 9.0f);
+		
+		AddTimer("firstloop", 10.0f, "TimerTimeLeft");
+		
+		GiveSanityBoostSmall();
+		if(GetGlobalVarInt("ShooterAchievement") == 1)
+		{
+			AddPlayerHealth(25.0f);
+			AddPlayerSanity(25.0f);
+		}
+	}
+}
+
+void TimerTimeLeft(string &in asTimer)
+{
+	if(asTimer == "firstloop")
+	{
+		AddTimer("secondloop", 60.0f, "TimerTimeLeft");
+		SetMessage("Hints", "FourMinutesLeft", 6.0f);
+		
+		PlayMusic("07_countdown01.ogg", true, 1.0f, 1.0f, 0, false);
+		
+		StartScreenShake(0.05f, 4.0f, 1.0f, 3.0f);
+		PlayGuiSound("guardian_ontop", 0.8f);
+	}
+	if(asTimer == "secondloop")
+	{
+		AddTimer("thirdloop", 60.0f, "TimerTimeLeft");
+		SetMessage("Hints", "ThreeMinutesLeft", 6.0f);
+		
+		PlayMusic("07_countdown02.ogg", true, 1.0f, 1.0f, 0, false);
+		
+		StartScreenShake(0.075f, 4.0f, 1.0f, 3.0f);
+		PlayGuiSound("29_amb_guard", 1.0f);
+	}
+	if(asTimer == "thirdloop")
+	{
+		AddTimer("fourthloop", 60.0f, "TimerTimeLeft");
+		SetMessage("Hints", "TwoMinutesLeft", 6.0f);
+		
+		PlayMusic("07_countdown03.ogg", true, 1.0f, 1.0f, 0, false);
+		
+		StartScreenShake(0.1f, 4.0f, 1.0f, 3.0f);
+		PlayGuiSound("29_amb_guard", 1.0f);
+	}
+	if(asTimer == "fourthloop")
+	{
+		AddTimer("fifthloop", 30.0f, "TimerTimeLeft");
+		SetMessage("Hints", "OneMinuteLeft", 6.0f);
+		
+		PlayMusic("07_countdown04.ogg", true, 1.0f, 1.0f, 10, false);
+		
+		StartScreenShake(0.101f, 4.0f, 1.0f, 3.0f);
+		PlayGuiSound("guardian_ontop", 1.0f);
+		
+		AddTimer("shallbemine", 10.0f, "TimerAlexTalk");
+	}
+	if(asTimer == "fifthloop")
+	{
+		AddTimer("sixthloop", 20.0f, "TimerTimeLeft");
+		SetMessage("Hints", "ThirtySecondsLeft", 6.0f);
+		
+		StartScreenShake(0.109f, 4.0f, 1.0f, 3.0f);
+		PlayGuiSound("guardian_distant2", 0.8f);
+	}
+	if(asTimer == "sixthloop")
+	{
+		AddTimer("seventhloop", 5.0f, "TimerTimeLeft");
+		SetMessage("Hints", "TenSecondsLeft", 6.0f);
+		
+		StartScreenShake(0.11f, 4.0f, 1.0f, 3.0f);
+		PlayGuiSound("guardian_activated2.ogg", 1.0f);
+	}
+	if(asTimer == "seventhloop")
+	{
+		AddTimer("eighthloop", 5.0f, "TimerTimeLeft");
+		SetMessage("Hints", "FiveSecondsLeft", 6.0f);
+		
+		StartScreenShake(0.125f, 7.0f, 1.0f, 3.0f);
+		PlayGuiSound("25_guardian_slime_appear", 0.8f);
+	}
+	if(asTimer == "eighthloop")
+	{
+		PlayGuiSound("25_guardian_slime_appear", 0.9f);
+		//PlayGuiSound("react_breath_slow", 1.0f);
+		SetDeathHint("DeathHints", "TimesUp");
+		SetEntityActive("waterlurker_1", false);
+		SetEntityActive("waterlurker_2", false);
+		SetEntityActive("waterlurker_3", false);
+		SetEntityActive("waterlurker_4", false);
+		SetEntityActive("waterlurker_5", false);
+		SetEntityActive("waterlurker_6", false);
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);
+		ExitInventory();
+		SetInventoryDisabled(true);
+		SetLightVisible("WorldBoxLightBad", true);
+		PlayMusic("29_amb_end_intense", true, 1.0f, 0, 10, false);
+		AddTimer("ninethloop", 8.0f, "TimerTimeLeft");
+	}
+	if(asTimer == "ninethloop")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		PlayGuiSound("slime_attack_normal_hit.snt", 0.9f);
+		PlayGuiSound("25_guardian_slime_appear.snt", 0.7f);
+		GivePlayerDamage(1000000.0f, "BloodSplat", true, true);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+			SetPlayerJumpForceMul(1.175f);
+	}
+}
+
+void TimerAlexTalk(string &in asTimer)
+{
+	if(asTimer == "shallbemine")
+	{
+		PlayGuiSound("07_strange_soulshallbemine", 1.0f);
+		//StartPlayerLookAt("orbgiant_1", 4.0f, 4.0f, "");
+		//AddTimer("", 2.0f, "TimerStopLook");
+		AddTimer("scareeffect", 0.5f, "TimerPlayerReactions");
+		AddTimer("breatheffect", 2.5f, "TimerPlayerReactions");
+		
+		SetMessage("Strange", "SoulShallBeMine", 5.0f);
+	}
+}
+
+void HubSetup()
+{
+		SetLightVisible("hub1_light_1", true);
+		SetLightVisible("hub1_light_2", true);
+		SetLightVisible("hub1_light_3", true);
+		SetLightVisible("hub1_light_4", true);
+		SetLightVisible("hub1_light_5", true);
+		SetLightVisible("hub1_light_6", true);
+		
+		PlaySoundAtEntity("orbpiece1sound", "07_orb_spark.snt", "orbpiece_1", 2.0f, true);
+		PlaySoundAtEntity("orbpiece2sound", "07_orb_spark.snt", "orbpiece_2", 2.0f, true);
+		PlaySoundAtEntity("orbpiece3sound", "07_orb_spark.snt", "orbpiece_3", 2.0f, true);
+		PlaySoundAtEntity("orbpiece4sound", "07_orb_spark.snt", "orbpiece_4", 2.0f, true);
+		PlaySoundAtEntity("orbpiece5sound", "07_orb_spark.snt", "orbpiece_5", 2.0f, true);
+		PlaySoundAtEntity("orbpiece6sound", "07_orb_spark.snt", "orbpiece_6", 2.0f, true);
+	
+		for(int y=1; y<=72; y++) SetLampLit("hub1_lamp_" + y, true, true);
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")	FadeIn(2.0f);
+	if(asTimer == "fadeinslow")	FadeIn(5.0f);
+	if(asTimer == "fadeout") FadeOut(2.0f);
+	if(asTimer == "fadeoutslow") FadeOut(5.0f);
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeinslowactiveplayer")
+	{
+		FadeIn(5.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}
+	if(asTimer == "fadeoutslowactiveplayer")
+	{
+		FadeOut(5.0f);
+		SetPlayerActive(true);	
+	}
+}
+
+void TimerFadeGlobalSound(string &in asTimer)
+{
+	if(asTimer == "globalsoundon") FadeGlobalSoundVolume(1.0f, 4.0f);
+	if(asTimer == "globalsoundonquick") FadeGlobalSoundVolume(1.0f, 0.5f);
+	if(asTimer == "globalsoundoff") FadeGlobalSoundVolume(0.0f, 4.0f);
+	if(asTimer == "globalsoundoffquick") FadeGlobalSoundVolume(0.0f, 0.5f);
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+			SetPlayerJumpForceMul(1.175f);
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}
+
+void PlayerLook(string &in asEntity, string &in asType, float afSpeed, float afTime)
+{
+	StartPlayerLookAt(asEntity, afSpeed, afSpeed, "");
+	if(asType == "reducespeed")
+	{
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);
+		AddTimer("resetspeedmul", afTime, "TimerStopLook");
+	}
+	else
+	if(asType == "deactive")
+	{
+		SetPlayerActive(false);
+		AddTimer("activeplayer", afTime, "TimerStopLook");
+	}
+	else AddTimer("", afTime, "TimerStopLook");
+}
+
+void PlayerReact(string &in asType, float afCount, bool abUseDamageEffect, bool abUseBlurEffect)
+{
+	if(asType == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "breath_slow")
+	{
+		PlayGuiSound("react_breath_slow", 0.6f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "pant")
+	{
+		PlayGuiSound("react_pant", 0.8f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(abUseDamageEffect == true) GiveSanityDamage(afCount, true);
+	else GiveSanityDamage(afCount, false);
+} 

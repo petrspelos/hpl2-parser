@@ -1,0 +1,265 @@
+void OnStart()
+{
+	AddUseItemCallback("", "waxroll", "phonograph", "PutRoll", true);
+	AddEntityCollideCallback("Player", "PitArea", "PitDeath", false, 1);
+	AddUseItemCallback("", "KeyRoom", "roomdoor", "UnlockRoom", true);
+	AddEntityCollideCallback("pog", "AreaPog", "EndPog", true, 1);
+	SetMapDisplayNameEntry("Archives");
+	//GiveItemFromFile("", "lantern.ent");
+	//GiveItemFromFile("waxroll", "waxroll_record.ent");
+	SetLightVisible("LightProjector", false);
+	FadeOut(0);
+	FadeIn(3.5f);
+}
+
+void PlaySong(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		StopMusic(2.5f, 0);
+		PlaySoundAtEntity("song", "amb_cellar_office_pigs_song.snt", "phonograph", 0.5f, false);
+		AddTimer("endmusic", 148.5f, "EndMusic");
+	}
+}
+
+void EndMusic(string &in asTimer)
+{
+	PlayMusic("16_amb.ogg", true, 0.6f, 3.5f, 0, true);
+	StopSound("song", 3.5f);
+}
+
+void PutRoll(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "gameplay_open_chest", "phonograph", 0, false);
+	SetWheelStuckState("phonograph", 0, true);
+	RemoveItem(asItem);
+	SetEntityConnectionStateChangeCallback("phonograph", "PlaySong");
+}
+
+void PitDeath(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(1);
+	GiveSanityDamage(10, true);
+	CheckPoint("CheckPointRoom", "RoomSpawn", "AfterPitDeath", "DeathHint", "DFall");
+	GivePlayerDamage(101, "BloodSplat", false, true);
+}
+
+void AfterPitDeath(string &in asName, int alCount)
+{
+	FadeIn(1);
+}
+
+void InteractDoor(string &in asEntity)
+{
+	SetMessage("ScreenText", "globaldoorclosed", 4.5f);
+}
+
+void UnlockRoom(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetSwingDoorLocked("roomdoor", false, true);
+	PlaySoundAtEntity("", "unlock_door", "roomdoor", 0.1f, false);
+}
+
+void PickupOrpiment(string &in asEntity, string &in OnPickup)
+{
+	GiveSanityBoostSmall();
+}
+
+void PickupCuprite(string &in asEntity, string &in OnPickup)
+{
+	AddEntityCollideCallback("Player", "AreaSpawnStudyPig", "SpawnStudyPig", true, 1);
+	GiveSanityBoostSmall();
+}
+
+void SpawnStudyPig(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(10, true);
+	StopMusic(2.5f, 2);
+	CheckPoint("CheckPointRoom2", "RoomSpawn", "", "DeathHint", "DMonster");
+	AddEntityCollideCallback("pigstudy", "AreaPigStudyEnd", "PigStudyEnd", true, 1);
+	AddEnemyPatrolNode("pigstudy", "StudyNode_1", 1, "");
+	AddEnemyPatrolNode("pigstudy", "StudyNode_2", 0, "");
+	AddEnemyPatrolNode("pigstudy", "StudyNode_3", 0, "");
+	AddEnemyPatrolNode("pigstudy", "StudyNode_4", 1, "");
+	AddEnemyPatrolNode("pigstudy", "StudyNode_5", 0, "");
+	AddEnemyPatrolNode("pigstudy", "StudyNode_6", 0, "");
+	AddEnemyPatrolNode("pigstudy", "StudyNode_7", 1, "");
+	PlayGuiSound("react_scare", 0.9f);
+	PlaySoundAtEntity("", "break_wood", "pigstudy", 0, false);
+	PlayMusic("10_event_coming.ogg", false, 0.7f, 0.1f, 0, false);
+	SetEntityActive("pigstudy", true);
+}
+
+void PigStudyEnd()
+{
+	FadeEnemyToSmoke("pigstudy", true);
+	PigEnd();
+}
+
+void PickupCalamine(string &in asEntity, string &in OnPickup)
+{
+	GiveSanityBoostSmall();
+}
+
+void PickupAqua(string &in asEntity, string &in OnPickup)
+{
+	StopPlayerLookAt();
+	GiveSanityBoostSmall();
+	AddEntityCollideCallback("Player", "AreaPig", "SpawnPig", true, 1);
+}
+
+void SpawnPig(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(10, true);
+	AddEntityCollideCallback("pig1", "AreaPig1End", "Pig1End", true, 1);
+	AddEnemyPatrolNode("pig1", "Pig1Node_1", 0, "");
+	AddEnemyPatrolNode("pig1", "Pig1Node_2", 0, "");
+	AddEnemyPatrolNode("pig1", "Pig1Node_3", 0, "");
+	AddEnemyPatrolNode("pig1", "Pig1Node_4", 0, "");
+	AddEnemyPatrolNode("pig1", "Pig1Node_5", 0, "");
+	PlayMusic("19_event_brute", false, 0.8f, 0.5f, 0, false);
+	PlayGuiSound("react_scare", 0.9f);
+	SetEntityActive("pig1", true);
+}
+
+void Pig1End(string &in asParent, string &in asChild, int alState)
+{
+	FadeEnemyToSmoke("pig1", true);
+	PigEnd();
+}
+
+void PigEnd()
+{
+	PlayGuiSound("react_breath_slow", 0.8f);
+	PlayMusic("16_amb.ogg", true, 0.6f, 1.5f, 0, true);
+}
+
+void PickupDiary(string &in asEntity, string &in OnPickup)
+{
+	SetPlayerJumpDisabled(true);
+	AddTimer("", 0.5f, "StartEvent");
+	SetPlayerActive(false);
+	PlayMusic("21_paper_daniel01.ogg", false, 0.7f, 1.5f, 0, true);
+}
+
+void StartEvent(string &in asTimer)
+{
+	SetInventoryDisabled(true);
+	FadePlayerAspectMulTo(0.75f, 0.5f);
+	AddTimer("", 8.5f, "StopLook");
+	AddTimer("", 20.0f, "NoJump");
+	StartPlayerLookAt("pog", 0.5f, 0.5f, "");
+	PlayGuiSound("react_scare", 0.8f);
+	SetPlayerMoveSpeedMul(0.32f);
+	SetPlayerRunSpeedMul(0.32f);
+	SetPlayerLookSpeedMul(0.32f);
+	FadeImageTrailTo(2, 3.5f);
+	FadeSepiaColorTo(1, 1);
+	SetLanternActive(false, true);
+	AddTimer("", 3.5f, "EventCity");
+	FadeOut(3);
+	StopMusic(2.5f, 3);
+	GiveSanityDamage(80, true);
+	PlayMusic("nest_music_verb.ogg", false, 0.6f, 3.5f, 0, true);
+}
+
+void NoJump(string &in asTimer)
+{
+	SetPlayerJumpDisabled(true);
+}
+
+void StopLook(string &in asTimer)
+{
+	PlaySoundAtEntity("london", "LondonSounds", "Player", 2.5f, false);
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	PlayGuiSound("react_breath_slow", 0.7f);
+}
+
+void EventCity(string &in asTimer)
+{
+	SetEntityActive("pog", true);
+	SetEntityActive("pog2", true);
+	SetEntityActive("pog3", true);
+	
+	SetEnemySanityDecreaseActive("pog3", false);
+	SetEnemySanityDecreaseActive("pog2", false);
+	SetEnemySanityDecreaseActive("pog", false);
+	AddEnemyPatrolNode("pog", "p1Node_1", 2.5f, "");
+	AddEnemyPatrolNode("pog", "p1Node_2", 0, "");
+	AddEnemyPatrolNode("pog", "p1Node_3", 0, "");
+	AddEnemyPatrolNode("pog", "p1Node_4", 0, "");
+	
+	AddEnemyPatrolNode("pog2", "p1Node_1", 2.5f, "");
+	AddEnemyPatrolNode("pog2", "p1Node_2", 0, "");
+	AddEnemyPatrolNode("pog2", "p1Node_3", 0, "");
+	AddEnemyPatrolNode("pog2", "p1Node_4", 0, "");
+	
+	AddEnemyPatrolNode("pog3", "p1Node_1", 2.5f, "");
+	AddEnemyPatrolNode("pog3", "p1Node_2", 0, "");
+	AddEnemyPatrolNode("pog3", "p1Node_3", 0, "");
+	AddEnemyPatrolNode("pog3", "p1Node_4", 0, "");
+
+	FadeIn(3);
+	TeleportPlayer("CitySpawn");
+}
+
+void OnEnter()
+{
+	PlayMusic("16_amb.ogg", true, 0.6f, 1.5f, 0, true);
+}
+
+void EndPog(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("react_scare", 0.6f);
+	FadeEnemyToSmoke("pog", true);
+	FadeEnemyToSmoke("pog2", true);
+	PogEnd();
+}
+
+void PogEnd()
+{
+	SetInventoryDisabled(false);
+	SetPlayerJumpDisabled(false);
+	FadeSepiaColorTo(0, 4.5f);
+	StopMusic(10.5f, 10);
+	AddTimer("", 5.5f, "TimerEndEvent");
+	FadeOut(5);
+	StopSound("london", 10.5f);
+	SetPlayerActive(false);
+	SetPlayerMoveSpeedMul(0.9f);
+	SetPlayerRunSpeedMul(0.9f);
+	SetPlayerLookSpeedMul(1);
+	FadeImageTrailTo(0, 5.5f);
+	FadePlayerAspectMulTo(1, 0.5f);
+}
+
+void TimerEndEvent(string &in asTimer)
+{
+	SetEntityActive("aqua", true);
+	SetPlayerActive(true);
+	PlayMusic("16_amb.ogg", true, 0.6f, 10.5f, 0, true);
+	TeleportPlayer("ClassSpawn");
+	PlayGuiSound("react_scare", 0.6f);
+	FadeIn(4.5f);
+	AddTimer("", 2.5f, "LookAqua");
+}
+
+void LookAqua(string &in asTimer)
+{
+	StartPlayerLookAt("aqua", 1.5f, 1.5f, "");
+}
+
+void LightUp(string &in asEntity, string &in OnIgnite)
+{
+	SetLightFlickerActive("KightProjector", true);
+	SetLightVisible("LightProjector", true);
+	FadeLightTo("LightProjector", 0, 0, 0, 0, -1, 2.5f);
+}
+
+void OnLeave()
+{
+	StopMusic(2.5f, 2);
+	SetupLoadScreen("LoadingScreen", "Load8", 0,"");
+}

@@ -1,0 +1,377 @@
+int swings = 0;
+
+void OnStart()
+{  
+		AutoSave();
+		AddEntityCollideCallback("Player", "Area Collide_1", "GruntKitchen", true, 1); // Grunt in the kitchen//
+		AddEntityCollideCallback("Player", "Area Collide_4", "GruntPatroll", false, 1); // Grunt that will patroll thr area after player picks up hammer//
+		AddEntityCollideCallback("Player", "Area Collide 5", "BruteWalk", true, 1); // Brute walking a corridor//
+		AddEntityCollideCallback("Henryk_1", "Area Collide_2", "GruntGone_1", true, 1); // Disables kitchen Grunt//
+		AddEntityCollideCallback("Henryk_2", "Area Collide_3", "GruntGone_2", true, 1); // Disables Cell Grunt//
+		AddEntityCollideCallback("Brute", "Area Collide_6", "BruteGone", true, 1); // Disables Brute walking in a corridor//
+		AddUseItemCallback("", "Dungeon Key", "DoorKey", "usekey", true); // Player uses dungeon key//
+		AddUseItemCallback("", "hammer", "AreaHammer", "HammerAnimation", true); // Player uses hammer//
+		SetEntityPlayerInteractCallback("hammer", "ActivateArea", true); // Allows Patroll Grunt to spawn//
+		
+	    
+	    
+}
+
+
+
+
+
+void OnEnter()
+{ 
+		AddTimer("PlayerCough", 30, "TimerCough");
+		StopMusic(6.0f, 10);
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen11", 0, "game_loading_rose.jpg");
+}
+
+
+//////////////////////Grunt Kitchen////////////////////////////////////
+
+void GruntKitchen(string &in asParent, string &in asChild, int alState) 
+	{
+	
+	if(GetLocalVarInt("Grunt") == 1) return;
+	StopMusic(6.0f, 10);
+	
+	SetEntityActive("Henryk_1", true);
+	
+	SetLocalVarInt("Grunt", 1);
+	
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+}
+void TimerPlayerreact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+		
+		CheckPoint("GruntKitchen", "PlayerStartArea_3", "GruntKitchen", "", "");
+	
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_1", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_19", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_20", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_21", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_22", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_24", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_26", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_28", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_29", 3, "idle");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_31", 3, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_33", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_35", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_37", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_39", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_40", 3, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_43", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_6-", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_61", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_63", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_65", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "GruntKitchen path_66", 0.001, "");
+
+}
+	
+void GruntGone_1(string &in asParent, string &in asChild, int alState)
+{
+		SetEntityActive("Henryk_1", false);
+		SetLocalVarInt("Grunt", 0);
+		PlaySoundAtEntity("", "door_level_cellar_close.snt", "level_celler_1", 0, false);
+}
+
+void GruntKitchen(string &in asName, int alCount)
+{
+	SetLocalVarInt("Grunt", 0);
+} 
+	
+
+
+////////////////////////////////////////////////////////////////////////
+
+///////////////////////////Key Storage//////////////////////////////////
+
+void usekey(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("DoorKey", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+}
+
+//////////////////////////Grunt Cell////////////////////////////////////
+
+void GruntDoor(string &in asEntity)
+{
+	if(GetLocalVarInt("Grunt") == 1) return;
+	StopMusic(6.0f, 10);
+	SetEntityActive("Henryk_2", true);
+	SetLocalVarInt("Grunt", 1);
+	
+		AddTimer("scare", 0.5f, "TimerPlayerreact");
+		AddTimer("breath", 1.0f, "TimerPlayerreact");
+		AddTimer("breathl", 3.0f, "TimerPlayerreact");
+		
+		CheckPoint("GruntCell", "PlayerStartArea_4", "GruntCell", "", "");
+		
+
+
+
+
+		
+		
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_1", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_2", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_4", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_5", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_6", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_7", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_8", 5, "idle");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_9", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_10", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_13", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_14", 4, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_15", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_16", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_18", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_19", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_20", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_21", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_22", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_24", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_25", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_26", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_27", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_28", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_29", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_30", 0.001, "");
+	AddEnemyPatrolNode("Henryk_2", "PathGruntCell_31", 0.001, "");
+}	
+
+	
+	void GruntGone_2(string &in asParent, string &in asChild, int alState)
+{
+		SetEntityActive("Henryk_2", false);
+		SetLocalVarInt("Grunt", 0);
+}
+
+void GruntCell(string &in asName, int alCount)
+{
+	SetLocalVarInt("Grunt", 0);
+} 
+
+///////////////////////////GruntPatroll////////////////////////////////
+
+
+void GruntPatroll(string &in asParent, string &in asChild, int alState) 
+{
+		if(GetLocalVarInt("Grunt") == 1) return;
+		
+		StopMusic(6.0f, 10);
+		SetEntityActive("Henryk_3", true);
+	    SetLocalVarInt("Grunt", 1);
+	    
+	    AddTimer("scare", 0.5f, "TimerPlayerreact");
+		AddTimer("breath", 1.0f, "TimerPlayerreact");
+		AddTimer("breathl", 3.0f, "TimerPlayerreact");
+		
+		CheckPoint("GruntPatroll", "PlayerStartArea_2", "HenrykRespawn", "", "");
+		
+		
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_1", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_2", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_3", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_4", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_5", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_6", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_7", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_8", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_9", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_10", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_12", 0.001, "");
+	AddEnemyPatrolNode("Henryk_3", "GruntPatrollPath_13", 0.001, "");
+}
+	
+void HenrykRespawn(string &in asName, int alCount)
+{
+	SetEntityActive("Henryk_3", true);
+}  
+	  
+
+		
+		
+
+		
+
+
+////////////////////////Pick up hammer//////////////////////////////////
+
+void ActivateArea(string &in item)
+{
+	SetEntityActive("Area Collide_4", true);
+}
+
+////////////////////////Brute Hallway///////////////////////////////////
+
+
+void BruteWalk(string &in asParent, string &in asChild, int alState) 
+{
+	StopMusic(6.0f, 10);
+	SetEntityActive("Brute", true);
+	
+	    AddTimer("scare", 0.5f, "TimerPlayerreact");
+		AddTimer("breath", 1.0f, "TimerPlayerreact");
+		AddTimer("breathl", 3.0f, "TimerPlayerreact");
+		
+		
+		AddEnemyPatrolNode("Brute", "BrutePath", 0.001, "");
+	
+}
+
+void BruteGone(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("Brute", false);
+AddTimer("music1", 10, "TimerMusicStart");
+
+}
+
+////////////////////////Hammer Padlock//////////////////////////////////
+
+void GateQuest(string &in asEntity)
+{
+	AddQuest("DungeonPad", "DungeonPadlock");
+}
+
+void HammerAnimation(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("Hammermove", true);
+	
+	swings = 1; // variable, inables the animation //
+	
+	StartPlayerLookAt("Hammermove", 2, 2, ""); // Player looks at the hammer//
+	
+	AddTimer("movehammer", 0.1, "TimerMoveHammer");
+	AddTimer("hammersound", 0.27, "TimerMoveHammer");
+	AddTimer("resethammer", 0.4, "TimerMoveHammer");
+	AddTimer("repeat", 0.6, "TimerMoveHammer");
+	
+	PlaySoundAtEntity("", "impact_metal_high.snt", "Padlock", 0, false);
+	PlaySoundAtEntity("", "15_make_hammer", "Player", 0.25, false);
+	PlaySoundAtEntity("", "impact_metal_med", "Padlock", 2, false);
+}
+
+void TimerMoveHammer(string &in asTimer)
+{
+	if(asTimer == "movehammer") SetMoveObjectState("Hammermove", 0.4); // moves hammer towards the entity//
+	
+	else if(asTimer == "hammersound") {
+		StopPlayerLookAt();
+		PlaySoundAtEntity("", "impact_metal_high.snt", "Player", 0, false);
+		PlaySoundAtEntity("", "15_hammer", "Player", 0, false);
+	}
+	
+	else if(asTimer == "resethammer") SetMoveObjectState("Hammermove", 0); // moves the hammer to its original position//
+	
+	if(swings < 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.01, "TimerMoveHammer");
+		AddTimer("hammersound", 0.17, "TimerMoveHammer");
+		AddTimer("resethammer", 0.3, "TimerMoveHammer");
+		AddTimer("repeat", 0.5, "TimerMoveHammer");
+		
+		swings = swings + 1;
+	}
+	
+	else if(swings == 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.2, "TimerMoveHammer");
+		AddTimer("hammersound", 0.37, "TimerMoveHammer");
+		AddTimer("resethammer", 0.5, "TimerMoveHammer");
+		AddTimer("repeat", 0.8, "TimerMoveHammer");
+		
+		AddTimer("break", 0.42, "TimerMoveHammer");
+		
+		swings = swings + 1;
+	}
+	
+	else if(swings == 4 && asTimer == "break") FinishAnimation();
+	
+	else if(swings == 4 && asTimer == "repeat") SetEntityActive("Hammermove", false);
+		
+	
+}
+
+void FinishAnimation()
+{
+	PlaySoundAtEntity("", "impact_metal_high.snt", "Player", 1, false);
+	SetEntityActive("Padlock", false);
+	SetEntityActive("Padlock_Broken", true);
+	SetSwingDoorLocked("prison_section_1", false, true);
+	GiveSanityBoostSmall();
+	PlayMusic("19_puzzle_inject.ogg", false, 0.7, 0.1, 10, false);
+	CompleteQuest("DungeonPad", "DungeonPadlock");
+}
+
+///////////////////////////////Cough////////////////////////////////////
+
+void TimerCough(string &in asTimer)
+{
+		if(asTimer == "PlayerCough") {
+	
+		SetLocalVarInt("RandomInt", RandInt(1,4));
+		
+		GetLocalVarInt("RandomInt");
+		
+		}
+		
+		
+		if(GetLocalVarInt("RandomInt") == 1) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 16, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 2) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 35, "TimerCough");
+		}
+		
+		
+		else if(GetLocalVarInt("RandomInt") == 3) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 23, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 4) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 25, "TimerCough");
+		}
+		
+
+		
+}
+
+/////////////////////////////////Messgaes///////////////////////////////
+
+void messagelocked(string &in asEntity) {
+	SetMessage("Message", "CellarLocked", 3);
+}
+
+///////////////////////////////////End23////////////////////////////////
+
+void End23(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	
+}

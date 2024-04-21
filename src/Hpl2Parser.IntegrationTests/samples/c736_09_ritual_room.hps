@@ -1,0 +1,76 @@
+void OnStart()
+{
+	PlaySoundAtEntity("", "ambience_voice.snt", "Player", 1.0 / 2, false);
+	AddUseItemCallback("", "ceremony_knife_1", "AreaUseKnife", "CutMan", true);
+	SetupLoadScreen("LoadingText", "Load10", 1, "");
+}
+
+void OnEnter()
+{
+	StopMusic(3.0, 3);
+}
+
+void OnLeave()
+{
+
+}
+
+void CutMan(string &in asItem, string &in asEntity)
+{
+	AddTimer("TimerECutMan", 2.0f, "TimerECutMan");
+	SetPlayerActive(false);
+	PlaySoundAtEntity("", "00_cuts.snt", "Player", 0, false);
+	GiveSanityDamage(5, true);
+}
+
+void TimerECutMan(string &in asTimer)
+{
+	PlayMusic("A2_2_4_Scare_Mid_02.ogg", false, 1, 1, 0, false);
+	AddUseItemCallback("GetVitae", "jar_blood", "AreaUseKnife", "GetVitae", true);
+	SetPropActiveAndFade("ritual_prisoner_noillum_1", false, 5.0);
+	SetPropActiveAndFade("ritual_prisoner_1", true, 5.0);
+	AddTimer("TimerECutMan1", 3.0f, "TimerECutMan1");
+	PlaySoundAtEntity("", "29_scream.snt", "Player", 0, false);
+	CreateParticleSystemAtEntity("blodp3", "blood.ps", "AreaBlood", false);
+	GiveSanityDamage(5, true);
+	PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+	FadeSepiaColorTo(1, 5.0);
+	FadeRadialBlurTo(0.3, 5.5);
+}
+
+void TimerECutMan1(string &in asTimer)
+{
+	SetPlayerActive(true);
+	FadeSepiaColorTo(0, 3.0);
+	FadeRadialBlurTo(0, 1.5);
+}
+
+void GetVitae(string &in asItem, string &in asEntity)
+{
+	GiveItem("jar_vitae", "Puzzle", "JarVitae", "glass_container_blood.tga", 0);
+	RemoveItem("jar_blood");
+	PlaySoundAtEntity("", "12_epoxy_fill.snt", "Player", 0, false);
+	RemoveUseItemCallback("GetVitae");
+	PlaySoundAtEntity("", "19_inject.snt", "Player", 0, false);
+}
+
+void JimRevo(string &in asEntity)
+{
+	PlayMusic("A2_01_02_DiscoverSurvivors.ogg", true, 0.5, 0, 6, false);	
+	AddEffectVoice("jim_sadness_1", "", "Voice", "JimSad", true, "Player", 100, 100);
+	AddTimer("TimerJimRedeem", 24.0f, "TimerJimRedeem");
+	AddTimer("TimerJimRedeem1", 0.1f, "TimerJimRedeem1");
+}
+
+void TimerJimRedeem(string &in asTimer)
+{
+	StopMusic(3.0, 6);
+	AddEffectVoice("jim_redeem", "", "Voice", "JimRedeem", true, "Player", 100, 100);
+	PlayMusic("A2_01_02_DiscoverGrave.ogg", false, 0.5, 0, 5, false);
+	SetLevelDoorLocked("level_orb_room_door_1", false);
+}
+
+void AreaShadowLook(string &in asEntity, int alState)
+{
+	PlayMusic("A2_3_3_Shadow_Spread.ogg", false, 1, 0, 0, false);
+}

@@ -1,0 +1,1361 @@
+//////////STAMINA SYSTEM SETTINGS//////////////
+///////////////////////////////////////////////
+const string STAMINA_TIMER_CALLBACK_NAME = "STAMINA_TIMER_CALLBACK";
+const string STAMINA_PLAYER_SPEED = "STAMINA_PLAYER_SPEED";
+const string STAMINA_PLAYER_LENGTH = "STAMINA_PLAYER_LENGTH";
+const string STAMINA_PLAYER_BREATH_SLOW = "STAMINA_PLAYER_BREATH_SLOW";
+const string STAMINA_PLAYER_BREATH_SNT = "react_breath_slow.snt";
+const string STAMINA_PLAYER_HEAD_BOB = "STAMINA_PLAYER_HEAD_BOB";
+
+const float STAMINA_TIMER_SPEED_TIME = 0.5f;
+const float STAMINA_PLAYER_HEAD_BOB_SPEED = 0.7f;
+
+enum StaminaStages
+    {
+        Full,
+        Low,
+        Exhausted
+    }
+
+class StaminaSystem
+    {
+        private int state;
+        private uint length;
+        private bool head_bobbing;
+        private bool is_running;
+
+        StaminaSystem()
+            {
+                PreloadSound(STAMINA_PLAYER_BREATH_SNT);
+                this.state = StaminaStages::Full;
+                this.length = 10;
+                this.head_bobbing = false;
+                this.is_running = false;
+            }
+
+        ~StaminaSystem()
+            {
+                this.Stop();
+            }
+
+        void AddDebugMessage(string &in message, bool check, bool to_file)
+            {
+                ::AddDebugMessage("Stamina system: " + message, check);
+                if (to_file) Print("Stamina system: " + message);
+            }
+
+        bool IsPlayerRunning() const
+            {
+                return this.is_running;
+            }
+
+        void PlayBreathSound()
+            {
+                PlaySoundAtEntity(STAMINA_PLAYER_BREATH_SLOW, STAMINA_PLAYER_BREATH_SNT, "Player", 0, false);
+            }
+
+        void Start()
+            {
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				AddTimer(STAMINA_PLAYER_SPEED, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerHeadBob()
+            {
+                if (this.head_bobbing)
+                    MovePlayerHeadPos(0, -0.35, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+                else
+                    MovePlayerHeadPos(0, 0, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+
+                this.head_bobbing = !this.head_bobbing;
+                AddTimer(STAMINA_PLAYER_HEAD_BOB, 0.75f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerTiredEffect()
+            {
+                this.PlayBreathSound();
+                AddTimer(STAMINA_PLAYER_BREATH_SLOW, 1.5f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void Stop()
+            {
+                this.StopPlayerTiredEffect();
+                RemoveTimer(STAMINA_PLAYER_SPEED);
+                RemoveTimer(STAMINA_PLAYER_LENGTH);
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				SetPlayerJumpDisabled(false);
+            }
+
+        void StopPlayerTiredEffect()
+            {
+                this.head_bobbing = false;
+                RemoveTimer(STAMINA_PLAYER_BREATH_SLOW);
+                RemoveTimer(STAMINA_PLAYER_HEAD_BOB);
+                MovePlayerHeadPos(0,0,0, 1, 1);
+				FadeImageTrailTo(0, 1); ////trail off
+                // StopSound(STAMINA_PLAYER_BREATH_SLOW, 1); // Crashes the game upon exit.
+            }
+
+        void SetStaminaLength(uint length)
+            {
+                if (length != 0)
+                    this.length = length;
+                else
+                    this.AddDebugMessage("Length cannot be 0!", false, true);
+            }
+
+        void Update(string &in timer_name)
+            {
+                if (timer_name == STAMINA_PLAYER_SPEED)
+                {
+                    this.is_running = (GetPlayerSpeed() > 3) ? true : false;
+
+                    if (this.is_running && GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) == 0)
+                        AddTimer(STAMINA_PLAYER_LENGTH, this.length, STAMINA_TIMER_CALLBACK_NAME);
+
+                    else if(!this.is_running)
+                    {
+                        if (GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) > 0 && this.state == StaminaStages::Full)
+                            RemoveTimer(STAMINA_PLAYER_LENGTH);
+
+                        else if(this.state == StaminaStages::Low)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/4, STAMINA_TIMER_CALLBACK_NAME);
+
+                        else if(this.state == StaminaStages::Exhausted)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/2, STAMINA_TIMER_CALLBACK_NAME);
+                    }
+
+                    AddTimer(timer_name, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+                }
+
+                else if (timer_name == STAMINA_PLAYER_BREATH_SLOW)
+                    this.StartPlayerTiredEffect();
+
+                else if (timer_name == STAMINA_PLAYER_HEAD_BOB)
+                    this.StartPlayerHeadBob();
+
+                else if (timer_name == STAMINA_PLAYER_LENGTH)
+                {
+                    if (this.is_running)
+                    {
+                        if (this.state == StaminaStages::Full)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.5);
+                        }
+
+                        else if (this.state == StaminaStages::Low)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.3);
+                            SetPlayerMoveSpeedMul(0.5);
+							FadeImageTrailTo(3,1); ////trail on
+                            SetPlayerJumpDisabled(true);
+                            ChangePlayerStateToNormal();
+                            this.StartPlayerTiredEffect();
+                            this.StartPlayerHeadBob();
+                        }
+                    }
+
+                    else
+                    {
+                        this.StopPlayerTiredEffect();
+
+                        SetPlayerRunSpeedMul(1);
+                        SetPlayerMoveSpeedMul(1);
+                        SetPlayerJumpDisabled(false);
+
+                        if (this.state == StaminaStages::Low)
+                            this.state = StaminaStages::Full;
+
+                        else if (this.state == StaminaStages::Exhausted)
+                            this.state = StaminaStages::Full;
+                    }
+                }
+            }
+    }
+
+StaminaSystem stamina_obj;
+
+void STAMINA_TIMER_CALLBACK(string &in timer_name)
+    { stamina_obj.Update(timer_name); } 
+//////////////////////////////////////
+void OnStart()
+{
+Syr();
+SetLightVisible("Light_sp", false);
+///ITEM USE////////
+AddUseItemCallback("", "item_circuit_card_red_1", "level09_circuit_board_1" ,"redcard_for_vilmor", false); 
+AddUseItemCallback("", "item_circuit_card_red_2", "level09_circuit_board_1" ,"bluecard_for_exit", false); 
+AddUseItemCallback("", "item_hand_item_1", "ScriptArea_12" ,"scanerlock", false); 
+AddUseItemCallback("", "item_eye", "ScriptArea_12" ,"scanerlock", false); 
+AddUseItemCallback("", "item_saw", "door_wiredoor_1" ,"wood_destroy", true); 
+AddUseItemCallback("", "item_keycard_1", "tech_cardreader_1" ,"keycardopendoor", true); 
+//////////////
+AddEntityCollideCallback("Player", "ScriptArea_42", "changerestartstate", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_43", "changerestartstate", false, 1);
+//////////////////
+///AREAS COLLIDE////
+AddEntityCollideCallback("Vilmar", "ScriptArea_52", "wilmar_fence_fix", false, 0);
+AddEntityCollideCallback("Player", "ScriptArea_45", "breakglasstube", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_41", "loading_texthere", false, 1);
+AddEntityCollideCallback("Player", "Glitch_area_1" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_2" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_3" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_4" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_5" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_6" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_7" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_39", "transit", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_40", "transit", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_36", "eye_cash", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_37", "eye_cash", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_11", "rumblesound02", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_25", "vilmorreactorspeak", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_10", "rumblesound", true, 1);
+AddEntityCollideCallback("Player", "Dead_area_1" ,"fall_dead", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_17", "noturnback", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_23", "vilmor_monster_now", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_22", "firedoor_suprise", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_17", "autodoor_closed", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_10", "metal_rumble", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_1", "vilmar_revelation", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_14", "monster_vilmar_walk", true, 1);
+////////////////////
+SetLightVisible("PointLight_1", false);
+for (int i=1; i<=7; i++){
+SetLightVisible("Light_"+i, false);
+SetLightVisible("Server_light_"+i, false);
+}
+SetLampLit("Lamp_comp_*", false, false);
+SetLightVisible("PointLight_14", false);SetLightVisible("PointLight_15", false);SetLightVisible("PointLight_16", false);
+StopSound("Sound_1", 1);
+SetMapDisplayNameEntry("Reactor");
+}
+////GRAB////
+void grabhand(string &in asEntity)
+{
+   if (GetPropIsInteractedWith(asEntity) == true){
+   StartInsanityEvent("grab");
+   }
+   AddTimer(asEntity, 0.01,"grabcheck");
+}
+void grabcheck(string &in asTimer)
+{
+AddTimer(asTimer, 0.01,"grabcheck");
+if (GetPropIsInteractedWith(asTimer) == false){
+StopCurrentInsanityEvent();
+RemoveTimer(asTimer);
+}
+}
+//SAVE STATION///
+////////////////
+void SaveSpot(string &in asEntity)
+{
+if(GetLocalVarInt("firstsave") == 0){
+AddTimer("", 2, "artefact_effect");
+SetLocalVarInt("firstsave", 1);
+}
+ShowPlayerCrossHairIcons(false);
+SetPlayerActive(false);
+GiveSanityBoostSmall();
+SetEntityActive("ScriptArea_16", false);
+PlayGuiSound("ui_emotion_stone.snt", 3.0f);
+FadePlayerFOVMulTo(0.17, 1.6);
+StartEffectFlash(2.5, 1, 2);
+FadeImageTrailTo(2, 100);
+AddTimer("waittim_save", 2, "waittim");
+AddTimer("", 5, "waittim2");
+
+}
+void waittim(string &in asTimer)
+{
+SetPlayerSanity(90);
+ShowPlayerCrossHairIcons(true);
+FadePlayerFOVMulTo(1, 100);
+FadeImageTrailTo(0, 100);
+SetSanityDrainDisabled(true);
+SetPlayerActive(true);
+AutoSave();
+}
+void waittim2(string &in asTimer)
+{
+SetEntityActive("ScriptArea_16", true);
+}
+void artefact_effect(string &in asTimer)
+{
+SetEntityActive("level09_vent_broken_2", true);SetEntityActive("level09_vent_broken_1", false);
+SetEntityActive("water", true);
+SetEntityActive("LiquidArea_1", true);
+for (int j=1; j<=18; j++){
+ResetProp("thing_"+j);
+}
+for (int i=1; i<=6; i++){
+SetLightVisible("Light_"+i, true);
+}
+SetLampLit("lamp_flourescent01_5", true, false);
+}
+////////////////////////
+void SaveSpot02(string &in asEntity)
+{
+if(GetLocalVarInt("firstsave02") == 0){
+AddTimer("", 2, "artefact_effect02");
+SetLocalVarInt("firstsave02", 1);
+}
+ShowPlayerCrossHairIcons(false);
+SetPlayerActive(false);
+GiveSanityBoostSmall();
+SetEntityActive("ScriptArea_21", false);
+PlayGuiSound("ui_emotion_stone.snt", 3.0f);
+//FadePlayerFOVMulTo(0.17, 1.6);
+//StartEffectFlash(2.5, 1, 2);
+FadeImageTrailTo(2, 100);
+AddTimer("waittim_save", 2, "waittim");
+AddTimer("", 5, "waittim3");
+if (GetLocalVarInt("first_artefact_touch") == 0){
+SetLocalVarInt("first_artefact_touch", 1);
+StartEffectEmotionFlash("Artefacts", "VisionArc02", "horror_flashback.snt");
+return;
+}
+else if (GetLocalVarInt("first_artefact_touch") == 1){
+PlayGuiSound("ui_emotion_stone.snt", 3.0f);
+FadePlayerFOVMulTo(0.17, 1.6);
+StartEffectFlash(2.5, 1, 2);
+return;
+}
+}
+void waittim3(string &in asTimer)
+{
+SetEntityActive("ScriptArea_21", true);
+}
+void artefact_effect02(string &in asTimer)
+{
+ResetProp("mining_room_chair_1");ResetProp("kitchen_cornflake_package_1");ResetProp("kitchen_cornflake_package_2");
+ResetProp("door_infected_blue_6_broken");ResetProp("kluch3_1");ResetProp("lab_scalpel_1");
+//SetEntityActive("corpse", true);
+}
+///////////////////////
+///////////////////////
+void sanit(string &in asTimer)
+{
+SetPlayerSanity(90);
+SetSanityDrainDisabled(true);
+AutoSave();
+}
+////////////////////
+//INTERACTION/////
+void gateclosed(string &in asEntity)
+{
+SetMessage("06_Reactor", "EventInteractGate", -1);
+PlayGuiSound("interact_locked_metal_door.snt", 0.8f);
+}
+void vilmar_last_speak(string &in asEntity)
+{
+PlayGuiSound("interact_play_tape1.ogg", 0.8f);
+AddTimer("", 1, "timelastspeak");
+}
+void timelastspeak(string &in asTimer)
+{
+AddEffectVoice("WILMOR_END", "", "Voice", "Wilmar_end", true, "items_cassette_recorder_1", 3, 12);
+AddTimer("", 6.2, "endsp");
+}
+void endsp(string &in asTimer)
+{
+PlaySoundAtEntity("", "interact_end_tape.snt", "items_cassette_recorder_1", 0, true); 
+StopAllEffectVoices(0);
+}
+////////////////
+///SANER///////
+void scaner_interact(string &in asEntity)
+{
+SetMessage("06_Reactor", "EventPlayerOnHandEyeScanner", -1);
+PlayGuiSound("07_scan_fail1.ogg", 0.5f);
+}
+void scanerlock(string &in asItem, string &in asEntity)
+{
+if (asItem == "item_hand_item_1"){
+if (GetLocalVarInt("hand") == 0){
+PlayGuiSound("07_scan_ok1.ogg", 0.5f);
+SetEntityActive("ScriptArea_12", false);
+SetEntityActive("sacner_hand", true);SetEntityActive("sacner_eye", false);
+SetButtonSwitchedOn("sacner_hand", true, true);
+AddTimer("sc1", 1, "scanhandcomplete");
+}
+AddTimer("", 0.2, "scaner_checker");
+AddTimer("h", 0.1, "scaner_var_delay");
+ if (GetLocalVarInt("eye") == 0){
+SetMessage("06_Reactor", "EventScannedHandNeedHead", -1);
+}
+  if (GetLocalVarInt("hand") == 1){
+  SetMessage("06_Reactor", "EventHandScanned", -1);
+  }
+}
+if (asItem == "item_eye"){
+if (GetLocalVarInt("eye") == 0){
+PlayGuiSound("07_scan_ok1.ogg", 0.5f);
+SetEntityActive("ScriptArea_12", false);
+SetEntityActive("sacner_hand", false);SetEntityActive("sacner_eye", true);
+SetButtonSwitchedOn("sacner_eye", true, true);
+AddTimer("sc2", 1, "scaneyecomplete");
+}
+AddTimer("", 0.2, "scaner_checker");
+AddTimer("e", 0.1, "scaner_var_delay");
+  if (GetLocalVarInt("hand") == 0){
+SetMessage("06_Reactor", "EventScannedHeadNeedHand", -1);
+ }
+  if (GetLocalVarInt("eye") == 1){
+SetMessage("06_Reactor", "EventEyeScanned", -1);
+}
+}
+}
+void scanhandcomplete(string &in asTimer)
+{
+SetButtonSwitchedOn("sacner_hand", false, true);
+SetEntityActive("ScriptArea_12", true);
+}
+void scaneyecomplete(string &in asTimer)
+{
+SetEntityActive("ScriptArea_12", true);
+SetButtonSwitchedOn("sacner_eye", false, true);
+}
+void scaner_var_delay(string &in asTimer)
+{
+if (asTimer == "h"){
+SetLocalVarInt("hand", 1);
+return;
+}
+if (asTimer == "e"){
+SetLocalVarInt("eye", 1);
+return;
+}
+}
+void scaner_checker(string &in asTimer)
+{
+if (GetLocalVarInt("hand") == 1 && GetLocalVarInt("eye") == 1){
+RemoveItem("item_hand_item_1");RemoveItem("item_eye");
+RemoveTimer("sc1");RemoveTimer("sc2");
+SetEntityActive("ScriptArea_12", false);
+AddTimer("dc1", 1, "doorcase");
+AddTimer("dc2", 2, "doorcase");
+}
+}
+void doorcase(string &in asTimer)
+{
+if (asTimer == "dc1"){
+PlayGuiSound("door_code_correct1.ogg", 0.5f);
+SetButtonSwitchedOn("sacner_eye", false, true);
+SetButtonSwitchedOn("sacner_hand", false, true);
+return;
+}
+if (asTimer == "dc2"){
+SetMoveObjectState("iron_mine_vertical_door_x_1", 0.9);
+return;
+}
+}
+////////////////
+//CARDREADER///
+void cardreader_interact(string &in asEntity)
+{
+SetMessage("06_Reactor", "EventInteractCardReader", -1);
+PlayGuiSound("07_scan_fail1.ogg", 0.5f);
+}
+void keycardopendoor(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("ScriptArea_13", false);
+SetEntityActive("tech_cardreader_1", false);SetEntityActive("tech_cardreader_2", true);
+PlayGuiSound("07_scan_ok1.ogg", 0.5f);
+SetMessage("06_Reactor", "DescUseKeyCardOnDoor", -1);
+AddTimer("fd1", 1.5, "firedooropen");
+AddTimer("fd2", 1.7, "firedooropen");
+}
+void firedooropen(string &in asTimer)
+{
+if (asTimer == "fd1"){
+StartScreenShake(0.02, 0.5, 0.2, 0.2);
+return;
+}
+if (asTimer == "fd2"){
+SetMoveObjectState("Firedoor", -0.8);
+return;
+}
+}
+///////////////////
+///WOOD BLOCKADE///
+void wiredoor_blocked(string &in asEntity)
+{
+PlayGuiSound("interact_locked_gate.snt", 1.0f);
+SetMessage("06_Reactor", "DescWiredoor", -1);
+ if (GetLocalVarInt("firsttouch") == 0){
+SetLocalVarInt("firsttouch", 1);
+//AddQuest("Fence", "LockedFence");
+}
+}
+void wood_destroy(string &in asItem, string &in asEntity)
+{
+SetLanternActive(false, false);
+StartInsanityEvent("WideSaw");
+RemoveItem(asItem);
+SetPlayerActive(false);
+SetEntityActive("door_wiredoor_1", false);SetEntityActive("door_wiredoor_2", true);
+StartPlayerLookAt("ScriptArea_18", 1.5, 1.5, "");
+ShowPlayerCrossHairIcons(false);
+SetPlayerCrouching(false);
+PlaySoundAtEntity("", "interact_wood_saw.snt", "ScriptArea_18", 0, false);
+CreateParticleSystemAtEntity("saw", "particle_dust_saw_hand.ps", "ScriptArea_19", true);
+AddTimer("bw1", 5.5, "breakwoodbeam");
+AddTimer("bw2", 5.6, "breakwoodbeam");
+}
+void breakwoodbeam(string &in asTimer)
+{
+if (asTimer == "bw1"){
+StopPlayerLookAt();
+SetEntityActive("ScriptArea_52", true);
+AddTimer("vilcheck", 1, "time_wilmar_fence");
+DestroyParticleSystem("saw");
+SetPropHealth("modern_mine_beam", 0);
+SetSwingDoorLocked("door_wiredoor_2", false, false);
+SetPlayerActive(true);
+CompleteQuest("Fence", "LockedFence");
+FadeLightTo("PointLight_2", 0, 0, 0, 0, 0, 1);
+ShowPlayerCrossHairIcons(true);
+return;
+}
+if (asTimer == "bw2"){
+SetEntityPlayerInteractCallback("modern_mine_beam_broken", "grabhand", false);
+return;
+}
+}
+////RED CARD INCERT///
+void redcard_for_vilmor(string &in asItem, string &in asEntity)
+{
+SetGlobalVarInt("first_card", 1);
+RemoveItem(asItem);
+StartPlayerLookAt("ScriptArea_20", 1.5, 1.5, "");
+SetEntityActive("level09_circuit_board_2", true);
+AddTimer("ct1", 1, "card_timer");
+AddTimer("ct2", 3, "card_timer");
+}
+void card_timer(string &in asTimer)
+{
+if (asTimer == "ct1"){
+SetMoveObjectState("level09_circuit_board_2", -0.5);
+PlayGuiSound("interact_insert_cd1.ogg", 0.6f);
+StopPlayerLookAt();
+return;
+}
+if (asTimer == "ct2"){
+SetLightFlickerActive("PointLight_14", true);
+SetLightFlickerActive("PointLight_15", true);
+SetLightFlickerActive("PointLight_16", true);
+AddTimer("sk", 0.5, "speakcheck");
+AddEffectVoice("WILMAR_03_4", "", "Voice", "Wilmar_3_4", true, "tech_speaker_7", 9, 16);
+AddEffectVoice("WILMAR_03_5", "", "Voice", "Wilmar_3_5", true, "tech_speaker_7", 9, 16);
+AddEffectVoice("WILMAR_03_6", "", "Voice", "Wilmar_3_6", true, "tech_speaker_7", 9, 16);
+return;
+}
+if (asTimer == "ct3"){
+SetMoveObjectState("level09_circuit_board_3", -0.5);
+PlayGuiSound("interact_insert_cd1.ogg", 0.6f);
+StopPlayerLookAt();
+return;
+}
+if (asTimer == "ct4"){
+FadeLightTo("Light_sp", 0, 0, 0, 0, 0, 1);
+SetEntityActive("Door_down", true);
+SetEntityActive("Door_up", false);
+SetEntityActive("ScriptArea_14", true);
+return;
+}
+}
+void speakcheck(string &in asTimer)
+{
+AddTimer("sk", 0.5, "speakcheck");
+if (GetEffectVoiceActive() == false){
+SetLightFlickerActive("PointLight_14", false);
+SetLightFlickerActive("PointLight_15", false);
+SetLightFlickerActive("PointLight_16", false);
+RemoveTimer("sk");
+}
+}
+void bluecard_for_exit(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+StartPlayerLookAt("ScriptArea_44", 1.5, 1.5, "");
+SetEntityActive("level09_circuit_board_3", true);
+AddTimer("ct3", 1, "card_timer");
+AddTimer("ct4", 3, "card_timer");
+
+}
+///////////////////
+////VILMOR TALK///
+/////////////////
+void vilmar_revelation(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+SetLanternActive(false, false);
+StartInsanityEvent("WideWilmar"); 
+StartPlayerLookAt("ScriptArea_13", 1.5, 1.5, "");
+ShowPlayerCrossHairIcons(false);
+SetPlayerCrouching(false);
+AddTimer("vp1", 1, "vilmor_present");
+AddTimer("vp2", 2, "vilmor_present");
+AddTimer("vp3", 28, "vilmor_present");
+AddTimer("vp4", 29, "vilmor_present");
+}
+void vilmor_present(string &in asTimer)
+{
+if (asTimer == "vp1"){
+SetLampLit("Lamp_comp_*", true, false);
+PlayGuiSound("light_off1.ogg", 0.85f);
+for (int i=1; i<=7; i++){
+SetLightVisible("Server_light_"+i, true);
+}
+SetLightVisible("PointLight_14", true);SetLightVisible("PointLight_15", true);SetLightVisible("PointLight_16", true);
+FadeInSound("Sound_1", 1, false);
+return;
+}
+if (asTimer == "vp2"){
+AddTimer("", 1.8, "speaknow");
+PlayMusic("penumbra_requiem_A1.ogg", true, 0.5, 5, 1, true);
+PlayGuiSound("general_speaker_noise_loud.snt", 0.85f);
+return;
+}
+if (asTimer == "vp3"){
+StopMusic(5, 1);
+SetLightFlickerActive("PointLight_14", false);
+SetLightFlickerActive("PointLight_15", false);
+SetLightFlickerActive("PointLight_16", false);
+return;
+}
+if (asTimer == "vp4"){
+StopPlayerLookAt();
+SetPlayerActive(true);
+AddQuest("Wilq", "Wilmartack");
+ShowPlayerCrossHairIcons(true);
+return;
+}
+}
+void speaknow(string &in asTimer)
+{
+SetLightFlickerActive("PointLight_14", true);
+SetLightFlickerActive("PointLight_15", true);
+SetLightFlickerActive("PointLight_16", true);
+AddEffectVoice("WILMAR_03_1", "", "Voice", "Wilmar_3_1", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_03_2", "", "Voice", "Wilmar_3_2", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_03_3", "", "Voice", "Wilmar_3_3", false, "narrator_voice_1", 9, 16);
+}
+//////////////////////////
+///VILMOR FIRST APPEAR///
+void vilmor_monster_now(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("penumbra_music_E1_C6.ogg", false, 0.9, 10, 1, false);
+}
+void firedoor_suprise(string &in asParent, string &in asChild, int alState)
+{
+SetLightVisible("Light_sp", true);
+SetEntityActive("block_box_silent_2", true);
+SetMoveObjectState("Firedoor", 0);
+}
+void vilmor_appear(string &in asEntity, string &in type)
+{
+//SetEntityActive("ScriptArea_14", true);
+}
+void monster_vilmar_walk(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("", 1, "eleanorscare");
+CheckPoint("vil", "PlayerStartArea_6", "pointsave", "", "");
+SetEntityActive("Vilmar", true);
+SetEntityActive("block_box_silent_5", true);SetEntityActive("block_box_silent_4", true);
+SetEntityActive("block_box_silent_3", true);
+SetEntityActive("block_box_silent_6", true);SetEntityActive("block_box_silent_7", true);
+SetEntityActive("block_box_silent_8", true);SetEntityActive("block_box_silent_9", true);
+SetEntityActive("block_box_silent_10", true);
+for (int i=1; i<=39; i++){
+AddEnemyPatrolNode("Vilmar", "PathNodeArea_"+i, 0.01, "");
+}
+}
+void eleanorscare(string &in asTimer)
+{
+PlayGuiSound("justine_wake2.ogg", 1.0f);
+}
+void pointsave(string &in asName, int alCount) 
+{
+SetEntityActive("Vilmar", true);
+for (int i=1; i<=39; i++){
+AddEnemyPatrolNode("Vilmar", "PathNodeArea_"+i, 0.01, "");
+}
+}
+/////////////////
+//FIRST PART////
+void noturnback(string &in asParent, string &in asChild, int alState)
+{
+SetMoveObjectState("door_emergency_sewer_y_4", -0.39);
+SetEntityActive("block_box_silent_1", true);
+}
+void fall_dead(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Dead_area_1", false);
+SetPlayerActive(false);
+SetPlayerFallDamageDisabled(true);
+AddTimer("d1", 0.3, "playerdead");
+StartInsanityEvent("fadedeath");
+}
+void playerdead(string &in asTimer)
+{
+SetLanternActive(false, false);
+FadeOut(0.5);
+FadeGlobalSoundVolume(0, 5);
+FadeGlobalSoundSpeed(0, 5);
+AddTimer("ref1", 3,"time_refresh");
+AddTimer("ref2", 3.2,"time_refresh");
+AddTimer("ref3", 4.5,"time_refresh");
+if (asTimer == "d1"){
+PlayGuiSound("12_implode_player1.ogg", 2.0f);
+return;
+}
+}
+void time_refresh(string &in asTimer)
+{
+if (asTimer == "ref1"){
+StartEffectFlash(0.3, 1, 0.8);
+return;
+}
+if (asTimer == "ref2"){
+if (GetLocalVarInt("resstate") == 0){
+TeleportPlayer("PlayerStartArea_7");
+}
+if (GetLocalVarInt("resstate") == 1){
+TeleportPlayer("PlayerStartArea_10");
+}
+return;
+}
+if (asTimer == "ref3"){
+FadeIn(0);
+if (GetPlayerHealth() <= 50){
+AddPlayerHealth(30);
+}
+SetEntityActive("Dead_area_1", true);
+SetPlayerFallDamageDisabled(false);
+SetPlayerActive(true);
+FadeGlobalSoundVolume(1, 5);
+FadeGlobalSoundSpeed(1, 5);
+return;
+}
+}
+void rumblesound(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "afx_sewer_pipetremor_01.snt", "ScriptArea_24", 0, true);
+StartScreenShake(0.02, 2, 3, 3);
+}
+void vilmorreactorspeak(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("", 1.5, "speaknowr");
+PlayGuiSound("general_speaker_noise_loud.snt", 0.85f);
+}
+void speaknowr(string &in asTimer)
+{
+AddEffectVoice("WILMAR_02_1", "", "Voice", "Wilmar_2_1", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_02_2", "", "Voice", "Wilmar_2_2", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_02_3", "", "Voice", "Wilmar_2_3", false, "narrator_voice_1", 9, 16);
+AddTimer("checkvoice", 1, "voicecheck");
+}
+void voicecheck(string &in asTimer)
+{
+AddTimer("checkvoice", 1, "voicecheck");
+if (GetEffectVoiceActive() == false){
+RemoveTimer("checkvoice");
+AddQuest("Rea", "Reactor");
+}
+}
+void rumblesound02(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "afx_sewer_pipetremor_03.snt", "ScriptArea_33", 0, true);
+StartScreenShake(0.02, 2, 3, 3);
+}
+///FLICKER LIGHT///
+void lampon(string &in asTimer)
+{
+PlaySoundAtEntity("lampon_1", "lm_light_flicker_long.snt", "lamp_flourescent01_17", 0, false);
+for (int i=1; i<=7; i++){
+SetLightVisible("Flickering_"+i, false);
+}
+AddTimer("lo2", 0.3f, "lampoff_1");
+SetLampLit("lamp_flourescent01_17", false, false);
+}
+
+void lampoff_1(string &in asTimer)
+{
+SetLampLit("lamp_flourescent01_17", true, false);
+for (int i=1; i<=7; i++){
+SetLightVisible("Flickering_"+i, true);
+}
+AddTimer("lo", 0.5f, "lampon");
+}
+//////////////////
+///REACTOR PUZZLE////
+void Stable01(string &in asEntity)
+{
+SetMessage("06_Reactor", "StablePower01", -1);
+}
+void interact_nonebutton(string &in asEntity)
+{
+PlayGuiSound("puzzle_button.ogg", 1.0f);
+SetMessage("08_End", "boilerbutton01", -1);
+}
+void Stable02(string &in asEntity)
+{
+SetMessage("06_Reactor", "StablePower02", -1);
+}
+void Stable03(string &in asEntity)
+{
+SetMessage("06_Reactor", "StablePower03", -1);
+}
+void OpenTower(string &in asEntity, int alState)
+{
+if (asEntity == "tech_lever_1"){
+  if (alState == 1)
+  {
+  SetLeverStuckState(asEntity, 1, false);  
+  SetMoveObjectState("door_emergency_sewer_y_12", 0.8);
+    }
+	}
+if (asEntity == "tech_lever_3"){
+if (alState == 1)
+  {
+  SetLeverStuckState(asEntity, 1, false);  
+  SetMoveObjectState("door_emergency_sewer_y_13", 0.8);
+    }
+}	
+}
+void interact_tower02button(string &in asEntity)
+{
+AddTimer("", 0.1, "button_check");
+PlayGuiSound("interact_button_gen.ogg", 1.0f);
+if (asEntity == "Area_1"){
+SetEntityActive("Area_1", false);
+AddLocalVarInt("Tower02Button", 41);
+SetButtonSwitchedOn("Button_1", true, true);
+return;
+}
+if (asEntity == "Area_2"){
+SetEntityActive("Area_2", false);
+AddLocalVarInt("Tower02Button", 8);
+SetButtonSwitchedOn("Button_2", true, true);
+return;
+}
+if (asEntity == "Area_3"){
+SetEntityActive("Area_3", false);
+AddLocalVarInt("Tower02Button", 10);
+SetButtonSwitchedOn("Button_3", true, true);
+return;
+}
+if (asEntity == "Area_4"){
+SetEntityActive("Area_4", false);
+AddLocalVarInt("Tower02Button", 22);
+SetButtonSwitchedOn("Button_4", true, true);
+return;
+}
+if (asEntity == "Area_5"){
+SetEntityActive("Area_5", false);
+AddLocalVarInt("Tower02Button", 13);
+SetButtonSwitchedOn("Button_5", true, true);
+return;
+}
+if (asEntity == "Area_6"){
+SetEntityActive("Area_6", false);
+AddLocalVarInt("Tower02Button", 5);
+SetButtonSwitchedOn("Button_6", true, true);
+return;
+}
+}
+void button_check(string &in asTimer)
+{
+if (GetLocalVarInt("Tower02Button") == 48){
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+AddTimer("", 1, "final_check");
+SetEntityActive("emergency_light_red_13", true);SetEntityActive("emergency_light_red_3", false);
+FadeLightTo("SpotLight_66", 0, 1, 0, 1, -1, 0.1);
+PlayGuiSound("door_code_correct1.ogg", 0.6f);
+PlaySoundAtEntity("", "amb_tesla_pulsating_electricity.snt", "ScriptArea_34", 1, true);
+SetLightVisible("PointLight_13", false);
+SetLightFlickerActive("PointLight_13", false);
+for (int i=1; i<=6; i++){
+SetEntityActive("Area_"+i, false);
+}
+}
+if (GetLocalVarInt("Tower02Button") == 99){
+SetLocalVarInt("Tower02Button", 0);
+AddTimer("", 1, "button_refresh");
+PlayGuiSound("door_code_incorrect1.ogg", 0.6f);
+for (int i=1; i<=6; i++){
+SetButtonSwitchedOn("Button_"+i, false, true);
+}
+}
+}
+void button_refresh(string &in asTimer)
+{
+for (int i=1; i<=6; i++){
+SetEntityActive("Area_"+i, true);
+}
+}
+//////
+void interact_tower03button(string &in asEntity)
+{
+AddTimer("", 0.1, "button_check03");
+PlayGuiSound("interact_button_gen.ogg", 1.0f);
+if (asEntity == "Area_7"){
+SetEntityActive("Area_7", false);
+AddLocalVarInt("Tower03Button", 41);
+SetButtonSwitchedOn("Button_7", true, true);
+return;
+}
+if (asEntity == "Area_8"){
+SetEntityActive("Area_8", false);
+AddLocalVarInt("Tower03Button", 8);
+SetButtonSwitchedOn("Button_8", true, true);
+return;
+}
+if (asEntity == "Area_9"){
+SetEntityActive("Area_9", false);
+AddLocalVarInt("Tower03Button", 10);
+SetButtonSwitchedOn("Button_9", true, true);
+return;
+}
+if (asEntity == "Area_10"){
+SetEntityActive("Area_10", false);
+AddLocalVarInt("Tower03Button", 22);
+SetButtonSwitchedOn("Button_10", true, true);
+return;
+}
+if (asEntity == "Area_11"){
+SetEntityActive("Area_11", false);
+AddLocalVarInt("Tower03Button", 13);
+SetButtonSwitchedOn("Button_11", true, true);
+return;
+}
+if (asEntity == "Area_12"){
+SetEntityActive("Area_12", false);
+AddLocalVarInt("Tower03Button", 5);
+SetButtonSwitchedOn("Button_12", true, true);
+return;
+}
+}
+void button_check03(string &in asTimer)
+{
+if (GetLocalVarInt("Tower03Button") == 73){
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+AddTimer("", 1, "final_check");
+SetEntityActive("emergency_light_red_17", true);SetEntityActive("emergency_light_red_5", false);
+FadeLightTo("SpotLight_67", 0, 1, 0, 1, -1, 0.1);
+PlayGuiSound("door_code_correct1.ogg", 0.6f);
+PlaySoundAtEntity("", "amb_tesla_pulsating_electricity.snt", "ScriptArea_38", 1, true);
+RemoveTimer("lo");RemoveTimer("lo2");
+SetLampLit("lamp_flourescent01_17", true, false);
+for (int k=1; k<=7; k++){
+SetLightVisible("Flickering_"+k, true);
+}
+for (int i=7; i<=12; i++){
+SetEntityActive("Area_"+i, false);
+}
+}
+if (GetLocalVarInt("Tower03Button") == 99){
+SetLocalVarInt("Tower03Button", 0);
+AddTimer("", 1, "button_refresh03");
+PlayGuiSound("door_code_incorrect1.ogg", 0.6f);
+for (int i=7; i<=12; i++){
+SetButtonSwitchedOn("Button_"+i, false, true);
+SetEntityActive("Area_"+i, false);
+}
+}
+}
+void button_refresh03(string &in asTimer)
+{
+for (int i=7; i<=12; i++){
+SetEntityActive("Area_"+i, true);
+}
+}
+void final_check(string &in asTimer)
+{
+if (GetLocalVarInt("Tower03Button") == 73 && GetLocalVarInt("Tower02Button") == 48){
+SetEntityActive("ScriptArea_36", true);SetEntityActive("ScriptArea_37", true);
+SetEntityActive("ScriptArea_10", false);
+StopSound("Sound_13", 1);
+PlaySoundAtEntity("", "amb_bilge_engineroom.snt", "ScriptArea_34", 1, true);
+PlayMusic("penumbra_requiem_PS4.ogg", false, 0.9, 12, 1, true);
+CompleteQuest("Rea", "Reactor");
+}
+}
+void eye_cash(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_36"){
+SetEntityActive("ScriptArea_37", false);
+AddTimer("se1", 1.5, "speakeyeevent");
+AddTimer("se2", 5.5, "speakeyeevent");
+AddTimer("se3", 9.3, "speakeyeevent");
+PlayGuiSound("general_speaker_noise_loud.snt", 0.85f);
+}
+if (asChild == "ScriptArea_37"){
+SetEntityActive("ScriptArea_36", false);
+AddTimer("se1", 1.5, "speakeyeevent");
+AddTimer("se2", 5.5, "speakeyeevent");
+AddTimer("se3", 9.3, "speakeyeevent");
+PlayGuiSound("general_speaker_noise_loud.snt", 0.85f);
+}
+}
+void speakeyeevent(string &in asTimer)
+{
+if (asTimer == "se1"){
+AddEffectVoice("WILMAR_02_4", "", "Voice", "Wilmar_2_4", false, "narrator_voice_1", 9, 16);
+AddEffectVoice("WILMAR_02_5", "", "Voice", "Wilmar_2_5", false, "narrator_voice_1", 9, 16);
+return;
+}
+if (asTimer == "se2"){
+SetLampLit("emergency_light_red_14", true, false);
+SetLightVisible("PointLight_1", true);
+SetEntityActive("item_eye", true);
+PlaySoundAtEntity("", "pneumatic_launch_3D.snt", "ScriptArea_35", 1, true);
+return;
+}
+if (asTimer == "se3"){
+SetMoveObjectState("level03_respawn_13", 0.5);
+return;
+}
+}
+///////MISC//////////////
+void afterload(string &in asTimer)
+{
+SetEntityPlayerInteractCallback("door_infected_blue_5_broken", "grabhand", false);
+}
+void transit(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_39"){
+SetLocalVarInt("tothestorage", 1);
+}
+if (asChild == "ScriptArea_40"){
+SetLocalVarInt("tothestorage", 0);
+}
+}
+//SAVE FIX//////
+void aftersave_fall_fix(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "Glitch_area_1"){
+TeleportPlayer("PlayerStartArea_1");
+}
+if (asChild == "Glitch_area_2"){
+TeleportPlayer("PlayerStartArea_8");
+}
+if (asChild == "Glitch_area_3"){
+TeleportPlayer("PlayerStartArea_9");
+}
+if (asChild == "Glitch_area_4"){
+TeleportPlayer("PlayerStartArea_4");
+}
+if (asChild == "Glitch_area_5"){
+TeleportPlayer("PlayerStartArea_6");
+}
+if (asChild == "Glitch_area_6"){
+TeleportPlayer("PlayerStartArea_5");
+}
+if (asChild == "Glitch_area_7"){
+TeleportPlayer("PlayerStartArea_3");
+}
+}
+void CompFakeLight(string &in asEntity, int alState)
+{
+ if (alState == 1){
+ if (GetLocalVarInt("fakecomp") == 0){
+ SetLocalVarInt("fakecomp", 1); 
+PlayGuiSound("light_off1.ogg", 0.5f);
+for (int i=1; i<=7; i++){
+SetLampLit("Lamp_comp_"+i, true, false);
+SetLightVisible("Server_light_"+i, true);
+}
+SetLightVisible("PointLight_14", true);SetLightVisible("PointLight_15", true);SetLightVisible("PointLight_16", true);
+return;
+}
+ }
+  if (GetLocalVarInt("fakecomp") == 1){
+  SetLocalVarInt("fakecomp", 0); 
+PlayGuiSound("light_off1.ogg", 0.5f);
+for (int i=1; i<=7; i++){
+SetLampLit("Lamp_comp_"+i, false, false);
+SetLightVisible("Server_light_"+i, false);
+}
+SetLightVisible("PointLight_14", false);SetLightVisible("PointLight_15", false);SetLightVisible("PointLight_16", false);
+return;
+}
+ }
+//////////////
+void loading_texthere(string &in asParent, string &in asChild, int alState)
+{
+SetLocalVarInt("tothestorage", 2);
+}
+/////////////
+//////////SYRINE////////////
+/////////////////////////////
+void Syr()
+{
+AddTimer("san1", 0.6, "sanity1");
+}
+void sanity1(string &in asTimer)
+{
+AddTimer("san1", 0.6, "sanity1");
+if (GetPlayerSanity() == 85){
+SetPlayerSanity(90);
+if (GetLocalVarInt("adrenalin_inject") == 0){
+stamina_obj.Stop();
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1.1);
+SetPlayerRunSpeedMul(1.05);
+SetPlayerLookSpeedMul(1.15);
+SetPlayerJumpForceMul(1.1);
+}
+AddPlayerHealth(30);
+SetLocalVarInt("adrenalin_inject", 1);
+FadeSepiaColorTo(0.7, 0.5);
+AddTimer("adren", 45 ,"adrenalin_end");
+}
+}
+}
+void adrenalin_end(string &in asTimer)
+{
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+SetPlayerJumpForceMul(1);
+}
+SetLocalVarInt("adrenalin_inject", 0);
+FadeSepiaColorTo(0, 0.5);
+stamina_obj.Start(); 
+}
+//////////////
+/////SIGN/////////
+void Sign_box(string &in asEntity)
+{
+if (asEntity == "signs_1"){
+SetMessage("06_Reactor", "radiator", -1);
+}
+if (asEntity == "signs_2"){
+SetMessage("06_Reactor", "radio", -1);
+}
+if (asEntity == "signs_3"){
+SetMessage("06_Reactor", "posters04", -1);
+}
+if (asEntity == "signs_4"){
+SetMessage("06_Reactor", "posters03", -1);
+}
+if (asEntity == "signs_5"){
+SetMessage("06_Reactor", "posters02", -1);
+}
+if (asEntity == "signs_6"){
+SetMessage("06_Reactor", "posters01", -1);
+}
+if (asEntity == "signs_7"){
+SetMessage("06_Reactor", "endposters01", -1);
+}
+if (asEntity == "signs_8"){
+SetMessage("06_Reactor", "endposters02", -1);
+}
+if (asEntity == "signs_9"){
+SetMessage("06_Reactor", "compvilmar", -1);
+}
+if (asEntity == "signs_10" or asEntity == "signs_11" or asEntity == "signs_12" or asEntity == "signs_13"){
+SetMessage("06_Reactor", "monitors", -1);
+}
+if (asEntity == "signs_14"){
+SetMessage("06_Reactor", "pnevtube", -1);
+}
+if (asEntity == "signs_15"){
+SetMessage("06_Reactor", "papersnew", -1);
+}
+if (asEntity == "signs_16"){
+SetMessage("09_Meteo", "posters02", -1);
+}
+}
+void nowayback(string &in asEntity)
+{
+SetMessage("06_Reactor", "nosewerback", -1);
+}
+////////////////
+void lockeddoor(string &in asEntity)
+{
+SetMessage("04_Morgue", "closeddoubledoor", -1);
+if (asEntity == "ScriptArea_51"){
+PlayGuiSound("interact_closed_door_old1.snt", 0.5f);
+}
+}
+////////////////
+void changerestartstate(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_42"){
+SetLocalVarInt("resstate", 0);
+}
+if (asChild == "ScriptArea_43"){
+SetLocalVarInt("resstate", 1);
+}
+}
+//////////////////
+void brokenentcheck(string &in asEntity, string &in asType)
+{
+if (asEntity == "door_infected_blue_2"){
+    if (asType == "Break"){
+    AddTimer("ac_1", 0.3, "apply_callback");
+    }
+	}
+}
+void apply_callback(string &in asTimer)
+{
+if (asTimer == "ac_1"){
+SetEntityPlayerInteractCallback("door_infected_blue_2_broken", "grabhand", false);
+return;
+}
+}
+/////////////////
+void breakglasstube(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "afx_sewer_pipetremor_02.snt", "ScriptArea_46", 0, true);
+StartScreenShake(0.02, 2, 3, 3);
+AddTimer("tc1", 0.6, "tubecrashevent");
+AddTimer("tc2", 3, "tubecrashevent");
+AddTimer("tc25", 5, "tubecrashevent");
+AddTimer("tc3", 9, "tubecrashevent");
+AddTimer("tc4", 10, "tubecrashevent");
+}
+void tubecrashevent(string &in asTimer)
+{
+if (asTimer == "tc1"){
+AddTimer("lo", 0.2f, "lampon");
+return;
+}
+if (asTimer == "tc2"){
+SetPropHealth("level06_radio_tube_19", 0);
+CreateParticleSystemAtEntity("", "ps_steam_rising_thin.ps", "ScriptArea_48", true);
+CreateParticleSystemAtEntity("ew1", "ps_electro_charge_weakened.ps", "ScriptArea_47", true);
+CreateParticleSystemAtEntity("ew2", "ps_electro_charge_weakened.ps", "ScriptArea_48", true);
+AddTimer("e1", 0.5, "eleccharge");
+AddTimer("e2", 2, "eleccharge");
+return;
+}
+if (asTimer == "tc25"){
+SetPropHealth("level06_radio_tube_18", 0);
+CreateParticleSystemAtEntity("", "ps_steam_rising_thin.ps", "ScriptArea_49", true);
+CreateParticleSystemAtEntity("ew3", "ps_electro_charge_weakened.ps", "ScriptArea_49", true);
+CreateParticleSystemAtEntity("ew4", "ps_electro_charge_weakened.ps", "ScriptArea_50", true);
+AddTimer("e3", 2, "eleccharge");
+return;
+}
+if (asTimer == "tc3"){
+RemoveTimer("lo");RemoveTimer("lo2");
+SetLampLit("lamp_flourescent01_17", true, false);
+for (int i=1; i<=7; i++){
+SetLightVisible("Flickering_"+i, true);
+}
+return;
+}
+if (asTimer == "tc4"){
+//
+
+return;
+}
+}
+void eleccharge(string &in asTimer)
+{
+if (asTimer == "e1"){
+PlaySoundAtEntity("", "27_orb_done.snt", "ScriptArea_47", 0, true);
+return;
+}
+if (asTimer == "e2"){
+DestroyParticleSystem("ew1");DestroyParticleSystem("ew2");
+return;
+}
+if (asTimer == "e3"){
+DestroyParticleSystem("ew3");DestroyParticleSystem("ew4");
+return;
+}
+}
+///////////////
+void wilmar_fence_fix(string &in asParent, string &in asChild, int alState)
+{
+if (alState == 1){
+SetLocalVarInt("nearfence", 1);
+}
+if (alState == -1){
+SetLocalVarInt("nearfence", 0);
+}
+}
+void time_wilmar_fence(string &in asTimer)
+{
+AddTimer("vilcheck", 1, "time_wilmar_fence");
+if (GetEnemyStateName("Vilmar") == "BreakDoor" && GetLocalVarInt("nearfence") == 1){
+AddLocalVarInt("checkbreakcases", 1);
+SetPropHealth("door_wiredoor_2", 0);
+SetPropHealth("door_wiredoor_1", 0);
+ShowEnemyPlayerPosition("Vilmar");
+if (GetLocalVarInt("checkbreakcases") == 2){
+RemoveTimer("vilcheck");
+}
+}
+}
+void OnEnter()
+{
+if (HasItem("item_circuit_card_red_1") == true){
+SetEntityActive("signs_9", false);
+}
+if (GetGlobalVarInt("Vilmar_mutation") == 1){
+for (int i=1; i<=7; i++){
+SetEntityActive("vil_"+i, true);
+SetLightVisible("Server_light_"+i, false);
+}
+CompleteQuest("Wilq", "Wilmartack");
+SetLampLit("Lamp_comp_*", false, false);
+ResetProp("props_*");
+AddTimer("", 1, "afterload");
+SetEntityActive("ScriptArea_22", true);SetEntityActive("ScriptArea_23", true);
+SetLightVisible("PointLight_14", false);SetLightVisible("PointLight_15", false);SetLightVisible("PointLight_16", false);
+StopSound("Sound_1", 1);
+PlaySoundAtEntity("", "lm_radio_noise.snt", "ScriptArea_8", 0, true);
+SetEntityActive("door_infected_blue_6", false);
+SetPropHealth("door_infected_blue_5", 0);
+SetEntityActive("door_infected_blue_8", true);SetEntityActive("door_infected_blue_frame", true);
+SetEntityActive("door_infected_blue_7", false);SetEntityActive("iron_mine_vertical_door_x_1", false);
+}
+PreloadSound("interact_wood_saw.snt");
+PreloadSound("interact_end_tape.snt");
+PreloadSound("interact_wood_saw.snt");
+PreloadSound("afx_sewer_pipetremor_01.snt");
+PreloadSound("afx_sewer_pipetremor_02.snt");
+PreloadSound("afx_sewer_pipetremor_03.snt");
+PreloadSound("lm_light_flicker_long.snt");
+PreloadSound("amb_tesla_pulsating_electricity.snt");
+PreloadSound("amb_bilge_engineroom.snt");
+PreloadSound("pneumatic_launch_3D.snt");
+PreloadSound("27_orb_done.snt");
+PreloadSound("lm_radio_noise.snt");
+PreloadParticleSystem("particle_dust_saw_hand.ps");
+PreloadParticleSystem("ps_steam_rising_thin.ps");
+PreloadParticleSystem("ps_electro_charge_weakened.ps");
+stamina_obj.Start(); 
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+}
+void OnLeave()
+{
+stamina_obj.Stop();
+if (GetLocalVarInt("tothestorage") == 0){
+SetupLoadScreen("", "", 1, "can_loadingscreen.jpg"); 
+}
+if (GetLocalVarInt("tothestorage") == 1){
+SetupLoadScreen("", "", 1, "menu_loading_screen.jpg"); 
+}
+if (GetLocalVarInt("tothestorage") == 2){
+SetupLoadScreen("LoadingText", "06_Reactor", 1, "cells_loadingscreen.jpg"); 
+}
+}

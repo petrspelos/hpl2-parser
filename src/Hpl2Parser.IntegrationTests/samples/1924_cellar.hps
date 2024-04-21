@@ -1,0 +1,142 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "area", "tapahtuu", true, 1);
+	AddEntityCollideCallback("Player", "area2", "tapahtuu2", true, 0);
+	AddEntityCollideCallback("Player", "area3", "tapahtuu5", true, 0);
+	AddEntityCollideCallback("morso", "delete", "tapahtuu3", true, 0);
+	AddEntityCollideCallback("Player", "scary", "tapahtuu4", true, 0);
+	AddUseItemCallback("", "key", "ovi", "FUNCTION", true);
+	AddUseItemCallback("", "vasara", "alue", "FUNCTION2", true);
+	CheckPoint ("", "Checkpoint", "", "", "");
+	AddEntityCollideCallback("Player", "area10", "tapahtuma1", true, 0);
+	PlayMusic("music_0.ogg", true, 0.9f, 4.0f, 1, true);
+	AutoSave();
+}
+
+void tapahtuma1(string &in asParent, string &in asChild, int alState)
+{
+	TeleportPlayer("PlayerStartArea_2");
+	CheckPoint ("", "PlayerStartArea_2", "", "", "");
+	SetEntityActive("brute2", true);
+	AddEnemyPatrolNode("brute2", "PathNodeArea_4", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_5", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_6", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_7", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_8", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_10", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_11", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_12", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_13", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_14", 0, ""); 
+	AddEnemyPatrolNode("brute2", "PathNodeArea_15", 0, ""); 
+}
+
+void FUNCTION(string &in item, string &in door)
+{
+	SetLevelDoorLocked("ovi", false);
+	PlaySoundAtEntity("", "unlock_door", "ovi", 0, false);
+	RemoveItem("key");
+}
+
+void FUNCTION2(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("door", false, true);
+	PlayGuiSound("impact_metal_high.snt", 1.0f);
+	RemoveItem("vasara");
+	CreateParticleSystemAtEntity("", "ps_hit_metal.ps", "alue", false);
+	SetEntityActive("alue", false);
+	AddTimer("", 0.2, "pp");
+}
+
+void pp(string &in asTimer)
+{
+	AddPropImpulse("door", 4, 0, 0, "world");
+}
+
+void tapahtuu(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(10, true);	
+	AddPropImpulse("kaappi", 0, 0, 2, "world");
+	AddPropImpulse("luuta", 0, 0, 5, "world");
+	SetEntityActive("area2", true);
+	CreateParticleSystemAtEntity("", "ps_dust_elevator_crash.ps", "partic", false);
+	AddTimer("", 1, "yska");
+	PlayGuiSound("18_blow_wind.snt", 0.5f);
+}
+
+void yska(string &in asTimer)
+{
+	PlayGuiSound("player_awaken.ogg", 1.0f);
+}
+
+void tapahtuu2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("morso", true);
+	GiveSanityDamage(10.0f, true);
+	AddEnemyPatrolNode("morso", "PathNodeArea_1", 0, ""); 
+	AddEnemyPatrolNode("morso", "PathNodeArea_2", 0, ""); 
+	AddEnemyPatrolNode("morso", "PathNodeArea_3", 0, ""); 
+	AddTimer("", 2, "StopLook");
+	StartPlayerLookAt("morso", 3, 5, "");
+	PlayMusic("19_event_brute.ogg", false, 0.9f, 9.0f, 52, false);
+	SetEntityActive("area3", true);
+}
+
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void tapahtuu3(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("morso", false);
+}
+
+void tapahtuu4(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(10.0f, true);
+	SetEntityActive("armor", false);
+	SetEntityActive("1", true);
+	SetEntityActive("2", true);
+	SetEntityActive("3", true);
+	SetEntityActive("4", true);
+	SetEntityActive("5", true);
+	AddPropImpulse("2", 3, 0, 0, "world");
+	AddPropImpulse("3", 3, 0, 0, "world");
+}
+
+void tapahtuu5(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("brute", true);
+	AddTimer("", 1, "paths");
+}
+
+void paths(string &in asTimer)
+{
+	AddEnemyPatrolNode("brute", "PathNodeArea_4", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_5", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_6", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_7", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_8", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_10", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_11", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_12", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_13", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_14", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_15", 0, ""); 
+	AddEntityCollideCallback("brute", "restart", "reactive", true, 0);
+}
+
+void reactive(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1, "paths");
+}
+
+
+
+
+
+
+
+
+

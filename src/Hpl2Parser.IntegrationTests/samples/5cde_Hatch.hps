@@ -1,0 +1,114 @@
+void OnStart()
+{
+	AutoSave();
+	AddEntityCollideCallback("Player", "ScareArea", "GiveQuest", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea2", "Fffuuuu2", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea_1", "CloseDoor", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea_2", "ScaryThings", true, 1);
+	AddEntityCollideCallback("Player", "ScareArea_3", "ScaryThings2", true, 1);
+	SetEntityCallbackFunc("hollow_needle_1", "OnPickup");
+}
+void Fffuuuu2 (string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("suitor/amb_hunt03.ogg", false, 1, 0.1f, 0, false);
+}
+void ScaryThings (string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("T1", 0.5, "BreakGlass");
+	AddTimer("T2", 1.5, "BreakGlass");
+	AddTimer("T3", 2.5, "BreakGlass");
+	PlayMusic("suitor/amb_idle_whimp01.ogg", false, 1, 0.1f, 0, false);
+		SetPlayerActive(false);
+		StartPlayerLookAt("ScriptArea_1", 5, 5, "");
+}
+void ScaryThings2 (string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("suitor/amb_hunt02.ogg", false, 1, 0.1f, 0, false);
+}
+void BreakGlass(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetLampLit("hanging_lantern_wall_8", false, false);
+		PlaySoundAtEntity("", "break_glass_bottle.snt", "hanging_lantern_wall_8", 0, false);
+	}
+	else if (x == "T2")
+	{
+		PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+	}
+	else if (x == "T3")
+	{
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+	}
+}
+void CloseDoor (string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("cellar_wood01_4", true, true);
+	PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 0, false);
+	PlaySoundAtEntity("", "react_scare", "Player", 0, false);
+	PlaySoundAtEntity("", "close_door.snt", "Player", 0, false);
+}
+void GiveQuest (string &in asParent, string &in asChild, int alState)
+{
+	SetLanternDisabled(true);
+	AddPropForce("wine01_1", 20, 15, 25, "world");
+	SetEntityActive("ScareArea2", true);
+	AddTimer("T1", 1.5, "SneakSounds");
+	AddTimer("T2", 4, "SneakSounds");
+	AddTimer("T3", 6.5, "SneakSounds");
+	AddTimer("T4", 9, "SneakSounds");
+	SetEntityActive("cellar_wood01_3", false);
+	SetEntityActive("cellar_wood01_4", true);
+	SetEntityActive("ScareArea_1", true);
+	SetEntityActive("ScareArea_2", true);
+	SetEntityActive("ScareArea_3", true);
+		SetLampLit("hanging_lantern_wall_7", false, true);
+		SetLampLit("hanging_lantern_wall_6", false, true);
+		SetLampLit("hanging_lantern_wall_2", false, true);
+}
+void SneakSounds(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("cellar_wood01_2", 5, 5, "");
+		PlayMusic("suitor/chains_monster_man_sneak_soft_1.ogg", false, 1, 0.1f, 0, false);
+	}
+	else if (x == "T2")
+	{
+		PlayMusic("suitor/chains_monster_man_sneak_soft_2.ogg", false, 1, 0.2f, 0, false);
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+	}
+	else if (x == "T3")
+	{
+		PlayMusic("suitor/chains_monster_man_sneak_soft_3.ogg", false, 1, 0.3f, 0, false);
+	}
+	else if (x == "T4")
+	{
+		PlayMusic("suitor/chains_monster_man_sneak_soft_2.ogg", false, 1, 0.4f, 0, false);
+	}
+}
+void OnPickup(string &in asEntity, string &in type)
+{
+	SetEntityActive("ScareArea2", true);
+	CompleteQuest ("HatchQuest", "HatchQuest");
+}
+void PantryDoor(string &in entity)
+  
+{
+    if(GetSwingDoorLocked("cellar_wood01_5") == true)
+    {
+ 
+        SetMessage("Messages", "PantryDoor", 0);
+ 
+    }
+}
+void OnLeave()
+{
+SetLanternDisabled(false);
+SetupLoadScreen("Loading", "LoadScreen5", 0, "pic13.png");
+}

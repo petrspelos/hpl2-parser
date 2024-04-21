@@ -1,0 +1,1223 @@
+ /*creaks
+ */
+ void CreaksTimer(string &in asTimer2)
+ {
+	PlaySoundAtEntity("Creaks", "afx_events_mansion_hallwaycreak", "AreaCreaks_"+RandInt(1,6), 0.0, false);
+	
+	AddTimer("CreaksTimer", RandFloat(5.0f, 12.0f), "CreaksTimer");
+ }
+
+ void RandMuseumSoundCues (string &in asTimer)
+{
+	string[] sCueSources8 = {"Sound_MuseumRand_1", "Sound_MuseumRand_2", "Sound_MuseumRand_3", "Sound_MuseumRand_4", "Sound_MuseumRand_5", "Sound_MuseumRand_6"};
+	asTimer = sCueSources8[RandInt (0, 6)];
+	PlaySoundAtEntity(asTimer, "afx_spooky_hallway_hits.snt", asTimer, 0, false);
+	AddDebugMessage("Random Sound Cue Function Selected Museum Sound Source: "+asTimer, false);
+	AddTimer(asTimer, RandFloat(5.0f, 12.0f), "RandMuseumSoundCues");
+}
+ 
+ 
+ void RandMuseumSoundCues2 (string &in asTimer)
+{
+	string[] sCueSources8 = {"Sound_CellarRand_1", "Sound_CellarRand_2", "Sound_CellarRand_3", "Sound_CellarRand_4", "Sound_CellarRand_5"};
+	asTimer = sCueSources8[RandInt (0, 5)];
+	PlaySoundAtEntity(asTimer, "afx_events_cellar_rand_env.snt", asTimer, 0, false);
+	//AddDebugMessage("Random Sound Cue Function Selected Museum Sound Source: "+asTimer, false);
+	AddTimer(asTimer, RandFloat(5.0f, 12.0f), "RandMuseumSoundCues2");
+}
+ 
+
+ 
+ //BEGIN BREAK WINDOW
+
+
+void CollideAreaBreakWindow(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("brum", "11_forest_minor.snt", "AreaGlassEffects", 0.0f, false);
+	PlaySoundAtEntity("guard", "04_warn.snt", "AreaGlassEffects", 0.0f, false);
+	SetEntityActive("block_box_4", true);
+	SetEntityActive("LadderArea_1", false);
+	CreateParticleSystemAtEntity("puff", "ps_cave_monster_warn.ps", "AreaGlassEffects_3", false);
+	
+	StartPlayerLookAt("AreaGlassEffects", 4.0f, 4.0f, "");
+	
+	AddTimer("glass1", 1.5f, "TimerGlassEffects");
+	AddTimer("glass2", 0.5f, "TimerGlassEffects");
+	AddTimer("glass3", 1.2f, "TimerGlassEffects");
+	AddTimer("glass4", 1.5f, "TimerGlassEffects");
+	
+	AddTimer("scare", 1.75f, "TimerPlayerReact02");
+	AddTimer("breath", 3.5f, "TimerPlayerReact02");
+	AddTimer("breath", 5.5f, "TimerPlayerReact02");
+
+	SetEntityActive("AreaBreakWindow_1", false);
+	SetEntityActive("AreaBreakWindow", false);
+}
+void TimerGlassEffects(string &in asTimer)
+{
+	if(asTimer == "glass1"){
+		SetEntityActive("windowb_1", false);
+		SetEntityActive("windowb_2", true);
+		SetEntityActive("mansionbase_large_window_breakable_1", true);
+		
+		PlaySoundAtEntity("bglass", "11_glass_crack", "AreaGlassEffects", 0.0f, false);
+		
+		CreateParticleSystemAtEntity("bglassp", "ps_hit_glass.ps", "AreaGlassEffects", false);
+	} 
+	else if(asTimer == "glass3"){
+		PlaySoundAtEntity("bglass2", "11_glass_crack", "AreaGlassEffects_1", 0.0f, false);
+		CreateParticleSystemAtEntity("bglassp2", "ps_hit_glass.ps", "AreaGlassEffects_1", false);
+		StopPlayerLookAt();
+	} 
+	else if(asTimer == "glass4"){
+		PlaySoundAtEntity("bglass3", "11_glass_crack", "AreaGlassEffects_2", 0.0f, false);
+		CreateParticleSystemAtEntity("bglassp3", "ps_hit_glass.ps", "AreaGlassEffects_2", false);
+	} 
+	else{
+		StartScreenShake(0.02f, 0.25f, 1.0f, 1.75f);
+		StopSound("brum", 4.0f);
+		StopSound("guard", 5.0f);
+	}
+}
+//END BREAK WINDOW
+
+//Collide window directly when close
+void CollideAreaBreakWindowOnClose(string &in asParent, string &in asChild, int alState)
+{
+	CollideAreaBreakWindow("", "", 1);	//Break window
+	
+	//Remove areas that count for break window
+	SetEntityActive("AreaRoom1", false);
+	SetEntityActive("AreaRoom2", false);
+	SetEntityActive("AreaRoom3", false);
+	SetEntityActive("AreaCorridorQuest", false);
+	
+	RemoveTimer("BreakWindowNoFS");	//Remove the timer that breaks window
+}
+
+
+//===========================================
+     // This runs when the map first starts
+     void OnStart()
+
+    {
+         SetMapDisplayNameEntry("EastHall");     
+	 StopSound("CellarDrone", 0.2);
+	 StopSound("WindDroneA", 0.2);
+	 StopSound("WindDroneB", 0.2);
+	 
+		  StopMusic(3, 2);
+		  StopMusic(3, 3);
+		  StopMusic(3, 4);
+		  StopMusic(3, 5);
+		  StopMusic(3, 6);
+		  StopMusic(3, 7);
+		  StopMusic(3, 8);
+		  StopMusic(3, 9);
+		  StopMusic(3, 10);
+		  StopMusic(3, 11);
+		  StopMusic(3, 12);
+		  StopMusic(3, 13);
+		  StopMusic(3, 14);
+		  StopMusic(3, 15);
+			  
+			  SetEntityPlayerInteractCallback("ScriptArea_button", "PictureMove", false);
+			  
+			  SetLightVisible("SpotLight_15", false);
+			  //CreateDataCache();
+			  GiveSanityDamage(10, false);
+			  
+			  AddUseItemCallback("", "key_study_2", "mansion_4", "UnlockDoor", true);
+			  SetLocalVarInt("CollideDoor", 0);
+			  SetEntityPlayerInteractCallback("note_paper01_2", "WindowArea", true);
+			  SetEntityPlayerInteractCallback("OrbPiece_2", "CollectOrb", true);
+			  SetEntityPlayerInteractCallback("hatch_ceiling_1", "DisableWood", true);
+			  SetEntityPlayerInteractCallback("cellar_wood01_8", "ChildRun1", true);
+			  SetEntityPlayerInteractCallback("note_paper01_1", "BaxterNote1", true);
+			  SetEntityPlayerInteractCallback("note_letter_1", "MonsterNote", true);
+			  SetEntityPlayerInteractCallback("CrankWheel", "ActivateArea", true);
+			  
+			  AddEntityCollideCallback("Player", "ScriptArea_31", "Sound1", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_33", "Sound2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_35", "Sound3", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_37", "Sound4", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_39", "Sound5", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_13", "Sound7", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_14", "Enemy1", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_30", "Blocking", true, 1);
+			  AddEntityCollideCallback("castle_portcullis_1", "ScriptArea_28", "DoorCollide", true, 1);
+			  AddEntityCollideCallback("chair_nice02_*", "AreaFallDeath2", "CollideFallDeath2", false, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_21", "Hits", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_15", "LadderBreak", true, 1);
+			  AddEntityCollideCallback("servant_grunt_pig_1", "ScriptArea_9", "EnemyGo", true, 1);
+			  AddEntityCollideCallback("chair_nice02_*", "AreaBirds", "BirdsFly", true, 1);
+			  AddEntityCollideCallback("Player", "DroneArea1", "DroneChange", false, 1);
+			  AddEntityCollideCallback("Player", "DroneArea2", "DroneChange2", false, 1);
+			  AddEntityCollideCallback("Player", "DroneArea3", "DroneChange3", false, 1);
+			  AddEntityCollideCallback("Player", "DroneArea4", "DroneChange4", false, 1);
+			  AddEntityCollideCallback("Player", "DroneArea5", "DroneChange5", false, 1);
+			  AddEntityCollideCallback("Player", "DroneArea6", "DroneChange6", false, 1);
+			  AddEntityCollideCallback("Player", "DroneArea7", "DroneChange7", false, 1);
+			  AddEntityCollideCallback("Player", "DroneArea8", "DroneChange8", false, 1);
+			  AddEntityCollideCallback("Player", "EnemyArea", "FirstEnemy", true, 1);
+			  AddEntityCollideCallback("servant_grunt_1", "EnemyAreaBlur", "FirstEnemyBlur", true, 1);
+			  AddEntityCollideCallback("servant_grunt_1", "EnemyAreaBlurAct", "FirstEnemyBlurAct", true, 1);
+			  AddEntityCollideCallback("servant_grunt_1", "ScriptArea_16", "FirstEnemyGo", true, 1);
+			  AddEntityCollideCallback("mansion_8", "ScriptArea_1", "DoorBlocked", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_2", "ChaseBegin", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_3", "ChaseCheck", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_4", "Chase2", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_5", "Chase3", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_27", "ChaseEXTRA", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_6", "Chase4", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_7", "Chase5", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_8", "Chase6", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_10", "Chase7", true, 1);
+			  AddEntityCollideCallback("Player", "ScriptArea_26", "ChaseEnd", true, 1);
+			  AddEntityCollideCallback("Player", "AreaFallDeath", "CollideFallDeath", false, 1);	//Kill player instantly if he falls down when outside
+			  AddEntityCollideCallback("Player", "CollideFall", "CollideCheckFall", true, 1);
+			  AddEntityCollideCallback("Player", "IncreaseSanity", "IncreaseSanityArea", true, 1);
+			  AddEntityCollideCallback("Player", "DustFall", "Creak2", true, 1);
+			  
+			  AddEntityCollideCallback("Player", "ScriptArea_18", "Scare2", true, 1);
+			  AddEntityCollideCallback("child_skipping_silent_1", "ScriptArea_23", "ChildGo", true, 1);
+			  
+			  AddEntityCollideCallback("Player", "AreaBreakWindow", "CollideAreaBreakWindow", true, 1);
+			  AddEntityCollideCallback("Player", "AreaBreakWindow_1", "CollideAreaBreakWindow", true, 1);
+			  AddEntityCollideCallback("Player", "AreaBreakWindowOnClose", "CollideAreaBreakWindowOnClose", true, 1);
+			  
+			  SetEntityConnectionStateChangeCallback("StatueLever2", "MoveStatue2");
+			  
+			  {	
+		//SETUP CONNECTIONS//
+		InteractConnectPropWithMoveObject("barrelcranktoslope", "CrankWheel", "castle_portcullis_1", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktopulley", "CrankWheel", "CrankPulley", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes1", "CrankWheel", "slope_ropes", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktoropes2", "CrankWheel", "slope_ropes_3", false, false, 0);
+		InteractConnectPropWithMoveObject("barrelcranktowheel1", "CrankWheel", "slope_wheel_1", false, true, 0);
+		InteractConnectPropWithMoveObject("barrelcranktowheel3", "CrankWheel", "slope_wheel_2", false, false, 0);
+	
+		
+	}
+			  
+	
+     }      
+	
+	void BaxterNote1(string &in asEntity)
+		
+		{
+				PlayMusic("07_edward_note_a", true, 0.8, 0.2, 3, true);
+				AddTimer("", 0.3, "StopNoteMusic");
+		}
+
+		void StopNoteMusic(string &in asTimer)
+		
+		{
+				StopMusic(3, 3);
+		}
+	
+	
+		void StopNoteMusic2(string &in asTimer)
+		
+		{
+				StopMusic(3, 3);
+		}
+	
+	void ActivateArea(string &in asEntity)	
+{
+//SetEntityActive("ScriptArea_33", true);
+
+}
+	
+	void MonsterNote(string &in asEntity)
+		
+		{
+				PlayMusic("07_monster_note", true, 0.45, 1, 3, true);
+				AddTimer("", 0.3, "StopNoteMusic3");
+		}
+
+		void StopNoteMusic3(string &in asTimer)
+		
+		{
+				StopMusic(3, 3);
+		}
+	
+	void CollideFallDeath2(string &in asParent, string &in asChild, int alState)
+{	
+	PlaySoundAtEntity("", "react_sigh", "Player", 0, false);
+	PlaceEntityAtEntity("armchair_5", "ScriptArea_29", "", false);
+	
+	FadeOut(1);
+	
+	AddTimer("death3", 0.5f, "TimerFallDeath2");	
+	AddTimer("death4", 1, "TimerFallDeath2");	
+}
+void TimerFallDeath2(string &in asTimer)
+{	
+	if(asTimer == "death3"){
+		PlaySoundAtEntity("", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+	
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	
+	PlaySoundAtEntity("", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("", "player_bodyfall", "Player", 0, false);
+}	
+	
+	void MoveStatue2(string &in asEntity, int alState)	
+	
+	{
+		if(GetLeverState("StatueLever2")==1)
+		
+			 {
+					
+					SetLeverStuckState("StatueLever2", 1, true);
+					AddGlobalVarInt("DiningRoom", 1);	
+					AddGlobalVarInt("StatB", 1);
+					SetEntityActive("ScriptArea_14", true);		
+					GiveSanityBoostSmall();
+					AddQuest("Statues2", "Statues2");
+					CompleteQuest("FindLever", "FindLever");
+					CheckPoint("check02","PlayerStartArea_7", "","", "");
+			 }
+							 	
+	}
+	
+	
+	///////////////////////
+//BEGIN FALL TO DEATH//
+void CollideFallDeath(string &in asParent, string &in asChild, int alState)
+{	
+	PlaySoundAtEntity("fallaaaaaah", "11_fall", "Player", 0, false);
+	PlaySoundAtEntity("fallaaaaaah2", "scare_male_terrified5", "Player", 0, false);
+	
+	FadeOut(1);
+	
+	AddTimer("death1", 0.5f, "TimerFallDeath");	
+	AddTimer("death2", 1, "TimerFallDeath");	
+}
+void TimerFallDeath(string &in asTimer)
+{	
+	if(asTimer == "death1"){
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+	
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+}	
+//END FALL TO DEATH//
+/////////////////////
+	
+	void CollideCheckFall(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("check01","PlayerStartArea_4", "CheckPointSouth","Hints", "DeathFall");
+	AddTimer("InitRandomMuseumSoundCuePlayer", 5.0f, "RandMuseumSoundCues");
+	AddTimer("InitRandomMuseumSoundCuePlayer2", 5.0f, "RandMuseumSoundCues2");
+}
+	
+	void CheckPointSouth(string &in asName, int alCount)
+{
+	FadeIn(0.2);
+	if(alCount >=2)
+	{
+		TeleportPlayer("PlayerStartArea_4");	
+	}
+}
+	
+	void IncreaseSanityArea(string &in asParent, string &in asChild, int alState)
+	
+	{
+			GiveSanityBoost();
+			PlayMusic("15_puzzle_hole", false, 0.7, 0.5, 5, false);
+	}
+	
+	//CHASE SEQUENCE//
+	
+	void ChaseCheck(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			SetEntityActive("servant_grunt_1", false);
+			CheckPoint ("ChaseCheckPoint", "PlayerStartArea_3", "", "", "");
+			
+	}
+	
+	void ChaseBegin(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPlayerRunSpeedMul(1.3);
+			SetPlayerMoveSpeedMul(1);
+			SetEntityActive("servant_grunt_2", true);
+			StartPlayerLookAt("ScriptArea_11", 2.5, 2.5, "");
+			SetPropHealth("cellar_wood01_11", 70);
+			PlaySoundAtEntity("", "break_wood3.snt", "ScriptArea_12", 0.0f, true);
+			
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_30", 3, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_31", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_32", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_2", "PathNodeArea_33", 0.001, "");
+			AddTimer("", 2, "MUSIC");
+	}
+	
+	void MUSIC(string &in asTimer)
+	
+	{
+			PlayMusic("29_amb_end_intense", true, 1, 5, 10, true);
+			StopPlayerLookAt();
+			SetMessage("Messages", "RunNow", 5);
+			FadeImageTrailTo(1.0, 5);
+			
+	}
+	
+	void Chase2(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropHealth("cellar_wood01_2", 0);
+			SetEntityActive("servant_grunt_2", false);
+			SetEntityActive("servant_grunt_3", true);
+			ShowEnemyPlayerPosition("servant_grunt_3");
+	}
+	
+	void ChaseEXTRA(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			SetEntityActive("servant_grunt_3", false);
+			SetEntityActive("servant_grunt_8", true);
+			ShowEnemyPlayerPosition("servant_grunt_8");
+	}
+	
+	void Chase3(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			SetEntityActive("servant_grunt_8", false);
+			SetEntityActive("servant_grunt_4", true);
+			ShowEnemyPlayerPosition("servant_grunt_4");
+	}
+	
+	void Chase4(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			SetEntityActive("servant_grunt_4", false);
+			SetEntityActive("servant_grunt_5", true);
+			ShowEnemyPlayerPosition("servant_grunt_5");
+	}
+	
+	void Chase5(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			SetEntityActive("servant_grunt_5", false);
+			SetEntityActive("servant_grunt_6", true);
+			ShowEnemyPlayerPosition("servant_grunt_6");
+			PlaySoundAtEntity("", "guardian_ontop.snt", "Player", 0.0f, true);
+			StartScreenShake(0.06, 4, 1.5, 1);
+	}
+	
+	void Chase6(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			SetEntityActive("servant_grunt_6", false);
+			SetEntityActive("servant_grunt_7", true);
+			ShowEnemyPlayerPosition("servant_grunt_7");
+	}
+	
+	void Chase7(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			SetEntityActive("servant_grunt_7", false);
+			
+			
+	}
+	
+	void ChaseEnd(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropActiveAndFade("slime_6way_1", true, 3);
+			PlaySoundAtEntity("", "guardian_distant2.snt", "Player", 0.0f, true);
+			StartScreenShake(0.02, 2, 1.5, 1);
+			//SetEntityActive("servant_grunt_nospawnsound_1", true);
+			//AddEnemyPatrolNode("servant_grunt_nospawnsound_1", "PathNodeArea_103", 12, "");
+			//AddEnemyPatrolNode("servant_grunt_nospawnsound_1", "PathNodeArea_85", 0.001, "");
+			//AddEnemyPatrolNode("servant_grunt_nospawnsound_1", "PathNodeArea_129", 0.001, "");
+			//AddEnemyPatrolNode("servant_grunt_nospawnsound_1", "PathNodeArea_84", 0.001, "");
+	}
+	
+	void FirstEnemyGo(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("servant_grunt_1", false);
+	}
+	
+	void DoorBlocked(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetMessage("Messages", "Barricade", 5);
+	}
+	
+	void FirstEnemyBlur(string &in asParent, string &in asChild, int alState)
+	
+	{
+					FadeRadialBlurTo(0, 4);	
+					FadeImageTrailTo(0, 4);
+	}
+	
+	void FirstEnemyBlurAct(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("EnemyAreaBlur", true);
+			SetEnemyDisableTriggers("servant_grunt_1", false);
+	}
+	
+	void FirstEnemy(string &in asParent, string &in asChild, int alState)
+	
+	{
+					SetEntityActive("servant_grunt_1", true);
+					//SetEnemyDisableTriggers("servant_grunt_1", true);
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 1, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_15", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_16", 6, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_17", 8, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_18", 4, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_19", 4, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_20", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_21", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_22", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_23", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_24", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_25", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_26", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_27", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_28", 0.001, "");
+					AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_29", 0.001, "");
+					FadeRadialBlurTo(0.05, 0.1);	
+					FadeImageTrailTo(0.5, 2);
+					PlayMusic("music_engine_room_discover", false, 1, 0.5, 10, false);
+	}
+	
+	void DroneChange(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			FadeInSound("CellarDrone", 3, false);
+			StopSound("GreatHall", 3);
+			AddTimer("DRONE", 1.5f, "DRONE");
+	
+	}
+	
+	void DroneChange2(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			FadeInSound("GreatHall", 3, false);
+			StopSound("CellarDrone", 3);
+			AddTimer("DRONE2", 1.5f, "DRONE2");
+			
+	
+	}
+	
+	void DroneChange3(string &in asParent, string &in asChild, int alState)
+	
+	{
+				FadeImageTrailTo(0.0, 4);
+				FadeInSound("GreatHall", 3, false);
+				StopSound("CellarDrone", 3);
+				SetEntityActive("DroneArea4", true);
+				SetEntityActive("ScriptArea_1", false);
+				SetEntityActive("servant_grunt_nospawnsound_1", false);
+				SetPlayerRunSpeedMul(1);
+				StopMusic(5, 10);
+				SetEntityActive("cellar_wood01_5", false);
+				SetEntityActive("cellar_wood01_12", true);
+				SetEntityActive("hatch_ceiling_1", false);
+				SetEntityActive("hatch_ceiling_2", true);
+				StopMusic(2,0);
+				SetPropStaticPhysics("door_barricade_1", false);
+				CheckPoint ("CheckChair", "PlayerStartArea_6", "", "", "");
+				
+StopMusic(2,1);
+StopMusic(2,2);
+StopMusic(2,3);
+StopMusic(2,4);
+StopMusic(2,5);
+StopMusic(2,6);
+StopMusic(2,7);
+StopMusic(2,8);
+StopMusic(2,9);
+
+StopMusic(2,11);
+StopMusic(2,12);
+StopMusic(2,13);
+StopMusic(2,14);
+				AddTimer("", 1.5f, "DRONE3");
+				
+	}
+	
+	void Creak2(string &in asParent, string &in asChild, int alState)
+	  
+		    {
+			
+					PlaySoundAtEntity("", "afx_mans_hallquake_postdetail.snt", "ScriptArea_4", 0, false);
+					
+					AddTimer("", 1.5, "SHAKE");
+					AddTimer("", 1, "BOOM");
+							
+			}
+	
+	
+	
+	void Scare2(string &in asParent, string &in asChild, int alState)
+	  
+		    {
+			
+					PlaySoundAtEntity("", "mans_afx_heavy_drag_block_door.snt", "ScriptArea_19", 0, false);
+					
+			}
+	
+	void ChildGo(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("child_skipping_silent_1", false);
+			SetPlayerRunSpeedMul(1);
+			SetPlayerMoveSpeedMul(1);
+			SetPlayerJumpDisabled(false);
+			FadeImageTrailTo(0, 1);
+	}
+	
+	void BOOM(string &in asTimer)
+	
+	{
+			PlaySoundAtEntity("", "mans_afx_undergroundexplo.snt", "ScriptArea_20", 0, false);
+	}
+	
+	void SHAKE(string &in asTimer)
+	
+	{
+			StartScreenShake(0.03f, 4.0f, 1.5f, 3.0f);
+			
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_1", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_2", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_3", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_4", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_5", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_6", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_7", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_8", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_9", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_10", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_11", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_12", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_13", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_14", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_15", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_16", false);
+			
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	void DroneChange4(string &in asParent, string &in asChild, int alState)
+	
+	{
+			FadeInSound("CellarDrone", 3, false);
+			StopSound("GreatHall", 3);
+			AddTimer("", 1.5f, "DRONE4");
+	}
+	
+	void DRONE(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea1", false);
+				SetEntityActive("DroneArea2", true);
+		
+			}
+	
+	void DRONE2(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea1", true);
+				SetEntityActive("DroneArea2", false);	
+		
+			}
+	
+	void DRONE3(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea4", true);
+				SetEntityActive("DroneArea3", false);	
+		
+			}
+	
+	void DRONE4(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea3", true);
+				SetEntityActive("DroneArea4", false);	
+		
+			}
+	
+
+	
+		void DroneChange5(string &in asParent, string &in asChild, int alState)
+	
+	{
+			FadeInSound("WindDroneA", 2, false);
+			FadeInSound("WindDroneB", 2, false);
+			StopSound("GreatHall", 2);
+			AddTimer("", 1.5f, "DRONE5");
+	}
+	
+		void DroneChange6(string &in asParent, string &in asChild, int alState)
+	
+	{
+			FadeInSound("GreatHall", 2, false);
+			StopSound("WindDroneA", 2);
+			StopSound("WindDroneB", 2);
+			AddTimer("", 1.5f, "DRONE6");
+	}
+	
+	void DRONE5(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea5", false);
+				SetEntityActive("DroneArea6", true);	
+		
+			}
+	
+	void DRONE6(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea5", true);
+				SetEntityActive("DroneArea6", false);	
+		
+			}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	void DroneChange7(string &in asParent, string &in asChild, int alState)
+	
+	{
+			FadeInSound("WindDroneA", 2, false);
+			FadeInSound("WindDroneB", 2, false);
+			StopSound("GreatHall", 2);
+			AddTimer("", 1.2f, "DRONE7");
+	}
+	
+		void DroneChange8(string &in asParent, string &in asChild, int alState)
+	
+	{
+			FadeInSound("GreatHall", 2, false);
+			StopSound("WindDroneA", 2);
+			StopSound("WindDroneB", 2);
+			AddTimer("", 1.2f, "DRONE8");
+	}
+	
+	void DRONE7(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea7", false);
+				SetEntityActive("DroneArea8", true);	
+		
+			}
+	
+	void DRONE8(string &in asTimer)
+			
+			{
+			
+				SetEntityActive("DroneArea7", true);
+				SetEntityActive("DroneArea8", false);	
+		
+			}
+	
+	
+	
+	
+	
+	void LadderBreak(string &in asParent, string &in asChild, int alState)
+	
+	{
+			StartScreenShake(0.05f, 0.5f, 0.8f, 2.0f);
+			SetEntityActive("ladder4m_tileable_2", false);
+			SetEntityActive("ladder_broken_debris_1", true);
+			SetEntityActive("LadderArea_3", false);
+			SetPlayerMoveSpeedMul(0.3);
+			SetPlayerRunSpeedMul(0.3);
+			SetPlayerLookSpeedMul(0.3);
+			CreateParticleSystemAtEntity("", "ps_area_fog", "fogarea", true);
+			CreateParticleSystemAtEntity("", "ps_area_fog", "fogarea_1", true);
+			CreateParticleSystemAtEntity("", "ps_area_fog", "fogarea_4", true);
+			CreateParticleSystemAtEntity("", "ps_dust_falling", "fogarea_3", true);
+			CreateParticleSystemAtEntity("", "ps_dust_elevator_crash", "fogarea_2", true);
+			PlaySoundAtEntity("rumble", "guardian_distant2.snt", "Player", 0.5f, true);
+			AddTimer("", 5.0f, "Music");
+			AddTimer("", 1.3f, "BreakLadder");
+	}
+	
+	
+	void Music(string &in asTimer)
+		
+	{
+			PlayMusic("music_reactor_pre_kyrie", false, 1, 0.5, 3, false);
+	}
+	
+		void BreakLadder(string &in asTimer)	
+	
+	{
+			PlaySoundAtEntity("", "break_wood.snt", "Player", 0.5f, true);
+			StartPlayerLookAt("fogarea_4", 2.5f, 2.5f, "");
+			AddTimer("", 1.3f, "STOP");
+	}
+	
+	void STOP(string &in asEntity)
+	
+	{
+			StopPlayerLookAt();
+			SetPlayerMoveSpeedMul(1);
+			SetPlayerRunSpeedMul(1);
+			SetPlayerLookSpeedMul(1);
+	}
+	
+	void WindowArea(string &in asEntity)
+	
+	{
+			SetEntityActive("AreaBreakWindow_1", true);
+			SetEntityActive("ScriptArea_21", true);
+			PlayMusic("07_edward_note_b", true, 0.35, 0.2, 3, true);
+			AddTimer("", 0.3, "StopNoteMusic2");
+	}
+	
+	
+	void CollectOrb(string &in asEntity)
+	
+	{
+			AddLocalVarInt("OrbCollect", 1);
+			SetLampLit("cellar_gaslamp01_short_4", true, true);
+			SetLightVisible("PointLight_174", true);
+			SetLightVisible("PointLight_175", true);
+			CheckPoint("check01","PlayerStartArea_5", "","", "");
+			SetEntityActive("cellar_wood01_1", false);
+			SetEntityActive("cellar_wood01_11", true);
+			AddTimer("", 0.5f, "CheckTheDoor");
+	}
+	
+	void CheckTheDoor(string &in asEntity)
+	
+	{		if(GetLocalVarInt("CollideDoor") == 1) 
+	
+				{
+						SetEntityActive("EnemyArea", true);
+				}
+	}
+	
+	void DisableWood(string &in asEntity)
+	
+	{
+			SetEntityActive("wood_beam_static_22", false);
+	}
+	
+	void ChildRun1(string &in asEntity)
+	
+	{
+			SetEntityActive("child_skipping_silent_1", true);
+			SetPlayerRunSpeedMul(0.5);
+			FadeImageTrailTo(0.02, 1);
+			SetPlayerMoveSpeedMul(0.5);
+			SetPlayerJumpDisabled(true);
+			AddEnemyPatrolNode("child_skipping_silent_1", "PathNodeArea_106", 0.001, "");
+			AddEnemyPatrolNode("child_skipping_silent_1", "PathNodeArea_107", 0.001, "");
+			AddEnemyPatrolNode("child_skipping_silent_1", "PathNodeArea_108", 0.001, "");
+			PlaySoundAtEntity("", "child_hide_seek", "ScriptArea_24", 0, false);
+	}
+	
+	
+	void BirdsFly(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("birdsfly", "general_birds_flee", "AreaBirds", 0, false);
+			SetLightVisible("SpotLight_15", true);
+			SetLightVisible("SpotLight_11", false);
+			SetEntityActive("CollideFall", true);
+	}
+	
+	void Hits(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_hallway_hits", "ScriptArea_22", 0, false);
+	}
+	
+	void DoorCollide(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetLocalVarInt("CollideDoor", 1);
+			SetPropStaticPhysics("slope_ropes_3", true);
+			SetPropStaticPhysics("slope_ropes_2", true);
+			SetPropStaticPhysics("slope_ropes", true);
+			SetPropStaticPhysics("CrankWheel", true);
+			SetPropStaticPhysics("castle_portcullis_1", true);
+			
+AddTimer("", RandInt(1,5), "StopShakingandLights");//Original	
+
+}
+
+ void StopShakingandLights(string &in asTimer)
+{
+PlaySoundAtEntity("", "afx_event_cellar_quake", "ScriptArea_34", 0, false);
+AddTimer("", 0.7f, "QuakeShake2");
+AddTimer("", 1.8f, "QuakeShake");
+}
+	
+	void Blocking(string &in asParent, string &in asChild, int alState)	
+	
+	{
+			SetEntityActive("block_box_4", true);
+			SetEntityActive("LadderArea_1", false);
+			PlaySoundAtEntity("", "sprint_over", "Player", 0, false);
+			SetPropStaticPhysics("chair_nice02_48", false);
+			SetPropStaticPhysics("chair_nice02_47", false);
+			SetPropStaticPhysics("chair_nice02_46", false);
+			SetPropStaticPhysics("chair_nice02_45", false);
+			SetPropStaticPhysics("chair_nice02_43", false);
+			SetPropStaticPhysics("chair_nice02_42", false);
+			SetPropStaticPhysics("chair_nice02_43", false);
+			SetPropStaticPhysics("chair_nice02_37", false);
+			SetPropStaticPhysics("chair_nice02_38", false);
+			SetPropStaticPhysics("chair_nice02_40", false);
+			SetPropStaticPhysics("chair_nice02_49", false);
+			SetPropStaticPhysics("chair_nice02_50", false);
+			SetPropStaticPhysics("chair_nice02_51", false);
+			SetPropStaticPhysics("chair_nice02_52", false);
+	}
+	
+void Sound1(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_cellar_post_collapse_wood_stress_trigger", "ScriptArea_32", 0, false);
+	}
+
+
+void Sound3(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_cellar_machine_hall_pole_drop", "ScriptArea_36", 0, false);
+			
+	}
+
+void Sound4(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_cellar_gate_reverb", "ScriptArea_38", 0, false);
+			
+	}
+
+void Sound5(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_footsteps_above_wooden", "ScriptArea_40", 0, false);
+			
+	}
+
+void Sound7(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "afx_spooky_mansion_backarea_abstract_04", "ScriptArea_40", 0, false);
+			
+	}
+	
+	void QuakeShake2(string &in asTimer)
+	
+	{
+		
+			StartScreenShake(0.03f, 6.0f, 1.5f, 3.0f);
+		
+	}
+	
+	void QuakeShake(string &in asTimer)
+	
+	{
+			
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_17", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_18", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_19", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_20", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_21", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_22", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_23", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_24", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_25", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_26", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_27", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_28", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_29", false);
+			CreateParticleSystemAtEntity("", "ps_dust_falling_mansion_quake_bedroom.ps", "AreaDust_30", false);
+			
+			SetEntityActive("cellar_gaslamp01_long_1", false);
+			SetEntityActive("cellar_gaslamp01_long_2", false);
+			SetEntityActive("cellar_gaslamp01_long_3", false);
+			SetEntityActive("cellar_gaslamp01_long_4", false);
+			SetEntityActive("cellar_gaslamp01_long_5", false);
+			SetEntityActive("cellar_gaslamp01_long_6", false);
+			SetEntityActive("cellar_gaslamp01_long_7", false);
+			SetEntityActive("cellar_gaslamp01_long_8", false);
+			
+			
+			SetEntityActive("cellar_gaslamp01_long_9", true);
+			SetEntityActive("cellar_gaslamp01_long_10", true);
+			SetEntityActive("cellar_gaslamp01_long_11", true);
+			SetEntityActive("cellar_gaslamp01_long_12", true);
+			SetEntityActive("cellar_gaslamp01_long_13", true);
+			SetEntityActive("cellar_gaslamp01_long_14", true);
+			SetEntityActive("cellar_gaslamp01_long_15", true);
+			SetEntityActive("cellar_gaslamp01_long_16", true);
+			
+			SetLightVisible("PointLight_175", false);
+			//SetLightVisible("PointLight_172", false);
+			SetLightVisible("PointLight_174", false);
+			
+			  // AddPropImpulse("cellar_gaslamp01_long_9", 5, 112, 3, "world");
+     //  AddPropImpulse("cellar_gaslamp01_long_10", 10, 222, 3, "world");
+  // AddPropImpulse("cellar_gaslamp01_long_11", 7, 222, 3, "world");
+  // AddPropImpulse("cellar_gaslamp01_long_12", 5, 222, 3, "world");
+  // AddPropImpulse("cellar_gaslamp01_long_13", 16, 332, 3, "world");
+  // AddPropImpulse("cellar_gaslamp01_long_14", 33, 442, 3, "world");
+  // AddPropImpulse("cellar_gaslamp01_long_15", 15, 552, 3, "world");
+  // AddPropImpulse("cellar_gaslamp01_long_16", 18, 662, 3, "world");
+			
+			
+			
+			
+			SetEntityActive("cellar_gaslamp01_short_20", true);
+			SetEntityActive("cellar_gaslamp01_short_8", false);
+			SetEntityActive("cellar_gaslamp01_short_9", false);
+			SetEntityActive("cellar_gaslamp01_short_7", false);
+			SetEntityActive("cellar_gaslamp01_short_19", true);
+			
+			SetEntityActive("cellar_gaslamp01_short_17", true);
+			SetEntityActive("cellar_gaslamp01_short_4", false);
+			
+			SetEntityActive("cellar_gaslamp01_short_18", true);
+			SetEntityActive("cellar_gaslamp01_short_2", false);
+			
+			
+			
+			SetLampLit("candle_floor_12", false, true);
+			SetLampLit("candle_floor_11", false, true);
+			SetLampLit("candle_floor_16", false, true);
+			SetLampLit("candle_floor_13", false, true);
+			SetLampLit("cellar_gaslamp01_short_6", false, true);
+			
+			
+			
+			//SetEntityActive("cellar_gaslamp01_long_10", true);
+
+			
+		AddTimer("", RandInt(5,12), "EndLightflicker");
+			
+	}
+	
+		    void EndLightflicker(string &in asTimer)
+{
+			
+			SetEntityActive("cellar_gaslamp01_long_2", true);
+			
+			SetEntityActive("cellar_gaslamp01_long_5", true);
+			SetEntityActive("cellar_gaslamp01_long_6", true);
+			SetEntityActive("cellar_gaslamp01_long_7", true);
+			
+
+			SetEntityActive("cellar_gaslamp01_short_4", true);
+			SetEntityActive("cellar_gaslamp01_long_9", false);
+			SetEntityActive("cellar_gaslamp01_long_10", false);
+			SetEntityActive("cellar_gaslamp01_long_11", false);
+			SetEntityActive("cellar_gaslamp01_long_12", false);
+			SetEntityActive("cellar_gaslamp01_long_13", false);
+			SetEntityActive("cellar_gaslamp01_long_14", false);
+			SetEntityActive("cellar_gaslamp01_long_15", false);
+			SetEntityActive("cellar_gaslamp01_long_16", false);
+			SetEntityActive("cellar_gaslamp01_long_8", true);
+			SetEntityActive("cellar_gaslamp01_long_17", true);
+			
+			SetEntityActive("cellar_gaslamp01_long_19", true);
+			
+			SetEntityActive("cellar_gaslamp01_short_17", false);
+			SetEntityActive("cellar_gaslamp01_short_21", true);
+			SetEntityActive("cellar_gaslamp01_short_19", false);
+			SetEntityActive("cellar_gaslamp01_long_18", true);
+			
+			SetEntityActive("cellar_gaslamp01_short_20", false);
+			SetEntityActive("cellar_gaslamp01_short_8", true);
+			SetEntityActive("cellar_gaslamp01_short_22", true);
+			SetEntityActive("cellar_gaslamp01_short_18", false);
+			
+			AddTimer("", 0, "FadeLamps");
+}
+
+		    void FadeLamps(string &in asTimer)
+{
+SetLampLit("cellar_gaslamp01_long_1", true, true);
+SetLampLit("cellar_gaslamp01_long_2", true, true);
+SetLampLit("cellar_gaslamp01_long_4", true, true);
+SetLampLit("cellar_gaslamp01_long_5", true, true);
+SetLampLit("cellar_gaslamp01_long_6", true, true);
+AddTimer("", 1, "FadeLamps_1");
+}
+
+		    void FadeLamps_1(string &in asTimer)
+{
+SetLampLit("cellar_gaslamp01_long_1", false, true);
+SetLampLit("cellar_gaslamp01_long_2", false, true);
+SetLampLit("cellar_gaslamp01_long_4", false, true);
+SetLampLit("cellar_gaslamp01_long_5", false, true);
+SetLampLit("cellar_gaslamp01_long_6", false, true);
+SetLampLit("cellar_gaslamp01_short_4", false, true);
+//AddTimer("", RandInt(3,10), "TurnOffCellarLights");
+}
+	
+	void Enemy1(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			
+			SetEntityActive("servant_grunt_pig_1", true);
+			SetEntityActive("mansion_5", false);
+			SetEntityActive("mansion_12", true);
+			SetEntityActive("mansion_7", false);
+			SetEntityActive("mansion_11", true);
+			
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_3", 3, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_4", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_5", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_6", 8, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_7", 8, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_8", 9, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_9", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_10", 11, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_11", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_12", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_190", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_13", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_130", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_191", 0.001, "");
+			AddEnemyPatrolNode("servant_grunt_pig_1", "PathNodeArea_14", 0.001, "");
+				
+	}	
+	
+	void UnlockDoor(string &in asItem, string &in asEntity)
+					 
+			{
+				 SetSwingDoorLocked("mansion_4", false, true);
+				 PlaySoundAtEntity("", "lock_door", "mansion_4", 0, false);
+				 											 
+			}
+	
+	void EnemyGo(string &in asParent, string &in asChild, int alState)	
+	
+	{
+	
+			SetEntityActive("servant_grunt_pig_1", false);
+	
+	}	
+			
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+  {
+			  StopMusic(2,1);
+			  PreloadSound("scrape_hard.snt");
+			  PreloadSound("afx_spooky_footsteps_above_wooden.snt");
+			  PreloadSound("afx_events_mansion_attic_childrun_dropbox.snt");
+			  PreloadSound("break_wood3.snt");
+			  PreloadSound("scare_steps_big"); 
+			  PreloadSound("scare_wood_creak_mix"); 
+			  PreloadSound("scare_tingeling"); 
+			  PreloadSound("vo_engine_child_whisper"); 
+			  PreloadSound("react_breath"); 
+			  PreloadSound("roll_wood"); 
+			  PreloadSound("react_scare");
+			  PreloadSound("player_falldamage_max");
+			  PreloadSound("player_bodyfall"); 
+			  PreloadSound("00_creak");
+			  PreloadSound("react_pant");
+			  PreloadSound("player_climb"); 
+			  PreloadSound("scare_wood_creak_walk"); 
+			  PreloadSound("05_event_door_bang"); 
+			  PreloadSound("05_wall_scratch"); 
+			  PreloadSound("scare_whine_loop"); 
+			  PreloadSound("close_door"); 
+			  PreloadSound("grunt/amb_idle"); 
+			  PreloadSound("afx_events_mansion_hallwaycreak.snt");
+			  PreloadSound("afx_events_cellar_rand_env_3D.snt");
+			  PreloadSound("afx_spooky_hallway_hits.snt");
+			  PreloadSound("mans_afx_heavy_drag_block_door.snt");
+			  PreloadSound("attic_smash_1.snt");
+			  PreloadSound("child_hide_seek.snt");
+			  PreloadSound("guardian_ontop.snt");
+			  PreloadSound("afx_event_cellar_quake.snt");
+			  PreloadSound("afx_cellar_post_collapse_wood_stress_trigger.snt");
+			  PreloadSound("afx_cellar_machine_hall_pole_drop.snt");
+			  PreloadSound("afx_cellar_gate_reverb.snt");
+			  PreloadSound("afx_spooky_footsteps_above_wooden.snt");
+			  PreloadSound("afx_spooky_mansion_backarea_abstract_04.snt");
+			  
+			  PreloadParticleSystem("ps_dust_whirl.ps");  
+			  PreloadParticleSystem("ps_area_fog.ps");
+			  PreloadParticleSystem("ps_cave_monster_warn.ps");
+			  PreloadParticleSystem("ps_dust_falling.ps");
+	SetupLoadScreen("LoadingText", "EastWing", 0, "07_loading.png");
+	 SetInDarknessEffectsActive(false);
+	 AddTimer("asTimer2", 5.0f, "CreaksTimer");
+	 AddTimer("InitRandomMuseumSoundCuePlayer", 9.0f, "RandMuseumSoundCues");
+	 AddTimer("InitRandomMuseumSoundCuePlayer2", 9.0f, "RandMuseumSoundCues2");
+	 AutoSave();
+	 
+     }
+ 
+   void ItsLocked(string &in entity)
+ 
+ 
+{
+    if(GetSwingDoorLocked("mansion_5") == true)
+    {
+ 
+        SetMessage("Messages", "ItsLocked", 0);
+ 
+    }
+}
+ 
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+	 
+     }

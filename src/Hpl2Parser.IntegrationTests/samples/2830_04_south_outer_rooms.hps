@@ -1,0 +1,108 @@
+void OnStart(){
+	AddEntityCollideCallback("servant_brute_1", "ScriptArea_2", "Brute1Breaks", true, 1);
+	AddUseItemCallback("", "full_acid", "bucket", "killBucket", true);
+	AddEntityCollideCallback("sledge_1", "servant_brute_1", "HitBrute", false, 1);
+	AddEntityCollideCallback("sledge_2", "servant_brute_2", "HitBrute2", false, 1);
+	SetEntityPlayerInteractCallback("note_generic_1", "TimerForBrute", true);
+	SetEntityPlayerInteractCallback("mansion_1", "mansion1Message", false);
+	SetEntityPlayerInteractCallback("bucket", "TouchBucket", false);
+	SetDeathHint("Messages", "fightback");
+	SetLocalVarInt("BruteHealth", 1);
+	SetLocalVarInt("Brute2Health", 1);
+}
+
+void OnEnter(){
+	PlayMusic("brute_amb.ogg", true, 0.5, 0, 0, true);
+}
+
+void OnLeave(){
+}
+
+void mansion1Message(string &in entity){
+	SetMessage("Messages", "doorlocked1", 0);
+}
+
+void TimerForBrute(string &in entity){
+	AddTimer("T1", 0.1f, "SpawnerForBrute");
+}
+
+void SpawnerForBrute(string &in asTimer){
+	SetEntityActive("servant_brute_1", true);
+	SetMessage("Messages", "defense_repeated", 0);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_8", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_9", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_10", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_11", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_12", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_13", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_14", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_15", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_16", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_18", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_19", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_20", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_21", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_22", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_23", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_24", 0.001, "");
+	GiveSanityDamage(25, true);
+}
+
+void Brute1Breaks(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("break_wood.snt", 100000);
+	SetEntityActive("mansion_1", false);
+}
+
+void TouchBucket(string &in entity){
+	SetMessage("Messages", "bucket_glued", 0);
+	AddQuest("bucket", "bucket");
+}
+
+void HitBrute(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("BruteHealth") == 1){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetLocalVarInt("BruteHealth", 0);
+	}else if (GetLocalVarInt("BruteHealth") == 0){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetEnemyIsHallucination("servant_brute_1", true);
+	}
+}
+
+void killBucket(string &in item, string &in entity){
+	SetEntityActive("bucket", false);
+	RemoveItem(item);
+	SetMessage("Messages", "kill_bucket", 0);
+	PlayGuiSound("puzzle_acid.snt", 100);
+	CompleteQuest("bucket", "bucket");
+	SetEntityActive("servant_brute_2", true);
+	AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_25", 0, "");
+	AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_26", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_27", 0, "");
+	AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_28", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_29", 0, "");
+	AddEnemyPatrolNode("servant_brute_2", "PathNodeArea_30", 0.001, "");
+	AddTimer("T2", 1.5f, "SetFightbackMessage");
+	GiveSanityDamage(25, true);
+}
+
+void SetFightbackMessage(string &in asTimer){
+	SetMessage("Messages", "defense_repeated", 0);
+}
+
+void HitBrute2(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("Brute2Health") == 1){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetLocalVarInt("Brute2Health", 0);
+	}else if (GetLocalVarInt("Brute2Health") == 0){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetEnemyIsHallucination("servant_brute_2", true);
+	}
+}

@@ -1,0 +1,416 @@
+void OnStart() //YOU HAVE TO READD ALL THE SHIT YOU FUCKED UP/CUSTOM ENTITES
+{
+	/*if(ScriptDebugOn()) //Debug stuff
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_health_"+i, "potion_health.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_sanity_"+i, "potion_sanity.ent");
+		
+		GiveItemFromFile("Chem1", "flask01_cuprite.ent");
+		GiveItemFromFile("Chem2", "flask01_calamine.ent");
+		GiveItemFromFile("Chem3", "flask01_aqua_regia.ent");
+		GiveItemFromFile("Chem4", "flask01_orpiment.ent");
+		GiveItemFromFile("ChemJar", "chemical_container.ent");
+		GiveItem("PoisonContainer", "Inventory", "Trial3_PoisonContainer", "chemical_container_half.tga", 0);
+	
+		SetLocalVarInt("ChemBurnerNumber", 2);
+		
+		//AddEntityCollideCallback("Player", "ReturnoftheGrunt", "udedson", true, 1); //OMFG
+	}*/
+	BeginTrial();
+	
+	SetupLoadScreen("Loading", "Load_3", 0, "load_pc.png");
+	
+	SetEntityInteractionDisabled("notouchmymeat", true);
+	
+	AddUseItemCallback("", "chemmix1", "Burner", "PlaceHeatChems", false);
+	AddUseItemCallback("", "PurifiedChems", "Burner", "PlaceHeatChems", false);
+	AddUseItemCallback("", "MixeredSolution", "Burner", "PlaceHeatChems", false);
+	
+	for(int i=0;i<5;i++) AddUseItemCallback("", "Chem"+i, "purifier_1", "PurifyChems", false);
+	for(int i=0;i<5;i++) AddUseItemCallback("", "Chem"+i, "extaction_oven_1", "PurifyChems", false);
+	
+	AddUseItemCallback("", "ChemMixBurner1", "purifier_1", "PlacePurifyChems", true);
+	AddUseItemCallback("", "ChemMixBurner1", "extaction_oven_1", "PlacePurifyChems", true);
+	AddUseItemCallback("", "ChemMixBurner1", "Place2Purify", "PlacePurifyChems", true);
+	
+	for(int i=0;i<5;i++) AddUseItemCallback("", "Chem"+i, "MixerArea", "PlaceChemsInMixer", false);
+	
+	AddUseItemCallback("", "ChemMixBurner2", "MixerArea", "PlaceMixerChems", true);
+	AddUseItemCallback("", "ChemMixBurner2", "MixerAreaPlaceChem", "PlaceMixerChems", true);
+	AddUseItemCallback("", "ChemMixBurner3", "MixerArea", "PlaceMixerChems", true);
+	AddUseItemCallback("", "ChemMixBurner3", "MixerAreaPlaceChem", "PlaceMixerChems", true);
+	
+	AddUseItemCallback("", "fresh_meat_1", "GruntHole", "Trial3_GruntHole", false);
+	AddUseItemCallback("", "poisonedmeat", "GruntHole", "Trial3_GruntHole", false);
+	AddUseItemCallback("", "PoisonContainer", "GruntHole", "Trial3_GruntHole", false);
+	
+	AddTimer("", 5, "Heal");
+}
+
+void Heal(string &in asTimer){
+	AddDebugMessage("Health: "+GetPlayerHealth(), false);
+	AddPlayerHealth(5);
+	AddTimer("", 5, "Heal");
+}
+
+/////////////////////////////////////////////////////
+/* *///CHEMICALS!!?!?!?!?!?!?!?!?!?!?!??!
+//THE BURNER
+void PlaceHeatChems(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("StaticChems", true);
+	PlaySoundAtEntity("", "puzzle_place_jar", asEntity, 0.1f, false);
+	SetLocalVarInt("ChemHeatPlaced", 1);
+}
+void Burner(string &in EntityName, int alState)
+{
+	if(alState==1 && GetLocalVarInt("ChemHeatPlaced")==1){
+		CreateParticleSystemAtEntity("BurnerFire", "ps_fire_lab_burner.ps", "BurnerArea_Fire", false);
+		PlaySoundAtEntity("IgniteSound", "general_fire_burning_low", "BurnerArea_Fire", 1, false);
+		SetWheelStuckState(EntityName, 1, true);
+		AddTimer("", 4.0f, "BurnerSwitch");
+		AddLocalVarInt("ChemBurnerNumber", 1);
+	}
+	else if(alState==1){
+		SetWheelAngle("Burner", -180, true);
+		SetMessage("Interact", "Trial3_BurnerNoChems", 0);
+	}
+	return;
+}
+void BurnerSwitch(string &in asTimer)
+{
+	if(GetLocalVarInt("ChemBurnerNumber")==1){
+		SetEntityActive("StaticChems", false);
+		SetEntityActive("ChemMixBurner1", true);
+	}
+	else if(GetLocalVarInt("ChemBurnerNumber")==2){
+		SetEntityActive("StaticChems", false);
+		SetEntityActive("ChemMixBurner2", true);
+	}
+	else if(GetLocalVarInt("ChemBurnerNumber")==3){
+		SetEntityActive("StaticChems", false);
+		SetEntityActive("ChemMixBurner3", true);
+	}
+}
+void PickChemsFromBurner(string &in asEntity){
+	SetWheelStuckState("Burner", 0, true);
+	DestroyParticleSystem("BurnerFire");
+	StopSound("IgniteSound", 0.5f);
+	SetWheelAngle("Burner", -180, true);
+	SetLocalVarInt("ChemHeatPlaced", 0);
+}
+
+//THE PURIFIER
+void PurifyChems(string &in asItem, string &in asEntity)
+{
+	if(asItem=="Chem1" && GetLocalVarInt("ChemsInPurifierVar")==0){
+		SetEntityActive("purifier_1", false);
+		SetEntityActive("purifier_2", true);
+		PlaySoundAtEntity("", "26_place_glass", "purifier_2", 0.1f, false);
+		AddLocalVarInt("Rdy2Purify", 1);
+		SetLocalVarInt("ChemsInPurifierVar", 1);
+	}
+	else if(asItem!="Chem1")
+		{SetMessage("Interact", "Trial3_WrongChems", 0);}
+	else
+		{SetMessage("Interact", "Trial3_GenError", 0);}
+}
+void PlacePurifyChems(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("UNPurifiedChems", true);
+	AddLocalVarInt("Rdy2Purify", 1);
+	PlaySoundAtEntity("", "puzzle_place_jar", "UNPurifiedChems", 0.1f, false);
+}
+void PurifyLever(string &in EntityName, int alState)
+{
+	if(alState==1 && GetLocalVarInt("Rdy2Purify")==2){
+		SetLeverStuckState("extaction_oven_lever_1", 1, true);
+		SetSwingDoorLocked("extaction_oven_1", true, true);
+		AddTimer("On", 0.2, "Purified");
+		AddTimer("Run", 1, "Purified");
+		AddTimer("Finish", 4, "Purified");
+		AddTimer("Destroy", 6, "Purified");
+		AddLocalVarInt("Rdy2Purify", 1);
+	}
+	else if(alState==1)
+		{SetMessage("Interact", "Trial3_PurifyNotReady", 0);}
+}
+void Purified(string &in asTimer)
+{
+	if(asTimer=="On")
+		{PlaySoundAtEntity("", "26_oven_on", "extaction_oven_1", 0, false);}
+	else if(asTimer=="Run")
+		{PlaySoundAtEntity("OvenRunning", "26_oven_run", "extaction_oven_1", 0, false);}
+	else if(asTimer=="Finish"){
+		CreateParticleSystemAtEntity("ovenliquid", "ps_extract_oven_liquid.ps", "PurifyExit", true);
+		PlaySoundAtEntity("ovenliquidsound","26_liquid.snt", "PurifyExit", 3, true);
+	}
+	else if(asTimer=="Destroy"){
+		DestroyParticleSystem("ovenliquid");
+		StopSound("ovenliquidsound",1);
+		StopSound("OvenRunning",1);
+		SetLeverStuckState("extaction_oven_lever_1", 0, true);
+		SetSwingDoorLocked("extaction_oven_1", false, true);
+		SetEntityActive("UNPurifiedChems", false);
+		SetEntityActive("PurifiedChems", true);
+		SetEntityActive("purifier_1", true);
+		SetEntityActive("purifier_2", false);
+	}
+}
+
+//THE MIXER
+void PlaceMixerChems(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("ImRunningOutofNames", true);
+	if(asItem=="ChemMixBurner2"){
+		AddLocalVarInt("Rdy2Mixer1", 1);
+		AddDebugMessage(GetLocalVarInt("Rdy2Mixer1")+"/4 parts for mixer!!", false);
+	}
+	else if(asItem=="ChemMixBurner3"){
+		AddLocalVarInt("Rdy2Mixer2", 1);
+	}
+	PlaySoundAtEntity("", "puzzle_place_jar", "MixerAreaPlaceChem", 0.1f, false);
+}
+void PlaceChemsInMixer(string &in asItem, string &in asEntity)
+{
+	if(GetLocalVarInt("Phase2")==1 && asItem=="Chem3"){
+		SetEntityActive("Chem2bottle", false);
+		SetEntityActive(asItem+"acid", true);
+		AddLocalVarInt("Rdy2Mixer2", 1);
+		PlaySoundAtEntity("","puzzle_add_chemical.snt", asItem+"acid", 1, false);
+	}
+	else if(GetLocalVarInt("Phase2")==1)
+		{SetMessage("Interact", "Trial3_WrongChems", 0);}
+	else{
+		if(asItem!="Chem3"){
+			if(GetLocalVarInt(asItem+"MixerVar")!=1){
+				SetEntityActive(asItem+"bottle", false);
+				SetEntityActive(asItem+"acid", true);
+				SetLocalVarInt(asItem+"MixerVar", 1);
+				PlaySoundAtEntity("","puzzle_add_chemical.snt", asItem+"acid", 1, false);
+				AddDebugMessage(asItem+" in mixer!", false);
+				AddLocalVarInt("Rdy2Mixer1", 1);
+				AddDebugMessage(GetLocalVarInt("Rdy2Mixer1")+"/4 parts for mixer!!", false);
+			}
+			else{SetMessage("Interact", "Trial3_AlreadyIn", 0);}
+		}
+		else{SetMessage("Interact", "Trial3_WrongChems", 0);}
+	}
+}
+void MixerWheel(string &in EntityName, int alState)
+{
+	if(GetLocalVarInt("Phase2")==1 && alState==1 && GetLocalVarInt("Rdy2Mixer2")==2){
+		SetWheelStuckState(EntityName, 1, true);
+		AddTimer("Run", 0.2, "MixeredONE");
+		AddTimer("Finish", 4, "MixeredONE");
+		AddTimer("Destroy", 6, "MixeredONE");
+	}
+	else if(alState==1 && GetLocalVarInt("Rdy2Mixer1")==4){
+		SetWheelStuckState(EntityName, 1, true);
+		AddTimer("Run", 0.2, "MixeredONE");
+		AddTimer("Finish", 4, "MixeredONE");
+		AddTimer("Destroy", 6, "MixeredONE");
+	}
+	else if(alState==1){
+		SetMessage("Interact", "Trial3_NotRdy2Mix", 0);
+		AddDebugMessage("NOT ENOUGH CHEMS", false);
+		SetWheelAngle("acidwheel", -180, true);
+	}
+}
+void MixeredONE(string &in asTimer)
+{
+	if(asTimer=="Run")
+		{PlaySoundAtEntity("MixerRunning", "puzzle_gas", "extaction_oven_1", 0, false);}
+	else if(asTimer=="Finish"){
+		CreateParticleSystemAtEntity("Mixerliquid", "ps_extract_oven_liquid.ps", "DripDrop", true);
+		PlaySoundAtEntity("Mixerliquidsound","puzzle_acid_success.snt", "DripDrop", 3, true);
+	}
+	else if(asTimer=="Destroy"){
+		DestroyParticleSystem("Mixerliquid");
+		StopSound("Mixerliquidsound",1);
+		StopSound("MixerRunning",1);
+		for(int i=0;i<5;i++) SetEntityActive("Chem"+i+"bottle", true);
+		for(int i=0;i<5;i++) SetEntityActive("Chem"+i+"acid", false);
+		SetEntityActive("ImRunningOutofNames", false);
+		if(GetLocalVarInt("Phase2")==1){
+			SetEntityActive("PoisonContainer", true);
+			SetLocalVarInt("Rdy2Mixer2", 0);
+		}
+		else{
+			SetEntityActive("MixeredSolution", true);
+			SetLocalVarInt("Rdy2Mixer1", 0);
+			SetLocalVarInt("Phase2", 1);
+		}
+		SetWheelStuckState("acidwheel", 0, true);
+		SetWheelAngle("acidwheel", -180, true);
+	}
+}
+
+/* *///END CHEMICALS?!?!?!?!?!?!!?!?!?!?
+//////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////
+/* *///GRUNT AND MEAT
+void InspectGruntHole(string &in asEntity)
+	{SetMessage("Interact", "Trial3_GruntHole", 0);}
+void Trial3_GruntHole(string &in asItem, string &in asEntity){
+	if(asItem=="PoisonContainer")
+		{SetMessage("Interact", "Trial3_PoisonInHole", 0);}
+	else if(asItem=="fresh_meat_1"){
+		RemoveItem(asItem);
+		AddDebugMessage("IT'S NOT POISONED, YOU FOOL!!!", false);
+		GruntWalk(0);
+	}
+	else if(asItem=="poisonedmeat"){
+		RemoveItem(asItem);
+		AddDebugMessage("Did he have the chicken or the fish??", false);
+		GruntWalk(1);
+	}
+}
+
+void GruntWalk(int isDead){
+	StopMusic(2, 0);
+	SetPlayerActive(false);
+	SetEntityActive("notouchmymeat", true);
+	SetEntityActive("Enjin", true);
+	SetEnemyDisableTriggers("Enjin", true);
+	AddEnemyPatrolNode("Enjin", "PathNodeArea_48", 10, "IdleExtra1");
+	AddTimer("", 2, "roflmao"); 
+	
+	PlayMusic("event_library_grunt", false, 1, 1, 10, true);
+	
+	if(isDead==0)
+		{AddTimer("jk",35,"thisiswherethegruntdies");}
+	else if(isDead==1)
+		{AddTimer("ded",35,"thisiswherethegruntdies");}
+}
+void roflmao(string &in asTimer){
+	PlaySoundAtEntity("", "react_breath", "Player", 0.0f, false);
+	StartPlayerLookAt("CanYouSeeThis?", 1, 1, "");
+	AddTimer("", 11, "whataretimers");
+}
+void whataretimers(string &in asTimer){
+	StartPlayerLookAt("This?", 1, 1, "");
+	AddTimer("", 7, "thistimerisforAoNanami");
+}
+void thistimerisforAoNanami(string &in asTimer){
+	StartPlayerLookAt("notouchmymeat", 0.8, 0.8, "");
+	PlayMusic("sub_search_grunt", true, 1, 1, 2, true);
+}
+void thisiswherethegruntdies(string &in asTimer){
+	SetPlayerActive(true);
+	SetEntityActive("notouchmymeat", false);
+	StopPlayerLookAt();
+	if(asTimer=="ded"){
+		SetEntityActive("bupabup", true);
+		AddEntityCollideCallback("Player", "Eyo", "Lookitbody", true, 1);
+		AddEntityCollideCallback("Player", "plsworkgoddammit", "deadbody", true, 1);
+		SetEntityActive("Enjin", false);
+		SetEntityActive("Hiizumi", true);
+		StopMusic(3, 0);
+		StopMusic(3, 2);
+	}
+	else if(asTimer=="jk"){
+		AddEntityCollideCallback("Player", "ReturnoftheGrunt", "udedson", true, 1);
+		CheckPoint("ThatCheckpoint", "CheckpointDeath", "ResetEverything", "Death", "Trial3_Grunt");
+		AddEnemyPatrolNode("Enjin", "PathNodeArea_24", 60, "");
+		AddTimer("jk2", 25, "thisiswherethegruntdies");
+	}
+	else if(asTimer=="jk2"){
+		SetEntityActive("Enjin", false);
+		//SetMessage("Examine", "Trial3_LeftArea", 0);
+		StopMusic(3, 2);
+	}
+}
+void udedson(string &in asParent, string &in asChild, int alState){ //grunt didn;t die
+	SetSwingDoorClosed("mansion_3", true, true);
+	SetSwingDoorLocked("mansion_3", true, true);
+	SetSwingDoorClosed("mansion_4", true, true);
+	SetSwingDoorLocked("mansion_4", true, true);
+	StopMusic(1, 2);
+	PlayMusic("sub_att_grunt", true, 1, 0, 10, true);
+	SetEntityActive("WaitIsThisGonnaWork", true);
+	ShowEnemyPlayerPosition("WaitIsThisGonnaWork");
+}
+void ResetEverything(string &in asName, int alCount){
+	SetEntityActive("WaitIsThisGonnaWork", false);
+	ResetProp("mansion_1");
+	ResetProp("mansion_2");
+	SetSwingDoorLocked("mansion_3", false, false);
+	SetSwingDoorLocked("mansion_4", false, false);
+	GiveItem("fresh_meat_1", "puzzle", "", "fresh_meat.tga", 1);
+	ResetProp("Enjin");
+	ResetProp("WaitIsThisGonnaWork");
+	ResetProp("notouchmymeat");
+	StopMusic(0,2);
+	PlayMusic("trial_2.ogg", true, 2.0f, 1.5f, 0, true);
+}
+
+void Lookitbody(string &in asParent, string &in asChild, int alState){ //Hey kids...
+	SetPlayerMoveSpeedMul(0.5f);
+	StartPlayerLookAt("CanYouSeeThis?", 0.75f, 0.75f, "");
+}
+void deadbody(string &in asParent, string &in asChild, int alState){ //Wanna see a dead body
+	SetPlayerActive(false);
+	StartPlayerLookAt("lookiehere", 1.0f, 1.0f, "");
+	PlayMusic("event_soft_2.ogg", false, 1, 2, 0, false);
+	talkynow();
+}
+void talkynow(){
+	AddEffectVoice("M3_S2_P1_01", "", "Voices", "03010201", false, "", 0, 0);
+	AddEffectVoice("M3_S2_P1_02", "", "Voices", "03010202", false, "", 0, 0);
+	AddEffectVoice("M3_S2_P1_03", "", "Voices", "03010203", false, "", 0, 0);
+	SetEffectVoiceOverCallback("voicesover");
+}
+void voicesover(){
+	SetEntityActive("bupabup", false);
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(1);
+	StopPlayerLookAt();
+}
+/* *///END GRUNT AND MEAT
+//////////////////////////////////////////////////////
+
+void BeginTrial(){
+	FadeOut(0);
+	FadeIn(2.0);
+	StartPlayerLookAt("LookAtMe", 10,10,"");
+	AddTimer("", 1.0f, "StopLookAtPls");
+	AddTimer("", 2.0f, "Voices");
+}
+void StopLookAtPls(string &in asTimer)
+	{StopPlayerLookAt();}
+void Voices(string &in asTimer){
+	AddEffectVoice("M3_S1_P1_01", "", "Voices", "03010101", false, "", 0, 0);
+	AddEffectVoice("M3_S1_P1_02", "", "Voices", "03010102", false, "", 0, 0);
+	AddEffectVoice("M3_S1_P1_03", "", "Voices", "03010103", false, "", 0, 0);
+	SetEffectVoiceOverCallback("TeleportInTo");
+}
+void TeleportInTo(){
+	StartEffectFlash(1.5, 1, 1.5);
+	AddTimer("", 1.5, "Teleporting");
+}
+void Teleporting(string &in asTimer){
+	PlayGuiSound("sub_warp.ogg", 1);
+	TeleportPlayer("Start_Library");
+	PlaySoundAtEntity("", "03_amb_library.snt", "Sound_1", 0.8f, false);
+	PlayMusic("trial_2.ogg", true, 2.0f, 1.5f, 0, true);
+}
+
+void OnEnter(){
+	AutoSave();
+}
+void OnLeave(){
+	RemoveItem("Chem1");
+	RemoveItem("Chem2");
+	RemoveItem("Chem3");
+	RemoveItem("Chem4");
+	RemoveItem("PoisonContainer");
+	RemoveItem("needle");
+	StopMusic(3,0);
+}

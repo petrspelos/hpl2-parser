@@ -1,0 +1,718 @@
+void OnStart()
+{
+  AddEntityCollideCallback("pig_corpse*", "area_pec", "dneska_bude_veprove", false,  1);
+  AddEntityCollideCallback("Player", "area_dira", "skluzykluz", false,  1);
+  AddEntityCollideCallback("Player", "area_dira_1", "skluzykluz", false,  1);
+  AddEntityCollideCallback("Player", "area_dira_2", "skluzykluz", false,  1);
+  AddEntityCollideCallback("Player", "area_dira_3", "skluzykluz", false,  1);
+  AddEntityCollideCallback("Player", "area_dira_4", "skluzykluz", false,  1);
+  AddEntityCollideCallback("Player", "area_dira_5", "skluzykluz_1", true,  1);
+  AddEntityCollideCallback("Player", "area_tamne", "sernato", false,  1);
+  AddEntityCollideCallback("Player", "area_dvere_scare", "ukazmuje", true,  1);
+  AddEntityCollideCallback("*", "corpse_male_1", "nebudes_ho_budit", false,  1);
+  AddEntityCollideCallback("zebrik", "area_dira", "blbec", false,  1);
+
+  AddUseItemCallback("", "dyka", "area_kuchi_kuch", "jen_mu_dej", false);
+
+  SetLocalVarInt("puzzle_vyresen", 0);
+  SetLocalVarInt("ohen_zapalen", 0);
+  SetLocalVarInt("tajne_dvere_otevreny", 0);
+  SetLocalVarInt("udelal_tu_vec", 0);
+  SetLocalVarInt("pocet_tycek", 0);
+  SetLocalVarInt("sebral_tajnou_poznamku", 0);
+}
+
+void ohniste(string &in asEntityName, string &in asType)
+{
+  if(asType == "OnIgnite")
+  {
+    SetLocalVarInt("ohen_zapalen", 1);
+    AddDebugMessage("zapaleno", false);
+    SetEntityActive("ohen_poskozeni", true);
+  }
+}
+
+void rozbiti(string &in asEntityName, string &in asType)
+{
+  if(asType == "Break")
+  {
+    AddDebugMessage("mel by ti nakopat kule vole", false);
+    if(GetLocalVarInt("udelal_tu_vec") == 0)
+    {
+      AddTimer("", 1.5, "zabij_ho_upire");
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+    }
+  }
+}
+
+void zebrik1_fn(string &in asStickyArea, string &in asBodyName)
+{
+  SetEntityActive("zebrik1", true);
+}
+
+void zebrik1_fn_2(string &in asStickyArea, string &in asBodyName)
+{
+  SetEntityActive("zebrik1", false);
+}
+
+void zebrik2_fn(string &in asStickyArea, string &in asBodyName)
+{
+  SetEntityActive("zebrik2", true);
+}
+
+void zebrik2_fn_2(string &in asStickyArea, string &in asBodyName)
+{
+  SetEntityActive("zebrik2", false);
+
+  if(GetLocalVarInt("sebral_tajnou_poznamku") == 1)
+  {
+    SetEntityActive("StickyArea_1", false);
+  }
+}
+
+void zabij_ho_upire(string &in asTimer)
+{
+  SetPlayerActive(false);
+  StartInsanityEvent("Stream_Monster_Roar02");
+  PlayGuiSound("marius_utok.ogg", 1.0);
+  SetPlayerCrouching(true);
+  AddTimer("", 1, "zabij_ho_upire_2");
+  FadeOut(1);
+}
+
+void zabij_ho_upire_2(string &in asTimer)
+{
+  GivePlayerDamage(200.0, "Slash", false, true);
+}
+
+void blbec(string &in asParent, string &in asChild, int alState)
+{
+  ResetProp("zebrik");
+}
+
+void tyckacb(string &in asEntity)
+{
+  SetLocalVarInt("pocet_tycek", GetLocalVarInt("pocet_tycek")+1);
+}
+
+void nebudes_ho_budit(string &in asParent, string &in asChild, int alState)
+{
+  AddDebugMessage("kolize vyvolana", false);
+  if(asChild == "bed_simple_movable_1")
+  {
+    AddDebugMessage("to mame postel", false);
+  }
+  else if(asParent == "wood_box02_2")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_1")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "zidle")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_3")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_4")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_5")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_6")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_7")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_8")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "wood_box02_9")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+  else if(asParent == "zebrik")
+  {
+    if(GetLocalVarInt("zabiji_se") == 0)
+    {
+      CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice1");
+      AddDebugMessage("zidle", false);
+      AddTimer("", 1.5, "zabij_ho_upire");
+      SetLocalVarInt("zabiji_se", 1);
+      SetPropActiveAndFade(asParent, false, 1.0);
+      ResetProp(asParent);
+    }
+  }
+
+}
+
+void dneska_bude_veprove(string &in asParent, string &in asChild, int alState)
+{
+  ChangePlayerStateToNormal();
+  SetEntityInteractionDisabled(asParent, true);
+  AddTimer(asParent, 1.0, "uz_na_nej_sakra_nesahej_ti_rikam");
+  AddTimer(asParent, 5.0, "fade");
+  AddDebugMessage("prase pridano", false);
+}
+
+void uz_na_nej_sakra_nesahej_ti_rikam(string &in asTimer)
+{
+  SetPropStaticPhysics(asTimer, true);
+}
+
+void fade(string &in asTimer)
+{
+  if(GetLocalVarInt("ohen_zapalen") == 1)
+  {
+    SetPropActiveAndFade(asTimer, false, 5.0);
+    PlayGuiSound("18_burn_steam.snt", 1.0);
+    if(asTimer == "pig_corpse_2")
+    {
+      //AddTimer("", 2.5, "uz_to_nasel_hajzl_jeden");
+      SetPropActiveAndFade("dyka", true, 1.43);
+      GiveSanityBoostSmall();
+    }
+  }
+  else
+  {
+    AddTimer(asTimer, 1.0, "fade");
+  }
+}
+
+void uz_to_nasel_hajzl_jeden(string &in asTimer)
+{
+  PlayGuiSound("pick_knife.snt", 1.0);
+}
+
+void procsahasnanahyhochlapavole(string &in asEntity)
+{
+  SetMessage("TheVoice", "upir1cz", 5.0);
+}
+
+void dovezeni(string &in asEntity)
+{
+  ChangeMap("08_prisoncz.map", "zmarnice", "", "");
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+}
+
+void dotunelu(string &in asEntity)
+{
+  ChangeMap("10_hluboke_podzemicz.map", "playerstart_zmarnice", "", "");
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+}
+
+void tajnycallback(string &in asEntity)
+{
+  SetGlobalVarInt("nalezenych_tajnych_poznamek", GetGlobalVarInt("nalezenych_tajnych_poznamek")+1);
+  SetMessage("TheVoice", "tajemstvinalezenocz", 3.0);
+  PlayGuiSound("puzzle.ogg", 1.0);
+  DetachFromStickyArea("StickyArea_1");
+  SetEntityActive("StickyArea_1", false);
+
+  SetLocalVarInt("sebral_tajnou_poznamku", 1);
+}
+
+void pink(string &in asTimer)
+{
+  SetLocalVarString("copak_stouchneme_tedko", "pig_corpse_hanging_"+RandInt(1,7));
+  AddPropImpulse(GetLocalVarString("copak_stouchneme_tedko"), 0.1, 0.5, 0.1, "world");
+
+  SetLocalVarString("copak_stouchneme_tedko", "pig_corpse_hanging_"+RandInt(1,7));
+  AddPropImpulse(GetLocalVarString("copak_stouchneme_tedko"), -0.1, 0.5, -0.1, "world");
+
+  SetLocalVarInt("stouchneme_i_rybu_nebo_ne_vole_co_myslis", RandInt(0,1));
+
+  if(GetLocalVarInt("stouchneme_i_rybu_nebo_ne_vole_co_myslis") == 1)
+  {
+    AddPropImpulse("carcass_1", -0.1, 0.5, -0.1, "world");
+  }
+
+  /*for(int i=1;i<=7;i++){
+    AddPropImpulse("pig_corpse_hanging_"+i, 0.1, 0.5, 0.1, "world");
+  }*/
+
+  AddTimer("", 1.0, "pink");
+}
+
+void ukazdvere()
+{
+  SetEntityActive("zed_normalni", false);
+  SetEntityActive("zed_dvere", true);
+  SetEntityActive("zed_dvere1", true);
+  SetEntityActive("zed_dvere2", true);
+}
+
+void schovejdvere()
+{
+  SetEntityActive("zed_normalni", true);
+  SetEntityActive("zed_dvere", false);
+  SetEntityActive("zed_dvere1", false);
+  SetEntityActive("zed_dvere2", false);
+}
+
+void cp1(string &in asName, int alCount)
+{
+  if(GetLocalVarInt("udelal_tu_vec") ==1)
+  {
+    SetEntityActive("ghoul2", true);
+    for(int i=1;i<=76;i++){
+      AddEnemyPatrolNode("ghoul2", "PathNodeArea_"+i, 0.001, "");
+      PlayMusic("02_07_coralencounter.ogg", true, 0.7, 0.1, 10, false);
+    }
+  }
+  else
+  {
+    PlayMusic("marnice.ogg", true, 0.7, 0.1, 10, false);
+  }
+  SetLocalVarInt("zabiji_se", 0);
+  SetPlayerActive(true);
+}
+
+void OnEnter()
+{
+  CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice");
+  SetEntityActive("temnapani", true);
+  SetEntityVisible("temnapani", false);
+  PlayMusic("marnice.ogg", true, 0.7, 0.1, 10, false);
+  SetMapDisplayNameEntry("marnice");
+
+  AddTimer("", 1.0, "pink");
+  if(GetLocalVarInt("udelal_tu_vec") == 1)
+  {
+    PlayPropAnimation("corpse_male_2", "ScreamRetract", 0.0f, false, "");
+    SetEntityActive("ghoul2", true);
+    for(int i=1;i<=76;i++){
+      AddEnemyPatrolNode("ghoul2", "PathNodeArea_"+i, 0.001, "");
+    }
+  }
+  if(GetGlobalVarInt("potkal_domaciho_mazlicka") == 1)
+  {
+    SetEntityActive("block", true);
+    SetEntityActive("exatamne", true);
+  }
+  /*if(HasItem("tinderbox_2") == false)
+  {
+    AddDebugMessage("tinderbox_2", false);
+  }*/
+  AutoSave();
+}
+
+void tajemstvi(string &in asEntity)
+{
+  PlayGuiSound("kdyz_neco_tahnes.ogg", 1.0);
+  if(GetLocalVarInt("tajne_dvere_otevreny") == 1)
+  {
+    SetLocalVarInt("tajne_dvere_otevreny", 0);
+    schovejdvere();
+  }
+  else if(GetLocalVarInt("tajne_dvere_otevreny") == 0)
+  {
+    SetLocalVarInt("tajne_dvere_otevreny", 1);
+    ukazdvere();
+  }
+  SetEntityActive("area_tlacitko", false);
+  AddTimer("", 3.0, "reaktivace");
+}
+
+void reaktivace(string &in asTimer)
+{
+  SetEntityActive("area_tlacitko", true);
+}
+
+void jen_mu_dej(string &in asItem, string &in asEntity)
+{
+  if(GetLocalVarInt("pocet_tycek") == 2)
+  {
+    StopMusic(1.0, 10);
+    PlayMusic("02_07_coralencounter.ogg", true, 0.7, 0.1, 10, false);
+    ShowPlayerCrossHairIcons(false);
+    SetPlayerCrouching(true);
+    SetPlayerActive(false);
+    StartInsanityEvent("wide_normalni");
+    AddTimer("", 1.0, "kuchej_1");
+    StartPlayerLookAt("area_kuchi_kuch", 2.5, 5.0, "null");
+    RemoveItem("dyka");
+  }
+  else
+  {
+    SetMessage("TheVoice", "jestenenenecz", 3.0);
+  }
+}
+
+void kuchej_1(string &in asTimer)
+{
+  SetPropActiveAndFade("kuchator1", true, 1.0);
+  SetEntityInteractionDisabled("kuchator1", true);
+  AddTimer("", 2.0, "kuchej_2");
+}
+
+void kuchej_2(string &in asTimer)
+{
+  SetEntityActive("kuchator1", false);
+  SetEntityActive("kuchator2", true);
+  SetEntityInteractionDisabled("kuchator2", true);
+  PlayGuiSound("kuch.ogg", 1.0);
+  AddTimer("", 0.3, "kuchej_3");
+}
+
+void kuchej_3(string &in asTimer)
+{
+  PlayGuiSound("victor_death_01.ogg", 1.0);
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  AddTimer("", 0.3, "kuchej_4");
+  StartScreenShake(0.001, 3.0, 1.0, 1.0);
+}
+
+void kuchej_4(string &in asTimer)
+{
+  //ReplaceEntity("corpse_male_1", "telo", "corpse_male_1", "guttedwalker.ent", false);
+  SetEntityActive("corpse_male_1", false);
+  SetEntityActive("corpse_male_2", true);
+  SetEntityActive("kuchator2", false);
+  PlayPropAnimation("corpse_male_2", "Scream", 0.0f, false, "mrtvola_cb");
+}
+
+void mrtvola_cb(string &in asProp)
+{
+PlayPropAnimation("corpse_male_2", "ScreamRetract", 0.0f, false, "");
+SetEntityActive("kuchator1", true);
+AddTimer("", 0.5, "kuchej_5");
+}
+
+void kuchej_5(string &in asTimer)
+{
+  SetEntityActive("kuchator1", false);
+  SetEntityActive("kuchator2", true);
+  PlayGuiSound("kuch.ogg", 1.0);
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  PlayGuiSound("hector_death_01.ogg", 1.0);
+  AddTimer("", 0.3, "kuchej_6");
+  //StartInsanityEvent("Stream_Monster_Roar01");
+}
+
+void kuchej_6(string &in asTimer)
+{
+  SetEntityActive("kuchator2", false);
+  PlayPropAnimation("corpse_male_2", "Scream", 0.0f, false, "mrtvola_cb_1");
+}
+
+void mrtvola_cb_1(string &in asProp)
+{
+PlayPropAnimation("corpse_male_2", "ScreamRetract", 0.0f, false, "");
+SetEntityActive("kuchator2", true);
+AddTimer("", 0.4, "kuchej_7");
+}
+
+void kuchej_7(string &in asTimer)
+{
+  PlayGuiSound("felix_death_01.ogg", 1.0);
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  RotatePropToSpeed("kuchator2", 1.0, 5.0, 0.0, 0.0, 100.0, false, "");
+  AddTimer("", 0.4, "kuchej_8");
+}
+
+void kuchej_8(string &in asTimer)
+{
+  //PlayGuiSound("felix_death_01.ogg", 1.0);
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  RotatePropToSpeed("kuchator2", 1.0, 5.0, 0.0, 0.0, -100.0, false, "");
+  AddTimer("", 0.4, "kuchej_9");
+  PlayGuiSound("kuch.ogg", 1.0);
+}
+
+void kuchej_9(string &in asTimer)
+{
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  RotatePropToSpeed("kuchator2", 1.0, 5.0, 0.0, 0.0, 100.0, false, "");
+  AddTimer("", 0.4, "kuchej_10");
+}
+
+void kuchej_10(string &in asTimer)
+{
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  RotatePropToSpeed("kuchator2", 1.0, 5.0, 0.0, 0.0, -100.0, false, "");
+  PlayGuiSound("kuch.ogg", 1.0);
+  AddTimer("", 0.4, "kuchej_11");
+}
+
+void kuchej_11(string &in asTimer)
+{
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  RotatePropToSpeed("kuchator2", 1.0, 5.0, 0.0, 0.0, 100.0, false, "");
+  AddTimer("", 0.4, "kuchej_12");
+}
+
+void kuchej_12(string &in asTimer)
+{
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  RotatePropToSpeed("kuchator2", 1.0, 5.0, 0.0, 0.0, -100.0, false, "");
+  AddTimer("", 0.4, "kuchej_13");
+}
+
+void kuchej_13(string &in asTimer)
+{
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "krev", false);
+  RotatePropToSpeed("kuchator2", 1.0, 5.0, 0.0, 0.0, 100.0, false, "");
+  AddTimer("", 0.4, "kuchej_14");
+}
+
+void kuchej_14(string &in asTimer)
+{
+  StopPropMovement("kuchator2");
+  SetPropActiveAndFade("kuchator2", false, 0.5);
+  SetPropActiveAndFade("streva1", true, 0.5);
+  SetPropActiveAndFade("streva2", true, 0.5);
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+  SetEntityActive("area_kuchi_kuch", false);
+  StopPlayerLookAt();
+  ShowPlayerCrossHairIcons(true);
+  CreateParticleSystemAtEntity("", "ps_blood_tiny_stream_impact.ps", "krev", false);
+  StopMusic(1.0, 10);
+  SetEntityActive("dvere", false);
+  SetEntityActive("dvere2", true);
+  SetEntityActive("ghoul", true);
+  SetLocalVarInt("udelal_tu_vec", 1);
+  SetEntityActive("block", false);
+  SetEntityActive("area_tamne", false);
+  CheckPoint("cp1", "cpmarnice", "cp1", "smrt", "marnice");
+  GiveSanityBoostSmall();
+  for(int i=1;i<=76;i++){
+    AddEnemyPatrolNode("ghoul", "PathNodeArea_"+i, 0.001, "");
+  }
+  ShowEnemyPlayerPosition("ghoul");
+  if(QuestIsAdded("q11") == true)
+  {
+    CompleteQuest("q11", "q11cz");
+  }
+  StopMusic(1.0, 10);
+  PlayMusic("Penumbra_BP_F2.ogg", true, 0.7, 0.1, 10, false);
+  SetGlobalVarInt("zabil_mariuse", 1);
+}
+
+void skluzykluz(string &in asParent, string &in asChild, int alState)
+{
+  AddPlayerBodyForce(0.0, 0.0, -50000.0, false);
+  SetLanternActive(false, true);
+  GivePlayerDamage(10.0, "BloodSpla", false, false);
+  //PlayGuiSound("hit_wood.snt", 1.0);
+}
+
+void skluzykluz_1(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("block1", true);
+}
+
+void sernato(string &in asParent, string &in asChild, int alState)
+{
+  SetMessage("TheVoice", "tamnepujducz", 3.0);
+}
+
+void ukazmuje(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("area_dvere_look", true);
+}
+
+void helevolekdemamdvere(string &in asEntity, int alState)
+{
+  if(alState == 1)
+  {
+    ukazdvere();
+    PlayGuiSound("04_03_core_collapse_stinger.ogg", 1.0);
+    AddTimer("", 0.5, "dveretimer1");
+    AddTimer("", 1.0, "dveretimer2");
+    AddTimer("", 1.5, "dveretimer3");
+    AddTimer("", 2.0, "dveretimer4");
+    AddTimer("", 2.3, "dveretimer5");
+    SetPlayerMoveSpeedMul(0.3);
+    SetPlayerRunSpeedMul(0.3);
+    SetEntityActive("temnapani2", true);
+    SetEntityVisible("temnapani2", false);
+  }
+}
+
+void dveretimer1(string &in asTimer)
+{
+  schovejdvere();
+}
+
+void dveretimer2(string &in asTimer)
+{
+  ukazdvere();
+}
+
+void dveretimer3(string &in asTimer)
+{
+  schovejdvere();
+}
+
+void dveretimer4(string &in asTimer)
+{
+  ukazdvere();
+}
+
+void dveretimer5(string &in asTimer)
+{
+  schovejdvere();
+  SetPlayerRunSpeedMul(1.0);
+  SetPlayerMoveSpeedMul(1.0);
+  SetEntityActive("temnapani2", false);
+}
+
+/*void onnatosahlfuj(string &in asEntity)
+{
+  SetPropStaticPhysics("streva2", false);
+}*/
+
+void kuchej_15(string &in asTimer)
+{
+  PlayGuiSound("pick_knife.snt", 1.0);
+}
+
+
+void OnLeave()
+{
+
+  StopMusic(1.0, 10);
+// LOADING ////////////////////
+SetGlobalVarInt("dalsi_nacitaci_obrazovka", RandInt(1,5));
+if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 1)
+{
+  if(GetGlobalVarInt("potkal_helene") == 0)
+  {
+    if(GetPlayerSanity() < 100 && GetPlayerSanity() > 80)
+    {
+      SetupLoadScreen("loading", "helenecz", 0, "nacitani_helene.jpg");
+    }
+    else if(GetPlayerSanity() < 80 && GetPlayerSanity() > 60)
+    {
+      SetupLoadScreen("loading", "helene2cz", 0, "nacitani_helene_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 60 && GetPlayerSanity() > 40)
+    {
+      SetupLoadScreen("loading", "helene3cz", 0, "nacitani_helene_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 40 && GetPlayerSanity() > 20)
+    {
+      SetupLoadScreen("loading", "helene4cz", 0, "nacitani_helene_horsi_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 20)
+    {
+      SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+    }
+  }
+  else
+  {
+    SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+  }
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 2)
+  {
+    SetupLoadScreen("loading", "niklascz", 0, "nacitani_niklas.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 3)
+  {
+    SetupLoadScreen("loading", "adolfcz", 0, "nacitani_adolf.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 4)
+  {
+    SetupLoadScreen("loading", "gotfriedcz", 0, "nacitani_gotfried.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 5)
+  {
+    SetupLoadScreen("loading", "hedwigcz", 0, "nacitani_hedwig.jpg");
+  }
+  /////////////
+  AutoSave();
+}

@@ -1,0 +1,522 @@
+
+void OnStart()
+{
+	if(ScriptDebugOn())
+    {
+		GiveItem("handdrill", "Puzzle", "taladrito", "hand_drill.tga", 0);	
+		GiveItem("herramienta", "Puzzle", "herramienta", "hammerandchipper", 0);
+    }
+
+
+
+	PlayMusic("04_The_Demons_Hatred.ogg", true, 0.80f, 1.0f, 0, true);
+	CheckPoint("check1", "PlayerStartArea_1", "recargo", "Muertes", "muertedollman1");
+	AddTimer("", 4.0f, "Luluvoz_inicio");
+
+	SetInDarknessEffectsActive(false);
+	SetSanityDrainDisabled(true);
+	SetEnemySanityDecreaseActive("dollman_2", false);
+	SetEnemySanityDecreaseActive("dollman_1", false);
+	
+	SetGlobalVarInt("DrillParts", 0);
+	SetLocalVarInt("Var1", 0);
+
+	for(int i=1;i<=3;i++){
+		SetEntityCallbackFunc("hand_drill_part0"+i, "PickDrill");
+	}
+	
+	AddUseItemCallback("","handdrill", "puertagrande", "desbloquear_puerta1", true);
+	AddUseItemCallback("","herramienta", "puertachica1", "desbloquear_puerta2", true);
+	
+	SetEntityPlayerInteractCallback("button_1", "func1", true);
+	SetEntityPlayerInteractCallback("button_2", "func2", true);
+	SetEntityPlayerInteractCallback("button_3", "func3", true);
+	SetEntityPlayerInteractCallback("button_4", "func4", true);
+	SetEntityPlayerInteractCallback("button_5", "func5", true);
+	SetEntityPlayerInteractCallback("button_6", "func6", true);
+	SetEntityPlayerInteractCallback("button_7", "func7", true);
+	SetEntityPlayerInteractCallback("button_8", "func8", true);
+	SetEntityPlayerInteractCallback("puertachica2", "desafio_escena1", true);
+	SetEntityPlayerInteractCallback("puertagrande", "interaccion1", true);
+	SetEntityPlayerInteractCallback("puertachica1", "interaccion2", true);
+	SetEntityPlayerInteractCallback("martillo", "interaccion9", true);
+	SetEntityPlayerInteractCallback("pico", "interaccion10", true);
+	SetEntityPlayerInteractCallback("hum5", "reaccion", true);
+	
+	AddEntityCollideCallback("Player", "areaencuentro_1", "encuentro_1", true, 1);
+	AddEntityCollideCallback("Player", "areaencuentro_2", "encuentro_2", true, 1);
+	AddEntityCollideCallback("Player", "areaencuentro_3", "encuentro_3", true, 1);
+	AddEntityCollideCallback("Player", "area_escena_final", "final_1", true, 1);
+	AddEntityCollideCallback("Player", "no_cuerpo", "Luluvoz_area_2", true, 1);
+	
+	SetEntityPlayerLookAtCallback("dollmanrag", "Luluvoz_interaccion_5", true);
+	
+	no_desafio();
+}
+
+     //===========================================
+		//Cuando se muere
+     //===========================================
+	 
+	void recargo(string &in asName, int alCount)
+	{
+	SetInDarknessEffectsActive(false);
+	SetSanityDrainDisabled(true);
+	SetEnemySanityDecreaseActive("dollman_2", false);
+	SetEnemySanityDecreaseActive("dollman_1", false);
+	}
+	
+	void recargo2(string &in asName, int alCount)
+	{
+	SetPlayerCrouching(true);
+	TeleportEnemyToNode("dollman_2", "r1", false);
+	SetInDarknessEffectsActive(false);
+	SetSanityDrainDisabled(true);
+	SetEnemySanityDecreaseActive("dollman_2", false);
+	SetEntityActive("dollman_2", true);
+	for(int t = 1; t <13; t++){  
+		AddEnemyPatrolNode("dollman_2", "r"+RandInt(1,6), RandInt(1,2), "");
+     }
+	}
+
+
+
+
+	 //===========================================
+		//Conteo para taladro y eventos(efecto de unión y nuevos items en "inventary.hps")
+     //===========================================
+
+	void PickDrill(string &in asEntity, string &in asType)
+	{
+		AddGlobalVarInt("DrillParts", 1);
+		dolleventos();
+	}	
+	
+	
+	void interaccion1(string &in asEntity)
+	{
+	if(GetSwingDoorLocked("puertagrande")==true){
+		AddTimer("", 1.0f, "Luluvoz_interaccion_1");
+		}
+	}
+		
+	void interaccion2(string &in asEntity)
+	{
+	if(GetSwingDoorLocked("puertachica1")==true){
+		AddTimer("", 1.0f, "Luluvoz_interaccion_2");
+		}
+	}
+	
+	void interaccion9(string &in asEntity)
+	{
+		AddTimer("", 1.0f, "Luluvoz_interaccion_9");
+	}
+		
+	void interaccion10(string &in asEntity)
+	{
+		AddTimer("", 1.0f, "Luluvoz_interaccion_10");
+	}
+	
+	
+	void reaccion(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "monster_puerta.snt", "Player", 0, false);
+	SetPlayerActive(false);
+	SetPlayerCrouching(false);
+	StartPlayerLookAt("ruido_mostro", 1.0f, 1.0f, "");
+	AddTimer("", 1.5f, "fin_reaccion");
+	StartScreenShake(0.01f, 1.0f, 0.5f, 1.0f);
+	}
+	void fin_reaccion(string &in asEntity)
+	{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	}
+		
+	
+	
+	 //===========================================
+		//Eventos con el Dollman
+     //===========================================	
+	
+	void dolleventos()
+	{
+	if(GetGlobalVarInt("DrillParts")==1){
+		SetEntityActive("dollmandead", false);
+		SetEntityActive("dollmanrag", true);
+		AddTimer("", 1.0f, "Luluvoz_interaccion_4");
+	}
+	
+	if(GetGlobalVarInt("DrillParts")==2){
+		SetEntityActive("dollmanrag", false);
+		SetEntityActive("no_cuerpo", true);
+		AddTimer("", 1.0f, "Luluvoz_interaccion_6");
+	}
+	
+	if(GetGlobalVarInt("DrillParts")==3){
+		SetEntityActive("dollman_1", true);
+		SetEntityActive("areaencuentro_1", true);
+		SetEntityActive("areaencuentro_2", true);
+		SetEntityActive("areaencuentro_3", true);
+		SetEntityActive("dollman_desc", true);
+		AddTimer("", 1.0f, "Luluvoz_interaccion_7");
+	}
+	}
+	
+	
+	
+	
+	 //===========================================
+		//Encuentro con el Dollman
+     //===========================================		
+	
+	void encuentro_1(string &in asParent, string &in asChild, int alState)
+	{
+	AddEnemyPatrolNode("dollman_1", "PathNodeArea_95", 3.0f, "");
+	SetEntityActive("areaencuentro_2", false);
+	SetEntityActive("areaencuentro_3", false);
+	AddTimer("", 7.0f, "Luluvoz_interaccion_8");
+	random();
+	}
+	
+	void encuentro_2(string &in asParent, string &in asChild, int alState)
+	{
+	AddEnemyPatrolNode("dollman_1", "PathNodeArea_139", 3.0f, "");
+	SetEntityActive("areaencuentro_1", false);
+	SetEntityActive("areaencuentro_3", false);
+	AddTimer("", 7.0f, "Luluvoz_interaccion_8");
+	random();
+	}
+	
+	void encuentro_3(string &in asParent, string &in asChild, int alState)
+	{
+	AddEnemyPatrolNode("dollman_1", "PathNodeArea_192", 3.0f, "");
+	SetEntityActive("areaencuentro_2", false);
+	SetEntityActive("areaencuentro_1", false);
+	AddTimer("", 7.0f, "Luluvoz_interaccion_8");
+	random();
+	}
+	
+	void random() 
+	{
+	for(int t = 1; t <10; t++){  
+		AddEnemyPatrolNode("dollman_1", "e"+RandInt(1,5), RandInt(3,5), "");
+     }
+	}
+	
+	
+	
+	 //===========================================
+		//Desbloqueo puertas 1 y 2
+     //===========================================
+	 
+	void desbloquear_puerta1(string &in asItem, string &in asEntity)
+	 {
+	 PlaySoundAtEntity("", "door_sewer_unlock.snt", "Player", 0, false);
+	 RemoveItem(asItem);
+	 SetSwingDoorLocked("puertagrande", false, true);
+	 CompleteQuest("quest_hum_1", "taladro");
+	}
+	
+	void desbloquear_puerta2(string &in asItem, string &in asEntity)
+	 {
+	 PlaySoundAtEntity("", "door_sewer_unlock.snt", "Player", 0, false);
+	 RemoveItem(asItem);
+	 SetSwingDoorLocked("puertachica1", false, false);
+	 CompleteQuest("quest_hum_2", "herramienta");
+	}
+	
+	
+	
+	 //===========================================
+		//Inicio del desafío
+     //===========================================	
+	
+	void desafio_escena1(string &in asEntity)
+	{
+	AddTimer("", 1.0f, "desafio_escena2");
+	SetSwingDoorClosed("puertachica1", false, true);
+	SetPlayerActive(false);
+	SetEntityActive("dollman_2", true);
+	SetEntityActive("dollman_1", false);
+	AddEnemyPatrolNode("dollman_2", "PathNodeArea_1", 6.0f, "");
+	}
+	
+	void desafio_escena2(string &in asTimer){
+	FadePlayerFOVMulTo(0.6f, 2.0f);
+	StartPlayerLookAt("dollman_2", 10.0f, 5.0f, "");
+	AddTimer("", 3.0f, "desafio_escena3");
+	}
+	
+	void desafio_escena3(string &in asTimer){
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	FadePlayerFOVMulTo(1.0f, 3.0f);
+	SetSwingDoorLocked("puertachica1", true, true);
+	SetSwingDoorClosed("puertachica1", true, true);
+	ClearEnemyPatrolNodes("dollman_2");
+	AddEnemyPatrolNode("dollman_2", "r1", 1.0f, "");
+	si_desafio();
+	}
+	
+	
+	 //===========================================
+		//Clic botones y desbloqueo puerta 3
+     //===========================================	
+	
+	void no_desafio(){
+	for(int i=1;i<=8;i++){
+		SetEntityInteractionDisabled("button_"+i, true);
+		SetLightVisible("luzbutton_"+i, false);
+		}
+	}
+	
+	void si_desafio(){
+	CheckPoint("check2", "PlayerStartArea_2", "recargo2", "Muertes", "muertedollman2");
+	for(int i=1;i<=8;i++){
+		SetEntityInteractionDisabled("button_"+i, false);
+		SetLightVisible("luzbutton_"+i, true);
+		}
+	for(int t = 1; t <13; t++){  
+		AddEnemyPatrolNode("dollman_2", "r"+RandInt(1,6), RandInt(1,2), "");
+     }
+	 
+	 AddTimer("", 1.0f, "Luluvoz_interaccion_3");
+	}
+	
+	void func1(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_1", 0, false);
+	SetLightVisible("luzbutton_1", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	
+	}
+	 
+	void func2(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_2", 0, false);
+	SetLightVisible("luzbutton_2", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	}
+	 
+	void func3(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_3", 0, false);
+	SetLightVisible("luzbutton_3", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	}
+	 
+	void func4(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_4", 0, false);
+	SetLightVisible("luzbutton_4", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	}
+	
+	void func5(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_5", 0, false);
+	SetLightVisible("luzbutton_5", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	}
+	
+	void func6(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_6", 0, false);
+	SetLightVisible("luzbutton_6", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	}
+	
+	void func7(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_7", 0, false);
+	SetLightVisible("luzbutton_7", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	}
+	
+	void func8(string &in asEntity)
+	{
+	PlaySoundAtEntity("", "alleyway_button_press.snt", "button_8", 0, false);
+	SetLightVisible("luzbutton_8", false);
+	AddLocalVarInt("Var1", 1);
+	botoneslistos();
+	}
+	 
+	void botoneslistos()
+	{
+	if(GetLocalVarInt("Var1") == 8)
+		{
+		AddTimer("puertalibertad", 0.7f, "desbloqueo_puerta");
+		}
+	} 
+	
+	void desbloqueo_puerta(string &in asTimer)
+	{
+	PlaySoundAtEntity("", "door_sewer_unlock.snt", "Player", 0, false);
+	SetSwingDoorLocked("puertachica2", false, true);
+	AlertEnemyOfPlayerPresence("dollman_2");
+	CompleteQuest("quest_hum_3", "desafio");
+	}
+
+	void final_1(string &in asParent, string &in asChild, int alState){
+	SetSwingDoorLocked("puertachica2", true, true);
+	PlaySoundAtEntity("", "door_sewer_close.snt", "Player", 0, false);
+	SetEntityActive("dollman_2", false);
+	FadePlayerFOVMulTo(1.1f, 1.1f);
+	StartPlayerLookAt("mirada_nave", 1.0f, 1.0f, "");
+	AddTimer("", 1.0f, "ruido_nave");
+	PlayMusic("04Hunk1.ogg", true, 0.6f, 1.0f, 0, true);
+	AddTimer("", 0.5f, "voz_intermedio");
+	}
+	
+	void voz_intermedio(string &in asTimer)
+	{
+	AddEffectVoice("Gemido.ogg", "", "Avisos", "Luluvoz_area_3", false, "" ,0.0f ,0.0f );
+	AddTimer("", 3.0f, "voz_freno");
+	}
+	
+	void voz_freno(string &in asTimer)
+	{
+	StopAllEffectVoices(0.0f);
+	}
+	
+	
+	void ruido_nave(string &in asTimer)
+	{
+	PlaySoundAtEntity("", "nave_encendido.snt", "Player", 0, false);
+	StartScreenShake(0.7f, 1.8f, 0.5f, 0.5f);	
+	AddTimer("", 5.15f, "carrera_final");
+	AddTimer("", 3.85f, "Luluvoz_area_1");
+	}
+	
+	void carrera_final(string &in asTimer)
+	{
+	StartPlayerLookAt("puerta_navefinal", 1.0f, 1.0f, "");
+	FadePlayerFOVMulTo(1.0f, 3.0f);
+	PlayMusic("04Hunk2.ogg", true, 0.8f, 0.0f, 0, true);
+	}
+	
+
+void OnEnter()
+{
+	AutoSave();
+	SetPlayerHealth(100.0f);
+	ClearSavedMaps();
+}
+ 
+
+void OnLeave()
+{
+	StopPlayerLookAt();
+	SetupLoadScreen("Loading", "cargando3", 0, "03accidente.jpg");
+}	 
+	 
+	
+	
+	
+	
+	
+	 
+	 //===========================================
+		//Luluvoces
+     //===========================================
+	 
+	void Luluvoz_inicio(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo01.ogg", "", "Avisos", "Luluvoz_inicio", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_area_1(string &in asTimer)
+	{ 
+		AddEffectVoice("Alla_vamos.ogg", "", "Avisos", "Luluvoz_area_1", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_area_2(string &in asParent, string &in asChild, int alState)
+	{ 
+		AddEffectVoice("Cansada.ogg", "", "Avisos", "Luluvoz_area_2", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_area_3(string &in asParent, string &in asChild, int alState)
+	{ 
+		AddEffectVoice("Cansada.ogg", "", "Avisos", "Luluvoz_area_3", false, "" ,0.0f ,0.0f );
+	}
+	
+
+	
+
+	
+	
+	void Luluvoz_interaccion_1(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo02.ogg", "", "Avisos", "Luluvoz_interaccion_1", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_interaccion_1", false, "" ,0.0f ,0.0f  );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_interaccion_1", false, "" ,0.0f ,0.0f  );
+		AddQuest("quest_hum_1", "taladro");
+	}
+	
+	void Luluvoz_interaccion_2(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo02.ogg", "", "Avisos", "Luluvoz_interaccion_2", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_interaccion_2", false, "" ,0.0f ,0.0f  );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_interaccion_2", false, "" ,0.0f ,0.0f  );
+		AddQuest("quest_hum_2", "herramienta");
+	}
+	
+	void Luluvoz_interaccion_3(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo03.ogg", "", "Avisos", "Luluvoz_interaccion_3", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_interaccion_3", false, "" ,0.0f ,0.0f  );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "Luluvoz_interaccion_3", false, "" ,0.0f ,0.0f  );
+		AddQuest("quest_hum_3", "desafio");
+	}
+	
+	void Luluvoz_interaccion_4(string &in asTimer)
+	{ 
+		AddEffectVoice("Taptap.ogg", "", "Avisos", "Luluvoz_interaccion_4", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_interaccion_5(string &in asEntity, int alState)
+	{ 
+		AddEffectVoice("Expresivo03.ogg", "", "Avisos", "Luluvoz_interaccion_5", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_interaccion_6(string &in asTimer)
+	{ 
+		AddEffectVoice("Taptap.ogg", "", "Avisos", "Luluvoz_interaccion_6", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_interaccion_7(string &in asTimer)
+	{ 
+		AddEffectVoice("Taptap.ogg", "", "Avisos", "Luluvoz_interaccion_7", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_interaccion_8(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo03.ogg", "", "Avisos", "Luluvoz_interaccion_8", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("Pensativa.ogg", "", "Avisos", "Luluvoz_area_4", false, "" ,0.0f ,0.0f );
+	}
+
+	void Luluvoz_interaccion_9(string &in asTimer)
+	{ 
+		AddEffectVoice("Taptap.ogg", "", "Avisos", "Luluvoz_interaccion_9", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_interaccion_10(string &in asTimer)
+	{ 
+		AddEffectVoice("Taptap.ogg", "", "Avisos", "Luluvoz_interaccion_10", false, "" ,0.0f ,0.0f );
+	}
+
+
+
+
+
+
+
+

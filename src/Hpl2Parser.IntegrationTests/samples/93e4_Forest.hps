@@ -1,0 +1,228 @@
+int swings = 0;
+
+void OnStart()
+{
+	SetMessage("ScreenText", "textchapter2", 5);
+	SetMapDisplayNameEntry("Pine Forest");
+	FadeOut(0);
+	FadeIn(2.5f);
+	AutoSave();
+	ClearSavedMaps();
+	AddEntityCollideCallback("Player", "AreaPatrolMonster", "SpawnPatrollingMonster", true, 1);
+	AddEntityCollideCallback("Player", "AreaMonster", "SpawnMonster", true, 1);
+	AddEntityCollideCallback("Player", "PitArea", "PitDeath", false, 1);
+	AddEntityCollideCallback("Player", "ExitArea", "ExitHole", true, 1);
+	AddEntityCollideCallback("Player", "AreaStartBridge", "BridgeEvent", true, 1);
+	SetupLoadScreen("LoadingScreen", "Load3", 0,"");
+	AddUseItemCallback("", "stone_hammer_chipper", "blockdoor", "HammerAnim", true);
+}
+
+void BrutePatrolEnd(string &in asEntity, string &in OnAutoDisabled)
+{
+	PlayGuiSound("react_breath_slow", 0.7);
+	SetMessage("ScreenText", "enemygone", 4.5f);
+}
+
+void GlowEndTimer(string &in asTimer)
+{
+	SetLightVisible("glowchipper", false);
+}
+
+void HammerAnim(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("AreaMonster", false);
+	swings = 1;
+	PlaySoundAtEntity("", "15_rock_break", "blockdoor", 0, false);
+	PlaySoundAtEntity("", "15_make_hammer", "Player", 0.25, false);
+	PlaySoundAtEntity("", "03_rock_move", "blockdoor", 2, false); 
+	StartPlayerLookAt("stone_hammer_move_1", 1.5f, 1.5f, "");
+	SetEntityActive("stone_hammer_move_1", true);
+	AddTimer("movehammer", 0.1, "TimerActiveHammer");
+	AddTimer("hammersound", 0.27, "TimerActiveHammer");
+	AddTimer("resethammer", 0.4, "TimerActiveHammer");
+	AddTimer("repeat", 0.6, "TimerActiveHammer");
+}
+
+void TimerActiveHammer(string &in asTimer)
+{
+	if(asTimer == "movehammer") SetMoveObjectState("stone_hammer_move_1", 0.4);
+
+	else if(asTimer == "hammersound")
+	{
+		PlaySoundAtEntity("", "15_hammer", "Player", 0, false);
+		PlaySoundAtEntity("", "impact_wood_high", "Player", 0, false);
+		StopPlayerLookAt();
+	}
+	
+	else if(asTimer == "resethammer") SetMoveObjectState("stone_hammer_move_1", 0);
+	
+	if(swings < 3 && asTimer == "repeat")
+	{
+		AddTimer("movehammer", 0.01, "TimerActiveHammer");
+		AddTimer("hammersound", 0.17, "TimerActiveHammer");
+		AddTimer("resethammer", 0.3, "TimerActiveHammer");
+		AddTimer("repeat", 0.5, "TimerActiveHammer");
+		swings = swings + 1;
+	}
+	
+	else if(swings == 3 && asTimer == "repeat")
+	{
+		AddTimer("movehammer", 0.2, "TimerActiveHammer");
+		AddTimer("hammersound", 0.37, "TimerActiveHammer");
+		AddTimer("resethammer", 0.5, "TimerActiveHammer");
+		AddTimer("repeat", 0.8, "TimerActiveHammer");
+		AddTimer("break", 0.42, "TimerActiveHammer");
+		swings = swings + 1;
+	}
+	
+	else if(swings == 4 && asTimer == "break") FinishAnim();
+	
+	else if(swings == 4 && asTimer == "repeat")
+	SetEntityActive("stone_hammer_move_1", false);
+}
+
+void FinishAnim()
+{
+	PlayMusic("02_puzzle.ogg", false, 0.7, 0, 1, false);
+	PlaySoundAtEntity("", "break_wood.snt", "blockeddoor", 0, false);
+	SetSwingDoorLocked("blockeddoor", false, true);
+	SetPropHealth("blockdoor", 0);
+	CompleteQuest("Memento34", "M34");
+	CreateParticleSystemAtEntity("", "ps_break_wood.ps", "blockeddoor", false);
+	AddTimer("", 5.5f, "AnimTimer");
+}
+
+void AnimTimer(string &in asTimer)
+{
+	PlayMusic("12_amb.ogg", true, 1, 5, 2, true);
+}
+
+void OnEnter()
+{
+	PlayMusic("12_amb.ogg", true, 1, 5, 1, true);
+}
+
+void OnLeave()
+{
+	StopMusic(1.5f, 1);
+	CompleteQuest("MementoB", "MB");
+	SetupLoadScreen("LoadingScreen", "Load5", 0,"");
+}
+
+void LockedDoorMessage(string &in asEntity)
+{
+	SetMessage("ScreenText", "doorblocked", 4.5f);
+	AddQuest("Memento34", "M34");
+}
+
+void PitDeath(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(10, true);
+	FadeOut(1);
+	CheckPoint("CheckPointBridge", "BridgeSpawn", "AfterPitDeath", "DeathHint", "DFall");
+	GivePlayerDamage(101, "BloodSplat", false, true);
+}
+
+void BridgeEvent(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	CreateParticleSystemAtEntity("slimeeffect", "ps_guardian_appear_explosion.ps", "slime1", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "slime5", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "slime3", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "slime6", false);
+	CreateParticleSystemAtEntity("", "ps_slime_fog.ps", "slime4", false);
+	PlayGuiSound("react_scare", 0.9);
+	StartPlayerLookAt("AreaLook", 5.5f, 5.5f, "");
+	StartScreenShake(0.3, 2, 1, 3);
+	GiveSanityDamage(10, true);
+	PlaySoundAtEntity("", "slime_loop", "slime1", 0.9, true);
+	PlaySoundAtEntity("", "guardian_activated.snt", "Player", 0.5f, false);
+	AddTimer("slimeeffectend", 4, "EffectEnd");
+	SetPropActiveAndFade("slime1", true, 1.5f);
+	SetPropActiveAndFade("slime2", true, 2);
+	SetPropActiveAndFade("slime3", true, 2.5f);
+	SetPropActiveAndFade("slime4", true, 2.5f);
+	SetPropActiveAndFade("slime5", true, 1.5f);
+	SetPropActiveAndFade("slime6", true, 2);
+	SetEntityActive("corpse", true);
+}
+
+void HammerPickup(string &in asEntity, string &in OnPickup)
+{
+	if(HasItem("stone_hammer") == true && HasItem("stone_chipper") == true)
+	{
+		GiveSanityBoostSmall();
+		SetEntityActive("AreaMonster", false);
+	}
+	else
+	{
+		SetEntityActive("AreaMonster", true);
+	}
+}
+
+void ChipperPickup(string &in asEntity, string &in OnPickup)
+{
+	if(HasItem("stone_hammer") == true && HasItem("stone_chipper") == true)
+	{
+		GiveSanityBoostSmall();
+		FadeLightTo("glowchipper", 0, 0, 0, 0, -1, 0.5f);
+		AddTimer("", 1, "GlowEndTimer");
+	}
+	else
+	{
+		FadeLightTo("glowchipper", 0, 0, 0, 0, -1, 0.5f);
+		AddTimer("", 1, "GlowEndTimer");
+		SetEntityActive("AreaPatrolMonster", true);
+	}
+}
+
+void EffectEnd(string &in asTimer)
+{
+	SetPlayerActive(true);
+	SetEntityActive("corpse", false);
+	AddQuest("MementoB", "MB");
+	StopPlayerLookAt();
+	DestroyParticleSystem("slimeeffect");
+}
+
+void SpawnMonster(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("CheckPointMonster", "MonsterSpawn", "", "DeathHint", "DMonster");
+	GiveSanityDamage(10, true);
+	SetEntityActive("Brute", true);
+	AddEnemyPatrolNode("Brute", "Brute1Node_1", 1, "");
+	AddEnemyPatrolNode("Brute", "Brute1Node_2", 1, "");
+	AddEnemyPatrolNode("Brute", "Brute1Node_3", 5, "");
+	AddEnemyPatrolNode("Brute", "Brute1Node_4", 1, "");
+	AddEnemyPatrolNode("Brute", "Brute1Node_5", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Brute1Node_6", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Brute1Node_7", 0.001, "");
+}
+
+void SpawnPatrollingMonster(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("CheckPointMonsterPatrol", "MonsterPatrolSpawn", "", "DeathHint", "DMonsterArea");
+	PlayGuiSound("react_scare", 0.9);
+	SetEntityActive("BrutePatrol", true);
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_1", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_2", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_3", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_4", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_5", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_6", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_7", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_8", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_9", 0, "");
+	AddEnemyPatrolNode("BrutePatrol", "BrutePNode_10", 0, "");
+}
+
+void ExitHole(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(1.5f, 1);
+	ChangeMap("Mines.map", "PlayerStartArea_1", "", "");
+}
+
+void AfterPitDeath(string &in asName, int alCount)
+{
+	FadeIn(1);
+}

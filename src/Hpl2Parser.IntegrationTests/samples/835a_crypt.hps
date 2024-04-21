@@ -1,0 +1,476 @@
+float[] x(10); float[] y(10); float[] z(10); int last;
+
+void OnStart()
+{
+	// Events
+	AddUseItemCallback("", "KeyJailer", "DoorJailer", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "KeyAlchemy", "AlchemySecret", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "Hammer", "Lock", "UseHammerOnLock", true);
+	AddUseItemCallback("", "HammerChipper", "Lock", "UseHammerOnLock", true);
+	AddUseItemCallback("", "Acid", "Slime", "UseAcidOnSlime", true);
+	AddUseItemCallback("", "Container", "Burner", "UseItemOnBurner", true);
+	AddUseItemCallback("", "Orpiment", "Burner", "UseItemOnBurner", true);
+	AddUseItemCallback("", "Hammer", "WoodenBarricadeCrypt", "UseHammerOnBarricade", true);
+	AddUseItemCallback("", "CeremonyDagger", "EvilPrisonerScript", "UseDaggerToPrisoner", true); 
+	
+	for(int i=1;i<=5;i++) AddEntityCollideCallback("BigHammer", "Suitor_"+i, "UseHammerOnSuitor", false, 1);
+	AddEntityCollideCallback("BigHammer", "DoorPrison_3_s", "UseHammerOnProp", false, 1);
+	AddEntityCollideCallback("Player", "FallArea", "CollideWater", false, 1);
+	AddEntityCollideCallback("Player", "AreaTorchGhost", "CollideGhostTorch", true, 1);
+	AddEntityCollideCallback("Player", "AreaHorror", "CollideHorror", true, 1);
+	
+	// Required Items
+	if(!HasItem("Lantern")) GiveItemFromFile("Lantern", "lantern.ent");
+	
+	// Other
+	SetMessage("Hints", "Chapter_3", 5.0f);
+	AddTimer("BigHammer", 0.0f, "TimerHammerPosition");
+	AddQuest("Jailer", "Jailer");
+	CheckPoint("Music", "StartArea", "OnDeathMusic", "", "");
+	PlayMusic("02_amb_strange.ogg", true, 0.8f, 0, 0, true);
+	PlayMusic("03_event_tomb.ogg", false, 1.2f, 0, 10, false);
+	SetFogColor(0.0f, 0.0f, 0.3f, 0.3f);
+	SetMapDisplayNameEntry("Crypt");
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(0.0f, 5);
+	CompleteQuest("Jailer", "Jailer");
+	SetupLoadScreen("Loading", "Forest", 0, "forest.jpg");
+}
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	SetLevelDoorLocked(asEntity, false);
+    PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	CompleteQuest(asEntity, asEntity);
+}
+
+void UseHammerOnLock(string &in asItem, string &in asEntity)
+{
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	for(int i=0;i<=4;i++) AddTimer(asEntity, i, "TimerBang");
+	AddTimer(asItem, 4.0f, "TimerBangComplete");
+}
+
+void UseHammerOnBarricade(string &in asItem, string &in asEntity)
+{
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	for(int i=0;i<=4;i++) AddTimer(asEntity, 1.25f * i, "TimerHammerAttack");
+	AddTimer(asEntity, 5.0f, "TimerHammerFinalAttack");
+}
+
+void TimerHammerAttack(string &in asTimer)
+{
+	PlaySoundAtEntity("HitSound", "hit_wood.snt", asTimer, 0.0f, false);
+	CreateParticleSystemAtEntity("HitEffect", "ps_hit_wood.ps", asTimer, false);
+}
+
+void TimerHammerFinalAttack(string &in asTimer)
+{
+	SetPropHealth(asTimer, 0.0f);
+	CompleteQuest("WoodenBarricadeHouse", "WoodenBarricadeHouse");
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+}
+
+void UseItemOnBurner(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive(asItem+"_s", true);
+	GiveSanityBoostSmall();
+	
+	if(!GetEntityExists("Container") && !GetEntityExists("Orpiment") && !HasItem("Container") && !HasItem("Orpiment")) SetWheelStuckState(asEntity, 0, true);
+}
+
+void UseDaggerToPrisoner(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("EvilPrisonerScript", false);
+	
+	SetPlayerActive(false);
+	FadeOut(1.5f);
+	AddTimer("Massacre", 1.5f, "TimerDaggerPrisoner"); AddTimer("1", 5.5f, "TimerDaggerPrisonerEnd");
+}
+
+void OnPickDagger(string &in asEntity, string &in type)
+{
+	SetEntityActive("SignEvilPrisoner", false); SetEntityActive("EvilPrisonerScript", true);
+}
+
+void OnChangeStateburner(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		PlaySoundAtEntity("", "13_attach_wheel.snt", asEntity, 0, false);
+		PlaySoundAtEntity("", "15_acid.snt", asEntity, 0, false);
+		
+		SetWheelStuckState(asEntity, alState, true);
+		
+		PlaySoundAtEntity("BurnerSound", "general_fire_burning_low", "Burner_s", 0.0f, false);	
+		CreateParticleSystemAtEntity("FireBurner", "ps_fire_lab_burner.ps", "Burner_s", false);	
+		
+		AddTimer("StartWaterSTream", 3.25f, "TimerWaterSTream");
+		AddTimer("CreateAcid", 6.75f, "TimerBurnerComplete");
+	}
+}
+
+void TimerWaterSTream(string &in asTimer)
+{
+	PlaySoundAtEntity("WaterSound", "16_water_stream_med.snt", "WaterStream_s", 0.05f, false);
+	CreateParticleSystemAtEntityExt("LiquidBurner", "ps_liquid_epoxy.ps", "WaterStream_s", false, 0.0f, 1.0f, 0.0f, 1.0f, false, 0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+void OnPickNote(string &in entityName, string &in type)
+{
+	if(!QuestIsCompleted("Purge")) AddQuest("Purge", "Purge");
+}
+
+void OnBreakDoor(string &in entityName, string &in type)
+{
+	SetEnemyIsHallucination("GruntHalluciation", true);
+	CompleteQuest("DoorBridge", "DoorBridge");
+}
+
+void OnInteractDropDoor(string &in asEntity)
+{
+	CheckPoint("PurgeQuest", "StartAreaPurge", "OnPlayerDie", "Die", "Hammer");
+	SetMessage("Hints", "HammerTime", 5.0f);
+}
+
+void OnPlayerDie(string &in asName, int alCount)
+{
+	PlayMusic("02_amb_strange.ogg", true, 0.8f, 0, 0, true);
+	
+	SetEntityActive("Suitor_1", true);
+	SetEntityActive("DoorPrison_3_s", true);
+	
+	for(int i=1;i<=5;i++) SetEnemyIsHallucination("Suitor_"+i, false);
+	for(int i=1;i<=3;i++) ResetProp("DoorPrison_"+i);
+	
+	ResetProp("IronMaiden");
+	SetSwingDoorLocked("IronMaiden", true, true);
+	
+	ResetProp("BigHammer");
+}
+
+void OnPickOrpiment(string &in entityName, string &in type)
+{
+	CompleteQuest("AlchemySecret", "AlchemySecret");
+}
+
+void OnIgniteCow(string &in entityName, string &in type)
+{
+	CheckPoint("PurgeQuestComplete", "StartAreaPurgeComplete", "", "", "");
+	
+	SetFogActive(true);
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	
+	SetPropActiveAndFade("Ghost", true, 0.25f);
+	SetEntityActive("CeremonyDagger", true);
+	
+	CreateParticleSystemAtEntity("GhostSmoke", "ps_ghost_release.ps", "Ghost", false);
+	CreateParticleSystemAtEntity("GhostBlood", "blood.ps", "Ghost", false);
+	PlaySoundAtEntity("", "BansheeDeath.snt", "EvilCow", 0, false);
+	
+	StartPlayerLookAt("GhostHead", 2.0f, 2.0f, "");
+
+	GiveSanityDamage(20.0f, true);
+	
+	CompleteQuest("IronMaiden", "IronMaiden");
+	CompleteQuest("EvilCow", "EvilCow");
+	SetLeverStuckState("EvilCow", 0, true);
+	
+	AddTimer("Ghost", 1.0f, "TimerGhostUnactive");
+	AddTimer("react_pant.snt", 1.5f, "TimerScare");
+	AddTimer("", 2.0f, "TimerLookComplete");
+	AddTimer("hurt_pant.snt", 3.25f, "TimerScare");
+}
+
+void OnDestroyDoor(string &in entityName, string &in type)
+{
+	SetEntityActive("Suitor_5", true);
+	ShowEnemyPlayerPosition("Suitor_5");
+}
+
+void OnInteractDoor(string &in door)
+{
+	if(!QuestIsCompleted(door))
+	{
+		SetMessage("Hints", door, 5.0f);
+		AddQuest(door, door);
+	}
+}
+
+void UseHammerOnSuitor(string &in weapon, string &in enemy, int alState)
+{	
+	if(Distance(weapon, x[last], y[last], z[last]) > 1.0f)
+	{
+		PlaySoundAtEntity("", "MetalMediumBashFlesh.snt", weapon, 0, false);	
+		CreateParticleSystemAtEntity("BloodyHit", "blood.ps", weapon, false);
+		FadeEnemyToSmoke(enemy, false);
+		if(enemy == "Suitor_1")
+		{
+			AddTimer("Suitors", 2.0f, "TimerSuitors");			
+			CompleteQuest("DoorPrison_2", "DoorPrison_2");
+		}
+	}
+}
+
+void UseHammerOnProp(string &in weapon, string &in collider, int alState)
+{	
+	float timerLeft = GetTimerTimeLeft(weapon);
+	RemoveTimer(weapon);
+	string theDoor = StringSub(collider, 0, collider.length() - 2);
+
+	if(Distance(weapon, x[last], y[last], z[last]) > 1.0f)
+	{
+		AddPropHealth(theDoor, -25.0f);
+		PlaySoundAtEntity("DoorHit", "MetalMediumBashWood.snt", theDoor, 0, false);
+		CreateParticleSystemAtEntity("HeavyHit", "ps_hit_wood.ps", weapon, false);
+		if(GetPropHealth(theDoor) == 0)
+		{
+			SetEntityActive(collider, false);
+			CompleteQuest(theDoor, theDoor);
+		}
+	}
+	AddTimer(weapon, 0.1f - timerLeft, "TimerHammerPosition");
+}
+
+void CollideWater(string &in weapon, string &in collider, int alState)
+{
+	for(int i=1;i<=4;i++) SetEntityActive("waterlurker_"+i, true);	
+}
+
+void CollideGhostTorch(string &in player, string &in collider, int alState)
+{
+	for(int i=1;i<=2;i++) SetLampLit("TorchGhost_"+i, true, true);
+	PlaySoundAtEntity("", "BansheeYesAttack.snt", "Bottle", 0, false);
+	StartPlayerLookAt("Bottle", 2.0f, 2.0f, ""); AddTimer("", 2.5f, "TimerLookComplete");
+	AddTimer("hurt_pant.snt", 1.25f, "TimerScare");
+	GiveSanityDamage(20.0f, true);
+	AddTimer("GruntBridge", 4.0f, "TimerGruntBridge");
+}
+
+void CollideHorror(string &in player, string &in collider, int alState)
+{
+	StartScreenShake(0.01f, 2.5f, 0.5f, 2.0f);
+	SetFogActive(true);
+	SetEntityActive("Horror", true);
+	PlayGuiSound("notice_long.snt", 2.5f);
+	
+	StartPlayerLookAt("Horror", 1.5f, 1.5f, ""); AddTimer("", 7.5f, "TimerLookComplete");
+	
+	GiveSanityDamage(40.0f, true);
+	
+	AddTimer("hurt_pant.snt", 1.5f, "TimerScare"); AddTimer("react_pant.snt", 3.0f, "TimerScare"); AddTimer("react_scare.snt", 4.5f, "TimerScare");
+
+	AddTimer("100", 0.75f, "TimerSanity");
+	AddTimer("1", 5.5f, "TimerHorrorEnd");
+	AddTimer("2", 7.0f, "TimerHorrorEnd");
+	AddTimer("3", 13.0f, "TimerHorrorEnd");
+}
+
+void UseAcidOnSlime(string &in asItem, string &in asEntity)
+{
+	CompleteQuest(asEntity, asEntity); CompleteQuest("BlockedDoorCrypt", "BlockedDoorCrypt");
+	RemoveItem(asItem);
+	SetPropHealth(asEntity, 0);
+	GiveItemFromFile("Container", "chemical_container.ent");
+	GiveSanityBoost();
+}
+
+float Distance(string &in asEntity, float x, float y, float z)
+{
+	return MathSqrt(MathPow(GetEntityPosX(asEntity) - x, 2) + MathPow(GetEntityPosY(asEntity) - y, 2) + MathPow(GetEntityPosZ(asEntity) - z, 2));
+}
+
+void OnLookJailer(string &in asEntity, int alState)
+{
+	SetMessage("Hints", "Jailer", 5.0f);
+	GiveSanityDamage(10.0f, true);
+	AddTimer("hurt_pant.snt", 0.5f, "TimerScare");
+	CompleteQuest("Jailer", "Jailer");
+}
+
+void OnLookBody(string &in asEntity, int alState)
+{
+	GiveSanityDamage(10.0f, true);
+	AddTimer("hurt_pant.snt", 0.5f, "TimerScare");
+}
+
+void TimerDaggerPrisoner(string &in asTimer)
+{
+	PlaySoundAtEntity("DaggerVoice", "15_the_big_scream.snt", "EvilPrisoner", 0, false);
+	SetEntityActive("EvilPrisoner", false);
+	for(int i=1;i<=6;i++) 
+	{
+		SetEntityActive("human_"+i, true);
+		AddTimer("24_knife.snt", i * 0.5f, "TimerSound");
+	}
+	
+	CompleteQuest("Purge", "Purge");
+	SetLevelDoorLocked("DoorForest", false);
+	SetEntityActive("AreaHorror", true);
+}
+
+void TimerDaggerPrisonerEnd(string &in asTimer)
+{
+	StopSound("DaggerVoice", 0.25f);
+	FadeIn(StringToFloat(asTimer)); 
+	GiveSanityDamage(10.0f, true);
+	SetPlayerActive(true);
+}
+
+void TimerSound(string &in sound)
+{
+	PlayGuiSound(sound, 1.0f);
+}
+
+void TimerBurnerComplete(string &in asTimer)
+{
+	DestroyParticleSystem("FireBurner");
+	StopSound("BurnerSound", 1.25f);
+	
+	ReplaceEntity("Container_s", "Container_sToAcid", "Acid", "chemical_container_full.ent", false);
+	CreateParticleSystemAtEntityExt("WaterDrop", "ps_impact_water_high", "Acid", false, 0.0f, 0.6f, 0.0f, 1.0f, false, 0.0f, 0.0f, 0.0f, 0.0f);
+	PlaySoundAtEntity("splash", "impact_water_med", "Acid", 0, false);
+	
+	DestroyParticleSystem("LiquidBurner");
+	StopSound("WaterSound", 0.05f);
+}
+
+void TimerLookComplete(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerGruntBridge(string &in asTimer)
+{
+	SetEntityActive("GruntHalluciation", true);
+	for(int i=1;i<=4;i++) AddEnemyPatrolNode("GruntHalluciation", "PathHalluciation_"+i, 0.001f, "");
+	
+	AddTimer("react_pant.snt", 1.5f, "TimerScare"); AddTimer("react_scare.snt", 3.5f, "TimerScare");
+	GiveSanityDamage(20.0f, true);
+	
+	StartPlayerLookAt("GruntHalluciation", 1.0f, 1.0f, "");
+	AddTimer("", 3.5f, "TimerLookComplete");
+}
+
+void TimerSuitors(string &in asTimer)
+{
+	GiveSanityDamage(20.0f, true);
+	AddTimer("hurt_pant.snt", 0.5f, "TimerScare");
+	SetSwingDoorLocked("IronMaiden", false, true);
+	SetSwingDoorClosed("IronMaiden", false, true);	
+	SetMoveObjectState("IronMaiden", 1.0f);	
+	for(int i=2;i<=3;i++)
+	{
+	SetEntityActive("Suitor_"+i, true);	
+	for(int j=1;j<=8;j++) AddEnemyPatrolNode("Suitor_"+i, "PathNodeArea_"+j, 0.001f, "");
+	}
+	SetEntityActive("Suitor_4", true);
+	for(int j=8;j>=1;j--) AddEnemyPatrolNode("Suitor_4", "PathNodeArea_"+j, 0.001f, "");
+}
+
+void TimerHammerPosition(string &in asTimer)
+{
+	x[last] = GetEntityPosX(asTimer);
+	y[last] = GetEntityPosY(asTimer);
+	z[last] = GetEntityPosZ(asTimer);
+
+	last = (last + 1) % 10;
+	
+	AddTimer(asTimer, 0.01f, "TimerHammerPosition");
+}
+	
+void TimerScare(string &in soundFile)
+{
+	PlayGuiSound(soundFile, 1.0f);
+	ChangePlayerStateToNormal();
+}
+
+void TimerSanity(string &in asTimer)
+{
+	GiveSanityDamage(StringToInt(asTimer), true);
+}
+
+void TimerHorrorEnd(string &in asTimer)
+{
+	switch(StringToInt(asTimer)) 
+	{
+		case 1:
+		FadeOut(1.5f);
+		break;
+		
+		case 2:
+		SetFogActive(false);
+		FadeIn(1.5f); 
+		SetEntityActive("Horror", false);
+		break;
+		
+		case 3:
+		SetEntityActive("Grunt", true);
+		ShowEnemyPlayerPosition("Grunt");
+		break;
+	}
+}
+
+void TimerSaw(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("SawSmoke", "ps_hit_wood.ps", asTimer, false);
+}
+
+void TimerBang(string &in asTimer)
+{
+	PlaySoundAtEntity("", "MetalMediumBashMetal.snt", asTimer, 0, false);
+	CreateParticleSystemAtEntity("GhostSmoke", "ps_hit_metal.ps", asTimer, false);
+}
+
+void TimerBangComplete(string &in asTimer)
+{
+	if(asTimer == "HammerChipper")
+	{
+		PlaySoundAtEntity("", "break_wood_metal.snt", "Lock", 0, false);
+		ReplaceEntity("Lock", "LockToLockBroken", "LockBroken", "padlock_broken.ent", false);
+		CompleteQuest("DoorAlchemy", "DoorAlchemy");
+		CompleteQuest("NeedBetterTool", "NeedBetterTool");
+		GiveSanityBoostSmall();		
+	}
+	else 
+	{
+		SetMessage("Hints", "LowHammer", 3.0f);
+		AddQuest("NeedBetterTool", "NeedBetterTool");
+	}
+	
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+}
+
+void TimerGhostUnactive(string &in asEntity)
+{
+	CreateParticleSystemAtEntity("GhostSmoke", "ps_ghost_release.ps", asEntity, false);
+	SetPropActiveAndFade(asEntity, false, 0.75f);
+	
+	CreateParticleSystemAtEntity("HammerBreak", "ps_ghost_release.ps", "BigHammer", false);
+	RemoveTimer("BigHammer");
+	SetEntityActive("BigHammer", false);
+	
+	ShowPlayerCrossHairIcons(true);
+	SetPlayerActive(true);
+	SetFogActive(false);
+	
+	SetMessage("Hints", "HammerDisappeared", 5.0f);
+}
+
+void OnDeathMusic(string &in asName, int alCount)
+{
+	PlayMusic("02_amb_strange.ogg", true, 0.8f, 0, 0, true);
+}

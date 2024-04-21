@@ -1,0 +1,322 @@
+void OnStart()
+{
+	if(GetGlobalVarInt("texttg") ==0)
+	{
+	SetEntityActive("ScriptArea_text1", true);
+	AddGlobalVarInt("texttg", 1);
+	AddEntityCollideCallback("Player", "ScriptArea_text1", "Texxt1", true, 0);
+	}else if(GetGlobalVarInt("texttg") ==1)
+	{
+	SetEntityActive("ScriptArea_text2", true);
+	AddGlobalVarInt("texttg", 1);
+	AddEntityCollideCallback("Player", "ScriptArea_text2", "Textt1", true, 0);
+	}
+	SetEntityCustomFocusCrossHair("ScriptArea_12", "Ladder");
+	SetEntityPlayerInteractCallback("ScriptArea_2", "CoridB", false);
+	SetEntityPlayerInteractCallback("ScriptArea_3", "BrokenElevatorButton", false);
+	SetEntityPlayerInteractCallback("ScriptArea_4", "NoPowerQuest", false);
+	SetEntityPlayerInteractCallback("ScriptArea_5", "NoPower", false);
+	SetEntityPlayerInteractCallback("ScriptArea_6", "ElectricHit", true);
+	SetEntityPlayerInteractCallback("ScriptArea_12", "TP2El2", false);
+	SetEntityPlayerInteractCallback("ScriptArea_27", "LockedMessage", false);
+	SetEntityPlayerInteractCallback("door_storage_4", "LockedMessage", false);
+	SetEntityPlayerInteractCallback("door_storage_7", "LockedMessage", false);
+	SetEntityPlayerInteractCallback("door_storage_8", "LockedMessage", false);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "Lab", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_19", "Push", true, 0);
+	AddEntityCollideCallback("infected_normal_1", "ScriptArea_17", "Disapear", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_18", "MonsterWalk", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_7", "TPBack", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_9", "TP2F", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_444", "DisMon", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_10", "TP2FF", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_11", "TP2El", false, 0);
+	SetEntityPlayerInteractCallback("ScriptArea_stone", "pickingupstone", false);
+}
+
+void OnEnter()
+{
+	PlayMusic("penumbra_music_E1_A1.ogg", true, 0.9f, 1.0f, 1, true);
+}
+
+void LockedMessage(string &in asEntity)
+{
+SetMessage("Message", "locked", 0);
+}
+
+void Texxt1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("t1", "33.snt", "Player", 0.0f, false);
+SetMessage("Message", "m1_51", 0);
+AddTimer("Text2", (17.1f), "texxt2");
+}
+void texxt2(string &in asTimer)
+{
+SetMessage("Message", "m1_52", 0);
+}
+
+void Textt1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("t1", "34.snt", "Player", 0.0f, false);
+SetMessage("Message", "m1_61", 0);
+AddTimer("Text2", (11.1f), "textt2");
+}
+void textt2(string &in asTimer)
+{
+PlaySoundAtEntity("t1", "35.snt", "Player", 0.0f, false);
+SetMessage("Message", "m1_62", 0);
+AddTimer("Text2", (11.1f), "textt3");
+}
+void textt3(string &in asTimer)
+{
+SetMessage("Message", "m1_63", 0);
+}
+
+void pickingupstone(string &in asEntity)
+{
+	PlaySoundAtEntity("buttonclick", "button_click.snt", "Player", 0.0f, false);
+	AddUseItemCallback("", "StoneW", "ScriptArea_stone_1", "WrongStone", true);
+	AddUseItemCallback("", "StoneC", "ScriptArea_stone_1", "RightStone", true);
+	GiveItem("StoneW", "Inventory", "stonew", "item_chtulhu_stone_wood_inventory.tga", 1);
+	AddQuest("Journal", "StonesQuestWood");
+	SetEntityActive("item_chtulhu_stone_1", false);
+	SetEntityActive("ScriptArea_stone", false);
+	SetEntityActive("ScriptArea_stone_1", true);
+	SetEntityActive("item_chtulhu_stone_wood_1", false);
+}
+
+void WrongStone(string &in asItem, string &in asEntity)
+{
+RemoveItem("StoneW");
+PlaySoundAtEntity("buttonclick", "button_click.snt", "Player", 0.0f, false);
+AddEntityCollideCallback("Player", "ScriptArea_stone", "pickingupstone", true, 0);
+SetEntityActive("ScriptArea_stone", true);
+SetEntityActive("ScriptArea_stone_1", false);
+SetEntityActive("item_chtulhu_stone_wood_1", true);
+}
+
+void RightStone(string &in asItem, string &in asEntity)
+{
+CompleteQuest("Journal", "StonesQuestWood");
+SetMoveObjectStateExt("furniture_shelf_storage2_1", 1.2f, 0.5f, 1.5f, 1.2f, true);
+RemoveItem("StoneC");
+PlaySoundAtEntity("buttonclick", "button_click.snt", "Player", 0.0f, false);
+PlaySoundAtEntity("scrape", "scrape_metal.snt", "furniture_shelf_storage2_1", 0.0f, false);
+SetEntityActive("ScriptArea_stone", false);
+SetEntityActive("item_chtulhu_stone_stat_1", true);
+SetEntityActive("ScriptArea_stone_1", false);
+GiveSanityBoost();
+CreateParticleSystemAtEntity("ps_steam", "ps_dust_falling_hole.ps", "ScriptArea_13", true);
+CreateParticleSystemAtEntity("ps_steam", "ps_dust_falling_hole.ps", "ScriptArea_14", true);
+CreateParticleSystemAtEntity("ps_steam", "ps_dust_falling_rumble.ps", "ScriptArea_15", true);
+CreateParticleSystemAtEntity("ps_steam", "ps_dust_falling_rumble.ps", "ScriptArea_16", true);
+AddTimer("1", 3.3f, "StopScrape");
+}
+
+void TPBack(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(25.0f, true);
+	TeleportPlayer("PlayerStartArea_4");
+	SetEntityActive("waterlurker_3", false);
+SetEntityActive("waterlurker_2", false);
+SetEntityActive("waterlurker_1", false);
+SetEntityActive("waterlurker_3", false);
+SetEntityActive("waterlurker_4", false);
+RemoveTimer("WD");
+SetEntityActive("ScriptArea_18", true);
+}
+
+void StopScrape(string &in asTimer)
+{
+StopSound("StopScrape", 1.0f);
+}
+
+void TP2El(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ScriptArea_11", false);
+	SetEntityActive("ScriptArea_12", true);
+}
+
+void DisMon(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("waterlurker_2", false);
+SetEntityActive("waterlurker_1", false);
+SetEntityActive("waterlurker_3", false);
+SetEntityActive("waterlurker_4", false);
+}
+
+void TP2El2(string &in asEntity)
+{
+	SetEntityActive("ScriptArea_12", false);
+	FadeOut(0.7f);
+	AddTimer("1", 1.0f, "TP2ElT");
+	AddTimer("123", 3.0f, "AreaSpawn");
+}
+
+void AreaSpawn(string &in asTimer)
+{
+SetEntityActive("ScriptArea_11", true);
+}
+
+void TP2ElT(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_6");
+FadeIn(0.7f);
+}
+
+void TP2F(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ScriptArea_9", false);
+	SetEntityActive("ScriptArea_10", true);
+}
+
+void TP2FF(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ScriptArea_10", false);
+	SetEntityActive("ScriptArea_9", true);
+	FadeOut(0.7f);
+	AddTimer("1", 1.0f, "TP2FFT");
+}
+
+void TP2FFT(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_5");
+FadeIn(0.7f);
+}
+
+void WalkingDead(string &in asTimer)
+{
+AddEnemyPatrolNode("infected_axe_1", "PathNodeArea_7", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_1", "PathNodeArea_8", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_1", "PathNodeArea_9", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_1", "PathNodeArea_20", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_2", "PathNodeArea_15", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_2", "PathNodeArea_19", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_2", "PathNodeArea_16", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_2", "PathNodeArea_17", 0.0f, "");
+AddEnemyPatrolNode("infected_axe_2", "PathNodeArea_18", 0.0f, "");
+AddTimer("WD", 15.0f, "WalkingDead");
+}
+
+void CoridB(string &in asEntity)
+{
+	ChangeMap("01_corridorsB.map", "PlayerStartArea_6", "", "");
+	PlaySoundAtEntity("vsvs", "door_code_correct1.snt", "Player", 0.0f, false);
+}
+
+void BrokenElevatorButton(string &in asEntity)
+{
+	SetMessage("Message", "readins", 0);
+}
+
+void NoPowerQuest(string &in asEntity)
+{
+	SetMessage("Message", "readins4", 0);
+	AddQuest("Journal", "NoPowerQ");
+	PlaySoundAtEntity("buttonclick", "button_click.snt", "tech_elevator_button_2", 0.0f, false);
+	SetEntityActive("ScriptArea_4", false);
+	SetEntityActive("ScriptArea_5", true);
+}
+void NoPower(string &in asEntity)
+{
+	SetMessage("Message", "readins4", 0);
+	PlaySoundAtEntity("buttonclick", "button_click.snt", "tech_elevator_button_2", 0.0f, false);
+}
+
+void OpenElevator(string &in asEntity)
+{
+	SetMoveObjectStateExt("tech_elevator_door_7", -1.0f, 0.95f, 2, 0.2f, true);
+	SetMoveObjectStateExt("tech_elevator_door_8", 1.0f, 0.95f, 2, 0.2f, true);
+	PlaySoundAtEntity("buttonclick", "refinery_slide_open.snt", "tech_elevator_door_8", 0.0f, false);
+	PlaySoundAtEntity("buttonclick", "refinery_slide_open.snt", "tech_elevator_door_7", 0.0f, false);
+}
+
+void ElectricHit(string &in asEntity)
+{
+	CompleteQuest("Journal", "NoPowerQ");
+	FadeOut(0.1f);
+	SetPlayerActive(false);
+	AddTimer("1", 1.8f, "TP");
+	PlaySoundAtEntity("buttonclick", "ui_elec_damage.snt", "Player", 0.0f, false);
+	SetEntityActive("ScriptArea_5", false);
+	SetEntityActive("ScriptArea_4", false);
+	SetEntityActive("ScriptArea_8", true);
+	SetEntityPlayerInteractCallback("ScriptArea_8", "OpenElevator", true);
+	SetLampLit("lamp_flourescent01_4", true, true);
+	SetLampLit("lamp_flourescent01_34", true, true);
+}
+
+void TP(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_3");
+StartPlayerLookAt("LookArea_1", 3.5f, 3.5f, "");
+MovePlayerHeadPos(-0.9f, -1.3f, 0, 5.2, 5.5f);
+AddTimer("1", 3.8f, "TP2");
+SetEntityActive("waterlurker_3", true);
+SetEntityActive("waterlurker_2", true);
+SetEntityActive("waterlurker_1", true);
+SetEntityActive("ScriptArea_444", true);
+CheckPoint("", "PlayerStartArea_2", "checkp1", "", "");
+}
+void checkp1(string &in asName, int alCount)
+{
+SetEntityActive("waterlurker_3", true);
+SetEntityActive("waterlurker_2", true);
+SetEntityActive("waterlurker_1", true);
+}
+
+void TP2(string &in asTimer)
+{
+FadeIn(5.3f);
+AddTimer("1", 3.8f, "TP3");
+}
+
+void TP3(string &in asTimer)
+{
+StartPlayerLookAt("LookArea_2", 0.7f, 0.7f, "");
+MovePlayerHeadPos(0, 0, 0, 2.2, 2.5f);
+AddTimer("1", 2.8f, "TP4");
+}
+
+void TP4(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+AutoSave;
+}
+
+void Growl(string &in asTimer)
+{
+PlaySoundAtEntity("buttonclick", "amb_alert.snt", "ScriptArea_20", 0.0f, false);
+}
+
+void Lab(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("06_lab.map", "PlayerStartArea_1", "", "");
+}
+
+void Push(string &in asParent, string &in asChild, int alState)
+{
+	AddPropImpulse("box_crate02_12", 0, 0, 5, "world");
+	CreateParticleSystemAtEntity("ps_dust", "ps_cave_monster_breath.ps", "ScriptArea_22", true);
+	CreateParticleSystemAtEntity("ps_dust", "ps_dust_falling_rumble.ps", "ScriptArea_23", true);
+	CreateParticleSystemAtEntity("ps_dust", "ps_area_fog.ps", "ScriptArea_23", true);
+	CreateParticleSystemAtEntity("ps_dust", "ps_area_fog.ps", "ScriptArea_24", true);
+	CreateParticleSystemAtEntity("ps_dust", "ps_area_fog.ps", "ScriptArea_25", true);
+	GiveSanityDamage(20.0f, true);
+	StartScreenShake(0.15f, 0.5f, 0.1f, 0.4f);
+	PlaySoundAtEntity("buttonclick", "lurker_hit_wood.snt", "ScriptArea_20", 0.0f, false);
+	AddTimer("1", 0.9f, "Growl");
+	PlaySoundAtEntity("elevator_sound", "Penumbra_BP_C1.snt", "Player", 0.0f, false);
+}
+
+void MonsterWalk(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("infected_normal_1", true);
+	AddEnemyPatrolNode("infected_normal_1", "PathNodeArea_124", 0.0f, "");
+}
+
+void Disapear(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("infected_normal_1", false);
+}

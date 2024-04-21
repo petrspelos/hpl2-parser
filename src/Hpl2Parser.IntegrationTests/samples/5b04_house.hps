@@ -1,0 +1,576 @@
+float[] x(10); float[] y(10); float[] z(10); int last;
+
+void OnStart()
+{
+	// Events
+	AddUseItemCallback("", "item", "AcidContainer", "OnUseItemOnAcid", true);
+	AddUseItemCallback("", "RustyKey", "LockedDoorHouse", "UseRustyKeyOnDoor", true);
+	AddUseItemCallback("", "RustyKey", "AcidContainer", "UseRustyKeyOnAcid", true);
+	AddUseItemCallback("", "PurgeKey", "LockedDoorHouse", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "HammerChipper", "WoodenBarricadeHouse", "UseHammerOnBarricade", true);	
+	
+	AddEntityCollideCallback("Player", "LiquidArea_1", "OnColliderLiquid", true, 1);
+	AddEntityCollideCallback("Player", "AreaPigRise", "OnColliderPigRise", true, 1);
+	AddEntityCollideCallback("Player", "AreaActiveWall", "OnColliderSetBarricadeActive", true, 1);
+	AddEntityCollideCallback("Player", "AreaAfterHeavyDoor", "OnCollideAreaAfterHeavyDoor", true, 1);
+	AddEntityCollideCallback("Player", "AreaChefFirstAttack", "OnColliderAreaChefFirstAttack", true, 1);
+	AddEntityCollideCallback("Player", "AreaChefSecondAttack", "OnColliderAreaChefSecondAttack", true, 1);
+	AddEntityCollideCallback("Player", "AreaScarePlace", "OnColliderScarePlace", true, 1);
+	AddEntityCollideCallback("Player", "AreaNoble", "OnColliderNoblePlace", true, 1);
+	AddEntityCollideCallback("Player", "HideFromChef", "OnColliderHideFromChef", true, 1);
+	AddEntityCollideCallback("Player", "AreaStopMusic", "OnColliderStopWaterMusic", false, 1);
+	
+	for(int i=1;i<=2;i++)
+	{
+		AddEntityCollideCallback("Player", "AreaFireDamage_" + i, "OnColliderFireDamage", false, 0);
+		AddEntityCollideCallback("Player", "barrel_" + i, "OnColliderBarrelPlayer", true, 1);
+		AddEntityCollideCallback("barrel_" + i, "AreaBarrelBoost", "OnColliderBarrelBoost", true, 1);
+		AddEntityCollideCallback("barrel_" + i, "AreaDestoryBarrels", "OnColliderBarrelDestroy", true, 1);	
+	}
+	
+	AddEntityCollideCallback("Chef", "AreaSetHalluciation", "OnColliderBeSafe", false, 1);
+	AddEntityCollideCallback("TheHammer", "ChefFinal", "UseHammerOnChef", false, 1);
+		
+	// Required Items
+	if(!HasItem("Lantern")) GiveItemFromFile("Lantern", "lantern.ent");
+	if(!HasItem("HammerChipper")) GiveItem("HammerChipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+	
+	// Other
+	PlayMusic("07_amb.ogg", true, 0.8f, 0, 0, true);
+	SetLightVisible("CabinetLight", false);
+	SetLightVisible("LightHammer", false);
+	SetMapDisplayNameEntry("House");
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(0.0f, 5);
+	SetGlobalVarInt("ForestSubChapterComplete", 2);
+	SetupLoadScreen("Loading", "OnLeaveHouse", 0, "forest.jpg");
+	CompleteQuest("BackToForest", "BackToForest");
+}
+
+// FIGHT SYSTEM -->
+float Distance(string &in asEntity, float x, float y, float z)
+{
+	return MathSqrt(MathPow(GetEntityPosX(asEntity) - x, 2) + MathPow(GetEntityPosY(asEntity) - y, 2) + MathPow(GetEntityPosZ(asEntity) - z, 2));
+}
+
+void UseHammerOnChef(string &in weapon, string &in enemy, int alState)
+{	
+	if(Distance(weapon, x[last], y[last], z[last]) > 1.0f)
+	{
+		PlaySoundAtEntity("", "MetalMediumBashFlesh.snt", enemy, 0, false);
+		CreateParticleSystemAtEntity("BloodyHit", "blood.ps", weapon, false);
+		FadeEnemyToSmoke(enemy, false);
+		AddLocalVarInt("ChefLife", -1);
+		if(GetLocalVarInt("ChefLife") > 0) AddTimer("ChefRespawn", RandFloat(1.25f, 1.75f), "TimerChefRespawn");
+		else AddTimer("WaitForChefNotCounterAttack", 0.25f, "TimerWaitForChefNotCounterAttack");
+	}
+}
+
+void TimerWaitForChefNotCounterAttack(string &in asTimer)
+{
+	if(GetPlayerHealth() > 0.0f) EndEvent();
+}
+
+void TimerHammerPosition(string &in asTimer)
+{
+	x[last] = GetEntityPosX(asTimer);
+	y[last] = GetEntityPosY(asTimer);
+	z[last] = GetEntityPosZ(asTimer);
+
+	last = (last + 1) % 10;
+	
+	AddTimer(asTimer, 0.01f, "TimerHammerPosition");
+}
+
+void TimerChefRespawn(string &in asTimer)
+{
+	SetEntityActive("ChefFinal", true);
+	TeleportEnemyToEntity("ChefFinal", "ChefFinal_" + RandInt(1, 8), "ChefFinal", true);
+	CreateParticleSystemAtEntity("ChefFinalEffect", "ps_ghost_release.ps","ChefFinal", false);
+	ShowEnemyPlayerPosition("ChefFinal");
+}
+// <-- FIGHT SYSTEM
+
+void OnPickFreshMeat(string &in asEntity, string &in asType)
+{
+	RemoveItem(asEntity);
+	SetEntityActive("FreshMeatBone", true);
+	CreateParticleSystemAtEntity("FreshMeatEat", "blood.ps", "FreshMeatBone", false);
+	PlaySoundAtEntity("", "21_meat_squeaz.snt", "FreshMeatBone", 0, false);
+	
+	GiveSanityDamage(15.0f, true);
+	AddTimer("hurt_pant.snt", 0.65f, "TimerScare");	
+}
+
+void OnColliderPigRise(string &in asParent, string &in asChild, int alState)
+{	
+	StopMusic(0.15f, 0);
+	StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+	for(int i=1;i<=10;i++) AddPropImpulse("pig_corpse_" + i, RandFloat(-6.5f, -6.5f), 0.0f, RandFloat(-6.5f, -6.5f), "World");
+	GivePlayerDamage(10.0f, "BloodSplat", true, false);
+	GiveSanityDamage(10.0f, true);
+	PlayGuiSound("pig_chase.snt", 1.0f);
+	AddTimer("hurt_pant.snt", 0.65f, "TimerScare");
+	AddTimer("07_amb.ogg", 4.0f, "TimerRestoreDefaultSound");
+}
+
+void OnColliderSetBarricadeActive(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("WoodenBarricadeHouse", true);
+}
+
+void TimerRestoreDefaultSound(string &in asTimer)
+{
+	PlayMusic("07_amb.ogg", true, 0.8f, 8.0f, 0, true);
+}
+
+void OnColliderAreaChefFirstAttack(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("ChefAttack_1", "StartAreaChefAttack_1", "OnDeathChefRestoreWater", "", "");
+	StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+	StartPlayerLookAt("SecretDoor", 2.5f, 3.0f, "");
+	GiveSanityDamage(10.0f, true);
+	SetMessage("Hints", "ChefFirst", 4.0f);
+	PlayMusic("04_event_hole.ogg", false, 1.8f, 0, 10, false);
+	PlaySoundAtEntity("ChefGuardian", "guardian_distant.snt", "SecretDoor", 0.0f, false);
+	
+	AddTimer("StopLook", 1.75f, "TimerLookComplete");
+	AddTimer("CloseShelf", 1.75f, "TimerCloseShelf");
+	AddTimer("DropBarrels", 2.00f, "TimerDropBarrels");
+	
+	SetEntityActive("BoxLight", true);
+}
+
+void OnColliderAreaChefSecondAttack(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("ChefAttack_2", "StartAreaChefAttack_2", "OnDeathChefAttack", "Die", "DieByChef");
+
+	SetPropActiveAndFade("SmokeDoor_1", false, 1.0f);
+	SetPropActiveAndFade("SmokeDoor_2", true, 1.0f);
+		
+	AddTimer("LetsAttack", 1.0f, "TimerLetsAttack");
+}
+
+void TimerLetsAttack(string &in asTimer)
+{
+	SetEntityActive("Chef", true);
+	CreateParticleSystemAtEntity("ChefSpawn", "ps_ghost_release.ps", "Chef", false);
+	GiveSanityDamage(20.0f, true);
+	
+	AddEnemyPatrolNode("Chef", "PosNodeArea_1", 0.001f, "");
+}
+
+void OnCollideAreaAfterHeavyDoor(string &in asParent, string &in asChild, int alState)
+{
+	CompleteQuest("HeavyDoorHouse", "HeavyDoorHouse");
+	GiveSanityBoostSmall();
+	
+	CheckPoint("AfterHeavyDoor", "StartAfterHeavyDoor", "OnDeathChefRestoreWater", "", "");
+}
+
+void OnColliderScarePlace(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("FakeChef", true);
+	for(int i=1;i<=4;i++) AddEnemyPatrolNode("FakeChef", "PathNodeArea_" + i, 0.001f, "");
+}
+
+void OnColliderNoblePlace(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=10;i++) SetLampLit("candlestick_red_" + i, true, true);
+	FadeLightTo("RedLight", 0.4f, 0.1f, 0.1f, 0.0f, -1, 3.0f);
+	StopMusic(1.0f, 6);
+	PlayMusic("20_puzzle.ogg", false, 1.0f, 1.0f, 10, false);
+}
+
+void OnDeathChefRestoreWater(string &in asName, int alCount)
+{
+	AddEntityCollideCallback("Player", "LiquidArea_1", "OnColliderLiquid", true, 1);
+}
+
+void OnDeathChefAttack(string &in asName, int alCount)
+{
+	AddEntityCollideCallback("Player", "AreaChefSecondAttack", "OnColliderAreaChefSecondAttack", true, 1);
+	AddEntityCollideCallback("Player", "LiquidArea_1", "OnColliderLiquid", true, 1);
+	
+	SetEntityActive("SmokeDoor_1", true);
+	SetEntityActive("SmokeDoor_2", false);
+	
+	ResetProp("EscapeCabinet");
+	for(int i=1;i<=3;i++) ResetProp("EscapeCabinet_" + i);
+}
+
+void OnColliderBarrelPlayer(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth(asChild, 0.0f);
+	GivePlayerDamage(35.0f, "BloodSplat", true, true);
+}
+
+void OnColliderFireDamage(string &in asParent, string &in asChild, int alState)
+{
+	switch(alState)
+	{
+		case 1:
+		AddTimer("FireDamage", 0.0f, "TimerFireDamage");
+		break;
+		case -1:
+		RemoveTimer("FireDamage");
+		break;
+	}
+}
+
+void TimerFireDamage(string &in asTimer)
+{
+	if(GetPlayerHealth() > 0.0f)
+	{
+		GivePlayerDamage(5.0f, "BloodSplat", false, true);
+		PlayGuiSound("ui_fire_damage.snt", 1.0f);
+	}
+	AddTimer(asTimer, 0.25f, "TimerFireDamage");
+}
+
+void OnColliderBarrelBoost(string &in asParent, string &in asChild, int alState)
+{
+	AddPropImpulse(asParent, 7.5f, 1.25f, 0.0f, "World");
+}
+
+void OnColliderLiquid(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=2;i++) SetEntityActive("waterlurker_" + i,true);
+	SetMessage("Hints", "WaterRun", 4.0f);
+}
+
+void OnColliderBeSafe(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaChefSecondAttack", false);
+	
+	SetPropActiveAndFade("SmokeDoor_2" ,false, 2.5f);
+	FadeEnemyToSmoke(asParent, true);
+	CheckPoint("ChefAttackAfter_2", "StartAreaAfterChefAttack_2", "OnDeathChefRestoreWater", "", "");
+}
+
+void OnColliderStopWaterMusic(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=2;i++) SetEntityActive("waterlurker_" + i,false);
+	AddEntityCollideCallback("Player", "LiquidArea_1", "OnColliderLiquid", true, 1);
+}
+
+void OnColliderHideFromChef(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("ChefFinal", false);
+	GiveSanityDamage(100.0f, false);
+	FadeOut(2.0f);
+	
+	AddTimer("ChangeIntoAngel", 2.0f, "TimerChangeIntoAngel");
+	AddTimer("2.0f", 2.5f, "TimerFadeIn");
+}
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+   	SetSwingDoorLocked(asEntity, false, true);
+	SetLevelDoorLocked(asEntity, false);
+   	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	CompleteQuest(asEntity, asEntity);
+}
+
+void UseHammerOnBarricade(string &in asItem, string &in asEntity)
+{
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	for(int i=0;i<=4;i++) AddTimer(asEntity, 1.25f * i, "TimerHammerAttack");
+	AddTimer(asEntity, 5.0f, "TimerHammerFinalAttack");
+}
+
+void TimerHammerAttack(string &in asTimer)
+{
+	PlaySoundAtEntity("HitSound", "hit_wood.snt", asTimer, 0.0f, false);
+	CreateParticleSystemAtEntity("HitEffect", "ps_hit_wood.ps", asTimer, false);
+}
+
+void TimerHammerFinalAttack(string &in asTimer)
+{
+	SetPropHealth(asTimer, 0.0f);
+	CompleteQuest(asTimer, asTimer);
+	SetPlayerActive(true);
+	ShowPlayerCrossHairIcons(true);
+}
+
+void UseRustyKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	if(!QuestIsCompleted("RustyKeyOnDoor"))
+	{
+		SetMessage("Hints", "RustyKeyOnDoor", 5.0f);
+		AddQuest("PurgeTheKey", "RustyKeyOnDoor");
+	}
+}
+
+void UseRustyKeyOnAcid(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("18_water_drip.snt", 1.0f);
+	PlayGuiSound("puzzle_acid.snt", 1.5f);
+	
+	GiveSanityBoostSmall();
+	
+	RemoveItem(asItem);
+	
+	GiveItem("PurgeKey", "key_tomb.ent", "PurgeKey", "key_tomb.tga", 1.0f);
+	
+	CompleteQuest("PurgeTheKey", "RustyKeyOnDoor");
+	
+	AddBubbleEffect(6.25f);
+}
+
+void OnInteractAcid(string &in door)
+{
+	SetMessage("Hints", "AcidTouch", 5.0f);
+	GivePlayerDamage(15.0f, "BloodSplat", false, false);
+	PlayGuiSound("puzzle_acid.snt", 1.5f);
+	
+	AddBubbleEffect(3.25f);
+}
+
+void AddBubbleEffect(float time)
+{
+	PlaySoundAtEntity("SoundAcidBubbles", "15_acid.snt", "AreaAcidBubbles", 1.25f, false);
+	CreateParticleSystemAtEntity("ParticleAcidBubbles", "ps_acid_container_bubbles.ps", "AreaAcidBubbles", false);
+	AddTimer("SoundAcidBubbles", time, "TimerStopSound");
+	AddTimer("ParticleAcidBubbles", time, "TimerStopParticle");	
+}
+
+void TimerStopParticle(string &in asParticle)
+{
+	DestroyParticleSystem(asParticle);
+}
+
+void TimerStopSound(string &in asSound)
+{
+	StopSound(asSound, 0.25f);
+}
+
+void OnChangeStateSecretLever(string &in asEntity, int alState)
+{
+	PlayMusic("02_puzzle.ogg", false, 1.8f, 0, 10, false);
+	SetLeverStuckState(asEntity, alState, true);
+	SetMoveObjectState("SecretDoor", 1);
+}
+
+void OnInteractSacrifice(string &in door)
+{
+	CheckPoint("AfterSacrificeBlood", "AreaSacrifice", "OnDeathSacrifice", "Die", "DeathFromChefFinal_1");
+	Sacrifice();
+}
+
+void OnPlayerInteractTheBed(string &in door)
+{
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadePlayerFOVMulTo(0.5f, 1.0f);
+	FadeOut(1.5f);
+	
+	AddTimer("1.5f", 4.5f, "TimerFadeIn");
+	AddTimer("Restore", 6.0f, "TimerRestore");
+	
+}
+
+void TimerRestore(string &in asTimer)
+{
+	AddPlayerHealth(50.0f);
+	AddPlayerSanity(50.0f);
+	FadePlayerFOVMulTo(1.0f, 4.0f);
+	SetPlayerCrouching(false);
+	SetPlayerActive(true);
+	
+	SetMessage("Hints", "Restore", 4.0f);
+}
+
+void OnDeathSacrifice(string &in asName, int alCount)
+{
+	Sacrifice();
+}
+
+void Sacrifice()
+{
+	PlayGuiSound("24_knife.snt", 1.0f);
+	SetEntityActive("ParticleBlood", true);
+	GivePlayerDamage(15.0f, "Slash", true, false);
+	GiveSanityDamage(110.0f, false);
+	FadeOut(1.5f);
+	
+	ReplaceEntity("ClearAltar", "ClearAltar", "BloodyAltar", "special_altar_static_knife_bloody.ent", false);
+	SetLightVisible("GreenLightKnife", false);
+	
+	AddTimer("ChangeRoom", 1.5f, "TimerChangeRoom");
+	AddTimer("1.5f", 2.0f, "TimerFadeIn");
+}
+
+void OnInteractDoor(string &in door)
+{
+	if(!QuestIsCompleted(door))
+	{
+		SetMessage("Hints", door, 5.0f);
+		AddQuest(door, door);
+	}
+}
+
+void OnInteractButtonHeavyDoor(string &in asEntity)
+{
+	PlaySoundAtEntity("SoundPressTheButton", "gameplay_tick.snt", asEntity, 0.0f, false);
+	AddTimer("OpenTheHeavyGate", 4.75f, "TimerOpenTheHeavyGate");
+}
+
+void TimerOpenTheHeavyGate(string &in asTimer)
+{
+	StopSound("SoundPressTheButton", 3.0f);
+	SetMoveObjectState("HeavyDoorHouse", 1.0f);
+	AddTimer("ResetButton", 3.0f, "TimerResetButton");
+}
+
+void TimerResetButton(string &in asTimer)
+{
+	SetEntityPlayerInteractCallback("ButtonHeavyDoor", "OnInteractButtonHeavyDoor", true);
+}
+
+void EndEvent()
+{
+	GiveSanityBoost();
+	AddPlayerHealth(50.0f);
+	for(int i=1;i<=6;i++) SetEntityActive("Knight_" + i, false);
+	for(int i=1;i<=10;i++)
+	{
+		SetEntityActive("candlestick_red_" + i, false);
+		SetEntityActive("candlestick_" + i, true);
+		SetLampLit("candlestick_" + i, true, true);
+	}
+	PlayMusic("15_event_girl_mother.ogg", false, 1.0f, 1.0f, 10, false);
+	PlayMusic("16_amb.ogg", true, 1.0f, 1.0f, 0, true);
+	FadeLightTo("RedLight", 0.3f, 0.5f, 0.5f, 0.0f, -1, 3.0f);
+	CompleteQuest("KillTheChef", "KillTheChef");
+	AddQuest("BackToForest", "BackToForest");
+	SetLightVisible("LightHammer", false);
+	SetLevelDoorLocked("BackDoor", false);
+	SetMoveObjectState("SecretDoorSecond", 1);
+	SetEntityPlayerInteractCallback("Script_TheBed", "OnPlayerInteractTheBed", true);
+	RemoveTimer("TheHammer");
+}
+
+void TimerDropBarrels(string &in asTimer)
+{
+	for(int i=1;i<=2;i++)
+	{
+		SetEntityActive("barrel_" + i, true);
+		AddPropImpulse("barrel_" + i, 7.5f, 1.75f, 0.0f, "World");
+	}
+}
+
+void TimerCloseShelf(string &in asBarrel)
+{
+	SetMoveObjectState("SecretDoor", 0);
+}
+
+void OnColliderBarrelDestroy(string &in asParent, string &in asChild, int alState)
+{
+	RemoveEntityCollideCallback("Player", asParent);
+	SetPropHealth(asParent, 0.0f);
+}	
+
+void TimerLookComplete(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerExpire(string &in asTimer)
+{
+	SetMessage("Hints", asTimer, 5.0f);	
+}
+
+void TimerScare(string &in soundFile)
+{
+	PlayGuiSound(soundFile, 1.0f);
+	ChangePlayerStateToNormal();
+}
+
+void TimerFadeIn(string &in time)
+{
+	FadeIn(StringToFloat(time));
+}
+
+void TimerChangeRoom(string &in asTimer)
+{
+	for(int i=1;i<=3;i++) SetEntityActive("Knight_" + i, true);
+	for(int i=1;i<=8;i++) SetEntityActive("CandlestickTri_" + i, true);
+	SetEntityActive("HideFromChef", true);
+	SetEntityActive("ChefFinal", true);
+	for(int i=1;i<=2;i++) AddEnemyPatrolNode("ChefFinal", "PathnodeChefFinalStrike_" + i, 0.01f, "");
+	SetLightVisible("CabinetLight", true);
+	StartPlayerLookAt("CabinetAngel", 1.0f, 2.0f, "");
+	SetMessage("Hints", "HideFromChef", 5.0f);
+}
+
+void TimerChangeIntoAngel(string &in asTimer)
+{
+	PlayMusic("09_amb_safe.ogg", false, 1.0f, 0.0f, 10, false);
+	
+	SetPlayerActive(false);
+	SetPlayerCrouching(false);
+	SetLanternActive(false, true);
+	TeleportPlayer("AreaAngel");
+	StartPlayerLookAt("AngelStatue", 10.0f, 10.0f, "");
+	
+	for(int i=1;i<=8;i++) AddTimer("AngelPart_" + i, 5.0f * i, "TimerAngelConversation");
+	
+	AddTimer("ReturnFromAngel", 45.0f, "TimerChangeFromAngel");
+}
+
+void TimerChangeFromAngel(string &in asTimer)
+{
+	FadeOut(1.5f);
+	StopMusic(1.5f, 50);	
+	for(int i=4;i<=6;i++) SetEntityActive("Knight_" + i, true);
+	SetLightVisible("CabinetLight", false);
+	AddTimer("ReturnFromAngelGradient", 1.5f, "TimerTeleportFromAngelVision");
+}
+
+void TimerAngelConversation(string &in asTextEntry)
+{
+	SetMessage("Hints", asTextEntry, 4.0f);
+}
+
+void TimerTeleportFromAngelVision(string &in asTextEntry)
+{
+	StopPlayerLookAt();
+	SetLightVisible("LightHammer", true);
+	TeleportPlayer("AreaHide");
+	FadeIn(1.5f);
+	ReturnFromAngel();
+	AddTimer("TheHammer", 0.0f, "TimerHammerPosition");
+	AddQuest("KillTheChef", "KillTheChef");
+
+	SetPlayerActive(true);
+	
+	CheckPoint("DeathDuringTheFight", "AreaHide", "OnDeathDuringFight", "Die", "DeathFromChefFinal_2");
+}
+
+void ReturnFromAngel()
+{
+	SetLocalVarInt("ChefLife", 5);
+	ResetProp("CabinetAngel");
+	ResetProp("TheHammer");
+	SetEntityActive("TheHammer", true);
+	SetEntityActive("ChefFinal", true);
+	TeleportEnemyToEntity("ChefFinal", "ChefFinalStart", "ChefFinal", true);
+	AddTimer("ChefFinalAttackRage", 7.5f, "TimerChefFinalAttackRage");
+}
+
+void TimerChefFinalAttackRage(string &in asTextEntry)
+{
+	ShowEnemyPlayerPosition("ChefFinal");
+	AddPropImpulse("CabinetAngel", 2.0f, 0.0f, 0.0f, "world");
+}
+
+void OnDeathDuringFight(string &in asName, int alCount)
+{
+	ReturnFromAngel();
+}

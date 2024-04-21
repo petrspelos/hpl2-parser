@@ -1,0 +1,490 @@
+void OnStart()
+{
+	ClearSavedMaps();
+	SetPlayerHealth(100);
+	SetPlayerSanity(80);
+	SetInventoryDisabled(false);
+	SetLocalVarInt("levers", 0);
+	SetLocalVarInt("guardianStep", 0);
+	CheckPoint("chk", "To_Outside", "PlayerDie", "Deaths", "guardian_chase");
+	AddTimer("", 0.7, "GuardianRoar");
+	
+	AddEntityCollideCallback("Player", "Area_BeginGuardian", "BeginGuardian", false, 1);
+	AddEntityCollideCallback("Player", "Area_End", "EndingCutscene", true, 1);
+	AddEntityCollideCallback("hatch", "Area_HatchOpen", "HatchOpenEnableSticky", false, 0);
+	for(int i=1; i<12; i++) AddEntityCollideCallback("Player", "Area_Kill_"+i, "GuardianKill", false, 1);
+	for(int i=1; i<4; i++) SetPropEffectActive("coal_"+i, false, false);
+	for(int i=1; i<103; i++) AddEntityCollideCallback("Player", "fire_"+i, "FireDamage", false, 0);
+	for(int i=1; i<8; i++) AddEntityCollideCallback("Player", "Area_Burn_"+i, "FireDamage", false, 0);
+	SetEntityPlayerInteractCallback("Window_Escape", "WindowEnding", true);
+	SetEntityPlayerInteractCallback("hatch", "InteractHatch", true);
+	
+	SetLocalVarInt("fire", 1);
+	SetLocalVarInt("cutscene", 0);
+	if(GetGlobalVarInt("the_tinderbox")==1) SetEntityActive("the_tinderbox_of_truth", false);//hmmmm
+	SetLightVisible("HutLight", false);
+	SetEntityInteractionDisabled("Candle", true);
+	SetEntityInteractionDisabled("chair_wood02_3", true);
+	SetEntityInteractionDisabled("plate_1", true);
+	PlayMusic("03_paper_village.ogg", true, 1, 1.2, 1, false);
+	
+	SetEntityCustomFocusCrossHair("easter_egg_13", "Pick");
+	SetEntityPlayerInteractCallback("easter_egg_13", "CollectEasterEgg", true);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("end-outside");
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(1, 1);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 10);
+}
+
+///////////////////
+
+void LeverSwitch(string &in asEntity, int alState)
+{
+	if(alState==-1)
+	{
+		AddLocalVarInt("levers", 1);
+		SetLeverStuckState(asEntity, -1, false);
+	}
+	if(GetLocalVarInt("levers")==2) OpenGate();
+}
+
+void OpenGate()
+{
+	SetMoveObjectStateExt("gate", 0.9, 0.2, 0.4, 0.05, true);
+}
+
+//////////////////////////
+
+void GuardianRoar(string &in asTimer)
+{
+	PlayGuiSound("guardian_activated.snt", 1);
+	SetPropActiveAndFade("slime", true, 1.8);
+	PlaySoundAtEntity("slimeloop", "slime_loop.snt", "slime", 0.5, false);
+	AddTimer("", 4, "GuardianRoar_Step2");
+	StartScreenShake(0.01, 4, 0.4, 2.4);
+}
+
+void GuardianRoar_Step2(string &in asTimer)
+{
+	StopSound("slimeloop", 0.8);
+}
+
+void BeginGuardian(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Area_BeginGuardian", false);
+	FadeLightTo("GlobalPointLight", 1, 0, 0.15, 1, 19, 2);
+	AddTimer("guardian_loop", 0.5, "GuardianChase");
+	PlayMusic("08_amb.ogg", true, 1, 0.3, 1, false);
+}
+
+void GuardianChase(string &in asTimer)
+{
+	int step = GetLocalVarInt("guardianStep");
+	if(step<11)
+	{
+		step++;
+		AddLocalVarInt("guardianStep", 1);
+		SetPropActiveAndFade("slime_"+step+"_*", true, 0.7);
+		AddTimer("guardian_effect", 0.3, "GuardianEffect");
+		AddTimer("guardian_loop", 1.5, "GuardianChase");
+	}
+	else if(GetLocalVarInt("cutscene")==0) AddTimer("guardian_afterkill", 2, "GuardianAfterKill");
+	
+	if(step==10)
+	{
+		SetLampLit("torch_static01_1", false, true);
+		SetLampLit("torch_static01_2", false, true);
+		SetLightVisible("PointLight_24", false);
+		SetLightVisible("PointLight_25", false);
+		SetEntityInteractionDisabled("torch_static01_1", true);
+		SetEntityInteractionDisabled("torch_static01_2", true);
+	}
+}
+
+void GuardianEffect(string &in asTimer)
+{
+	int step = GetLocalVarInt("guardianStep");
+	SetEntityActive("Area_Kill_"+step, true);
+	PlaySoundAtEntity("", "25_guardian_slime_appear.snt", "Area_GuardianEffect_"+step, 0, false);
+	CreateParticleSystemAtEntity("", "ps_guardian_appear_explosion.ps", "Area_GuardianEffect_"+step, false);
+	StartScreenShake(0.02, 0.3, 0.05, 0.3);
+	if(step==9 && GetPlayerPosZ()<20) GuardianKillFunc();
+}
+
+void GuardianKill(string &in asParent, string &in asChild, int alState)
+{
+	GuardianKillFunc();
+}
+
+void GuardianAfterKill(string &in asTimer)
+{
+	GuardianKillFunc();
+}
+
+void GuardianKillFunc()
+{
+	RemoveTimer("guardian_afterkill");
+	SetEntityActive("Area_Kill_*", false);
+	GivePlayerDamage(200, "Slash", true, true);
+	PlayGuiSound("attack_claw_hit03.ogg", 0.85);
+	RemoveTimer("guardian_loop");
+}
+
+void PlayerDie(string &in asName, int alCount)
+{
+	PlayMusic("03_paper_village.ogg", true, 1, 1.2, 1, false);
+	FadeLightTo("GlobalPointLight", 0.5, 0.4, 0.4, 0.8, 19, 0.1);
+	SetEntityActive("Area_BeginGuardian", true);
+	SetEntityActive("slime_*", false);
+	SetEntityActive("Area_Kill_*", false);
+	SetMoveObjectStateExt("gate", 0, 100, 100, 0, true);
+	SetLeverStuckState("lever_*", 0, false);
+	ResetProp("lever_*");
+	SetLocalVarInt("levers", 0);
+	SetLocalVarInt("guardianStep", 0);
+}
+
+//////////////////////////
+
+void EndingCutscene(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("cutscene", 1);
+	RemoveTimer("guardian_afterkill");
+	SetEntityActive("Area_Kill_*", false);
+	SetPlayerActive(false);
+	SetInventoryDisabled(true);
+	SetPlayerCrouching(false);
+	ChangePlayerStateToNormal();
+	StartPlayerLookAt("Area_Look_1", 2, 2.5, "");
+	StopMusic(5, 1);
+	AddTimer("walk_forward", 0.1, "WalkForward");
+	AddTimer("", 3.3, "Cutscene_Step2");
+}
+
+int walkStep = 0;
+int walkMax = 40;
+
+void WalkForward(string &in asTimer)
+{
+	if(GetPlayerSpeed()<1.5) AddPlayerBodyForce(0, 0, 1000, true);
+	walkStep++;
+	if(walkStep > walkMax)
+	{
+		walkStep = 0;
+		walkMax = RandInt(35, 55);
+		PlayGuiSound("step_walk_dirt.snt", 1);
+	}
+	AddTimer("walk_forward", 0.016, "WalkForward");	
+}
+
+void Cutscene_Step2(string &in asTimer)
+{
+	StartPlayerLookAt("Area_Look_2", 0.8, 3, "");
+	FadePlayerRollTo(30, 5, 15);
+	MovePlayerHeadPos(0, -0.6, 0, 0.8, 0.1);
+	PlayGuiSound("player_bodyfall.snt", 1);
+	PlaySoundAtEntity("ring", "insanity_ear_ring.snt", "Player", 3, true);
+	FadeGlobalSoundVolume(0.7, 3);
+	SetPlayerCrouching(true);
+	StartPlayerLookAt("Area_Look_2", 0.5, 2, "");
+	AddTimer("", 0.3, "Cutscene_Step3");
+}
+
+void Cutscene_Step3(string &in asTimer)
+{
+	RemoveTimer("walk_forward");
+	FadePlayerFOVMulTo(0.7, 0.6);
+	AddTimer("", 0.6, "Cutscene_Step4");
+}
+
+void Cutscene_Step4(string &in asTimer)
+{
+	StartEffectFlash(1, 0.5, 3);
+	AddTimer("", 3.5, "Cutscene_Step5");
+}
+
+void Cutscene_Step5(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetLanternActive(false, false);
+	SetSanityDrainDisabled(true);
+	SetPlayerHealth(100);
+	SetPlayerSanity(100);
+	TeleportPlayer("TP_Black");
+	AddTimer("", 0.1, "Cutscene_Step6");
+}
+
+void Cutscene_Step6(string &in asTimer)
+{
+	FadeOut(0.5);
+	FadePlayerRollTo(0, 50, 50);
+	MovePlayerHeadPos(0, -0.5, 0, 10, 0.1);
+	SetPlayerLampOil(0);
+	AddTimer("", 1.3, "Cutscene_Step7");
+	StopSound("ring", 1.6);
+	FadeGlobalSoundVolume(1, 1.6);
+}
+
+void Cutscene_Step7(string &in asTimer)
+{
+	SetMapDisplayNameEntry("home");
+	TeleportPlayer("TP_Bed");
+	StartPlayerLookAt("Area_Look_3", 100, 100, "");
+	CheckPoint("chk2", "TP_from_bed", "", "Deaths", "guardian_chase");
+	AddTimer("", 0.3, "Cutscene_Step8");
+	AddTimer("autosave", 0.1, "Cutscene_Step7b");
+}
+
+void Cutscene_Step7b(string &in asTimer)
+{
+	AutoSave();
+}
+
+void Cutscene_Step8(string &in asTimer)
+{
+	FadeIn(0.3);
+	StartPlayerLookAt("Area_Look_4", 0.8, 1.5, "");
+	PlayGuiSound("react_pant4.ogg", 1);
+	AddTimer("", 0.8, "Cutscene_Step9");
+	FadeRadialBlurTo(0.02, 0.1);
+	FadePlayerFOVMulTo(1, 1);
+	PlayMusic("29_amb.ogg", true, 0.6, 1.6, 1, false);
+}
+
+void Cutscene_Step9(string &in asTimer)
+{
+	SetMessage("Messages", "wake_up", 2);
+	AddTimer("", 2.1, "Cutscene_Step10");
+	
+	AddTimer("2", 1.6, "BruteWalkSound");
+	AddTimer("2", 1.95, "BruteWalkSound");
+}
+
+void Cutscene_Step10(string &in asTimer)
+{
+	PlaySoundAtEntity("", "brute/notice.snt", "Area_Look_6", 0.1, false);
+	AddTimer("", 0.3, "Cutscene_Step11");
+}
+
+void Cutscene_Step11(string &in asTimer)
+{
+	StartPlayerLookAt("Area_Look_6", 4, 8, "");
+	GiveSanityDamage(10, true);
+	AddTimer("", 0.2, "Cutscene_Step11b");
+	AddTimer("", 2, "Cutscene_Step12");
+}
+
+void Cutscene_Step11b(string &in asTimer)
+{
+	PlayGuiSound("react_scare.snt", 1);
+}
+
+void Cutscene_Step12(string &in asTimer)
+{
+	PlaySoundAtEntity("", "ui_fire_damage.snt", "Area_Look_6", 0.1, false);
+	PlaySoundAtEntity("", "attack_claw.snt", "Area_Look_6", 0.1, false);
+	SetEntityActive("fire_0", true);
+	AddTimer("fire_loop", 4, "FireLoop");
+	AddTimer("", 0.3, "Cutscene_Step13");
+	
+	AddTimer("1", 1, "BruteWalkSound");
+	AddTimer("2", 2.1, "BruteWalkSound");
+	AddTimer("3", 3.2, "BruteWalkSound");
+	AddTimer("4", 4.3, "BruteWalkSound");
+	AddTimer("5", 5.4, "BruteWalkSound");
+	AddTimer("", 7.2, "BruteEndSound");
+}
+
+void BruteWalkSound(string &in asTimer)
+{
+	PlaySoundAtEntity("", "brute/metal_walk.snt", "Area_BruteWalk_"+asTimer, 0.01, false);
+}
+
+void BruteEndSound(string &in asTimer)
+{
+	PlaySoundAtEntity("", "brute/amb_idle_scratch.snt", "Area_BruteWalk_5", 0.01, false);
+}
+
+void Cutscene_Step13(string &in asTimer)
+{
+	SetMessage("Messages", "wake_up_fire", 0);
+	AddTimer("", 1.4, "Cutscene_Step14");
+	StopMusic(1.3, 1);
+	PlayMusic("14_elevator_falls.ogg", true, 0.7, 0.8, 1, false);
+}
+
+void Cutscene_Step14(string &in asTimer)
+{
+	StartPlayerLookAt("Area_Look_7", 2, 4, "Cutscene_Step15");
+}
+
+void Cutscene_Step15()
+{
+	AddTimer("", 0.2, "Cutscene_Step16");
+	StopPlayerLookAt();
+}
+
+void Cutscene_Step16(string &in asTimer)
+{
+	PlayGuiSound("ui_use_tinderbox.snt", 0.9);
+	SetLampLit("Candle", true, true);
+	SetLightVisible("HutLight", true);
+	AddTimer("", 0.4, "Cutscene_Step17");
+}
+
+void Cutscene_Step17(string &in asTimer)
+{
+	StartPlayerLookAt("Area_Look_5", 2, 4, "");
+	AddTimer("", 0.3, "Cutscene_Step18");
+}
+
+void Cutscene_Step18(string &in asTimer)
+{
+	SetMessage("Messages", "wake_up_go", 0);
+	FadeRadialBlurTo(0, 0.4);
+	MovePlayerHeadPos(0, 0, 1.6, 2, 1.7);
+	FadePlayerRollTo(-50, 8, 15);
+	AddTimer("", 0.5, "Cutscene_Step19");
+}
+
+void Cutscene_Step19(string &in asTimer)
+{
+	FadePlayerRollTo(0, 4, 5);
+	StartPlayerLookAt("Area_Look_4", 2, 3.5, "");
+	AddTimer("", 0.75, "Cutscene_Step20");
+}
+
+void Cutscene_Step20(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetEntityInteractionDisabled("chair_wood02_3", false);
+	SetEntityInteractionDisabled("plate_1", false);
+	SetPlayerCrouching(false);
+	MovePlayerHeadPos(0, 0, 0, 40, 0.5);
+	TeleportPlayer("TP_from_bed");
+	SetPlayerActive(true);
+	SetLocalVarInt("cutscene", 0);
+}
+
+////////////////////
+
+void FireLoop(string &in asTimer)
+{
+	int fire = GetLocalVarInt("fire");
+	if(fire<103)
+	{
+		SetEntityActive("fire_"+fire, true);
+		AddLocalVarInt("fire", 1);
+		if(fire<30 || fire>64) AddTimer("fire_loop", RandFloat(0.2, 1.4), "FireLoop");
+		else AddTimer("fire_loop", RandFloat(0.2, 0.8), "FireLoop");
+	}
+	
+	if(fire==30) SetEntityActive("Area_Burn_1", true);
+	else if(fire==37) SetEntityActive("Area_Burn_2", true);
+	else if(fire==45) SetEntityActive("Area_Burn_3", true);
+	else if(fire==56) SetEntityActive("Area_Burn_4", true);
+	else if(fire==80) SetEntityActive("Area_Burn_5", true);
+	else if(fire==92) SetEntityActive("Area_Burn_6", true);
+	else if(fire==102)
+	{
+		SetEntityActive("Area_Burn_7", true);
+		inFires++;
+		if(inFires==1) AddTimer("firedamage_loop", 0.5, "FireDamageLoop");
+	}
+}
+
+int inFires = 0;
+void FireDamage(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1)
+	{
+		inFires++;
+		if(inFires==1) AddTimer("firedamage_loop", 0.1, "FireDamageLoop");
+	}
+	else
+	{
+		inFires--;
+		if(inFires==0) RemoveTimer("firedamage_loop");
+	}
+}
+
+void FireDamageLoop(string &in asTimer)
+{
+	GivePlayerDamage(18, "BloodSplat", true, false);
+	PlayGuiSound("ui_fire_damage.snt", 0.6);
+	if(GetLocalVarInt("fire")<50) AddPlayerBodyForce(12000, 0, 0, false);
+	AddTimer("", 0.3, "FireReact");
+	AddTimer("firedamage_loop", 0.8, "FireDamageLoop");
+	if(GetPlayerHealth()<11) FireEnding();
+}
+
+void FireReact(string &in asTimer)
+{
+	PlayGuiSound("react_scare.snt", 1);
+}
+
+void InteractHatch(string &in asEntity)
+{
+	SetEntityActive("block_hatch", false);
+}
+
+void AttachLadder(string &in asStickyArea, string &in asBodyName)
+{
+	SetEntityActive("Area_Ladder", true);
+	RemoveEntityCollideCallback("hatch", "Area_HatchOpen");
+}
+
+void HatchOpenEnableSticky(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1) SetEntityActive("StickyArea_Ladder", true);
+	else SetEntityActive("StickyArea_Ladder", false);
+}
+
+void WindowEnding(string &in asEntity)
+{
+	SetPlayerActive(false);
+	FadeOut(1.5);
+	AddTimer("", 1.6, "END");
+}
+
+void FireEnding()
+{
+	inFires = -1000;
+	RemoveTimer("firedamage_loop");
+	FadePlayerRollTo(80, 10, 25);
+	MovePlayerHeadPos(0, -0.6, 0, 0.5, 0.1);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeGlobalSoundSpeed(0.6, 2);
+	FadeGlobalSoundVolume(0, 3);
+	FadeOut(3);
+	AddTimer("", 3.1, "END");
+}
+
+void END(string &in asTimer)
+{
+	StopMusic(1, 1);
+	RemoveTimer("fire_loop");
+	TeleportPlayer("TP_Black");
+	AddTimer("", 1.4, "Credits");
+}
+
+void Credits(string &in asTimer)
+{
+	StartCredits("ending_alexander.ogg", true, "Credits", "credits", -1);
+}

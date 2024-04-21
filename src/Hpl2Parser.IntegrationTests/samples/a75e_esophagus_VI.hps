@@ -1,0 +1,457 @@
+///////// move to Include hps
+
+void ResumeNormalSpeed() {
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+
+void DisableCandles(bool abDisabled) {
+	SetEntityInteractionDisabled("candle_floor_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick01_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick02_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_floor_*", abDisabled);
+	SetEntityInteractionDisabled("torch_*", abDisabled);
+	SetEntityInteractionDisabled("hanging_lantern_ceiling_*", abDisabled);
+	SetEntityInteractionDisabled("elevator_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_tri_*", abDisabled);
+	
+	SetEntityInteractionDisabled("lamp_wall_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("ki_lampion_*", abDisabled);
+	SetEntityInteractionDisabled("lamp_gas_*", abDisabled);
+	SetEntityInteractionDisabled("LampBarrelsTake_*", abDisabled);
+}
+
+void TimerMoveForward(string &in asTimer)
+{
+	MovePlayerForward(2);
+	AddTimer("automove", 0, "TimerMoveForward");
+	AddDebugMessage("Move forward!", false);
+}
+
+void RemoveQuest_Diary(string &in asTimer) {
+	CompleteQuest(asTimer, "commongospel");
+}
+
+////////
+
+void OnStart() {
+	DisableCandles(true);
+
+	if (ScriptDebugOn()) {
+		if (!HasItem("lantern_1")) {
+			GiveItemFromFile("lantern_1", "lantern.ent");
+		}
+		
+		SetGlobalVarInt("NumOfDeaths", 0);
+		PlayMusic("withered_idols", true, 1.0f, 5.0f, 0, true);
+	} else {
+		FadeOut(0);
+		FadeIn(2);
+		if (GetGlobalVarInt("NumOfDeaths") >= 20) {
+			CreatureRoarQuest("nomatter", "nomatter", 0);
+			SetEntityActive("ScriptArea_Roar", false);
+		}
+		CaveIntro();
+		SetPlayerSanity(40);
+	}
+	
+	SetLightVisible("Light_ScriptArea_Flames_1", false);
+	SetLightVisible("Light_ScriptArea_Flames_2", false);
+	SetLightVisible("Light_ScriptArea_Flames_3", false);
+	SetLightVisible("SpotLight_moon", false);
+	SetLightVisible("PointLight_102", false);
+	
+	AddEntityCollideCallback("Player", "ScriptArea_Roar", "CreatureRoarQuest", true, 0);
+	AddEntityCollideCallback("Player", "LiquidArea_Script", "PlayerInWaterHandler", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_SkullFalls", "SkullFalls", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_DeactWraiths", "DeactWraiths", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_LaunchPortFinale", "LaunchPortFinale", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_DialogStart", "PortDialog", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_Swallow", "CutsceneSwallow", true, 0);
+	
+	CompleteQuest("Deathwarning1", "deathwarning1");
+	CompleteQuest("Deathwarning2", "deathwarning2");
+	CompleteQuest("Deathwarning3", "deathwarning3");
+	
+	AutoSave();
+}
+
+void CaveIntro() {
+	SetEntityActive("ScriptArea_SkullFalls", false);
+	AddTimer("caveDialog_Timer", 3.5f, "CaveDialog_Timer");
+}
+
+void CaveDialog_Timer(string &in asTimer) {
+	AddEffectVoice("06_apocalypse1.ogg", "", "Voice", "06_apocalypse1", false, "", 0, 0);
+}
+
+void CreatureRoarQuest(string &in asParent, string &in asChild, int alState) {
+	PlayGuiSound("leviathan_search_02slow", 0.6f);
+	AddDiary("Gospel_Level6", "diary_page");
+}
+
+void PlayerInWaterHandler(string &in asParent, string &in asChild, int alState) {
+	if (alState == 1) {
+		SetPlayerCrouching(true);
+		SetPlayerJumpDisabled(true);
+		SetPlayerCrouchDisabled(true);
+		SetPlayerRunSpeedMul(0);
+		SetPlayerLookSpeedMul(0.5f);
+		SetLanternDisabled(true);
+		if (GetLanternActive()) {
+			SetLanternActive(false, true);
+		}
+		PlaySoundAtEntity("", "water_enter_rebirth.snt", "Player" , 0.0f, false);
+	}
+	else if (alState == -1) {
+		ResumeNormalSpeed();
+		SetLanternDisabled(false);
+		PlaySoundAtEntity("", "water_emerge_rebirth.snt", "Player" , 0.0f, false);
+	}
+}
+
+/// Interact with brain, cutscene plays
+
+void InteractWithBrainLid(string &in asEntity) {
+	//CreateFlames();
+	AddTimer("brainLid_Timer1", 2, "BrainLid_Timer1");
+	AddTimer("brainLid_Timer2", 4, "BrainLid_Timer2");
+	AddTimer("brainLid_Timer3", 9, "BrainLid_Timer3");
+}
+
+void BrainLid_Timer1(string &in asTimer) {
+	SetPropActiveAndFade("brain_lid", false, 2.0f);
+	PlayGuiSound("react_scare.snt", 1.0f);
+	FadeRadialBlurTo(2, 0.5f);
+}
+
+void BrainLid_Timer2(string &in asTimer) {
+	GiveSanityDamage(200, true);
+	ShowPlayerCrossHairIcons(false);
+}
+
+void BrainLid_Timer3(string &in asTimer) {
+	MoonLightShineEvent();
+}
+
+void MoonLightShineEvent() {
+	AddTimer("moonLightShine_1", 5.0f, "MoonLightShine_1");
+	AddTimer("moonLightShine_2", 8.0f, "MoonLightShine_2");
+	AddTimer("fadein1", 9.0f, "MoonLightShine_3");
+	AddTimer("fadeout1", 12.0f, "MoonLightShine_4");
+	AddTimer("moonLightShine_5", 14.5f, "MoonLightShine_5");
+	AddTimer("fadein2", 16.0f, "MoonLightShine_3");
+	AddTimer("moonLightShine_6", 17.0f, "MoonLightShine_6");
+	AddTimer("moonLightShine_7", 18.0f, "MoonLightShine_7");
+	AddTimer("fadeout2", 20.0f, "MoonLightShine_4");
+	AddTimer("moonLightShine_8", 22.0f, "MoonLightShine_8");
+	AddTimer("fadein3", 23.5f, "MoonLightShine_3");
+}
+
+void MoonLightShine_1(string &in asTimer) {
+	FadeOut(2);
+	SetLightVisible("SpotLight_moon", true);
+	SetLightVisible("PointLight_102", true);
+}
+
+void MoonLightShine_2(string &in asTimer) {
+	SetEntityActive("ScriptArea_LaunchPortFinale", false);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeRadialBlurTo(0, 2);
+	TeleportPlayer("PlayerStartArea_Moonlight_1");
+	PlayMusic("soma_city_reveal", false, 0.6f, 0, 0, false);
+}
+
+void MoonLightShine_3(string &in asTimer) {
+	FadeIn(2);
+}
+
+void MoonLightShine_4(string &in asTimer) {
+	
+	FadeOut(2);
+}
+
+void MoonLightShine_5(string &in asTimer) {
+	AddEffectVoice("06_apocalypse2.ogg", "", "Voice", "06_apocalypse2", false, "", 0, 0);
+	AddEffectVoice("06_apocalypse3.ogg", "", "Voice", "06_apocalypse3", false, "", 0, 0);
+	TeleportPlayer("PlayerStartArea_Moonlight_2");
+}
+
+void MoonLightShine_6(string &in asTimer) {
+	StartPlayerLookAt("block_box_well", 0.5f, 1.0f, "");
+	AddTimer("automove", 3.0f, "TimerMoveForward");
+}
+
+void MoonLightShine_7(string &in asTimer) {
+	SetEntityActive("block_box_well", false);
+	PlayGuiSound("SmallStinger_1_3time.snt", 3.0f);
+}
+
+void MoonLightShine_8(string &in asTimer) {
+	StopPlayerLookAt();
+	RemoveTimer("automove");
+	TeleportPlayer("PlayerStartArea_2");
+	SetPlayerCrouching(false);
+	SetPlayerActive(true);
+	SetLightVisible("SpotLight_moon", false);
+	SetLightVisible("PointLight_102", false);
+	SetPlayerSanity(40);
+	SetPlayerHealth(100);
+	ShowPlayerCrossHairIcons(true);
+	
+	SetEntityActive("ScriptArea_SkullFalls", true);
+	SetEntityActive("ScriptArea_LaunchPortFinale", true);
+}
+
+// return to cave, skull falls from well
+
+void SkullFalls(string &in asParent, string &in asChild, int alState) {
+	SetPlayerActive(false);
+	FadePlayerFOVMulTo(0.2, 0.3);
+	StartPlayerLookAt("human_skull_cutscene", 0.5f, 1.0f, "");
+	SetEntityActive("human_skull_uptop", true);
+	SetEntityActive("block_box_skull", true);
+	AddTimer("skullFalls_Timer1", 2.5f, "SkullFalls_Timer1");
+	AddTimer("skullFalls_Timer2", 5, "SkullFalls_Timer2");
+}
+
+void SkullFalls_Timer1(string &in asTimer) {
+	SetEntityActive("human_skull_cutscene", true);
+	SetEntityActive("block_box_skull", false);
+}
+
+void SkullFalls_Timer2(string &in asTimer) {
+	StopPlayerLookAt();
+	FadePlayerFOVMulTo(1, 0.5);
+	SetPlayerActive(true);
+	AddEffectVoice("06_apocalypse4.ogg", "", "Voice", "06_apocalypse4", false, "", 0, 0);
+	CreateFlames();
+}
+
+/// flames light up, monsters start roaming
+
+
+void CreateFlames() {
+	CheckPoint("eso6_check", "PlayerStartArea_2", "Eso6Checkpoint", "", "");
+	PlayMusic("clinic_stalkers", true, 1.0f, 3.0f, 0, true);
+	AddTimer("ScriptArea_Flames_1", 5, "Flames_Timer");
+	AddTimer("ScriptArea_Flames_2", 6, "Flames_Timer");
+	AddTimer("ScriptArea_Flames_3", 7, "Flames_Timer");
+	AddTimer("spawnWraiths", 15, "SpawnWraiths");
+	AddQuest("06_commongospel", "commongospel");
+	AddTimer("06_commongospel", 10.0f, "RemoveQuest_Diary");
+	AutoSave();
+}
+
+void Flames_Timer(string &in asTimer) {
+	CreateParticleSystemAtEntityExt(asTimer + "_ps", "ps_fire_stove_large.ps", asTimer, false, 1.0f, 0.5f, 0, 1.0f, false, 0, 0, 0, 0);
+	SetLightVisible("Light_" + asTimer, true);
+	PlaySoundAtEntity(asTimer + "_fire", "22_fire.snt", asTimer, 2.0f, true);
+	PlaySoundAtEntity("", "fire_campfire_ignite_rebirth.snt", asTimer, 0.0f, false);
+}
+
+void SpawnWraiths(string &in asTimer) {
+	SetEntityActive("enemy_wraith_*", true);
+	SetEntityActive("ScriptArea_DeactWraiths", true);
+	SetEntityActive("block_box_bridge_*", true);
+	SetEntityActive("block_box_cave", true);
+	SetEntityActive("Examine_Cave", true);
+	AddTimer("teleportWraith1", 2, "TeleportWraith1");
+	AddTimer("teleportWraith2", 4, "TeleportWraith2");
+	
+}
+
+void TeleportWraith1(string &in asTimer) {
+	TeleportEnemyToNode("enemy_wraith_1", "PathNodeArea_10", true);
+	WraithSpawnEffects("enemy_wraith_1");
+}
+
+void TeleportWraith2(string &in asTimer) {
+	TeleportEnemyToNode("enemy_wraith_2", "PathNodeArea_5", true);
+	WraithSpawnEffects("enemy_wraith_2");
+}
+
+void WraithSpawnEffects(string &in enemyEntity) {
+	CreateParticleSystemAtEntity("", "tesla_teleport.ps", enemyEntity, false);
+	PlayGuiSound("tesla_teleport_adv", 0.3f);
+	if (enemyEntity == "enemy_wraith_1") {
+		AddEnemyPatrolNode(enemyEntity, "PathNodeArea_22", 0, "");
+	} else {
+		AddEnemyPatrolNode(enemyEntity, "PathNodeArea_52", 0, "");
+	}
+	AddTimer("keepUpWraithSearch_" + enemyEntity, 20, "KeepUpWraithSearch");
+}
+
+void KeepUpWraithSearch(string &in asTimer) {
+	AlertEnemyOfPlayerPresence("enemy_wraith_1");
+	AlertEnemyOfPlayerPresence("enemy_wraith_2");
+	AddTimer(asTimer, 20, "KeepUpWraithSearch");
+}
+
+void Eso6Checkpoint(string &in asName, int alCount) {
+	PlayMusic("clinic_stalkers", true, 1.0f, 3.0f, 0, true);
+	AddTimer("spawnWraiths", alCount, "SpawnWraiths");
+}
+
+/// climbing the rope
+
+void DeactWraiths(string &in asParent, string &in asChild, int alState) {
+	WraithSpawnEffects("enemy_wraith_1");
+	WraithSpawnEffects("enemy_wraith_2");
+	AddTimer("teleportWraithsAway", 0.5f, "TeleportWraithsAway");
+	AddTimer("teleportWraithsAway2", 1.0f, "TeleportWraithsAway2");
+}
+
+void TeleportWraithsAway(string &in asTimer) {
+	TeleportEnemyToNode("enemy_wraith_2", "PathNodeArea_1", true);
+	TeleportEnemyToNode("enemy_wraith_2", "PathNodeArea_2", true);
+	RemoveTimer("keepUpWraithSearch_enemy_wraith_1");
+	RemoveTimer("keepUpWraithSearch_enemy_wraith_2");
+}
+
+void TeleportWraithsAway2(string &in asTimer) {
+	SetEntityActive("block_box_bridge_*", false);
+	SetEntityActive("enemy_wraith_*", false);
+}
+
+/// Ending cutscenes and swallow
+
+void LaunchPortFinale(string &in asParent, string &in asChild, int alState) {
+	SetEntityActive("block_box_well", false);
+	DestroyParticleSystem("ps_well_1");
+	DestroyParticleSystem("ps_well_2");
+	DestroyParticleSystem("ps_well_3");
+	DestroyParticleSystem("ps_well_4");
+	DestroyParticleSystem("ps_well_5");
+	SetEntityActive("ScriptArea_DialogStart", true);
+	SetEntityActive("ScriptArea_Swallow", false);
+	PlayMusic("advent_of_the_lunarian", true, 0.7f, 3.0f, 0, true);
+}
+
+void PortDialog(string &in asParent, string &in asChild, int alState) {
+	CheckPoint("eso6_check2", "PlayerStartArea_3", "Eso6Checkpoint_Finale", "", "");
+	SetPlayerSanity(20);
+	SetEntityActive("block_box_well", true);
+	CompleteQuest("03_bible", "03bible");
+	AddEffectVoice("06_hellfire1.ogg", "", "Voice", "06_hellfire1", false, "", 0, 0);
+	AddTimer("portDialog_Timer", 40.0f, "PortDialog_Timer");
+	AddTimer("finalePlaceTimer", 120.0f, "FinalePlaceTimer");
+}
+
+void PortDialog_Timer(string &in asTimer) {
+	AddEffectVoice("06_hellfire2.ogg", "", "Voice", "06_hellfire2", false, "", 0, 0);
+}
+
+void FinalePlaceTimer(string &in asTimer) {
+	SetEntityActive("ScriptArea_Swallow", true);
+	CreateParticleSystemAtEntity("divineps1", "ps_orb_divine.ps", "psarea_guidelight", false);
+	CreateParticleSystemAtEntity("divineps2", "ps_orb_divine.ps", "psarea_guidelight", false);
+}
+
+void CutsceneSwallow(string &in asParent, string &in asChild, int alState) {
+	PlayMusic("advent_outro", false, 0.7f, 5.0f, 0, false);
+	SetEntityActive("block_box_swallow_*", true);
+	SetPlayerMoveSpeedMul(0.8f);
+	SetPlayerRunSpeedMul(0.8f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	PlayGuiSound("react_sigh.snt", 0.5f);
+	ShowPlayerCrossHairIcons(false);
+	
+	AddTimer("cutsceneSwallow_Timer1", 5.0f, "CutsceneSwallow_Timer1");
+	
+	AutoSave();
+}
+
+void CutsceneSwallow_Timer1(string &in asTimer) {
+	PlayGuiSound("react_sigh.snt", 0.8f);
+	SetPlayerMoveSpeedMul(0.5f);
+	SetPlayerRunSpeedMul(0.5f);
+	SetEffectVoiceOverCallback("CutsceneSwallow_Timer2");
+	PlaySoundAtEntity("moansounds", "fp_weird_noices.snt", "Player", 3.0f, false);
+	AddEffectVoice("06_hellfire3.ogg", "", "Voice", "06_hellfire3", false, "", 0, 0);
+	StartPlayerLookAt("psarea_guidelight", 0.5f, 1.0f, "");
+}
+
+void CutsceneSwallow_Timer2() {
+	StopPlayerLookAt();
+	SetEffectVoiceOverCallback("CutsceneSwallow_Timer3");
+	AddEffectVoice("06_hellfire4.ogg", "", "Voice", "06_hellfire4", false, "", 0, 0);
+}
+
+void CutsceneSwallow_Timer3() {
+	DestroyParticleSystem("divineps1");
+	DestroyParticleSystem("divineps2");
+	
+	CreateParticleSystemAtEntityExt("nondivineps1", "ps_orb_absorb.ps", "psarea_guidelight", false, 0, 0, 0, 1, false, 0, 0, 0, 0);
+	CreateParticleSystemAtEntityExt("nondivineps2", "ps_orb_absorb.ps", "psarea_guidelight", false, 0, 0, 0, 1, false, 0, 0, 0, 0);
+	
+	GiveSanityDamage(200, false);
+	SetPropActiveAndFade("moon_eye", true, 3.0f);
+	AddTimer("cutsceneSwallow_Timer4", 10.0f, "CutsceneSwallow_Timer4");
+	AddTimer("cutsceneSwallow_Timer5", 13.0f, "CutsceneSwallow_Timer5");
+	AddTimer("cutsceneSwallow_Timer5_2", 14.8f, "CutsceneSwallow_Timer5_2");
+	AddTimer("cutsceneSwallow_Timer6", 16.4f, "CutsceneSwallow_Timer6");
+	AddTimer("cutsceneSwallow_Timer7", 18.0f, "CutsceneSwallow_Timer7");
+}
+
+void CutsceneSwallow_Timer4(string &in asTimer) {
+	DestroyParticleSystem("nondivineps1");
+	DestroyParticleSystem("nondivineps2");
+	SetPlayerActive(false);
+}
+
+void CutsceneSwallow_Timer5(string &in asTimer) {
+	SpawnAbovePlayer();
+	StopSound("moansounds", 2.0f);
+	PlayGuiSound("OutlastEffect_1", 0.7f);
+}
+
+void CutsceneSwallow_Timer5_2(string &in asTimer) {
+	StartPlayerLookAt("leviathan_swallow_2", 2, 3, "");
+	// put leviathan sound effect here
+    PlayGuiSound("lev_pickup_screech_01", 1.2f);
+}
+
+void SpawnAbovePlayer() {
+	SetEntityActive("leviathan_swallow_2", true);
+	SetEntityPos("leviathan_swallow_2", GetPlayerPosX() - 1, GetPlayerPosY() + 50, GetPlayerPosZ() - 1);
+	SetEntityActive("leviathan_swallow", true);
+	SetEntityPos("leviathan_swallow", GetEntityPosX("leviathan_swallow_2") - 2, GetEntityPosY("leviathan_swallow_2") + 2, GetEntityPosZ("leviathan_swallow_2") + 2);
+}
+
+void CutsceneSwallow_Timer6(string &in asTimer) {
+	FadeOut(0);
+	SetEntityActive("leviathan_swallo*", false);
+	PlayGuiSound("lev_inside_gurgle_01", 1.0f);
+	StopPlayerLookAt();
+	PlayGuiSound("blackbox_start", 3.0f);
+}
+
+void CutsceneSwallow_Timer7(string &in asTimer) {
+	SetPlayerActive(true);
+	ResumeNormalSpeed();
+	ShowPlayerCrossHairIcons(true);
+	if (!ScriptDebugOn()) {
+		ChangeMap("esophagus_VII.map", "PlayerStartArea_1", "00_transition_final", "");
+	} else {
+		FadeIn(2);
+	}
+}
+
+void Eso6Checkpoint_Finale(string &in asName, int alCount) {
+	PlayMusic("advent_of_the_lunarian", true, 0.7f, 3.0f, 0, true);
+}
+
+void OnLeave() {
+	SetupLoadScreen("Voice", "00_transition_final", 0, "eso_loading_VII.jpg");
+
+	DestroyDataCache();
+	ClearSavedMaps();
+}

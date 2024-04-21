@@ -1,0 +1,267 @@
+
+void OnStart()
+{
+	ClearSavedMaps();
+	FadeOut(0);
+	SetPlayerMoveSpeedMul(0.5);
+	SetPlayerRunSpeedMul(0.5);
+	SetPlayerLookSpeedMul(0.8);
+	SetPlayerJumpForceMul(0.7);
+	SetPlayerLampOil(0);
+	SetPlayerActive(false);
+	
+	AddUseItemCallback("", "key_tomb_1", "level_cistern_2", "levelDoor", true);
+	AddUseItemCallback("", "key_study_1", "prison_section_1", "prisonDoor", true);
+	AddEntityCollideCallback("Player", "noLanternArea", "noLantern", false, 1);
+	SetEntityCallbackFunc("lantern_1", "pickLantern");
+	AddEntityCollideCallback("Player", "Area_SpawnGrunt", "spawnGrunt", true, 1);
+	AddEntityCollideCallback("Player", "Area_EnableGruntTriggers", "EnableGruntTriggers", true, 1);
+	AddEntityCollideCallback("prison_6", "Area_GhostTrigger", "GhostScare", true, 1);
+	AddEntityCollideCallback("Player", "Area_Ghost_CloseDoor", "CloseGhostDoor", true, 1);
+	AddEntityCollideCallback("Player", "Area_GruntChase", "GruntChase", true, 1);
+	AddEntityCollideCallback("grunt_1", "Area_ResetGruntNodes", "ResetGruntNodes", true, 1);
+	AddEntityCollideCallback("grunt_1", "gruntLeave", "despawnGrunt", true, 1);
+	
+	SetEntityCustomFocusCrossHair("easter_egg_1", "Pick");
+	SetEntityPlayerInteractCallback("easter_egg_1", "CollectEasterEgg", true);
+	
+	SetEntityActive("noLanternWall", true);
+	AddTimer("", 2.5, "cutScene4_1");
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("test-subject-holding-area");
+	if(GetLocalVarInt("playing")==1) PlayMusic("06_amb.ogg", true, 1, 0.2, 1, false);
+}
+
+void OnLeave()
+{
+	CompleteQuest("start", "start");
+	if(GetPlayerSanity() < 80) SetPlayerSanity(80);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpForceMul(1);
+	RemoveTimer("player_effects");
+	StopMusic(3, 1);
+	StopMusic(3, 2);
+	SetupLoadScreen("LoadingScreens", "to_offices", 0, "");
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////cutscene_4//////////////////////////////////////////////////////////////////////
+
+void cutScene4_1(string &in asTimer)
+{
+	PlayGuiSound("15_ripp_door.snt", 0.75);
+	MovePlayerHeadPos(0, -1, 0, 10, 0.1);
+	StartPlayerLookAt("CutScene4-look1", 15, 20, "");
+	AddTimer("", 3, "cutScene4_1x");
+	AddTimer("", 0.4, "ReactScare");
+	PlayMusic("04_event_stairs.ogg", false, 1, 0.5, 2, false);
+}
+
+void cutScene4_1x(string &in asTimer)
+{
+	SetEntityActive("torch_static01_nosnd_*", false);
+	SetEntityActive("torch_static01_snd_*", true);
+	SetPlayerSanity(10);
+	SetPlayerHealth(40);
+	SetSanityDrainDisabled(false);
+	FadeIn(2);
+	PlayGuiSound("react_breath.snt", 1);
+	AddTimer("", 3, "cutScene4_2");
+}
+
+void cutScene4_2(string &in asTimer)
+{
+	MovePlayerHeadPos(0, 0, 0, 2, 0.5);
+	SetPlayerCrouching(false);
+	StartPlayerLookAt("CutScene4-look2", 2.2, 5, "cutScene4_2x");
+	AddTimer("", 1.3, "StartPlay");
+	PlayGuiSound("player_jump.snt", 1);
+}
+
+void cutScene4_2x()
+{
+	StopPlayerLookAt();
+}
+
+////////////////////////////////////
+/////START/////////////////////////
+
+void StartPlay(string &in asTimer)
+{
+	PlayGuiSound("react_sigh.snt", 1);
+	SetPlayerActive(true);
+	
+	AddTimer("player_effects", 20, "PlayerEffects");
+	AddQuest("start", "start");
+	SetLocalVarInt("playing", 1);
+	
+	PlayMusic("06_amb.ogg", true, 1, 0.2, 1, false);
+	CheckPoint("respawn", "TP_StartGame", "Respawn", "Deaths", "prison_grunt");
+	AddTimer("autosave", 0.05, "StartPlayAutosave");
+}
+
+void StartPlayAutosave(string &in asTimer)
+{
+	AutoSave();
+}
+
+void PlayerEffects(string &in asTimer)
+{
+	if(GetPlayerSanity()<40) SetPlayerSanity(40);
+	SetPlayerMoveSpeedMul(0.8);
+	SetPlayerRunSpeedMul(0.8);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpForceMul(1);
+}
+
+void ReactScare(string &in asTimer)
+{
+	PlayGuiSound("react_scare.snt", 1);
+}
+
+void Respawn(string &in asName, int alCount)
+{
+	PlayMusic("06_amb.ogg", true, 1, 0.2, 1, false);
+}
+
+void pickLantern(string &in asEntity, string &in type) 
+{
+	SetPlayerLampOil(8);
+	SetEntityActive("noLanternWall", false);
+	RemoveEntityCollideCallback("Player", "noLanternArea");
+	CompleteQuest("findLantern", "noLanternFound");
+	//AutoSave();
+}
+
+void noLantern(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "noLantern", 5);
+	AddQuest("findLantern", "noLanternFound");
+}
+
+void GhostScare(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_ghost_release.ps", "Area_GhostEffect", false);
+	PlaySoundAtEntity("", "03_in_a_bottle.snt", "Area_GhostEffect", 0.05, false);
+	SetLampLit("torch_static01_16", false, true);
+	GiveSanityDamage(10, true);
+	AddTimer("", 0.3, "ReactScare");
+	PlayMusic("05_event_steps.ogg", false, 1, 0.1, 2, false);
+}
+
+void CloseGhostDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("prison_6", true, true);
+	GiveSanityDamage(10, true);
+}
+
+void levelDoor(string &in item, string &in door)
+{
+	SetLevelDoorLocked("level_cistern_2", false);
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(item);
+}
+
+void prisonDoor(string &in item, string &in door)
+{
+	SetSwingDoorLocked("prison_section_1", false, true);
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(item);
+	GiveSanityBoostSmall();
+	CompleteQuest("start", "start");
+	if(GetPlayerSanity()<50) SetPlayerSanity(50);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpForceMul(1);
+	RemoveTimer("player_effects");
+	//AutoSave();
+}
+
+void spawnGrunt(string &in asParent, string &in asChild, int &in asState)
+{
+	SetEntityActive("grunt_1", true);
+	SetMessage("Messages", "grunt_1_spawned", 5);
+	GiveSanityDamage(20, true);
+	PlayGuiSound("react_scare.snt", 1);
+	SetEntityActive("Area_GruntChase", true);
+	AddTimer("gruntTriggers", 9, "EnableGruntTriggers_timer");
+	SetEntityActive("Area_EnableGruntTriggers", true);
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_1", 2, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_2x", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_3", 4, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_5", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_7", 0.2, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_7x", 1.8, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_8", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_9", 4, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_10", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_11", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_12", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_20", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_28", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_29", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_30", 3, "");
+}
+
+void ResetGruntNodes(string &in asParent, string &in asChild, int alState)
+{
+	ClearEnemyPatrolNodes("grunt_1");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_7", 0.2, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_7x", 1.8, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_8", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_9", 4, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_10", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_11", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_12", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_20", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_28", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_29", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_30", 3, "");
+	
+}
+
+void EnableGruntTriggers(string &in asParent, string &in asChild, int &in asState)
+{
+	RemoveTimer("gruntTriggers");
+	SetEnemyDisableTriggers("grunt_1", false);
+	SetEntityActive("Area_EnableGruntTriggers", false);
+}
+
+void EnableGruntTriggers_timer(string &in asTimer)
+{
+	SetEnemyDisableTriggers("grunt_1", false);
+	SetEntityActive("Area_EnableGruntTriggers", false);
+}
+
+void GruntChase(string &in asParent, string &in asChild, int alState)
+{
+	ShowEnemyPlayerPosition("grunt_1");
+}
+
+void despawnGrunt(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("grunt_1", false);
+	SetEntityActive("Area_GruntChase", false);
+	PlaySoundAtEntity("", "door_level_cellar_close.snt", "gruntLeave", 0.1, false);
+	//SetMessage("Messages", "grunt1left", 4);
+	GiveSanityBoostSmall();
+	//AutoSave();
+}

@@ -1,0 +1,340 @@
+
+
+//===========================================
+     // This runs when the map first starts
+     void OnStart()
+
+      
+	  
+	  
+	  {
+    for(int i = 1; i <= 3; i++) //this will loop the following line 3 times.
+        AddEntityCollideCallback("Book_"+i, "Area_"+i, "PullBook", false, 1); 
+        //Adds callbacks for Book_1 and Area_1, and for 2 and 3.
+		
+	  PreloadSound("unlock_door.snt");
+	  PreloadSound("attack_claw_hit.snt");
+	  PreloadSound("gameplay_tick_long_dist.snt");
+	  SetMapDisplayNameEntry("Entrance1");  
+	  CheckPoint("checkEHA","PlayerStartArea_1", "","", "");
+	  CompleteQuest("SlimeThought", "SlimeThought");
+	  SetNumberOfQuestsInMap(2);
+	  SetGlobalVarInt("FinalAct", 0);
+	  SetGlobalVarInt("DiningRoomFirst", 0);
+	  SetGlobalVarInt("PickedEagle", 0);
+	  
+	  //SetEntityPlayerInteractCallback("ExamineArea_2", "UnlockDoor", true);  
+	  SetEntityPlayerInteractCallback("level_wood_12", "SwanQuest", true);
+	  
+	  AddEntityCollideCallback("Player", "ScriptArea_1", "Furn", true, 1);
+	  AddEntityCollideCallback("Player", "Collide_1", "Static1", true, 1);
+	  AddEntityCollideCallback("Player", "Collide_2", "Static2", true, 1);
+	  AddEntityCollideCallback("Book_3", "Collide_3", "Static3", false, 1);
+	  //AddEntityCollideCallback("Player", "ScriptArea_8", "GetOrbPiece", true, 1);
+	  //AddEntityCollideCallback("Player", "ScriptArea_10", "CheckOrb", false, 1);
+	  AddEntityCollideCallback("Player", "ScriptArea_11", "BasementQuest", false, 1);
+	  
+	  
+	  SetEntityPlayerInteractCallback("ExamineArea_1", "Damage", false);
+	  SetEntityPlayerInteractCallback("DiningRoomFirst_1", "DRFirst", false);
+	  SetEntityPlayerInteractCallback("DiningRoomFirst_2", "DRFirst", false);
+	  SetEntityPlayerInteractCallback("DiningRoomFirst_3", "DRFirst", false);
+	  SetEntityPlayerInteractCallback("DiningRoomFirst_4", "DRFirst", false);
+	  SetEntityPlayerInteractCallback("mansion_double_door_level_1", "HallQuest", false);
+	  
+	  
+	  AddUseItemCallback("", "key_dove", "mansion_double_door_level_1", "UnlockBackHall", true);
+	  AddUseItemCallback("", "SwanKey", "level_wood_12", "UnlockEastHall", true);
+	  
+}
+
+void DRFirst(string &in asEntity)
+
+{
+				SetMessage("Messages", "CheckDRFirst", 5);
+}
+
+//void CheckOrb(string &in asParent, string &in asChild, int alState)
+	
+	//{
+		//	if(GetGlobalVarInt("DROrb") == 1) 
+//{
+	//		SetEntityActive("ScriptArea_8", true);
+			
+	//}
+	//}
+
+	void BasementQuestCheck()
+	
+{
+	if(GetGlobalVarInt("PickedEagle") == 1) 
+	
+			{
+						AddQuest("GoToBasement", "GoToBasement");
+			
+			}
+}
+
+	
+	void SwanQuest(string &in asEntity)
+	
+	{
+			AddQuest("SwanKeyQuest", "SwanKeyQuest");
+	}
+	
+//void UnlockDoor(string &in asEntity)
+	
+	//{
+		//	SetMessage("Messages", "DoorNowUnlocked", 3);
+			//PlaySoundAtEntity("", "lock_door.snt", "level_wood_8", 0, false);
+			//SetEntityActive("ExamineArea_2", false);
+			
+	//}
+
+void PullBook(string &in asParent, string &in asChild, int alState)
+{
+    AddTimer("expire", 30.0f, "TimerExpired"); //Change time to how long it should last
+    PlaySoundAtEntity("Ticking", "gameplay_tick_long_dist", "ScriptArea_7", 0.0f, false);
+
+    AddLocalVarInt("Books", 1); //This adds +1 to this variable for every book that collides with the area.
+    //SetPropStaticPhysics("Book_"+i, true);
+
+    if(GetLocalVarInt("Books") == 3) {
+        //This will complete the event, put your code here
+        RemoveTimer("expire");
+        StopSound("Ticking", 0.2);
+		StartPlayerLookAt("ScriptArea_3", 2, 3, "");
+		PlaySoundAtEntity("UnlockSecret", "lock_door", "ScriptArea_4", 0.0f, false);
+		PlaySoundAtEntity("UnlockSecret", "lock_door", "ScriptArea_5", 0.0f, false);
+		PlaySoundAtEntity("UnlockSecret", "lock_door", "ScriptArea_6", 0.0f, false);
+		AddTimer("StopLook2", 1.6, "StopLook2");
+		SetLevelDoorLocked("default02_secret_door_level_1", false);
+    }
+}
+
+void StopLook2(string &in asTimer)
+			
+			{
+					StopPlayerLookAt();
+			}
+
+void TimerExpired(string &in asTimer)
+{
+    //This will reset the event because you ran out of time.
+	SetPropStaticPhysics("Book_1", false);
+	SetPropStaticPhysics("Book_2", false);
+	SetPropStaticPhysics("Book_3", false);
+    for(int i = 1; i <= 3; i++) ResetProp("Book_"+i);
+    SetLocalVarInt("Books", 0);//Resets the counter
+    StopSound("Ticking", 0.2);
+    
+} 
+	  
+	 void Static1(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropStaticPhysics("Book_1", true);
+	}
+	
+	void Static2(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropStaticPhysics("Book_2", true);
+	}
+	 
+	 void Static3(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropStaticPhysics("Book_3", true);
+	}
+	
+	 //void GetOrbPiece(string &in asParent, string &in asChild, int alState)
+	
+	//{
+			//StartPlayerLookAt("ScriptArea_9", 2, 3, "");
+			//SetPlayerMoveSpeedMul(0);
+			//SetPlayerLookSpeedMul(0);
+			//SetPlayerRunSpeedMul(0);
+			//AddTimer("", 1.0f, "OrbMessage");
+	//}
+	
+	//void OrbMessage(string &in asTimer)
+	
+		//{
+			//	SetMessage("Messages", "GetTheOrb", 5);
+				//SetPlayerMoveSpeedMul(1);
+				//SetPlayerLookSpeedMul(1);
+				//SetPlayerRunSpeedMul(1);
+				//StopPlayerLookAt();
+	//	}			
+	
+void UnlockBackHall(string &in asItem, string &in asEntity)
+	
+	{
+			SetLevelDoorLocked("mansion_double_door_level_1", false);
+			PlaySoundAtEntity("", "lock_door", "mansion_double_door_level_1", 0, false);
+	}
+	
+	void UnlockEastHall(string &in asItem, string &in asEntity)
+	
+	{
+			SetLevelDoorLocked("level_wood_12", false);
+			CompleteQuest("SwanKeyQuest", "SwanKeyQuest");
+			RemoveItem("SwanKey");
+			PlaySoundAtEntity("", "lock_door", "level_wood_12", 0, false);
+	}
+	
+	void HallQuest(string &in asEntity)
+	
+	{
+				AddQuest("BackHallQuest", "BackHallQuest");
+	}
+	
+	void Damage(string &in asEntity)
+	
+			{
+			
+					
+					GivePlayerDamage(5, "Slash", true, false);
+					PlaySoundAtEntity("", "attack_claw_hit", "Player", 0.0f, false);
+			
+			
+			}
+	
+	void Furn(string &in asParent, string &in asChild, int alState)
+	
+			{
+					
+					SetEntityActive("armchair_alt_2", true);
+					SetEntityActive("bookcase_stool_2", true);
+					SetEntityActive("chair_nice01_alt_2", true);
+					SetEntityActive("chair_nice02_2", true);
+					SetEntityActive("armchair_alt_1", false);
+					SetEntityActive("bookcase_stool_1", false);
+					SetEntityActive("chair_nice01_alt_1", false);
+					SetEntityActive("chair_nice02_1", false);
+					SetEntityActive("ExamineArea_1", true);
+					
+			}
+			
+			void CheckDiningRoomFirstCount()
+	
+	
+{
+
+	if(GetGlobalVarInt("DiningRoomFirst") == 1) 
+	
+		{
+			
+			SetEntityActive("DiningRoomFirst_1", false);
+			SetEntityActive("DiningRoomFirst_2", false);
+			SetEntityActive("DiningRoomFirst_3", false);
+			SetEntityActive("DiningRoomFirst_4", false);
+			
+		}
+}
+	
+	void CheckDiningRoomCount()
+	
+	
+{
+
+	if(GetGlobalVarInt("DiningRoom") == 2) 
+	
+		{
+			
+			DestroyParticleSystem("ParticleSystem_2");
+			StopSound("Sound_2", 0.2);
+			
+			
+		}
+}
+	
+						 
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+   {
+   CheckDiningRoomCount();
+   //----AUDIO----//
+SetupLoadScreen("LoadingText", "EntranceA", 0, "00_loading.png");
+CheckDiningRoomFirstCount();
+
+
+
+StopMusic(2,0);
+
+StopMusic(2,2);
+StopMusic(2,3);
+StopMusic(2,4);
+StopMusic(2,5);
+StopMusic(2,6);
+StopMusic(2,7);
+StopMusic(2,8);
+StopMusic(2,9);
+StopMusic(2,10);
+StopMusic(2,11);
+StopMusic(2,12);
+StopMusic(2,13);
+StopMusic(2,14);
+StopSound("GreatHall", 2);
+PreloadSound("RainSound_Fx_1.snt");
+PreloadParticleSystem("ps_water_rain.ps");
+    PlayMusic("entrancehall", true, 0.8, 1, 1, true);
+	SetInDarknessEffectsActive(false);
+	BasementQuestCheck();
+	AutoSave();
+}
+
+
+
+
+
+
+
+
+
+void StoreRoom2(string &in entity)
+
+{
+    if(GetSwingDoorLocked("cellar_wood01_15") == true)
+    {
+ 
+        SetMessage("Messages", "StoreRoom2", 0);
+ 
+    }
+}
+
+void HammerDoor(string &in entity)
+ 
+ 
+{
+    if(GetSwingDoorLocked("RustyLock") == true)
+    {
+ 
+        SetMessage("Messages", "HammerDoor", 0);
+ 
+    }
+}
+
+void WalkwayMessage(string &in entity)
+ 
+ 
+{
+    if(GetSwingDoorLocked("cellar_wood01_5") == true)
+    {
+ 
+        SetMessage("Messages", "WalkwayMessage", 0);
+ 
+    }
+}
+
+
+
+	
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+	 
+     }

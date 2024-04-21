@@ -1,0 +1,721 @@
+
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\HPL2_AnimationSubSystem\HPL2_AnimationSubSystem.hps"
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\Ass_Animations_Scripts\AssAnim_FredIntro.hps"
+
+
+void OnStart()
+{
+
+	
+
+
+	
+		
+SetPlayerCrouching(true);
+	
+	
+	
+	SetLocalVarInt("BottlesBroken", 0);
+	AddEntityCollideCallback("Player", "collide_SnowballJS", "collide_SnowballJS", true, 0);
+	
+	SetPlayerFallDamageDisabled(true);
+
+	AddEntityCollideCallback("Player", "area_Slide_1", "area_Slide", false, 0);
+	AddEntityCollideCallback("Player", "area_Slide_2", "area_Slide", false, 0);
+	AddEntityCollideCallback("Player", "area_Slide_3", "area_Slide", false, 0);
+	AddEntityCollideCallback("Player", "area_Slide_4", "area_Slide", false, 0);
+	AddEntityCollideCallback("Player", "area_Slide_5", "area_Slide", false, 0);
+	
+
+
+	AddEntityCollideCallback("Player", "areaSlideSAFE_1", "area_CancelSlide", false, 0);
+	AddEntityCollideCallback("Player", "areaSlideSAFE_2", "area_CancelSlide", false, 0);
+	AddEntityCollideCallback("Player", "areaSlideSAFE_3", "area_CancelSlide", false, 0);
+	
+	AddEntityCollideCallback("Player", "area_slide_Respawn", "area_slide_Respawn", false, 1);
+	
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_1", "area_MeltIce_1", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_2", "area_MeltIce_2", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_3", "area_MeltIce_3", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_4", "area_MeltIce_4", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_5", "area_MeltIce_5", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_6", "area_MeltIce_6", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_7", "area_MeltIce_7", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_8", "area_MeltIce_8", true, 1);
+
+	
+	AddEntityCollideCallback("Player", "area_CloseCaves", "area_CloseCaves", false, 1);
+	
+
+	AddEntityCollideCallback("lever_small_lever_1", "area_PlaceLeverSlot", "area_PlaceLeverSlot", true, 1);
+
+
+	AddUseItemCallback("UnlockSnowDimension", "key_tower_1", "level_hub_christmas_1", "UnlockSnowDimension", true);
+
+	SetLocalVarFloat("InSlideArea", 0);
+	SetLocalVarInt("InSafeSlideArea", 0);
+	SetLocalVarInt("TickDelay", 2);
+	
+	SetLocalVarInt("HasSnowDimKey", 0);
+	
+	SetMoveObjectStateExt("castle_portcullis_1", 1.0f, 20.0f, 65.0f, 0.0f, true);
+
+
+	SetMoveObjectState("OS_movingIcePlatform_1", 1.0f);
+	AddTimer("MovingIceBrickTimerRight", 1.5f, "MovingIceBrickTimerRight");
+	
+	PlayPropAnimation("frozenBruteChar_1", "FrozenInIce", 0.1f, true, "");
+
+
+
+	AddEntityCollideCallback("Player", "area_Location_IceCaveMessage", "area_Location_IceCaveMessage", false, 1);
+	AddEntityCollideCallback("Player", "area_Location_IceRinkMessage", "area_Location_IceRinkMessage", false, 1);
+
+	AddEntityCollideCallback("red_torch_prop01_1", "area_slide_Respawn", "Torch_IceRink_Fall_Respawn", false, 1);
+
+
+	for(int i = 1; i<16;i++){
+	AddEntityCollideCallback("snowball_"+i, "area_respawnSnowballFall", "area_respawnSnowballFall", false, 1);
+	}
+
+		
+
+	FadeOut(0.0f);
+	
+	AddTimer("BeginIntroMessages", 5.0f, "BeginIntroMessages");
+	SetPlayerActive(false);
+	
+	
+	
+	
+}
+
+void OnEnter()
+{
+
+
+}
+
+void OnLeave()
+{
+
+}
+
+void OnUpdate(float afStep){
+
+SlideAreaLogic();
+ASS_AnimationSystem(afStep);
+
+
+
+}
+
+
+void BeginIntroMessages(string &in asTimer)
+{
+	SetMessage("Messages", "gcs_intromessages_01", 7.0f);
+	AddTimer("BeginIntroMessages_2", 8.0f, "BeginIntroMessages_2");
+}
+void BeginIntroMessages_2(string &in asTimer)
+{
+	SetMessage("Messages", "gcs_intromessages_02", 5.0f);
+	AddTimer("BeginIntroMessages_3", 6.0f, "BeginIntroMessages_3");
+}
+void BeginIntroMessages_3(string &in asTimer)
+{
+	SetMessage("Messages", "gcs_intromessages_03", 7.0f);
+	AddTimer("BeginIntroMessages_4", 8.0f, "BeginIntroMessages_4");
+}
+void BeginIntroMessages_4(string &in asTimer)
+{
+	SetMessage("Messages", "gcs_intromessages_04", 5.0f);
+	AddTimer("BeginIntroMessages_5", 6.0f, "BeginIntroMessages_5");
+}
+void BeginIntroMessages_5(string &in asTimer)
+{
+	SetMessage("Messages", "gcs_intromessages_05", 5.0f);
+	AddTimer("BeginIntroMessages_6", 10.0f, "BeginIntroMessages_6");
+}
+void BeginIntroMessages_6(string &in asTimer)
+{
+	SetMessage("Messages", "gcs_intromessages_06", 5.0f);
+	AddTimer("BeginIntroMessages_7", 6.0f, "BeginIntroMessages_7");
+}
+void BeginIntroMessages_7(string &in asTimer)
+{
+	SetMessage("Messages", "gcs_intromessages_07", 7.0f);
+	AddTimer("BeginIntroMessages_lastly", 8.0f, "BeginIntroMessages_lastly");
+}
+void BeginIntroMessages_lastly(string &in asTimer)
+{
+	PlayFredIntro();
+	AddTimer("BeginIntroTitleCard", 11.0f, "BeginIntroTitleCard");
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// FALLEN SNOWBALL RESPAWN ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void area_respawnSnowballFall(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityPos(asParent, GetEntityPosX("area_SnowballRespawnLoc"), GetEntityPosY("area_SnowballRespawnLoc"), GetEntityPosZ("area_SnowballRespawnLoc"));
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// INTRO SCENE CUTSCENE //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BeginIntroTitleCard(string &in asTimer)
+{
+	ShowScreenImage("GCS_IntroTitleCard.png", -750, -750, 1500, false, 5.0f, 0.0f, 0.0f);
+	PlaySoundAtEntity("GCS_IntroTitleMusic", "GCS_IntroTitleMusic", "Player", 0.0f, false);
+	AddTimer("AwakeInRoomTimer", 5.0f, "AwakeInRoomTimer");
+}
+
+
+
+
+
+void AwakeInRoomTimer(string &in asTimer){
+
+	StopSound("GCS_IntroTitleMusic", 0.0f);
+	FadeIn(0.0f);
+	GiveSanityDamage(5.0f, true);
+	
+	PlayMusic("09_amb_safe", true, 1.0f, 1.0f, 0, false);
+
+	PlayMusic("02_amb_safe", true, 1.0f, 1.0f, 1, false);
+	AddTimer("AwakeLookAtNoteTable", 1.0f, "AwakeLookAtNoteTable");
+	
+}
+
+void AwakeLookAtNoteTable(string &in asTimer)
+{
+StartPlayerLookAt("note_generic_2", 5.0f, 6.0f, "");
+AddTimer("AwakeLookAtNoteTable2", 1.5f, "AwakeLookAtNoteTable2");
+}
+
+void AwakeLookAtNoteTable2(string &in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerActive(true);
+}
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// SAVE RED TORCH IF DROPPED /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Torch_IceRink_Fall_Respawn(string &in asParent, string &in asChild, int alState)
+{
+	ResetProp("red_torch_prop01_1");
+	SetEntityPos("red_torch_prop01_1", GetEntityPosX("area_TorchRespawn_Pitfall"), GetEntityPosY("area_TorchRespawn_Pitfall"), GetEntityPosZ("area_TorchRespawn_Pitfall"));
+	
+	SetMessage("Messages", "LostRedTorchInPit", 0.0f);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// REGIONAL MESSAGES /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_Location_IceCaveMessage(string &in asParent, string &in asChild, int alState)
+{
+	ShowScreenImage("OS_RegionalMessage_IceCaves.png", -250.0f, 200.0f, 500.0f, false, 5.0f, 1.0f, 1.0f);
+}
+void area_Location_IceRinkMessage(string &in asParent, string &in asChild, int alState)
+{
+	ShowScreenImage("OS_RegionalMessage_IceRink.png", -250.0f, 200.0f, 500.0f, false, 5.0f, 1.0f, 1.0f);
+}
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ICE CAVE GATE SHUT ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_CloseCaves(string &in asParent, string &in asChild, int alState)
+{
+
+if(GetLocalVarInt("HasSnowDimKey") == 1){
+	SetMoveObjectStateExt("castle_portcullis_1", 0.0f, 20.0f, 25.0f, 0.0f, true);
+	FadeEnemyToSmoke("servant_brute_1", true);
+	SetLocalVarInt("HasSnowDimKey", 2);
+	AutoSave();
+	}
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// CHECKPOINTS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////
+// CHECKPOINT HELPERS:
+/////////////////////////
+
+void removeAllIceWalls()
+{
+SetEntityActive("OS_iceBlock_1", false);
+SetEntityActive("area_MeltIce_1", false);
+
+SetEntityActive("OS_iceBlock_2", false);
+SetEntityActive("area_MeltIce_2", false);
+
+SetEntityActive("OS_iceBlock_3", false);
+SetEntityActive("area_MeltIce_3", false);
+
+SetEntityActive("OS_iceBlock_4", false);
+SetEntityActive("area_MeltIce_4", false);
+
+SetEntityActive("OS_iceBlock_5", false);
+SetEntityActive("area_MeltIce_5", false);
+
+}
+
+void alreadyClearedIceRink()
+{
+	SetMoveObjectState("safety_normal_vert_1", 1.0f);
+	SetEntityActive("wine01_1", false);
+	SetEntityActive("wine01_2", false);
+	SetEntityActive("wine01_3", false);
+	SetEntityActive("collide_SnowballJS", false);
+	SetEntityActive("OS_SnowballChristmas_10", false);
+}
+
+////////////////////////
+// CHECKPOINTS:
+/////////////////////////
+
+void CP_Pre_Melt_Brute(string &in asName, int alCount)
+{
+	removeAllIceWalls();
+	alreadyClearedIceRink();
+	SetEntityPos("red_torch_prop01_1", GetEntityPosX("area_TorchRespawn_1"), GetEntityPosY("area_TorchRespawn_1"), GetEntityPosZ("area_TorchRespawn_1"));
+	
+
+	SetEntityActive("OS_iceBlock_6", true);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_6", "area_MeltIce_6", true, 1);
+	
+	SetEntityActive("frozenBruteChar_1", true);
+		
+	ResetProp("servant_brute_1");
+	SetPropStaticPhysics("lever_small_lever_1", true);
+	ResetProp("lever_small_lever_1");
+	
+	AutoSave();
+	
+}
+
+void CP_LeverPulledIceCave(string &in asName, int alCount)
+{
+	removeAllIceWalls();
+	alreadyClearedIceRink();
+	SetEntityPos("red_torch_prop01_1", GetEntityPosX("area_TorchRespawn_2"), GetEntityPosY("area_TorchRespawn_2"), GetEntityPosZ("area_TorchRespawn_2"));
+	
+	SetEntityActive("lever_small_mount_2", true);
+	SetEntityActive("lever_small_mount_1", false);
+	SetEntityActive("lever_small_lever_1", false);	
+
+	SetLeverStuckState("lever_small_mount_2", 1, false);
+	SetMoveObjectState("safety_normal_vert_2", 1.0f);
+	PlaySoundAtEntity("", "unlock_door.snt", "area_PlaceLeverSlot", 0.0f, false);
+	
+	
+	SetEntityActive("OS_iceBlock_6", false);
+	SetEntityActive("area_MeltIce_6", false);
+	
+	SetEntityActive("frozenBruteChar_1", false);
+	SetEntityActive("servant_brute_1", true);
+	
+	for(int i =1; i< 52;i++){
+	AddEnemyPatrolNode("servant_brute_1", "FrozenBrute_Node_"+i, 0.001f, "");
+	}
+	
+	AutoSave();
+	
+}
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// DOOR UNLOCKS //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void UnlockSnowDimension(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("level_hub_christmas_1", false);
+	PlayGuiSound("unlock_door.snt", 1.0f);
+	RemoveItem(asItem);
+}
+
+void grabSnowDimKeyInteract(string &in asEntity){
+
+	SetLocalVarInt("HasSnowDimKey", 1);
+
+}
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ICE CAVE LEVER ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pullLeverIceCave(string &in asEntity, int alState)
+{
+	if(alState == 1){
+	SetLeverStuckState("lever_small_mount_2", 1, false);
+	SetMoveObjectState("safety_normal_vert_2", 1.0f);
+	PlaySoundAtEntity("", "unlock_door.snt", "area_PlaceLeverSlot", 0.0f, false);
+	CheckPoint("CP_LeverPulledIceCave", "PlayerStart_CP_LeverPulled", "CP_LeverPulledIceCave", "", "");
+	}
+}
+
+
+
+void area_PlaceLeverSlot(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("lever_small_lever_1", false);
+SetEntityActive("lever_small_mount_1", false);
+SetEntityActive("lever_small_mount_2", true);
+PlaySoundAtEntity("", "puzzle_place_jar.snt", "area_PlaceLeverSlot", 0.0f, false);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// TORCH MELT ICE COLLISIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_MeltIce_1(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_1", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_1", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_1", 0.0f, false);
+}
+
+void area_MeltIce_2(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_2", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_2", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_2", 0.0f, false);
+}
+
+void area_MeltIce_3(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_3", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_3", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_3", 0.0f, false);
+}
+
+void area_MeltIce_4(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_4", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_4", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_4", 0.0f, false);
+}
+
+void area_MeltIce_5(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_5", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_5", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_5", 0.0f, false);
+}
+
+void area_MeltIce_6(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_6", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_6", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_6", 0.0f, false);
+
+AddTimer("frozenBruteAwaken", 2.0f, "frozenBruteAwaken");
+
+CheckPoint("CP_Pre_Melt_Brute", "PlayerStart_CP_MeltBrute", "CP_Pre_Melt_Brute", "", "");
+}
+
+void area_MeltIce_7(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_7", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_7", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_7", 0.0f, false);
+
+AddTimer("frozenBruteAwaken", 2.0f, "frozenBruteAwaken");
+}
+
+void area_MeltIce_8(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_8", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_8", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_8", 0.0f, false);
+}
+
+/////////////////////////////////////////////
+/// MELTED BRUTE SPAWN
+/////////////////////////////////////////////
+
+void frozenBruteAwaken(string &in asTimer)
+{
+SetEntityActive("servant_brute_1", true);
+
+for(int i =1; i< 52;i++){
+AddEnemyPatrolNode("servant_brute_1", "FrozenBrute_Node_"+i, 0.001f, "");
+}
+
+SetEntityActive("frozenBruteChar_1", false);
+
+
+SetPropStaticPhysics("lever_small_lever_1", false);
+ResetProp("lever_small_lever_1");
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// SLIDE MINIGAME RESPAWN ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_slide_Respawn(string &in asParent, string &in asChild, int alState)
+{
+	StartEffectFlash(0.5f, 1.0f, 0.4f);
+	AddTimer("TeleportPlayerIceSlideBackUP", 1.0f, "TeleportPlayerIceSlideBackUP");
+	PlayGuiSound("SlipOffIceRinkSFX.snt", 1.0f);
+}
+
+void TeleportPlayerIceSlideBackUP(string &in asTimer)
+{
+SetPlayerActive(false);
+TeleportPlayer("PlayerStartArea_SlideRespawn");
+	AddTimer("TeleportPlayerIceSlideBackUP_allowMove", 1.5f, "TeleportPlayerIceSlideBackUP_allowMove");
+}
+
+void TeleportPlayerIceSlideBackUP_allowMove(string &in asTimer)
+{
+SetPlayerActive(true);
+}
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ICE SLIDE BLOCK MOVEMENT //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MovingIceBrickTimerRight(string &in asTimer)
+{
+	SetMoveObjectState("OS_movingIcePlatform_1", -1.0f);
+	SetMoveObjectState("OS_movingIcePlatform_2", 0.0f);
+	AddTimer("MovingIceBrickTimerLeft", 2.0f, "MovingIceBrickTimerLeft");
+}
+
+void MovingIceBrickTimerLeft(string &in asTimer)
+{
+	SetMoveObjectState("OS_movingIcePlatform_1", 1.0f);
+	SetMoveObjectState("OS_movingIcePlatform_2", 0.5f);
+	AddTimer("MovingIceBrickTimerRight", 2.0f, "MovingIceBrickTimerRight");
+}
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// BOTTLE BREAK MINIGAME /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void bottleBreak(string &in asEntity, string &in type)
+{
+
+if(type == "Break"){
+
+AddLocalVarInt("BottlesBroken", 1);
+AddTimer("BellSnowballBreakSFX", 1.0f, "BellSnowballBreakSFX");
+
+	if(GetLocalVarInt("BottlesBroken") == 3){
+	SetMoveObjectState("safety_normal_vert_1", 1.0f);
+	}
+
+}
+}
+
+void BellSnowballBreakSFX(string &in asTimer){
+PlayGuiSound("OS_SnowballHitSuccessSFX.snt",1.0f);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// SNOWBALL JUMPSCARE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void collide_SnowballJS(string &in asParent, string &in asChild, int alState){
+
+SetEntityPos("OS_SnowballChristmas_10", GetPlayerPosX(), GetEntityPosY("OS_SnowballChristmas_10"), GetEntityPosZ("OS_SnowballChristmas_10"));
+
+SetPropStaticPhysics("OS_SnowballChristmas_10", false);
+AddPropImpulse("OS_SnowballChristmas_10", 0.0f, 0.0f, -20.0f, "world");
+AddTimer("SnowballHitPlayerTimer", 0.4f, "SnowballHitPlayerTimer");
+}
+
+void SnowballHitPlayerTimer(string &in asTimer){
+
+AddPlayerBodyForce(0.0f, 0.0f, -25000.0f, false);
+AddPropImpulse("OS_SnowballChristmas_10", 0.0f, 0.0f, 20.0f, "world");
+PlayGuiSound("OS_SnowballBonkSFX", 1.0f);
+
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ICY SLIDE FLOOR FUN ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+void area_CancelSlide(string &in asParent, string &in asChild, int alState){
+
+
+if(alState == 1){
+	SetLocalVarInt("InSafeSlideArea", 1);
+	ShouldBeSliding_SAFE_SPOT(-1);
+}
+if(alState == -1){
+	SetLocalVarInt("InSafeSlideArea", 0);
+	ShouldBeSliding_SAFE_SPOT(1);
+}
+
+}
+
+////////////////////////////////////////////////
+/// Used for passive collision with slide area:
+////////////////////////////////////////////////
+
+void ShouldBeSliding(int alState){
+
+	if( GetLocalVarInt("InSafeSlideArea") == 0){
+
+	DecideToSlideLogic(alState);
+
+	}
+}
+
+////////////////////////////////////////////////
+/// Used for safe zone collision with slide area:
+////////////////////////////////////////////////
+
+void ShouldBeSliding_SAFE_SPOT(int alState){
+
+
+DecideToSlideLogic(alState);
+
+}
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+
+void DecideToSlideLogic(int alState){
+if(alState == 1){
+	SetLocalVarInt("InSlideArea", 1);
+	
+	PlayGuiSound("iceSkateSFX.snt", 1.0f);
+	
+SetLocalVarFloat("X_lastTick", GetPlayerPosX());
+SetLocalVarFloat("Y_lastTick", GetPlayerPosY());
+SetLocalVarFloat("Z_lastTick", GetPlayerPosZ());
+	SetLocalVarInt("TickDelay", 0);
+	
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+
+	
+}
+
+if(alState == -1){
+	SetLocalVarInt("InSlideArea", 0);
+	
+
+SetLocalVarFloat("X_lastTick", 0.0f);
+SetLocalVarFloat("Y_lastTick", 0.0f);
+SetLocalVarFloat("Z_lastTick", 0.0f);
+
+SetLocalVarFloat("Dx", 0.0f);
+SetLocalVarFloat("Dy", 0.0f);
+SetLocalVarFloat("Dz", 0.0f);
+
+
+SetLocalVarInt("TickDelay", 2);
+
+SetPlayerMoveSpeedMul(1.0f);
+SetPlayerJumpDisabled(false);
+SetPlayerCrouchDisabled(false);
+}
+}
+
+////////////////////////////////////////////////
+////////////////////Passive collision with area:
+////////////////////////////////////////////////
+
+
+void area_Slide(string &in asParent, string &in asChild, int alState)
+{
+ShouldBeSliding(alState);
+}
+
+////////////////////////////////////////////////
+////Actual calculations for player's 'velocity':
+////////////////////////////////////////////////
+
+void SlideAreaLogic(){
+
+if(GetLocalVarInt("InSlideArea") == 1){
+
+
+
+	if(GetLocalVarInt("TickDelay") == 1){
+	
+	SetLocalVarFloat("Dx", GetPlayerPosX()-GetLocalVarFloat("X_lastTick"));
+	SetLocalVarFloat("Dy", GetPlayerPosY()-GetLocalVarFloat("Y_lastTick"));
+	SetLocalVarFloat("Dz", GetPlayerPosZ()-GetLocalVarFloat("Z_lastTick"));
+	
+	SetLocalVarInt("TickDelay", 2);
+	}
+
+
+	SetPlayerPos(GetPlayerPosX()+GetLocalVarFloat("Dx"), GetPlayerPosY(), GetPlayerPosZ()+GetLocalVarFloat("Dz"));
+	
+	if(GetLocalVarInt("TickDelay") == 0){
+	SetLocalVarInt("TickDelay", 1);
+	}
+
+}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+

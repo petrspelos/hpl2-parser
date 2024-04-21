@@ -1,0 +1,506 @@
+int swings = 0;
+
+void OnStart()
+{
+	StopMusic(2.5f, 2);
+	AutoSave();
+	
+	SetWheelStuckState("valve_4", 1, true);
+	SetWheelStuckState("valve_3", 1, true);
+	SetWheelStuckState("valve_2", 1, true);
+	SetWheelStuckState("valve_1", 1, true);
+	SetWheelStuckState("valve_0", -1, true);
+	SetLocalVarInt("4ChemsOK", 0);
+	SetLocalVarInt("4ChemsOnMachineOK", 0);
+	SetLocalVarInt("4ValvesOK", 0);
+	
+	//GiveItemFromFile("aqua", "flask01_aqua_regia.ent");
+	//GiveItemFromFile("calamine", "flask01_calamine.ent");
+	//GiveItemFromFile("cuprite", "flask01_cuprite.ent");
+	//GiveItemFromFile("orpiment", "flask01_orpiment.ent");
+	//GiveItem("stone_hammer_chipper", "stone_hammer_chipper.ent", "", "stone_hammer_chipper.tga", 1);
+	
+	AddUseItemCallback("", "handle", "AreaPlaceLever", "PutLever", true);
+	AddUseItemCallback("", "key_study", "archdoor", "UnlockStudyDoor", true);
+	AddUseItemCallback("", "KeyGarden", "gardendoor", "UnlockGardenDoor", true);
+	SetMapDisplayNameEntry("CastleBackside");
+	FadeOut(0);
+	FadeIn(3.5f);
+	SetMessage("ScreenText", "textchapter3", 5);
+	GiveSanityBoost();
+	ClearSavedMaps();
+	AddEntityCollideCallback("stone_small01_1", "AreaBreakBridge",  "CollideBreakBridge", true, 1);
+	AddEntityCollideCallback("bridge_chained_1", "AreaImpactBridge",  "CollideImpactBridge", true, 1);
+}
+
+void PickupChemFull(string &in asEntity, string &in OnPickup)
+{
+	GiveSanityBoostSmall();
+}
+
+void UnlockStudyDoor(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "door_sewer_unlock", "archdoor", 0, false);
+	SetLevelDoorLocked("archdoor", false);
+}
+
+void BreakJar(string &in asEntity, string &in OnBreak)
+{
+	SetEntityActive("key_study", true);
+	PlaceEntityAtEntity("key_study", "BottleKey", "BottleKey", true);
+}
+
+void PickupRecipe(string &in asEntity, string &in OnPickup)
+{
+	AddUseItemCallback("", "ChemEmpty", "AreaPlaceContainer", "PutContainer", true);
+
+	AddQuest("MementoR", "MR");
+}
+
+void Valve0OK(string &in asEntity, int alState)
+{
+	if(GetLocalVarInt("4ValvesOK") == 4 && alState == 1)
+	{
+		SetWheelStuckState("valve_0", 1, true);
+		PlaySoundAtEntity("AcidSuccess", "puzzle_acid_success", "AreaPlaceContainer", 0, false);
+		PlayMusic("04_puzzle_acid.ogg", false, 0.7f, 0.5f, 0, false);
+		AddTimer("", 15.5f, "EndMix");
+		AddTimer("", 2.5f, "EnableChem");
+		StartPlayerLookAt("ChemFull", 1.5f, 1.5f, "");
+		SetPropActiveAndFade("ChemFull", true, 1);
+		SetPropActiveAndFade("ChemStatic", false, 1);
+	}
+}
+
+void EnableChem(string &in asTimer)
+{
+	SetEntityActive("AreaEffect5", false);
+	SetEntityActive("AreaPlaceContainer", false);
+	SetEntityActive("ChemStatic", false);
+	StopPlayerLookAt();
+}
+
+void EndMix(string &in asTimer)
+{
+	CompleteQuest("MementoR", "MR");
+	
+	StopMusic(4.5f, 10);
+	PlayMusic("25_amb.ogg", true, 0.5f, 5, 0, false);
+	
+	DestroyParticleSystem("1PSteam");
+	DestroyParticleSystem("2PSteam");
+	DestroyParticleSystem("3PSteam");
+	
+	StopSound("1SSteam", 3.5f);
+	StopSound("2SSteam", 3.5f);
+	StopSound("3SSteam", 3.5f);
+	StopSound("4SSteam", 3.5f);
+	
+	StopSound("1SBoil", 3.5f);
+	StopSound("2SBoil", 3.5f);
+	StopSound("3SBoil", 3.5f);
+	StopSound("4SBoil", 3.5f);
+	
+	DestroyParticleSystem("FinalFlow");
+	DestroyParticleSystem("FinalSteam");
+}
+
+void Valve1OK(string &in asEntity, int alState)
+{
+	if(alState == -1)
+	{
+		CreateParticleSystemAtEntity("1PSteam", "ps_acid_machine_bubble_large.ps", "AreaEffect1", false); 
+		PlaySoundAtEntity("1SBoil","puzzle_boil_low.snt", "bottle_1", 1, false);
+		PlaySoundAtEntity("1SSteam","puzzle_gas.snt", asEntity, 1, false);
+		AddLocalVarInt("4ValvesOK", 1);
+		SetWheelStuckState("valve_1", -1, true);
+	}
+}
+
+void Valve2OK(string &in asEntity, int alState)
+{
+	if(alState == -1)
+	{
+		CreateParticleSystemAtEntity("2PSteam", "ps_acid_machine_bubble_large.ps", "AreaEffect2", false); 
+		PlaySoundAtEntity("2SBoil","puzzle_boil_low.snt", "bottle_2", 1, false);
+		PlaySoundAtEntity("2SSteam","puzzle_gas.snt", asEntity, 1, false);
+		AddLocalVarInt("4ValvesOK", 1);
+		SetWheelStuckState("valve_2", -1, true);
+	}
+}
+
+void Valve3OK(string &in asEntity, int alState)
+{
+	if(alState == -1)
+	{
+		AddLocalVarInt("4ValvesOK", 1);
+		CreateParticleSystemAtEntity("3PSteam", "ps_acid_machine_bubble_large.ps", "AreaEffect3", false); 
+		PlaySoundAtEntity("3SBoil","puzzle_boil_low.snt", "bottle_3", 1, false);
+		PlaySoundAtEntity("3SSteam","puzzle_gas.snt", asEntity, 1, false);
+		SetWheelStuckState("valve_3", -1, true);
+	}
+}
+
+void Valve4OK(string &in asEntity, int alState)
+{
+	if(alState == -1)
+	{
+		AddLocalVarInt("4ValvesOK", 1);
+		CreateParticleSystemAtEntity("FinalSteam", "ps_acid_machine_bubble_large.ps", "AreaEffect4", false); 
+		PlaySoundAtEntity("4SBoil","puzzle_boil_low.snt", "bottle_4", 1, false);
+		PlaySoundAtEntity("4SSteam","puzzle_gas.snt", asEntity, 1, false);
+		SetWheelStuckState("valve_4", -1, true);
+		SetEntityConnectionStateChangeCallback("valve_0", "Valve0OK");
+	}
+}
+
+void PutContainer(string &in asItem, string &in asEntity)
+{	
+	SetEntityConnectionStateChangeCallback("valve_4", "Valve4OK");
+	SetEntityConnectionStateChangeCallback("valve_3", "Valve3OK");
+	SetEntityConnectionStateChangeCallback("valve_2", "Valve2OK");
+	SetEntityConnectionStateChangeCallback("valve_1", "Valve1OK");
+
+	AddUseItemCallback("", "cuprite", "bottle1", "CupriteOK", true);
+	AddUseItemCallback("", "orpiment", "bottle2", "OrpimentOK", true);
+	AddUseItemCallback("", "aqua", "bottle3", "AquaOK", true);
+	AddUseItemCallback("", "calamine", "bottle4", "CalamineOK", true);
+	
+	SetEntityActive("ChemStatic", true);
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "puzzle_place_jar", "AreaPlaceContainer", 0.1f, false);
+}
+
+void CupriteOK(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("valve_1", 0, true);
+	PlaySoundAtEntity("", "puzzle_add_chemical", asEntity, 0.5f, false);
+	SetEntityActive("bottle_1", true);
+	SetEntityActive("bottleempty_1", false);
+	RemoveItem(asItem);
+	AddLocalVarInt("4ChemsOnMachineOK", 1);
+	if(GetLocalVarInt("4ChemsOnMachineOK") == 4)
+	{
+		SetWheelStuckState("valve_0", 0, true);
+	}
+}
+
+void OrpimentOK(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("valve_2", 0, true);
+	PlaySoundAtEntity("", "puzzle_add_chemical", asEntity, 0.5f, false);
+	SetEntityActive("bottle_2", true);
+	SetEntityActive("bottleempty_2", false);
+	RemoveItem(asItem);
+	AddLocalVarInt("4ChemsOnMachineOK", 1);
+	if(GetLocalVarInt("4ChemsOnMachineOK") == 4)
+	{
+		SetWheelStuckState("valve_0", 0, true);
+	}
+}
+
+void AquaOK(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("valve_3", 0, true);
+	PlaySoundAtEntity("", "puzzle_add_chemical", asEntity, 0.5f, false);
+	SetEntityActive("bottle_3", true);
+	SetEntityActive("bottleempty_3", false);
+	RemoveItem(asItem);
+	AddLocalVarInt("4ChemsOnMachineOK", 1);
+	if(GetLocalVarInt("4ChemsOnMachineOK") == 4)
+	{
+		SetWheelStuckState("valve_0", 0, true);
+	}
+}
+
+void CalamineOK(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("valve_4", 0, true);
+	PlaySoundAtEntity("", "puzzle_add_chemical", asEntity, 0.5f, false);
+	SetEntityActive("bottle_4", true);
+	SetEntityActive("bottleempty_4", false);
+	RemoveItem(asItem);
+	AddLocalVarInt("4ChemsOnMachineOK", 1);
+	if(GetLocalVarInt("4ChemsOnMachineOK") == 4)
+	{
+		SetWheelStuckState("valve_0", 0, true);
+	}
+}
+
+void InteractMount(string &in asEntity)
+{
+	SetMessage("ScreenText", "levermissing", 4.5f);
+	AddQuest("MementoLever", "MLever");
+}
+
+void PutLever(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	CompleteQuest("MementoLever", "MLever");
+	SetEntityActive("AreaPlaceLever", false);
+	SetEntityActive("mount", false);
+	SetEntityActive("lever", true);
+	PlaySoundAtEntity("", "gameplay_open_chest", "AreaPlaceLever", 0.1f, false);
+}
+
+void StartChase(string &in asParent, string &in asChild, int alState)
+{
+	SetEnemyIsHallucination("grunt", true);
+	PlayGuiSound("react_scare", 0.8f);
+	SetEntityActive("grunt", true);
+	ShowEnemyPlayerPosition("grunt");
+}
+
+void PullLever(string &in asEntity, int LeverState)
+{
+	if(LeverState == -1)
+	{
+		CreateParticleSystemAtEntity("gate", "ps_dust_falling_door_quick.ps", "AreaGate", false); 
+		AddTimer("", 2.5f, "EndLever");
+		PlaySoundAtEntity("gate", "move_gate", "secretdoor", 0.5f, false);
+		AddEntityCollideCallback("Player", "AreaChase",  "StartChase", true, 1);
+		CompleteQuest("MementoSecret", "MSecret");
+		GiveSanityBoostSmall();
+		SetMoveObjectState("secretdoor", 1);
+		SetLeverStuckState("lever", -1, true);
+	}
+}
+
+void EndLever(string &in asTimer)
+{
+	DestroyParticleSystem("gate");
+	StopSound("gate", 2.5f);
+}
+
+void UnlockGardenDoor(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "unlock_door", "gardendoor", 0, false);
+	CompleteQuest("Memento7", "M7");
+	SetSwingDoorLocked("gardendoor", false, true);
+}
+
+void GardenInteract(string &in asEntity)
+{
+	AddQuest("Memento7", "M7");
+	SetMessage("ScreenText", "gardendoorclosed", 4.5f);
+}
+
+void BridgeInteract(string &in asEntity)
+{
+	AddQuest("Memento6", "M6");
+	PlayGuiSound("impact_wood_med", 0.7f);
+	SetMessage("ScreenText", "bridge", 4.5f);
+}
+
+void CollideBreakBridge(string &in asParent, string &in asChild, int alState)
+{
+	RemoveEntityCollideCallback("stone_small01_1", "AreaBreakBridge");
+	CreateParticleSystemAtEntity("BreakBridge", "ps_break_wood_small", "AreaBreakBridge", false);
+	PlaySoundAtEntity("BreakBridge","break_wood_metal", "AreaBreakBridge", 0, false);
+	BreakJoint("bridge_chained_1_BallJoint_1");
+	AddTimer("ChainForce",0.3f,"TimerChainForce");
+	CompleteQuest("Memento6", "M6");
+	SetEntityActive("bridgeblocker_1", false);
+}
+
+void TimerChainForce(string &in asTimer)
+{
+	SetMoveObjectState("portcullis", 1);
+	AddBodyImpulse("bridge_chained_1_chain", 1,0.5,-2, "World");
+	PlaySoundAtEntity("creak", "18_bridge_fall", "bridge_chained_1", 0.0f, false);
+}
+
+void PadInteract(string &in asEntity)
+{
+	AddUseItemCallback("", "stone_hammer_chipper", "padlock", "HammerAnim", true);
+	PlaySoundAtEntity("", "door_prison_locked", "padlock", 0.5f, false);
+	SetMessage("ScreenText", "doorpadlock", 4.5f);
+	AddQuest("MementoP", "MP");
+}
+
+void SanctumInteract(string &in asEntity)
+{
+	SetPropActiveAndFade("slime", true, 3.5f);
+	StartScreenShake(0.06f, 2.5f, 2, 0.5f);
+	PlaySoundAtEntity("", "guardian_distant", "sanctumdoor", 0.8f, false);
+	AddQuest("MementoI", "MI");
+}
+
+void SecretInteract(string &in asEntity)
+{
+	AddQuest("MementoSecret", "MSecret");
+	PlayGuiSound("impact_generic_hard_high", 0.5f);
+	AddTimer(asEntity, 0.4f, "TimerCloseGate");
+	AddTimer("sound", 0.8f, "TimerCloseGate");
+}
+
+void TimerCloseGate(string &in asTimer)
+{
+	if(asTimer == "sound")
+	{
+		PlayGuiSound("impact_rock_high2.ogg", 0.5f);
+	}
+	else
+	{
+		if(GetLocalVarInt(asTimer) != 1)
+		SetEntityPlayerInteractCallback(asTimer, "SecretInteract", true);
+	}
+}
+
+void LadderPickup(string &in asEntity, string &in OnPickup)
+{
+	AddUseItemCallback("", "ladder", "AreaPlaceLadder", "PlaceLadder", true);
+	AddEntityCollideCallback("Player", "AreaSlime", "SlimeSpawn", true, 1);
+}
+
+void SlimeSpawn(string &in asParent, string &in asChild, int alState)
+{
+	AddUseItemCallback("", "ChemFull", "web", "Dissolve", true);
+	CreateParticleSystemAtEntity("slimefog", "ps_guardian_danger_fog_loop.ps", "web", false);
+	PlayGuiSound("guardian_activated", 0.8);
+	GiveSanityDamage(10, true);
+	SetPropActiveAndFade("web", true, 1.5f);
+}
+
+void SlimeInteract(string &in asEntity)
+{
+	PlayGuiSound("impact_organic_high", 0.8);
+	AddQuest("MementoS", "MS");
+}
+
+void Dissolve(string &in asItem, string &in asEntity)
+{
+	AddTimer("", 3.5f, "EndAcid");
+	CreateParticleSystemAtEntity("acid", "ps_acid_web_dissolve", "web", false);
+	DestroyParticleSystem("slimefog");
+	RemoveItem(asItem);
+	CompleteQuest("MementoS", "MS");
+	GiveSanityBoostSmall();
+	PlaySoundAtEntity("", "puzzle_acid", "web", 0, false);
+	SetPropActiveAndFade("web", false, 3.5f);
+}
+
+void HammerAnim(string &in asItem, string &in asEntity)
+{
+	swings = 1;
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "impact_metal_low", "padlock", 0, false);
+	PlaySoundAtEntity("", "15_make_hammer", "Player", 0.25, false);
+	PlaySoundAtEntity("", "player_crouch", "greendoor", 2, false); 
+	StartPlayerLookAt("stone_hammer_move_1", 1.5f, 1.5f, "");
+	SetEntityActive("stone_hammer_move_1", true);
+	AddTimer("movehammer", 0.1, "TimerActiveHammer");
+	AddTimer("hammersound", 0.27, "TimerActiveHammer");
+	AddTimer("resethammer", 0.4, "TimerActiveHammer");
+	AddTimer("repeat", 0.6, "TimerActiveHammer");
+}
+
+void TimerActiveHammer(string &in asTimer)
+{
+	if(asTimer == "movehammer") SetMoveObjectState("stone_hammer_move_1", 0.4);
+
+	else if(asTimer == "hammersound")
+	{
+		StopPlayerLookAt();
+		PlaySoundAtEntity("", "15_hammer", "Player", 0, false);
+		PlaySoundAtEntity("", "impact_metal_high", "padlock", 0, false);
+	}
+	
+	else if(asTimer == "resethammer") SetMoveObjectState("stone_hammer_move_1", 0);
+	
+	if(swings < 3 && asTimer == "repeat")
+	{
+		AddTimer("movehammer", 0.01, "TimerActiveHammer");
+		AddTimer("hammersound", 0.17, "TimerActiveHammer");
+		AddTimer("resethammer", 0.3, "TimerActiveHammer");
+		AddTimer("repeat", 0.5, "TimerActiveHammer");
+		swings = swings + 1;
+	}
+	
+	else if(swings == 3 && asTimer == "repeat")
+	{
+		AddTimer("movehammer", 0.2, "TimerActiveHammer");
+		AddTimer("hammersound", 0.37, "TimerActiveHammer");
+		AddTimer("resethammer", 0.5, "TimerActiveHammer");
+		AddTimer("repeat", 0.8, "TimerActiveHammer");
+		AddTimer("break", 0.42, "TimerActiveHammer");
+		swings = swings + 1;
+	}
+	
+	else if(swings == 4 && asTimer == "break") FinishAnim();
+	
+	else if(swings == 4 && asTimer == "repeat")
+	
+	SetEntityActive("stone_hammer_move_1", false);
+}
+
+void FinishAnim()
+{
+	GiveSanityBoostSmall();
+	SetEntityActive("padlockbroken", true);
+	SetEntityActive("padlock", false);
+	StopMusic(2.5f, 3);
+	SetMessage("ScreenText", "hammerbreak", 4.5f);
+	PlayMusic("02_puzzle.ogg", false, 0.8, 0, 0, false);
+	PlaySoundAtEntity("", "break_wood.snt", "greendoor", 0, false);
+	SetSwingDoorLocked("greendoor", false, true);
+	CompleteQuest("MementoP", "MP");
+	CreateParticleSystemAtEntity("greenopen", "ps_break_wood.ps", "padlockbroken", false);
+	AddTimer("", 4.5f, "AnimTimer");
+}
+
+void AnimTimer(string &in asTimer)
+{
+	StopMusic(5.5f, 4);
+	DestroyParticleSystem("greenopen");
+	PlayMusic("25_amb.ogg", true, 0.5, 5, 0, true);
+}
+
+void PlaceLadder(string &in asItem, string &in asEntity)
+{
+	CompleteQuest("MementoL", "ML");
+	GiveSanityBoostSmall();
+	RemoveItem(asItem);
+	AddTimer("", 0.01f, "TimerPutLadder");
+	SetEntityActive("LadderPlaced", true);
+	PlaySoundAtEntity("", "L01_ladder", "AreaPlaceLadder", 0, false);
+}
+
+void TimerPutLadder(string &in asTimer)
+{
+	SetEntityActive("ClimbArea", true);
+	SetEntityActive("AreaPlaceLadder", false);
+}
+
+void InteractLadder(string &in asEntity)
+{
+	SetMessage("ScreenText", "ladder", 4.5f);
+	AddQuest("MementoL", "ML");
+}
+
+void OnEnter()
+{
+	PlayMusic("25_amb.ogg", true, 0.5f, 5, 0, true);
+	
+	if(GetGlobalVarInt("SanctumDoor") == 1)
+	{
+		AddEntityCollideCallback("Player", "AreaSlimeSanctum", "SpawnSlimeSanctum", true, 1);
+		SetLevelDoorLocked("sanctumdoor", false);
+	}
+}
+
+void SpawnSlimeSanctum(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "slimesanctum", false);
+	SetPropActiveAndFade("slimesanctum", true, 3.5f);
+	StartScreenShake(0.08f, 2.5f, 2, 0.5f);
+	PlaySoundAtEntity("", "guardian_activated", "Player", 0.8f, false);
+}
+
+void OnLeave()
+{
+	StopMusic(2.5f, 0);
+	SetupLoadScreen("LoadingScreen", "Load7", 0,"");
+}

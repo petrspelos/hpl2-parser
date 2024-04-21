@@ -1,0 +1,144 @@
+void OnStart(){
+	PlayerFunctions();
+	variables();
+	events();
+	enemy();
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.5f, 0, 0, true);
+	SetDeathHint("Messages", "death_1");
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "06Suspicion", 1, "06Debris.jpg");
+}
+
+void PlayerFunctions(){
+	SetEntityPlayerInteractCallback("box_remove", "needToRemove", false);
+	AddEntityCollideCallback("breaker", "AreaRemove", "removeBox", true, 1);
+	AddEntityCollideCallback("short", "AreaRemove", "removeBox", true, 1);
+	SetEntityConnectionStateChangeCallback("LeverUnlock", "unlockBreakSpace");
+}
+
+void variables(){
+	SetLocalVarInt("hasPulled", 0);
+	SetLocalVarInt("bruteHealth", 1);
+	SetLocalVarInt("hasSpawned", 0);
+	SetLocalVarInt("hasRemoved", 0);
+}
+
+void events(){
+	AddEntityCollideCallback("Player", "AreaSound_1", "playScareSoundScary", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_2", "playScareSoundEasy", true, 1);
+}
+
+void enemy(){
+	AddEntityCollideCallback("Player", "AreaSpawnBrute", "spawnBrute", false, 1);
+	AddEntityCollideCallback("brute", "AreaEnableTriggers", "enableTriggers", true, 1);
+	AddEntityCollideCallback("long_1", "brute", "hitBruteThrown_1", false, 1);
+	AddEntityCollideCallback("long_2", "brute", "hitBruteThrown_2", false, 1);
+	AddEntityCollideCallback("short", "brute", "hitBruteShort", false, 1);
+	AddEntityCollideCallback("breaker", "brute", "hitBruteShort", false, 1);
+}
+
+void needToRemove(string &in entity){
+	SetMessage("Messages", "needRemoving", 0);
+}
+
+void removeBox(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("hasRemoved") == 0){
+		SetEntityActive("box_remove", false);
+		SetEntityActive("box_broken", true);
+		PlayGuiSound("break_wood.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood", "AreaDust_1", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood", "AreaDust_2", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood", "AreaDust_3", false);
+		SetLocalVarInt("hasRemoved", 1);
+		SetEntityActive("LeverUnlock", true);
+		SetEntityActive("block_1", false);
+		SetEntityActive("block_2", false);
+	}
+}
+
+void unlockBreakSpace(string &in asEntity, int alState){
+	if (GetLocalVarInt("hasPulled") == 0){
+		PlayGuiSound("move_gate.snt", 100);
+		AddTimer("", 2.5f, "unlockDoor");
+		SetLocalVarInt("hasPulled", 1);
+	}
+}
+
+void unlockDoor(string &in asTimer){
+	PlayGuiSound("unlock_door.snt", 100);
+	SetLevelDoorLocked("breakSpaceGo", false);
+	AddPlayerSanity(25);
+}
+
+void playScareSoundScary(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_brute_scary.ogg", 1000);
+}
+
+void playScareSoundEasy(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_brute_easy.ogg", 1000);
+}
+
+void spawnBrute(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("hasPulled") == 1){
+		if (GetLocalVarInt("hasSpawned") == 0){
+			SetEntityActive("brute", true);
+			SetLocalVarInt("hasSpawned", 1);
+			GiveSanityDamage(25, true);
+			SetEnemyDisableTriggers("brute", true);
+			AddEnemyPatrolNode("brute", "PathNodeArea_1", 0, "");
+			AddEnemyPatrolNode("brute", "PathNodeArea_2", 0.001, "");
+			SetMessage("Messages", "defend", 0);
+		}
+	}
+}
+
+void hitBruteThrown_1(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("bruteHealth") == 1){
+		SetLocalVarInt("bruteHealth", 0);
+		ChangePlayerStateToNormal();
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		PlayGuiSound("brute_attack.snt", 100);
+	}else if (GetLocalVarInt("bruteHealth") == 0){
+		SetEntityActive("brute", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_1", false);
+		ChangePlayerStateToNormal();
+		PlayGuiSound("brute_attack.snt", 100);
+	}
+}
+
+void hitBruteThrown_2(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("bruteHealth") == 1){
+		SetLocalVarInt("bruteHealth", 0);
+		ChangePlayerStateToNormal();
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		PlayGuiSound("brute_attack.snt", 100);
+	}else if (GetLocalVarInt("bruteHealth") == 0){
+		SetEntityActive("brute", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "long_2", false);
+		ChangePlayerStateToNormal();
+		PlayGuiSound("brute_attack.snt", 100);
+	}
+}
+
+void hitBruteShort(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("bruteHealth") == 1){
+		PlayGuiSound("brute_attack.snt", 100);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+		SetLocalVarInt("bruteHealth", 0);
+	}else if (GetLocalVarInt("bruteHealth") == 0){
+		SetEnemyIsHallucination("brute", true);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small", "short", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "short", false);
+		PlayGuiSound("brute_attack.snt", 100);
+	}
+}
+
+void enableTriggers(string &in asParent, string &in asChild , int alState){
+	SetEnemyDisableTriggers("brute", false);
+}

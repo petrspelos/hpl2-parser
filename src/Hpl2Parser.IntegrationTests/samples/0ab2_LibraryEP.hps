@@ -1,0 +1,157 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaPassword", "Password", true, 1);
+PlayMusic("StorageAmb", true, 1, 5, 0, true);
+SetMapDisplayNameEntry("Library");
+AutoSave();
+}
+
+void Password(string &in asParent, string &in asChild, int alState) 
+{
+SetMessage("Messages", "passwordlibrary", 7);
+AddQuest("Passwordlibrary", "Passwordlibrary");
+}
+
+void Button1(string &in asEntity)
+{
+PlaySoundAtEntity("", "Button.snt", "Player", 0, false);
+SetEntityActive("Button2", true);
+SetEntityActive("Button1", false);
+SetEntityActive("ScriptArea_5", true);
+SetEntityActive("ScriptArea_7", false);
+AddLocalVarInt("VarIntButton", 1);
+	ItemsDone();
+}
+
+void Button2(string &in asEntity)
+{
+PlaySoundAtEntity("", "Button.snt", "Player", 0, false);
+SetEntityActive("Button3", true);
+SetEntityActive("Button2", false);
+SetEntityActive("ScriptArea_3", false);
+SetEntityActive("ScriptArea_7", true);
+AddLocalVarInt("VarIntButton", 1);
+	ItemsDone();
+}
+
+void Button3(string &in asEntity)
+{
+PlaySoundAtEntity("", "Button.snt", "Player", 0, false);
+SetEntityActive("Button4", true);
+SetEntityActive("Button3", false);
+SetEntityActive("ScriptArea_3", true);
+SetEntityActive("ScriptArea_6", false);
+AddLocalVarInt("VarIntButton", 1);
+	ItemsDone();
+}
+
+void Button4(string &in asEntity)
+{
+PlaySoundAtEntity("", "Button.snt", "Player", 0, false);
+AddLocalVarInt("VarIntButton", 1);
+	ItemsDone();
+}
+
+void Button5(string &in asEntity)
+{
+PlaySoundAtEntity("", "Button.snt", "Player", 0, false);
+SetEntityActive("Button1", true);
+SetEntityActive("Button2", false);
+SetEntityActive("Button3", false);
+SetEntityActive("Button4", false);
+SetEntityActive("ScriptArea_5", false);
+SetEntityActive("ScriptArea_7", true);
+SetEntityActive("ScriptArea_3", true);
+SetEntityActive("ScriptArea_6", true);
+SetLocalVarInt("VarIntButton", 0);
+	ItemsDone();
+}
+
+void ItemsDone(){
+
+	if(GetLocalVarInt("VarIntButton") == 4){
+		
+SetMoveObjectState("shelf_secret_door_1", 1);
+SetEntityPlayerInteractCallback("shelf_secret_door_1", "", false);
+CompleteQuest("Passwordlibrary", "Passwordlibrary");
+	}
+}
+
+void closeshelf(string &in asEntity)
+{
+SetMoveObjectState("shelf_secret_door_1", 0);
+SetEntityPlayerInteractCallback("Button5", "openshelf", false);
+}
+
+void openshelf(string &in asEntity)
+{
+SetMoveObjectState("shelf_secret_door_1", 1);
+SetEntityPlayerInteractCallback("Button5", "", false);
+SetEntityActive("stand_1", true);
+AddTimer("ghost2", 3, "ghost2");
+}
+
+void ghost2(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_cloud_thing01", "AreaAlma", false);
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+AddTimer("ghost3", 2, "ghost3");
+}
+
+void ghost3(string &in asTimer)
+{
+SetEntityActive("stand_1", false);
+}
+
+void powerup(string &in asEntity)
+{
+SetMessage("Messages", "powerup9", 7);
+AddGlobalVarInt("Powerup9", 1);
+RemoveItem("syringe_1");
+}
+
+//---- Messages ----//
+
+void Shelf(string &in asEntity)
+{
+SetMessage("Messages", "shelf", 4);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+}
+
+void OnEnter()
+{	
+PlayMusic("StorageAmb", true, 1, 5, 0, true);
+
+if(GetGlobalVarInt("Powerup2")==1)
+	{
+SetPlayerSanity(100);
+	}
+
+if(GetGlobalVarInt("Powerup7")==1)
+	{
+AddPlayerSanity(30);
+	}
+
+if(GetGlobalVarInt("Powerup8")==1)
+	{
+SetSanityDrainDisabled(true);
+	}
+
+if(GetGlobalVarInt("Powerup9")==1)
+	{
+AddPlayerHealth(30);
+	}
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

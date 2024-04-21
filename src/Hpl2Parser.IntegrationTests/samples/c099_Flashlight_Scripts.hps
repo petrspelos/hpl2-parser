@@ -1,0 +1,64 @@
+//////////////////////FLASHLIGHT//////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+void SetUpFlashlight(string &in asArea)  //Area to create the object at. Should be placed out of player's view
+	{	
+	
+		/////////Gets rid of a bug that occurs the first time the flashlight is used/////////
+		GiveItemFromFile("oldlantern", "lantern.ent");			
+		SetLanternActive(true, false);
+		SetLanternActive(false, false);
+		RemoveItem("oldlantern");
+		////////////////////////////////////////////////////////////////////////////////////
+		
+		AddDebugMessage("Setting up a flashlight...", false);
+		
+		
+		SetLocalVarInt("FlashLightVar", 0);
+		SetLanternLitCallback("FlashlightFunction");
+		
+		CreateEntityAtArea("flashlight_playerhands", "experimental_flashlight.ent", asArea, false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", false);
+		
+		AddTimer("FlickerTimer", 1.0f, "FlickerScript");
+	}
+
+void FlashlightFunction(bool abLit)
+{
+
+	if(GetLocalVarInt("FlashLightVar") == 1)
+	{
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", false);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", false);
+		PlaySoundAtEntity("", "flashlight_off.snt", "Player", 0, false);
+		SetLocalVarInt("FlashLightVar", 0);
+	}
+	else if(GetLocalVarInt("FlashLightVar") == 0)
+	{
+		SetLightVisible("flashlight_playerhands_Flashlight_Point", true);
+		SetLightVisible("flashlight_playerhands_Flashlight_Spot", true);
+		PlaySoundAtEntity("", "flashlight_on.snt", "Player", 0, false);
+		SetLocalVarInt("FlashLightVar", 1);
+	}
+	
+}
+
+void FlickerScript(string &in asTimer)  //looping timer, sets flicker to flashlight if player has one
+{
+	
+	if(GetPlayerLampOil() >= 10.0f || GetPlayerLampOil() == 0.0f || GetLocalVarInt("FlashLightVar") == 0)
+	{
+		SetLightFlickerActive("flashlight_playerhands_Flashlight_Spot", false);
+	}
+	else if(GetLocalVarInt("FlashLightVar") == 1 && GetPlayerLampOil() < 10.0f && GetPlayerLampOil() != 0.0f)
+	{
+		SetLightFlickerActive("flashlight_playerhands_Flashlight_Spot", true);
+	}
+	
+		AddTimer("FlickerTimer", 1.0f, "FlickerScript");
+}
+
+
+//////////////////////////////END FLASHLIGHT///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////

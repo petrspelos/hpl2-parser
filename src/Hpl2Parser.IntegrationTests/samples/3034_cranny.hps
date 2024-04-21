@@ -1,0 +1,1238 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AmbienceAreaA_1", "ambGate", false, 0);
+	AddEntityCollideCallback("Player", "AmbienceAreaA_2", "ambMaze", false, 0);
+	AddEntityCollideCallback("Player", "AmbienceAreaA_3", "ambDescent", false, 0);
+	AddEntityCollideCallback("Player", "AmbienceAreaC_1", "ambpooldrips", false, 0);
+	AddEntityCollideCallback("Player", "AmbienceAreaC_2", "ambpool", false, 0);
+	AddEntityCollideCallback("Player", "AmbienceAreaC_3", "ambpoolechoes", false, 0);
+	AddEntityCollideCallback("stone_med01_brown_1", "ScriptArea_5", "impactingWall", false, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_13", "enterWorld", false, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_14", "bleedinghands", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_17", "puzzleHintSuitor", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_18", "wellDiveIn", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_20", "openCage", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_21", "closingCageEvent", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_22", "dreamEngage", true, 1);
+	for(int i=0; i<=17; i++)	AddEntityCollideCallback("HideArea_"+i, "Player", "hiding", false, 0);
+	for(int i=0; i<=2; i++)		AddEntityCollideCallback("Player", "winearea_"+i, "bglassE", false, 0);
+	//AddUseItemCallback("", "empty_container", "massbox", "place_container", false);
+	AddUseItemCallback("", "key_tomb_1", "metal_1", "unlockCell", false);
+	AddUseItemCallback("", "crowbar_1", "block_box_nonchar_3", "crowbarDoor", true);
+	AddUseItemCallback("", "chemical_container_static_3", "block_box_nonchar_4", "place_explosiv", true);
+	SetGlobalVarInt("crowbarStage", 1);
+	
+	FadeOut(0);		FadeIn(8);
+	SetSanityDrainDisabled(true);
+	FadeGlobalSoundVolume(0.1f, 0);
+	FadeGlobalSoundVolume(1, 30);
+	
+	SetFogActive(true);
+	SetFogColor(0.1, 0.15, 0.2, 1);
+	SetFogProperties(1, 1000, 1, false);
+	
+	FadeLightTo("PointLight_7", 0.2, 0.35, 0.35, 2, -1, 5);
+	SetEntityPlayerLookAtCallback("ScriptArea_4", "questLadder", true);
+	
+	
+	//	SetGlobalVarInt("LimitedLife", 3);			//SERIOUS LIFE SYSTEM
+	if(GetGlobalVarInt("LimitedLife") != 3)		AddTimer("musicIntroAmbiene", 5, "TimerList");
+	if(GetGlobalVarInt("LimitedLife") == 3)		AddTimer("DoomAmbience", 20, "TimerList");
+}
+
+/////////////////////RADNOM GENERATOR
+
+void SetupRandomGenerator(){
+		if(GetLocalVarInt("oneway")==0)	{
+			int light = RandInt(0, 1);	SetLocalVarInt("Candle", light);
+	
+			if(GetLocalVarInt("Candle")==1)	SetLampLit("candlestick01_3", true, false);
+			SetLocalVarInt("oneway", 1);
+		}
+	
+
+	if(GetGlobalVarInt("LimitedLife")==3){
+		for(int i=0; i<=4; i++)	{
+			int o = RandInt(1, 4);	SetLocalVarInt("monster", o);
+			if(GetLocalVarInt("monster")==1)	{
+					AddEntityCollideCallback("Player", "ScriptArea_23", "wineSufferEvent", true, 1);
+					SetSwingDoorClosed("sewer_arched_3", true, false);
+					SetSwingDoorLocked("sewer_arched_3", true, false);
+				}
+		}
+	}
+}
+
+void wineSufferEvent(string &in asParent, string &in asChild, int alState){
+	SetSwingDoorDisableAutoClose("sewer_arched_3", true);
+	SetEntityActive("wine02_18", true);
+	for(int i=0; i<=10; i++)	AddTimer("wine02_18", 5 + i*0.1f, "NegateX");
+	for(int i=0; i<=10; i++)	AddTimer("sewer_arched_3", i*0.1f, "NegateX");
+	AddTimer("drunkgrunt", 1, "TimerList");
+	AddEntityCollideCallback("Player", "ScriptArea_24", "interuptWineSuffer", true, 1);
+}
+
+void interuptWineSuffer(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_grunt_1", true);
+	RemoveTimer("drunkgrunt");
+}
+
+void NegateX(string &in door_name)	{	AddPropForce(door_name, 0, 0, -50, "world");	}
+
+/////////////////////
+
+
+
+
+
+
+void bglassE(string &in asParent, string &in asChild, int alState){
+	PlaySoundAtEntity("", "11_glass_crack", "winearea_1", RandFloat(0, 0.8f), true);
+}
+
+void puzzleHintSuitor(string &in asParent, string &in asChild, int alState){
+	FadeLightTo("PointLight_50", 0.9f, 0.4f, 0.3f, 0, -1, 0);
+	SetEntityActive("silent_suitor_1", true);
+	AddEnemyPatrolNode("silent_suitor_1", "PathNodeArea_43", 0, "");
+	AddEntityCollideCallback("silent_suitor_1", "ScriptArea_16", "disabledS", true, 1);
+}
+void disabledS(string &in asParent, string &in asChild, int alState){	SetEntityActive("silent_suitor_1", false);	FadeLightTo("PointLight_50", 0, 0, 0, 0, -1, 1);	}
+
+void interactLabyrinthGate(string &in asEntity){
+	if(GetLocalVarInt("gateL")==0)		PlaySoundAtEntity("", "interactLaby", "prison_section_silent_2", 0, false);		AddTimer("dus", 7, "TimerList");	SetLocalVarInt("gateL", 1);
+}
+
+void infoDeath(string &in asItem){
+	AddTimer("friendsNote", 3, "TimerList");
+}
+
+void TimerList(string &in asTimer){
+	if(asTimer == "BlurStunEvent1"){	FadeRadialBlurTo(0.06f, 0.003f);	StartScreenShake(0.003f, 15, 20, 10);}
+	if(asTimer == "BlurStunEvent2"){	FadeRadialBlurTo(0, 0.003f);	}
+	if(asTimer == "friendsNote"){
+		AddQuest("friendQuest", "friendQuest");		
+		PlayMusic("friendside.ogg", false, 0.15f, 1, 5, false);
+		}
+	if(asTimer == "drunkgrunt"){
+		AddTimer("puk", RandFloat(1, 5),"TimerList");
+		AddTimer("bottle", RandFloat(1, 5),"TimerList");
+		AddTimer("Wfeet", RandFloat(0,2), "TimerList");
+		AddTimer("Wfeet", RandFloat(2,4), "TimerList");
+		AddTimer("drunkgrunt", RandFloat(4, 6), "TimerList");
+	}
+	if(asTimer == "puk")	PlaySoundAtEntity("", "drunkGrunt", "winearea_1", RandFloat(0, 1), true);
+	if(asTimer == "Wfeet")	PlaySoundAtEntity("", "leather_run", "winearea_1", 0, true);
+	if(asTimer == "bottle")	PlaySoundAtEntity("", "drippinBottle", "winearea_1", 0, true);
+	if(asTimer == "SuitorMus")	PlayMusic("suitorPatrol.ogg", false, 1, 1, 45, false);
+	if(asTimer == "SuitorCall"){
+		SetEntityActive("enemy_suitor_1", true);
+		PlaySoundAtEntity("", "suitor/enabled", "Player", 5, true);
+		AddTimer("SuitorMus", 4, "TimerList");
+		AddTimer("BlurStunEvent1", 15, "TimerList");
+		AddTimer("BlurStunEvent2", 35, "TimerList");
+		AddTimer("SuitorSafetySpot", 45, "TimerList");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_1", 5, "");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_6", 5, "");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_18", 5, "");
+		AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_40", 0, "");
+	}
+	if(asTimer == "SuitorSafetySpot")	SetLocalVarInt("SuitorCrannyTrigger", 1);
+	if(asTimer == "SuitorEnd"){
+		AddEntityCollideCallback("enemy_suitor_1", "ScriptArea_11", "removeEnemy", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_12", "endPlayer", true, 1);
+		PlayMusic("downinto.ogg", true, 1, 1, 1, true);
+	}
+	if(asTimer == "fullExplosiv"){
+		DestroyParticleSystem("explosiv");
+		SetPropActiveAndFade("chemical_container_static_2", false, 0.6f);
+		SetPropActiveAndFade("chemical_container_static_3", true, 0.6f);
+		FadeLightTo("SpotLight_25", 1, 0.3f, 0, 0, -1, 0.6);
+		PlayGuiSound("12_epoxy_fill", 1);
+		StopSound("liquid2", 10);
+	}
+	if(asTimer == "fullInflame"){
+		DestroyParticleSystem("igniteLiq");
+		SetPropActiveAndFade("glass_container_filled_1", false, 0.6f);
+		SetPropActiveAndFade("glass_container_filled_2", true, 0.6f);
+		PlayGuiSound("12_epoxy_fill", 1);
+		StopSound("liquid", 10);
+	}
+	if(asTimer == "LadderTimer"){	
+		AddQuest("puzzleLadder", "puzzleLadder");
+		}
+	if(asTimer == "loadingMap"){
+		ChangeMap("world.map", "PlayerStartArea_2", "", "");
+	}
+	if(asTimer == "ExplosivJar"){
+		SetPropActiveAndFade("glass_container_mix_notdone_static_1", false, 1);
+		SetPropActiveAndFade("glass_container_mix_notdone_static_2", true, 1);
+		FadeLightTo("SpotLight_25", 1, 1, 0, 2, -1, 0.6);
+		DestroyParticleSystem("explosiv");
+		PlayGuiSound("12_epoxy_fill", 1);
+		StopSound("flow", 10);
+	}
+	if(asTimer == "questExplosiv"){		AddQuest("explosivQuest", "explosivQuest");		}
+	
+	if(asTimer == "insanevision01")	{	FadePlayerFOVMulTo(1.2f, 0.5f);	FadePlayerRollTo(-10, 0.5f, 0.5f);	AddTimer("insanevision02", 25, "TimerList");	}
+	if(asTimer == "insanevision02")	{	FadePlayerFOVMulTo(0.8f, 0.5f);	FadePlayerRollTo(10, 0.5f, 0.5f);		AddTimer("insanevision01", 25, "TimerList");	}
+	if(asTimer == "neutralvision")	{	FadePlayerFOVMulTo(1, 0.8f);	FadePlayerRollTo(0, 1, 1);		for(int i=1; i<=2; i++)	{	RemoveTimer("insanevision0"+i);	}			}
+	if(asTimer == "bleedinghands")	{	PlayMusic("bleedinghands.ogg", false, 0.1f, 5, 0, false);	RemoveTimer("musicIntroAmbiene");	SetSanityDrainDisabled(false);	}
+	if(asTimer == "musicIntroAmbiene")	{	PlayMusic("bathroom_109", false, 2, RandFloat(0, 5), 0, false); AddTimer("musicIntroAmbiene", RandFloat(15, 45), "TimerList");	}
+	if(asTimer == "DoomAmbience")	{	PlayMusic("thedoom.ogg", true, 1, 0, 0, true);		}
+	if(asTimer == "explosivAmbMusic")	{	PlayMusic("music_temple_ambient.ogg", true, 1, 8, 3, false);	}
+	if(asTimer == "prioQuest")	{	AddQuest("explosivGate", "explosivGate");	}
+	if(asTimer == "machineQuest")	{	AddQuest("machineQuest", "machineQuest");	}
+	if(asTimer == "machineQuestAlt")	{	AddQuest("machineQuest", "machineQuestAlt");	}
+	if(asTimer == "RadialVision1")	{	FadeRadialBlurTo(0.048f, 0.004f);	AddTimer("RadialVision2", 13, "TimerList");	}
+	if(asTimer == "RadialVision2")	{	FadeRadialBlurTo(0.02f, 0.004f);	AddTimer("RadialVision1", 13, "TimerList");		}
+	if(asTimer == "RadialVision3")	{	FadeRadialBlurTo(0, 0.01f);	RemoveTimer("RadialVision1");	RemoveTimer("RadialVision2");		}
+	if(asTimer == "teleporttortureDream")	{	
+										TeleportPlayer("PlayerStartArea_4");	FadeIn(2);
+										StartPlayerLookAt("torture_cradle_1", 5, 5, "");
+										AddTimer("LocalWell", 10, "TimerList");
+										FadePlayerFOVMulTo(1.2f, 0.3f);
+										StopSound("descent", 1);
+										SetPlayerActive(false);
+										}
+	if(asTimer == "diveForce")	{	if(GetLocalVarInt("dive") == 0)	
+//											AddPlayerBodyForce(0, 8500, 0, false);		
+											AddPlayerBodyForce(0, 9350, 0, false);		
+//									else	AddPlayerBodyForce(0, 8790.9f, 0, false);		}
+									else	AddPlayerBodyForce(0, 8671.0f, 0, false);		}
+	if(asTimer == "LocalWell")	{	SetLocalVarInt("dive", 1);	StopPlayerLookAt();}
+	if(asTimer == "maidenDreamEvent1")	{	StartPlayerLookAt("ScriptArea_20", 0.5, 0.5, "");	SetPlayerMoveSpeedMul(0);	}
+	if(asTimer == "maidenDreamEvent2")	{	for(int i=0; i<=100; i++)	{	AddTimer("", 0.75f * i, "TimerExtraMaidenEmPulse");	}
+											StopPlayerLookAt();			SetPlayerActive(false);			FadeOut(6);	}
+	if(asTimer == "maidenDreamEvent3")	{	FadePlayerFOVMulTo(1.8f, 0.2f);	 FadePlayerAspectMulTo(1.5f, 0.3f);	}
+	if(asTimer == "maidenDreamDisable")	{	TeleportPlayer("PlayerStartArea_5");		SetPlayerMoveSpeedMul(0.7f);	
+		SetPlayerJumpDisabled(false);		SetPlayerCrouchDisabled(false);		SetPlayerRunSpeedMul(1);		SetPlayerLookSpeedMul(1);	SetPlayerActive(true);		SetInventoryDisabled(false);	FadeIn(0);	FadeGlobalSoundVolume(1, 0);	}
+	
+	if(asTimer == "dreamoutEvent")	{	TeleportPlayer("PlayerStartArea_5");		StartPlayerLookAt("LookArea01_1", 30, 30, "");			MovePlayerHeadPos(0, -1.4f, 0, 10, 0.5f);	SetPlayerCrouchDisabled(true);	SetPlayerJumpDisabled(true);	FadePlayerFOVMulTo(1.1f, 5);	 FadePlayerAspectMulTo(1.1f, 5);	}
+	if(asTimer == "dreamoutEvent1")	{	SetPlayerMoveSpeedMul(0); SetPlayerRunSpeedMul(0);	SetPlayerLookSpeedMul(0.2f);	FadeIn(0.3f);	StopMusic(0.3f, 4);		FadeGlobalSoundVolume(1, 8);	}
+	if(asTimer == "dreamoutEvent2")	{	StartPlayerLookAt("LookArea01_2", 1, 1, "");	SetPlayerLookSpeedMul(0.5f);	PlaySoundAtEntity("", "player_stand", "Player", 0.35f, true);		}
+	if(asTimer == "dreamoutEvent3")	{	StartPlayerLookAt("LookArea01_3", 3, 3, "");	MovePlayerHeadPos(0, 0, 0, 1, 1.0f);	StartScreenShake(0.05f, 0, 0.3f, 1);		SetPlayerLookSpeedMul(1);	SetPlayerMoveSpeedMul(0.3f);	PlaySoundAtEntity("", "player_jump", "Player", 0, true);	 SetPlayerActive(true);		}
+	if(asTimer == "dreamoutEvent4")	{	StartPlayerLookAt("LookArea01_4", 1, 1, "");	SetPlayerMoveSpeedMul(0.7f);	SetPlayerRunSpeedMul(1);	SetPlayerCrouchDisabled(false);	SetPlayerJumpDisabled(false);	}
+	if(asTimer == "dreamoutEvent5")	{	StopPlayerLookAt();		FadePlayerFOVMulTo(1, 0.2f);	 FadePlayerAspectMulTo(1, 0.2f);	PlayGuiSound("quest_completed", 1);		SetInventoryDisabled(false);}
+	
+	if(asTimer == "PlayerPants")	{	PlaySoundAtEntity("", "sanity_pant", "Player", RandFloat(0, 0.5f), true);	AddTimer("PlayerPants", RandFloat(1, 4), "TimerList");	}
+	if(asTimer == "InsanitySneakProcess")	{	for(int i=0; i<=RandInt(5, 10); i++)	AddTimer("InsanitySneak", 5 + 0.4f*i, "TimerList");			AddTimer("InsanitySneakProcess", RandFloat(7, 12), "TimerList");	}
+	if(asTimer == "InsanitySneak")	{	PlaySoundAtEntity("", "insanity_step_slime_sneak", "SoundArea02", 0, true);	}
+	if(asTimer == "cradleDisabled")	{	SetPropActiveAndFade("torture_cradle_1", false, 0.5f);	SetEntityActive("ScriptArea_19", false);	}
+	if(asTimer == "InsanityBaby")	{	PlaySoundAtEntity("", "insanity_baby_cry", "SoundArea02", RandFloat(0, 0.7f), true);	}
+	if(asTimer == "descendingBreath")	{	PlaySoundAtEntity("DarkWorm", "29_amb_guard", "SoundArea02", RandFloat(0, 14), false);	AddTimer("descendingBreath", RandFloat(10, 24), "TimerList");	}
+	if(asTimer == "dreamMove")		{	SetPlayerActive(true);
+										SetPlayerMoveSpeedMul(0.1f);
+										MovePlayerHeadPos(0, -0.8f, 0, 0.2f, 0.1f);
+										AddTimer("dreamMove2", 6, "TimerList");		
+										}
+	if(asTimer == "dreamMove2"){		MovePlayerHeadPos(0, 0, 0, 0.2f, 0.1f);		SetPlayerMoveSpeedMul(0.3f);}
+	if(asTimer == "ShadowRift")	{		//TeleportPlayer();
+										StopSound("terror", 1);		FadeIn(1);
+	}
+	if(asTimer == "dus")	{	AddTimer("dus", RandFloat(5, 15), "TimerList");		PlaySoundAtEntity("", "DDL", "Player", RandFloat(3, 8), false);		}
+	if(asTimer == "suitortriggeralarm")	{		ClearEnemyPatrolNodes("enemy_suitor_1");	PlaySoundAtEntity("", "suitor/notice", "Player", 1, false);
+												AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_21", 5, "");
+												AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_18", 5, "");
+												AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_9", 0, "");
+												AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_4", 0, "");
+												AddEnemyPatrolNode("enemy_suitor_1", "PathNodeArea_40", 0, "");	}
+}
+void spotlightDin(string &in asEntityName, string &in asType){
+	FadeLightTo("SpotLight_25", 0, 0, 0, 0, -1, 0);
+}
+
+void bleedinghands(string &in asParent, string &in asChild, int alState){
+	AddTimer("bleedinghands", 10, "TimerList");
+}
+
+void pickupExplosivJar(string &in asItem){
+	RemoveItem(asItem);
+	GiveItem("chemical_container_static_3", "", "chemical_container_static_3", "glass_container_mix_explosivNew.tga", 0);
+	FadeLightTo("PointLight_46", 0, 0, 0, 0, -1, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_14", "explosivMusicAmb", true, 1);
+	}
+
+void explosivMusicAmb(string &in asParent, string &in asChild, int alState){	AddTimer("explosivAmbMusic", 8, "TimerList");}
+
+
+void enterWorld(string &in asParent, string &in asChild, int alState)
+{	AddTimer("RadialVision3", 0, "TimerList");
+	//FadeLightTo("PointLight_44", 0, 0, 0, 0, -1, 4);
+	//FadeLightTo("SpotLight_5", 0.2, 0.1, 0, 1, -1, 4);
+	FadeOut(5);
+	FadeGlobalSoundVolume(0, 5);
+	PlaySoundAtEntity("", "sfx_06", "Player", 6, false);
+	AddTimer("loadingMap", 5, "TimerList");
+}
+void GateBlow(string &in door_name)	{	AddPropForce(door_name, 0, 0, 600, "world");	}
+
+void explosivEvent(string &in asTimer){
+	if(asTimer == "explosivScene1")
+	{	FadeLightTo("PointLight_41", 1, 0.3, 0.1, 1, -1, 2);
+		PlaySoundAtEntity("", "12_epoxy_blow", "chemical_container_half_static_1", 0, true);
+	}
+	if(asTimer == "explosivScene11"){
+		StopSound("drops", 1);
+	}
+	if(asTimer == "explosivScene2")
+	{	FadeLightTo("PointLight_41", 4, 4, 4, 4, -1, 0.1f);
+		FadeLightTo("BoxLight_1", 0.3, 0.3, 0.1, 0, -1, 0.1f);
+		SetEntityActive("chemical_container_half_static_1", false);
+		SetSwingDoorLocked("prison_section_silent_1", false, true);
+		SetSwingDoorClosed("prison_section_silent_1", false, false);
+		CreateParticleSystemAtEntity("", "ps_dust_break_stair.ps", "prison_section_silent_1", true);
+		CreateParticleSystemAtEntity("", "ps_break_cavein.ps", "ParticleArea01_1", true);
+		for (int i = 0; i < 10; i++)	{	AddTimer("prison_section_silent_1", i * 0.1, "GateBlow");	}
+		
+		StartScreenShake(1, 0, 0.4f, 0);
+		//PlaySoundAtEntity("boom", "explosivbang.snt", "prison_section_silent_1", 0, true);		
+		PlayGuiSound("explosiv_boom.ogg", 1);
+		SetEntityActive("padlock_1", false);
+	}
+	if(asTimer == "explosivScene3")
+	{	FadeLightTo("PointLight_41", 0, 0, 0, 0, -1, 0.15f);
+		FadeLightTo("BoxLight_1", 0, 0, 0, 0, -1, 0.15f);
+		CompleteQuest("explosivGate", "explosivGate");
+		CompleteQuest("explosivQuest", "explosivQuest");
+		
+		FadeImageTrailTo(4, 1);
+		AddTimer("explosivAmbMusic", 4, "TimerList");
+	}
+	if(asTimer == "explosivScene4"){
+		FadeImageTrailTo(0, 4);		AddTimer("RadialVision1", 8, "TimerList");
+	}
+}
+
+void ignite_explosiv(string &in asItem, string &in asEntity){
+	RemoveItem(asItem);
+	PlaySoundAtEntity("drops", "fb_sfx_05_transformation01.ogg", "chemical_container_half_static_1", 1, true);
+	GiveItemFromFile("glass_explosivcontainer", "glass_container.ent");
+		PlayGuiSound("infusebomb.ogg", 1);
+	SetEntityActive("ScriptArea_6", true);
+	SetGlobalVarInt("explosivInt", 1);
+	SetEntityActive("block_box_nonchar_1", true);
+	AddTimer("explosivScene1", 0.3, "explosivEvent");
+	AddTimer("explosivScene11", 1.3, "explosivEvent");
+	AddTimer("explosivScene2", 2.5, "explosivEvent");
+	AddTimer("explosivScene3", 2.9, "explosivEvent");
+	AddTimer("explosivScene4", 8, "explosivEvent");
+}
+void place_explosiv(string &in asItem, string &in asEntity){
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "puzzle_place_jar", "chemical_container_half_static_1", 0, true);
+	SetEntityActive("chemical_container_half_static_1", true);
+	AddUseItemCallback("", "glass_container_filled_2", "chemical_container_half_static_1", "ignite_explosiv", true);
+}
+void fillLiquid(string &in asItem, string &in asEntity){
+	RemoveItem(asItem);
+	AddTimer("fullInflame", 3, "TimerList");
+		PlayGuiSound("12_epoxy_fill", 1);	
+	SetEntityActive("glass_container_filled_1", true);
+	SetEntityActive("block_box_nonchar_2", false);
+	PlaySoundAtEntity("", "puzzle_place_jar", "glass_container_filled_1", 0, false);
+	PlaySoundAtEntity("liquid", "26_liquid", "ScriptArea_7", 3, false);
+	StopSound("flow", 6);
+}
+void fillinExplosiv(string &in asItem, string &in asEntity){
+	RemoveItem(asItem);
+		PlayGuiSound("12_epoxy_fill", 1);
+	SetEntityActive("chemical_container_static_2", true);
+	SetEntityActive("block_box_nonchar_1", false);
+	PlaySoundAtEntity("", "puzzle_place_jar", "chemical_container_static_2", 0, false);
+	AddTimer("fullExplosiv", 3, "TimerList");
+	PlaySoundAtEntity("liquid2", "26_liquid", "ScriptArea_6", 3, false);
+	StopSound("flow", 6);
+}
+void fill_glassExplosiv(string &in asItem, string &in asEntity){
+	RemoveItem(asItem);
+		PlayGuiSound("12_epoxy_fill", 1);
+	FadeLightTo("PointLight_46", 1, 1, 0, 1, -1, 3);
+	SetEntityActive("block_box_nonchar_1", false);
+	SetEntityActive("glass_container_mix_notdone_static_1", true);
+	PlaySoundAtEntity("", "puzzle_place_jar", "glass_container_mix_notdone_static_1", 0, false);
+	AddTimer("ExplosivJar", 3, "TimerList");
+}
+
+void interactBarrelOne(string &in asArea)
+{	CreateParticleSystemAtEntity("explosiv", "ps_liquid_epoxy.ps", "ScriptArea_6", false);
+	AddUseItemCallback("", "empty_container", "block_box_nonchar_1", "fillinExplosiv", false);
+	PlaySoundAtEntity("flow", "12_epoxy_flow", "ScriptArea_6", 0.5f, false);
+	PlayGuiSound("pop.ogg", 1);
+	SetEntityActive("ScriptArea_6", false);
+	
+	if(GetGlobalVarInt("explosivInt")==1){
+		AddUseItemCallback("", "glass_explosivcontainer", "block_box_nonchar_1", "fill_glassExplosiv", true);
+	}
+	if(GetLocalVarInt("SuitorCrannyTrigger")==0){
+		SetLocalVarInt("SuitorCrannyTrigger", 1);
+		AddTimer("suitortriggeralarm", 0.4f, "TimerList");
+	}
+}
+void interactBarrelTwo(string &in asArea)
+{	CreateParticleSystemAtEntity("igniteLiq", "ps_liquid_epoxy.ps", "ScriptArea_7", false);
+	AddUseItemCallback("", "glass_container_1", "block_box_nonchar_2", "fillLiquid", false);
+	PlaySoundAtEntity("flow", "12_epoxy_flow", "ScriptArea_7", 0.5f, false);
+	PlayGuiSound("pop.ogg", 1);
+	SetEntityActive("ScriptArea_7", false);
+	
+	if(GetLocalVarInt("SuitorCrannyTrigger")==0){
+		SetLocalVarInt("SuitorCrannyTrigger", 1);
+		AddTimer("suitortriggeralarm", 0.4f, "TimerList");
+	}
+}
+void endPlayer(string &in asParent, string &in asChild, int alState)
+{	ShowEnemyPlayerPosition("enemy_suitor_1");
+}
+void removeEnemy(string &in asParent, string &in asChild, int alState)
+{	SetEntityActive("enemy_suitor_1", false);
+	RemoveEntityCollideCallback("Player", "ScriptArea_12");
+}
+void crowbarDoor(string &in asItem, string &in asEntity)
+{	RemoveItem(asItem);
+	PlaySoundAtEntity("", "puzzle_place_jar", "Player", 0, false);
+	
+	if(GetGlobalVarInt("crowbarStage")==1){
+		SetEntityActive("crowbar_joint_1", true);
+		AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_8", "breakWoodExplosivDoor", true, 1);
+		RemoveTimer("dus");
+	}
+	else if(GetGlobalVarInt("crowbarStage")==2){
+		SetEntityActive("crowbar_joint_4", true);
+		AddEntityCollideCallback("crowbar_joint_4", "ScriptArea_9", "breakWoodExplosivDoor", true, 1);
+	}
+	else if(GetGlobalVarInt("crowbarStage")==3){
+		SetEntityActive("crowbar_joint_6", true);
+		AddEntityCollideCallback("crowbar_joint_6", "ScriptArea_10", "breakWoodExplosivDoor", true, 1);
+	}
+}
+void breakWoodExplosivDoor(string &in asParent, string &in asChild, int alState){
+	if(GetGlobalVarInt("crowbarStage")==1){
+		GiveItemFromFile("crowbar_1", "crowbar.ent");
+		AddUseItemCallback("", "crowbar_1", "block_box_nonchar_3", "crowbarDoor", true);
+		SetEntityActive("crowbar_joint_1", false);
+		AddGlobalVarInt("crowbarStage", 1);
+		
+		SetEntityActive("wooden_board01_2", false);
+		SetEntityActive("wooden_board01_5", true);
+		CreateParticleSystemAtEntity("", "ps_break_wood_pulley_blocker.ps", "ParticleArea02_1", true);
+		PlaySoundAtEntity("", "06_break_wood", "ParticleArea02_1", 0, true);
+	}
+	else if(GetGlobalVarInt("crowbarStage")==2){
+		GiveItemFromFile("crowbar_1", "crowbar.ent"); 
+		AddUseItemCallback("", "crowbar_1", "block_box_nonchar_3", "crowbarDoor", true);
+		SetEntityActive("crowbar_joint_4", false);
+		AddGlobalVarInt("crowbarStage", 1);
+		
+		SetEntityActive("wooden_board01_3", false);
+		SetEntityActive("wooden_board01_6", true);
+		AddTimer("SuitorCall", 3, "TimerList");
+		AddTimer("SuitorEnd", 13, "TimerList");
+		CreateParticleSystemAtEntity("", "ps_break_wood_pulley_blocker.ps", "ParticleArea02_2", true);
+		PlaySoundAtEntity("", "06_break_wood", "ParticleArea02_2", 0, true);
+	}
+	else if(GetGlobalVarInt("crowbarStage")==3){
+		SetEntityActive("crowbar_joint_6", false);
+		
+		SetEntityActive("wooden_board01_4", false);
+		SetEntityActive("block_box_nonchar_3", false);
+		SetEntityActive("wooden_board01_7", true);
+		CreateParticleSystemAtEntity("", "ps_break_wood_pulley_blocker.ps", "ParticleArea02_3", true);
+		PlaySoundAtEntity("", "06_break_wood", "ParticleArea02_3", 0, true);
+	}
+}
+void unlockCell(string &in asItem, string &in asEntity)
+{	RemoveItem(asItem);
+	SetSwingDoorLocked("metal_1", false, true);
+	PlaySoundAtEntity("", "unlock_door", "metal_1", 1, true);
+	PlaySoundAtEntity("", "lock_door", "metal_1", 1, true);
+}
+void place_container(string &in asItem, string &in asEntity)
+{	RemoveItem(asItem);
+	SetEntityActive("chemical_container_static_1", true);
+}
+
+void questLadder(string &in asEntity, int alState)
+{	AddTimer ("LadderTimer", 3, "TimerList");	
+}
+
+
+void ambGate(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1)
+	{	FadeLightTo("PointLight_7", 0.2, 0.35, 0.35, 2, -1, 5);
+		if(GetGlobalVarInt("crannyPrioQuest") == 0)	{
+			SetGlobalVarInt("crannyPrioQuest", 1);
+			AddTimer("prioQuest", 4, "TimerList");
+		}
+	}
+	else
+	{	FadeLightTo("PointLight_7", 0, 0, 0, 0, -1, 5);
+	}
+}
+void ambMaze(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1)
+	{	//FadeLightTo("BoxLight_1", 0.08, 0.08, 0.2, 0, -1, 5);
+		for(int i=0; i<=47; i++)	FadeLightTo("DarkLight_"+i, 0.05f, 0.1f, 0.2f, 0, -1, RandFloat(3, 6));
+		AddTimer("insanevision01", 3, "TimerList");		StopMusic(15, 0);
+		
+		if(GetGlobalVarInt("LimitedLife")==3)	{	AddTimer("Common", 0, "MazeMadnessProgram");	FadeGlobalSoundVolume(0.2f, 10);			AddTimer("ghostRock", RandFloat(8, 16), "TimerList");		AddTimer("ghostWalk", RandFloat(8, 16), "TimerList");	}
+	}
+	else
+	{	//FadeLightTo("BoxLight_1", 0, 0, 0, 0, -1, 5);
+		for(int i=0; i<=47; i++)	FadeLightTo("DarkLight_"+i, 0, 0, 0, 0, -1, RandFloat(3, 6));
+		AddTimer("neutralvision", 3, "TimerList");
+		RemoveTimer("ghostRock");
+		RemoveTimer("ghostWalk");
+		
+		for(int i=0; i<=7; i++)	{
+			RemoveTimer("Warp0"+i);
+			RemoveTimer("Warp0"+i+"D");
+		}
+	}
+}
+
+void MazeMadnessProgram(string &in asTimer){
+	for(int i=0; i<=47; i++){
+		if(asTimer == "DarkPoint"+i)	FadeLightTo("DarkLight_"+i, 0, 0, 0, 0, -1, 3);
+		if(asTimer == "BluePoint"+i)	FadeLightTo("DarkLight_"+i, 0.05f, 0.1f, 0.2f, 0, -1, 3);
+		}
+	if(asTimer == "Common"){
+		AddTimer("Warp04", 0, "MazeMadnessProgram");
+	}
+	if(asTimer == "Warp01"){
+		AddTimer("BluePoint44", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint45", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint46", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint47", 4, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint2", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint1", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint3", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint4", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint5", 6, "MazeMadnessProgram");
+		AddTimer("DarkPoint6", 8, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_2", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_7", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_1", "WarpAttended", false, 0);
+		AddTimer("Warp01Rift", 8, "MazeMadnessProgram");
+		AddTimer("Warp01Clear", 12, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp02", 12.1f, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp07D", 12.1f, "MazeMadnessProgram");
+	}
+	if(asTimer == "Warp01D"){
+		AddTimer("BluePoint9", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint8", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint7", 4, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint3", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint4", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint2", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint5", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint1", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint6", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_2", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_7", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_1", "WarpAttended", false, 0);
+		AddTimer("Warp01Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp01Clear", 10, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp07D", 10.1f, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp02", 10.1f, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp02"){
+		AddTimer("BluePoint1", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint6", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint2", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint5", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint4", 4, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint3", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint7", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint8", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint9", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_1", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_3", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_2", "WarpAttended", false, 0);
+		AddTimer("Warp02Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp02Clear", 10, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp03", 10.1f, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp01D", 10.1f, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp02D"){
+		AddTimer("BluePoint13", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint12", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint11", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint10", 6, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint9", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint8", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint7", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint3", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_1", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_3", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_2", "WarpAttended", false, 0);
+		AddTimer("Warp02Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp02Clear", 10, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp01D", 10.1f, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp03", 10.1f, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp03"){
+		AddTimer("BluePoint3", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint7", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint8", 4, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint9", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint10", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint11", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint12", 6, "MazeMadnessProgram");
+		AddTimer("DarkPoint13", 8, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_2", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_4", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_3", "WarpAttended", false, 0);
+		AddTimer("Warp03Rift", 8, "MazeMadnessProgram");
+		AddTimer("Warp03Clear", 12, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp04", 12.1f, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp02D", 12.1f, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp03D"){
+		AddTimer("BluePoint37", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint22", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint21", 3, "MazeMadnessProgram");
+		AddTimer("BluePoint20", 6, "MazeMadnessProgram");
+		AddTimer("BluePoint19", 9, "MazeMadnessProgram");
+		AddTimer("BluePoint18", 12, "MazeMadnessProgram");
+		AddTimer("BluePoint17", 15, "MazeMadnessProgram");
+		AddTimer("BluePoint16", 18, "MazeMadnessProgram");
+		AddTimer("BluePoint15", 21, "MazeMadnessProgram");
+		AddTimer("BluePoint14", 24, "MazeMadnessProgram");		
+		AddTimer("BluePoint36", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint29", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint35", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint34", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint27", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint33", 6, "MazeMadnessProgram");
+		AddTimer("BluePoint25", 6, "MazeMadnessProgram");
+		AddTimer("BluePoint32", 8, "MazeMadnessProgram");
+		AddTimer("BluePoint23", 8, "MazeMadnessProgram");
+		AddTimer("BluePoint31", 10, "MazeMadnessProgram");
+		AddTimer("BluePoint30", 12, "MazeMadnessProgram");
+		AddTimer("BluePoint28", 14, "MazeMadnessProgram");
+		AddTimer("BluePoint26", 16, "MazeMadnessProgram");
+		AddTimer("BluePoint24", 18, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint13", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint12", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint11", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint10", 6, "MazeMadnessProgram");
+		AddTimer("DarkPoint9", 8, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_4", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_2", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_3", "WarpAttended", false, 0);
+		AddTimer("Warp03Rift", 8, "MazeMadnessProgram");
+		AddTimer("Warp03Clear", 28, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp02D", 28.1f, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp04", 28.1f, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp04"){
+		AddTimer("BluePoint9", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint10", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint11", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint12", 6, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint13", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint14", 3, "MazeMadnessProgram");
+		AddTimer("DarkPoint15", 6, "MazeMadnessProgram");
+		AddTimer("DarkPoint16", 9, "MazeMadnessProgram");
+		AddTimer("DarkPoint17", 12, "MazeMadnessProgram");
+		AddTimer("DarkPoint18", 15, "MazeMadnessProgram");
+		AddTimer("DarkPoint19", 18, "MazeMadnessProgram");
+		AddTimer("DarkPoint20", 21, "MazeMadnessProgram");
+		AddTimer("DarkPoint21", 24, "MazeMadnessProgram");
+		AddTimer("DarkPoint22", 27, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint23", 20, "MazeMadnessProgram");
+		AddTimer("DarkPoint25", 19, "MazeMadnessProgram");
+		AddTimer("DarkPoint27", 18, "MazeMadnessProgram");
+		AddTimer("DarkPoint29", 17, "MazeMadnessProgram");
+		AddTimer("DarkPoint36", 16, "MazeMadnessProgram");
+		AddTimer("DarkPoint35", 15, "MazeMadnessProgram");
+		AddTimer("DarkPoint34", 14, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint24", 7, "MazeMadnessProgram");
+		AddTimer("DarkPoint26", 8, "MazeMadnessProgram");
+		AddTimer("DarkPoint28", 9, "MazeMadnessProgram");
+		AddTimer("DarkPoint30", 10, "MazeMadnessProgram");
+		AddTimer("DarkPoint31", 11, "MazeMadnessProgram");
+		AddTimer("DarkPoint32", 12, "MazeMadnessProgram");
+		AddTimer("DarkPoint37", 12, "MazeMadnessProgram");
+		AddTimer("DarkPoint33", 13, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_3", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_5", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_4", "WarpAttended", false, 0);
+		AddTimer("Warp04Rift", 24, "MazeMadnessProgram");
+		AddTimer("Warp04Clear", 28, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp05", 28.1, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp03D", 28.1, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp04D"){
+		AddTimer("BluePoint41", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint40", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint39", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint38", 6, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint22", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint21", 3, "MazeMadnessProgram");
+		AddTimer("DarkPoint20", 6, "MazeMadnessProgram");
+		AddTimer("DarkPoint19", 9, "MazeMadnessProgram");
+		AddTimer("DarkPoint18", 12, "MazeMadnessProgram");
+		AddTimer("DarkPoint17", 15, "MazeMadnessProgram");
+		AddTimer("DarkPoint16", 18, "MazeMadnessProgram");
+		AddTimer("DarkPoint15", 21, "MazeMadnessProgram");
+		AddTimer("DarkPoint14", 24, "MazeMadnessProgram");
+		AddTimer("DarkPoint13", 27, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint23", 7, "MazeMadnessProgram");
+		AddTimer("DarkPoint25", 8, "MazeMadnessProgram");
+		AddTimer("DarkPoint27", 9, "MazeMadnessProgram");
+		AddTimer("DarkPoint29", 10, "MazeMadnessProgram");
+		AddTimer("DarkPoint36", 11, "MazeMadnessProgram");
+		AddTimer("DarkPoint35", 12, "MazeMadnessProgram");
+		AddTimer("DarkPoint34", 13, "MazeMadnessProgram");
+		AddTimer("DarkPoint33", 14, "MazeMadnessProgram");
+		AddTimer("DarkPoint31", 15, "MazeMadnessProgram");
+		AddTimer("DarkPoint32", 16, "MazeMadnessProgram");
+		AddTimer("DarkPoint37", 16, "MazeMadnessProgram");
+		AddTimer("DarkPoint30", 17, "MazeMadnessProgram");
+		AddTimer("DarkPoint28", 18, "MazeMadnessProgram");
+		AddTimer("DarkPoint26", 19, "MazeMadnessProgram");
+		AddTimer("DarkPoint24", 20, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_3", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_5", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_4", "WarpAttended", false, 0);
+		AddTimer("Warp04Rift", 18, "MazeMadnessProgram");
+		AddTimer("Warp04Clear", 28, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp03D", 28.1, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp05", 28.1, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp05"){
+		AddTimer("BluePoint13", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint14", 3, "MazeMadnessProgram");
+		AddTimer("BluePoint15", 6, "MazeMadnessProgram");
+		AddTimer("BluePoint16", 9, "MazeMadnessProgram");
+		AddTimer("BluePoint17", 12, "MazeMadnessProgram");
+		AddTimer("BluePoint18", 15, "MazeMadnessProgram");
+		AddTimer("BluePoint19", 18, "MazeMadnessProgram");
+		AddTimer("BluePoint20", 21, "MazeMadnessProgram");
+		AddTimer("BluePoint21", 24, "MazeMadnessProgram");
+		AddTimer("BluePoint22", 27, "MazeMadnessProgram");
+		
+		AddTimer("BluePoint37", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint31", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint30", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint28", 6, "MazeMadnessProgram");
+		AddTimer("BluePoint26", 8, "MazeMadnessProgram");
+		AddTimer("BluePoint24", 10, "MazeMadnessProgram");
+		AddTimer("BluePoint32", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint33", 6, "MazeMadnessProgram");
+		AddTimer("BluePoint34", 8, "MazeMadnessProgram");
+		AddTimer("BluePoint35", 10, "MazeMadnessProgram");
+		AddTimer("BluePoint36", 12, "MazeMadnessProgram");
+		AddTimer("BluePoint29", 14, "MazeMadnessProgram");
+		AddTimer("BluePoint27", 16, "MazeMadnessProgram");
+		AddTimer("BluePoint25", 18, "MazeMadnessProgram");
+		AddTimer("BluePoint23", 20, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint38", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint39", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint40", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint41", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_4", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_6", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_5", "WarpAttended", false, 0);
+		AddTimer("Warp05Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp05Clear", 28, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp06", 28, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp04D", 28, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp05D"){
+		AddTimer("BluePoint44", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint43", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint42", 4, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint40", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint41", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint39", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint38", 4, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_4", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_6", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_5", "WarpAttended", false, 0);
+		AddTimer("Warp05Rift", 4, "MazeMadnessProgram");
+		AddTimer("Warp05Clear", 8, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp04D", 8, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp06", 8, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp06"){
+		AddTimer("BluePoint38", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint39", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint41", 2, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint40", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint42", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint43", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint44", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_5", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_7", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_6", "WarpAttended", false, 0);
+		AddTimer("Warp06Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp06Clear", 10, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp07", 10, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp05D", 10, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp06D"){
+		AddTimer("BluePoint2", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint46", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint47", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint45", 4, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint44", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint43", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint42", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint40", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_5", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_7", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_6", "WarpAttended", false, 0);
+		AddTimer("Warp06Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp06Clear", 10, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp05D", 10, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp07", 10, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp07"){
+		AddTimer("BluePoint40", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint42", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint43", 4, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint44", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint45", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint47", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint46", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint2", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_1", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_6", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_7", "WarpAttended", false, 0);
+		AddTimer("Warp07Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp07Clear", 10, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp01", 10, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp06D", 10, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp07D"){
+		AddTimer("BluePoint6", 0, "MazeMadnessProgram");
+		AddTimer("BluePoint5", 2, "MazeMadnessProgram");
+		AddTimer("BluePoint4", 4, "MazeMadnessProgram");
+		AddTimer("BluePoint3", 6, "MazeMadnessProgram");
+		AddTimer("BluePoint1", 6, "MazeMadnessProgram");
+		
+		AddTimer("DarkPoint2", 0, "MazeMadnessProgram");
+		AddTimer("DarkPoint46", 2, "MazeMadnessProgram");
+		AddTimer("DarkPoint45", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint47", 4, "MazeMadnessProgram");
+		AddTimer("DarkPoint44", 6, "MazeMadnessProgram");
+		
+		AddEntityCollideCallback("Player", "TrapArea_1", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_6", "DarkImpulse", false, 0);
+		AddEntityCollideCallback("Player", "TrapArea_7", "WarpAttended", false, 0);
+		AddTimer("Warp07Rift", 6, "MazeMadnessProgram");
+		AddTimer("Warp07Clear", 10, "MazeMadnessProgram");
+		
+		int i = RandInt(1, 3);
+		SetLocalVarInt("Direction", i);
+		if(GetLocalVarInt("Direction") == 1 || GetLocalVarInt("Direction") == 2)	AddTimer("Warp06D", 10, "MazeMadnessProgram");
+		if(GetLocalVarInt("Direction") == 3)										AddTimer("Warp01", 10, "MazeMadnessProgram");
+		}
+	if(asTimer == "Warp01Rift")		{	RemoveEntityCollideCallback("Player", "TrapArea_1");
+										AddEntityCollideCallback("Player", "TrapArea_1", "PrisonRift", true, 1);	}
+	if(asTimer == "Warp01Clear")	{	RemoveEntityCollideCallback("Player", "TrapArea_1");
+										RemoveEntityCollideCallback("Player", "TrapArea_2");	AddEntityCollideCallback("Player", "TrapArea_2", "ImpulseBuffer", true, 1);	AddTimer("buffer2", 0.1f, "TimerList");
+										RemoveEntityCollideCallback("Player", "TrapArea_7");	AddEntityCollideCallback("Player", "TrapArea_7", "ImpulseBuffer", true, 1);	AddTimer("buffer7", 0.1f, "TimerList");
+									}
+	if(asTimer == "Warp02Rift")		{	RemoveEntityCollideCallback("Player", "TrapArea_2");
+										AddEntityCollideCallback("Player", "TrapArea_2", "PrisonRift", true, 1);	}
+	if(asTimer == "Warp02Clear")	{	RemoveEntityCollideCallback("Player", "TrapArea_2");
+										RemoveEntityCollideCallback("Player", "TrapArea_1");	AddEntityCollideCallback("Player", "TrapArea_1", "ImpulseBuffer", true, 1);	AddTimer("buffer1", 0.1f, "TimerList");
+										RemoveEntityCollideCallback("Player", "TrapArea_3");	AddEntityCollideCallback("Player", "TrapArea_3", "ImpulseBuffer", true, 1);	AddTimer("buffer3", 0.1f, "TimerList");	
+									}
+	if(asTimer == "Warp03Rift")		{	RemoveEntityCollideCallback("Player", "TrapArea_3");
+										AddEntityCollideCallback("Player", "TrapArea_3", "PrisonRift", true, 1);	}
+	if(asTimer == "Warp03Clear")	{	RemoveEntityCollideCallback("Player", "TrapArea_3");
+										RemoveEntityCollideCallback("Player", "TrapArea_2");	AddEntityCollideCallback("Player", "TrapArea_2", "ImpulseBuffer", true, 1);	AddTimer("buffer1", 0.1f, "TimerList");
+										RemoveEntityCollideCallback("Player", "TrapArea_4");	AddEntityCollideCallback("Player", "TrapArea_4", "ImpulseBuffer", true, 1);	AddTimer("buffer4", 0.1f, "TimerList");
+									}
+	if(asTimer == "Warp04Rift")		{	RemoveEntityCollideCallback("Player", "TrapArea_4");
+										AddEntityCollideCallback("Player", "TrapArea_4", "PrisonRift", true, 1);	}
+	if(asTimer == "Warp04Clear")	{	RemoveEntityCollideCallback("Player", "TrapArea_4");
+										RemoveEntityCollideCallback("Player", "TrapArea_3");	AddEntityCollideCallback("Player", "TrapArea_3", "ImpulseBuffer", true, 1);	AddTimer("buffer3", 0.1f, "TimerList");
+										RemoveEntityCollideCallback("Player", "TrapArea_5");	AddEntityCollideCallback("Player", "TrapArea_5", "ImpulseBuffer", true, 1);	AddTimer("buffer5", 0.1f, "TimerList");
+									}
+	if(asTimer == "Warp05Rift")		{	RemoveEntityCollideCallback("Player", "TrapArea_5");
+										AddEntityCollideCallback("Player", "TrapArea_5", "PrisonRift", true, 1);	}
+	if(asTimer == "Warp05Clear")	{	RemoveEntityCollideCallback("Player", "TrapArea_5");
+										RemoveEntityCollideCallback("Player", "TrapArea_4");	AddEntityCollideCallback("Player", "TrapArea_4", "ImpulseBuffer", true, 1);	AddTimer("buffer4", 0.1f, "TimerList");
+										RemoveEntityCollideCallback("Player", "TrapArea_6");	AddEntityCollideCallback("Player", "TrapArea_6", "ImpulseBuffer", true, 1);	AddTimer("buffer6", 0.1f, "TimerList");
+									}
+	if(asTimer == "Warp06Rift")		{	RemoveEntityCollideCallback("Player", "TrapArea_6");
+										AddEntityCollideCallback("Player", "TrapArea_6", "PrisonRift", true, 1);	}
+	if(asTimer == "Warp06Clear")	{	RemoveEntityCollideCallback("Player", "TrapArea_6");
+										RemoveEntityCollideCallback("Player", "TrapArea_5");	AddEntityCollideCallback("Player", "TrapArea_5", "ImpulseBuffer", true, 1);	AddTimer("buffer5", 0.1f, "TimerList");
+										RemoveEntityCollideCallback("Player", "TrapArea_7");	AddEntityCollideCallback("Player", "TrapArea_7", "ImpulseBuffer", true, 1);	AddTimer("buffer7", 0.1f, "TimerList");
+									}
+	if(asTimer == "Warp07Rift")		{	RemoveEntityCollideCallback("Player", "TrapArea_7");
+										AddEntityCollideCallback("Player", "TrapArea_7", "PrisonRift", true, 1);	}
+	if(asTimer == "Warp07Clear")	{	RemoveEntityCollideCallback("Player", "TrapArea_7");
+										RemoveEntityCollideCallback("Player", "TrapArea_1");	AddEntityCollideCallback("Player", "TrapArea_1", "ImpulseBuffer", true, 1);	AddTimer("buffer1", 0.1f, "TimerList");
+										RemoveEntityCollideCallback("Player", "TrapArea_6");	AddEntityCollideCallback("Player", "TrapArea_6", "ImpulseBuffer", true, 1);	AddTimer("buffer6", 0.1f, "TimerList");
+									}
+	for(int i=0; i<=7; i++)	if(asTimer == "buffer"+i)	RemoveEntityCollideCallback("Player", "TrapArea_"+i);	
+	if(asTimer == "ghostRock")		{	int i = RandInt(1, 44); PlaySoundAtEntity("", "step_sneak_rock_rev", "SoundArea03_"+i, 	RandFloat(2, 7), true);		AddTimer("ghostRock", RandFloat(4, 9), "TimerList");	}
+	if(asTimer == "ghostWalk")		{	int i = RandInt(1, 44);	PlaySoundAtEntity("", "24_wing", "SoundArea03_"+i, RandFloat(2, 7), true);		AddTimer("ghostWalk", RandFloat(4, 9), "TimerList");	}
+}
+
+void DarkImpulse(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	PlaySoundAtEntity("impulse", "darkmatter", "Player", 4, true);
+	else				StopSound("impulse", 4);
+}
+void ImpulseBuffer(string &in asParent, string &in asChild, int alState){
+	StopSound("impulse", 4);
+}
+void WarpAttended(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	{	StartScreenShake(0.03, 0, 4, 4);	
+						FadePlayerAspectMulTo(1.3f, 0.3f);
+						PlaySoundAtEntity("terror", "ui_terror_shadow", "Player", 16, false);
+	}
+	else{				StopSound("terror", 8);
+						FadePlayerAspectMulTo(1.0f, 0.3f);
+	}
+}
+
+void PrisonRift(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("HideMode") == 0)	{
+	PlayGuiSound("shadowRift.ogg", 20);
+	FadeOut(2);
+	AddTimer("ShadowRift", 2.3f, "TimerList");
+	}
+	if(GetLocalVarInt("HideMode") == 1)	{
+		PlayGuiSound("???", 1);
+		StartScreenShake(0.023, 0.4f, 3, 4);
+	}
+}
+
+void ambDescent(string &in asParent, string &in asChild, int alState){
+	if(alState == 1){
+			SetPlayerJumpDisabled(true);
+			SetPlayerMoveSpeedMul(0.45f);
+			AddTimer("PlayerPants", 1, "TimerList");
+			AddTimer("InsanityBaby", RandFloat(20, 40), "TimerList");
+			PlaySoundAtEntity("DarkWorm", "29_amb_loop", "SoundArea02", 40, false);
+			AddTimer("InsanitySneakProcess", RandFloat(7, 12), "TimerList");
+			AddTimer("descendingBreath", 35, "TimerList");
+	}
+	else{
+			SetPlayerJumpDisabled(false);
+			SetPlayerMoveSpeedMul(0.7f);
+			RemoveTimer("PlayerPants");
+			RemoveTimer("InsanityBaby");
+			RemoveTimer("InsanitySneakProcess");
+			//StopSound("breath", 6);
+			RemoveTimer("descendingBreath");
+			StopSound("DarkWorm", 12);
+			}
+}
+
+void impactingWall(string &in asParent, string &in asChild, int alState){
+		PlaySoundAtEntity("", "impact_dirt_low", "SoundArea01_1", 0, true);
+		PlaySoundAtEntity("", "15_rock_break", "SoundArea01_1", 0, true);
+		CreateParticleSystemAtEntity("", "ps_impact_dust_high.ps", "stone_med01_brown_1", true);
+		AddGlobalVarInt("wallstats", 1);
+	if(GetGlobalVarInt ("wallstats") == 2){
+		CreateParticleSystemAtEntity("", "ps_impact_dust_high.ps", "stone_med01_brown_1", true);
+		PlaySoundAtEntity("", "03_break_wall", "SoundArea01_1", 0, true);
+		SetEntityActive("cell_breakable_wall_1", false);
+		SetEntityActive("cell_breakable_wall_2", true);
+		for(int i=1; i<=7; i++)	{	SetEntityActive("ffragment_"+i, true);	}
+		PlaySoundAtEntity("","cell_breakable_wall_2" , "03_break_wall", 0, true);
+		StartScreenShake(0.007f, 0, 0, 3);
+	}
+}
+
+void ladderPlaced(string &in asStickyArea, string &in asBodyName)
+{	SetEntityActive("ScriptArea_3", true);
+	CompleteQuest("puzzleLadder", "puzzleLadder");
+}
+
+void doom(string &in asName, int alCount)
+		{	
+			doom();
+		}
+
+void doom()
+		{	TeleportPlayer("PlayerStartArea_2");
+			SetPlayerMoveSpeedMul(1.0f);
+			AddTimer("insanevision01", 0, "TimerList");
+			AddTimer("neutralvision", 150, "TimerList");
+			AddTimer("clips1", 0, "wakeCellEvent");
+			AddTimer("clips2", 3, "wakeCellEvent");
+			AddTimer("clips3", 3.3f, "wakeCellEvent");
+			AddTimer("clips3", 8.3f, "wakeCellEvent");
+			AddTimer("clips4", 9, "wakeCellEvent");
+			AddTimer("clips5", 13, "wakeCellEvent");
+			AddTimer("clips6", 17, "wakeCellEvent");
+			AddTimer("clips7", 19, "wakeCellEvent");
+			SetGlobalVarInt("LimitedLife", 3);
+	StopMusic(2, 4);
+			
+			if(GetGlobalVarInt("DeathOfKind") == 1){
+				SetEntityActive("note_manual_1", true);
+				SetEntityActive("note_manual_2", false);
+			}
+		}
+		
+		
+
+void wakeCellEvent(string &in asTimer){
+	if(asTimer == "clips1"){
+		FadeOut(0);
+		SetSanityDrainDisabled(true);
+		SetPlayerLookSpeedMul(0.1f);
+		SetPlayerMoveSpeedMul(0);
+		SetPlayerRunSpeedMul(0);
+		StartPlayerLookAt("LookArea_1", 3, 3, "");
+		MovePlayerHeadPos(0, -1.3, 0, 40.0f, 40.0f);
+		FadeImageTrailTo(1.6f, 50);
+		
+		SetEntityActive("prison_section_silent_1", false);
+		SetEntityActive("prison_section_silent_3", true);
+		for(int i=1; i<=3; i++)	{	SetEntityActive("wooden_board02_"+i, true);	}
+		for(int a=5; a<=7; a++)	{	SetEntityActive("wooden_board01_"+a, false);	}
+		
+	}
+	if(asTimer == "clips2"){
+		PlaySoundAtEntity("", "general_water_drip", "Player",1 , true);
+	}
+	if(asTimer == "clips3"){
+		FadeIn(0.3f);
+		PlayGuiSound("react_breath_slow", 1);
+		SetPlayerMoveSpeedMul(0.1f);
+		SetPlayerRunSpeedMul(0.1f);
+	}
+	if(asTimer == "clips4"){
+		PlayGuiSound("player_crouch", 1);
+		StartPlayerLookAt("LookArea_2", 3, 3, "");
+	}
+	if(asTimer == "clips5"){
+		PlayGuiSound("player_crouch", 1);
+		StartPlayerLookAt("LookArea_3", 3, 3, "");
+	}
+	if(asTimer == "clips6"){
+		StartPlayerLookAt("LookArea_4", 3, 3, "");
+	}
+	if(asTimer == "clips7"){
+		StopPlayerLookAt();
+		StartScreenShake(0.05, 0, 0.2f, 0.2f);
+		PlayGuiSound("player_stand", 1);
+		MovePlayerHeadPos(0, 0, 0, 5, 5);
+		SetPlayerMoveSpeedMul(0.8f);
+		SetPlayerRunSpeedMul(0.8f);
+		SetPlayerLookSpeedMul(1);
+		FadeImageTrailTo(0.1f, 0.05f);
+	}
+}
+
+void NoteDeathOfKind01(string &in asItem)	{	AddEntityCollideCallback("Player", "ScriptArea_15", "NewPriorityQuestEvent", true, 1);	SetLocalVarInt("newPrioKind", 1);
+												AddQuest("machineUnplan", "machineUnplan");		AddQuest("LastLife", "lastLife");		}
+void NoteDeathOfKind02(string &in asItem)	{	AddEntityCollideCallback("Player", "ScriptArea_15", "NewPriorityQuestEvent", true, 1);	SetLocalVarInt("newPrioKind", 2);
+												AddQuest("machineInTrapVision", "machineInTrapVision");		AddQuest("LastLife", "lastLife");		}
+
+void NewPriorityQuestEvent(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("newPrioKind")==1)
+		{	AddTimer("machineQuest", 2, "TimerList");	}
+	if(GetLocalVarInt("newPrioKind")==2)
+		{	//AddTimer("machineQuestAlt", 2, "TimerList");	
+			AddTimer("machineQuest", 2, "TimerList");	}
+
+}
+
+void machineTrapPlan(string &in asItem){
+	AddQuest("machineInTrapVision", "machineInTrapVision");
+	AddQuest("lastLife", "lastLife");
+	//THE QUEST IF YOU RANDOMLY DIED BY THE SERVANT
+}
+void machineWay(string &in asItem){
+	AddQuest("machineUnplan", "machineUnplan");	
+	AddQuest("lastLife", "lastLife");
+	//THE QUEST AFTER YOU TRIED TO STOP THE MACHINE
+}
+
+
+void explosivPage(string &in asItem){
+	AddTimer("questExplosiv", 3, "TimerList");
+}
+
+void dreamEngage(string &in asParent, string &in asChild, int alState)
+{	PlaySoundAtEntity("descent", "21_alex_low_freq_rumble", "Player", 0, true);	}
+
+void wellDiveIn(string &in asParent, string &in asChild, int alState)
+{	
+		FadeOut(1);
+		SetPlayerJumpDisabled(true);
+		SetPlayerCrouchDisabled(true);
+		SetPlayerMoveSpeedMul(0);
+		SetPlayerRunSpeedMul(0);
+		SetPlayerLookSpeedMul(0.3f);
+		SetInventoryDisabled(true);
+		FadeGlobalSoundVolume(0, 3);
+		AddTimer("teleporttortureDream", 8, "TimerList");
+		SetSanityDrainDisabled(true);
+		for(int i=1; i<=200; i++)	AddTimer("diveForce", 8+i*0.1f, "TimerList");	
+		AddTimer("dreamMove", 27.6f, "TimerList");
+		PlayMusic("madness.ogg", false, 1, 0, 4, true);
+		RemoveTimer("musicIntroAmbiene");
+		AddTimer("neutralvision", 0, "TimerList");
+		RemoveEntityCollideCallback("Player", "AmbienceAreaA_3");
+		AddTimer("RadialVision1", 8, "TimerList");
+		StopSound("cloud", 8);
+}
+
+void InteractEmotionEffectCradle(string &in asArea)
+{
+	AddTimer("cradleDisabled", 2, "TimerList");
+	StartEffectEmotionFlash("Level04", "theCradle", "scare_wall_stomp.snt");
+	FadeLightTo("PointLight_51", 0.4, 0.1, 0.1, 1, -1, 10);
+			RemoveTimer("descendingBreath");
+			SetEntityActive("SoundArea02", false);
+}
+
+void openCage(string &in asParent, string &in asChild, int alState){
+	for(int i=0; i<=30; i++)	AddTimer("", 0.1f * i, "TimerExtraMaidenImpulse");
+}
+
+void closingCageEvent(string &in asParent, string &in asChild, int alState)
+{	AddTimer("maidenDreamEvent1", 1, "TimerList");
+	AddTimer("maidenDreamEvent2", 9, "TimerList");
+	AddTimer("maidenDreamEvent3", 4, "TimerList");
+	//AddTimer("maidenDreamDisable", 15, "TimerList");
+	AddTimer("dreamoutEvent", 15, "TimerList");
+	AddTimer("dreamoutEvent1", 17, "TimerList");
+	AddTimer("dreamoutEvent2", 20, "TimerList");
+	AddTimer("dreamoutEvent3", 23, "TimerList");
+	AddTimer("dreamoutEvent4", 25, "TimerList");
+	AddTimer("dreamoutEvent5", 26, "TimerList");
+	//SetPlayerMoveSpeedMul(0.1f);
+}
+
+void TimerExtraMaidenImpulse(string &asTimer)
+{
+	AddBodyImpulse("iron_maiden_1_leftDoor", -0.035, 0 , 0.035, "world");
+	AddBodyImpulse("iron_maiden_1_rightDoor", 0.035, 0 , 0.035, "world");
+}
+void TimerExtraMaidenEmPulse(string &asTimer)
+{
+	AddBodyImpulse("iron_maiden_1_leftDoor", 0.17, 0 , -0.17, "world");
+	AddBodyImpulse("iron_maiden_1_rightDoor", -0.17, 0 , -0.17, "world");
+}
+
+void ambpool(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	PlaySoundAtEntity("pool", "cavepool", "Player", 10, true);
+	else				StopSound("pool", 10);
+}
+
+void ambpooldrips(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	PlaySoundAtEntity("drips", "cavepooldrips", "Player", 5, true);
+	else				StopSound("drips", 9);
+}
+
+void ambpoolechoes(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	PlaySoundAtEntity("echoes", "cavepoolechoes", "Player", 20, true);
+	else				StopSound("echoes", 20);
+}
+
+void torchfire(string &in asEntity, string &in asType){
+	PlaySoundAtEntity("", "22_fire", asEntity, 4, true);
+}
+
+void hiding(string &in asParent, string &in asChild, int alState){
+	if(alState == 1)	SetLocalVarInt("HideMode", 1);
+	else				SetLocalVarInt("HideMode", 0);
+}
+
+void doomsday(){
+	SetMapDisplayNameEntry("defeat");
+	for(int i=0; i<=15; i++)	AutoSave();
+	StartCredits("blackplague_ending.ogg", "Ending", "BombCredits", 0);
+}
+
+void OnEnter()
+{	if(GetGlobalVarInt("LimitedLife")==3){
+			doom(); }
+	if(GetGlobalVarInt("LimitedLife")==4){
+			//doomsday();
+			}
+	
+	SetMapDisplayNameEntry("cranny");
+	SetupRandomGenerator();
+	AutoSave();
+}
+void OnLeave()
+{
+	StopMusic(5, 1);
+	StopMusic(20, 3);
+}

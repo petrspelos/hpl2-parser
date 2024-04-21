@@ -1,0 +1,300 @@
+void OnEnter()
+{
+	if(ScriptDebugOn())
+	{
+		SetGlobalVarInt("FastSeekerAchievement", 1);
+		SetGlobalVarInt("HealthAchievement", 1);
+		SetGlobalVarInt("ItemsAchievement", 1);
+		SetGlobalVarInt("NoDeathAchievement", 1);
+		//SetGlobalVarInt("StatuesAchievement", 1);
+		SetGlobalVarInt("WardrobeAchievement", 1);
+		SetGlobalVarInt("EnemiesAchievement", 1);
+		SetGlobalVarInt("PuzzleAchievement", 1);
+		//SetGlobalVarInt("NoPuzzleAchievement", 1);
+		SetGlobalVarInt("NoStatuesAchievement", 1);
+		SetGlobalVarInt("SanityAchievement", 1);
+		SetGlobalVarInt("SlimesAchievement", 1);
+		SetGlobalVarInt("LightsAchievement", 1);
+	}
+	
+	StopMusic(0.1f, 10);
+	StopMusic(0.1f, 1);
+
+	PreloadParticleSystem("ps_area_fog.ps");
+	
+	PreloadSound("02_ambience_house.snt");
+	PreloadSound("02_clock_desk.snt");
+	PreloadSound("02_clock_grandfather.snt");
+	PreloadSound("03_amb_library.snt");
+	PreloadSound("general_thunder.snt");
+	PreloadSound("general_fire_burning.snt");
+	PreloadSound("general_fire_burning_low.snt");
+	PreloadSound("open_door.snt");
+	PreloadSound("close_door.snt");
+
+	SetMapDisplayNameEntry("RedRoom");
+	
+	PlayMusic("10_amb.ogg", true, 0.7f, 2.0f, 0, false);
+	
+	CheckPoint ("OutOfMap", "PlayerStartArea_1", "CPOutOfMap", "DeathHints", "DoNotFall");
+	
+	SetupLoadScreen("LoadingHints", "ToTavern", 0, "menu_loading_screen.jpg");
+	
+	if(GetGlobalVarInt("HealthAchievement") == 1)
+		AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+}
+
+void OnLeave()
+{
+	RemoveTimer("addhealth");
+	RemoveTimer("checkhealth");
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+}
+
+void OnStart()
+{
+	if(GetPlayerLampOil() < 10) AddPlayerLampOil(10.0f);
+}
+
+void TimerHealthAchievement(string &in asTimer)
+{
+	if(asTimer == "addhealth")
+	{
+		if(GetPlayerHealth() <= 98.0f)
+		{
+			AddPlayerHealth(2.0f);
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "checkhealth")
+	{
+		if(GetPlayerHealth() > 98.0f)
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "pausehealth")
+	{
+		RemoveTimer("addhealth");
+		RemoveTimer("checkhealth");
+	}
+}
+
+void CPOutOfMap(string &in asName, int alCount)
+{
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	if(GetGlobalVarInt("NoDeathAchievement") == 1)
+		SetPlayerHealth(100.1f);
+	if(GetGlobalVarInt("SanityAchievement") == 1)
+		SetPlayerSanity(100.1f);
+	PlayMusic("10_amb.ogg", true, 0.7f, 2.0f, 0, false);
+}
+
+void PickNote(string &in asEntity)
+{
+	if(asEntity == "note_scroll_1") SetEntityActive("AreaTavernDoor", true);
+}
+
+void TouchDoor(string &in asEntity)
+{
+	if(asEntity == "AreaTavernDoor") ChangeMap("00_tavern.map", "PlayerStartArea_4", "open_door.snt", "close_door.snt");
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")	FadeIn(2.0f);
+	if(asTimer == "fadeinslow")	FadeIn(5.0f);
+	if(asTimer == "fadeout") FadeOut(2.0f);
+	if(asTimer == "fadeoutslow") FadeOut(5.0f);
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeinslowactiveplayer")
+	{
+		FadeIn(5.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}
+	if(asTimer == "fadeoutslowactiveplayer")
+	{
+		FadeOut(5.0f);
+		SetPlayerActive(true);	
+	}
+}
+
+void TimerFadeGlobalSound(string &in asTimer)
+{
+	if(asTimer == "globalsoundon") FadeGlobalSoundVolume(1.0f, 4.0f);
+	if(asTimer == "globalsoundonquick") FadeGlobalSoundVolume(1.0f, 0.5f);
+	if(asTimer == "globalsoundoff") FadeGlobalSoundVolume(0.0f, 4.0f);
+	if(asTimer == "globalsoundoffquick") FadeGlobalSoundVolume(0.0f, 0.5f);
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+			SetPlayerJumpForceMul(1.175f);
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}
+
+void PlayerLook(string &in asEntity, string &in asType, float afSpeed, float afTime)
+{
+	StartPlayerLookAt(asEntity, afSpeed, afSpeed, "");
+	if(asType == "lookspeed")
+	{
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.2f);
+		SetPlayerLookSpeedMul(0.2f);
+		AddTimer("resetspeedmul", afTime, "TimerStopLook");
+	}
+	else
+	if(asType == "lookactive")
+	{
+		SetPlayerActive(false);
+		AddTimer("activeplayer", afTime, "TimerStopLook");
+	}
+	else AddTimer("", afTime, "TimerStopLook");
+}
+
+void PlayerReact(string &in asType, float afCount, bool abUseDamageEffect, bool abUseBlurEffect)
+{
+	if(asType == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "breath_slow")
+	{
+		PlayGuiSound("react_breath_slow", 0.6f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(asType == "pant")
+	{
+		PlayGuiSound("react_pant", 0.8f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0.5f, 0.025f);
+			FadeRadialBlurTo(0.1f, 0.025f);
+			SetRadialBlurStartDist(0.2f);
+		}
+	}
+	if(asType == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		if(abUseBlurEffect == true)
+		{
+			FadeSepiaColorTo(0, 0.1f);
+			FadeRadialBlurTo(0, 0.1f);
+		}
+	}
+	if(abUseDamageEffect == true) GiveSanityDamage(afCount, true);
+	else GiveSanityDamage(afCount, false);
+} 

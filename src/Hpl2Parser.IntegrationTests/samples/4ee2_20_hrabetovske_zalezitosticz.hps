@@ -1,0 +1,1061 @@
+void OnStart()
+{
+  //==========================================
+  // debug bullshit
+  //==========================================
+  //GiveItemFromFile("lantern_1", "lantern.ent");
+
+  AddEntityCollideCallback("*", "area_portal", "portal", false, 1);
+  AddEntityCollideCallback("Player", "area_portal", "portal", false, 1);
+  AddEntityCollideCallback("corpse*", "vodnizachrana", "idiotproof_1", false, 1);
+  AddEntityCollideCallback("corpse*", "area_jidlo", "na_puta_puta", false, 1);
+  AddEntityCollideCallback("Player", "vodnizachrana", "pomuzeme_ti_na_druhou_stranu", false, 1);
+  AddEntityCollideCallback("zebrik", "vodnizachrana", "dalsi_idiotproof", false, 1);
+  AddEntityCollideCallback("zebrik", "area_pomoc", "pomuzeme_zebrikovi", true, 1);
+  AddEntityCollideCallback("Player", "escape", "escape", true, 1);
+  AddEntityCollideCallback("Player", "change", "change", true, 1);
+  SetEntityInteractionDisabled("zebrik", true);
+
+  AddEntityCollideCallback("Player", "area_hrabe", "hrabe", true, 1);
+
+  //debug only
+  //AddEntityCollideCallback("Player", "area_hrabe", "direcky_dalsi", true, 1);
+
+  AddEntityCollideCallback("gottfried", "area_g_konec", "hrabe_stop", true, 1);
+
+  AddEntityCollideCallback("Player", "nahore", "nahore_handler", false, 1);
+  AddEntityCollideCallback("Player", "dole", "dole_handler", false, 1);
+
+  AddEntityCollideCallback("gottfried", "nahore", "nahore_handler", false, 1);
+  AddEntityCollideCallback("gottfried", "dole", "dole_handler", false, 1);
+
+  AddEntityCollideCallback("Player", "refresh", "refresh", false, 1);
+  AddEntityCollideCallback("gottfried_2", "rozbit_dvere", "dalsidvere2", true, 1);
+
+
+  // páčičičinkyyyy
+  AddEntityCollideCallback("pacicka_1", "dira_1", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_1", "dira_2", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_1", "dira_3", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_1", "dira_4", "direcky", false, 1);
+
+  AddEntityCollideCallback("pacicka_2", "dira_1", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_2", "dira_2", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_2", "dira_3", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_2", "dira_4", "direcky", false, 1);
+
+  AddEntityCollideCallback("pacicka_3", "dira_1", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_3", "dira_2", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_3", "dira_3", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_3", "dira_4", "direcky", false, 1);
+
+  AddEntityCollideCallback("pacicka_4", "dira_1", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_4", "dira_2", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_4", "dira_3", "direcky", false, 1);
+  AddEntityCollideCallback("pacicka_4", "dira_4", "direcky", false, 1);
+
+  AddEntityCollideCallback("dira_1_paka", "pacickadolu_1", "direcky_dalsi", false, 1);
+  AddEntityCollideCallback("dira_2_paka", "pacickadolu_2", "direcky_dalsi", false, 1);
+  AddEntityCollideCallback("dira_3_paka", "pacickadolu_3", "direcky_dalsi", false, 1);
+  AddEntityCollideCallback("dira_4_paka", "pacickadolu_4", "direcky_dalsi", false, 1);
+
+  AddEntityCollideCallback("gottfried", "portarea_1", "gottfried_port", false, 1);
+  AddEntityCollideCallback("gottfried", "portarea_2", "gottfried_port", false, 1);
+  AddEntityCollideCallback("gottfried", "portarea_3", "gottfried_port", false, 1);
+  AddEntityCollideCallback("gottfried", "portarea_4", "gottfried_port", false, 1);
+
+  // zase ti zasrani cervove
+  AddEntityCollideCallback("Player", "area_bezpeci", "handler_bezpecnosti_proti_cervum", false, 1);
+  AddEntityCollideCallback("Player", "area_nebezpeci", "handler_bezpecnosti_proti_cervum", false, 1);
+  AddEntityCollideCallback("Player", "area_nebezpeci_1", "handler_bezpecnosti_proti_cervum", false, 1);
+  AddEntityCollideCallback("Player", "area_bezpeci_1", "handler_bezpecnosti_proti_cervum", false, 1);
+
+  AddEntityCollideCallback("paka_2", "paka_2_dolu", "paka_things", false, 1);
+  AddEntityCollideCallback("paka_1", "paka_1_dolu", "paka_things", false, 1);
+
+  AddTimer("", 5.0, "nahodny_scare_eventy");
+
+  // promenne
+  SetLocalVarInt("rozmlatil_maso", 0);
+  SetLocalVarInt("paka_1_stlacena", 0);
+  SetLocalVarInt("paka_2_stlacena", 0);
+  //SetLocalVarInt("klikl_na_dvere", 0);
+  //SetLocalVarInt("hodil_driv_nez_klikl", 0);
+  SetLocalVarString("primarni_hudba", "hrabe.ogg");
+  SetLocalVarInt("hrac_je_v_bezpeci", 0);
+  SetLocalVarInt("hodil_tam_jidlo", 0);
+  SetLocalVarInt("pocet_stlacenych_pak", 0);
+  SetLocalVarInt("bossfight_bezi", 0);
+  SetLocalVarInt("pocet_escape_node", 17);
+  SetLocalVarInt("hrabe_je_nahore", 0);
+
+  // debug
+  //SetLocalVarInt("pocet_stlacenych_pak", 4);
+
+  // use item
+  for(int i=1;i<=21;i++)
+  {
+    AddUseItemCallback("callback_kladivo" + i, "kladivo", "corpse_things_" + i, "krev_o_to_tu_jde", false);
+  }
+
+  // no going back
+  ClearSavedMaps();
+
+  //vypnout pro testovani jinak mi z toho upadne pero
+  AddTimer("", 3.0, "stinovyzamek");
+
+  // cervene svetlo
+  for(int i=1;i<=21;i++){
+    CreateParticleSystemAtEntityExt("cervene_ps_" + i, "ps_orb_light.ps", "cerveny_ps_" + i, true, 1.0, 0.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+  }
+
+  //SetPropEffectActive("orb_1", true, true);
+
+  if(QuestIsAdded("q25"))
+  {
+    CompleteQuest("q25", "q25cz");
+  }
+
+}
+
+void stinovyzamek(string &in asTimer)
+{
+  SetPropActiveAndFade("sliz", true, 1.0);
+  StartInsanityEvent("Stream_Monster_Roar01");
+}
+
+void nahodny_scare_eventy(string &in asTimer)
+{
+    PlayGuiSound("horror_rock_worm_far.snt", 1.0);
+    StartScreenShake(0.03, 1.0, 1.0, 1.0);
+    AddTimer("scareev", 5 + RandInt(1,5), "nahodny_scare_eventy");
+}
+
+void dverecb(string &in asEntity)
+{
+  SetMessage("TheVoice", "podzemidverecz", 3.0);
+  PlayGuiSound("door_level_wood_locked.ogg", 1.0);
+  if(QuestIsAdded("q23") == false)
+  {
+    SetEntityInteractionDisabled("zebrik", false);
+    AddQuest("q23", "q23cz");
+    SetLocalVarString("dialog", "poslednipodzemi");
+    if(GetGlobalVarInt("jazyk") == 0)
+    {
+      AddEffectVoice(GetLocalVarString("dialog") + "1", "", "dabing", GetLocalVarString("dialog") + "1cz", false, "Player", 5.0, 15.0);
+    }
+    else if(GetGlobalVarInt("jazyk") == 1)
+    {
+      AddEffectVoice(GetLocalVarString("dialog") + "1_en", "", "dabing", GetLocalVarString("dialog") + "1", false, "Player", 5.0, 15.0);
+    }
+  }
+}
+
+void tajnycallback(string &in asEntity)
+{
+  SetGlobalVarInt("nalezenych_tajnych_poznamek", GetGlobalVarInt("nalezenych_tajnych_poznamek")+1);
+  SetMessage("TheVoice", "tajemstvinalezenocz", 3.0);
+  PlayGuiSound("puzzle.ogg", 1.0);
+}
+
+void change(string &in asParent, string &in asChild, int alState)
+{
+  AddDebugMessage("change maybe", false);
+  ChangeMap("21_rozluckove_zalezitosticz.map", "playerstart_0", "", "");
+}
+
+void escape(string &in asParent, string &in asChild, int alState)
+{
+  AddDebugMessage("dvere", false);
+  SetEntityActive("dvere_normalni", false);
+  SetEntityActive("dvere_otevreny", true);
+  AddTimer("", 1.0, "lasko");
+}
+
+void lasko(string &in asTimer)
+{
+  SetLocalVarString("dialog", "hrabetovskezalezitosti");
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "33", "", "dabing", GetLocalVarString("dialog") + "33cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "34", "", "dabing", GetLocalVarString("dialog") + "34cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "35", "", "dabing", GetLocalVarString("dialog") + "35cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "36", "", "dabing", GetLocalVarString("dialog") + "36cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "37", "", "dabing", GetLocalVarString("dialog") + "37cz", false, "hrabedabing", 5.0, 15.0);
+    //AddEffectVoice(GetLocalVarString("dialog") + "38", "", "dabing", GetLocalVarString("dialog") + "38", false, "hrabedabing", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "33_en", "", "dabing", GetLocalVarString("dialog") + "33", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "34_en", "", "dabing", GetLocalVarString("dialog") + "34", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "35_en", "", "dabing", GetLocalVarString("dialog") + "35", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "36_en", "", "dabing", GetLocalVarString("dialog") + "36", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "37_en", "", "dabing", GetLocalVarString("dialog") + "37", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "38_en", "", "dabing", GetLocalVarString("dialog") + "38", false, "hrabedabing", 5.0, 15.0);
+  }
+}
+
+void gottfried_port(string &in asParent, string &in asChild, int alState)
+{
+  if(GetLocalVarInt("hrac_je_nahore") == 1 && GetLocalVarInt("bossfight_bezi") == 1)
+  {
+    ShowEnemyPlayerPosition("gottfried");
+    TeleportEnemyToNode("gottfried", asChild + "_node", true);
+    CreateParticleSystemAtEntityExt("port_ps_dalsi", "ps_orb_light.ps", asChild + "_area", true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+    AddTimer("", 1.434, "prycprycsps");
+    nejaka_husta_gottfriedova_hlaska();
+  }
+}
+
+void prycprycsps(string &in asTimer)
+{
+  DestroyParticleSystem("port_ps_dalsi");
+}
+
+void nahore_handler(string &in asParent, string &in asChild, int alState)
+{
+  if(asParent == "Player")
+  {
+    SetLocalVarInt("hrac_je_nahore", 1);
+    AddTimer("", RandInt(2,4), "neuteces_nahoru");
+  }
+  else if(asParent == "gottfried")
+  {
+    SetLocalVarInt("hrabe_je_nahore", 1);
+    AddTimer("", RandInt(2,4), "neuteces_dolu");
+  }
+}
+
+void neuteces_nahoru(string &in asTimer)
+{
+  if(GetLocalVarInt("hrac_je_nahore") == 1 && GetLocalVarInt("bossfight_bezi") == 1)
+  {
+    SetLocalVarInt("dalsi_cislo", RandInt(1, 6));
+    CreateParticleSystemAtEntityExt("port_ps", "ps_orb_light.ps", "portnode_" + GetLocalVarInt("dalsi_cislo") + "_area", true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+    PlayGuiSound("25_guardian_slime_appear.snt", 1.0);
+    AddTimer("", 1.5, "pryc_s_ps");
+    TeleportEnemyToNode("gottfried", "portnode_" + GetLocalVarInt("dalsi_cislo"), true);
+    StartScreenShake(0.03, 5.0, 0.1, 2.0);
+  }
+}
+
+void neuteces_dolu(string &in asTimer)
+{
+  if(GetLocalVarInt("hrac_je_nahore") == 0 && GetLocalVarInt("bossfight_bezi") == 1 && GetLocalVarInt("hrabe_je_nahore") == 1)
+  {
+    SetLocalVarInt("dalsi_cislo", RandInt(1, 6));
+    CreateParticleSystemAtEntityExt("port_ps", "ps_orb_light.ps", "portnode_" + GetLocalVarInt("dalsi_cislo") + "_area", true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+    PlayGuiSound("25_guardian_slime_appear.snt", 1.0);
+    AddTimer("", 1.5, "pryc_s_ps");
+    TeleportEnemyToNode("gottfried", "portnode_" + GetLocalVarInt("dalsi_cislo"), true);
+    StartScreenShake(0.03, 5.0, 0.1, 2.0);
+  }
+}
+
+void pryc_s_ps(string &in asTimer)
+{
+  DestroyParticleSystem("port_ps");
+}
+
+void dole_handler(string &in asParent, string &in asChild, int alState)
+{
+  if(asParent == "Player")
+  {
+    SetLocalVarInt("hrac_je_nahore", 0);
+  }
+  else if(asParent == "gottfried")
+  {
+    SetLocalVarInt("hrabe_je_nahore", 0);
+  }
+}
+
+void hrabe_stop(string &in asParent, string &in asChild, int alState)
+{
+  AddDebugMessage("clearing", false);
+  ClearEnemyPatrolNodes("gottfried");
+}
+
+void hrabe(string &in asParent, string &in asChild, int alState)
+{
+  AddDebugMessage("hrabe", false);
+  SetPlayerActive(false);
+  StartInsanityEvent("Wide2");
+  AddTimer("", 0.5, "pohled");
+  DestroyParticleSystem("cervene_ps_*");
+  //AddTimer("", 1.0, "fo1");
+}
+
+void pohled(string &in asTimer)
+{
+  StartPlayerLookAt("area_dalsiportal", 2.5, 5.0, "null");
+  AddTimer("", 2.0, "pohled_1");
+}
+
+void pohled_1(string &in asTimer)
+{
+  RemoveTimer("scareev");
+  CreateParticleSystemAtEntityExt("portalovekrasneps", "ps_orb_light.ps", "area_dalsiportal", true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+  SetEntityActive("block", true);
+  PlayGuiSound("03_orb.ogg", 1.0);
+  if(GetPlayerSanity() > 30)
+  {
+    GiveSanityDamage(10.0, true);
+  }
+  AddTimer("", 2.0, "pohled_2");
+}
+
+void pohled_2(string &in asTimer)
+{
+  SetEntityActive("gottfried", true);
+  for(int i=1;i<=11;i++){
+    AddEnemyPatrolNode("gottfried", "PathNodeArea_" + i, 0.001, "");
+  }
+  SetEnemySanityDecreaseActive("gottfried", false);
+  SetLocalVarString("dialog", "hrabetovskezalezitosti");
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "1", "", "dabing", GetLocalVarString("dialog") + "1cz", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "2", "", "dabing", GetLocalVarString("dialog") + "2cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "3", "", "dabing", GetLocalVarString("dialog") + "3cz", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "4", "", "dabing", GetLocalVarString("dialog") + "4cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "5", "", "dabing", GetLocalVarString("dialog") + "5cz", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "6", "", "dabing", GetLocalVarString("dialog") + "6cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "7", "", "dabing", GetLocalVarString("dialog") + "7cz", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "8", "", "dabing", GetLocalVarString("dialog") + "8cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "9", "", "dabing", GetLocalVarString("dialog") + "9cz", true, "hrabedabing", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "1_en", "", "dabing", GetLocalVarString("dialog") + "1", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "2_en", "", "dabing", GetLocalVarString("dialog") + "2", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "3_en", "", "dabing", GetLocalVarString("dialog") + "3", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "4_en", "", "dabing", GetLocalVarString("dialog") + "4", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "5_en", "", "dabing", GetLocalVarString("dialog") + "5", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "6_en", "", "dabing", GetLocalVarString("dialog") + "6", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "7_en", "", "dabing", GetLocalVarString("dialog") + "7", true, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "8_en", "", "dabing", GetLocalVarString("dialog") + "8", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "9_en", "", "dabing", GetLocalVarString("dialog") + "9", true, "hrabedabing", 5.0, 15.0);
+  }
+  AddTimer("", 0.1, "t1");
+  StartPlayerLookAt("gottfried", 6.0, 8.0, "null");
+}
+
+void t1(string &in asTimer)
+{
+  if(GetEffectVoiceActive() == false)
+  {
+    CheckPoint ("cp3", "cp_bossfight", "cp_cb_bossfight", "smrt", "poslednisklepeni_3");
+    StopMusic(0.5, 10);
+    StopCurrentInsanityEvent();
+    StopPlayerLookAt();
+    SetPlayerActive(true);
+    SetEnemyDisableTriggers("gottfried", false);
+    PlayMusic("gottfried.ogg", true, 0.5, 0.1, 10, false);
+    SetEntityActive("portarea_3", true);
+    SetLocalVarInt("bossfight_bezi", 1);
+    AutoSave();
+  }
+  else
+  {
+    AddTimer("", 0.1, "t1");
+  }
+}
+
+void direcky(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive(asParent, false);
+  SetEntityActive(asChild, false);
+  SetEntityActive(asChild + "_paka", true);
+  PlayGuiSound("puzzle_place_jar.ogg", 1.0);
+  StartRandomInsanityEvent();
+  if(GetEffectVoiceActive() == false)
+  {
+    nejaka_husta_gottfriedova_hlaska();
+  }
+}
+
+void direcky_dalsi(string &in asParent, string &in asChild, int alState)
+{
+  StartScreenShake(0.05, 2.0, 0.5, 0.5);
+  SetLeverStuckState(asParent, 1, true);
+
+  //debug only
+  //SetLocalVarInt("pocet_stlacenych_pak", 4);
+
+  SetLocalVarInt("pocet_stlacenych_pak", GetLocalVarInt("pocet_stlacenych_pak") + 1);
+
+  if(GetLocalVarInt("pocet_stlacenych_pak") == 4)
+  {
+    DestroyParticleSystem("ps_hlavni_4");
+    PlayGuiSound("27_orb_implode.ogg", 1.0);
+    FadeOut(0);
+    AddTimer("", 1.0, "fo1");
+    //AddTimer("", 1.5, "fo2");
+    //AddTimer("", 2.0, "fo3");
+    //AddTimer("", 2.5, "fo4");
+    //AddTimer("", 3.0, "fo5");
+    SetEntityActive("gottfried", false);
+    StopMusic(0.5, 10);
+    PlayMusic("kalieena.ogg", true, 0.5, 0.1, 10, false);
+
+    for(int i=1;i<=10;i++)
+    {
+      CreateParticleSystemAtEntity("prach_" + i, "kour_zasrany.ps", "ps_prach_dalsi_" + i, false);
+    }
+    SetEntityActive("gottfried", false);
+    StartInsanityEvent("wide_normalni");
+    SetPlayerActive(false);
+    AutoSave();
+  }
+  else if(GetLocalVarInt("pocet_stlacenych_pak") == 1)
+  {
+    DestroyParticleSystem("ps_hlavni_1");
+    PlayGuiSound("27_break.ogg", 1.0);
+  }
+  else if(GetLocalVarInt("pocet_stlacenych_pak") == 2)
+  {
+    DestroyParticleSystem("ps_hlavni_2");
+    PlayGuiSound("27_break.ogg", 1.0);
+  }
+  else if(GetLocalVarInt("pocet_stlacenych_pak") == 3)
+  {
+    DestroyParticleSystem("ps_hlavni_3");
+    PlayGuiSound("27_break.ogg", 1.0);
+  }
+}
+
+void fo1(string &in asTimer)
+{
+  SetPlayerActive(false);
+  FadeIn(0);
+  AddTimer("", 0.5, "fo2");
+}
+
+void fo2(string &in asTimer)
+{
+  FadeOut(0);
+  TeleportPlayer("pos_dalsi");
+  SetEntityActive("gottfried_2", true);
+  StartPlayerLookAt("gottfried_2", 2.5, 5.0, "");
+  AddTimer("", 0.5, "fo3");
+}
+
+void fo3(string &in asTimer)
+{
+  FadeIn(0);
+  AddPlayerBodyForce(0.0, 0.0, -10000.0, true);
+  PlayGuiSound("blesk.ogg", 1.0);
+  //SetPlayerCrouching(true);
+  AddTimer("", 0.5, "fo4");
+}
+
+void fo4(string &in asTimer)
+{
+  FadeOut(0);
+  AddTimer("", 0.5, "fo5");
+}
+
+void fo5(string &in asTimer)
+{
+  FadeIn(0);
+  AddTimer("", 1.0, "ani_nevim_2");
+}
+
+void ani_nevim_2(string &in asTimer)
+{
+  PlayGuiSound("kdyz_to_strcis_do_spatny_diry_2.ogg", 1.0);
+  FadeEnemyToSmoke("gottfried_2", true);
+  StopMusic(1.0, 10);
+  PlayMusic("end1.ogg", true, 0.5, 0.1, 10, false);
+  //SetPlayerCrouching(false);
+  StopPlayerLookAt();
+  AddTimer("", 1.0, "ani_nevim_3");
+}
+
+void ani_nevim_3(string &in asTimer)
+{
+  SetPropActiveAndFade("helene", true, 1.0);
+  SetPropActiveAndFade("hedwig", true, 1.0);
+  SetEntityActive("blockpoklad", false);
+  DestroyParticleSystem("pspoklad");
+  StartPlayerLookAt("pohledpyco", 2.5, 5.0, "");
+  PlayGuiSound("jejdacoto.ogg", 1.0);
+  AddTimer("", 1.0, "finalnirozhovor");
+}
+
+void finalnirozhovor(string &in asTimer)
+{
+  SetLocalVarString("dialog", "hrabetovskezalezitosti");
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "21", "", "dabing", GetLocalVarString("dialog") + "21cz", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "22", "", "dabing", GetLocalVarString("dialog") + "22cz", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "23", "", "dabing", GetLocalVarString("dialog") + "23cz", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "24", "", "dabing", GetLocalVarString("dialog") + "24cz", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "25", "", "dabing", GetLocalVarString("dialog") + "25cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "26", "", "dabing", GetLocalVarString("dialog") + "26cz", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "27", "", "dabing", GetLocalVarString("dialog") + "27cz", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "28", "", "dabing", GetLocalVarString("dialog") + "28cz", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "29", "", "dabing", GetLocalVarString("dialog") + "29cz", false, "pohledpyco", 5.0, 15.0);    AddEffectVoice(GetLocalVarString("dialog") + "30", "", "dabing", GetLocalVarString("dialog") + "30", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "31", "", "dabing", GetLocalVarString("dialog") + "31cz", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "32", "", "dabing", GetLocalVarString("dialog") + "32cz", false, "hrabedabing", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "21_en", "", "dabing", GetLocalVarString("dialog") + "21", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "22_en", "", "dabing", GetLocalVarString("dialog") + "22", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "23_en", "", "dabing", GetLocalVarString("dialog") + "23", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "24_en", "", "dabing", GetLocalVarString("dialog") + "24", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "25_en", "", "dabing", GetLocalVarString("dialog") + "25", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "26_en", "", "dabing", GetLocalVarString("dialog") + "26", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "27_en", "", "dabing", GetLocalVarString("dialog") + "27", false, "hrabedabing", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "28_en", "", "dabing", GetLocalVarString("dialog") + "28", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "31_en", "", "dabing", GetLocalVarString("dialog") + "31", true, "pohledpyco", 5.0, 15.0);
+    AddEffectVoice(GetLocalVarString("dialog") + "32_en", "", "dabing", GetLocalVarString("dialog") + "32", false, "hrabedabing", 5.0, 15.0);
+  }
+  AddTimer("", 0.1, "t20");
+}
+
+void t20(string &in asTimer)
+{
+  if(GetEffectVoiceActive() == false)
+  {
+    SetPropActiveAndFade("hedwig", false, 0.5);
+    SetPropActiveAndFade("helene", false, 0.5);
+    SetPlayerActive(true);
+    StopPlayerLookAt();
+    SetSwingDoorLocked("dvere_normalni", false, false);
+    SetPlayerRunSpeedMul(0.5);
+    SetPlayerMoveSpeedMul(0.7434);
+    StopCurrentInsanityEvent();
+  }
+  else
+  {
+    AddTimer("", 0.1, "t20");
+  }
+}
+
+void ani_nevim(string &in asTimer)
+{
+  SetPropActiveAndFade("mec_static", true, 1.0);
+  StartPlayerLookAt("mec_static", 2.5, 5.0, "");
+  RotatePropToSpeed("mec_static", 3.0, 5.0, 100.0, 0.0, 0.0, false, "");
+  CreateParticleSystemAtEntityExt("mec_psps", "ps_orb_light.ps", "mec_psps", true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+
+
+  AddTimer("", 3.0, "stop_move");
+  //AddTimer("", 3.1, "cerv_thief");
+}
+
+void stop_move(string &in asTimer)
+{
+  StopPropMovement("mec_static");
+  SetPropStaticPhysics("mec_static", false);
+  StartPlayerLookAt("gottfried_2", 2.5, 5.0, "");
+
+  AddTimer("", 1.0, "uznevimjaktokurvadopicipojmenovat");
+}
+
+void uznevimjaktokurvadopicipojmenovat(string &in asTimer)
+{
+  SetPlayerActive(true);
+}
+
+void cerv_thief(string &in asTimer)
+{
+  StartPlayerLookAt("cervospawner", 2.5, 5.0, "");
+  CreateParticleSystemAtEntityExt("cerv_portal", "ps_orb_room_portal_start.ps", "cervospawner", true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+  AddTimer("", 0.743, "cerv_thief_2");
+}
+
+void cerv_thief_2(string &in asTimer)
+{
+  DestroyParticleSystem("mec_psps");
+  SetEntityActive("cerv", true);
+  AddTimer("", 2.90, "cervopryc");
+  AddTimer("", 1.7, "cervopryc_1");
+}
+
+void cervopryc(string &in asTimer)
+{
+  SetEntityActive("cerv", false);
+}
+
+void cervopryc_1(string &in asTimer)
+{
+  SetEntityActive("mec_static", false);
+  AddTimer("", 3.0, "utikej_gottfriede_utikej");
+}
+
+void utikej_gottfriede_utikej(string &in asTimer)
+{
+  for(int i=1;i<=GetLocalVarInt("pocet_escape_node");i++)
+  {
+    AddEnemyPatrolNode("gottfried_2", "escapenode_" + i, 0.001, "");
+  }
+}
+
+void nejaka_husta_gottfriedova_hlaska()
+{
+  AddDebugMessage("test", false);
+
+  SetLocalVarString("dialog", "hrabetovskezalezitosti");
+
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    SetLocalVarInt("dalsi_hlaska", RandInt(10, 19));
+  }
+  else if(GetGlobalVarInt("jazyk") ==1)
+  {
+    SetLocalVarInt("dalsi_hlaska", RandInt(10, 18));
+  }
+
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + GetLocalVarInt("dalsi_hlaska"), "", "dabing", GetLocalVarString("dialog") + GetLocalVarInt("dalsi_hlaska") + "cz", false, "Player", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + GetLocalVarInt("dalsi_hlaska") + "_en", "", "dabing", GetLocalVarString("dialog") + GetLocalVarInt("dalsi_hlaska"), false, "Player", 5.0, 15.0);
+  }
+}
+
+void pomuzeme_ti_na_druhou_stranu(string &in asParent, string &in asChild, int alState)
+{
+  SetPlayerHealth(10.0);
+  SetEntityActive("bb1", true);
+  SetEntityActive("bb2", true);
+  SetPlayerRunSpeedMul(0.5);
+  SetPlayerMoveSpeedMul(0.3);
+  SetPlayerJumpDisabled(true);
+  SetPlayerCrouchDisabled(true);
+}
+
+void pomuzeme_zebrikovi(string &in asParent, string &in asChild, int alState)
+{
+  AddPropImpulse("zebrik", 10.0, 0.0, 0.0, "world");
+}
+
+void handler_bezpecnosti_proti_cervum(string &in asParent, string &in asChild, int alState)
+{
+  if(asChild == "area_bezpeci")
+  {
+    SetLocalVarInt("hrac_je_v_bezpeci", 1);
+  }
+  else if(asChild == "area_nebezpeci")
+  {
+    SetLocalVarInt("hrac_je_v_bezpeci", 0);
+  }
+  else if(asChild == "area_nebezpeci_1")
+  {
+    SetLocalVarInt("hrac_je_v_bezpeci", 0);
+  }
+  else if(asChild == "area_bezpeci_1")
+  {
+    SetLocalVarInt("hrac_je_v_bezpeci", 1);
+  }
+}
+
+void paka_things(string &in asParent, string &in asChild, int alState)
+{
+  AddDebugMessage("funkce vyvolana", false);
+  SetLeverStuckState(asParent, 1, true);
+  SetLocalVarInt(asParent + "_stlacena", 1);
+
+  if(GetLocalVarInt("paka_1_stlacena") == 1 && GetLocalVarInt("paka_2_stlacena") == 1)
+  {
+    AddDebugMessage("obe paky dole", false);
+    PlayGuiSound("27_jam.ogg", 1.0);
+    PlayGuiSound("29_pillar_fall.snt", 1.0);
+    DestroyParticleSystem("ps_portal");
+    SetEntityActive("area_portal", false);
+    StartScreenShake(0.05, 2.0, 0.5, 0.5);
+
+    // menime barvu
+    DestroyParticleSystem("cervene_ps_*");
+    for(int i=1;i<=21;i++)
+    {
+      CreateParticleSystemAtEntityExt("cervene_ps_" + i, "ps_orb_light.ps", "cerveny_ps_" + i, true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+    }
+
+    StartInsanityEvent("Stream_Monster_Roar01");
+
+    if(QuestIsAdded("q24") == true)
+    {
+      CompleteQuest("q24", "q24cz");
+    }
+    AutoSave();
+  }
+}
+
+void krev_o_to_tu_jde(string &in asItem, string &in asEntity)
+{
+  AddDebugMessage("funkce vyvolana", false);
+  if(GetLocalVarInt("rozmlatil_maso") == 0)
+  {
+    if(GetEntitiesCollide(asEntity, "area_jidlo_1") == true)
+    {
+      SetLocalVarInt("rozmlatil_maso", 1);
+      //SetPlayerActive(false);
+      //StartInsanityEvent("wide_normalni");
+      //CreateEntityAtArea("kladivo_static", "stone_hammer_move.ent", "spawner", false);
+      //SetPropStaticPhysics(asEntity, true);
+      //SetEntityPos("kladivo_static", GetEntityPosX(asEntity), GetEntityPosY(asEntity) + 1.0, GetEntityPosZ(asEntity));
+      //StartPlayerLookAt("kladivo_static", 2.5, 5.0, "null");
+
+      PlayGuiSound("attack_claw_hit.snt", 1.0);
+      CreateParticleSystemAtEntity("ps_maso", "blood.ps", asEntity, false);
+      AddTimer("", 1.0, "je_cas_zdrhat");
+      PlaySoundAtEntity("cervo_zvuk", "enemy_rock_worm_move.snt", "Player", 1.0, false);
+      CheckPoint ("cp2", "cp_pos", "cp_cb", "smrt", "poslednisklepeni_2");
+    }
+    else
+    {
+      SetMessage("TheVoice", "masomasomaso1cz", 3.0);
+    }
+  }
+  else
+  {
+    SetMessage("TheVoice", "masomasomasocz", 3.0);
+  }
+}
+
+void je_cas_zdrhat(string &in asTimer)
+{
+  AddDebugMessage("poznamka", false);
+  SetLocalVarString("dialog", "poslednipodzemi");
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "5", "", "dabing", GetLocalVarString("dialog") + "5cz", false, "Player", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "5_en", "", "dabing", GetLocalVarString("dialog") + "5", false, "Player", 5.0, 15.0);
+  }
+  StopMusic(1.0, 10);
+  PlayMusic("Penumbra_BP_F2.ogg", true, 0.5, 0.1, 10, false);
+
+  AddTimer("", 10.0, "utok");
+  AutoSave();
+}
+
+void utok(string &in asTimer)
+{
+  StopMusic(1.0, 10);
+  AddDebugMessage("CERVOVE ZASE KURVA UTOCI", false);
+  if(GetLocalVarInt("hrac_je_v_bezpeci") == 0)
+  {
+    AddDebugMessage("ted chcipnes, slysis me", false);
+    PlayGuiSound("enemy_worm_boss_break.snt", 1.0);
+    StartScreenShake(0.05, 2.434, 0.5, 0.5);
+    AddTimer("", 1.343, "chcipni");
+  }
+  else if(GetLocalVarInt("hrac_je_v_bezpeci") == 1)
+  {
+    PlayMusic(GetLocalVarString("primarni_hudba"), true, 0.5, 0.1, 10, false);
+    PlayGuiSound("enemy_worm_boss_break.snt", 1.0);
+    PlayGuiSound("react_sigh.snt", 1.0);
+    PlayGuiSound("zkurvene_velka_rana.ogg", 1.0);
+    FadeOut(0.0);
+    AddTimer("", 0.5, "otevri_oci_pyco");
+    AddDebugMessage("zachranen", false);
+    SetPropActiveAndFade("dvere_co_budou_na_sracky", false, 0.5);
+    SetPropActiveAndFade("dvere_co_jsou_na_sracky", true, 0.5);
+    SetPropActiveAndFade("zaval", true, 0.5);
+    SetEntityActive("block_2", true);
+    SetEntityActive("rytir1", false);
+    SetEntityActive("rytir2", false);
+    SetEntityActive("rytir_2", true);
+    SetEntityActive("rytir_3", true);
+    SetEntityActive("rytir_4", true);
+    SetEntityActive("rytir_5", true);
+    SetEntityActive("rytir_6", true);
+    SetEntityActive("rytir_7", true);
+    SetEntityActive("rytir_8", true);
+    SetEntityActive("plosina_1", false);
+    SetEntityActive("plosina_2", true);
+    SetEntityActive("police_1", false);
+    SetEntityActive("police_2", true);
+    AddPropImpulse("hammer_1", 0.0, 0.0, 10.0, "world");
+    AddPropImpulse("plane_1", 0.0, 0.0, 10.0, "world");
+    AddPropImpulse("picovina_1", 0.0, 0.0, 10.0, "world");
+    AddPropImpulse("picovina_2", 0.0, 0.0, 10.0, "world");
+    AddPropImpulse("buzzsaw_1", 0.0, 0.0, 10.0, "world");
+    AddPropImpulse("chair_metal_1", 0.0, 0.0, 10.0, "world");
+    if(GetEntityExists("bottle_lithium_bromide_1") == true)
+    {
+      AddPropImpulse("bottle_lithium_bromide_1", 0.0, 0.0, 10.0, "world");
+    }
+    for(int i=1;i<=7;i++)
+    {
+    AddPropImpulse("potato_small_" + i, 0.0, 0.0, 10.0, "world");
+    }
+    AddPropImpulse("potato_large_1", 0.0, 0.0, 10.0, "world");
+    for(int i=1;i<=3;i++)
+    {
+    AddPropImpulse("bottle_absinthe_cork_" + i, 0.0, 0.0, 10.0, "world");
+    }
+    SetEntityActive("transformation_poster02_1", false);
+    SetEntityActive("transformation_poster02_2", false);
+    SetEntityActive("armour_rusty_complete_1", false);
+
+
+
+    for(int i=1;i<=32;i++)
+    {
+      CreateParticleSystemAtEntity("kour_" + i, "kour_zasrany.ps", "ps_prach_" + i, false);
+    }
+    StartScreenShake(0.05, 2.434, 0.5, 0.5);
+
+    /*for(int i=1;i<=21;i++)
+    {
+      if(GetEntitiesCollide("corpse_things_" + i, "area_jidlo"))
+      {
+        SetEntityActive("corpse_things" + i, false);
+      }
+    }*/
+  }
+}
+
+void otevri_oci_pyco(string &in asTimer)
+{
+  FadeIn(0.5);
+}
+
+void chcipni(string &in asTimer)
+{
+  SetPlayerHealth(0.0);
+}
+void idiotproof_1(string &in asParent, string &in asChild, int alState)
+{
+  ResetProp(asParent);
+}
+
+void dalsi_idiotproof(string &in asParent, string &in asChild, int alState)
+{
+  ResetProp(asParent);
+}
+
+void na_puta_puta(string &in asParent, string &in asChild, int alState)
+{
+  AddTimer(asParent, 1.0, "propstatic");
+  ChangePlayerStateToNormal();
+}
+
+void propstatic(string &in asTimer)
+{
+  if(GetEntitiesCollide(asTimer, "area_jidlo") == true)
+  {
+    SetPropStaticPhysics(asTimer, true);
+  }
+  if(GetLocalVarInt("hodil_tam_jidlo") == 0)
+  {
+    AddTimer("", 1.0, "komentar");
+    SetLocalVarInt("hodil_tam_jidlo", 1);
+  }
+}
+
+void komentar(string &in asTimer)
+{
+  SetLocalVarString("dialog", "poslednipodzemi");
+  if(GetGlobalVarInt("jazyk") == 0)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "2", "", "dabing", GetLocalVarString("dialog") + "2cz", false, "Player", 5.0, 15.0);
+  }
+  else if(GetGlobalVarInt("jazyk") == 1)
+  {
+    AddEffectVoice(GetLocalVarString("dialog") + "2_en", "", "dabing", GetLocalVarString("dialog") + "2", false, "Player", 5.0, 15.0);
+  }
+}
+
+void portal(string &in asParent, string &in asChild, int alState)
+{
+  if(asParent != "zebrik" && asParent != "Player")
+  {
+    SetPropActiveAndFade(asParent, false, 3.0);
+    PlaySoundAtEntity("portalzvuk", "28_done.snt", "area_portal", 0.1, false);
+  }
+  else if(asParent == "Player")
+  {
+    if(QuestIsAdded("q24") == false)
+    {
+      AddQuest("q24", "q24cz");
+    }
+    AddDebugMessage("hrac", false);
+    StartRandomInsanityEvent();
+    PlaySoundAtEntity("portalzvuk", "28_done.snt", "area_portal", 0.1, false);
+    PlayGuiSound("27_spark.snt", 1.0);
+    StartScreenShake(0.03, 1.5, 0.5, 0.5);
+  }
+  else
+  {
+    SetPropActiveAndFade(asParent, false, 3.0);
+    AddTimer("", 3.5, "zebrikreset");
+    ResetProp("zebrik");
+    PlaySoundAtEntity("portalzvuk", "28_done.snt", "area_portal", 0.1, false);
+  }
+}
+
+void zebrikreset(string &in asTimer)
+{
+    SetEntityActive("zebrik", true);
+    ResetProp("zebrik");
+}
+
+void priserky_s_r_o()
+{
+  SetEntityActive("waterlurker_1", true);
+  SetEntityActive("waterlurker_2", true);
+}
+
+void cp_cb(string &in asName, int alCount)
+{
+  PlayMusic(GetLocalVarString("primarni_hudba"), true, 0.5, 0.1, 10, false);
+  ResetProp("corpse_things_*");
+  priserky_s_r_o();
+  SetEntityInteractionDisabled("zebrik", false);
+  SetEntityActive("bb1", false);
+  SetEntityActive("bb2", false);
+  SetEntityInteractionDisabled("corpse*", false);
+  SetPropStaticPhysics("corpse*", false);
+  if(GetEntitiesCollide("zebrik", "StickyArea_1") == false)
+  {
+    DetachFromStickyArea("StickyArea_1");
+    ResetProp("zebrik");
+  }
+  SetLocalVarInt("rozmlatil_maso", 0);
+  SetPlayerRunSpeedMul(1.0);
+  SetPlayerMoveSpeedMul(1.0);
+  SetPlayerJumpDisabled(false);
+  SetPlayerCrouchDisabled(false);
+  for(int i=1;i<=21;i++)
+  {
+    RemoveUseItemCallback("callback_kladivo" + i);
+  }
+  for(int i=1;i<=21;i++)
+  {
+    AddUseItemCallback("callback_kladivo" + i, "kladivo", "corpse_things_" + i, "krev_o_to_tu_jde", false);
+  }
+}
+
+void cp_cb_bossfight(string &in asName, int alCount)
+{
+  PlayMusic(GetLocalVarString("primarni_hudba"), true, 0.5, 0.1, 10, false);
+  DestroyParticleSystem("portalovekrasneps");
+  SetEntityActive("block", false);
+  SetEntityActive("refresh", true);
+  SetLocalVarInt("bossfight_bezi", 0);
+
+  SetEntityActive("dira_1_paka", false);
+  SetEntityActive("dira_2_paka", false);
+  SetEntityActive("dira_3_paka", false);
+  SetEntityActive("dira_4_paka", false);
+
+  SetEntityActive("dira_1", true);
+  SetEntityActive("dira_2", true);
+  SetEntityActive("dira_3", true);
+  SetEntityActive("dira_4", true);
+
+  SetEntityActive("pacicka_1", true);
+  ResetProp("pacicka_1");
+  SetEntityInteractionDisabled("pacicka_1", false);
+  SetEntityActive("pacicka_2", true);
+  ResetProp("pacicka_2");
+  SetEntityInteractionDisabled("pacicka_2", false);
+  SetEntityActive("pacicka_3", true);
+  ResetProp("pacicka_3");
+  SetEntityInteractionDisabled("pacicka_3", false);
+  SetEntityActive("pacicka_4", true);
+  ResetProp("pacicka_4");
+  SetEntityInteractionDisabled("pacicka_4", false);
+
+  SetLocalVarInt("pocet_stlacenych_pak", 0);
+
+  SetLeverStuckState("dira_1_paka", 0, false);
+  SetLeverStuckState("dira_2_paka", 0, false);
+  SetLeverStuckState("dira_3_paka", 0, false);
+  SetLeverStuckState("dira_4_paka", 0, false);
+
+  ResetProp("ps_hlavni_1");
+  ResetProp("ps_hlavni_2");
+  ResetProp("ps_hlavni_3");
+  ResetProp("ps_hlavni_4");
+
+}
+
+void refresh(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("refresh", false);
+  CreateParticleSystemAtEntityExt("portalovekrasneps", "ps_orb_light.ps", "area_dalsiportal", true, 0.0, 1.0, 0.0, 1.0, false, 0.0, 0.0, 0.0, 0.0);
+  SetEntityActive("block", true);
+  SetEntityActive("gottfried", true);
+  for(int i=1;i<=20;i++){
+    AddEnemyPatrolNode("gottfried", "newnode_" + i, 0.001, "");
+  }
+  SetLocalVarInt("bossfight_bezi", 1);
+  PlayMusic("gottfried.ogg", true, 0.5, 0.1, 10, false);
+}
+
+void OnEnter()
+{
+  SetMapDisplayNameEntry("poslednisklepeni");
+  CheckPoint ("cp1", "cp_pos", "cp_cb", "smrt", "poslednisklepeni");
+  PlayMusic(GetLocalVarString("primarni_hudba"), true, 0.5, 0.1, 10, false);
+  AutoSave();
+}
+
+void OnLeave()
+{
+  SetPlayerRunSpeedMul(1.0);
+  SetPlayerMoveSpeedMul(1.0);
+  StopMusic(1.0, 1000);
+// LOADING ////////////////////
+SetGlobalVarInt("dalsi_nacitaci_obrazovka", RandInt(1,5));
+if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 1)
+{
+  if(GetGlobalVarInt("potkal_helene") == 0)
+  {
+    if(GetPlayerSanity() < 100 && GetPlayerSanity() > 80)
+    {
+      SetupLoadScreen("loading", "helenecz", 0, "nacitani_helene.jpg");
+    }
+    else if(GetPlayerSanity() < 80 && GetPlayerSanity() > 60)
+    {
+      SetupLoadScreen("loading", "helene2cz", 0, "nacitani_helene_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 60 && GetPlayerSanity() > 40)
+    {
+      SetupLoadScreen("loading", "helene3cz", 0, "nacitani_helene_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 40 && GetPlayerSanity() > 20)
+    {
+      SetupLoadScreen("loading", "helene4cz", 0, "nacitani_helene_horsi_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 20)
+    {
+      SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+    }
+  }
+  else
+  {
+    SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+  }
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 2)
+  {
+    SetupLoadScreen("loading", "niklascz", 0, "nacitani_niklas.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 3)
+  {
+    SetupLoadScreen("loading", "adolfcz", 0, "nacitani_adolf.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 4)
+  {
+    SetupLoadScreen("loading", "gotfriedcz", 0, "nacitani_gotfried.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 5)
+  {
+    SetupLoadScreen("loading", "hedwigcz", 0, "nacitani_hedwig.jpg");
+  }
+  /////////////
+}

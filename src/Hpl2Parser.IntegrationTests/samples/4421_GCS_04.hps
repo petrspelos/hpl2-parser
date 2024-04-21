@@ -1,0 +1,219 @@
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\Ass_Animation_Scripts\AssAnim_FredOutro.hps"
+
+bool doFlybys = false;
+float flybySpeed = 0.3f;
+float flyAwaySpeed = 0.0f;
+
+void OnStart()
+{
+FadePlayerRollTo(3800.0f, 50.0f, 250.0f);
+SetPlayerActive(false);
+FadePlayerFOVMulTo(0.1f, 0.35f);
+doFlybys = true;
+
+PlayPropAnimation("servant_grunt_FlybyProp_1", "Idle", 0.0f, true, "");
+PlayPropAnimation("servant_Brute_FlybyProp_1", "Idle", 0.0f, true, "");
+
+
+AddTimer("", 5.0f, "SpedUpFlyby");
+AddTimer("", 15.0f, "FadetoBlackSpiral");
+
+
+
+	AddEntityCollideCallback("cabinet_nice_1", "area_js_sht", "area_js_sht", true, 1);
+	
+	SetEntityPlayerInteractCallback("OS_blue_Note_1", "takeFinalNote", true);
+	
+	SetLanternDisabled(true);
+	
+
+	PlaySoundAtEntity("SpiralCrazyMusic", "GCS_IntroTitleMusic.snt", "Player", 0.0f, false);
+	
+AddTimer("", 0.5f, "enemyPassbySoundBegin");
+}
+
+
+void OnEnter()
+{
+
+}
+
+
+void OnLeave()
+{
+
+}
+
+void OnUpdate(float afStep)
+{
+	ChristmasFlybys();
+	ASS_AnimationSystem(afStep);
+}
+
+void enemyPassbySoundBegin(string &in asTimer)
+{
+PlayGuiSound("flyGrunt_attack_launch.snt", 1.0f);
+AddTimer("", 1.5f, "enemyPassbySoundBrute");
+}
+
+void enemyPassbySoundBrute(string &in asTimer)
+{
+PlayGuiSound("flyBrute_attack_launch.snt", 1.0f);
+}
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// AFTER TAKING NOTE ENDING //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void takeFinalNote(string &in asEntity)
+{
+SetPlayerActive(false);
+AddTimer("", 1.0f, "HearDoorOpen");
+}
+
+void HearDoorOpen(string &in asTimer)
+{
+StopMusic(1.0f, 1);
+PlaySoundAtEntity("", "door_mansion_open.snt", "mansion_1", 0.0f, false);
+SetEntityActive("mansion_1", false);
+SetEntityActive("mansion_2", true);
+AddTimer("", 1.0f, "LookToOpenDoor");
+}
+
+void LookToOpenDoor(string &in asTimer)
+{
+StartPlayerLookAt("area_openDoor", 3.0f, 5.0f, "");
+AddTimer("", 2.0f, "QuickZoomOnDoor");
+}
+
+void QuickZoomOnDoor(string &in asTimer)
+{
+	FadePlayerFOVMulTo(0.05f, 8.0f);
+	AddTimer("", 0.5f, "FadetoBlackOnOpenDoor");
+}
+
+void FadetoBlackOnOpenDoor(string &in asTimer)
+{
+	FadeOut(1.0f);
+	SetLampLit("bonfire_1", false, true);
+	AddTimer("", 1.0f, "PlayFreddyOlssonEnding");
+}
+
+void PlayFreddyOlssonEnding(string &in asTimer)
+{
+	// PLAY "CHRISTMAS UPDATE ON 25TH OF DECEMBER" CLIP HERE, THEN ROLL CREDITS!!!
+	
+	PlayFredOutro();
+	AddTimer("", 15.0f, "FinaleJingleScare");
+}
+
+void FinaleJingleScare(string &in asTimer)
+{
+	ShowScreenImage("GCS_IntroTitleCard.png", -750, -750, 1500, false, 5.0f, 0.0f, 0.0f);
+	PlaySoundAtEntity("GCS_IntroTitleMusic", "GCS_IntroTitleMusic", "Player", 0.0f, false);
+	AddTimer("RollCreditsEndLol", 5.0f, "RollCreditsEndLol");
+}
+
+void RollCreditsEndLol(string &in asTimer)
+{
+	StopSound("GCS_IntroTitleMusic", 0.0f);
+	StartCredits("ending_daniel.ogg", true, "Credits", "CreditsGCS", 3);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// CABINET JS SHIT ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void area_js_sht(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics("corpse_male_1", false);
+	AddPropImpulse("corpse_male_1", 0.0f, 0.0f, 100.0f, "world");
+	PlayGuiSound("24_iron_maiden.snt", 1.0f);
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// CRAZY FLYBY STUFF /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+void SpedUpFlyby(string &in asTimer)
+{
+flybySpeed = 0.45;
+flyAwaySpeed = 0.075f;
+}
+
+
+void ChristmasFlybys()
+{
+	if(doFlybys == true){
+	SetEntityPos("servant_grunt_FlybyProp_1", GetEntityPosX("servant_grunt_FlybyProp_1")+flybySpeed, GetEntityPosY("servant_grunt_FlybyProp_1")+flyAwaySpeed, GetEntityPosZ("servant_grunt_FlybyProp_1"));
+	SetEntityPos("servant_Brute_FlybyProp_1", GetEntityPosX("servant_Brute_FlybyProp_1")+flybySpeed, GetEntityPosY("servant_Brute_FlybyProp_1"), GetEntityPosZ("servant_Brute_FlybyProp_1")+flyAwaySpeed);
+	
+	SetEntityPos("christmastree_1", GetEntityPosX("christmastree_1")+flybySpeed, GetEntityPosY("christmastree_1"), GetEntityPosZ("christmastree_1")-flyAwaySpeed);
+
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ENDING OF SPIRAL SEQ //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void FadetoBlackSpiral(string &in asTimer)
+{
+FadeOut(1.0f);
+AddTimer("", 1.0f, "TeleportToHomeStage1");
+
+}
+
+void TeleportToHomeStage1(string &in asTimer)
+{
+StopSound("SpiralCrazyMusic", 0.0f);
+SetPlayerCrouching(true);
+TeleportPlayer("PlayerStartArea_2");
+FadePlayerFOVMulTo(1.0f, 10.0f);
+FadePlayerRollTo(0.0f, 1000.0f, 1000.0f);
+AddTimer("", 7.0f, "TeleportToHomeStage2");
+doFlybys = false;
+}
+
+
+
+void TeleportToHomeStage2(string &in asTimer)
+{
+FadeIn(1.0f);
+SetPlayerMoveSpeedMul(0.0f);
+SetPlayerJumpDisabled(true);
+SetPlayerCrouchDisabled(true);
+
+StartPlayerLookAt("area_lookTree", 0.25f, 1.0f, "");
+AddTimer("", 4.0f, "TeleportToHomeStage3");
+
+PlayMusic("09_amb_safe", true, 1.0f, 1.0f, 1, false);
+
+}
+
+void TeleportToHomeStage3(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+}
+
+
+

@@ -1,0 +1,139 @@
+void OnStart()
+{
+	SetPlayerMoveSpeedMul(0.75);
+	AutoSave();
+	PlayMusic("amb_extra01.ogg", true, 1, 1.5f, 0, true);
+	SetPlayerLookSpeedMul(0.6);
+	SetSanityDrainDisabled(true);
+	AddUseItemCallback("", "crowbar_1", "boards", "UsedCrowbarOnBoards", true);
+AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_8", "CollideAreaBreakDoor", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_9", "Boardswtf", true, 1);
+SetEntityPlayerInteractCallback("MapChange", "ChangeMap", false);
+AddEntityCollideCallback("Player", "QuestArea", "GiveCrowbarQuestForest", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_17", "Alexanderscare", true, 1);
+SetEntityCallbackFunc("crowbar_1", "OnPickupForest");
+AddTimer("T1", 1.2, "Lightning");
+AddTimer("T1", 1, "SuitorBangDoor");
+AddTimer("T2", 2.5, "SuitorBangDoor");
+AddTimer("T3", 5, "SuitorBangDoor");
+}
+void SuitorBangDoor(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		PlaySoundAtEntity("", "lurker_hit_wood.snt", "ScriptArea_9", 0, false);
+		CreateParticleSystemAtEntity("", "ps_break_wood.ps", "ScriptArea_9", false);
+	}
+	else if (x == "T2")
+	{
+		PlaySoundAtEntity("", "lurker_hit_wood.snt", "ScriptArea_9", 0, false);
+		CreateParticleSystemAtEntity("", "ps_break_wood.ps", "ScriptArea_9", false);
+	}
+	else if (x == "T3")
+	{
+		PlaySoundAtEntity("", "suitor/amb_idle_whimp.snt", "ScriptArea_16", 0, false);
+	}
+}
+void GiveCrowbarQuestForest (string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "ForestMessage", 0);
+	AddTimer("T1", 2, "GiveCrowbarQuestTimer");
+}
+void Alexanderscare (string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("alexander_1", false);
+}
+void GiveCrowbarQuestTimer(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		AddQuest ("CrowbarQuestForest", "CrowbarQuestForest");
+	}
+}
+void OnPickupForest(string &in asEntity, string &in type)
+{
+	CompleteQuest ("CrowbarQuestForest", "CrowbarQuestForest");
+}
+void Lightning(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		AddTimer("T1", 15, "Lightning");
+		PlaySoundAtEntity("Player", "general_thunder.snt", "Player", 0, false);
+	}
+}
+void UsedCrowbarOnBoards(string &in asItem, string &in asEntity)
+ {
+ AddTimer("", 0.2, "TimerSwitchShovel");
+ RemoveItem("crowbar_1");
+ }
+ void TimerSwitchShovel(string &in asTimer)
+ {
+ PlaySoundAtEntity("","puzzle_place_jar.snt", "", 0, false);
+ SetEntityActive("crowbar_joint_1", true);
+ }
+ void CollideAreaBreakDoor(string &in asParent, string &in asChild, int alState)
+ {
+ SetLevelDoorLocked("level_celler_1", false);
+ AddPropImpulse("boards", 0, 0, -50, "World");
+ SetMoveObjectState("boards", 1);
+ PlaySoundAtEntity("","break_wood_metal", "ScriptArea_7", 0, false);
+ CreateParticleSystemAtEntity("", "ps_hit_wood", "ScriptArea_7", false);
+ SetEntityActive("crowbar_joint_1", false);
+ SetLocalVarInt("boards", 1);
+ SetPropHealth("boards", 0);
+ SetEntityActive("MapChange", true);
+ }
+ void ChangeMap (string &in asEntity)
+{
+	SetPlayerActive(false);
+	FadeOut(2);
+	AddTimer("T1", 3.5, "CSinfo");
+	AddTimer("T2", 6, "CSinfo");
+}
+void CSinfo(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetMessage("Messages", "Message11", 0);
+	}
+	else if (x == "T2")
+	{
+		PlaySoundAtEntity("","open_door.snt", "Player", 0, false);
+		ChangeMap("Home.map", "PlayerStartArea_1", "", "");
+	}
+}
+ void Boardswtf(string &in asParent, string &in asChild, int alState)
+ {
+	StartPlayerLookAt("boards", 3, 3, "");
+	SetPlayerActive(false);
+	AddTimer("T1", 2, "Wutwut");
+	AddTimer("T2", 6.5, "Wutwut");
+ }
+ void Wutwut(string &in asTimer)
+{
+	string x = asTimer;
+	if (x == "T1")
+	{
+		SetMessage("Messages", "Message1", 0);
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+	}
+	else if (x == "T2")
+	{
+		SetMessage("Messages", "Message2", 0);
+	}
+}
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+StopMusic(2,0);
+SetupLoadScreen("Loading", "LoadScreen9", 0, "pic6.png");
+}

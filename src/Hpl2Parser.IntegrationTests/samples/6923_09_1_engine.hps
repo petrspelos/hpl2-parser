@@ -1,0 +1,1254 @@
+//////////STAMINA SYSTEM SETTINGS//////////////
+///////////////////////////////////////////////
+const string STAMINA_TIMER_CALLBACK_NAME = "STAMINA_TIMER_CALLBACK";
+const string STAMINA_PLAYER_SPEED = "STAMINA_PLAYER_SPEED";
+const string STAMINA_PLAYER_LENGTH = "STAMINA_PLAYER_LENGTH";
+const string STAMINA_PLAYER_BREATH_SLOW = "STAMINA_PLAYER_BREATH_SLOW";
+const string STAMINA_PLAYER_BREATH_SNT = "react_breath_slow.snt";
+const string STAMINA_PLAYER_HEAD_BOB = "STAMINA_PLAYER_HEAD_BOB";
+
+const float STAMINA_TIMER_SPEED_TIME = 0.5f;
+const float STAMINA_PLAYER_HEAD_BOB_SPEED = 0.7f;
+
+enum StaminaStages
+    {
+        Full,
+        Low,
+        Exhausted
+    }
+
+class StaminaSystem
+    {
+        private int state;
+        private uint length;
+        private bool head_bobbing;
+        private bool is_running;
+
+        StaminaSystem()
+            {
+                PreloadSound(STAMINA_PLAYER_BREATH_SNT);
+                this.state = StaminaStages::Full;
+                this.length = 10;
+                this.head_bobbing = false;
+                this.is_running = false;
+            }
+
+        ~StaminaSystem()
+            {
+                this.Stop();
+            }
+
+        void AddDebugMessage(string &in message, bool check, bool to_file)
+            {
+                ::AddDebugMessage("Stamina system: " + message, check);
+                if (to_file) Print("Stamina system: " + message);
+            }
+
+        bool IsPlayerRunning() const
+            {
+                return this.is_running;
+            }
+
+        void PlayBreathSound()
+            {
+                PlaySoundAtEntity(STAMINA_PLAYER_BREATH_SLOW, STAMINA_PLAYER_BREATH_SNT, "Player", 0, false);
+            }
+
+        void Start()
+            {
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				AddTimer(STAMINA_PLAYER_SPEED, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerHeadBob()
+            {
+                if (this.head_bobbing)
+                    MovePlayerHeadPos(0, -0.35, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+                else
+                    MovePlayerHeadPos(0, 0, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+
+                this.head_bobbing = !this.head_bobbing;
+                AddTimer(STAMINA_PLAYER_HEAD_BOB, 0.75f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerTiredEffect()
+            {
+                this.PlayBreathSound();
+                AddTimer(STAMINA_PLAYER_BREATH_SLOW, 1.5f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void Stop()
+            {
+                this.StopPlayerTiredEffect();
+                RemoveTimer(STAMINA_PLAYER_SPEED);
+                RemoveTimer(STAMINA_PLAYER_LENGTH);
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				SetPlayerJumpDisabled(false);
+            }
+
+        void StopPlayerTiredEffect()
+            {
+                this.head_bobbing = false;
+                RemoveTimer(STAMINA_PLAYER_BREATH_SLOW);
+                RemoveTimer(STAMINA_PLAYER_HEAD_BOB);
+                MovePlayerHeadPos(0,0,0, 1, 1);
+				FadeImageTrailTo(0, 1); ////trail off
+                // StopSound(STAMINA_PLAYER_BREATH_SLOW, 1); // Crashes the game upon exit.
+            }
+
+        void SetStaminaLength(uint length)
+            {
+                if (length != 0)
+                    this.length = length;
+                else
+                    this.AddDebugMessage("Length cannot be 0!", false, true);
+            }
+
+        void Update(string &in timer_name)
+            {
+                if (timer_name == STAMINA_PLAYER_SPEED)
+                {
+                    this.is_running = (GetPlayerSpeed() > 3) ? true : false;
+
+                    if (this.is_running && GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) == 0)
+                        AddTimer(STAMINA_PLAYER_LENGTH, this.length, STAMINA_TIMER_CALLBACK_NAME);
+
+                    else if(!this.is_running)
+                    {
+                        if (GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) > 0 && this.state == StaminaStages::Full)
+                            RemoveTimer(STAMINA_PLAYER_LENGTH);
+
+                        else if(this.state == StaminaStages::Low)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/4, STAMINA_TIMER_CALLBACK_NAME);
+
+                        else if(this.state == StaminaStages::Exhausted)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/2, STAMINA_TIMER_CALLBACK_NAME);
+                    }
+
+                    AddTimer(timer_name, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+                }
+
+                else if (timer_name == STAMINA_PLAYER_BREATH_SLOW)
+                    this.StartPlayerTiredEffect();
+
+                else if (timer_name == STAMINA_PLAYER_HEAD_BOB)
+                    this.StartPlayerHeadBob();
+
+                else if (timer_name == STAMINA_PLAYER_LENGTH)
+                {
+                    if (this.is_running)
+                    {
+                        if (this.state == StaminaStages::Full)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.5);
+                        }
+
+                        else if (this.state == StaminaStages::Low)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.3);
+                            SetPlayerMoveSpeedMul(0.5);
+							FadeImageTrailTo(3,1); ////trail on
+                            SetPlayerJumpDisabled(true);
+                            ChangePlayerStateToNormal();
+                            this.StartPlayerTiredEffect();
+                            this.StartPlayerHeadBob();
+                        }
+                    }
+
+                    else
+                    {
+                        this.StopPlayerTiredEffect();
+
+                        SetPlayerRunSpeedMul(1);
+                        SetPlayerMoveSpeedMul(1);
+                        SetPlayerJumpDisabled(false);
+
+                        if (this.state == StaminaStages::Low)
+                            this.state = StaminaStages::Full;
+
+                        else if (this.state == StaminaStages::Exhausted)
+                            this.state = StaminaStages::Full;
+                    }
+                }
+            }
+    }
+
+StaminaSystem stamina_obj;
+
+void STAMINA_TIMER_CALLBACK(string &in timer_name)
+    { stamina_obj.Update(timer_name); } 
+//////////////////////////////////////
+void OnStart()
+{
+Syr();
+   for (int k=1; k<=7; k++){
+ AddEntityCollideCallback("Player", "area_mine_"+k, "laser_active_addit", true, 1);
+}
+ AddEntityCollideCallback("Player", "ScriptArea_27", "laser_active_flick", true, 1);
+///CAMERAS/////////////////////
+RotatePropToSpeed("cam_1", 8, 0.55, 0, 0.5, 0, true, "RotateArea_1");
+AddTimer("ct", 4, "cam_1_turn");
+AddTimer("dac_1", 0.8, "ganger_areas_cam_1");
+AddTimer("dac_2", 1.6, "ganger_areas_cam_1");
+AddTimer("dac_3", 2.4, "ganger_areas_cam_1");
+AddTimer("dac_4", 3.2, "ganger_areas_cam_1");
+AddTimer("dac_5", 4.0, "ganger_areas_cam_1");
+PlaySoundAtEntity("cttr01", "19_camera_turn1.snt", "RotateArea_1", 0, false);
+for (int i=1; i<=20; i++){
+AddEntityCollideCallback("Player", "area_cam_1_"+i, "alert_cam_1", true, 1);
+AddEntityCollideCallback("Player", "area_cam_2_"+i, "alert_cam_2", true, 1);
+AddEntityCollideCallback("Player", "area_flash_"+i, "alert_flashcam", true, 1);
+}
+//--------------------------------------------------------------------
+RotatePropToSpeed("cam_8", 8, 0.55, 0, 0.5, 0, true, "RotateArea_2");
+AddTimer("ct02", 4, "cam_2_turn");
+PlaySoundAtEntity("cttr02", "19_camera_turn1.snt", "RotateArea_2", 0, false);
+
+//--------------------------------------------------------------------
+AddTimer("dac02_1", 1, "ganger_areas_cam_2");
+AddTimer("dac02_2", 2, "ganger_areas_cam_2");
+AddTimer("dac02_3", 3, "ganger_areas_cam_2");
+AddTimer("dac02_4", 4, "ganger_areas_cam_2");
+///-------------------------------
+AddTimer("fc", 1, "flash_cam");
+SetMapDisplayNameEntry("Engine");
+AddEntityCollideCallback("Player", "ScriptArea_29", "dooropennow", true, 1);
+AddEntityCollideCallback("Player", "Glitch_area_1" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_2" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_3" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_23", "roach_final_room", true, 1);
+AddEntityCollideCallback("Player", "Falldead_area" ,"fall_dead", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_19" ,"fall_dead", false, 1); 
+AddEntityCollideCallback("Player", "ScriptArea_18" ,"push_wind", false, 1); 
+for (int g=1; g<=12; g++){
+AddEntityCollideCallback("thing_"+g, "ScriptArea_22" ,"push_things", false, 1); 
+AddEntityCollideCallback("thing_"+g, "ScriptArea_26" ,"push_things", false, 1); 
+AddEntityCollideCallback("thing_"+g, "ScriptArea_25" ,"destroy_things", false, 1); 
+}
+AddEntityCollideCallback("door_storagedoor_20", "ScriptArea_16", "roach_door_check", false, 0);
+for (int k=1; k<=4; k++){
+AddEntityCollideCallback("nec_enemy_roach_"+k, "ScriptArea_12", "roach_pos_check", false, 0);
+}
+AddEntityCollideCallback("Player", "ScriptArea_11", "light_off", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_17", "gen_var_check", false, 1);
+AddEntityCollideCallback("Player", "ScriptArea_4", "laser_active", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_13", "laser_active", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_6", "laser_active", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_7", "laser_active", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_1", "engine_music", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_5", "start_roach_event", true, 1);
+AddEntityCollideCallback("engine_hanging_platform_1", "ScriptArea_8", "elevator_collide_botton_or_top", false, 1);
+AddEntityCollideCallback("engine_hanging_platform_1", "ScriptArea_9", "elevator_collide_botton_or_top", false, 1);
+}
+void engine_music(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("Penumbra_BP_A3.ogg", false, 0.85f, 10, 1, true);
+}
+void grabhand(string &in asEntity)
+{
+   if (GetPropIsInteractedWith(asEntity) == true){
+   StartInsanityEvent("grab");
+   }
+   AddTimer(asEntity, 0.01,"grabcheck");
+}
+void grabcheck(string &in asTimer)
+{
+AddTimer(asTimer, 0.01,"grabcheck");
+if (GetPropIsInteractedWith(asTimer) == false){
+StopCurrentInsanityEvent();
+RemoveTimer(asTimer);
+}
+}
+////////////
+void sanit(string &in asTimer)
+{
+SetSanityDrainDisabled(true);
+AutoSave();
+}
+/////////
+///ELEVATORS/////////////
+void elevator_down(string &in asEntity, int alState)
+{
+if (asEntity == "stick_holder01_2"){
+if (alState == 1){
+if (GetLocalVarInt("eledown") == 0){
+SetLocalVarInt("eledown", 1);
+SetLeverStuckState("stick_holder01_2", 1, false);  
+AddTimer("s1", 3, "start_move_elevator");
+PlaySoundAtEntity("tick1", "21_4_door_ticking.snt", "engine_hanging_platform_1", 0, false);
+}
+}
+if (alState == -1){
+SetMoveObjectState("engine_hanging_platform_1", 0);
+}
+}
+///////
+if (asEntity == "stick_holder01_3"){
+if (alState == 1){
+ if (GetLocalVarInt("eledown") == 1){
+SetLeverStuckState("stick_holder01_3", 1, false);  
+AddTimer("s2", 3.5, "start_move_elevator");
+PlaySoundAtEntity("tick1", "21_4_door_ticking.snt", "engine_hanging_platform_1", 0, false);
+}
+}
+if (alState == -1){
+SetMoveObjectState("engine_hanging_platform_1", -0.88);
+}
+}
+}
+void start_move_elevator(string &in asTimer)
+{
+StopSound("tick1", 1);
+if (asTimer == "s1"){
+SetMoveObjectState("engine_hanging_platform_1", -0.88);
+return;
+}
+if (asTimer == "s2"){
+SetMoveObjectState("engine_hanging_platform_1", 0);
+return;
+}
+}
+void elevator_collide_botton_or_top(string &in asParent, string &in asChild, int alState)
+{
+SetLeverStuckState("stick_holder01_2", 0, true);  
+SetLeverStuckState("stick_holder01_3", 0, true);  
+if (asChild == "ScriptArea_8"){
+SetLocalVarInt("eledown", 1);
+SetEntityActive("ScriptArea_9", true);SetEntityActive("ScriptArea_8", false);
+}
+if (asChild == "ScriptArea_9"){
+SetLocalVarInt("eledown", 0);
+SetEntityActive("ScriptArea_8", true);SetEntityActive("ScriptArea_9", false);
+}
+}
+////GEN/////
+void starter_active(string &in asEntity, int alState)
+{
+if (asEntity == "Lever"){
+ if (alState == 1){
+    for (int k=7; k<=13; k++){
+    SetLightVisible("PointLight_"+k, true); 
+     }
+	    for (int l=1; l<=7; l++){
+SetEntityActive("area_mine_"+l, true);
+}
+ PlaySoundAtEntity("", "amb_mashines.snt", "Mashines_1", 1, true);
+ SetLightVisible("light_1", true);SetLightVisible("SpotLight_39", true);
+ SetLampLit("em_lamp_28", true, true);
+ SetLocalVarInt("firstlever", 1);
+ SetLeverStuckState("Lever", 1, false);  
+ PlayGuiSound("08_done_beep1.ogg", 0.7f);
+ }
+}
+if (asEntity == "Lever_2"){
+if (alState == 1){
+   AddTimer("flicker_laser", RandFloat(0.5,2.5), "flicker_laser_timer");
+  SetEntityActive("ScriptArea_27", true);
+  FadeLightTo("PointLight_14", -1, -1, -1, -1, 0, 1);
+  SetLightVisible("Flashs_3", true);SetLightVisible("Flashs_4", true);
+  PlaySoundAtEntity("fl01", "03_laser.snt", "ScriptArea_28", 0, false);
+ PlaySoundAtEntity("", "amb_mashines.snt", "Mashines_2", 1, true);
+ SetLightVisible("light_2", true);SetLightVisible("SpotLight_41", true);
+ SetLampLit("em_lamp_29", true, true);
+ SetLocalVarInt("secondlever", 1);
+ SetLeverStuckState("Lever_2", 1, false);  
+ PlayGuiSound("08_done_beep1.ogg", 0.7f);
+ }
+}
+if (asEntity == "Lever_3"){
+if (alState == 1){
+ PlaySoundAtEntity("", "amb_mashines.snt", "Mashines_3", 1, true);
+ SetLightVisible("light_3", true);SetLightVisible("SpotLight_40", true);
+ SetLampLit("em_lamp_30", true, true);
+ SetLocalVarInt("thirdlever", 1);
+ SetLeverStuckState("Lever_3", 1, false);  
+ PlayGuiSound("08_done_beep1.ogg", 0.7f);
+ }
+}
+}
+void flicker_laser_timer(string &in asTimer)
+{
+AddTimer("flicker_laser", RandFloat(0.5,2.5), "flicker_laser_timer");
+if (GetLocalVarInt("flicklaser_case") == 0){
+SetLocalVarInt("flicklaser_case", 1);
+SetEntityActive("ScriptArea_27", false);
+  SetLightVisible("Flashs_3", false);SetLightVisible("Flashs_4", false);
+  StopSound("fl01", 0);
+  return;
+}
+if (GetLocalVarInt("flicklaser_case") == 1){
+ SetEntityActive("ScriptArea_27", true);
+  SetLightVisible("Flashs_3", true);SetLightVisible("Flashs_4", true);
+  PlaySoundAtEntity("fl01", "03_laser.snt", "ScriptArea_28", 0, false);
+SetLocalVarInt("flicklaser_case", 0);
+  return;
+}
+}
+
+void Propeller_levers(string &in asEntity, int alState)
+{
+if (asEntity == "tech_lever_3"){
+ if (alState == 1){
+    if (GetLocalVarInt("firstlever") == 1){
+      SetLeverStuckState("tech_lever_3", 1, false);
+	  AddLocalVarInt("genon", 1);
+	  AddTimer("cgc", 0.1, "check_gen_power");
+     }
+   }
+}
+////---------
+if (asEntity == "tech_lever_1"){
+ if (alState == 1){
+    if (GetLocalVarInt("secondlever") == 1){
+      SetLeverStuckState("tech_lever_1", 1, false);
+	  AddLocalVarInt("genon", 1);
+	  AddTimer("cgc", 0.1, "check_gen_power");
+     }
+   }
+}
+///-------------------
+if (asEntity == "tech_lever_2"){
+ if (alState == 1){
+    if (GetLocalVarInt("thirdlever") == 1){
+      SetLeverStuckState("tech_lever_2", 1, false);
+	  AddLocalVarInt("genon", 1);
+	  AddTimer("cgc", 0.1, "check_gen_power");
+     }
+   }
+}
+}
+void check_gen_power(string &in asTimer)
+{
+if (GetLocalVarInt("genon") == 3){
+SetGlobalVarInt("gas_overnow", 1);
+AddTimer("sprop_1", 0.5, "start_propeller");
+AddTimer("sprop_2", 1, "start_propeller");
+AddTimer("sprop_3", 1.5, "start_propeller");
+AddTimer("sprop_4", 2, "start_propeller");
+AddTimer("sprop_5", 3, "start_propeller");
+}
+}
+void start_propeller(string &in asTimer)
+{
+if (asTimer == "sprop_1"){
+SetEntityActive("ScriptArea_29", true);
+PlaySoundAtEntity("", "lights_on_test.snt", "ScriptArea_2", 0, true);
+SetLampLit("em_lamp_10", true, false);SetLampLit("em_lamp_7", true, false);SetLampLit("em_lamp_13", true, false);
+SetLightVisible("Propeller_light_6", true);SetLightVisible("Propeller_light_7", true);SetLightVisible("Propeller_light_1", true);
+return;
+}
+if (asTimer == "sprop_2"){
+PlaySoundAtEntity("", "lights_on_test.snt", "ScriptArea_2", 0, true);
+SetLampLit("em_lamp_14", true, false);SetLampLit("em_lamp_8", true, false);SetLampLit("em_lamp_11", true, false);
+SetLightVisible("Propeller_light_5", true);SetLightVisible("Propeller_light_8", true);SetLightVisible("Propeller_light_2", true);
+return;
+}
+if (asTimer == "sprop_3"){
+PlaySoundAtEntity("", "lights_on_test.snt", "ScriptArea_2", 0, true);
+SetLampLit("em_lamp_9", true, false);SetLampLit("em_lamp_15", true, false);SetLampLit("em_lamp_12", true, false);
+SetLightVisible("Propeller_light_3", true);SetLightVisible("Propeller_light_4", true);SetLightVisible("Propeller_light_9", true);
+return;
+}
+if (asTimer == "sprop_4"){
+StartScreenShake(0.02, 0.6, 0.1, 0.1);
+PlaySoundAtEntity("", "afx_reactor_power_horn.snt", "ScriptArea_2", 1, true);
+PlaySoundAtEntity("", "fan_engine.snt", "ScriptArea_2", 10, true);
+PlaySoundAtEntity("", "fan_engine.snt", "ScriptArea_3", 10, true);
+PlaySoundAtEntity("", "im_wind.snt", "ScriptArea_2", 5, true);
+StopSound("Sound_1", 2);
+SetEntityActive("ScriptArea_18", true);SetEntityActive("ScriptArea_22", true);
+SetEntityActive("ScriptArea_21", true);SetEntityActive("ScriptArea_26", true);SetEntityActive("ScriptArea_19", true);
+SetEntityActive("ScriptArea_25", true);
+///SetEntityActive("Falldead_area", false);
+DestroyParticleSystem("ParticleSystem_7");DestroyParticleSystem("ParticleSystem_8");
+RotatePropToSpeed("propeller_work_1", 2, 3, 0, 0.5, 0, true, "ScriptArea_2");
+RotatePropToSpeed("propeller_work_2", 2, 3, 0, 0.5, 0, true, "ScriptArea_3");
+return;
+}
+if (asTimer == "sprop_5"){
+
+PlayMusic("08_Puzzle_power.ogg", false, 0.85f, 10, 1, true);
+return;
+}
+}
+void dooropennow(string &in asParent, string &in asChild, int alState)
+{
+SetLevelDoorLocked("mine_level_door_1", false);
+PlayGuiSound("13_unlock_door1.ogg", 0.8f);
+}
+void gen_var_check(string &in asParent, string &in asChild, int alState)
+{
+if (GetLocalVarInt("firstlever") == 1 && GetLocalVarInt("secondlever") == 1 && GetLocalVarInt("thirdlever") == 1){
+SetGlobalVarInt("roach_01", 0);SetGlobalVarInt("roach_02", 0);SetGlobalVarInt("roach_03", 0);SetGlobalVarInt("roach_04", 0);
+SetLocalVarInt("roach_music", 0);
+SetLocalVarInt("checkpoint01", 0);
+for (int i=1; i<=5; i++){
+SetEntityActive("door_storagedoor_25", true);
+FadeEnemyToSmoke("nec_enemy_roach_"+i, false);
+SetEnemyDisableTriggers("nec_enemy_roach_"+i, true);
+}
+}
+}
+
+////////////////////
+///ROACH ENCOUNTER////
+void start_roach_event(string &in asParent, string &in asChild, int alState)
+{
+SetLocalVarInt("checkpoint01", 1);
+CheckPoint("first", "PlayerStartArea_2", "roach_point_one", "", "");
+SetEntityActive("nec_enemy_roach_5", true);
+SetLocalVarInt("roach_music", 1);
+}
+void roach_final_room(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("ScriptArea_6", true);SetEntityActive("ScriptArea_7", true);
+SetLightVisible("PointLight_5", true);SetLightVisible("PointLight_4", true);
+PlaySoundAtEntity("area6las", "03_laser.snt", "ScriptArea_6", 0, true);
+PlaySoundAtEntity("area7las", "03_laser.snt", "ScriptArea_7", 0, true);
+SetLocalVarInt("checkpoint01", 2);
+CheckPoint("second", "PlayerStartArea_3", "roach_point_one", "", "");
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+AddTimer("", 0.1, "sanit");
+GiveSanityBoostSmall();
+}
+void roach_point_one(string &in asName, int alCount)
+{
+SetEntityActive("nec_enemy_roach_5", true);
+}
+void cam_1_turn(string &in asTimer)
+{
+StopPropMovement("cam_1");
+StopSound("cttr01", 0);
+if (GetLocalVarInt("cam1rotate") == 0)
+{
+AddTimer("c1", 1.6, "cam_delay");
+}
+if (GetLocalVarInt("cam1rotate") == 1)
+{
+AddTimer("c2", 1.6, "cam_delay");
+}
+}
+void cam_delay(string &in asTimer)
+{
+AddTimer("ct", 4, "cam_1_turn");
+PlaySoundAtEntity("cttr01", "19_camera_turn1.snt", "RotateArea_1", 0, false);
+if (asTimer == "c1"){
+SetLocalVarInt("cam1rotate", 1);
+RotatePropToSpeed("cam_1", 8, 0.55, 0, -0.5, 0, true, "RotateArea_1");
+return;
+}
+if (asTimer == "c2"){
+SetLocalVarInt("cam1rotate", 0);
+RotatePropToSpeed("cam_1", 8, 0.55, 0, 0.5, 0, true, "RotateArea_1");
+return;
+}
+}
+void cam_2_turn(string &in asTimer)
+{
+StopPropMovement("cam_8");
+StopSound("cttr02", 0);
+if (GetLocalVarInt("cam1rotate02") == 0)
+{
+AddTimer("c3", 1.6, "cam_delay02");
+}
+if (GetLocalVarInt("cam1rotate02") == 1)
+{
+AddTimer("c4", 1.6, "cam_delay02");
+}
+}
+void cam_delay02(string &in asTimer)
+{
+AddTimer("ct02", 4, "cam_2_turn");
+PlaySoundAtEntity("cttr01", "19_camera_turn1.snt", "RotateArea_2", 0, false);
+if (asTimer == "c3"){
+SetLocalVarInt("cam1rotate02", 1);
+RotatePropToSpeed("cam_8", 8, 0.55, 0, -0.5, 0, true, "RotateArea_2");
+return;
+}
+if (asTimer == "c4"){
+SetLocalVarInt("cam1rotate02", 0);
+RotatePropToSpeed("cam_8", 8, 0.55, 0, 0.5, 0, true, "RotateArea_2");
+return;
+}
+}
+
+
+void ganger_areas_cam_1(string &in asTimer)
+{
+if (asTimer == "dac_1"){
+SetEntityActive("area_cam_1_1", false);SetEntityActive("area_cam_1_2", false);SetEntityActive("area_cam_1_3", false);
+SetEntityActive("area_cam_1_4", true);SetEntityActive("area_cam_1_5", true);SetEntityActive("area_cam_1_6", true);
+return;
+}
+if (asTimer == "dac_2"){
+SetEntityActive("area_cam_1_4", false);
+SetEntityActive("area_cam_1_8", true);SetEntityActive("area_cam_1_9", true);
+return;
+}
+if (asTimer == "dac_3"){
+SetEntityActive("area_cam_1_5", false);SetEntityActive("area_cam_1_6", false);SetEntityActive("area_cam_1_8", false);SetEntityActive("area_cam_1_9", false);
+SetEntityActive("area_cam_1_10", true);SetEntityActive("area_cam_1_11", true);SetEntityActive("area_cam_1_12", true);
+return;
+}
+if (asTimer == "dac_4"){
+SetEntityActive("area_cam_1_11", false);SetEntityActive("area_cam_1_12", false);
+SetEntityActive("area_cam_1_13", true);SetEntityActive("area_cam_1_14", true);
+return;
+}
+if (asTimer == "dac_5"){
+AddTimer("ca1", 1.6, "cam_delay_areas");
+SetEntityActive("area_cam_1_14", false);SetEntityActive("area_cam_1_10", false);
+SetEntityActive("area_cam_1_15", true);SetEntityActive("area_cam_1_17", true);SetEntityActive("area_cam_1_16", true);
+return;
+}
+///////INVERT////////
+if (asTimer == "dac_6"){
+SetEntityActive("area_cam_1_14", true);SetEntityActive("area_cam_1_10", true);
+SetEntityActive("area_cam_1_15", false);SetEntityActive("area_cam_1_17", false);SetEntityActive("area_cam_1_16", false);
+return;
+}
+if (asTimer == "dac_7"){
+SetEntityActive("area_cam_1_11", true);SetEntityActive("area_cam_1_12", true);
+SetEntityActive("area_cam_1_13", false);SetEntityActive("area_cam_1_14", false);
+return;
+}
+if (asTimer == "dac_8"){
+SetEntityActive("area_cam_1_5", true);SetEntityActive("area_cam_1_6", true);SetEntityActive("area_cam_1_8", true);SetEntityActive("area_cam_1_9", true);
+SetEntityActive("area_cam_1_10", false);SetEntityActive("area_cam_1_11", false);SetEntityActive("area_cam_1_12", false);
+return;
+}
+if (asTimer == "dac_9"){
+SetEntityActive("area_cam_1_4", true);
+SetEntityActive("area_cam_1_8", false);SetEntityActive("area_cam_1_9", false);
+return;
+}
+if (asTimer == "dac_10"){
+SetEntityActive("area_cam_1_1", true);SetEntityActive("area_cam_1_2", true);SetEntityActive("area_cam_1_3", true);
+SetEntityActive("area_cam_1_4", false);SetEntityActive("area_cam_1_5", false);SetEntityActive("area_cam_1_6", false);
+AddTimer("ca2", 1.6, "cam_delay_areas");
+return;
+}
+}
+void cam_delay_areas(string &in asTimer)
+{
+if (asTimer == "ca1"){
+AddTimer("dac_6", 0.8, "ganger_areas_cam_1");
+AddTimer("dac_7", 1.6, "ganger_areas_cam_1");
+AddTimer("dac_8", 2.4, "ganger_areas_cam_1");
+AddTimer("dac_9", 3.2, "ganger_areas_cam_1");
+AddTimer("dac_10", 4.0, "ganger_areas_cam_1");
+return;
+}
+if (asTimer == "ca2"){
+AddTimer("dac_1", 0.8, "ganger_areas_cam_1");
+AddTimer("dac_2", 1.6, "ganger_areas_cam_1");
+AddTimer("dac_3", 2.4, "ganger_areas_cam_1");
+AddTimer("dac_4", 3.2, "ganger_areas_cam_1");
+AddTimer("dac_5", 4.0, "ganger_areas_cam_1");
+return;
+}
+}
+////--------------------
+void ganger_areas_cam_2(string &in asTimer)
+{
+if (asTimer == "dac02_1"){
+SetEntityActive("area_cam_2_1", false);SetEntityActive("area_cam_2_2", false);SetEntityActive("area_cam_2_3", false);
+SetEntityActive("area_cam_2_4", false);
+SetEntityActive("area_cam_2_5", true);SetEntityActive("area_cam_2_6", true);SetEntityActive("area_cam_2_8", true);SetEntityActive("area_cam_2_10", true);
+SetEntityActive("area_cam_2_7", true);
+return;
+}
+if (asTimer == "dac02_2"){
+SetEntityActive("area_cam_2_5", false);SetEntityActive("area_cam_2_6", false);SetEntityActive("area_cam_2_8", false);SetEntityActive("area_cam_2_10", false);
+SetEntityActive("area_cam_2_7", false);
+SetEntityActive("area_cam_2_11", true);SetEntityActive("area_cam_2_10", true);
+SetEntityActive("area_cam_2_9", true);SetEntityActive("area_cam_2_12", true);
+return;
+}
+if (asTimer == "dac02_3"){
+SetEntityActive("area_cam_2_11", false);SetEntityActive("area_cam_2_10", false);
+SetEntityActive("area_cam_2_9", false);SetEntityActive("area_cam_2_12", false);
+SetEntityActive("area_cam_2_15", true);SetEntityActive("area_cam_2_14", true);SetEntityActive("area_cam_2_13", true);
+SetEntityActive("area_cam_2_16", true);
+return;
+}
+if (asTimer == "dac02_4"){
+AddTimer("ca3", 1.6, "cam_delay_areas_2");
+SetEntityActive("area_cam_2_15", false);SetEntityActive("area_cam_2_14", false);SetEntityActive("area_cam_2_13", false);
+SetEntityActive("area_cam_2_16", false);
+SetEntityActive("area_cam_2_17", true);SetEntityActive("area_cam_2_18", true);SetEntityActive("area_cam_2_19", true);
+SetEntityActive("area_cam_2_20", true);
+return;
+}
+///////INVERT////////
+if (asTimer == "dac02_5"){
+SetEntityActive("area_cam_2_15", true);SetEntityActive("area_cam_2_14", true);SetEntityActive("area_cam_2_13", true);
+SetEntityActive("area_cam_2_16", true);
+SetEntityActive("area_cam_2_17", false);SetEntityActive("area_cam_2_18", false);SetEntityActive("area_cam_2_19", false);
+SetEntityActive("area_cam_2_20", false);
+return;
+}
+if (asTimer == "dac02_6"){
+SetEntityActive("area_cam_2_11", true);SetEntityActive("area_cam_2_10", true);
+SetEntityActive("area_cam_2_9", true);SetEntityActive("area_cam_2_12", true);
+SetEntityActive("area_cam_2_15", false);SetEntityActive("area_cam_2_14", false);SetEntityActive("area_cam_2_13", false);
+SetEntityActive("area_cam_2_16", false);
+return;
+}
+if (asTimer == "dac02_7"){
+SetEntityActive("area_cam_2_5", true);SetEntityActive("area_cam_2_6", true);SetEntityActive("area_cam_2_8", true);SetEntityActive("area_cam_2_10", true);
+SetEntityActive("area_cam_2_7", true);
+SetEntityActive("area_cam_2_11", false);SetEntityActive("area_cam_2_10", false);
+SetEntityActive("area_cam_2_9", false);SetEntityActive("area_cam_2_12", false);
+return;
+}
+if (asTimer == "dac02_8"){
+AddTimer("ca4", 1.6, "cam_delay_areas_2");
+SetEntityActive("area_cam_2_1", true);SetEntityActive("area_cam_2_2", true);SetEntityActive("area_cam_2_3", true);
+SetEntityActive("area_cam_2_4", true);
+SetEntityActive("area_cam_2_5", false);SetEntityActive("area_cam_2_6", false);SetEntityActive("area_cam_2_8", false);SetEntityActive("area_cam_2_10", false);
+SetEntityActive("area_cam_2_7", false);
+return;
+}
+}
+///------------------------
+void cam_delay_areas_2(string &in asTimer)
+{
+if (asTimer == "ca3"){
+AddTimer("dac02_5", 1, "ganger_areas_cam_2");
+AddTimer("dac02_6", 2, "ganger_areas_cam_2");
+AddTimer("dac02_7", 3, "ganger_areas_cam_2");
+AddTimer("dac02_8", 4, "ganger_areas_cam_2");
+return;
+}
+if (asTimer == "ca4"){
+AddTimer("dac02_1", 1, "ganger_areas_cam_2");
+AddTimer("dac02_2", 2, "ganger_areas_cam_2");
+AddTimer("dac02_3", 3, "ganger_areas_cam_2");
+AddTimer("dac02_4", 4, "ganger_areas_cam_2");
+return;
+}
+}
+////////////////////////////
+void alert_cam_1(string &in asParent, string &in asChild, int alState)
+{
+for (int i=1; i<=17; i++){
+RemoveTimer("dac_"+i);
+SetEntityActive("area_cam_1_"+i, false);
+}
+SetMoveObjectState("door_storagedoor_17", 12);
+SetEntityActive("nec_enemy_roach_3", true);
+SetGlobalVarInt("roach_03", 1);
+for (int j=1; j<=19; j++){
+AddEnemyPatrolNode("nec_enemy_roach_3", "Path_roach_3_"+j, 0.01, "");
+}
+PlaySoundAtEntity("", "19_camera_alert.snt", "RotateArea_1", 0, false);
+FadeLightTo("cam_1_SpotLight_1", 0.69, 0, 0, -1, -1, 0.1);
+FadeLightTo("cam_1_PointLight_1", 0.69, 0, 0, -1, -1, 0.1);
+RemoveTimer("c1");RemoveTimer("c2");RemoveTimer("ct");
+StopPropMovement("cam_1");
+StopSound("cttr01", 0);
+}
+/////////////-----------------
+void alert_cam_2(string &in asParent, string &in asChild, int alState)
+{
+for (int i=1; i<=20; i++){
+RemoveTimer("dac02_"+i);
+SetEntityActive("area_cam_2_"+i, false);
+}
+if (GetGlobalVarInt("roach_04") == 0){
+SetMoveObjectState("door_storagedoor_22", 12);
+SetEntityActive("nec_enemy_roach_4", true);
+SetGlobalVarInt("roach_04", 1);
+for (int j=1; j<=17; j++){
+AddEnemyPatrolNode("nec_enemy_roach_4", "Path_roach_4_"+j, 0.01, "");
+}
+}
+PlaySoundAtEntity("", "19_camera_alert.snt", "RotateArea_2", 0, false);
+FadeLightTo("cam_8_SpotLight_1", 0.69, 0, 0, -1, -1, 0.1);
+FadeLightTo("cam_8_PointLight_1", 0.69, 0, 0, -1, -1, 0.1);
+RemoveTimer("c3");RemoveTimer("c4");RemoveTimer("ct02");
+StopPropMovement("cam_8");
+StopSound("cttr02", 0);
+}
+//------------------
+/////////////
+void laser_active(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "ScriptArea_4"){
+StopSound("Sound_12", 1);
+PlayGuiSound("03_laser_trip1.ogg", 4.0f);
+FadeLightTo("PointLight_3", 0.69, 0, 0, -1, -1, 0.1);
+AddTimer("la1", 1, "laser_activenow");
+}
+if (asChild == "ScriptArea_13"){
+StopSound("Sound_16", 1);
+SetEntityActive("signs_3", false);
+PlayGuiSound("03_laser_trip1.ogg", 4.0f);
+FadeLightTo("Flashs_1", 0.69, 0, 0, -1, -1, 0.1);
+FadeLightTo("Flashs_2", 0.69, 0, 0, -1, -1, 0.1);
+AddTimer("la2", 1, "laser_activenow");
+}
+if (asChild == "ScriptArea_6"){
+StopSound("area6las", 1);
+PlayGuiSound("03_laser_trip1.ogg", 4.0f);
+FadeLightTo("PointLight_4", 0.69, 0, 0, -1, -1, 0.1);
+AddTimer("la3", 1, "laser_activenow");
+}
+if (asChild == "ScriptArea_7"){
+StopSound("area7las", 1);
+PlayGuiSound("03_laser_trip1.ogg", 4.0f);
+FadeLightTo("PointLight_5", 0.69, 0, 0, -1, -1, 0.1);
+AddTimer("la4", 1, "laser_activenow");
+
+}
+}
+void laser_active_addit(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("03_laser_trip1.ogg", 4.0f);
+for (int k=7; k<=13; k++){
+FadeLightTo("PointLight_"+k, 0.69, 0, 0, -1, -1, 0.1);
+}
+AddTimer("", 1, "laser_activenow_alt");
+}
+void laser_activenow_alt(string &in asTimer)
+{
+if (GetGlobalVarInt("roach_04") == 0){
+SetMoveObjectState("door_storagedoor_22", 12);
+SetEntityActive("nec_enemy_roach_4", true);
+SetGlobalVarInt("roach_04", 1);
+for (int j=1; j<=17; j++){
+AddEnemyPatrolNode("nec_enemy_roach_4", "Path_roach_4_"+j, 0.01, "");
+}
+}
+}
+////////////////
+void laser_active_flick(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("03_laser_trip1.ogg", 4.0f);
+SetEntityActive("signs_3", false);
+FadeLightTo("Flashs_3", 0.69, 0, 0, -1, -1, 0.1);FadeLightTo("Flashs_4", 0.69, 0, 0, -1, -1, 0.1);
+AddTimer("", 1, "laser_activenow_flick");
+RemoveTimer("flicker_laser");
+StopSound("fl01", 0);
+}
+void laser_activenow_flick(string &in asTimer)
+{
+if (GetGlobalVarInt("roach_01") == 0){
+SetEntityActive("nec_enemy_roach_1", true);
+SetGlobalVarInt("roach_01", 1);
+for (int j=1; j<=20; j++){
+AddEnemyPatrolNode("nec_enemy_roach_1", "Path_roach_1_"+j, 0.01, "");
+}
+SetMoveObjectState("door_storagedoor_15", 12);
+}
+SetLightVisible("Flashs_3", false);SetLightVisible("Flashs_4", false);
+}
+/////////////
+
+void laser_activenow(string &in asTimer)
+{
+if (asTimer == "la1"){
+if (GetGlobalVarInt("roach_01") == 0){
+SetEntityActive("nec_enemy_roach_1", true);
+SetGlobalVarInt("roach_01", 1);
+for (int j=1; j<=20; j++){
+AddEnemyPatrolNode("nec_enemy_roach_1", "Path_roach_1_"+j, 0.01, "");
+}
+SetMoveObjectState("door_storagedoor_15", 12);
+}
+SetLightVisible("PointLight_3", false);
+return;
+}
+if (asTimer == "la2"){
+if (GetGlobalVarInt("roach_02") == 0){
+SetEntityActive("nec_enemy_roach_2", true);
+SetGlobalVarInt("roach_02", 1);
+for (int j=1; j<=17; j++){
+AddEnemyPatrolNode("nec_enemy_roach_2", "Path_roach_2_"+j, 0.01, "");
+}
+SetMoveObjectState("door_storagedoor_16", 12);
+}
+SetLightVisible("Flashs_1", false);
+SetLightVisible("Flashs_2", false);
+return;
+}
+if (asTimer == "la3"){
+SetLightVisible("PointLight_4", false);
+if (GetGlobalVarInt("roach_01") == 0){
+SetEntityActive("nec_enemy_roach_1", true);
+SetGlobalVarInt("roach_01", 1);
+for (int j=1; j<=20; j++){
+AddEnemyPatrolNode("nec_enemy_roach_1", "Path_roach_1_"+j, 0.01, "");
+}
+SetMoveObjectState("door_storagedoor_15", 12);
+}
+return;
+}
+if (asTimer == "la4"){
+SetLightVisible("PointLight_5", false);
+if (GetGlobalVarInt("roach_01") == 0){
+SetEntityActive("nec_enemy_roach_1", true);
+SetGlobalVarInt("roach_01", 1);
+for (int j=1; j<=20; j++){
+AddEnemyPatrolNode("nec_enemy_roach_1", "Path_roach_1_"+j, 0.01, "");
+}
+SetMoveObjectState("door_storagedoor_15", 12);
+}
+return;
+}
+}
+void flash_cam(string &in asTimer)
+{
+AddTimer("ffl", 0.2, "fade_flash_lights");
+AddTimer("fc", 5.1, "flash_cam");
+AddTimer("ffa", 2, "fade_flash_areas");
+SetEntityActive("area_flash_2", true);SetEntityActive("area_flash_3", true);SetEntityActive("area_flash_1", true);
+SetEntityActive("area_flash_4", true);SetEntityActive("area_flash_5", true);
+ PlaySoundAtEntity("", "cam_flash.snt", "ScriptArea_14", 0, true);
+ for (int j=1; j<=7; j++){
+ FadeLightTo("Flash_"+j, 0.113, 0.776, 0, 1, 10.5, 0.1);
+ }
+}
+void fade_flash_lights(string &in asTimer)
+{
+ FadeLightTo("Flash_1", 0, 0, 0, 0, 10.5, 5);
+ FadeLightTo("Flash_2", 0, 0, 0, 0, 10.5, 4);
+ FadeLightTo("Flash_3", 0, 0, 0, 0, 10.5, 3);
+ FadeLightTo("Flash_4", 0, 0, 0, 0, 10.5, 2);
+ FadeLightTo("Flash_5", 0, 0, 0, 0, 10.5, 1);
+  FadeLightTo("Flash_6", 0, 0, 0, 0, 10.5, 4);
+   FadeLightTo("Flash_7", 0, 0, 0, 0, 10.5, 2);
+}
+void fade_flash_areas(string &in asTimer)
+{
+SetEntityActive("area_flash_2", false);SetEntityActive("area_flash_3", false);SetEntityActive("area_flash_1", false);
+SetEntityActive("area_flash_4", false);SetEntityActive("area_flash_5", false);
+}
+void alert_flashcam(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "19_camera_alert.snt", "ScriptArea_14", 0, false);
+ for (int j=1; j<=7; j++){
+ SetEntityActive("area_flash_"+j, false);
+ FadeLightTo("Flash_"+j,0.69, 0, 0, 1, 10.5, 0.1);
+ }
+RemoveTimer("ffl"); RemoveTimer("ffa"); RemoveTimer("fc"); 
+AddTimer("", 1, "flash_roach");
+}
+void flash_roach(string &in asTimer)
+{
+ for (int j=1; j<=7; j++){
+ FadeLightTo("Flash_"+j,0, 0, 0, 0, 10.5, 0.1);
+ }
+if (GetGlobalVarInt("roach_02") == 0){
+SetEntityActive("nec_enemy_roach_2", true);
+SetGlobalVarInt("roach_02", 1);
+for (int j=1; j<=17; j++){
+AddEnemyPatrolNode("nec_enemy_roach_2", "Path_roach_2_"+j, 0.01, "");
+}
+SetMoveObjectState("door_storagedoor_16", 12);
+}
+}
+/////////////////////////////////
+void open_gate(string &in asEntity)
+{
+AddTimer("dode", 1, "door_delay");
+SetEntityActive("tech_handscan_panel_1", false);SetEntityActive("tech_handscan_panel_2", false);
+SetEntityActive("tech_handscan_panel_3", true);SetEntityActive("tech_handscan_panel_4", true);
+PlaySoundAtEntity("","scan_ok.snt", "door_storagedoor_20", 0.5, false);
+if (GetLocalVarInt("door_case") == 0){
+SetLocalVarInt("door_case", 1);
+SetMoveObjectState("door_storagedoor_20", 1);
+return;
+}
+if (GetLocalVarInt("door_case") == 1){
+SetLocalVarInt("door_case", 0);
+SetMoveObjectState("door_storagedoor_20", 0);
+return;
+}
+}
+void door_delay(string &in asTimer)
+{
+SetEntityActive("tech_handscan_panel_1", true);SetEntityActive("tech_handscan_panel_2", true);
+SetEntityActive("tech_handscan_panel_3", false);SetEntityActive("tech_handscan_panel_4", false);
+}
+void light_off(string &in asParent, string &in asChild, int alState)
+{
+ for (int j=1; j<=9; j++){
+SetLightVisible("Propeller_light_"+j, false);
+ }
+  SetLightVisible("PointLight_5", false); SetLightVisible("PointLight_4", false);
+  SetLightVisible("Flashs_3", false);SetLightVisible("Flashs_4", false);
+ SetLightVisible("SpotLight_40", false); SetLightVisible("SpotLight_41", false);SetLightVisible("SpotLight_39", false);
+  SetLightVisible("Light_3", false); SetLightVisible("Light_1", false); SetLightVisible("Light_2", false);
+   for (int k=7; k<=13; k++){
+    SetLightVisible("PointLight_"+k, false); 
+}
+}
+////////////////
+//SAVE STATION///
+////////////////
+void SaveSpot(string &in asEntity)
+{
+ShowPlayerCrossHairIcons(false);
+SetPlayerActive(false);
+GiveSanityBoostSmall();
+SetEntityActive("ScriptArea_24", false);
+FadeImageTrailTo(2, 100);
+AddTimer("waittim_save", 2, "waittim");
+AddTimer("", 5, "waittim2");
+if (GetLocalVarInt("first_artefact_touch") == 0){
+SetLocalVarInt("first_artefact_touch", 1);
+StartEffectEmotionFlash("Artefacts", "VisionArc05", "horror_flashback.snt");
+return;
+}
+else if (GetLocalVarInt("first_artefact_touch") == 1){
+PlayGuiSound("ui_emotion_stone.snt", 3.0f);
+FadePlayerFOVMulTo(0.17, 1.6);
+StartEffectFlash(2.5, 1, 2);
+return;
+}
+}
+void waittim(string &in asTimer)
+{
+SetPlayerSanity(90);
+ShowPlayerCrossHairIcons(true);
+FadePlayerFOVMulTo(1, 100);
+FadeImageTrailTo(0, 100);
+SetSanityDrainDisabled(true);
+SetPlayerActive(true);
+AutoSave();
+}
+void waittim2(string &in asTimer)
+{
+SetEntityActive("ScriptArea_24", true);
+}
+/////////////////
+void fall_dead(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Falldead_area", false);
+SetEntityActive("ScriptArea_19", false);
+SetPlayerActive(false);
+SetPlayerFallDamageDisabled(true);
+AddTimer("d1", 0.3, "playerdead");
+StartInsanityEvent("fadedeath");
+}
+void playerdead(string &in asTimer)
+{
+SetLanternActive(false, false);
+FadeOut(0.5);
+FadeGlobalSoundVolume(0, 5);
+FadeGlobalSoundSpeed(0, 5);
+AddTimer("ref1", 3,"time_refresh");
+AddTimer("ref2", 3.2,"time_refresh");
+AddTimer("ref3", 4.5,"time_refresh");
+PlayGuiSound("12_implode_player1.ogg", 2.0f);
+}
+void time_refresh(string &in asTimer)
+{
+if (asTimer == "ref1"){
+StartEffectFlash(0.3, 1, 0.8);
+return;
+}
+if (asTimer == "ref2"){
+TeleportPlayer("PlayerStartArea_5");
+return;
+}
+if (asTimer == "ref3"){
+FadeIn(0);
+if (GetPlayerHealth() <= 50){
+AddPlayerHealth(30);
+}
+SetEntityActive("Falldead_area", true);
+SetEntityActive("ScriptArea_19", true);
+SetPlayerFallDamageDisabled(false);
+SetPlayerActive(true);
+FadeGlobalSoundVolume(1, 5);
+FadeGlobalSoundSpeed(1, 5);
+return;
+}
+}
+void push_wind(string &in asParent, string &in asChild, int alState)
+{
+ AddPlayerBodyForce(0, 600000, 0, false);
+}
+void push_things(string &in asParent, string &in asChild, int alState)
+{
+AddPropForce(asParent, 0, 6000, 0, "World");
+}
+void destroy_things(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade(asParent, false, 2);
+}
+//////////////
+//SAVE FIX//////
+void aftersave_fall_fix(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "Glitch_area_1"){
+TeleportPlayer("PlayerStartArea_1");
+}
+if (asChild == "Glitch_area_2"){
+TeleportPlayer("PlayerStartArea_4");
+}
+if (asChild == "Glitch_area_3"){
+TeleportPlayer("PlayerStartArea_3");
+}
+}
+//////////////
+void roach_door_check(string &in asParent, string &in asChild, int alState)
+{
+AddTimer("dd", 1, "bashdoorcheck");
+if (alState == 1){
+SetLocalVarInt("doorcaseroach", 1);
+}
+if (alState == -1){
+SetLocalVarInt("doorcaseroach", 0);
+}
+}
+void roach_pos_check(string &in asParent, string &in asChild, int alState)
+{
+if (alState == 1){
+SetLocalVarInt("caseroach", 1);
+}
+if (alState == -1){
+SetLocalVarInt("caseroach", 0);
+}
+}
+void bashdoorcheck(string &in asTimer)
+{
+AddTimer("dd", 1, "bashdoorcheck");
+if (GetLocalVarInt("caseroach") == 1 && GetLocalVarInt("doorcaseroach") == 1 ){
+RemoveTimer("dd");
+RemoveTimer("dode");
+SetEntityActive("tech_handscan_panel_3", true);SetEntityActive("tech_handscan_panel_4", true);
+SetEntityActive("tech_handscan_panel_1", false);SetEntityActive("tech_handscan_panel_2", false);
+PlaySoundAtEntity("", "27_orb_done.snt", "ScriptArea_14", 0, false);
+SetLocalVarInt("door_case", 1);
+SetMoveObjectState("door_storagedoor_20", 1);
+}
+}
+//////////SYRINE////////////
+/////////////////////////////
+void Syr()
+{
+AddTimer("san1", 0.6, "sanity1");
+}
+void sanity1(string &in asTimer)
+{
+AddTimer("san1", 0.6, "sanity1");
+if (GetPlayerSanity() == 85){
+SetPlayerSanity(90);
+if (GetLocalVarInt("adrenalin_inject") == 0){
+stamina_obj.Stop();
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1.1);
+SetPlayerRunSpeedMul(1.05);
+SetPlayerLookSpeedMul(1.15);
+SetPlayerJumpForceMul(1.1);
+}
+AddPlayerHealth(30);
+SetLocalVarInt("adrenalin_inject", 1);
+FadeSepiaColorTo(0.7, 0.5);
+AddTimer("adren", 45 ,"adrenalin_end");
+}
+}
+}
+void adrenalin_end(string &in asTimer)
+{
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+SetPlayerJumpForceMul(1);
+}
+SetLocalVarInt("adrenalin_inject", 0);
+FadeSepiaColorTo(0, 0.5);
+stamina_obj.Start(); 
+}
+//////////////
+/////////////
+void signs_box(string &in asEntity)
+{
+if (asEntity == "signs_1"){
+SetMessage("09_Engine", "bloodcorpse", -1);
+}
+if (asEntity == "signs_2"){
+SetMessage("09_Engine", "propeller", -1);
+}
+if (asEntity == "signs_3"){
+SetMessage("09_Engine", "greenlasers", -1);
+}
+}
+void OnEnter()
+{
+stamina_obj.Start(); 
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+AddTimer("", 0.1, "sanit");
+GiveSanityBoostSmall();
+SetLocalVarInt("adrenalin_inject", 0);
+RemoveTimer("adren");
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+SetPlayerJumpForceMul(1);
+FadeSepiaColorTo(0, 100);
+///SetGlobalVarInt("entrymus", 2); SetGlobalVarInt("gas_overnow", 1);
+PreloadSound("19_camera_turn1.snt");
+PreloadSound("21_4_door_ticking.snt");
+PreloadSound("amb_mashines.snt");
+PreloadSound("03_laser.snt");
+PreloadSound("amb_mashines.snt");
+PreloadSound("lights_on_test.snt");
+PreloadSound("afx_reactor_power_horn.snt");
+PreloadSound("fan_engine.snt");
+PreloadSound("im_wind.snt");
+PreloadSound("19_camera_alert.snt");
+PreloadSound("cam_flash.snt");
+PreloadSound("scan_ok.snt");
+PreloadSound("27_orb_done.snt");
+if (GetLocalVarInt("checkpoint01") == 1){
+CheckPoint("first", "PlayerStartArea_2", "roach_point_one", "", "");
+}
+if (GetLocalVarInt("checkpoint01") == 2){
+CheckPoint("second", "PlayerStartArea_3", "roach_point_one", "", "");
+}
+if (GetLocalVarInt("roach_music") == 1){
+SetEntityActive("nec_enemy_roach_5", true);
+}
+if (GetGlobalVarInt("roach_02") == 1){
+SetEntityActive("nec_enemy_roach_2", true);
+for (int j=1; j<=17; j++){
+AddEnemyPatrolNode("nec_enemy_roach_2", "Path_roach_2_"+j, 0.01, "");
+}
+}
+if (GetGlobalVarInt("roach_01") == 1){
+SetEntityActive("nec_enemy_roach_1", true);
+for (int j=1; j<=20; j++){
+AddEnemyPatrolNode("nec_enemy_roach_1", "Path_roach_1_"+j, 0.01, "");
+}
+}
+if (GetGlobalVarInt("roach_03") == 1){
+SetEntityActive("nec_enemy_roach_3", true);
+for (int j=1; j<=19; j++){
+AddEnemyPatrolNode("nec_enemy_roach_3", "Path_roach_3_"+j, 0.01, "");
+}
+}
+if (GetGlobalVarInt("roach_04") == 1){
+SetEntityActive("nec_enemy_roach_4", true);
+for (int j=1; j<=17; j++){
+AddEnemyPatrolNode("nec_enemy_roach_4", "Path_roach_4_"+j, 0.01, "");
+}
+}
+}
+void OnLeave()
+{
+stamina_obj.Stop();
+StopMusic(0, 1);
+SetupLoadScreen("", "", 1, "loadscreen_meteo.jpg");
+}

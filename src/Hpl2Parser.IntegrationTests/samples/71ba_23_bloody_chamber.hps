@@ -1,0 +1,560 @@
+void OnStart()
+{
+	SetDeathHint("DeathHint", "DHint1");
+	StopMusic(1.0f, 0);
+	StopMusic(1.0f, 10);
+	PlayMusic("18_amb.ogg", true, 0.3f, 1.0f, 0.0f, false);
+	
+	//Collides
+	AddEntityCollideCallback("Player", "AreaKnife", "EventKnife", true, 1);
+	AddEntityCollideCallback("Player", "AreaStartLookValveRoom", "LookValveRoom", true, 1);
+	
+	//use
+	AddUseItemCallback("cuts", "Dagger", "AreaCut", "CutEvent", false);
+	
+	SetLightVisible("L1", false);
+	SetLightVisible("L2", false);
+	
+	//Disable this later
+	//AddEntityCollideCallback("Player", "AreaLeavingEvents", "EventsLeaving", true, 1);
+	
+	//--DISPLAY--//
+	CheckPoint("bloodychamber1", "PlayerStartArea_1", "", "DeathHint", "Dhint1");
+	SetMapDisplayNameEntry("LevelSacrifice");
+	AutoSave();
+	
+	/*
+	FadeOut(0);
+	AddTimer("timeraway_1", 1, "TimerAway");
+	SetPlayerMoveSpeedMul(0.1);
+	*/
+	}
+	
+//
+//Knife Beginning
+void EventKnife(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("Dagger", 300, 0, 300, "world");
+	
+	SetPlayerActive(false);
+	
+	StartPlayerLookAt("Dagger", 2, 3, "");
+	
+	AddTimer("", 1.0f, "TimerEndLook");
+	
+	PlaySoundAtEntity("", "27_wind", "Player", 0.0f, false);
+	}
+	
+void TimerEndLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	
+	SetPlayerActive(true);
+	}
+	
+/////////////////////////
+//Dagger faint
+void DaggerPick(string &in asEntity)
+{
+	PlayGuiSound("general_wind_whirl.snt", 0.5f);
+	SetRadialBlurStartDist(0.2f);
+	FadeRadialBlurTo(0.2f, 0.1f);
+	
+	SetPlayerActive(false);
+	
+	AddTimer("", 3.0f, "TimerBack");
+	
+	FadePlayerRollTo(10, 3, 4);
+	MovePlayerHeadPos(0, -0.5, 0, 1, 1);
+	
+	StopMusic(1.0f, 0);
+	
+	SetEntityActive("Block", true);
+	
+	AddTimer("back1", 3.0f, "FuncTimerBack");
+	AddTimer("back2", 6.0f, "FuncTimerBack");
+	
+	PlaySoundAtEntity("creak", "00_creak", "Player", 3, false);
+	
+	SetPlayerMoveSpeedMul(0.5f);
+	}
+	
+void FuncTimerBack(string &in asTimer)
+{
+	if(asTimer == "back1") {
+		
+		//FadeIn(3.0f);
+	
+		AddTimer("", 8.0f, "TimerBack2");
+	
+		FadePlayerRollTo(0, 5, 10);
+	
+		FadePlayerFOVMulTo(1.2f, 2.0f);
+
+		MovePlayerHeadPos(0, -0.3, 0, 1, 1);	
+		
+		PlaySoundAtEntity("", "react_breath", "Player", 0, false);
+	
+	} else if(asTimer == "back2") {
+		
+		PlaySoundAtEntity("", "react_sigh", "Player", 0, false);
+		
+		SetPlayerCrouching(false);
+		
+		SetPlayerActive(true);
+		
+		FadeRadialBlurTo(0, 1);
+	
+		//SetMessage("TextOne", "SacMes", 2.0f);
+	
+		PlayMusic("29_amb.ogg", true, 0.3f, 4.0f, 0, false);
+		
+		MovePlayerHeadPos(0, 0, 0, 1, 1);
+		StopSound("creak", 3);
+	}
+	}
+///////////////////////////////
+//Cuts
+void CutEvent(string &in asItem, string &in asEntity)
+{
+	int iCuts = GetLocalVarInt("CutsOK");
+	
+	//PlaySoundAtEntity("", "slime_attack_normal_hit", "Player", 0.0f, false);
+	PlayGuiSound("sanity_heartbeat.snt", 1.0f);
+	PlayGuiSound("19_inject.ogg", 0.4f);
+	PlayGuiSound("general_wind_whirl.snt", 0.5f);
+	PlaySoundAtEntity("blood", "28_touch", "Player", 0.05f, false);
+	
+	CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "AreaBloodPart", false);
+	
+	FadeOut(0.5f);
+	
+	//AddTimer("fade", 3.5f, "CutsFade");
+	
+	AddLocalVarInt("CutsOK", 1);
+	
+	AddDebugMessage("fade is fade"+GetLocalVarInt("CutsOK"), false);
+	
+	//+GetLocalVarInt("CutsOK")
+	
+	SetPlayerActive(false);
+	
+	SetInventoryDisabled(true);
+	
+	if(GetLocalVarInt("CutsOK") < 2)
+	{
+		AddTimer("inv", 5.5f, "CutsFade");
+	}
+	
+	if(GetLocalVarInt("CutsOK") == 2)
+	{
+		StopMusic(0.0f, 0);
+		PlayMusic("29_amb02.ogg", true, 0.3f, 4.0f, 0, false);
+		PlaySoundAtEntity("cut", "24_cut", "AreaBloodPart", 1.05f, false);
+		
+		GiveSanityDamage(10, true);
+		
+			FadeImageTrailTo(1.5, 1);
+			SetRadialBlurStartDist(0.2f);
+			FadeRadialBlurTo(0.2f, 0.1f);
+			SetPlayerLookSpeedMul(0.4f);
+			FadePlayerFOVMulTo(0.9f, 1);
+			SetPlayerMoveSpeedMul(0.1f);
+			
+		AddTimer("inv", 5.5f, "CutsFade");
+	}
+	
+	if(GetLocalVarInt("CutsOK") > 2)
+	{
+			PlaySoundAtEntity("", "enemy/brute/attack_claw_hit", "Player", 0.0f, false);
+			PlaySoundAtEntity("", "25_guardian_slime_appear", "Player", 0.0f, false);
+			//PlayMusic("15_event_elevator.ogg", false, 0.3f, 4.0f, 10, false);
+			PlaySoundAtEntity("blood", "28_touch", "Player", 0.05f, false);
+			PlayGuiSound("19_inject.ogg", 0.4f);
+			PlayGuiSound("sanity_heartbeat.snt", 1.0f);
+			
+			RemoveTimer("fade");
+			
+			StopMusic(1.0f, 0);
+			
+			SetPlayerActive(false);
+			
+			//AddTimer("", 8.0f, "TimerBack3");
+			//AddTimer("", 14.0f, "MEvent");
+			AddTimer("timeraway_1", 11, "TimerAway");
+			
+			AddEntityCollideCallback("Player", "AreaLeavingEvents", "EventsLeaving", true, 1);
+			
+			SetPropActiveAndFade("Pris", false, 2);
+			
+				SetEntityActive("Wheel1_1", false);
+				SetEntityActive("Wheel2_1", false);
+				
+				SetEntityActive("Wheel1", true);
+				SetEntityActive("Wheel2", true);
+	}
+
+	}
+	///////////PART
+
+//29_amb_guard.snt
+void TimerAway(string &in asTimer)
+{
+	if(asTimer == "timeraway_1")
+	{
+		AddTimer("removesepia", 10, "TimerRemoveSepia");
+		
+		StopMusic(2, 0);
+		PlaySoundAtEntity("guard", "29_amb_guard.snt", "Player", 0.05f, false);
+		SetPlayerActive(true);
+		TeleportPlayer("AreaAway");
+		AddTimer("timeraway_2", 15, "TimerAway");
+		
+	AddEffectVoice("REV613", "", "TextOne", "Rev613", false, "", 0, 0);
+	
+		FadeIn(10);
+		FadeImageTrailTo(1.8, 1);
+		FadePlayerFOVMulTo(1.3, 0.3);
+		StartScreenShake(0.08,5, 5, 5);
+		FadeSepiaColorTo(1, 10);
+	}
+	
+	if(asTimer == "timeraway_2")
+	{
+		AddTimer("timeraway_3", 16, "TimerAway");
+		
+		AddTimer("removesepia", 10, "TimerRemoveSepia");
+	AddEffectVoice("REV614", "", "TextOne", "Rev614", false, "", 0, 0);
+		FadePlayerFOVMulTo(0.8, 0.2);
+		
+		PlaySoundAtEntity("guard", "29_amb_guard.snt", "Player", 0.05f, false);
+		FadeImageTrailTo(1.4, 1);
+		FadePlayerFOVMulTo(1.3, 0.3);
+		StartScreenShake(0.08,5, 5, 5);
+		FadeSepiaColorTo(1, 0.2);
+	}
+		
+	if(asTimer == "timeraway_3")
+	{
+		AddTimer("timeraway_4", 13, "TimerAway");
+		AddTimer("removesepia", 10, "TimerRemoveSepia");
+		
+	AddEffectVoice("REV615", "", "TextOne", "Rev615", false, "", 0, 0);
+	
+		FadePlayerFOVMulTo(1.3, 0.3);
+		
+		PlaySoundAtEntity("guard", "29_amb_guard.snt", "Player", 0.05f, false);
+		FadeImageTrailTo(1.4, 1);
+		FadePlayerFOVMulTo(1.3, 0.3);
+		StartScreenShake(0.08,5, 5, 5);
+		FadeSepiaColorTo(1, 0.2);
+		
+		CreateParticleSystemAtEntity("blood", "ps_guardian_appear_explosion.ps", "AreaBlood", true);
+		PlaySoundAtEntity("boom", "27_orb_implode", "AreaBlood", 0.05f, false);
+		SetPropActiveAndFade("Sacrifice", false, 4);
+		
+		FadeLightTo("PointLight_8", 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		
+	}
+	
+	if(asTimer == "timeraway_4")
+	{
+		AddTimer("timeraway_5", 4, "TimerAway");
+		FadeOut(6);
+	}
+	
+	if(asTimer == "timeraway_5")
+	{
+		AddTimer("timeraway_6", 4, "TimerAway");
+	}
+		
+	if(asTimer == "timeraway_6")
+	{
+		AddTimer("", 4, "TimerBack3");
+	}
+}
+void TimerRemoveSepia(string &in asTimer)
+{
+	FadeSepiaColorTo(0, 0.3);
+}
+
+
+void TimerBack3(string &in asTimer)
+{
+	SetInventoryDisabled(false);
+	PlayMusic("15_event_elevator.ogg", false, 0.3f, 4.0f, 10, false);
+	AddTimer("", 14.0f, "MEvent");
+	TeleportPlayer("AreaBack");
+	
+	FadeIn(5.0f);
+	
+	SetPlayerActive(true);
+	StopSound("cut", 1);
+	
+	CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "EndParticles", true);
+	
+	StopMusic(1.0f, 0);
+	
+		FadeImageTrailTo(0, 1);
+		//SetRadialBlurStartDist(0.2f);
+		FadeRadialBlurTo(0.0, 0.1f);
+		SetPlayerLookSpeedMul(1.0f);
+		FadePlayerFOVMulTo(1, 1);
+		SetPlayerMoveSpeedMul(1.0f);
+	}
+/////
+//Music Scare
+void MEvent(string &in asTimer)
+{
+	SetPropActiveAndFade("Block", false, 2);
+	GiveSanityDamage(10, true);
+	PlaySoundAtEntity("", "scare_ghost", "Player", 0.0f, false);
+	
+	//Callbacks
+	SetEntityConnectionStateChangeCallback("Wheel1", "IntWheel1");
+	SetEntityConnectionStateChangeCallback("Wheel2", "IntWheel2");
+	
+	//Unstuck
+	SetWheelStuckState("Wheel1", 0, true);
+	SetWheelStuckState("Wheel2", 0, true);
+	}
+
+/////////////////////
+/////////////////////
+void CutsFade(string &in asTimer)
+{
+	AddDebugMessage("timer works", false);
+	
+	FadeIn(3.5f);
+	SetPlayerActive(true);
+	
+	PlaySoundAtEntity("", "react_breath", "Player", 0, false);
+	
+	SetInventoryDisabled(false);
+	
+	/*
+	if(asTimer == "fade1")
+	{
+		FadeIn(1.5f);
+		SetPlayerActive(true);
+		
+		AddDebugMessage("asTImer works, fade is fade"+GetLocalVarInt("CutsOK"), false);
+	}
+	
+	if(asTimer == "fade2")
+	{
+		FadeIn(5.5f);
+		SetPlayerActive(true);
+		
+		StopSound("cut", 1);
+	}
+	*/
+	}
+	
+///////////////////////////////
+
+////////////WHEELS/////////////
+
+//////////////////////////////
+void IntWheel1(string &in asEntity, int alState)
+{
+	if(alState != 1) return;
+	
+	PlaySoundAtEntity("", "18_valve_off", "Player", 0.0f, false);
+	PlaySoundAtEntity("", "14_elevator_clank", "Player", 0.0f, false);
+	
+	AddLocalVarInt("WheelsOK", 1);
+	
+	AddTimer("", 0.5f, "TimerDelayWheel");
+	}
+	
+void IntWheel2(string &in asEntity, int alState)
+{
+	if(alState != 1) return;
+	
+	PlaySoundAtEntity("", "18_valve_off", "Player", 0.0f, false);
+	PlaySoundAtEntity("", "14_elevator_clank", "Player", 0.0f, false);
+	
+	AddLocalVarInt("WheelsOK", 1);
+	
+	AddTimer("", 0.5f, "TimerDelayWheel");
+	
+	//BLOODY CHAMBER COMPLETED VAR
+	SetGlobalVarInt("BC", 2);
+	AutoSave();
+	}
+	
+void TimerDelayWheel(string &in asEntity)
+{
+	if(GetLocalVarInt("WheelsOK") == 2)
+	{
+		StopMusic(1.0f, 0);
+		
+		PlayMusic("26_paper_daniel01.ogg", false, 0.7f, 1.0f, 10, false);
+		
+		GiveSanityBoost();
+		
+		AddEntityCollideCallback("Player", "AreaGruntBecome", "EventGruntHorror", true, 1);
+		
+		//FOGGY TEMPLE GRUNT SHADOW FIGURE SCARE!!!!!!
+	SetEntityActive("Grunt", true);
+	
+	SetLightVisible("L1", true);
+	SetLightVisible("L2", true);
+	
+	SetLampLit("Lantern2", false, true);
+	
+	SetDeathHint("DeathHint", "DHint1");
+	
+	AutoSave();
+	} 
+}
+
+//Leaving Bloody Chamber..
+void EventGruntHorror(string &in asParent, string &in asChild, int alState)
+{
+	ShowEnemyPlayerPosition("Grunt");
+	
+	AddEnemyPatrolNode("Grunt", "Node_*", 0.001f, "");
+	
+	PlayMusic("22_event_trapped.ogg", false, 1.0f, 0.0f, 10, false);
+	
+	GiveSanityDamage(10, true);
+	}
+
+////////////////////////////////////////////
+
+///////////////EFFECTS/////////////////////
+
+//////////////////////////////////////////
+
+//LEAVING THE CHAMBER EVENTS
+void EventsLeaving(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 0.1f, "DustEvents");
+	CompleteQuest("23Wheel", "23Wheel");
+	}
+	
+void DustEvents(string &in asTimer) //Dust and scary noises throughout hallway
+{
+	AddLocalVarInt("Dusts", 1);
+	float fDust = 0.5f;
+	
+	switch(GetLocalVarInt("Dusts")) 
+		{
+		case 1: //Beginning
+			PlaySoundAtEntity("creaks", "00_creak", "Player", 0.3f, false); 
+			PlaySoundAtEntity("", "general_wind_whirl.snt", "ScriptArea_1", 0.3f, false);
+			SetPlayerMoveSpeedMul(0.5f);
+			SetLampLit("Lantern1", false, true);
+			FadeLightTo("PointLight_3", 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+			CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_1", false);
+			StartScreenShake(0.02f, 4.0f, 1.5f, 1.5f);
+			FadePlayerFOVMulTo(1.3f, 2.0f);
+			FadePlayerRollTo(-30.0f, 1.0f, 2.0f);
+			FadeImageTrailTo(1.3f, 2.0f);
+			FadeSepiaColorTo(1, 1);
+			fDust = 1.0f;
+		break;
+		case 2:
+			CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ScriptArea_2", false);
+			PlaySoundAtEntity("", "27_wind", "ScriptArea_2", 0.3f, false);
+			GiveSanityDamage(10, true); 
+			PlayMusic("04_event_stairs.ogg", false, 1.0f, 0.0f, 10, false);
+			PlaySoundAtEntity("", "scare_ghost", "Player", 0.0f, false);
+		break;
+		case 3:
+			CreateParticleSystemAtEntity("", "ps_dust_ghost.ps", "ScriptArea_3", false);
+			PlaySoundAtEntity("", "scare_wind", "ScriptArea_2", 0.3f, false);
+			PlaySoundAtEntity("", "21_screams", "ScriptArea_2", 0.3f, false); //!
+			PlayMusic("10_event_prisoner.ogg", false, 0.3f, 1.0f, 0, false);
+			AddPropForce("Lantern2", 500, 0, 0, "world");
+			PlaySoundAtEntity("", "scare_tingeling", "Player", 0.0f, false);
+		break;
+		case 4:
+			CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ScriptArea_4", false);
+			PlaySoundAtEntity("", "scare_wind_reverse", "ScriptArea_4", 0.3f, false);
+			AddPropForce("Lantern1", -500, 0, 0, "world");
+			PlaySoundAtEntity("", "21_screams", "Player", 0.0f, false);
+			FadePlayerRollTo(30.0f, 1.0f, 2.0f);
+			fDust = 0.5f; //Time between events shortens
+		break;
+		case 5:
+			CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "Step_1", false);
+			PlaySoundAtEntity("", "scare_walk_ghost", "Step_1", 0.3f, false);
+		break;
+		case 6:
+			CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "Step_2", false);
+			PlaySoundAtEntity("", "scare_walk_ghost", "Step_2", 0.3f, false);
+			PlaySoundAtEntity("", "21_screams", "Player", 0.0f, false);
+		break;
+		case 7:
+			CreateParticleSystemAtEntity("", "ps_dust_impact_vert.ps", "Step_3", false);
+			PlaySoundAtEntity("", "scare_walk_ghost", "Step_3", 0.3f, false);
+			PlaySoundAtEntity("", "21_screams", "Step3", 0.3f, false); //!
+			SetEntityActive("surprise_grunt_1", true);
+			StopSound("creaks", 1.0f);
+			AddLocalVarInt("Dusts", 11); //Stop the timer from running again
+			FadePlayerFOVMulTo(1.0f, 2.0f);
+			FadePlayerRollTo(0, 1.0f, 2.0f);
+			FadeSepiaColorTo(0, 1);
+			FadeImageTrailTo(0, 2);
+			SetPlayerMoveSpeedMul(1.0f); //Make sure all screen effects go back to normal
+		break;
+		}
+		
+	if(GetLocalVarInt("Dusts") < 10) AddTimer("dusts", fDust, "DustEvents");
+	}
+	
+void OnLeave()
+{
+	SetDeathHint("DeathHint", "DHint1");
+	}
+	
+void OnEnter()
+{
+	AutoSave();
+	}
+	
+//---------------------------------------------	
+
+/////////////////////////////
+// MISC
+/////////////////////////////
+
+//---------------------------------------------	
+
+//--PLAYER INTERRACT WHEEL--//
+void TouchWheel(string &in asEntity)
+{
+	AddQuest("23Wheel", "23Wheel");
+	SetMessage("TextOne", "NotWorking", 2.0f);
+}
+
+//--PLAYER INTERRACT GATE--//
+void TouchGate(string &in asEntity)
+{
+	SetMessage("TextOne", "23Gate", 2.0f);
+}
+
+
+//--PLAYER LOOK AT VALVE ROOM--//
+void LookValveRoom(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("windy1", "ps_dust_whirl.ps", "ScriptArea_6", false);
+	PlaySoundAtEntity("windy2", "general_wind_whirl", "ScriptArea_6", 0.0f, false);
+	
+	StartPlayerLookAt("ScriptArea_5", 1, 2, "StopLookArea");
+	
+	AddTimer("endlookingarea", 4.0f, "TimerEndLookAt");
+	
+	SetPlayerMoveSpeedMul(0.4f);
+}
+
+
+void TimerEndLookAt(string &in asTimer)
+{
+	StopPlayerLookAt();
+	
+	SetPlayerMoveSpeedMul(1);
+}

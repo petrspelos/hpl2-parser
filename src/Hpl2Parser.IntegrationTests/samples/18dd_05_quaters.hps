@@ -1,0 +1,60 @@
+void OnStart()
+{
+	AddUseItemCallback("", "key_tomb_rusty_1", "level_hub_3", "doortostorage", true);
+	AddUseItemCallback("", "bone_saw_1", "prison_section_1", "unlockmetalbar", true);
+	SetEntityPlayerInteractCallback("prison_section_1", "getmemirondoorlocked", true);
+	SetEntityPlayerInteractCallback("note_letter_1", "grabnoteoldsanc", true);
+}
+
+void OnEnter()
+{
+	StopMusic(1.0f, 0);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "load05", 1, "");
+}
+
+////////////////////////////////////////////
+/////////////////DOOR/THING/////////////////
+////////////////////////////////////////////
+
+void doortostorage(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked(asEntity, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+void getmemirondoorlocked(string &in asEntity)
+{
+	AddQuest("mem6", "memento6");
+}
+
+void unlockmetalbar(string &in asItem, string &in asEntity)
+{
+	FadeOut(0.5); 
+	SetPlayerActive(false);
+	AddTimer("finishcutfence", 5, "finishcutfence");
+	PlaySoundAtEntity("", "26_saw", "Player", 0, false);
+}
+
+void finishcutfence(string &in asTimer)
+{
+	SetPlayerActive(true);
+	SetEntityActive("prison_section_1", false);
+	SetEntityActive("prison_section_broken", true);
+	PlaySoundAtEntity("", "door_bar_close", "Player", 0, false);
+	FadeIn(0.5); 
+	CompleteQuest("mem6", "memento6");
+	AutoSave();
+}
+
+void grabnoteoldsanc(string &in asEntity)
+{
+	AddQuest("mem7", "memento7");
+	SetEntityActive("angel_statue_1", false);
+	SetEntityActive("angel_statue_2", true);
+}

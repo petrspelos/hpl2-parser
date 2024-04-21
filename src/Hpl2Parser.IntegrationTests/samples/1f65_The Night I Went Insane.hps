@@ -1,0 +1,802 @@
+///////////////////////////////////////////////////////////////////////////
+//OnStart
+///////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	    AddUseItemCallback("", "main_key", "main_door", "UseKeyOnDoor", true);
+		AddUseItemCallback("", "monster_key", "level_2", "UseKeyOnDoorTwo", true);
+		AddUseItemCallback("", "water_key", "level_3", "UseKeyOnDoorThree", true);
+		AddUseItemCallback("", "Level4", "level_4", "UseKeyOnDoorFour", true);
+		AddUseItemCallback("", "dirty_key", "level_5", "UseKeyOnDoorFive", true);
+		AddUseItemCallback("", "Level5", "level_6", "UseKeyOnDoorSix", true);
+		AddUseItemCallback("", "Key", "level_7", "UseKeyOnDoorSeven", true);
+		AddUseItemCallback("", "ToLevel8", "level_8", "UseKeyOnDoorEight", true);
+		AddUseItemCallback("", "BasementKey", "Basement", "UseKeyOnDoorNine", true);
+		AddUseItemCallback("", "Piece_1", "BuildOrb", "StartOrb", true);
+		AddUseItemCallback("", "Piece_1", "BuildOrb_1", "StartOrb", true);
+		AddEntityCollideCallback("Player", "Quest_3","QuestToCheck",true, 1);
+		AddEntityCollideCallback("Player", "Quest_1","QuestAfterCheck",true, 1);
+        AddEntityCollideCallback("Player", "Quest_2","QuestAfterUnlock",true, 1);
+		AddEntityCollideCallback("Player", "Dialogue_01", "Dialogue", true, 1);
+		AddEntityCollideCallback("Player", "Dialogue_03", "Dialogue3", true, 1);
+		AddEntityCollideCallback("Player", "ToEnd", "EndMap", true, 1);
+		AddEntityCollideCallback("Player", "MusicArea", "Music", false, 1);
+		AddEntityCollideCallback("Player", "To_Basement", "Boss", true, 1);
+		FadePlayerRollTo(-65, 20, 20);
+		MovePlayerHeadPos(-1, 0.45, -1.1, 20, 1);
+		AddTimer("activate_player", 3, "FadeIn");
+		AddTimer("", 10, "StartMovement");
+		FadeImageTrailTo(3, 1);
+		FadeRadialBlurTo(0.4, 1);
+		ShowPlayerCrossHairIcons(false);
+		SetPlayerActive(false);
+		SetPlayerCrouching(true);
+		SetLightVisible("Gross_Light", false);
+		GiveHint ("GetLantern", "Hints", "Lantern", 15);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnEnter
+//////////////////////////////////////////////////////////////////////////	
+
+void OnEnter()
+{
+	StopMusic(0,1);
+	if(HasItem("monster_key") == true)
+	{
+		SetLevelDoorLocked("level_1", true);
+	}
+
+if(HasItem("water_key") == true)
+	{
+		SetLevelDoorLocked("level_2", true);
+	}
+
+if(HasItem("Level4") == true)
+	{
+		SetLevelDoorLocked("level_3", true);
+	}
+
+if(HasItem("dirty_key") == true)
+	{
+		SetLevelDoorLocked("level_4", true);
+	}
+
+if(HasItem("Level5") == true)
+	{
+		SetLevelDoorLocked("level_5", true);
+	}
+
+if(HasItem("Key") == true)
+	{
+		SetLevelDoorLocked("level_6", true);
+	}
+
+if(HasItem("ToLevel8") == true)
+	{
+		SetLevelDoorLocked("level_7", true);
+	}
+
+if(HasItem("BasementKey") == true)
+	{
+		SetLevelDoorLocked("level_8", true);
+	}
+	
+	if(HasItem("Piece_6") == true)
+		{
+			SetLightVisible("Gross_Light", true);
+			for(int i = 1; i <= 5; i++) SetEntityActive("Egg_"+i, true);
+			for(int i = 1; i <= 2; i++) SetEntityActive("Beam_"+i, true);
+			for(int i = 1; i <= 5; i++) SetEntityActive("After_"+i, true);
+			for(int i = 1; i <= 6; i++) SetEntityActive("FloatingBody_"+i, true);
+			for(int i = 1; i <= 3; i++) SetEntityActive("Statue_"+i, true);
+			for(int i = 1; i <= 3; i++) SetEntityActive("Skull_"+i, true);
+			for(int i = 1; i <= 4; i++) SetEntityActive("Slime_"+i, true);
+			for(int i = 1; i <= 9; i++) SetEntityActive("Block_"+i, true);
+			SetEntityActive("Insane_Corpse", true);
+			SetEntityActive("Painting_Base", true);
+			SetEntityActive("Painting_Insane", true);
+			AddEntityCollideCallback("Player", "BarricadeStairsArea", "CollapseRocks", true, 1);
+			SetSwingDoorLocked("Basement", true, true);
+			PlayMusic("Track23.ogg", true, 2, 1, 1, true);
+			SetPlayerMoveSpeedMul(0.9);
+			SetPlayerRunSpeedMul(1);
+			if(GetPlayerYSpeed() <= 0.9)
+		{
+				AddTimer("", 0.5f, "Stop");
+		}
+			if(GetPlayerYSpeed() == 1)
+		{
+				AddTimer("", 0.3f, "Stop");
+		}
+		SetInventoryDisabled(false);
+		TimerShakeLamp("");
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+	}
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Player Effects
+//////////////////////////////////////////////////////////////////////////	
+
+void Stop(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	AddTimer("", 0.1f, "Start");
+}
+
+void Start(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0.9);
+	SetPlayerRunSpeedMul(1);
+	if(GetPlayerYSpeed() <= 0.9)
+	{
+		AddTimer("", 0.5f, "Stop");
+	}
+	
+	if(GetPlayerYSpeed() == 1)
+	{
+		AddTimer("", 0.3f, "Stop");
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+//Music
+//////////////////////////////////////////////////////////////////////////	
+
+void Music(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Track_BeginningAmbience.ogg", false, 2, 1, 2, true);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Unlock Door
+//////////////////////////////////////////////////////////////////////////
+void CheckDoorSwing(string &in asEntity)
+{
+	if(GetSwingDoorLocked(asEntity) == true)
+		{
+		SetMessage("Messages", "Locked", 1);
+		}
+	
+	if(GetSwingDoorLocked(asEntity) == false)
+		{
+			SetMessage("Messages", "Blank", 1);
+		}
+}
+
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+    SetSwingDoorLocked("main_door", false, true);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);
+	
+	SetLocalVarInt("Switch", 1);
+    CompleteQuest("Unlock_Door", "UnlockDoor");
+	}
+	
+void UseKeyOnDoorTwo(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+    SetLevelDoorLocked("level_1", true);
+	SetEntityActive("Copy_1", true);
+    SetEntityActive("level_1", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+
+void UseKeyOnDoorThree(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+	SetLevelDoorLocked("level_2", true);
+	SetEntityActive("Copy_2", true);
+    SetEntityActive("level_2", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+void UseKeyOnDoorFour(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+	SetLevelDoorLocked("level_3", true);
+	SetEntityActive("Copy_3", true);
+    SetEntityActive("level_3", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}	
+void UseKeyOnDoorFive(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+	SetLevelDoorLocked("level_4", true);
+	SetEntityActive("Copy_4", true);
+    SetEntityActive("level_4", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+	
+void UseKeyOnDoorSix(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+	SetLevelDoorLocked("level_5", true);
+	SetEntityActive("Copy_5", true);
+    SetEntityActive("level_5", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+	
+void UseKeyOnDoorSeven(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+	SetLevelDoorLocked("level_6", true);
+	SetEntityActive("Copy_6", true);
+    SetEntityActive("level_6", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+
+void UseKeyOnDoorEight(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+	SetLevelDoorLocked("level_7", true);
+	SetEntityActive("Copy_7", true);
+    SetEntityActive("level_7", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+
+void UseKeyOnDoorNine(string &in asItem, string &in asEntity)
+{
+    SetSwingDoorLocked(asEntity, false, true);
+	SetLevelDoorLocked("level_8", true);
+	SetEntityActive("Copy_8", true);
+    SetEntityActive("level_8", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+	
+//////////////////////////////////////////////////////////////////////////
+//Orbs
+//////////////////////////////////////////////////////////////////////////
+
+void StartOrb(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);	
+	SetEntityActive("orb_1_of_7", true);
+	SetEntityActive("orb_1_of_8", true);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb", 0.5f, false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb_1", 0.5f, false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb", false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb_1", false);
+	AddUseItemCallback("", "Piece_2", "BuildOrb", "Piece2", true);
+	AddUseItemCallback("", "Piece_2", "BuildOrb_1", "Piece2", true);
+}
+
+void Piece2(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);	
+	SetEntityActive("orb_2_of_7", true);
+	SetEntityActive("orb_2_of_8", true);
+	SetEntityActive("orb_1_of_7", false);
+	SetEntityActive("orb_1_of_8", false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb", 0.5f, false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb_1", 0.5f, false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb", false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb_1", false);
+	AddUseItemCallback("", "Piece_3", "BuildOrb", "Piece3", true);
+	AddUseItemCallback("", "Piece_3", "BuildOrb_1", "Piece3", true);
+}
+
+void Piece3(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("orb_3_of_7", true);
+	SetEntityActive("orb_3_of_8", true);
+	SetEntityActive("orb_2_of_7", false);
+	SetEntityActive("orb_2_of_8", false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb", 0.5f, false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb_1", 0.5f, false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb", false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb_1", false);
+	AddUseItemCallback("", "Piece_4", "BuildOrb", "Piece4", true);
+	AddUseItemCallback("", "Piece_4", "BuildOrb_1", "Piece4", true);
+}
+
+void Piece4(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("orb_4_of_7", true);
+	SetEntityActive("orb_4_of_8", true);
+	SetEntityActive("orb_3_of_7", false);
+	SetEntityActive("orb_3_of_8", false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb", 0.5f, false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb_1", 0.5f, false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb", false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb_1", false);
+	AddUseItemCallback("", "Piece_5", "BuildOrb", "Piece5", true);
+	AddUseItemCallback("", "Piece_5", "BuildOrb_1", "Piece5", true);
+}
+
+void Piece5(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("orb_5_of_7", true);
+	SetEntityActive("orb_5_of_8", true);
+	SetEntityActive("orb_4_of_7", false);
+	SetEntityActive("orb_4_of_8", false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb", 0.5f, false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb_1", 0.5f, false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb", false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb_1", false);
+	AddUseItemCallback("", "Piece_6", "BuildOrb", "PieceFinal", true);
+	AddUseItemCallback("", "Piece_6", "BuildOrb_1", "PieceFinal", true);
+}
+
+void PieceFinal(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("orb_6_of_7", true);
+	SetEntityActive("orb_6_of_8", true);
+	SetEntityActive("orb_5_of_7", true);
+	SetEntityActive("orb_5_of_8", true);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb", 0.5f, false);
+	PlaySoundAtEntity("forges", "22_orb_forge.snt", "BuildOrb_1", 0.5f, false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb", false);
+	CreateParticleSystemAtEntity("orb_repair", "ps_orb_repair_effect.ps", "BuildOrb_1", false);
+	SetLampLit("orb_pedestal_1", true, true);
+	AddTimer("", 1, "SecondPedestal");
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Dialogue
+//////////////////////////////////////////////////////////////////////////
+void Dialogue(string &in asParent, string &in asChild, int alState)
+{
+		StopMusic(1, 1);
+		GiveSanityDamage(20, true);
+		StartPlayerLookAt("main_door", 1, 1, "BeforeStopLook");
+		SetPlayerActive(false);
+		AddEffectVoice("line_01.ogg" ,"", "Dialogue", "Line_1", false, "", 0, 0);
+		
+		SetEffectVoiceOverCallback("VoiceDone");
+	}
+
+void BeforeStopLook(string &in asCallback)
+{
+	AddTimer("notlooking", 5, "StopLook");
+}
+
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void VoiceDone()
+{
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+		PlayMusic("Track_BeginningAmbience.ogg", false, 2, 1, 1, true);
+}
+
+void Dialogue3(string &in asParent, string &in asChild, int alState)
+{
+		GiveSanityDamage(30, true);
+		SetPlayerActive(false);
+		AddEffectVoice("line_03.ogg" ,"", "Dialogue", "Line_3", false, "", 0, 0);
+		
+		SetEffectVoiceOverCallback("VoiceDone2");
+	}
+
+void VoiceDone2()
+{
+		SetPlayerActive(true);
+}
+	
+void NoticeBlood(string &in asEntity)
+{
+		AddEffectVoice("line_02.ogg" ,"", "Dialogue", "Line_2", false, "", 0, 0);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Wake Up Script
+//////////////////////////////////////////////////////////////////////////	
+
+void WakeUp(string &in asTimer)
+{
+	if(asTimer == "Start")
+	{
+		AddTimer("MoveHead", 1, "WakeUp");
+	}
+	
+	else if(asTimer == "MoveHead")
+	{
+		MovePlayerHeadPos(-0.5, -0.2, -1.1, 2, 2);
+		FadePlayerRollTo(0, 1.7, 500);
+		AddTimer("ActivatePlayer", 2, "WakeUp");
+		FadeImageTrailTo(0, 1);
+		FadeRadialBlurTo(0, 1);
+	}
+	else if(asTimer =="ActivatePlayer")
+	{
+		MovePlayerHeadPos(0, 0, 0, 2 , 2);
+		ShowPlayerCrossHairIcons(true);
+		SetPlayerCrouching(false);
+		SetPlayerActive(true);
+	}
+	
+}
+
+void StartMovement(string&in asTimer)
+{
+	SetPlayerActive(true);
+}
+
+void FadeIn(string &in asTimer)
+{
+FadeIn(2);
+AddTimer("Start", 2, "WakeUp");
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Hallucination_1 Patrol Nodes After Flashback
+//////////////////////////////////////////////////////////////////////////
+
+void AfterFlashback()
+{
+		SetLevelDoorLocked("level_1", false);
+        SetEntityActive("Hallucination_1", true);
+		SetEntityActive("Head", true);
+		SetEntityActive("Splatter1", true);
+        AddEnemyPatrolNode("Hallucination_1", "Node_3", 0.001f, "");
+		AddEnemyPatrolNode("Hallucination_1", "Node_13", 0.001f, "");
+		AddEnemyPatrolNode("Hallucination_1", "Node_16", 0.001f, "");
+		AddEnemyPatrolNode("Hallucination_1", "Node_27", 0.001f, "");
+		AddEnemyPatrolNode("Hallucination_1", "Node_30", 0.001f, "");	
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Mementos
+///////////////////////////////////////////////////////////////////////////
+void KeyToDoor(string &in asEntity)
+{
+        if(GetLocalVarInt("Switch") == 0)
+        {
+                AddQuest("Unlock_Door", "UnlockDoor");
+        }
+	}
+	
+void QuestToCheck(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Track1.ogg", true, 2, 1, 1, true);
+    AddQuest("QuestToCheck", "GoOut");
+}
+
+void QuestAfterCheck(string &in asParent, string &in asChild, int alState)
+{
+        AddQuest("QuestAfterCheck", "CheckOutside");
+		SetSwingDoorClosed("begin_door", true, true);
+		SetSwingDoorLocked("begin_door", true, true);
+		
+        CompleteQuest("QuestToCheck","GoOut");
+}
+
+void QuestAfterUnlock(string &in asParent, string &in asChild, int alState)
+{
+        AddQuest("QuestAfterUnlock", "UnlockedDoor");
+		SetSwingDoorClosed("main_door", true, true);
+		SetSwingDoorLocked("main_door", true, true);
+		
+}
+
+//////////////////////////////////////////////////////////////////////////
+//To Basement
+//////////////////////////////////////////////////////////////////////////
+
+void Boss(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("Basement", true, true);
+	FadeOut(3);
+    AddTimer("", 3, "TimerTransition");
+    }
+     
+void TimerTransition(string &in asTimer)
+{  
+	ChangeMap("Elevator.map", "PlayerStartArea_1", "", "");
+    }
+
+//////////////////////////////////////////////////////////////////////////
+//The Escape
+//////////////////////////////////////////////////////////////////////////	
+
+void TimerShakeLamp(string &in asTimer)
+{
+		AddPropImpulse("Chandelier", RandFloat(0.7, 2), 0, 0, "world");
+		AddTimer("shakelamp", RandFloat(0.1, 1.5), "TimerShakeLamp");
+}
+
+void DropRock(string &in asTimer)
+{
+	if (asTimer == "rock1")
+		{
+		SetEntityActive("rock_large01_push_1", true);
+		SetEntityActive("RandomFall_1", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock2")
+		{
+		SetEntityActive("rock_large01_push_2", true);
+		SetEntityActive("RandomFall_2", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock3")
+		{
+		SetEntityActive("rock_large01_push_3", true);
+		SetEntityActive("RandomFall_3", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock4")
+		{
+		SetEntityActive("rock_large01_push_4", true);
+		SetEntityActive("RandomFall_4", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock5")
+		{
+		SetEntityActive("rock_large01_push_5", true);
+		SetEntityActive("RandomFall_5", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock6")
+		{
+		SetEntityActive("rock_large01_push_6", true);
+		SetEntityActive("RandomFall_6", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock7")
+		{
+		SetEntityActive("rock_large01_push_7", true);
+		SetEntityActive("RandomFall_7", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock8")
+		{
+		SetEntityActive("rock_large01_push_8", true);
+		SetEntityActive("RandomFall_8", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock9")
+		{
+		SetEntityActive("rock_large01_push_9", true);
+		SetEntityActive("RandomFall_9", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+	if (asTimer == "rock10")
+		{
+		SetEntityActive("rock_large01_push_10", true);
+		SetEntityActive("RandomFall_10", false);
+		int rocks = RandInt(1, 10);
+		if(rocks == 1) AddTimer("rock1", RandFloat(3, 5), "DropRock");
+		if(rocks == 2) AddTimer("rock2", RandFloat(3, 5), "DropRock");
+		if(rocks == 3) AddTimer("rock3", RandFloat(3, 5), "DropRock");
+		if(rocks == 4) AddTimer("rock4", RandFloat(3, 5), "DropRock");
+		if(rocks == 5) AddTimer("rock5", RandFloat(3, 5), "DropRock");
+		if(rocks == 6) AddTimer("rock6", RandFloat(3, 5), "DropRock");
+		if(rocks == 7) AddTimer("rock7", RandFloat(3, 5), "DropRock");
+		if(rocks == 8) AddTimer("rock8", RandFloat(3, 5), "DropRock");
+		if(rocks == 9) AddTimer("rock9", RandFloat(3, 5), "DropRock");
+		if(rocks == 10) AddTimer("rock10", RandFloat(3, 5), "DropRock");
+		}
+}
+
+void CollapseRocks(string &in asParent, string &in asChild, int alState)
+{
+	for(int i = 1; i <= 4; i++) SetEntityActive("EnsureFall_"+i, true);
+	for(int i = 1; i <= 10; i++) SetEntityActive("rock_med01_push_"+i, true);
+	SetEntityActive("BarricadeStairsThing", false);
+	AddEntityCollideCallback("rock_med01_push_", "PlayNoise", "Crash", true, 1);
+}
+
+void Crash(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("explosion", "explosion_rock_large.snt", "AreaNoiseFall", 0, false);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Open Final Map
+//////////////////////////////////////////////////////////////////////////
+
+void EndMap(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("outro", "PlayerStartArea_1", "", "");
+}
+
+void SecondPedestal(string &in asTimer)
+{
+	SetLampLit("orb_pedestal_1", true, true);
+	FadeOut(3);
+	StopMusic(0,1);
+	SetPlayerActive(false);
+	ShowPlayerCrossHairIcons(false);
+	AddTimer("", 3, "LastCutscene");
+}
+
+void LastCutscene(string &in asTimer)
+{
+	RemoveTimer("rock1");
+	RemoveTimer("rock2");
+	RemoveTimer("rock3");
+	RemoveTimer("rock4");
+	RemoveTimer("rock5");
+	RemoveTimer("rock6");
+	RemoveTimer("rock7");
+	RemoveTimer("rock8");
+	RemoveTimer("rock9");
+	RemoveTimer("rock10");
+	FadeIn(2);
+	TeleportPlayer("OutroPosition");
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpDisabled(true);
+	SetPlayerActive(false);
+	StartPlayerLookAt("BeforeOutro", 1, 1, "Leave");
+	PlaySoundAtEntity("rumble", "rumbling.snt", "Player", 2, true);
+	StartScreenShake( 0.1f, 10, 0.1, 0.1);
+	AddTimer("", 10, "Light");
+}
+
+void Light(string &in asTimer)
+{
+	StartEffectFlash(1, 1.0, 4);
+	AddTimer("", 5, "SetUpEnd");
+	StopMusic(0,1);
+}
+
+void SetUpEnd(string &in asTimer)
+{
+	SetEntityActive("ToEnd", true);
+	SetEntityActive("BeforeOutro", false);
+	SetEntityActive("Outro", true);
+	AddTimer("", 3, "MovePlayer");
+}
+
+void MovePlayer(string &in asTimer)
+{
+	StopPlayerLookAt();
+	PlayMusic("Victory_Music.ogg", true, 2, 1, 1, true);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerActive(true);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+	CompleteQuest("QuestAfterCheck", "CheckOutside");
+	CompleteQuest("Unlock_Door", "UnlockDoor");
+	CompleteQuest("QuestAfterUnlock", "UnlockedDoor");
+	StopMusic(0,1);
+}

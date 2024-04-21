@@ -1,0 +1,143 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "Spawn_Room_Brute", "SpawnRoomBrute", true, 1);
+AddEntityCollideCallback("Handle", "AreaConnect", "AttachLever", true, 1);
+AddEntityCollideCallback("RoomBrute", "Despawn_Room_Brute", "DespawnRoomBrute", true, 1);
+ConnectEntities("FirstGate", "Lever", "WoodGate", true, -1, "PullLever");
+ConnectEntities("FirstGate", "Lever2", "WoodGate", true, -1, "PullLever2");
+SetEntityPlayerInteractCallback("Rod3", "SpawnRodBrute", false);
+SetEntityPlayerInteractCallback("WoodDoor", "PlayerInteractDoor", true);
+SetEntityPlayerInteractCallback("WoodDoor2", "PlayerInteractDoor2", true);
+///AddEntityCollideCallback("Player", "Gate_Quest_Area", "GetGateQuest", true, 1);
+///AddEntityCollideCallback("Player", "Gate_Quest_Complete_Area", "FinishGateQuest", true, 1);
+AddUseItemCallback("", "DoorKey", "WoodDoor2", "UnlockDoor", true);
+SetEntityPlayerInteractCallback("FromUnknown2", "Dialogue", true);
+}
+
+void SpawnRoomBrute(string &in asParent, string &in asChild, int alState)
+{
+   ClearEnemyPatrolNodes("RoomBrute");
+   SetEntityActive("RoomBrute", true);
+   AddEnemyPatrolNode("RoomBrute", "PathNodeArea_1", 0, "");
+   AddEnemyPatrolNode("RoomBrute", "PathNodeArea_2", 0, "");
+   AddEnemyPatrolNode("RoomBrute", "PathNodeArea_3", 0, "");
+   AddEnemyPatrolNode("RoomBrute", "PathNodeArea_4", 0, "");
+   AddEnemyPatrolNode("RoomBrute", "PathNodeArea_5", 0, "");
+}
+
+void DespawnRoomBrute(string &in asParent, string &in asChild, int alState)
+{
+   SetEntityActive("RoomBrute", false);
+}
+
+void AttachLever(string &in asParent, string &in asChild, int alState)
+{
+   SetEntityActive("Lever", true);
+   SetEntityActive(asParent, false);
+   SetEntityActive("Mount", false);
+}
+
+void PullLever(string &in asConnectionName, string &in asMainEntity, string &in asConnectEntity, int alState)
+{
+   SetLeverStuckState(asMainEntity, -1, true);
+
+   SetLocalVarInt("WoodGate", 1);
+   SetEntityPlayerInteractCallback("WoodGate", "", true);
+
+   float fTime =   5.0f + GetLocalVarFloat("TimeAdd");
+   AddTimer("WoodGateDown", fTime, "TimerWoodGateGoesDown");
+   AddLocalVarFloat("TimeAdd", 2.5f);
+}
+
+void TimerWoodGateGoesDown(string &in asTimer)
+{
+   SetMoveObjectState("WoodGate", 0);
+   SetLeverStuckState("Lever", 0, true);
+
+   SetEntityPlayerInteractCallback("WoodGate", "InteractGate", true);
+   SetLocalVarInt("WoodGate", 0);
+}
+
+void PullLever2(string &in asConnectionName, string &in asMainEntity, string &in asConnectEntity, int alState)
+{
+   SetLeverStuckState(asMainEntity, -1, true);
+
+   SetLocalVarInt("WoodGate", 1);
+   SetEntityPlayerInteractCallback("WoodGate", "", true);
+
+   float fTime =   5.0f + GetLocalVarFloat("TimeAdd");
+   AddTimer("WoodGateDown", fTime, "TimerWoodGateGoesDown2");
+   AddLocalVarFloat("TimeAdd", 2.5f);
+}
+
+void TimerWoodGateGoesDown2(string &in asTimer)
+{
+   SetMoveObjectState("WoodGate", 0);
+   SetLeverStuckState("Lever2", 0, true);
+
+   SetEntityPlayerInteractCallback("WoodGate", "InteractGate", true);
+   SetLocalVarInt("WoodGate", 0);
+}
+
+void SpawnRodBrute(string &in asEntity)
+{
+   ClearEnemyPatrolNodes("RodBrute");
+   SetEntityActive("RodBrute", true);
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_6", 0, "");
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_7", 4, "");
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_8", 0, "");
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_9", 0, "");
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_10", 0, "");
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_11", 0, "");
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_12", 0, "");
+   AddEnemyPatrolNode("RodBrute", "PathNodeArea_13", 0, "");
+}
+
+void PlayerInteractDoor(string &in asEntity)
+{
+   SetMessage("BasementMap", "InteractDoor", 0);
+}
+
+void PlayerInteractDoor2(string &in asEntity)
+{
+   if(HasItem("DoorKey"))
+   {
+          SetMessage("BasementMap", "InteractDoor2", 0);
+   }
+   else if(GetSwingDoorLocked("WoodDoor2")==true)
+   {
+   SetMessage("BasementMap", "LevelDoorLocked", 0);
+   }
+}
+
+void GetGateQuest(string &in asParent, string &in asChild, int alState)
+{
+   AddQuest("opengate", "OpenGate");
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity)
+{
+         PlaySoundAtEntity("unlocked", "unlock_door", asEntity, 0.0f, false);
+         SetSwingDoorLocked(asEntity, false, true);
+         RemoveItem(asItem);
+}
+
+void FinishGateQuest(string &in asParent, string &in asChild, int alState)
+{
+   CompleteQuest("opengate", "OpenGate");
+}
+
+void Dialogue(string &in asEntity)
+{
+   SetMessage("Dialogue", "KyleeDialogue5", 6);
+}
+
+void OnEnter()
+{
+     PlayMusic("18_amb.ogg", true, 1, 4, 2, true);
+}
+
+void OnLeave()
+{
+
+}

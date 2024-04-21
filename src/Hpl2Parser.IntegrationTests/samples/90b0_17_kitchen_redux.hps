@@ -1,0 +1,230 @@
+void RandMuseumSoundCues (string &in asTimer)
+{
+	string[] sCueSources8 = {"Sound_MuseumRand_1", "Sound_MuseumRand_2", "Sound_MuseumRand_3", "Sound_MuseumRand_4", "Sound_MuseumRand_5"};
+	asTimer = sCueSources8[RandInt (0, 4)];
+	PlaySoundAtEntity(asTimer, "afx_spooky_hallway_hits.snt", asTimer, 0, false);
+	AddDebugMessage("Random Sound Cue Function Selected Museum Sound Source: "+asTimer, false);
+	AddTimer(asTimer, RandFloat(8.0f, 20.0f), "RandMuseumSoundCues");
+}
+
+void RandMuseumSoundCues2 (string &in asTimer)
+{
+	string[] sCueSources8 = {"Sound_MuseumRand_6", "Sound_MuseumRand_7", "Sound_MuseumRand_8", "Sound_MuseumRand_9", "Sound_MuseumRand_10"};
+	asTimer = sCueSources8[RandInt (0, 4)];
+	PlaySoundAtEntity(asTimer, "afx_spooky_hallway_hits.snt", asTimer, 0, false);
+	//AddDebugMessage("Random Sound Cue Function Selected Museum Sound Source: "+asTimer, false);
+	AddTimer(asTimer, RandFloat(10.0f, 20.0f), "RandMuseumSoundCues2");
+}
+
+//===========================================
+     // This runs when the map first starts
+     void OnStart()
+{
+   
+   SetMapDisplayNameEntry("KitchenRedux");
+		
+		StopMusic(2,0);
+StopMusic(2,1);
+StopMusic(2,2);
+StopMusic(2,3);
+StopMusic(2,4);
+StopMusic(2,5);
+StopMusic(2,6);
+StopMusic(2,7);
+StopMusic(2,8);
+StopMusic(2,9);
+StopMusic(2,10);
+StopMusic(2,11);
+StopMusic(2,12);
+StopMusic(2,13);
+StopMusic(2,14);
+		SetMapDisplayNameEntry("KitchenRedux");
+		
+		PreloadParticleSystem("ps_area_fog.ps");
+		
+		AddEntityCollideCallback("Player", "ScriptArea_1", "FeedingWretch", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_2", "FeedingWretchStop", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_3", "EdwinActivate", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_5", "Creak1", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_7", "Creak2", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_9", "Creak3", true, 1);
+		AddEntityCollideCallback("wretch_nospawnsound_1", "ScriptArea_13", "PigGo", true, 1);
+
+		AddTimer("InitRandomMuseumSoundCuePlayer", 9.0f, "RandMuseumSoundCues");
+		AddTimer("InitRandomMuseumSoundCuePlayer2", 9.0f, "RandMuseumSoundCues2");
+   
+}
+   
+   void Creak1(string &in asParent, string &in asChild, int alState)
+   
+   {
+			PlaySoundAtEntity("", "afx_spooky_footsteps_above_wooden_nocreak.snt", "ScriptArea_6", 0, false);
+   }
+   
+   void Creak2(string &in asParent, string &in asChild, int alState)
+   
+   {
+			PlaySoundAtEntity("", "afx_spooky_footsteps_above_wooden_nocreak.snt", "ScriptArea_8", 0, false);
+   }
+   
+    void Creak3(string &in asParent, string &in asChild, int alState)
+   
+   {
+			PlaySoundAtEntity("", "afx_spooky_footsteps_above_wooden_nocreak.snt", "ScriptArea_10", 0, false);
+   }
+   
+		void FeedingWretch(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("nest_wretch_feeding_1", true);
+			PlaySoundAtEntity("", "afx_spooky_monster_noises_tight.snt", "ScriptArea_12", 0, false);
+			PlayPropAnimation("nest_wretch_feeding_1", "NestFeed1", 0.0f, true, "");
+	}	
+	
+	void PigGo(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("wretch_nospawnsound_1", false);
+			SetPlayerRunSpeedMul(1.0f);
+			SetPlayerMoveSpeedMul(1.0f);
+			SetPlayerJumpDisabled(false);
+	}
+	
+void FeedingWretchStop(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetEntityActive("nest_wretch_feeding_1", false);
+			SetEntityActive("male_corpse_torso_1", false);
+			SetEntityActive("male_corpse_torso_2", true);
+			StopSound("Sound_6", 1);
+			SetEntityActive("cellar_offices_5", false);
+			SetEntityActive("cellar_offices_10", true);
+			SetEntityActive("wretch_nospawnsound_1", true);
+			AddEnemyPatrolNode("wretch_nospawnsound_1", "PathNodeArea_1", 0.001, "");
+			PlaySoundAtEntity("", "afx_spooky_monster_noises_tight.snt", "ScriptArea_11", 0, false);
+			SetPlayerRunSpeedMul(0.4f);
+			SetPlayerMoveSpeedMul(0.4f);
+			SetPlayerJumpDisabled(true);
+	}	
+
+void EdwinActivate(string &in asParent, string &in asChild, int alState)	
+
+{
+		StartEffectFlash(0.4, 0.1, 1);
+		SetPlayerMoveSpeedMul(0.0f);		
+		SetPlayerRunSpeedMul(0.0f);
+		SetPlayerJumpDisabled(true);
+		SetPlayerCrouchDisabled(true);
+		PlaySoundAtEntity("", "29_hole_blue.snt", "Player", 0, false);
+		AddTimer("", 1.3f, "Spawn");
+		AddTimer("", 4.0f, "Scared");
+		AddTimer("", 5.5f, "Voice1");
+		SetPropActiveAndFade("alexander_1", true, 4);
+		SetSwingDoorLocked("cellar_offices_1", false, false);
+}
+
+void Spawn(string &in asTimer)
+
+{
+		StartPlayerLookAt("ScriptArea_4", 2.0f, 2.0f, "");
+		FadeRadialBlurTo(0.02, 1.0f);
+		SetPlayerLookSpeedMul(0.0f);
+		
+		PlayMusic("23_puzzle", false, 0.5, 3, 5, false);
+}
+
+void Scared(string &in asTimer)
+
+{
+		PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+		StopPlayerLookAt();
+		SetPlayerLookSpeedMul(0.5);
+}
+
+void Voice1(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin1", 5);
+		AddTimer("", 5.5f, "Voice2");
+}
+
+void Voice2(string &in asTimer)
+
+{
+		PlayMusic("Sewers_74", false, 0.4, 5, 5, false);
+		SetMessage("Messages", "Edwin2", 6);
+		AddTimer("", 6.5f, "Voice3");
+}
+
+void Voice3(string &in asTimer)
+
+{
+		
+		SetMessage("Messages", "Edwin3", 8);
+		AddTimer("", 8.5f, "Voice4");
+}
+
+void Voice4(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin4", 8);
+		AddTimer("", 8.5f, "Voice5");
+}
+
+void Voice5(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin5", 8);
+		AddTimer("", 8.5f, "Voice6");
+}
+
+void Voice6(string &in asTimer)
+
+{
+		SetMessage("Messages", "Edwin6", 5);
+		AddTimer("", 5.5f, "Voice7");
+}
+
+void Voice7(string &in asTimer)
+
+{
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerLookSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+		SetPlayerJumpDisabled(false);
+		SetPlayerCrouchDisabled(false);
+		StartEffectFlash(0.4, 0.1, 2);
+		PlaySoundAtEntity("", "29_hole_blue.snt", "Player", 0, false);
+		SetPropActiveAndFade("alexander_1", false, 2);
+		FadeRadialBlurTo(0.0, 3.0f);
+		StopMusic(6.0f, 5);
+}
+
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+   {
+   SetupLoadScreen("LoadingText", "KitchenRed", 0, "17_loading.png");
+   //----AUDIO----//
+
+SetInDarknessEffectsActive(false);
+
+PreloadSound("29_hole_blue.snt");
+		PreloadSound("react_scare.snt");
+		PreloadSound("afx_spooky_monster_noises_tight.snt");
+		PreloadSound("afx_spooky_footsteps_above_wooden_nocreak.snt");
+		PreloadSound("afx_spooky_hallway_hits.snt");
+		AutoSave();
+}
+
+
+
+
+
+	
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+	 
+     }

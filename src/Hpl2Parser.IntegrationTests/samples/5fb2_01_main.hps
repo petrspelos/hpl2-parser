@@ -1,0 +1,885 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("1");
+	if(GetGlobalVarInt("SwitchBack") == 0)
+	{
+		PlayMusic("Intro.ogg", false, 2.0, 0.0f, 5000, false);
+		SetLampLit("candle1", false, true);
+		SetPlayerCrouching(true);
+		FadeOut(0.1f);
+		TeleportPlayer("SeeGrunt");
+		AddTimer("FadeInTimer", 6.76f, "StartFade");
+		SetPlayerActive(false);
+	}
+	
+	SetSanityDrainDisabled(true);
+	SetEntityActive("grunt1", false);
+	SetEntityActive("grunt2", false);
+	SetEntityInteractionDisabled("tar1", true); //disable tar pickups
+	SetEntityInteractionDisabled("tar2", true); //
+	SetEntityInteractionDisabled("saw1", true); //
+	SetEntityInteractionDisabled("saw2", true); //
+	SetEntityInteractionDisabled("knife1", true); //
+	AddGlobalVarInt("russlab", 1);
+}
+
+void OnEnter()
+{
+	if(GetGlobalVarInt("SwitchBack") == 1)
+	{
+		FadeIn(2.0);
+		AddTimer("StartSpeech", 2.3, "StartTalking");
+		SetPlayerMoveSpeedMul(0.2);
+		FadeRadialBlurTo(0, 1.5);
+		FadeSepiaColorTo(0, 1.5);
+	}	
+	
+	if(GetGlobalVarInt("SwitchBack") == 2)
+	{
+		FadeIn(2.0);
+		AddTimer("StartSpeech2", 2.3, "StartTalking2");
+		SetPlayerMoveSpeedMul(0.2);
+		FadeRadialBlurTo(0, 1.5);
+		FadeSepiaColorTo(0, 1.5);
+		RemoveItem("CHEM1");
+		RemoveItem("CHEM2");
+		RemoveItem("CHEM3");
+		RemoveItem("CHEM4");
+		RemoveItem("CHEM5");
+	}	
+	
+	if(GetGlobalVarInt("SwitchBack") == 3)
+	{
+		SetEntityActive("shackles_1", true);
+		SetEntityActive("shackles_2", true);
+		SetEntityActive("grunt_chase", true);
+		AddEntityCollideCallback("Player", "activatearea", "ActivateSee", true, 1);
+		AddTimer("timemerrr", 3.0, "Shackles");	
+		RemoveItem("CHEM1");
+		RemoveItem("CHEM2");
+		RemoveItem("CHEM3");
+		RemoveItem("CHEM4");
+		RemoveItem("CHEM5");
+	}
+	
+	if(GetGlobalVarInt("feeding") == 1)
+	{
+		SetSwingDoorLocked("cabinet_metal_1", false, false);
+		SetSwingDoorLocked("cabinet_metal_2", false, false);
+		RemoveItem("CHEM1");
+		RemoveItem("CHEM2");
+		RemoveItem("CHEM3");
+		RemoveItem("CHEM4");
+		RemoveItem("CHEM5");
+		AddEntityCollideCallback("Player", "gruntscareareaactivate", "gruntscareareaactivate2", true, 1);
+	}
+	
+	if(GetGlobalVarInt("SwitchBack") == 4)
+	{
+		SetPlayerMoveSpeedMul(0.2);
+		FadeRadialBlurTo(0, 1.5);
+		FadeSepiaColorTo(0, 1.5);
+		FadeIn(1.5);
+		AddTimer("dhdedhd", 2.0, "Procrastinate");
+	}
+	
+	if(GetGlobalVarInt("Book") == 1)
+	{
+		SetPropStaticPhysics("presentdesk", false);
+		AddEntityCollideCallback("Player", "Paper", "INeedPaper", true, 1);
+		AddEntityCollideCallback("presentdesk", "drawer", "SeeBook", true, 1);
+	}
+		
+	SetSanityDrainDisabled(true);
+	SetEntityActive("grunt1", false);
+	SetEntityActive("grunt2", false);
+	SetEntityInteractionDisabled("tar1", true); //disable tar pickups
+	SetEntityInteractionDisabled("tar2", true); //
+	SetEntityInteractionDisabled("saw1", true); //
+	SetEntityInteractionDisabled("saw2", true); //
+	SetEntityInteractionDisabled("knife1", true); //
+}
+
+void ActivateSee(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityPlayerLookAtCallback("seeprisoner", "GruntScare", true);
+}
+void INeedPaper(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("17_paper.ogg", "17_paper.snt", "Player", 0.0, false);
+}
+void SeeBook(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Book.ogg", false, 1.0, 0.0, 18, false);
+	StartPlayerLookAt("thebook", 1.0, 1.0, "");
+	AddTimer("dskfhkdjfhskf", 3.0, "FadeItOut");
+	SetPlayerActive(false);
+}
+
+void FadeItOut(string &in asTimer)
+{
+	FadeOut(3.0);
+	AddTimer("ufyfyyfyfyff", 3.2, "MoveIt");
+}
+
+void MoveIt(string &in asTimer)
+{
+	StopPlayerLookAt();
+	TeleportPlayer("StartWindow");
+	SetPlayerMoveSpeedMul(0.2);
+	FadeRadialBlurTo(0, 1.5);
+	FadeSepiaColorTo(0, 1.5);
+	AddTimer("shgsadha", 4.0, "FadeThemIn");
+}
+
+void FadeThemIn(string &in asTimer)
+{
+	FadeIn(2.0f);
+	AddTimer("talak", 2.3, "Talking");
+	SetEntityActive("potionliving", true);
+}
+
+void Talking(string &in asTimer)
+{
+	AddEffectVoice("19_shivers.ogg", "", "Dialogue", "D6_1", 
+	 false, "Player", 0, 20);
+	AddTimer("talak2", 6.5, "Talking2");	
+}
+
+void Talking2(string &in asTimer)
+{
+	AddEffectVoice("20_father.ogg", "", "Dialogue", "D6_2", 
+	 false, "Player", 0, 20);
+	AddTimer("talak3", 5.1, "Talking3");	
+}
+
+void Talking3(string &in asTimer)
+{
+	AddEffectVoice("21_cholera.ogg", "", "Dialogue", "D6_3", 
+	 false, "Player", 0, 20);
+	AddTimer("talak4", 9.2, "Talking4");	
+}
+
+void Talking4(string &in asTimer)
+{
+	AddEffectVoice("22_drifted.ogg", "", "Dialogue", "D6_4", 
+	 false, "Player", 0, 20);
+	AddTimer("talak5", 11.0, "Talking5");	
+}
+
+void Talking5(string &in asTimer)
+{
+	AddEffectVoice("23_mother.ogg", "", "Dialogue", "D6_5", 
+	 false, "Player", 0, 20);
+	AddTimer("talak6", 6.3, "Talking6");	
+}
+
+void Talking6(string &in asTimer)
+{
+	AddEffectVoice("24_try.ogg", "", "Dialogue", "D6_6", 
+	 false, "Player", 0, 20);
+	AddTimer("talak7", 6.3, "Talking7");	
+}
+
+void Talking7(string &in asTimer)
+{
+	AddEffectVoice("25_dejection.ogg", "", "Dialogue", "D6_7", 
+	 false, "Player", 0, 20);
+	AddTimer("talak8", 6.2, "Talking8");	
+}
+
+void Talking8(string &in asTimer)
+{
+	AddEffectVoice("26_thinking.ogg", "", "Dialogue", "D6_8", 
+	 false, "Player", 0, 20);
+	AddTimer("talak9", 5.4, "Talking9");	
+}
+
+void Talking9(string &in asTimer)
+{
+	AddEffectVoice("27_immortality.ogg", "", "Dialogue", "D6_9", 
+	 false, "Player", 0, 20);
+	AddTimer("talak10", 8.0, "Talking10");	
+}
+
+void Talking10(string &in asTimer)
+{
+	FadeOut(2.0);
+	AddTimer("yeyeyeye", 3.8, "TeleP");
+}
+
+void TeleP(string &in asTimer)
+{
+	TeleportPlayer("StartLivingroom");
+	SetEntityActive("thebook", false);
+	SetPlayerCrouching(true);
+	FadeRadialBlurTo(0.01, 2.0);
+	FadeSepiaColorTo(0.35, 2.0);
+	SetPlayerMoveSpeedMul(1.0);
+	AddTimer("hfdhf", 5.0, "CUMBACK");
+	SetEntityPlayerInteractCallback("potionliving", "DrinkPotion", true);
+	PlaySoundAtEntity("18_perfect.ogg", "18_perfect.snt", "Player", 0.0, false);
+}
+
+void DrinkPotion(string &in asEntity)
+{
+	RemoveItem("potionliving");
+	FadeOut(0.6);
+	AddTimer("sduasda", 1.2, "Drinking");
+}
+
+void Drinking(string &in asTimer)
+{
+	PlaySoundAtEntity("drinking.snt", "drinking.ogg", "Player", 0.0, false);
+	AddTimer("jhsjshdf", 6.4, "StopDrinking");
+	SetPlayerActive(false);
+}
+
+void StopDrinking(string &in asTimer)
+{
+	FadeIn(1.4);
+	AddTimer("ushs", 2.0, "FreakOut");
+}
+
+void FreakOut(string &in asTimer)
+{
+	SetPlayerSanity(50.0);
+	SetPlayerHealth(50.0);
+	FadeRadialBlurTo(0.5, 15);
+	FadeSepiaColorTo(0.5, 15.0);
+	FadeImageTrailTo(0.3, 15.0);
+	SetPlayerMoveSpeedMul(0.8);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerActive(true);
+	PlaySoundAtEntity("19_worked.ogg", "19_worked.snt", "Player", 0.0, false);	
+	AddEntityCollideCallback("Player", "collapse", "PlayerCollapse", true, 1);
+	PlayMusic("Failure.ogg", false, 1.5, 0.0, 20, false);
+}
+
+void PlayerCollapse(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(0.0);
+	PlaySoundAtEntity("player_bodyfall4.ogg", "player_bodyfall.snt", "Player", 0.0, false);
+	SetPlayerActive(false);
+	AddTimer("yydyydydyd", 4.0, "PlsSpeak");
+	SetSwingDoorClosed("mansion_8", true, false);
+	SetPlayerHealth(100);
+	SetPlayerSanity(100);
+	StopMusic(4.0, 20);
+}
+	
+void PlsSpeak(string &in asTimer)
+{
+	AddEffectVoice("28_holy_grail.ogg", "", "Dialogue", "D7_1", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd2", 8.0, "PlsSpeak2");	
+}
+
+void PlsSpeak2(string &in asTimer)
+{
+	AddEffectVoice("29_trytry.ogg", "", "Dialogue", "D7_2", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd3", 7.1, "PlsSpeak3");	
+}
+
+void PlsSpeak3(string &in asTimer)
+{
+	AddEffectVoice("30_counter.ogg", "", "Dialogue", "D7_3", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd4", 8.0, "PlsSpeak4");	
+}
+
+void PlsSpeak4(string &in asTimer)
+{
+	AddEffectVoice("31_acceptance.ogg", "", "Dialogue", "D7_4", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd5", 12.9, "PlsSpeak5");	
+}
+
+void PlsSpeak5(string &in asTimer)
+{
+	FadeIn(3.0);
+	FadeRadialBlurTo(0, 0.1);
+	FadeSepiaColorTo(0, 0.1);
+	FadeImageTrailTo(0, 0.1);
+	PlaySoundAtEntity("20_happened.ogg", "20_happened.snt", "Player", 0.0, false);
+	AddTimer("yydyydydyd6", 3.8, "PlsSpeak6");	
+} 
+
+void PlsSpeak6(string &in asTimer)
+{
+	SetEntityActive("endgrunt1", true);
+	SetEntityActive("endgrunt2", true);
+	StartPlayerLookAt("mansion_8", 3.0, 3.0, "");
+	PlaySoundAtEntity("21_prisoners.ogg", "21_prisoners.snt", "Player", 0.0, false);
+	AddTimer("yydyydydyd55", 8.46, "PlsSpeak55");
+	AddTimer("yydyydydyd7", 13.6, "PlsSpeak7");
+}
+
+void PlsSpeak55(string &in asTimer)
+{
+	PlayMusic("Outro.ogg", false, 1.0, 0.0, 8, true);
+}
+void PlsSpeak7(string &in asTimer)
+{
+	SetEntityActive("endgrunt1", false);
+	SetEntityActive("endgrunt2", false);	
+	StopPlayerLookAt();
+	AddEffectVoice("32_foolish.ogg", "", "Dialogue", "D7_5", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd8", 5.14, "PlsSpeak8");	
+}
+
+void PlsSpeak8(string &in asTimer)
+{
+	AddEffectVoice("33_see.ogg", "", "Dialogue", "D7_6", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd9", 10.28, "PlsSpeak9");	
+}
+
+void PlsSpeak9(string &in asTimer)
+{
+	FadeOut(1.0);
+	AddEffectVoice("34_father.ogg", "", "Dialogue", "D7_7", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd10", 7.71, "PlsSpeak10");	
+	SetPlayerCrouching(true);
+}
+
+void PlsSpeak10(string &in asTimer)
+{
+	AddEffectVoice("35_read.ogg", "", "Dialogue", "D7_8", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd11", 6.86, "PlsSpeak11");	
+}
+
+void PlsSpeak11(string &in asTimer)
+{
+	AddEffectVoice("36_favourite.ogg", "", "Dialogue", "D7_9", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd12", 8.25, "PlsSpeak12");	
+}
+
+void PlsSpeak12(string &in asTimer)
+{
+
+	AddEffectVoice("37_done.ogg", "", "Dialogue", "D7_10", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd13", 15.75, "PlsSpeak13");	
+	FadeIn(6.0);
+	SetEntityActive("bookend", true);
+}
+
+void PlsSpeak13(string &in asTimer)
+{
+	SetEntityActive("endgrunt1", true);
+	SetEntityActive("endgrunt2", true);
+	AddEffectVoice("38_fate.ogg", "", "Dialogue", "D7_11", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd14", 6.58, "PlsSpeak14");
+	AddTimer("125timer", 0.25, "NextMusic");
+	SetPlayerCrouching(false);
+}
+
+void NextMusic(string &in asTimer)
+{
+	PlayMusic("Door.ogg", false, 1.0, 0.0, 9, true);
+}
+
+void PlsSpeak14(string &in asTimer)
+{
+	AddEffectVoice("39_anxiety.ogg", "", "Dialogue", "D7_12", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd15", 8.85, "PlsSpeak15");
+}
+
+void PlsSpeak15(string &in asTimer)
+{
+	AddEffectVoice("40_ready.ogg", "", "Dialogue", "D7_13", 
+	 false, "Player", 0, 20);
+	AddTimer("yydyydydyd16", 4.0, "PlsSpeak16");
+}
+
+void PlsSpeak16(string &in asTimer)
+{
+	SetPlayerActive(true);
+	PlayMusic("Doorloop.ogg", true, 1.0, 0.0, 10, true);
+	AddEntityCollideCallback("mansion_8", "SeeLast", "End", true, 1);
+	StopPlayerLookAt();
+	SetPlayerMoveSpeedMul(1.0);
+	SetPlayerRunSpeedMul(1.0);
+}
+
+void BOOOM(string &in asTimer)
+{
+	SetEntityActive("endgrunt1", false);
+	SetEntityActive("endgrunt2", false);
+	PlaySoundAtEntity("enemy_hallucination_disappear.ogg", "enemy_hallucination_disappear.snt", "Player", 0.0, false);
+	FadeOut(0.0);
+	StopMusic(0.0, 10);
+	StopMusic(0.0, 9);
+	StopMusic(0.0, 8);
+	SetPlayerSanity(100.0);
+	TeleportPlayer("credits");
+	AddTimer("ueueueuue", 5.0, "CreditsTime");
+	StopSound("ui_terror_meter.snt", 0.0);
+}
+void End(string &in asParent, string &in asChild, int alState)
+{
+	SetEnemyDisableTriggers("endgrunt1", false);
+	SetEnemyDisableTriggers("endgrunt2", false);
+	ShowEnemyPlayerPosition("endgrunt1");
+	ShowEnemyPlayerPosition("endgrunt2");
+	PlaySoundAtEntity("23_scream.ogg", "23_scream.snt", "Player", 0.0, false);
+	AddTimer("ENDSTORY", 1.93, "BOOOM");
+	SetPlayerActive(false);
+	StartPlayerLookAt("endgrunt1", 2.0, 2.0, "");
+}
+
+void CreditsTime(string &in asTimer)
+{
+	StartCredits("Finale.ogg", false, "Ending", "Credits", 30);
+}
+
+void CUMBACK(string &in asTimer)
+{
+	FadeIn(1.0);
+	SetPlayerActive(true);
+}
+void gruntscareareaactivate2(string &in asParent, string &in asChild, int alState)
+{
+	AddEntityCollideCallback("Player", "gruntscarearea", "scaree", true, 1);
+}
+
+void scaree(string &in asParent, string &in asChild, int alState)
+{
+		SetEntityActive("scaregrunt", true);
+		PlaySoundAtEntity("scare.ogg", "scare.snt", "Player", 0.0, false);
+		AddTimer("hdegrunt", 0.1, "DeleteGrunt");
+}
+
+void DeleteGrunt(string &in asTimer)
+{
+	SetEntityActive("scaregrunt", false);
+}
+
+void Procrastinate(string &in asTimer)
+{
+	AddEffectVoice("12_procrastinate.ogg", "", "Dialogue", "D5_1", 
+	 false, "Player", 0, 20);
+	AddTimer("fuckingtalk", 8.9, "FuckingTalk");
+}
+
+void FuckingTalk(string &in asTimer)
+{
+	AddEffectVoice("13_hideous.ogg", "", "Dialogue", "D5_2", 
+	 false, "Player", 0, 20);
+	AddTimer("fuckingtalk2", 4.3, "FuckingTalk2");
+}
+
+void FuckingTalk2(string &in asTimer)
+{
+	AddEffectVoice("14_help.ogg", "", "Dialogue", "D5_3", 
+	 false, "Player", 0, 20);
+	AddTimer("fuckingtalk3", 5.1, "FuckingTalk3");
+}
+
+void FuckingTalk3(string &in asTimer)
+{
+	AddEffectVoice("15_book.ogg", "", "Dialogue", "D5_4", 
+	 false, "Player", 0, 20);
+	AddTimer("fuckingtalk4", 4.3, "FuckingTalk4");
+}
+
+void FuckingTalk4(string &in asTimer)
+{
+	AddEffectVoice("16_chemical.ogg", "", "Dialogue", "D5_5", 
+	 false, "Player", 0, 20);
+	AddTimer("fuckingtalk5", 6.0, "FuckingTalk5");
+}
+
+void FuckingTalk5(string &in asTimer)
+{
+	AddEffectVoice("17_this.ogg", "", "Dialogue", "D5_6", 
+	 false, "Player", 0, 20);
+	AddTimer("fuckingtalk6", 4.8, "FuckingTalk6");
+}
+
+void FuckingTalk6(string &in asTimer)
+{
+	AddEffectVoice("18_chemistry.ogg", "", "Dialogue", "D5_7", 
+	 false, "Player", 0, 20);
+	AddTimer("fuckingtalk7", 5.4, "FuckingTalk7");
+}
+
+void FuckingTalk7(string &in asTimer)
+{
+	FadeOut(2.0);
+	AddTimer("jdhfjdhf", 3.0, "MovePlayer");
+	SetPlayerActive(false);
+}
+
+void MovePlayer(string &in asTimer)
+{
+	TeleportPlayer("BedStart");
+	SetPlayerCrouching(true);
+	AddTimer("sjdkfdsf", 2.0, "WakeBed");
+}
+
+void WakeBed(string &in asTimer)
+{
+	FadeIn(2.0);
+	PlaySoundAtEntity("yawn.ogg", "yawn.snt", "Player", 0.0, false);
+	AddTimer("jshfsdf", 5.0, "Written");
+	FadeRadialBlurTo(0.01, 2.0);
+	FadeSepiaColorTo(0.35, 2.0);
+}
+			
+void Written(string &in asTimer)
+{
+	PlaySoundAtEntity("15_hope.ogg", "15_hope.snt", "Player", 0.0, false);
+	SetPlayerActive(true);
+	AddQuest("CheckMail", "checkthemail");
+	SetEntityPlayerInteractCallback("russnote", "NoteMusic", true);
+	SetEntityActive("secondchem1", true);
+	SetEntityActive("secondchem2", true);
+	SetEntityActive("secondchem3", true);
+	SetEntityActive("russnote", true);
+	SetPlayerMoveSpeedMul(1.0);
+}
+void NoteMusic(string &in asEntity)
+{
+	AddTimer("fsffufuf", 0.01, "StopThe");
+	PlayMusic("Letter.ogg", false, 2.5, 0.0, 5, false);
+}
+
+void StopThe(string &in asTimer)
+{
+	AddQuest("makepotion", "MakeThePotion");
+	CompleteQuest("CheckMail", "checkthemail");
+	AddGlobalVarInt("makingpotion", 1);
+}
+
+void GruntScare(string &in asEntity, int alState)
+{
+	PlaySoundAtEntity("03_gasp_3.ogg", "03_gasp_3.snt", "Player", 0.0, false);
+	AddTimer("gruntt", 2.4, "GruntSee");
+	SetPlayerActive(false);
+	StartPlayerLookAt("grunt_chase", 2.0, 2.0, "");
+	AddEntityCollideCallback("Player", "grunt_chase", "EndChase", true, 1);
+	PlayMusic("Prisoner1.ogg", false, 3.0, 0.0, 1, false);
+	SetEnemyDisableTriggers("grunt_chase", false);
+	SetEntityInteractionDisabled("mansion_5", true);
+	CheckPoint("CPGrunt", "Wake", "Recover", "", "");
+	AddTimer("enddis", 15.0, "EndAnyway");
+	SetLevelDoorLocked("mansion_2", true);
+}
+
+void Recover(string &in asName, int alCount)
+{
+	SetPlayerHealth(100);
+	FadeIn(2.0);
+	AddTimer("StartSpeech7", 1.0, "TALKPLS");
+	SetPlayerMoveSpeedMul(0.2);
+	FadeRadialBlurTo(0, 1.5);
+	FadeSepiaColorTo(0, 1.5);
+}
+
+void EndAnyway(string &in asTimer)
+{
+	SetEntityActive("grunt_chase", false);
+	FadeOut(0.0);
+	PlaySoundAtEntity("enemy_hallucination_disappear.ogg", "enemy_hallucination_disappear.snt", "Player", 0.0f, false);
+	AddTimer("hfhjfh2", 5.2, "Bedroom2");
+	PlaySoundAtEntity("fade.ogg", "fade.snt", "Player", 0.0, false);
+}
+
+void Shackles(string &in asTimer)
+{
+	StartPlayerLookAt("shackles_1", 0.8, 0.8, "");
+	PlaySoundAtEntity("10_shackles.ogg", "10_shackles.snt", "Player", 0.0, false);
+	AddTimer("sll", 5.0, "stoplook");
+}
+
+void stoplook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TALKPLS(string &in asTimer)
+{
+	AddEffectVoice("08_that_memory.ogg", "", "Dialogue", "D4_1", 
+	 false, "Player", 0, 20);
+	AddTimer("StartSpeech8", 8.9, "TALKPLS2");
+	CompleteQuest("FindPrisoner", "find");
+	SetPlayerRunSpeedMul(1.0);
+	SetEntityActive("shackles_1", false);
+	SetEntityActive("shackles_2", false);
+	
+}
+
+void TALKPLS2(string &in asTimer)
+{
+	AddEffectVoice("09_to_be_honest.ogg", "", "Dialogue", "D4_2", 
+	 false, "Player", 0, 20);
+	AddTimer("StartSpeech9", 4.0, "TALKPLS3");
+	SetLevelDoorLocked("mansion_2", false);
+}
+
+void TALKPLS3(string &in asTimer)
+{
+	AddEffectVoice("10_was.ogg", "", "Dialogue", "D4_3", 
+	 false, "Player", 0, 20);
+	AddTimer("StartSpeech10", 4.0, "TALKPLS4");
+}
+
+void TALKPLS4(string &in asTimer)
+{
+	AddEffectVoice("11_of_course.ogg", "", "Dialogue", "D4_4", 
+	 false, "Player", 0, 20);
+	AddTimer("StartSpeech11", 7.8, "TALKPLS5");
+}
+
+void TALKPLS5(string &in asTimer)
+{
+	FadeOut(2.0);
+	ChangeMap("02_lab.map", "lab_cell", "", "");
+	AddGlobalVarInt("killedprisoner", 1);
+	SetGlobalVarInt("killedprisoner", 1);
+}
+
+void EndChase(string &in asParent, string &in asChild, int alState)
+{
+	RemoveTimer("enddis");
+	SetEntityActive("grunt_chase", false);
+	FadeOut(0.0);
+	PlaySoundAtEntity("enemy_hallucination_disappear.ogg", "enemy_hallucination_disappear.snt", "Player", 0.0f, false);
+	AddTimer("hfhjfh2", 5.2, "Bedroom2");
+	PlaySoundAtEntity("fade.ogg", "fade.snt", "Player", 0.0, false);
+}
+
+void Bedroom(string &in asTimer)
+{
+	TeleportPlayer("Wake");
+	SetPlayerHealth(100);
+	StopMusic(0.0, 2);
+	FadeIn(0.2);
+	AddTimer("StartSpeech7", 1.0, "TALKPLS");
+	SetPlayerMoveSpeedMul(0.2);
+	FadeRadialBlurTo(0, 1.5);
+	FadeSepiaColorTo(0, 1.5);
+	//speech
+}
+
+void Bedroom2(string &in asTimer)
+{
+	TeleportPlayer("Wake");
+	FadeIn(0.2);
+	StopMusic(0.0, 2);
+	SetPlayerHealth(100);
+	AddTimer("StartSpeech7", 1.0, "TALKPLS");
+	SetPlayerMoveSpeedMul(0.2);
+	FadeRadialBlurTo(0, 0.5);
+	FadeSepiaColorTo(0, 0.5);
+	//speech
+}
+
+void GruntSee(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	SetPlayerRunSpeedMul(0.5);
+	AddTimer("grr", 0.5, "GruntMove");
+	PlayMusic("Chase.ogg", true, 1.0, 0.0, 2, false);
+}
+
+void GruntMove(string &in asTimer)
+{
+	ShowEnemyPlayerPosition("grunt_chase");
+}
+
+void StartTalking(string &in asTimer)
+{
+	AddEffectVoice("03_inane_obsession.ogg", "", "Dialogue", "D2_1", 
+	 false, "Player", 0, 20);
+	AddTimer("Next4", 7.3, "NextDialogue1");
+	
+}
+
+void StartTalking2(string &in asTimer)
+{
+	AddEffectVoice("05_ah_yes.ogg", "", "Dialogue", "D3_1", 
+	 false, "Player", 0, 20);
+	AddTimer("Next5", 4.9, "NextDialogue2");
+	
+}
+
+void NextDialogue1(string &in asTimer)
+{
+	AddEffectVoice("04_foolish.ogg", "", "Dialogue", "D2_1_2", 
+	 false, "Player", 0, 20);
+	AddTimer("swag", 9.2, "RussLab");
+}
+
+void NextDialogue2(string &in asTimer)
+{
+	AddEffectVoice("06_motives.ogg", "", "Dialogue", "D3_2", 
+	 false, "Player", 0, 20);
+	AddTimer("Next6", 8.3, "NextDialogue3");
+}
+
+void NextDialogue3(string &in asTimer)
+{
+	AddEffectVoice("07_trusted.ogg", "", "Dialogue", "D3_3", 
+	 false, "Player", 0, 20);
+	AddTimer("swag2", 9.0, "BackToLab");
+}
+
+void BackToLab(string &in asTimer)
+{
+	ChangeMap("02_lab.map", "Acid", "", "");
+}
+void RussLab(string &in asTimer)
+{
+	ChangeMap("03_russ_lab.map", "Start_Lab", "", "");
+}
+
+void StartFade(string &in asTimer)
+{
+	FadeSepiaColorTo(2.0f, 1.0f);
+	FadeRadialBlurTo(10, 5.0f);
+	SetEntityInteractionDisabled("mansion_8", true); //
+	SetEntityActive("grunt1", true);
+	FadeIn(7.0f);
+	AddTimer("FadeInTimer2", 4.2f, "Finish");
+}
+
+void Finish(string &in asTimer)
+{
+	PlaySoundAtEntity("01_gasp_1.ogg", "01_gasp_1.snt", "Player", 0.0f, false);
+	SetEntityActive("grunt1", false);
+	FadeOut(0.1f);
+	PlaySoundAtEntity("enemy_hallucination_disappear.ogg", "enemy_hallucination_disappear.snt", "Player", 0.0f, false);
+	AddTimer("FadeInTimer3", 4.0f, "StartFade2");
+	TeleportPlayer("SeeGrunt2");
+}
+
+void StartFade2(string &in asTimer)
+{
+	SetEntityInteractionDisabled("mansion_8", false);
+	SetEntityInteractionDisabled("inkbottlepresent", false);	//	
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_4", 0, "");
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_6", 0, "");
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_8", 0, "");
+	SetEntityActive("grunt2", true);
+	FadeIn(7.0f);
+	FadePlayerFOVMulTo(0.2, 0.07);
+	AddTimer("FadeInTimer4", 5.9f, "Finish2");
+}
+
+void Finish2(string &in asTimer)
+{
+	PlaySoundAtEntity("02_gasp_2.ogg", "02_gasp_2.snt", "Player", 0.0f, false);
+	SetEntityActive("grunt2", false);
+	FadeOut(0.0f);
+	PlaySoundAtEntity("enemy_hallucination_disappear.ogg", "enemy_hallucination_disappear.snt", "Player", 0.0f, false);
+	AddTimer("FadeInTimer5", 8.9f, "StartFade3");
+	SetLampLit("candle1", true, true);
+	TeleportPlayer("Wake");
+}
+
+void StartFade3(string &in asTimer)
+{
+	PlaySoundAtEntity("03_gasp_3.ogg", "03_gasp_3.snt", "Player", 0.0f, false);
+	PlaySoundAtEntity("clock_loop2.ogg", "clock_loop2.snt", "keysound", 0.0f, false);
+	StartPlayerLookAt("deskpad_1", 1000, 1000, "");
+	FadeIn(0.1f);
+	SetPlayerCrouching(false);
+	FadeSepiaColorTo(0.0f, 1.0f);
+	FadeRadialBlurTo(0.0f, 1.0f);
+	SetLightVisible("BoxLight_2", true);
+	AddTimer("StopLoook", 2.5, "StopLook");
+	AddTimer("Light", 4.0f, "CandleOut");
+	SetLightVisible("gruntlight", false);
+	FadePlayerFOVMulTo(1, 0.1f);
+	AddTimer("StartD", 5.8, "StartDialogue");
+	PlayMusic("Awaken.ogg", false, 0.8, 0.0f, 5000, false);
+}
+
+void CandleOut(string &in asTimer)
+{
+	SetLampLit("candle1", false, true);
+}
+
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	StartPlayerLookAt("keysound", 3, 3, "");
+	AddTimer("StopLoook2", 3.0, "StopLook2");
+}
+
+void StopLook2(string &in asTimer)
+{
+	StopPlayerLookAt();
+	StartPlayerLookAt("deskpad_5", 3, 3, "");
+}
+
+void StartDialogue(string &in asTimer)
+{
+	AddEffectVoice("01_fourth_time_this_week.ogg", "", "Dialogue", "D1_1", 
+	 false, "Player", 0, 20);
+	AddTimer("Next", 6.3f, "NextVoice");
+	SetMoveObjectState("mansion_5", 0.0);
+}
+
+void NextVoice(string &in asTimer)
+{
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	SetPlayerMoveSpeedMul(0.2);
+	AddEffectVoice("02_want_to_forget.ogg", "", "Dialogue", "D1_2", 
+	 false, "Player", 0, 20);
+	AddTimer("Past", 11.0, "GoToPast");
+}
+
+void GoToPast(string &in asTimer)
+{
+	FadeOut(3.0);
+	PlaySoundAtEntity("present_to_past.ogg", "present_to_past.snt", "Player", 0.0, false);
+	SetPlayerActive(false);
+	AddTimer("FadeToBlack", 6.0, "FadeToBlackk");
+	FadeRadialBlurTo(0.01, 2.0);
+	FadeSepiaColorTo(0.35, 2.0);
+	SetEntityActive("drawerspresent", false);
+	SetEntityActive("deskpast", true);
+	SetMessage("Messages", "Intro", 5.0f);
+	
+}
+
+void FadeToBlackk(string &in asTimer)
+{
+	FadeGlobalSoundVolume(0.0, 0.1);
+	TeleportPlayer("StartLivingroom");
+	AddTimer("ComeBack", 1.0, "ComeBackPls");	
+}
+
+void ComeBackPls(string &in asTimer)
+{
+	FadeGlobalSoundVolume(1.0, 2.0);
+	FadeIn(2.0);
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(1.0);
+	PlaySoundAtEntity("clock_loop.ogg", "clock_loop.snt", "stone1", 0, true);
+	SetEntityActive("presentpen", false);
+	SetEntityActive("candle1", false);
+	SetEntityActive("presentclock", false);
+	SetEntityActive("keysound", false);
+	SetEntityActive("cabinetpresent", false);
+	SetEntityActive("cabinetpast", true);
+	SetMessage("Two", "Years", 5.0);
+}

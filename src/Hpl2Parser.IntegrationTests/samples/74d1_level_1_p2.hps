@@ -1,0 +1,454 @@
+///////////////////////////////////////////////////////////////////////////////////
+//OnStart
+///////////////////////////////////////////////////////////////////////////////////
+    void OnStart()
+    {
+            AddEntityCollideCallback("Player", "ToLastLevel", "Transition", false, 1);
+			AddEntityCollideCallback("Player", "KillTheLights", "LightsOut", true, 1);
+			AddEntityCollideCallback("Player", "Spawn", "EventCollide", true, 1);
+			AddEntityCollideCallback("Player", "SpawnSecondMonster", "MoveDatGuy", true, 1);
+			AddEntityCollideCallback("not_your_friend", "MakeHostile", "SeePlayer", true, 1);
+			AddEntityCollideCallback("SecondMonster", "CheckForLight", "TurnOff", true, 1);
+			SetEntityPlayerInteractCallback("monster_key","ActivateMonster", true);
+			SetAllowStickyAreaAttachment(false);
+			SetLightVisible("EnemyLight", false);
+			SetLightVisible("RedLight", false);
+			SetLightVisible("Armor_1", false);
+			SetLightVisible("Armor_2", false);
+			SetLightVisible("Armor_3", false);
+			SetLightVisible("Armor_4", false);
+			PlayMusic("Track3.ogg", true, 2, 1, 1, true);
+    }
+	
+///////////////////////////////////////////////////////////////////////////////////
+//OnEnter
+///////////////////////////////////////////////////////////////////////////////////
+
+void OnEnter()
+{
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Door Messages
+//////////////////////////////////////////////////////////////////////////////////////	
+	
+void Locked(string &in asEntity)	
+{
+	SetMessage("Messages", "Never", 1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//Spawn Grunt	 
+//////////////////////////////////////////////////////////////////////////////////	 
+void EventCollide(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("servant_grunt_1", true);
+AddTimer("Scare", 0.5f, "Scare1");
+AddQuest("Fake", "Hallucination");
+}
+void Scare1(string &in asTimer)
+{
+GiveSanityDamage(10, true);
+PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+SetEntityActive("servant_grunt_1", false);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//Turn Off Lights
+/////////////////////////////////////////////////////////////////////////////////
+void LightsOut(string &in asParent, string &in asChild, int alState)
+{
+CheckPoint ("", "Checkpoint", "Reset", "DeathHint", "DefaultEntry");
+PlaySoundAtEntity("", "react_scare.snt", "Player", 0, false);
+PlaySoundAtEntity("", "general_thunder.ent", "Player", 0, false);
+AddEffectVoice("SE_line1.ogg" ,"", "Dialogue", "Line_1SE", false, "", 0, 0);
+AddEffectVoice("Johnathan_Line_.5.ogg" ,"", "Dialogue", "Line_4", false, "", 0, 0);
+SetEffectVoiceOverCallback("Memento1");
+SetLampLit("candlestick_floor_1", false, true);
+AddTimer("", 0.001, "Out2");
+}
+ 
+ 
+void Out2(string &in asTimer)
+{
+SetLampLit("candlestick_floor_2", false, true);
+AddTimer("", 0.001, "Out3");
+}
+ 
+ 
+void Out3(string &in asTimer)
+{
+SetLampLit("candlestick_floor_3", false, true);
+AddTimer("", 0.001, "Out4");
+}
+ 
+ 
+void Out4(string &in asTimer)
+{
+SetLampLit("candlestick_floor_4", false, true);
+AddTimer("", 0.001, "Out5");
+}
+ 
+ 
+void Out5(string &in asTimer)
+{
+SetLampLit("candlestick_floor_5", false, true);
+AddTimer("", 0.001, "Out6");
+}
+
+
+void Out6(string &in asTimer)
+{
+SetLampLit("candlestick_floor_6", false, true);
+AddTimer("", 0.001, "Out7");
+}
+ 
+ 
+void Out7(string &in asTimer)
+{
+SetLampLit("chandelier_nice_1", false, true);
+} 
+
+///////////////////////////////////////////////////////////////////////////////////////
+//To Level 1: Corridor
+///////////////////////////////////////////////////////////////////////////////////////
+    void Transition(string &in asParent, string &in asChild, int alState)
+    {
+            FadeOut(1);
+            AddTimer("", 1, "TimerTransition");
+    }
+     
+    void TimerTransition(string &in asTimer)
+    {  
+            ChangeMap("level_1_corridor", "PlayerStartArea_2", "", "");
+    }
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Spawn Grunt With Key
+//////////////////////////////////////////////////////////////////////////////////////
+    void ActivateMonster(string &in item)
+	{
+		PlaySoundAtEntity("crygirl", "girl_crying.snt", "AP_1", 1, true);
+		PlaySoundAtEntity("crymale", "male_crying.snt", "AP_4", 1, true);
+		for(int i = 1; i <= 11; i++) SetEntityActive("Slime_"+i, true);
+		for(int i = 1; i <= 4; i++) SetEntityActive("Blood_"+i, true);
+		SetLightVisible("DarkLight", false);
+		SetLightVisible("RedLight", true);
+		SetLightVisible("KeyLight", false);
+		SetLightVisible("Armor_1", true);
+		SetLightVisible("Armor_2", true);
+		SetLightVisible("Armor_3", true);
+		SetLightVisible("Armor_4", true);
+	    SetEntityActive("Slime_4Block", true);
+	    SetEntityActive("SpawnSecondMonster", true);
+	    SetEntityActive("not_your_friend", true);
+		AddEnemyPatrolNode("not_your_friend", "PathNodeArea_1", 0.001f, "");
+        AddEnemyPatrolNode("not_your_friend", "PathNodeArea_2", 0.001f, "");
+        AddEnemyPatrolNode("not_your_friend", "PathNodeArea_3", 0.001f, "");
+		AddEffectVoice("SE_line2.ogg" ,"", "Dialogue", "Line_2SE", false, "", 0, 0);
+		AddEffectVoice("Line_1G.ogg" ,"", "Dialogue", "Line_1G", false, "", 0, 0);
+		AddEffectVoice("Johnathan_Line_1.ogg" ,"", "Dialogue", "Line_5", false, "", 0, 0);
+		AddEffectVoice("Line_2G.ogg" ,"", "Dialogue", "Line_2G", false, "", 0, 0);
+		SetEffectVoiceOverCallback("Memento3");
+		SetEntityActive("AP_1", true);
+		SetEntityActive("AP_2", true);
+		SetEntityActive("AP_3", true);
+		SetEntityActive("AP_4", true);
+		SetEntityActive("Stick_1", true);
+		SetEntityActive("Stick_2", true);
+		SetAllowStickyAreaAttachment(true);
+		SetEntityActive("ToLastLevel", true);
+		AddTimer("", 3, "BreakDoor");
+		int message = RandInt(1, 6);
+		if(message == 1) AddTimer("pop1", 3, "PopUp");
+		if(message == 2) AddTimer("pop2", 1, "PopUp");
+		if(message == 3) AddTimer("pop3", 5, "PopUp");
+		if(message == 4) AddTimer("pop4", 3.5, "PopUp");
+		if(message == 5) AddTimer("pop5", 6, "PopUp");
+		if(message == 6) AddTimer("pop6", 0.5, "PopUp");
+		int scream = RandInt(1, 5);
+		if(scream == 1) AddTimer("scream1", 5, "ScreamsTimer");
+		if(scream == 2) AddTimer("scream2", 5, "ScreamsTimer");
+		if(scream == 3) AddTimer("scream3", 5, "ScreamsTimer");
+		if(scream == 4) AddTimer("scream4", 5, "ScreamsTimer");
+		if(scream == 5) AddTimer("scream5", 5, "ScreamsTimer");
+		 }
+
+void SeePlayer(string &in asParent, string &in asChild, int alState)
+{
+	ShowEnemyPlayerPosition("not_your_friend");
+} 
+		 
+//////////////////////////////////////////////////////////////////////////////////////	
+//Slime Damage
+//////////////////////////////////////////////////////////////////////////////////////		 
+		 
+void Damage(string &in asArea)
+{
+	GivePlayerDamage(10, "BloodSplat", true, true);
+	PlayGuiSound("slime_attack_normal_hit.snt", 0.7f);
+}		 
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Messages
+//////////////////////////////////////////////////////////////////////////////////////
+
+	void PopUp(string &in asTimer)
+	{
+		if (asTimer == "pop1")
+		{
+			SetMessage("Messages", "Run1", 0.1);
+			int messageone = RandInt(1, 6);
+		 if(messageone == 1) AddTimer("pop1", 3, "PopUp");
+		 if(messageone == 2) AddTimer("pop2", 1, "PopUp");
+		 if(messageone == 3) AddTimer("pop3", 5, "PopUp");
+		 if(messageone == 4) AddTimer("pop4", 3.5, "PopUp");
+		 if(messageone == 5) AddTimer("pop5", 6, "PopUp");
+		 if(messageone == 6) AddTimer("pop6", 0.5, "PopUp");
+		}
+		
+		if (asTimer == "pop2")
+		{
+			SetMessage("Messages", "Run2", 0.1);
+			int messagetwo = RandInt(1, 6);
+		 if(messagetwo == 1) AddTimer("pop1", 3, "PopUp");
+		 if(messagetwo == 2) AddTimer("pop2", 1, "PopUp");
+		 if(messagetwo == 3) AddTimer("pop3", 5, "PopUp");
+		 if(messagetwo == 4) AddTimer("pop4", 3.5, "PopUp");
+		 if(messagetwo == 5) AddTimer("pop5", 6, "PopUp");
+		 if(messagetwo == 6) AddTimer("pop6", 0.5, "PopUp");
+		}
+		
+		if (asTimer == "pop3")
+		{
+			SetMessage("Messages", "Run3", 0.1);
+			int messagethree = RandInt(1, 6);
+		 if(messagethree == 1) AddTimer("pop1", 3, "PopUp");
+		 if(messagethree == 2) AddTimer("pop2", 1, "PopUp");
+		 if(messagethree == 3) AddTimer("pop3", 5, "PopUp");
+		 if(messagethree == 4) AddTimer("pop4", 3.5, "PopUp");
+		 if(messagethree == 5) AddTimer("pop5", 6, "PopUp");
+		 if(messagethree == 6) AddTimer("pop6", 0.5, "PopUp");
+		}
+		
+		if (asTimer == "pop4")
+		{
+			SetMessage("Messages", "Run4", 0.1);
+			int messagefour = RandInt(1, 6);
+		 if(messagefour == 1) AddTimer("pop1", 3, "PopUp");
+		 if(messagefour == 2) AddTimer("pop2", 1, "PopUp");
+		 if(messagefour == 3) AddTimer("pop3", 5, "PopUp");
+		 if(messagefour == 4) AddTimer("pop4", 3.5, "PopUp");
+		 if(messagefour == 5) AddTimer("pop5", 6, "PopUp");
+		 if(messagefour == 6) AddTimer("pop6", 0.5, "PopUp");
+		}
+		
+		if (asTimer == "pop5")
+		{
+			SetMessage("Messages", "Run5", 0.1);
+			int messagefive = RandInt(1, 6);
+		 if(messagefive == 1) AddTimer("pop1", 3, "PopUp");
+		 if(messagefive == 2) AddTimer("pop2", 1, "PopUp");
+		 if(messagefive == 3) AddTimer("pop3", 5, "PopUp");
+		 if(messagefive == 4) AddTimer("pop4", 3.5, "PopUp");
+		 if(messagefive == 5) AddTimer("pop5", 6, "PopUp");
+		 if(messagefive == 6) AddTimer("pop6", 0.5, "PopUp");
+		}
+		
+		if (asTimer == "pop6")
+		{
+			SetMessage("Messages", "Run6", 0.1);
+			int messagesix = RandInt(1, 6);
+		 if(messagesix == 1) AddTimer("pop1", 3, "PopUp");
+		 if(messagesix == 2) AddTimer("pop2", 1, "PopUp");
+		 if(messagesix == 3) AddTimer("pop3", 5, "PopUp");
+		 if(messagesix == 4) AddTimer("pop4", 3.5, "PopUp");
+		 if(messagesix == 5) AddTimer("pop5", 6, "PopUp");
+		 if(messagesix == 6) AddTimer("pop6", 0.5, "PopUp");
+		}
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Screams
+//////////////////////////////////////////////////////////////////////////////////////	
+
+void ScreamsTimer(string &in asTimer)
+{
+	if (asTimer == "scream1")
+	{
+		PlaySoundAtEntity("", "f_low_scream_1.snt", "Player", 1, false);
+		int scream = RandInt(1, 5);
+		if(scream == 1) AddTimer("scream1", 5, "ScreamsTimer");
+		if(scream == 2) AddTimer("scream2", 5, "ScreamsTimer");
+		if(scream == 3) AddTimer("scream3", 5, "ScreamsTimer");
+		if(scream == 4) AddTimer("scream4", 5, "ScreamsTimer");
+		if(scream == 5) AddTimer("scream5", 5, "ScreamsTimer");
+	}
+	
+	if (asTimer == "scream2")
+	{
+		PlaySoundAtEntity("", "f_high_scream_1.snt", "Player", 1, false);
+		int scream = RandInt(1, 5);
+		if(scream == 1) AddTimer("scream1", 5, "ScreamsTimer");
+		if(scream == 2) AddTimer("scream2", 5, "ScreamsTimer");
+		if(scream == 3) AddTimer("scream3", 5, "ScreamsTimer");
+		if(scream == 4) AddTimer("scream4", 5, "ScreamsTimer");
+		if(scream == 5) AddTimer("scream5", 5, "ScreamsTimer");
+	}
+	
+	if (asTimer == "scream3")
+	{
+		PlaySoundAtEntity("", "f_high_scream_2.snt", "Player", 1, false);
+		int scream = RandInt(1, 5);
+		if(scream == 1) AddTimer("scream1", 5, "ScreamsTimer");
+		if(scream == 2) AddTimer("scream2", 5, "ScreamsTimer");
+		if(scream == 3) AddTimer("scream3", 5, "ScreamsTimer");
+		if(scream == 4) AddTimer("scream4", 5, "ScreamsTimer");
+		if(scream == 5) AddTimer("scream5", 5, "ScreamsTimer");
+	}
+	
+	if (asTimer == "scream4")
+	{
+		PlaySoundAtEntity("", "m_low_scream_1.snt", "Player", 1, false);
+		int scream = RandInt(1, 5);
+		if(scream == 1) AddTimer("scream1", 5, "ScreamsTimer");
+		if(scream == 2) AddTimer("scream2", 5, "ScreamsTimer");
+		if(scream == 3) AddTimer("scream3", 5, "ScreamsTimer");
+		if(scream == 4) AddTimer("scream4", 5, "ScreamsTimer");
+		if(scream == 5) AddTimer("scream5", 5, "ScreamsTimer");
+	}
+	
+	if (asTimer == "scream5")
+	{
+		PlaySoundAtEntity("", "m_high_scream_1.snt", "Player", 1, false);
+		int scream = RandInt(1, 5);
+		if(scream == 1) AddTimer("scream1", 5, "ScreamsTimer");
+		if(scream == 2) AddTimer("scream2", 5, "ScreamsTimer");
+		if(scream == 3) AddTimer("scream3", 5, "ScreamsTimer");
+		if(scream == 4) AddTimer("scream4", 5, "ScreamsTimer");
+		if(scream == 5) AddTimer("scream5", 5, "ScreamsTimer");
+	}
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Break Door
+//////////////////////////////////////////////////////////////////////////////////////	
+	
+	void BreakDoor(string &in asTimer)
+	{
+		SetPropHealth("Break", 0);
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Death Reset
+//////////////////////////////////////////////////////////////////////////////////////	
+
+	void Reset(string &in asName, int alCount)
+	{
+	AddEntityCollideCallback("Player", "SpawnSecondMonster", "MoveDatGuy", true, 1);
+	AddEntityCollideCallback("not_your_friend", "MakeHostile", "SeePlayer", true, 1);
+	AddEntityCollideCallback("SecondMonster", "CheckForLight", "TurnOff", true, 1);
+		RemoveTimer("pop1");
+		RemoveTimer("pop2");
+		RemoveTimer("pop3");
+		RemoveTimer("pop4");
+		RemoveTimer("pop5");
+		RemoveTimer("pop6");
+		RemoveTimer("scream1");
+		RemoveTimer("scream2");
+		RemoveTimer("scream3");
+		RemoveTimer("scream4");
+		RemoveTimer("scream5");
+		RemoveTimer("scream6");
+		SetEnemyDisabled("not_your_friend", false);
+		SetEntityActive("not_your_friend", false);
+		AddTimer("monster1", 1, "SetActive");
+		SetEnemyDisabled("not_your_friend_2", false);
+	}
+	
+void SetActive(string &in asTimer)
+{
+	SetEntityActive("not_your_friend", true);
+	AddEnemyPatrolNode("not_your_friend", "PathNodeArea_1", 0.001f, "");
+    AddEnemyPatrolNode("not_your_friend", "PathNodeArea_2", 0.001f, "");
+    AddEnemyPatrolNode("not_your_friend", "PathNodeArea_3", 0.001f, "");
+	int message = RandInt(1, 6);
+		if(message == 1) AddTimer("pop1", 3, "PopUp");
+		if(message == 2) AddTimer("pop2", 1, "PopUp");
+		if(message == 3) AddTimer("pop3", 5, "PopUp");
+		if(message == 4) AddTimer("pop4", 3.5, "PopUp");
+		if(message == 5) AddTimer("pop5", 6, "PopUp");
+		if(message == 6) AddTimer("pop6", 0.5, "PopUp");
+	int scream = RandInt(1, 5);
+		if(scream == 1) AddTimer("scream1", 5, "ScreamsTimer");
+		if(scream == 2) AddTimer("scream2", 5, "ScreamsTimer");
+		if(scream == 3) AddTimer("scream3", 5, "ScreamsTimer");
+		if(scream == 4) AddTimer("scream4", 5, "ScreamsTimer");
+		if(scream == 5) AddTimer("scream5", 5, "ScreamsTimer");
+}	
+	
+//////////////////////////////////////////////////////////////////////////////////
+//Teleport Grunt	 
+//////////////////////////////////////////////////////////////////////////////////	
+void MoveDatGuy(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("not_your_friend", false);
+		SetEntityActive("SecondMonster", true);
+		ShowEnemyPlayerPosition("SecondMonster");
+		if(GetEntityExists("SecondMonster") == true)
+		{
+			SetLightVisible("EnemyLight", true);
+		}
+	}
+
+void TurnOff(string &in asParent, string &in asChild, int alState)
+{
+	SetLightVisible("EnemyLight", false);
+}	
+	
+///////////////////////////////////////////////////////////////////////////////////////
+//Mementos
+///////////////////////////////////////////////////////////////////////////////////////	
+void Memento1()
+{
+	AddQuest("He", "WantsMe");
+}
+
+void Memento3()
+{
+	AddQuest("Start", "Chase");
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load ==0) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("He", "WantsMe");
+CompleteQuest("Fake", "Hallucination");
+CompleteQuest("Start", "Chase");
+StopMusic(0,1);
+}

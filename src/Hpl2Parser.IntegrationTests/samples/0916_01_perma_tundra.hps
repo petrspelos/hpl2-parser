@@ -1,0 +1,176 @@
+void OnStart()
+{
+	SetPlayerActive(false);
+	SetPlayerCrouching(true);
+	FadeOut(0.0f);
+	AddTimer("screamsoundstart", 5.0f, "screamsoundstart");
+	StartPlayerLookAt("lookup_start", 1.0f, 1.0f, "");
+	
+	AddEntityCollideCallback("cellar_wood01_1", "doorisclosed", "wind_muffle", false, 1);	
+	AddEntityCollideCallback("cellar_wood01_1", "doorisopen", "wind_normal", false, 1);	
+	
+	SetEntityPlayerInteractCallback("dlc_jacket_2", "makedooravailable", true);
+	
+	SetEntityPlayerInteractCallback("interact_door_nojacket", "interact_door_nojacket", false);
+	
+	AddEntityCollideCallback("Player", "hear_bear_area1", "hear_bear_area1", true, 0);	
+	AddEntityCollideCallback("Player", "hear_bear_area2", "hear_bear_area2", true, 0);	
+	AddEntityCollideCallback("Player", "hear_bear_area3", "hear_bear_area3", true, 0);	
+	
+	AddEntityCollideCallback("Player", "EnterCave_transition", "EnterCave_transition", true, 0);	
+	
+	AddEntityCollideCallback("Player", "areyououthere_voice", "areyououthere_voice", true, 0);	
+
+}
+
+void OnEnter()
+{
+
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("", "", 1, "menu_loading_screen.jpg");
+}
+
+////////////////////////////////////////////
+////////////////START/SCENE/////////////////
+////////////////////////////////////////////
+	
+void screamsoundstart(string &in AsTimer)
+{
+	SetMessage("Messages", "permapretense_info", 16.0f);
+	AddTimer("playerawakennow", 18.0f, "playerawakennow");
+	AddTimer("startmusic_buildup", 4.0f, "startmusic_buildup");
+
+}	
+
+void startmusic_buildup(string &in AsTimer)
+{
+	PlayMusic("Bear_Fog_Appear_Finale", false, 1.0f, 3.0f, 1, false);
+}
+	
+void playerawakennow(string &in AsTimer)
+{
+	StopMusic(0.0f, 1);
+	FadeIn(1.0f);
+	StopPlayerLookAt();
+	StartPlayerLookAt("lookupatdoornow", 1.0f, 1.0f, "");
+    FadePlayerRollTo( -40, 20, 20);
+	AddTimer("lookside_forwife1", 5.0f, "lookside_forwife1");
+	PlaySoundAtEntity("scared_awake", "react_breath.snt", "Player", 0.0f, false);
+	
+	PlaySoundAtEntity("mufflednormalwind", "snow_wind_sfx_inside.snt", "Player", 0.0f, false);
+	
+	PlaySoundAtEntity("", "general_wind_whirl.snt", "Player", 0.0f, false);
+}	
+
+void lookside_forwife1(string &in AsTimer)
+{
+	AddTimer("lookside_forwife2", 1.0f, "lookside_forwife2");
+	StopPlayerLookAt();	
+	StartPlayerLookAt("look_for_Wife_loc1", 3.0f, 4.0f, "");
+    FadePlayerRollTo( 0, 80, 80);
+	GiveSanityDamage(5.0f, true);
+}
+
+void lookside_forwife2(string &in AsTimer)
+{
+	AddTimer("getupnowfinal", 1.0f, "getupnowfinal");
+	StopPlayerLookAt();	
+	StartPlayerLookAt("look_for_Wife_loc2", 3.0f, 4.0f, "");
+	GiveSanityDamage(5.0f, true);
+}
+
+
+void getupnowfinal(string &in AsTimer)
+{
+	StopPlayerLookAt();
+	StartPlayerLookAt("getuplookloc", 1.0f, 1.0f, "");
+	SetPlayerCrouching(false);
+	AddTimer("gaincontrolnow", 1.0f, "gaincontrolnow");
+	
+	AddQuest("lookforwife_missing", "lookforwife_missing");
+}
+
+void gaincontrolnow(string &in AsTimer)
+{
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+}
+
+////////////////////////////////////////////
+////////////////START/EXTRA/////////////////
+////////////////////////////////////////////
+
+void wind_muffle(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("mufflednormalwind", "snow_wind_sfx_inside.snt", "Player", 0.0f, false);
+	StopSound("normalwind", 1.0f);
+}
+
+void wind_normal(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("normalwind", "snow_wind_sfx.snt", "Player", 0.0f, false);
+	StopSound("mufflednormalwind", 2.0f);
+}
+
+void makedooravailable(string &in asEntity)
+{
+	SetEntityActive("cellar_wood01_1", true);
+	SetEntityActive("cellar_wood01_2", false);
+	SetEntityActive("interact_door_nojacket", false);
+}
+
+void interact_door_nojacket(string &in asEntity)
+{
+	SetMessage("Messages", "idonthavejacketmustgetdoor", 0.0f);
+}
+
+void areyououthere_voice(string &in asParent, string &in asChild, int alState)
+{
+	AddEffectVoice("perma_protag_v_outhere.ogg", "", "Voice", "perma_protag_v_outhere", false, "", 1.0f, 2.0f);
+}
+
+////////////////////////////////////////////
+////////////////BEAR/SOUNDS/////////////////
+////////////////////////////////////////////
+
+void hear_bear_area1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "grizzly_start_1.snt", "bear_sfx_loc_1", 0.0f, false);
+	AddTimer("ithinkthat_is_Grizzlyvoice", 2.0f, "ithinkthat_is_Grizzlyvoice");
+}
+
+void ithinkthat_is_Grizzlyvoice(string &in AsTimer)
+{
+	AddEffectVoice("perma_protag_v_grizzly_hear.ogg", "", "Voice", "perma_protag_v_grizzly_hear", false, "", 1.0f, 2.0f);
+}
+
+void hear_bear_area2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "grizzly_start_2.snt", "bear_sfx_loc_2", 0.0f, false);
+	AddTimer("yelling_imcomingwife", 1.0f, "yelling_imcomingwife");
+}
+
+void yelling_imcomingwife(string &in AsTimer)
+{
+	PlaySoundAtEntity("", "wife_scream_swanson.snt", "bear_sfx_loc_2", 0.0f, false);
+	AddTimer("yelling_imcomingwife2", 1.0f, "yelling_imcomingwife2");
+}
+
+void yelling_imcomingwife2(string &in AsTimer)
+{
+	AddEffectVoice("perma_protag_v_imcoming.ogg", "", "Voice", "perma_protag_v_imcoming", false, "", 1.0f, 2.0f);
+}
+
+void hear_bear_area3(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "grizzly_start_3.snt", "bear_sfx_loc_3", 0.0f, false);
+}
+
+
+void EnterCave_transition(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("02_perma_cavern_1", "PlayerStartArea_1", "", "");
+}

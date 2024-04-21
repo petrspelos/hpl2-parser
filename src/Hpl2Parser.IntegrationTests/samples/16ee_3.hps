@@ -1,0 +1,606 @@
+void OnStart()
+{
+// debug things
+//GiveItem("obscurumcoat", "item", "obscurumcoat", "obscurum_coat.tga", 1);
+//
+AddUseItemCallback("door_0_crowbar", "crowbar1", "door_0", "door_0_crowbar", true);
+AddUseItemCallback("door_1_crowbar", "crowbar1", "level_dungeon_2", "door_1_crowbar", true);
+AddUseItemCallback("door_2_crowbar", "crowbar1", "prison_2", "door_2_crowbar", true);
+
+AddEntityCollideCallback("sledge_1", "area_0", "smash_the_fucking_door_1", true, 1);
+AddEntityCollideCallback("sledge_1", "area_2", "smash_the_fucking_door_2", true, 1);
+AddEntityCollideCallback("sledge_1", "area_3", "smash_the_fucking_door_3", true, 1);
+
+AddEntityCollideCallback("Player", "area_evelin", "evelin_introduce", true, 1);
+AddEntityCollideCallback("Player", "area_5", "area_5_script", true, 1);
+AddEntityCollideCallback("Player", "area_6", "area_6_script", true, 1);
+
+AddEntityCollideCallback("Player", "area_christine", "prettychristine", false, 1);
+
+AddEntityCollideCallback("dog_0", "monster_despawn", "goaway", false, 1);
+
+AddUseItemCallback("unlocktower", "keytower", "level_dungeon_2", "unlocktower", true);
+AddUseItemCallback("unlockundergrounddoor", "key_undergrounddoor", "prison_2", "unlockundergrounddoor", true);
+AddUseItemCallback("unlockprison", "keyprison", "prison_7", "unlockprison", true);
+
+//arthur uses crowbar on the wooden door - castle_silent_1 ====================================
+AddUseItemCallback("", "crowbar1", "castle_silent_1", "UsedCrowbarOnDoor", true);
+AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_1", "CollideAreaBreakDoor", true, 1);
+
+AddUseItemCallback("unlocksewers", "key_sewers", "sewers", "unlocksewers", true);
+
+// loading screens
+AddEntityCollideCallback("Player", "loading_0", "loading_0_script", false, 1);
+AddEntityCollideCallback("Player", "loading_1", "loading_1_script", false, 1);
+
+}
+
+//arthur touches the hot pipes like a real idiot======================
+void ouch(string &in asEntity)
+ {
+GivePlayerDamage(1.0f, "BloodSplat", true, false);
+PlaySoundAtEntity("","afx_tunnels_steam_burst_pop_02.snt", "Player", 0, false);	
+ }
+ 
+ //arthur uses crowbar on the wooden door - castle_silent_1 ====================================
+void UsedCrowbarOnDoor(string &in asItem, string &in asEntity)
+ {
+ RemoveItem("crowbar1");
+ AddTimer("", 0.2, "TimerSwitchShovel");
+ }
+ 
+//arthur interacts with the note written by Christine======================
+void christinenote(string &in asEntity)
+ {
+  PlaySoundAtEntity("","christine_theme", "Player", 0, false);
+ }
+ 
+//==============================
+void TimerSwitchShovel(string &in asTimer)
+ {
+ PlaySoundAtEntity("","puzzle_place_jar.snt", "Player", 0, false);
+ SetEntityActive("crowbar_joint_1", true);
+ }
+
+void CollideAreaBreakDoor(string &in asParent, string &in asChild, int alState)
+ {
+ AddPlayerSanity(25);
+ //PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+ PlaySoundAtEntity("","break_wood_metal", "AreaBreakEffect", 0, false);
+ CreateParticleSystemAtEntity("", "ps_hit_wood", "AreaBreakEffect", false);
+ SetEntityActive("crowbar_joint_1", false);
+ SetSwingDoorLocked("castle_silent_1", false, true);
+ GiveItem("crowbar1", "item", "crowbar1", "crowbar.tga", 1);
+ // Need the door in the same universe... and on the same planet... so...
+ //AddPropImpulse("castle_silent_1", 0.0, 0.0, -50.0, "world");
+ 
+ //Wrong implementation is "from file", no SubItemTypeName etc.
+ //GiveItemFromFile("crowbar1", "crowbar.ent");
+ } 
+
+
+// arthur interacts with the first (locked) door
+// removing it - there's no way to disable it if player breaks the door first :(
+//void door_0_callback(string &in asEntity)
+//{
+//AddQuest("questundergrounddoorlocked", "questundergrounddoorlocked");
+//}
+
+// arthur uses crowbar on the metal door=============================
+void door_0_crowbar(string &in asItem, string &in asEntity)
+{
+SetMessage("TheVoice", "arthur16", 4.0);
+PlaySoundAtEntity("", "arthur16_thiswontworkonmetaldoor", "Player", 0, false);
+}
+ 
+//arthur smashes the door with the sledgehammer
+void smash_the_fucking_door_1(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","smash1", "door_0", 0, false);
+AddPropImpulse("sledge_1", 0.0, 0.0, 10.0, "world");
+AddTimer("enable_area_1", 1.0, "enable_area_1");
+CreateParticleSystemAtEntity("", "ps_hit_wood", "door_0", false);
+}
+
+void enable_area_1(string &in asTimer)
+{
+SetEntityActive("area_2", true);
+}
+
+void smash_the_fucking_door_2(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","smash2", "door_0", 0, false);
+AddPropImpulse("sledge_1", 0.0, 0.0, 10.0, "world");
+AddTimer("enable_area_2", 1.0, "enable_area_2");
+}
+
+void enable_another_christine(string &in asName, int alCount)
+{
+SetEntityActive("dog_1", true);
+AddEnemyPatrolNode("dog_1", "PathNodeArea_1", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_2", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_3", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_4", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_5", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_6", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_7", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_8", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_9", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_10", 0, "");
+//AddTimer("", 3, "sezer_ho");
+}
+
+void enable_another_christine1(string &in asName, int alCount)
+{
+SetEntityActive("infected", true);
+AddEnemyPatrolNode("infected", "PathNodeArea_11", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_12", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_13", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_14", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_15", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_16", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_17", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_18", 0, "");
+AddEnemyPatrolNode("infected", "PathNodeArea_19", 0, "");
+//AddTimer("", 3, "sezer_ho");
+}
+
+void enable_area_2(string &in asTimer)
+{
+SetEntityActive("area_3", true);
+}
+
+void smash_the_fucking_door_3(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","smash2", "door_0", 0, false);
+SetEntityActive("area_3", false);
+SetSwingDoorLocked("door_0", false, true);
+AddPropImpulse("door_0", 0.0, 0.0, -50.0, "world");
+PlaySoundAtEntity("","break_wood_metal", "door_0", 0, false);
+RemoveUseItemCallback("door_0_crowbar");
+//SetPlayerActive(false);
+//AddTimer("stonefall", 1.0, "stonefall_0");
+}
+
+// arthur interacts with the note
+void script_evelin(string &in asEntity)
+{
+SetEntityActive("area_evelin", true);
+}
+
+// time to introduce evelin :)
+void evelin_introduce(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorLocked("prison_1", true, true);
+PlaySoundAtEntity("", "evelin1_terribleplace", "Player", 0, false);
+SetMessage("TheVoice", "evelin1", 4.0);
+AddTimer("", 4.5, "evelin_timer_1");
+}
+
+
+void evelin_timer_1(string &in asTimer){
+PlaySoundAtEntity("", "arthur21_whoisthis", "Player", 0, false);
+SetMessage("TheVoice", "arthur21", 1.3);
+AddTimer("", 1.5, "evelin_timer_2");
+}
+
+
+void evelin_timer_2(string &in asTimer){
+SetMessage("TheVoice", "evelin2", 4.0);
+PlaySoundAtEntity("", "evelin2_youcantseeme", "Player", 0, false);
+AddTimer("", 4.5, "evelin_timer_3");
+}
+
+void evelin_timer_3(string &in asTimer){
+SetMessage("TheVoice", "arthur22", 1.0);
+PlaySoundAtEntity("", "arthur22_showyourself", "Player", 0, false);
+AddTimer("", 1.5, "evelin_timer_4");
+}
+
+void evelin_timer_4(string &in asTimer){
+SetMessage("TheVoice", "evelin4", 4.0);
+PlaySoundAtEntity("", "evelin4_itsokthisway", "Player", 0, false);
+AddTimer("", 4.5, "evelin_timer_5");
+}
+
+void evelin_timer_5(string &in asTimer){
+SetMessage("TheVoice", "arthur23", 2.0);
+PlaySoundAtEntity("", "arthur23_whatdoyouwant", "Player", 0, false);
+AddTimer("", 2.5, "evelin_timer_6");
+}
+
+void evelin_timer_6(string &in asTimer){
+SetMessage("TheVoice", "evelin5", 5.0);
+PlaySoundAtEntity("", "evelin5_toomanyquestions", "Player", 0, false);
+AddTimer("", 5.5, "evelin_timer_7");
+}
+
+void evelin_timer_7(string &in asTimer){
+SetMessage("TheVoice", "arthur24", 1.0);
+PlaySoundAtEntity("", "arthur24_what", "Player", 0, false);
+AddTimer("", 1.3, "evelin_timer_8");
+}
+
+void evelin_timer_8(string &in asTimer){
+SetMessage("TheVoice", "evelin6", 8.0);
+PlaySoundAtEntity("", "evelin6_betteridea", "Player", 0, false);
+AddTimer("", 8.4, "evelin_timer_9");
+}
+
+void evelin_timer_9(string &in asTimer){
+SetMessage("TheVoice", "arthur25", 1.3);
+PlaySoundAtEntity("", "arthur25_goahead", "Player", 0, false);
+AddTimer("", 1.6, "evelin_timer_10");
+}
+
+void evelin_timer_10(string &in asTimer){
+SetMessage("TheVoice", "evelin7", 6.0);
+PlaySoundAtEntity("", "evelin7_whyshould", "Player", 0, false);
+AddTimer("", 6.9, "evelin_timer_11");
+}
+
+void evelin_timer_11(string &in asTimer){
+SetMessage("TheVoice", "arthur26", 4.0);
+PlaySoundAtEntity("", "arthur26_whatareyoutalkingabout", "Player", 0, false);
+AddTimer("", 4.5, "evelin_timer_12");
+}
+
+void evelin_timer_12(string &in asTimer){
+SetMessage("TheVoice", "evelin8", 5.0);
+PlaySoundAtEntity("", "evelin8_thenwhy", "Player", 0, false);
+AddTimer("", 5.6, "evelin_timer_13");
+}
+
+void evelin_timer_13(string &in asTimer){
+SetMessage("TheVoice", "arthur27", 1.0);
+PlaySoundAtEntity("", "arthur27_lookmiss", "Player", 0, false);
+AddTimer("", 1.3, "evelin_timer_14");
+}
+
+void evelin_timer_14(string &in asTimer){
+SetMessage("TheVoice", "evelin9", 4.0);
+PlaySoundAtEntity("", "evelin9_miss", "Player", 0, false);
+AddTimer("", 4.4, "evelin_timer_15");
+}
+
+void evelin_timer_15(string &in asTimer){
+// whoops
+AddTimer("", 0.0, "evelin_timer_16");
+}
+
+void evelin_timer_16(string &in asTimer){
+SetMessage("TheVoice", "evelin3", 2.0);
+PlaySoundAtEntity("", "evelin3_myname", "Player", 0, false);
+AddTimer("", 2.9, "evelin_timer_17");
+}
+
+void evelin_timer_17(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur28", 6.0);
+PlaySoundAtEntity("", "arthur28_iamheretoexplore", "Player", 0, false);
+AddTimer("", 6.7, "evelin_timer_18");
+}
+
+void evelin_timer_18(string &in asTimer)
+{
+SetMessage("TheVoice", "evelin10", 2.0);
+PlaySoundAtEntity("", "evelin10_isee", "Player", 0, false);
+AddTimer("", 2.8, "evelin_timer_19");
+}
+
+void evelin_timer_19(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur32", 2.0);
+PlaySoundAtEntity("", "arthur32_whatisthisallabout", "Player", 0, false);
+AddTimer("", 2.8, "evelin_timer_20");
+}
+
+void evelin_timer_20(string &in asTimer)
+{
+SetMessage("TheVoice", "evelin11", 14.0);
+PlaySoundAtEntity("", "evelin11_theykidnapp", "Player", 0, false);
+AddTimer("", 14.5, "evelin_timer_21");
+}
+
+void evelin_timer_21(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur29", 2.0);
+PlaySoundAtEntity("", "arthur29_iwillfindsomehelp", "Player", 0, false);
+AddTimer("", 2.6, "evelin_timer_22");
+}
+
+void evelin_timer_22(string &in asTimer)
+{
+SetMessage("TheVoice", "evelin12", 12.0);
+PlaySoundAtEntity("", "evelin12_nohelp", "Player", 0, false);
+AddTimer("", 12.2, "evelin_timer_23");
+AddTimer("", 8, "dog_timer_1");
+AutoSave();
+CheckPoint("cp0", "cp0", "enable_another_christine", "smrt", "christine_hint");
+}
+
+// time for the dog
+// well... looks like it won't be a dog afterall
+// neither your best friend
+// but who knows
+void dog_timer_1(string &in asTimer)
+{
+SetEntityActive("dog_1", true);
+AddEnemyPatrolNode("dog_1", "PathNodeArea_1", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_2", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_3", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_4", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_5", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_6", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_7", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_8", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_9", 0, "");
+AddEnemyPatrolNode("dog_1", "PathNodeArea_10", 0, "");
+}
+//---------------------------
+
+void evelin_timer_23(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur30", 2.0);
+PlaySoundAtEntity("", "arthur30_whatwasthat", "Player", 0, false);
+AddTimer("", 2.1, "evelin_timer_24");
+}
+
+void evelin_timer_24(string &in asTimer)
+{
+SetMessage("TheVoice", "evelin13", 2.0);
+PlaySoundAtEntity("", "evelin13_theyarecoming", "Player", 0, false);
+AddTimer("", 2.2, "evelin_timer_25");
+}
+
+void evelin_timer_25(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur31", 2.0);
+PlaySoundAtEntity("", "arthur31_waitmiss", "Player", 0, false);
+AddTimer("", 2.5, "evelin_timer_26");
+SetSwingDoorLocked("prison_1", false, true);
+}
+
+void evelin_timer_26(string &in asTimer)
+{
+SetMessage("TheVoice", "obscurum2", 5.0);
+PlaySoundAtEntity("", "obscurum2_heardvoices", "dog_1", 0, false);
+AddTimer("", 5.1, "evelin_timer_27");
+}
+
+void evelin_timer_27(string &in asTimer)
+{
+PlaySoundAtEntity("", "triuz", "Player", 0, false);
+}
+
+//arthur triggers the stone fall event
+void area_5_script(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("debris_0", true);
+SetEntityActive("debris_1", true);
+SetEntityActive("debris_2", true);
+SetEntityActive("debris_3", true);
+GiveSanityDamage(10.0, true);
+SetPlayerActive(false);
+SetInventoryDisabled(true);
+StartPlayerLookAt("area_0", 2.5, 5.0, "null");
+AddTimer("", 2.0, "stonefall_0");
+}
+
+void stonefall_0(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur17", 3.0);
+PlaySoundAtEntity("", "arthur17_sledgehammer", "Player", 0, false);
+StopPlayerLookAt();
+SetPlayerActive(true);
+SetInventoryDisabled(false);
+}
+
+//arthur triggers the stone fall event 2
+void area_6_script(string &in asParent, string &in asChild, int alState)
+{
+StartScreenShake(0.3, 3.0, 1.0, 2.0);
+PlaySoundAtEntity("", "15_intro", "Player", 0, false);
+AddTimer("", 1.5, "stonefall_1");
+}
+
+void stonefall_1(string &in asTimer)
+{
+SetPlayerActive(false);
+SetInventoryDisabled(true);
+PlaySoundAtEntity("", "explosion_rock_large", "area_0", 0.0f, false);
+SetPlayerSanity(20.0);
+SetEntityActive("door_0", false);
+SetEntityActive("cavein", true);
+SetPlayerHealth(10.0);
+SetPlayerCrouching(true);
+FadePlayerRollTo(25.0, 2.0, 5.0);
+AddTimer("", 1.0, "stonefall_2");
+}
+
+void stonefall_2(string &in asTimer)
+{
+FadeOut(0.3);
+SetLanternActive(false, true);
+StartPlayerLookAt("area_7", 2.5, 5.0, "null");
+AddTimer("", 5.0, "stonefall_3");
+}
+
+void stonefall_3(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur18", 3.0);
+PlaySoundAtEntity("", "arthur18_whathappened", "Player", 0, false);
+FadeIn(1);
+FadePlayerRollTo(0.0, 1.0, 3.0);
+AddTimer("", 5, "stonefall_4");
+}
+
+void stonefall_4(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur19", 2.0);
+PlaySoundAtEntity("", "arthur19_cantbreathe", "Player", 0, false);
+FadeOut(1);
+AddTimer("", 5, "stonefall_5");
+}
+
+void stonefall_5(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_hit_wood", "area_5", false);
+CreateParticleSystemAtEntity("", "ps_hit_wood", "area_5", false);
+CreateParticleSystemAtEntity("", "ps_hit_wood", "area_5", false);
+CreateParticleSystemAtEntity("", "ps_hit_wood", "area_5", false);
+SetEntityActive("debris_4", true);
+SetEntityActive("debris_5", true);
+SetEntityActive("debris_6", true);
+FadeIn(1);
+SetPlayerActive(true);
+SetInventoryDisabled(false);
+StopPlayerLookAt();
+}
+
+
+
+void prison7interact(string &in asEntity)
+{
+AddQuest("questanothermetaldoorlocked", "questanothermetaldoorlocked");
+}
+
+// arthur interacts with the tower door
+void towerlockeddoor(string &in asEntity)
+{
+AddQuest("questtowerdoorlocked", "questtowerdoorlocked");
+}
+
+// arthur interacts with the locked metal door
+void metallockeddoor(string &in asEntity)
+{
+AddQuest("questmetaldoorlocked", "questmetaldoorlocked");
+}
+
+// arthur unlocks tower door
+void unlocktower(string &in asItem, string &in asEntity)
+{
+SetLevelDoorLocked("level_dungeon_2", false);
+PlaySoundAtEntity("", "unlock_door", "level_dungeon_2", 0, false);
+RemoveItem("keytower");
+CompleteQuest("questtowerdoorlocked", "questtowerdoorlocked");
+}
+
+// arthur unlocks underground door
+void unlockundergrounddoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("prison_2", false, true);
+PlaySoundAtEntity("", "unlock_door", "prison_2", 0, false);
+RemoveItem("key_undergrounddoor");
+CompleteQuest("questmetaldoorlocked", "questmetaldoorlocked");
+}
+
+// arthur unlocks sewers
+void unlocksewers(string &in asItem, string &in asEntity)
+{
+SetLevelDoorLocked("sewers", false);
+PlaySoundAtEntity("", "unlock_door", "sewers", 0, false);
+RemoveItem("key_sewers");
+}
+
+// arthur unlocks prison door
+void unlockprison(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("prison_7", false, true);
+PlaySoundAtEntity("", "unlock_door", "prison_7", 0, false);
+RemoveItem("keyprison");
+CompleteQuest("questanothermetaldoorlocked", "questanothermetaldoorlocked");
+}
+
+
+// arthur uses crowbar on metal tower door=============================
+void door_1_crowbar(string &in asItem, string &in asEntity)
+{
+SetMessage("TheVoice", "arthur36", 4.0);
+PlaySoundAtEntity("", "arthur36_crowbar", "Player", 0, false);
+}
+
+// arthur uses crowbar on another metal tower door=============================
+void door_2_crowbar(string &in asItem, string &in asEntity)
+{
+SetMessage("TheVoice", "arthur36", 4.0);
+// voice acting needed to be done here !!!
+PlaySoundAtEntity("", "arthu36_crowbar", "Player", 0, false);
+}
+
+void prettychristine(string &in asParent, string &in asChild, int alState)
+{
+if(HasItem("key_sewers")==true)
+{
+AutoSave();
+SetPlayerHealth(100.0);
+SetPlayerActive(false);
+SetInventoryDisabled(true);
+SetEntityActive("christine_2", true);
+AddEnemyPatrolNode("christine_2", "christine_node", 0, "");
+StartPlayerLookAt("christine_look", 2.5, 5.0, "null");
+AddTimer("", 2, "prettychristine_1");
+SetPlayerSanity(90.0);
+SetEntityActive("area_christine", false);
+SetEnemySanityDecreaseActive("christine_2", false);
+}
+}
+
+void prettychristine_1(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur33", 13.0);
+PlaySoundAtEntity("", "arthur33_christine", "Player", 0, false);
+AddTimer("", 14, "prettychristine_2");
+}
+
+void prettychristine_2(string &in asTimer)
+{
+SetMessage("TheVoice", "arthur34", 2.0);
+PlaySoundAtEntity("", "arthur34_iknow", "Player", 0, false);
+AddTimer("", 2.9, "prettychristine_3");
+}
+
+void prettychristine_3(string &in asTimer)
+{
+SetPlayerSanity(90.0);
+SetMessage("TheVoice", "arthur35", 4.0);
+PlaySoundAtEntity("", "arthur35_iwillhelp", "Player", 0, false);
+AddTimer("", 5, "prettychristine_5");
+}
+
+void prettychristine_5(string &in asTimer)
+{
+StopPlayerLookAt();
+SetPlayerActive(true);
+SetInventoryDisabled(false);
+SetEnemyDisableTriggers("christine_2", false);
+SetEnemySanityDecreaseActive("christine_2", true);
+CheckPoint("cp1", "cp1", "enable_another_christine1", "smrt", "christine_hint2");
+}
+
+// go do something else Christine, jesus christ why would you spend all your free time chasing Arthur?
+void goaway(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("dog_0", false);
+}
+
+// regular loading shit
+void loading_0_script(string &in asParent, string &in asChild, int alState)
+{
+SetupLoadScreen("loadingscreen", "load_06", 0, "loading_tower.jpg");
+}
+
+void loading_1_script(string &in asParent, string &in asChild, int alState)
+{
+SetupLoadScreen("loadingscreen", "load_17", 0, "loading_sewers.jpg");
+}
+
+void OnEnter()
+{
+PlayMusic("penumbra_music_E1_A11.ogg", true, 0.3, 3.0, 1000, true);
+}
+
+void OnLeave()
+{
+StopMusic(1.0, 1000);
+}

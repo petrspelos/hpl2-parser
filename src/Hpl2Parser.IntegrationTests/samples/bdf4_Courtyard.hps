@@ -1,0 +1,262 @@
+////////////////////////////
+// Run when starting map
+void OnStart()
+{
+AddUseItemCallback("", "cryptkey", "cellar_wood01_1", "cryptopened", true);
+SetPlayerLampOil(8.2f);
+StopPlayerLookAt();
+SetPlayerActive(false);
+FadeOut(0);
+AddTimer("activate_player", 2, "FadeIn");
+AddEntityCollideCallback("Player", "DiaryCourtyard", "FreshAirDiary", true, 1);
+}
+
+
+
+void eventactive(string &in asEntity)
+{
+	SetEntityActive("eventstartarea", true);
+	SetEntityActive("standghost", true);
+	AddEntityCollideCallback("Player", "eventstartarea", "ghostevent", true, 1);
+}
+
+void ghostevent(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	SetEntityActive("block_box_33", true);
+	SetEntityActive("block_box_34", true);
+	PlaySoundAtEntity("","react_breath.snt","Player", 0, false);
+	SetPlayerMoveSpeedMul(0.32f);
+	SetPlayerRunSpeedMul(0);
+	StartPlayerLookAt("scarelook_1", 6, 9, "");
+	FadeLightTo("BoxLight_1", 0.26f, 0.31f, 0.42f, 255, 0, 0.911f);
+	FadeLightTo("SpotLight_1", 0.26f, 0.31f, 0.42f, 255, 0, 0.911f);
+	FadeLightTo("SpotLight_2", 0.26f, 0.31f, 0.42f, 255, 0, 0.911f);
+	FadeLightTo("SpotLight_6", 0.26f, 0.31f, 0.42f, 255, 0, 0.911f);
+	StopMusic(1.6f, 0);
+	PlayMusic("AlmaWhisper.ogg", true, 0.069f, 12, 1, false);
+	FadeRadialBlurTo(0.016f, 16);
+	FadeImageTrailTo(0.76f, 6);
+	AddEntityCollideCallback("Player", "teleportarea", "ghosttp", true, 1);
+}
+
+void ghosttp(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(0);
+	AddTimer("scare", 0.047f, "scare");
+	SetNPCFollowPlayer("standtp", true);
+	SetEntityActive("eventstartarea", false);
+	SetEntityActive("standtp", true);
+	SetEntityActive("standghost", false);
+
+	AddTimer("HeartBeat_1", 0.1f, "HeartBeat");
+	SetLocalVarInt("Heartbeat", 1);
+
+}
+
+void blackingout()
+{
+	AddTimer("outblackfade", 0.01f, "outblackfade");
+}
+
+void outblackfade(string &in asTimer)
+{
+	FadeOut(2);
+	AddTimer("inblackfade", 1, "inblackfade");
+}
+
+void inblackfade(string &in asTimer)
+{
+	FadeIn(1);
+	AddTimer("outblackfade", 2, "outblackfade");
+}
+
+
+
+void scare(string &in asTimer)
+{
+	blackingout();
+	AddTimer("scarelookxd", 0.047f, "scarelookxd");
+	PlaySoundAtEntity("","react_pant.snt","Player", 0, false);
+	GiveSanityDamage(120, true);
+	FadeIn(0.016f);
+	SetPlayerActive(false);
+	PlaySoundAtEntity("","react_breath_slow.snt", "Player", 0, false);
+	AddPlayerBodyForce(22600, 16000, -25600, false);
+	AddTimer("startfade", 5.7f, "startfade");
+}
+
+void scarelookxd(string &in asTimer)
+{
+	StartPlayerLookAt("scarelook", 0.69f, 1, "");
+}
+
+void startfade(string &in asTimer)
+{
+	RemoveTimer("outblackfade");
+	RemoveTimer("inblackfade");
+	FadeOut(4);
+	FadeGlobalSoundVolume(0, 7);
+	StopMusic(8, 1);
+	StopPlayerLookAt();
+	AddTimer("wakeup", 9, "wakeup");
+	SetEntityActive("standtp", false);
+}
+
+void HeartBeat(string &in asTimer)
+{
+if(GetLocalVarInt("Heartbeat") == 1)
+{
+if(asTimer == "HeartBeat_1")
+{
+PlaySoundAtEntity("heartbeat", "sanity_heartbeat.snt", "Player", 0.0f, false);
+AddTimer("Beat", 0.05f, "HeartBeat");
+AddTimer("Beat", 0.35f, "HeartBeat");
+AddDebugMessage("EXECUTE TIMER", false);
+AddTimer("HeartBeat_1", 2, "HeartBeat");
+}
+
+if(asTimer == "Beat")
+{
+FadePlayerAspectMulTo(1.25f, 20);
+FadeRadialBlurTo(0.05f, 20);
+FadePlayerFOVMulTo(0.8f, 30);
+AddTimer("Beat_end", 0.05f, "HeartBeat");
+}
+
+if(asTimer == "Beat_end")
+{
+FadePlayerAspectMulTo(1.0f, 1);
+FadePlayerFOVMulTo(1.0f, 0.75f);
+FadeRadialBlurTo(0.0f, 1);
+}
+}
+}
+
+
+
+void wakeup(string &in asTimer)
+{
+	SetLocalVarInt("Heartbeat", 0);
+	SetEntityActive("block_box_33", false);
+	SetEntityActive("block_box_34", false);
+	FadeLightTo("BoxLight_1", 1.75f, 1.09f, 0.0096f, 255, 0, 0);
+	FadeLightTo("SpotLight_1", 0.066f, 0.059f, 0.059f, 120, 64, 0);
+	FadeLightTo("SpotLight_2", 0, 0, 0, 0, 0, 0);
+	FadeLightTo("SpotLight_6", 0.066f, 0.059f, 0.059f, 120, 8, 0);
+	TeleportPlayer("PlayerStartArea_3");
+	FadeIn(0.21f);
+	PlaySoundAtEntity("","react_pant.snt","Player", 0, false);
+	FadeGlobalSoundVolume(1, 0.016f);
+	PlayMusic("Courtyard.ogg", true, 2, 0.1f, 0, true);
+	AddTimer("activexd", 1.6f, "activexd");
+	FadeRadialBlurTo(0, 3);
+	FadeImageTrailTo(0, 3);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerSanity(91);
+	SetEntityActive("note_paper01_1", true);
+}
+
+void activexd(string &in asTimer)
+{
+	SetPlayerActive(true);
+	SetEntityActive("DiaryCourtyard", true);
+}
+
+
+
+
+
+
+
+
+void finishquestwater(string &in asEntity)
+{
+	GiveSanityBoost();
+	CompleteQuest("ShelfQuestFireXD", "ShelfQuestFireXD");
+}
+
+void teleportback(string &in asEntity)
+{
+	StopMusic(1.6f, 5);
+	AddTimer("fadeXD2", 2.4f, "fadeXD2");
+	FadeOut(1.8f);
+	SetPlayerActive(false);
+}
+
+void fadeXD2(string &in asTimer)
+{
+	PlayMusic("Courtyard.ogg", true, 2, 4, 0, true);
+    SetPlayerActive(true);
+	FadeIn(1);
+	TeleportPlayer("PlayerStartArea_3");
+}
+
+void teleportXD(string &in asEntity)
+{
+	//PlaySoundAtEntity("","locked_door.snt", "cellar_wood01_1", 0, false);
+	SetMessage("ScreenText", "hope", 0);
+	SetEntityActive("ScriptArea_1", true);
+}
+
+void fadeXD(string &in asTimer)
+{
+	PlayMusic("07_amb.ogg", true, 4, 4, 0, true);
+    SetPlayerActive(true);
+	FadeIn(1);
+	TeleportPlayer("PlayerStartArea_2");
+}
+
+void cryptopened(string &in asItem, string &in asEntity)
+{
+	 RemoveItem(asItem);
+     SetEntityActive("cellar_wood01_3", true);
+	 SetEntityActive("ScriptArea_1", true);
+	 SetEntityActive("cellar_wood01_1", false);
+	 PlaySoundAtEntity("","unlock_door","Player", 0,false);
+}
+
+void FadeIn(string &in asTimer)
+{
+	PlayMusic("Courtyard.ogg", true, 2, 4, 0, true);
+    SetPlayerActive(true);
+	FadeIn(2);
+}
+
+void hope(string &in entity)
+{
+	SetMessage("ScreenText", "hope", 0);
+}
+
+void OnEnter()
+{
+	PlayMusic("Courtyard.ogg", true, 2, 4, 0, true);
+	SetEntityActive("block_box_33", false);
+	SetEntityActive("block_box_34", false);
+}
+
+void mightbeuseful(string &in entity)
+{
+	SetMessage("ScreenText", "lantern", 0);
+	GiveSanityBoostSmall();
+}
+
+void FreshAirDiary(string &in asParent, string &in asChild, int alState)
+{
+	AddDiary("FreshAir", "FreshAir");
+	SetMessage("ScreenText", "FreshAirXD", 0);
+	PlaySoundAtEntity("","ui_add_quest.snt","Player", 0, false);  
+	SetupLoadScreen("LoadingText", "leftcourtyard", 1, "insertnamehere.jpg");
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	StopMusic(2, 6);
+}
+

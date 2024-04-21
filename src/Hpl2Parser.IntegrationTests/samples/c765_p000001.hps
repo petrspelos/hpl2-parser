@@ -1,0 +1,148 @@
+void OnStart()
+{	
+
+	//---Movement Startups---//
+	SetPlayerLookSpeedMul(0.5f);
+	SetPlayerMoveSpeedMul(0.65f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	
+	//---Visuals---//
+	FadeImageTrailTo(0.7f, 0.2f);
+	
+	//---Entity Collide Callbacks---//
+	
+	//---Note Pickup Callbacks---//
+	
+	//---Timer Callbacks---//
+	
+}
+
+//First note pick up//
+void picknote(string &in EntityName, string &in Type)
+{
+	GiveSanityDamage(0.0f, true);
+	
+	StartPlayerLookAt("AreaScratch_1", 5.0f, 10.0f, "stop_look");
+	
+	PlaySoundAtEntity("scratch_1", "scare_scratch", "AreaScratch_1", 4.0f, false);
+	PlaySoundAtEntity("chains", "general_chain_rattle_single", "AreaChainsRattle_1", 4.0f, false);
+	PlaySoundAtEntity("pant_react", "react_pant", "Player", 0.0f, false);
+	
+	AddTimer("StartScratch2", RandFloat(5.0f, 10.0f), "TimerEvents");
+	AddTimer("Break_door", RandFloat(6.0f, 8.0f), "TimerEvents");
+	
+	AddEntityCollideCallback("Player", "InsanityCell_1", "InsanityEvent", false, 0);
+	
+}
+
+//Timer Events//
+void stop_look()
+{
+	StopPlayerLookAt();
+	//Stops player look at//
+}
+
+void TimerEvents(string &in asTimer)
+{
+	if(asTimer == "StartScratch2")	
+		PlaySoundAtEntity("scratch_2", "scare_scratch", "AreaScratch_2", 4.0f, false);
+	
+	else  if(asTimer == "Break_door")	
+	{
+		SetPropHealth("prison_section_1", 0.0f);
+		
+		GiveSanityDamage(1.0f, true);
+		
+		PlaySoundAtEntity("react-pant", "react_pant", "Player", 0.0f, false);
+		StartPlayerLookAt("prison_section_1", 5.0f, 20.0f, "stop_look");
+		
+		AddEntityCollideCallback("Player", "StopScratch_1", "StopScratch_1", true, 0);
+		AddEntityCollideCallback("Player", "StopScratch_2", "StopScratch_2", true, 0);
+		AddEntityCollideCallback("Player", "RestorePlayer_1", "RestorePlayer", true, 0);
+	}
+}
+
+void InsanityEvent(string &in asTimer)
+{
+	if(GetPlayerSanity() >= 50)
+		GiveSanityDamage(0.15f * 0.05f, false);
+	else
+		GiveSanityDamage(0.05f * 0.1f, false);
+	AddTimer("insanity", RandFloat(1.5f, 2.5f), "InsanityEvent");
+}
+//---//
+
+/////
+//Entity Collide Callbacks//
+/////
+
+void InsanityEvent(string &in asParent, string &in asChild, int alState)
+{
+	//If player is still in cell//
+	if(alState == 1)
+	{	
+		PlaySoundAtEntity("insanity_at_"+asChild, "ui_torture", asParent, 4.0f, false);
+		AddTimer("insanity", 1.0f, "InsanityEvent");
+		FadeImageTrailTo(0.8f, 0.2f);
+	}
+	else
+	{
+		RemoveTimer("insanity");
+		StopSound("insanity_at_"+asChild, 0.5f);
+		FadeImageTrailTo(0.0f, 0.2f);
+	}
+}
+
+
+
+void StopScratch_1(string &in asParent, string &in asChild, int alState)
+{
+	StopSound("scratch_1", 0.5f);
+}
+
+void StopScratch_2(string &in asParent, string &in asChild, int alState)
+{
+	StopSound("scratch_2", 0.5f);
+}
+
+void RestorePlayer(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerLookSpeedMul(1.0f);
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	
+	SetPlayerJumpDisabled(false);
+	
+	PlaySoundAtEntity("restore_player", "player_cough", asParent, 0.0f, false);
+	
+	for(int i=2; i<=3; ++i)SetEntityPlayerLookAtCallback("InsanityArea_"+i , "InsanityEventLookAt", false);
+	
+	SetEntityPlayerInteractCallback("lantern_1", "removeblockwall", true);
+	
+	PlayMusic("21_amb", true, 1.0f, 0.0f, 1.0f, false);
+}
+
+//Look At Callbacks//
+void InsanityEventLookAt(string &in asEntity, int alState)
+{
+	//If player is still in cell//
+	if(alState == 1)
+	{	
+		PlaySoundAtEntity("insanity_at_"+asEntity, "ui_torture", "InsanityMusic", 4.0f, false);
+		AddTimer("insanity", 1.0f, "InsanityEvent");
+		FadeImageTrailTo(0.8f, 0.2f);
+	}
+	else
+	{
+		RemoveTimer("insanity");
+		StopSound("insanity_at_"+asEntity, 0.5f);
+		FadeImageTrailTo(0.0f, 0.2f);
+	}
+}
+
+//Entity Interact Callbacks//
+void removeblockwall(string &in asEntity)
+{
+	SetEntityActive("block_box_nonchar_1", false);
+}

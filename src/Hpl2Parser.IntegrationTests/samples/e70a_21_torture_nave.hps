@@ -1,0 +1,3133 @@
+
+//-------------------------------------------------
+
+//////////////////////////////
+// EXTRAMODES AND CUSTOM CODE
+//////////////////////////////
+
+//-------------------------------------------------
+
+string gsCurrentMapName = "21_torture_nave";
+
+string gsFunnyEasierEntry = "FunnyEasier";
+string gsFunnyEasierSuffix = "_funny_easier";
+string gsFunnyEasyEntry = "FunnyEasy";
+string gsFunnyEasySuffix = "_funny_easy";
+string gsFunnyTougherEntry = "FunnyTougher";
+string gsFunnyTougherSuffix = "_funny_tougher";
+string gsFunnyToughEntry = "FunnyTough";
+string gsFunnyToughSuffix = "_funny_tough";
+string gsFunnyEntry = "Funny";
+string gsFunnySuffix = "_funny";
+string gsStandardEasierEntry = "StandardEasier";
+string gsStandardEasierSuffix = "_easier";
+string gsStandardEasyEntry = "StandardEasy";
+string gsStandardEasySuffix = "_easy";
+string gsStandardTougherEntry = "StandardTougher";
+string gsStandardTougherSuffix = "_tougher";
+string gsStandardToughEntry = "StandardTough";
+string gsStandardToughSuffix = "_tough";
+string gsStandardEntry = "Standard";
+string gsStandardSuffix = "";
+
+string gsHealthPotion = "potion_health";
+string gsLargeOilPotion = "potion_oil_large";
+string gsOilPotion = "potion_oil";
+string gsSanityPotion = "potion_sanity";
+string gsTinderbox = "tinderbox";
+
+int[] gviEasierTinderboxesCodesArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+int[] gviEasierOilPotionsCodesArray = {1, 2, 3};
+int[] gviEasierHealthPotionsCodesArray = {1};
+int[] gviEasierSanityPotionsCodesArray = {0};
+int[] gviEasierLargeOilPotionsCodesArray = {0};
+
+int[] gviEasyTinderboxesCodesArray = gviEasierTinderboxesCodesArray;
+int[] gviEasyOilPotionsCodesArray = gviEasierOilPotionsCodesArray;
+int[] gviEasyHealthPotionsCodesArray = gviEasierHealthPotionsCodesArray;
+int[] gviEasySanityPotionsCodesArray = gviEasierSanityPotionsCodesArray;
+int[] gviEasyLargeOilPotionsCodesArray = gviEasierLargeOilPotionsCodesArray;
+
+int[] gviNormalTinderboxesCodesArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+int[] gviNormalOilPotionsCodesArray = {1};
+int[] gviNormalHealthPotionsCodesArray = {1};
+int[] gviNormalSanityPotionsCodesArray = {0};
+int[] gviNormalLargeOilPotionsCodesArray = {0};
+
+int[] gviToughTinderboxesCodesArray = {11, 15, 18, 21, 22, 24};
+int[] gviToughOilPotionsCodesArray = {3};
+int[] gviToughHealthPotionsCodesArray = {0};
+int[] gviToughSanityPotionsCodesArray = {0};
+int[] gviToughLargeOilPotionsCodesArray = {0};
+
+int[] gviTougherTinderboxesCodesArray = {15};
+int[] gviTougherOilPotionsCodesArray = {3};
+int[] gviTougherHealthPotionsCodesArray = {0};
+int[] gviTougherSanityPotionsCodesArray = {0};
+int[] gviTougherLargeOilPotionsCodesArray = {0};
+
+int giMaxGlobalDeathCount = 9;
+
+void PlayEnemySoundAtEntity(string asSound, string asEntity, string asType) //HELPER FUNCTION.
+{
+	PlaySoundAtEntity(asEntity + "_" + asSound, GetStringWithReplacedFunnySubString(asType + "_" + asSound, asType), asEntity, 0.0f, false);
+}
+
+//START STRING MANAGEMENT FUNCTIONS
+int GetSubStringIndex(string asString, string asSubString, int aiOffset) //RETURNS THE STARTING POINT/INDEX OF A DEFINED SUBSTRING CONTAINED IN A STRING, IF THE DEFINED SUBSTRING COULD NOT BE FOUND IT RETURNS THE NEGATIVE VALUE -1. THE THIRD ARGUMENT DEFINES THE STARTING POINT/INDEX OF THE STRING TO START THE SEARCH.
+{
+	if(aiOffset >= asString.length() || aiOffset < 0)
+	{
+		return -1;
+	}
+	
+	string sExaminedString = StringSub(asString, aiOffset, asString.length() - aiOffset);
+	int iStringLength = sExaminedString.length();
+	int iSubStringLength = asSubString.length();
+	
+	if(iStringLength == iSubStringLength)
+	{
+		if(sExaminedString == asSubString)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else
+	if(iSubStringLength > iStringLength)
+	{
+		return -1;
+	}
+	else
+	{
+		int iFirstMatchIndex = 0;
+		int iLastMatchIndex = 0;
+		int iMatchCount = 0;
+		
+		for(int i=0; i<iStringLength; i++)
+		{
+			if(sExaminedString[i] == asSubString[iMatchCount])
+			{
+				iLastMatchIndex = i;
+				
+				if(iMatchCount < iSubStringLength)
+				{
+					iMatchCount = iMatchCount + 1;
+					
+					if(iMatchCount == 1)
+					{
+						iFirstMatchIndex = i;
+					}
+					
+					if(iMatchCount == iSubStringLength)
+					{
+						break;
+					}
+				}
+			}
+			else
+			if(iMatchCount > 0)
+			{
+				iMatchCount = 0;
+				
+				if(asString[i] == asSubString[iMatchCount])
+				{
+					iLastMatchIndex = i;
+					iMatchCount = iMatchCount + 1;
+					iFirstMatchIndex = i;
+				}
+			}
+		}
+		
+		if(iMatchCount == iSubStringLength)
+		{
+			return iFirstMatchIndex;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+}
+
+string GetStringWithReplacedSubString(string asString, string asSearchedSubString, string asReplacedSubString) //RETURNS THE ORIGINAL STRING BUT IT HAS DEFINED SUBSTRINGS REPLACED, IF NO DEFINED SUBSTRINGS ARE FOUND THEN IT RETURNS JUST THE ORIGINAL STRING. FIRST ARGUMENT: ORIGINAL STRING, SECOND ARGUMENT: SUBSTRING THAT MUST BE CONTAINED INSIDE THE ORIGINAL STRING, THIRD ARGUMENT: STRING THAT WILL REPLACE ALL THE SECOND ARGUMENT SUBSTRINGS INSIDE THE ORIGINAL STRING.
+{
+	string sUnchangedFirstMatchSection = "";
+	string sOriginalFirstMatchSection = "";
+	string sReplacedFirstMatchSection = "";
+	int iFirstMatchIndex = GetSubStringIndex(asString, asSearchedSubString, 0);
+	
+	if(iFirstMatchIndex == -1)
+	{
+		return asString;
+	}
+	else
+	if(iFirstMatchIndex > 0)
+	{
+		sUnchangedFirstMatchSection = StringSub(asString, 0, iFirstMatchIndex);
+	}
+	
+	sOriginalFirstMatchSection = sUnchangedFirstMatchSection + asSearchedSubString;
+	sReplacedFirstMatchSection = sUnchangedFirstMatchSection + asReplacedSubString;
+	
+	if(sOriginalFirstMatchSection.length() < asString.length())
+	{
+		return sReplacedFirstMatchSection + GetStringWithReplacedSubString(StringSub(asString, sOriginalFirstMatchSection.length(), asString.length() - sOriginalFirstMatchSection.length()), asSearchedSubString, asReplacedSubString);
+	}
+	else
+	{
+		return sReplacedFirstMatchSection;
+	}
+}
+
+string GetStringWithoutSubString(string asString, string asSubString) //RETURNS THE REMAINING STRING WITHOUT THE SUBSTRING DEFINED AS THE SECOND ARGUMENT.
+{
+	return GetStringWithReplacedSubString(asString, asSubString, "");
+}
+
+string GetSubString(string asString, int aiOffset) //RETURNS THE REMAINING SUBSTRING STARTING FROM THE OFFSET DEFINED AS THE SECOND ARGUMENT.
+{
+	int iLength = asString.length() - aiOffset;
+	
+	if(iLength <= 0)
+	{
+		return asString;
+	}
+	else
+	{
+		return StringSub(asString, aiOffset, iLength);
+	}
+}
+//END STRING MANAGEMENT FUNCTIONS
+
+void TimerTunePlayerLanternOil(string asTimer) //USED AS A TIMER TO CHECK AND ADJUST PLAYER LANTERN OIL VALUE.
+{
+	AddTimer(asTimer, 2.0f, "TimerTunePlayerLanternOil");
+	
+	if(asTimer == "oilspeedslow")
+	{
+		if(GetPlayerLampOil() < 99.0f)
+		{
+			AddPlayerLampOil(0.2f);
+		}
+	}
+	else
+	if(asTimer == "oilspeedquick")
+	{
+		if(GetPlayerLampOil() > 1.0f)
+		{
+			AddPlayerLampOil(-0.2f);
+		}
+	}
+	else
+	if(asTimer == "oilspeedoff")
+	{
+		SetPlayerLampOil(100.0f);
+	}
+}
+
+void LanternLitOilSpeedSlow(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SLOWS DOWN PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeedslow", 2.0f, "TimerTunePlayerLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeedslow");
+	}
+}
+
+void LanternLitOilSpeedQuick(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SPEEDS UP PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeedquick", 2.0f, "TimerTunePlayerLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeedquick");
+	}
+}
+
+float GetDifficultyDirectFactor() //RETURNS THE VALUE OF THE DIRECT DIFFICULTY FACTOR.
+{
+	return GetGlobalVarFloat("DifficultyDirectFactor");
+}
+
+float GetDifficultyInverseFactor() //RETURNS THE VALUE OF THE INVERSE DIFFICULTY FACTOR.
+{
+	return GetGlobalVarFloat("DifficultyInverseFactor");
+}
+
+int GetEasyModeOn() //RETURNS 1 IF THE EASY MODE IS ENABLED, 2 IF THE EASIER MODE IS ENABLED, 0 ELSE.
+{
+	return GetGlobalVarInt("EasyModeOn");
+}
+
+string GetExtraModesSuffix() //RETURNS THE SUFFIX OF THE EXTRAMODES.
+{
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 6);
+	
+	switch(iChecker)
+	{
+		case 1:
+			return gsFunnySuffix;
+		case 2:
+			return gsStandardEasySuffix;
+		case 3:
+			return gsFunnyEasySuffix;
+		case 4:
+			return gsStandardEasierSuffix;
+		case 5:
+			return gsFunnyEasierSuffix;
+		case 6:
+			return gsStandardToughSuffix;
+		case 7:
+			return gsFunnyToughSuffix;
+		case 12:
+			return gsStandardTougherSuffix;
+		case 13:
+			return gsFunnyTougherSuffix;
+		default:
+			return gsStandardSuffix;
+	}
+	
+	return "";
+}
+
+bool GetFunnyModeOn() //RETURNS TRUE IF THE FUNNY MODE IS ENABLED.
+{
+	return (GetGlobalVarInt("FunnyModeOn") >= 1);
+}
+
+string GetStringWithExtraModesSuffix(string asString) //RETURNS THE NAME + THE EXTRAMODES SUFFIX IF SOME EXTRAMODES ARE ACTIVE.
+{
+	return asString + GetExtraModesSuffix();
+}
+
+string GetStringWithReplacedFunnySubString(string asString, string asSearchedSubString) //RETURNS A MODIFIED VERSION OF THE STRING GIVEN AS THE FIRST ARGUMENT IF FUNNY MODE IS ACTIVE.
+{
+	if(GetFunnyModeOn())
+	{
+		if(StringContains(asString, asSearchedSubString))
+		{
+			return GetStringWithReplacedSubString(asString, asSearchedSubString, asSearchedSubString + gsFunnySuffix);
+		}
+		else
+		{
+			AddDebugMessage("ERROR: Could not find " + asSearchedSubString + " in " + asString + "! Could not replace it with " + asSearchedSubString + gsFunnySuffix + "!", false);
+			return asString;
+		}
+	}
+	else
+	{
+		return asString;
+	}
+}
+
+int GetToughModeOn() //RETURNS 1 IF THE TOUGH MODE IS ENABLED, 2 IF THE TOUGHER MODE IS ENABLED, 0 ELSE.
+{
+	return GetGlobalVarInt("ToughModeOn");
+}
+
+void SetDifficultyDirectFactor(float afAmount) //CHANGES THE VALUE OF THE DIRECT DIFFICULTY FACTOR.
+{
+	SetGlobalVarFloat("DifficultyDirectFactor", afAmount);
+}
+
+void SetDifficultyInverseFactor(float afAmount) //CHANGES THE VALUE OF THE INVERSE DIFFICULTY FACTOR.
+{
+	SetGlobalVarFloat("DifficultyInverseFactor", afAmount);
+}
+
+void SetEasyModeOn(int aiState) //CHANGES THE VALUE OF THE EASY DIFFICULTY MODE. 0 -> off, 1 -> on, 2 -> easier mode on.
+{
+	if(aiState < 0)
+	{
+		aiState = 0;
+	}
+	else
+	if(aiState > 2)
+	{
+		aiState = 2;
+	}
+	
+	if(aiState > 0)
+	{
+		SetGlobalVarInt("ToughModeOn", 0);
+	}
+	
+	SetGlobalVarInt("EasyModeOn", aiState);
+}
+
+void SetFunnyModeOn(bool abState) //CHANGES THE VALUE OF THE FUNNY MODE. false -> off, true -> on.
+{
+	if(abState)
+	{
+		SetGlobalVarInt("FunnyModeOn", 1);
+	}
+	else
+	{
+		SetGlobalVarInt("FunnyModeOn", 0);
+	}
+}
+
+void SetToughModeOn(int aiState) //CHANGES THE VALUE OF THE TOUGH DIFFICULTY MODE. 0 -> off, 1 -> on, 2 -> tougher mode on.
+{
+	if(aiState < 0)
+	{
+		aiState = 0;
+	}
+	else
+	if(aiState > 2)
+	{
+		aiState = 2;
+	}
+	
+	if(aiState > 0)
+	{
+		SetGlobalVarInt("EasyModeOn", 0);
+	}
+	
+	SetGlobalVarInt("ToughModeOn", aiState);
+}
+
+void GiveItemFromFile(string asItem) //GIVES AN ITEM THAT CAN BE EITHER USED AS A DEBUG ITEM OR AS A GOODY.
+{
+	string sItem = GetStringWithoutSubString(asItem, ".ent");
+	int i = 0;
+	
+	do
+	{
+		i = i + 1;
+	}
+	while(HasItem(sItem + "_" + i));
+	
+	GiveItemFromFile(sItem + "_" + i, sItem + ".ent");
+}
+
+void TimerTunePlayerState(string asTimer)
+{
+	float fCooldown = 10.0f;
+	float fHealth = GetPlayerHealth();
+	float fOil = GetPlayerLampOil();
+	float fSanity = GetPlayerSanity();
+	int iRand = RandInt(0, 4);
+	
+	if(StringContains(asTimer, "Blessing"))
+	{
+		if(asTimer == "BlessingRegainHealth")
+		{
+			if(fHealth <= 99.0f)
+			{
+				SetPlayerHealth(fHealth + 1.0f);
+			}
+			else
+			if(fHealth < 100.0f)
+			{
+				SetPlayerHealth(100.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "BlessingRegainSanity")
+		{
+			if(fSanity <= 99.0f)
+			{
+				SetPlayerSanity(fSanity + 1.0f);
+			}
+			else
+			if(fSanity < 100.0f)
+			{
+				SetPlayerSanity(100.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "BlessingRegainLanternOil")
+		{
+			if(fOil <= 95.0f)
+			{
+				SetPlayerLampOil(fOil + 5.0f);
+			}
+			else
+			if(fOil < 100.0f)
+			{
+				SetPlayerLampOil(100.0f);
+			}
+			
+			fCooldown = 90.0f;
+		}
+		else
+		if(asTimer == "BlessingRandomGoodies")
+		{
+			fCooldown = RandFloat(240.0f, 480.0f);
+			
+			if(iRand == 0)
+			{
+				GiveItemFromFile(gsTinderbox + ".ent");
+				PlayGuiSound("pick_generic.snt", 0.5f);
+			}
+			else
+			if(iRand == 1)
+			{
+				GiveItemFromFile(gsOilPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+			else
+			if(iRand == 2)
+			{
+				GiveItemFromFile(gsHealthPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+			else
+			if(iRand == 3)
+			{
+				GiveItemFromFile(gsSanityPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+		}
+	}
+	else
+	if(StringContains(asTimer, "Curse"))
+	{
+		if(asTimer == "CurseRegainHealth")
+		{
+			if(fHealth < 50.0f && fHealth > 5.0f)
+			{
+				SetPlayerHealth(fHealth - 1.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "CurseRegainSanity")
+		{
+			if(fSanity < 50.0f && fSanity > 5.0f)
+			{
+				SetPlayerSanity(fSanity - 0.4f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "CurseRegainLanternOil")
+		{
+			if(fOil < 50.0f && fOil > 5.0f)
+			{
+				SetPlayerLampOil(fOil - 5.0f);
+			}
+			
+			fCooldown = 90.0f;
+		}
+		else
+		if(asTimer == "CurseRandomGoodies")
+		{
+			fCooldown = RandFloat(240.0f, 480.0f);
+			int i = 0;
+			
+			if(iRand == 0)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsTinderbox + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsTinderbox + "_" + i))
+				{
+					RemoveItem(gsTinderbox + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 1)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsOilPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsOilPotion + "_" + i))
+				{
+					RemoveItem(gsOilPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 2)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsHealthPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsHealthPotion + "_" + i))
+				{
+					RemoveItem(gsHealthPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 3)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsSanityPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsSanityPotion + "_" + i))
+				{
+					RemoveItem(gsSanityPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+		}
+	}
+	
+	AddTimer(asTimer, fCooldown, "TimerTunePlayerState");
+}
+
+void SetupCurrentMapBasedOnExtraModes()
+{
+	string sPrefix = "";
+	float fDifficultyDirectFactor = 0.0f;
+	float fDifficultyInverseFactor = 0.0f;
+	int[] viTinderboxesCodesArray;
+	int[] viOilPotionsCodesArray;
+	int[] viHealthPotionsCodesArray;
+	int[] viSanityPotionsCodesArray;
+	int[] viLargeOilPotionsCodesArray;
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 6);
+	bool bFunnyModeOn = (iChecker == 1 || iChecker == 3 || iChecker == 5 || iChecker == 7 || iChecker == 13);
+	bool bEasierModeOn = (iChecker == 4 || iChecker == 5);
+	bool bEasyModeOn = (iChecker == 2 || iChecker == 3);
+	bool bToughModeOn = (iChecker == 6 || iChecker == 7);
+	bool bTougherModeOn = (iChecker == 12 || iChecker == 13);
+	RemoveTimer("oilspeedquick");
+	RemoveTimer("oilspeedslow");
+	RemoveTimer("BlessingRandomGoodies");
+	RemoveTimer("BlessingRegainHealth");
+	RemoveTimer("BlessingRegainLanternOil");
+	RemoveTimer("BlessingRegainSanity");
+	RemoveTimer("CurseRandomGoodies");
+	RemoveTimer("CurseRegainHealth");
+	RemoveTimer("CurseRegainLanternOil");
+	RemoveTimer("CurseRegainSanity");
+	
+	if(bEasierModeOn)
+	{
+		sPrefix = "Blessing";
+		fDifficultyDirectFactor = 0.25f;
+		fDifficultyInverseFactor = 1.75f;
+		viTinderboxesCodesArray = gviEasierTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviEasierOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviEasierHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviEasierSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviEasierLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedSlow");
+		LanternLitOilSpeedSlow(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(true);
+		SetSanityDrainDisabled(true);
+		AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bEasyModeOn)
+	{
+		sPrefix = "Blessing";
+		fDifficultyDirectFactor = 0.5f;
+		fDifficultyInverseFactor = 1.5f;
+		viTinderboxesCodesArray = gviEasyTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviEasyOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviEasyHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviEasySanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviEasyLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedSlow");
+		LanternLitOilSpeedSlow(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(true);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bToughModeOn)
+	{
+		sPrefix = "Curse";
+		fDifficultyDirectFactor = 1.5f;
+		fDifficultyInverseFactor = 0.5f;
+		viTinderboxesCodesArray = gviToughTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviToughOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviToughHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviToughSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviToughLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedQuick");
+		LanternLitOilSpeedQuick(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bTougherModeOn)
+	{
+		sPrefix = "Curse";
+		fDifficultyDirectFactor = 1.75f;
+		fDifficultyInverseFactor = 0.25f;
+		viTinderboxesCodesArray = gviTougherTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviTougherOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviTougherHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviTougherSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviTougherLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedQuick");
+		LanternLitOilSpeedQuick(GetLanternActive());
+		SetEntityActive("oil_barrel_*", false);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	{
+		sPrefix = "";
+		fDifficultyDirectFactor = 1.0f;
+		fDifficultyInverseFactor = 1.0f;
+		viTinderboxesCodesArray = gviNormalTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviNormalOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviNormalHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviNormalSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviNormalLargeOilPotionsCodesArray;
+		SetLanternLitCallback("");
+		//LanternLitOilSpeedNormal(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	
+	SetDifficultyDirectFactor(fDifficultyDirectFactor);
+	SetDifficultyInverseFactor(fDifficultyInverseFactor);
+	//SetEnemyMinIdleTime(2.0f * fDifficultyDirectFactor);
+	//DISABLES ALL GOODIES.
+	if(gviEasierTinderboxesCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierTinderboxesCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsTinderbox + "_" + gviEasierTinderboxesCodesArray[i]))
+			{
+				SetEntityActive(gsTinderbox + "_" + gviEasierTinderboxesCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsOilPotion + "_" + gviEasierOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsOilPotion + "_" + gviEasierOilPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierHealthPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierHealthPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsHealthPotion + "_" + gviEasierHealthPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsHealthPotion + "_" + gviEasierHealthPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierSanityPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierSanityPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsSanityPotion + "_" + gviEasierSanityPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsSanityPotion + "_" + gviEasierSanityPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierLargeOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierLargeOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsLargeOilPotion + "_" + gviEasierLargeOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsLargeOilPotion + "_" + gviEasierLargeOilPotionsCodesArray[i], false);
+			}
+		}
+	}
+	//ENABLES SPECIFIC GOODIES BASED ON EXTRAMODES.
+	if(viTinderboxesCodesArray[0] != 0)
+	{
+		for(int i=0; i<viTinderboxesCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsTinderbox + "_" + viTinderboxesCodesArray[i]))
+			{
+				SetEntityActive(gsTinderbox + "_" + viTinderboxesCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsOilPotion + "_" + viOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsOilPotion + "_" + viOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viHealthPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viHealthPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsHealthPotion + "_" + viHealthPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsHealthPotion + "_" + viHealthPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viSanityPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viSanityPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsSanityPotion + "_" + viSanityPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsSanityPotion + "_" + viSanityPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viLargeOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viLargeOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsLargeOilPotion + "_" + viLargeOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsLargeOilPotion + "_" + viLargeOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(gsCurrentMapName == "00_rainy_hall")
+	{
+		AddEntityCollideCallback("Player", "AreaExtraModes", "OnAreaExtraModesCollide", true, 1);
+		SetLightVisible("ButtonBoxLight" + gsStandardSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardToughSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardTougherSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardEasySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardEasierSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyToughSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyTougherSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyEasySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyEasierSuffix, false);
+	}
+	else
+	if(gsCurrentMapName == "01_old_archives")
+	{
+		if(bEasierModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		{
+			SetEntityActive("AreaHintLean", false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "04_wine_cellar_lab")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.16f, 0.18f, 0.22f, 0.7f);
+			SetFogProperties(6.0f, 24.0f, 1.0f, false);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.14f, 0.16f, 0.2f, 0.7f);
+			SetFogProperties(5.0f, 20.0f, 1.0f, false);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.1f, 0.12f, 0.16f, 0.7f);
+			SetFogProperties(3.0f, 12.0f, 1.0f, false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.08f, 0.1f, 0.14f, 0.7f);
+			SetFogProperties(2.0f, 8.0f, 1.0f, false);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogColor(0.12f, 0.14f, 0.18f, 0.7f);
+			SetFogProperties(4.0f, 16.0f, 1.0f, false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "05_wine_cellar")
+	{
+		if(bEasierModeOn)
+		{
+			SetEntityActive("chest_small_2", true);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(10.0f, 30.0f, 1.0f, false);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetEntityActive("chest_small_2", true);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(8.0f, 26.0f, 1.0f, false);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(4.0f, 18.0f, 1.0f, false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(2.0f, 14.0f, 1.0f, false);
+		}
+		else
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(6.0f, 22.0f, 1.0f, false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "06_distillery")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.16f, 0.18f, 0.22f, 0.7f);
+			SetFogProperties(6.0f, 24.0f, 1.0f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.14f, 0.16f, 0.2f, 0.7f);
+			SetFogProperties(5.0f, 20.0f, 1.0f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.1f, 0.12f, 0.16f, 0.7f);
+			SetFogProperties(3.0f, 12.0f, 1.0f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.08f, 0.1f, 0.14f, 0.7f);
+			SetFogProperties(2.0f, 8.0f, 1.0f, true);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogColor(0.12f, 0.14f, 0.18f, 0.7f);
+			SetFogProperties(4.0f, 16.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "07_archives_cellar")
+	{
+		if(bEasierModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 0);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 0);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 2);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 3);
+		}
+		else
+		{
+			SetLocalVarInt("MeatReducer", 1);
+		}
+	}
+	else
+	if(gsCurrentMapName == "12_storage")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(false);
+			SetSkyBoxActive(false);
+			SetLocalVarInt("GruntDoorMaxBangs", 3);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(4.0f, 35.0f, 1.2f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 3);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(2.0f, 29.0f, 0.8f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 1);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(1.0f, 26.0f, 0.6f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 1);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogProperties(3.0f, 32.0f, 1.0f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 2);
+		}
+	}
+	else
+	if(gsCurrentMapName == "15_prison_north")
+	{
+		if(bEasierModeOn)
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+		else
+		if(bEasyModeOn)
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("tinderbox_13", false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("tinderbox_13", false);
+		}
+		else
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+	}
+	else
+	if(gsCurrentMapName == "20_sewer")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(9.0f, 28.0f, 1.2f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(7.0f, 24.0f, 1.1f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(3.0f, 16.0f, 0.9f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(1.0f, 12.0f, 0.8f, true);
+		}
+		else
+		{
+			SetFogProperties(5.0f, 20.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "23_torture_transept")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(5.0f, 20.0f, 1.2f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(4.0f, 17.5f, 1.1f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(2.0f, 12.5f, 0.9f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(1.0f, 10.0f, 0.8f, true);
+		}
+		else
+		{
+			SetFogProperties(3.0f, 15.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "24_torture_choir_east")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(6.0f, 45.0f, 0.4f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 47.0f);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(4.5f, 37.5f, 0.35f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 39.0f);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(1.5f, 22.5f, 0.25f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 23.0f);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(0.0f, 15.0f, 0.2f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 15.0f);
+		}
+		else
+		{
+			SetFogProperties(3.0f, 30.0f, 0.3f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 31.0f);
+		}
+	}
+}
+
+void SetExtraModesOn(string asInput) //HELPER FUNCTION TO ENABLE THE CORRECT EXTRAMODES, ITS BASED ON THE EXTRAMODES SUFFIX CONTAINED INSIDE THE ARGUMENT.
+{
+	string sSuffix = "ModeChosen";
+	
+	if(StringContains(asInput, gsFunnyEasierSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(2);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEasierEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyEasySuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(1);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEasyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyTougherSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(2);
+		SetMessage("MainMenu", gsFunnyTougherEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyToughSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(1);
+		SetMessage("MainMenu", gsFunnyToughEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnySuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardEasierSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(2);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEasierEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardEasySuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(1);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEasyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardTougherSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(2);
+		SetMessage("MainMenu", gsStandardTougherEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardToughSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(1);
+		SetMessage("MainMenu", gsStandardToughEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEntry + sSuffix, 8.0f);
+	}
+	
+	SetupCurrentMapBasedOnExtraModes();
+}
+
+////////////////
+////////////////
+
+float GetEnemyIdleTime(float afTime)
+{
+	if(GetEasyModeOn() >= 2)
+	{
+		return afTime;
+	}
+	else
+	if(GetToughModeOn() >= 2)
+	{
+		return (RandFloat(((GetDifficultyDirectFactor() * afTime) * 1.0f), ((GetDifficultyDirectFactor() * afTime) * 2.0f)));
+	}
+	else
+	{
+		return (GetDifficultyDirectFactor() * afTime);
+	}
+}
+
+int GetPlayerGlobalDeathCount() //RETURNS THE VALUE OF THE PLAYER GLOBAL DEATH COUNT.
+{
+	return GetGlobalVarInt("PlayerGlobalDeathCount");
+}
+
+void SetPlayerGlobalDeathCount(int aiCount) //CHANGES THE VALUE OF THE PLAYER GLOBAL DEATH COUNT.
+{
+	SetGlobalVarInt("PlayerGlobalDeathCount", aiCount);
+}
+
+bool GetHardModeEndingOn()
+{
+	return ((GetToughModeOn() == 1 && (GetPlayerGlobalDeathCount() + 1) > giMaxGlobalDeathCount) || (GetToughModeOn() == 2));
+}
+
+void StartHardModeEnding(string asInput)
+{
+	if(asInput == "HardModeDeath")
+	{
+		StartCredits("", false, "Hints", "HardModeDeath", 3);
+	}
+	else
+	{
+		ChangePlayerStateToNormal();
+		ExitInventory();
+		FadeGlobalSoundVolume(0.0f, 0.01f);
+		FadeOut(0.01f);
+		SetInDarknessEffectsActive(false);
+		SetInventoryDisabled(true);
+		SetLanternActive(false, false);
+		SetLanternDisabled(true);
+		SetPlayerActive(false);
+		SetPlayerHealth(999.999f);
+		SetPlayerLampOil(999.999f);
+		SetPlayerSanity(999.999f);
+		SetSanityDrainDisabled(true);
+		ShowPlayerCrossHairIcons(false);
+		StopMusic(0.01f, 0);
+		StopMusic(0.01f, 1);
+		StopMusic(0.01f, 2);
+		StopMusic(0.01f, 3);
+		StopMusic(0.01f, 4);
+		StopMusic(0.01f, 5);
+		StopMusic(0.01f, 6);
+		StopMusic(0.01f, 7);
+		StopMusic(0.01f, 8);
+		StopMusic(0.01f, 9);
+		StopMusic(0.01f, 10);
+		StopPlayerLookAt();
+		AddTimer("HardModeDeath", 6.0f, "StartHardModeEnding");
+	}
+}
+
+void OnPlayerDeath(string asName) //COUNTS HOW MANY TIMES THE PLAYER DIED THROUGH THE WHOLE STORY. CONTAINS THE HARD MODE GAME OVER ENDING LOGIC.
+{
+	if(GetHardModeEndingOn())
+	{
+		StartHardModeEnding("");
+		return;
+	}
+	
+	SetPlayerGlobalDeathCount(GetPlayerGlobalDeathCount() + 1);
+}
+
+void PreloadEnemySound(string asSound, string asType) //HELPER FUNCTION.
+{
+	PreloadSound(GetStringWithReplacedFunnySubString(asType + "_" + asSound, asType));
+}
+
+//-------------------------------------------------
+
+//////////////////////////////
+// CUSTOM CODE END
+//////////////////////////////
+
+//-------------------------------------------------
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// AGRIPPA WAKE UP
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void CollideWakeUpAgrippa(string &in asParent, string &in asChild, int alState)
+{
+	//If there is a flashback playing wait a little longer.
+	if(GetFlashbackIsActive() || alState != 1)
+	{
+		return;	
+	}
+	
+	RemoveEntityCollideCallback(asParent, asChild);
+	
+	SetNPCAwake("agrippa_2", true, true);
+	
+	SetLocalVarInt("AgrippaAwake",1);
+	
+	StartPlayerLookAt("AreaAgrippa", 3, 5, "");
+	PlayerReact(true,0.5f);
+	
+	AddTimer("AgrippaScareStopLookAt", 1.5, "TimerAgrippaScareStopLookAt");
+	AddTimer("AgrippaScareOver", 	3, "TimerAgrippaScareOver");
+	
+	PlayGuiSound("general_chain_rattle_single.snt", 0.5f);
+	
+	PlayMusic("21_agrippa_lever.ogg", false, 1.0f, 0.8f, 9, false);
+	
+	PlaySoundAtEntity("wake", "agrippa_wake.snt", "AreaAgrippa", 1.0f, false);
+}
+
+void TimerAgrippaScareStopLookAt(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerAgrippaScareOver(string &in asTimer)
+{
+	//Agrippa starts talking, make sure 1 and 2 are played first. After that it will be random.
+	AgrippaStrainedSpeak(1);
+	AgrippaStrainedSpeak(2);
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// AGRIPPA STRAINED TALKING
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void AgrippaStrainedSpeak(int alNum)
+{
+	////////////////////////////////////////
+	//If below zero, pick at random.
+	if(alNum < 0)
+	{
+		int lLast = GetLocalVarInt("LastStrainedVoiceIndex");
+		
+		alNum = RandInt(1, 4); 
+		if(alNum == lLast)
+		{
+			alNum++;
+			if(alNum > 4) alNum = 1;
+		}
+	}
+	
+	////////////////////////////////////////
+	//Save what voice is played
+	SetLocalVarInt("LastStrainedVoiceIndex", alNum);
+	
+	////////////////////////////////////////
+	//Play the voice at Agrippa
+	AddEffectVoice("CH02L21_Agrippa_Strained_0"+alNum+".ogg", "", "Voice", "CH02L21_Agrippa_Strained_0"+alNum, true, "AreaAgrippa", 4, 12);
+		
+	////////////////////////////////////////
+	//When over, play something else.
+	SetEffectVoiceOverCallback("AgrippaStrainedSpeakStartRandom");
+}
+
+//------------------------------------------
+
+void AgrippaStrainedSpeakStartRandom()
+{
+	AddTimer("AgrippaRandomStrainedSpeak", RandFloat(2, 4), "TimerAgrippaRandomStrainedSpeak");
+}
+
+void TimerAgrippaRandomStrainedSpeak(string &in asTimer)
+{
+	//If a flashback or voice is active, wait a little longer.
+	if(GetFlashbackIsActive() || GetEffectVoiceActive())
+	{
+		AgrippaStrainedSpeakStartRandom();
+		return;
+	}
+		
+	AgrippaStrainedSpeak(-1);		
+}
+
+
+//------------------------------------------
+
+void StopAgrippaStrainedSpeak()
+{
+	//Make sure that no voice is played again!
+	SetEffectVoiceOverCallback("");
+	RemoveTimer("AgrippaRandomStrainedSpeak");	
+	
+	//Stop the current voice playing
+	StopAllEffectVoices(0.5);
+	
+	//In case player is very fast and runs outside of area before first event is over.
+	RemoveTimer("AgrippaScareOver"); 
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// AGRIPPA CHANNELING MACHINE START
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void ChangeChannelingLever(string &in asEntityName, int alState)
+{
+	if(alState != 1) return;
+	
+	AddDebugMessage("Turned channeling on chaneling machine!", false);
+	
+	//Stop any strained talking going on
+	StopAgrippaStrainedSpeak();
+	
+	//Lever is now stuck and will not move.
+	SetLeverStuckState("channeling_machine_lever_1", alState, true);
+	
+	SetLocalVarInt("AgrippaVoiceMachineOn",1);
+	
+	SetGlobalVarInt("AgrippaActivatedIn21", 1);	//Agrippa is awake in 26 too
+	
+	AddTimer("AgrippaNormalTalkStart", 2, "TimerAgrippaNormalTalkStart");
+	
+	//Add effects on machine
+	CreateParticleSystemAtEntity("ChannelingMachinePS", "ps_channeling_machine_smoke", "AreaChannelingMachine", true);
+	
+	PlaySoundAtEntity("ChannelingMachineStart","21_cm_reverse_low.snt", "AreaChannelingMachine", 0.05, false);
+	PlaySoundAtEntity("ChannelingMachineRunning","21_channeling_machine.snt", "AreaChannelingMachine", 2.0, true);
+}
+
+//------------------------------------------
+
+void TimerAgrippaNormalTalkStart(string &in asTimer)
+{
+	AgrippaNormalSpeak(true);
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// AGRIPPA NORMAL TALK
+////////////////////////////////////////////
+
+//------------------------------------------
+
+//Helper function to see if agrippa has spoken or not
+bool AgrippaTopicNotSpoken(string &in asTopic)
+{
+	return GetLocalVarInt("SpokenVar_"+asTopic)==1 ? false : true;
+}
+
+//Used to set that a certain 
+void SetAgrippaTopicHasSpoken(string &in asTopic)
+{
+	SetLocalVarInt("SpokenVar_"+asTopic, 1);	
+}
+
+//------------------------------------------
+
+void PlayAgrippaNormalVoice(string &in asTopic, int alNumOfParts, bool abGreeting, bool abSetAsSpoken)
+{
+	//Set up some settings
+	float fMinDist = 9;
+	float fMaxDist = 16;
+		
+	//Set the topic as spoken
+	if(abSetAsSpoken) SetAgrippaTopicHasSpoken(asTopic);
+	
+	AddDebugMessage("Starting topic "+asTopic+" parts: "+alNumOfParts+".", false);
+	
+	//TODO: Start with random greeting!
+	if(abGreeting)
+	{
+		string sSoundName = "CH02L21_Agrippa_Nrm_Greeting_0"+RandInt(1,4);
+		
+		AddEffectVoice(sSoundName+ ".ogg", "", "Voice", sSoundName, true, "AreaChannelingMachine", fMinDist, fMaxDist);	
+	}
+	
+	//Start all voices in topic
+	for(int i=1; i<=alNumOfParts; ++i)
+	{
+		string sNum = i<10 ? "0"+i : ""+i;
+		string sSoundName = "CH02L21_Agrippa_Nrm_"+asTopic+"_"+sNum;
+		
+		AddEffectVoice(sSoundName+ ".ogg", "", "Voice", sSoundName, true, "AreaChannelingMachine", fMinDist, fMaxDist);		
+	}
+	
+	//Callback when voices are done playing
+	SetEffectVoiceOverCallback("AgrippaNormalTalkOver");
+}
+
+//------------------------------------------
+
+//Starts a topic for Agrippa. Not that all topics are listed in an order of priority. 
+//So the top once are started before the lower.
+void AgrippaNormalSpeak(bool abGreeting)
+{
+	//If there is an voice active, then wait adding.
+	//same if there is a flashback playing!
+	if(GetEffectVoiceActive() || GetFlashbackIsActive())
+	{
+		AgrippaNormalTalkOver();
+		return;
+	}
+	
+	string sTopicName = "";
+	
+	//////////////////////////////////////////
+	// Introduction and Orb Quest
+	//  - First thing spoken!
+	sTopicName = "Introduction";
+	if(AgrippaTopicNotSpoken(sTopicName))
+	{
+		SetLocalVarInt("MentionedOrb", 1);
+		
+		PlayAgrippaNormalVoice(sTopicName, 12, false, true);
+		return;
+	}
+	
+	//////////////////////////////////////////
+	// Tonic Quest
+	//  - Player has not yet picked up weyer note.
+	sTopicName = "TonicQuest";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetLocalVarInt("PickedWeyerNote")==0)
+	{
+		SetLocalVarInt("AgrippaWantsWeyerNote", 1);//<- so player is given a quest!
+		
+		PlayAgrippaNormalVoice(sTopicName, 4, false, true);
+		return;
+	}
+	
+	//////////////////////////////////////////
+	// Weyer Note
+	//  - Player has picked Weyer note
+	sTopicName = "WeyerNote";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetLocalVarInt("PickedWeyerNote")==1)
+	{
+		PlayAgrippaNormalVoice(sTopicName, 5, abGreeting, true);
+		return;
+	}
+	
+	//////////////////////////////////////////
+	// Orbs for Choir done
+	//  - All orbs in choir picked up, but not all in transept
+	sTopicName = "ChoirDone";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetGlobalVarInt("ChoirOrbCount")==3 && GetGlobalVarInt("TranseptOrbCount")<3)
+	{
+		SetLocalVarInt("TranseptOrbNotDone", 1);
+		
+		PlayAgrippaNormalVoice(sTopicName, 1, abGreeting, true);
+		return;	
+	}
+	
+	//////////////////////////////////////////
+	// Orbs for Transept done
+	//  - All orbs in transept picked up, but not all in choir
+	sTopicName = "TranseptDone";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetGlobalVarInt("TranseptOrbCount")==3 && GetGlobalVarInt("ChoirOrbCount")<3)
+	{
+		SetLocalVarInt("ChoirOrbNotDone", 1);
+		
+		PlayAgrippaNormalVoice(sTopicName, 1, abGreeting, true);
+		return;	
+	}
+	
+	//////////////////////////////////////////
+	// All Orbs Done BUT not all ingredients
+	// - All orbs in choir and transpept picked up. Ingredients are missing.
+	// - This will be repeated until player has found all ingredients!
+	sTopicName = "AllOrbsNotIngred";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetGlobalVarInt("ChoirOrbCount")==3 && GetGlobalVarInt("TranseptOrbCount")==3 && GetGlobalVarInt("IngredientCount")<3)
+	{
+		PlayAgrippaNormalVoice(sTopicName, 3, false, false);
+		return;	
+	}
+	
+	//////////////////////////////////////////
+	// All Orbs Done AND all ingredients!
+	// - All orbs in choir picked up, but not all in transept
+	sTopicName = "AllOrbs";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetGlobalVarInt("ChoirOrbCount")==3 && GetGlobalVarInt("TranseptOrbCount")==3 && GetGlobalVarInt("IngredientCount")==3)
+	{
+		PlayAgrippaNormalVoice(sTopicName, 2, false, false);
+		return;	
+	}
+	
+	//////////////////////////////////////////
+	// Opened Safety Doors
+	//  - Player has opened safety doors
+	sTopicName = "SafetyDoors";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetLocalVarInt("SafetyDoorsOpen")==1)
+	{
+		PlayAgrippaNormalVoice(sTopicName, 1, abGreeting, true);
+		return;	
+	}
+	
+	//////////////////////////////////////////
+	// Pulled Lever
+	//  - Player has pulled lever in Lever Room and Safy doors are NOT open.
+	sTopicName = "PulledLever";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetLocalVarInt("InteractedDoorLever")==1 && GetLocalVarInt("SafetyDoorsOpen")==0)
+	{
+		PlayAgrippaNormalVoice(sTopicName, 2, abGreeting, true);
+		return;
+	}
+	
+	//////////////////////////////////////////
+	// Laboratory Locked
+	//  - Player has interacted with locked lab door
+	sTopicName = "LabLocked";
+	if(AgrippaTopicNotSpoken(sTopicName) && GetLocalVarInt("InteractedLabDoor")==1)
+	{
+		PlayAgrippaNormalVoice(sTopicName, 2, abGreeting, true);
+		return;
+	}
+	
+	
+	//////////////////////////////////////////
+	// Random Chatter
+	// - Agrippa has nothing else to say
+	// - The current chatter is saved in global var AgrippaRandomChatterNum, and is increased after every time he has spoken.
+	{
+		/////////////////////
+		// Number of parts in each random topic
+		int[] vRandomPartNum = {	
+			2, 1, 3, 2,
+			3, 2, 2, 1,
+			2, 1, 1, 1
+		};
+		
+		/////////////////////		
+		// If end of random chatter is reached, loop the last two.
+		
+		/////////////////////
+		//Get the name of the topic	
+		int lNum = GetGlobalVarInt("AgrippaRandomChatterNum");
+		int lPartNum = vRandomPartNum[lNum-1];//Index starts at 1!
+		
+		string sNum = lNum<10 ? "0"+lNum : ""+lNum;
+		sTopicName = "Random"+sNum;
+		
+		/////////////////////
+		// Play voice
+		PlayAgrippaNormalVoice(sTopicName, lPartNum, abGreeting, false);		
+		
+		/////////////////////
+		// Increase counter, so new chatter is played next time
+		lNum++;
+		if(lNum > 12) lNum = 11; //if end of list, repeat last two!
+		SetGlobalVarInt("AgrippaRandomChatterNum", lNum);
+	}
+}
+
+//------------------------------------------
+
+void AgrippaNormalTalkOver()
+{
+	AddTimer("NewAgrippaTopic", RandFloat(3, 12), "TimerNewAgrippaTopic");
+	
+	CheckAgrippaNormalTalkOverEvent();
+}
+
+void CheckAgrippaNormalTalkOverEvent()
+{
+	////////////////////////////////
+	//Give quest about weyere not
+	if(GetLocalVarInt("AgrippaWantsWeyerNote")==1)
+	{
+		SetLocalVarInt("AgrippaWantsWeyerNote", 0);
+		
+		AddQuest("21FindWeyerNote", "21FindWeyerNote");
+	}
+	
+	////////////////////////////////
+	//Give quest about tonic
+	if(GetLocalVarInt("PickedWeyerNote")==1)
+	{
+		CompleteQuest("21FindWeyerNote", "21FindWeyerNote");
+		AddQuest("21FindTonic", "21FindTonic");
+	}	
+	
+	////////////////////////////////
+	//Give quest about orb
+	if(GetLocalVarInt("MentionedOrb")==1)
+	{
+		AddQuest("21FindOrb", "21FindOrb");
+	}	
+	
+	////////////////////////////////
+	//Give quest about orb
+	if(GetLocalVarInt("TranseptOrbNotDone")==1)
+	{
+		AddQuest("21OrbsLeftInTransept", "21OrbsLeftInTransept");
+	}	
+	
+	////////////////////////////////
+	//Give quest about orb
+	if(GetLocalVarInt("ChoirOrbNotDone")==1)
+	{
+		AddQuest("21OrbsLeftInChoir", "21OrbsLeftInChoir");
+	}	
+}
+
+void TimerNewAgrippaTopic(string &in asTimer)
+{
+	//Check if player is close enough to Agrippa.
+	if(GetLocalVarInt("PlayerInRandomArea")==1)
+	{
+		//Start a new topic, without any greeting.
+		AgrippaNormalSpeak(false);	
+	}
+	else
+	{
+		//Wait some more
+		AddTimer("NewAgrippaTopic", RandFloat(3, 12), "TimerNewAgrippaTopic");
+		
+	}
+}
+
+//------------------------------------------
+
+void StopAgrippaNormalSpeak()
+{
+	//No more callback
+	SetEffectVoiceOverCallback("");
+	
+	//Check if there is any event to do when ending.
+	CheckAgrippaNormalTalkOverEvent();
+	
+	//Stop the current voice playing
+	StopAllEffectVoices(0.5);
+	
+	//No more extra talk
+	RemoveTimer("NewAgrippaTopic");
+	
+	//In case player is very fast and runs before for first greeting is started!
+	RemoveTimer("AgrippaNormalTalkStart"); 
+	
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// AGRIPPA RANDOM AREA
+// - Simply checks if payer is in the random area, only when in this will random messages be spoken (ie messages after the one spoken when player enters area)
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void CollideAgrippaRandomArea(string &in asParent, string &in asChild, int alState)
+{
+	int lVarValue = alState == 1 ? 1 : 0;
+	
+	SetLocalVarInt("PlayerInRandomArea", lVarValue);
+	
+	AddDebugMessage("PlayerInRandomArea: "+lVarValue, false);
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// AGRIPPA BASE TALKING 
+// - All basic stuff for talking
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void CollideAgrippaStartTalk(string &in asParent, string &in asChild, int alState)
+{
+	//Only run function is outside talk range
+	if(GetLocalVarInt("PlayerInAgrippaTalkRange")==1) return; 
+	SetLocalVarInt("PlayerInAgrippaTalkRange",1);
+	
+	AddDebugMessage("INSIDE START TALK", false);
+	
+	//If not awake, do nothing
+	if(GetLocalVarInt("AgrippaAwake")==0) return;
+	
+	////////////////////////////
+	//Machine is on, Normal Voice
+	if(GetLocalVarInt("AgrippaVoiceMachineOn")==1)
+	{
+		//Start speaking.
+		AgrippaNormalSpeak(true);
+	}
+	////////////////////////////
+	//Machine is off, Strained Voice
+	else
+	{		
+		//Start a timer that will trigger a voice.
+		AgrippaStrainedSpeakStartRandom();
+	}
+}
+
+//------------------------------------------
+
+void CollideAgrippaStopTalk(string &in asParent, string &in asChild, int alState)
+{
+	//Only run function is inside talk range
+	if(GetLocalVarInt("PlayerInAgrippaTalkRange")==0) return; 
+	SetLocalVarInt("PlayerInAgrippaTalkRange",0);
+	
+	AddDebugMessage("OUTSIDE STOP TALK", false);
+	
+	//If not awake, do nothing
+	if(GetLocalVarInt("AgrippaAwake")==0) return;
+	
+	////////////////////////////
+	//Machine is on, Normal Voice
+	if(GetLocalVarInt("AgrippaVoiceMachineOn")==1)
+	{
+		StopAgrippaNormalSpeak();
+	}
+	////////////////////////////
+	//Machine is off, Strained Voice
+	else
+	{
+		//Stop any strained speak
+		StopAgrippaStrainedSpeak();
+	}
+}
+
+
+///////////////////////////////////////////
+// INTERACT LAB DOOR
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void PlayerInteractLabDoor(string asEntity)
+{
+	//SetMessage("Ch02Level21", "LabDoorLocked", 0);
+	SetMessage("LevelDoors", "LockedForever", 0);
+	
+	SetLocalVarInt("InteractedLabDoor", 1);
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// REPAIR COG WHEELS IN CEILING
+////////////////////////////////////////////
+
+//------------------------------------------
+
+float gfCogWheelSpeed = 2.0;
+//------------------------------------------
+
+void InitCeilingCogWheels()
+{
+	RotatePropToSpeed("ceiling_machinery_cog_4", 10, gfCogWheelSpeed, 0, 1, 0, true, ""); 
+	RotatePropToSpeed("ceiling_machinery_cog_1", 10, gfCogWheelSpeed, 0, -1, 0, true, "");
+}
+
+//When player interacts with cog just attach it to the sticky area. (so no movements are needed!)
+void CeilingCogWheelInteracted(string &in asEntity)
+{
+	AddDebugMessage("Interacted with cogwheel!", false);
+	
+	AttachBodyToStickyArea("StickyArea_1", "ceiling_machinery_cog_interact_1_Body_1");
+	
+	PlaySoundAtEntity("wheel11", "21_cog_slide.snt", "ceiling_machinery_cog_interact_1", 0.0f, true);
+
+	AddTimer("CogWheelAttached", 0.5f, "TimerCogWheelAttached");
+}
+
+void TimerCogWheelAttached(string &in asTimer)
+{
+	//Remove the interactable cog wheel
+	SetEntityActive("ceiling_machinery_cog_interact_1", false);
+	
+	//Make the non-interable wheel visible
+	SetEntityActive("ceiling_machinery_cog_interact_static_2", true);
+	
+	PlaySoundAtEntity("wheel13", "21_cog_attach.snt", "ceiling_machinery_cog_interact_static_2", 0.0f, true);
+	PlaySoundAtEntity("wheel2", "21_cog_wheel_big.snt", "ceiling_machinery_cog_interact_static_2", 1.0f, true);
+	
+	//Make all remaining wheel rotate
+	RotatePropToSpeed("ceiling_machinery_cog_interact_static_2", 10, gfCogWheelSpeed, 0, 1, 0, true, ""); 
+	RotatePropToSpeed("ceiling_machinery_cog_2", 10, gfCogWheelSpeed, 0, -1, 0, true, ""); 
+	RotatePropToSpeed("ceiling_machinery_cog_5", 10, gfCogWheelSpeed, 0, 1, 0, true, ""); 
+	
+	//Set a var to notify that the wheel
+	SetLocalVarInt("CogWheelInPlace", 1);	
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// PULL SECURITY DOOR LEVER
+////////////////////////////////////////////
+
+//------------------------------------------
+
+//Player interacts with a safety door.
+void InteractSafetyDoor(string &in asEntity)
+{
+	//Show message
+	SetMessage("Ch02Level21", "InteractSafetyDoor", 0);
+	
+	//Locked sound
+	PlayGuiSound("17_attach_crank", 0.5f);
+	
+	SetMoveObjectState(asEntity, 0.05f);
+	
+	AddTimer(asEntity, 0.4f, "TimerCloseGate");
+	AddTimer("sound", 1.0f, "TimerCloseGate");
+	
+	//Wait 4 seconds and then give a quest.
+	if(QuestIsAdded("20SafetyDoorClosed")==false)
+		AddTimer("SafetyDoorQuest", 3.1f, "TimerSafetyDoorQuest");
+}
+
+void TimerCloseGate(string &in asTimer)
+{
+	if(asTimer == "sound"){
+		PlayGuiSound("close_gate.ogg", 0.5f);
+	} else{
+		SetMoveObjectState(asTimer, 0.00f);
+		
+		SetEntityPlayerInteractCallback(asTimer, "InteractSafetyDoor", true);	
+	}
+}
+
+void TimerSafetyDoorQuest(string &in asTimer)
+{
+	AddQuest("21SafetyDoorClosed", "21SafetyDoorClosed");	
+}
+
+//------------------------------------------
+
+void PullSafetyDoorLever(string &in asEntity, int alState)
+{
+	if(alState != -1) return;	
+	
+	/////////////////////////////////
+	//Cog wheels are in place
+	if(GetLocalVarInt("CogWheelInPlace")==1)
+	{
+		string sDoorName = asEntity=="lever_simple01_1" ? "safety_large_vert_1" : "safety_large_vert_2";
+		
+		//Open the door
+		SetMoveObjectState(sDoorName, 1);
+		
+		//No more interact callbacks on safety doors.
+		SetEntityPlayerInteractCallback("safety_large_vert_1","",false);
+		SetEntityPlayerInteractCallback("safety_large_vert_2","",false);
+		
+		//Lever becomes stuck
+		SetLeverStuckState(asEntity, alState, true);
+			
+		PlaySoundAtEntity("workins", "21_ignite.snt", "LeverSounds", 0.2f, false);
+		PlaySoundAtEntity("working", "21_lever_success", "LeverSounds", 2.0f, false);
+		PlaySoundAtEntity("working2", "21_loop", "LeverSounds", 2.0f, false);
+		AddTimer("working", 3.0f, "TimerStopSounds");
+		
+		StartScreenShake(0.005f, 0.0f, 3.0f, 3.0f);
+		
+		//Inc lever in position counter
+		AddLocalVarInt("SafetyDoorCount",1);
+		if(GetLocalVarInt("SafetyDoorCount")==2)
+		{
+			//Complete quest with levers.
+			CompleteQuest("21LeverNotWorking","20LeverNotWorking");
+					
+			//Tell agrippa that safety doors are open
+			SetLocalVarInt("SafetyDoorsOpen", 1);
+			
+			//activate an area that triggers a voice from Alexander
+			SetEntityActive("AreaStartAlexanderVoice", true);
+			
+			//Complete quest!
+			CompleteQuest("21SafetyDoorClosed", "20SafetyDoorClosed");
+			
+			//Sanity boost + nice music!
+			GiveSanityBoostSmall();
+			PlayMusic("21_puzzle_door.ogg", false, 0.8f, 0.5f, 9, false);
+		}		
+		
+	}
+	///////////////////////////////
+	//Cog wheels are NOT in place
+	else
+	{
+		//Add quest
+		AddQuest("21LeverNotWorking","21LeverNotWorking");
+		
+		//Tell agrippa that we have tried a lever.
+		SetLocalVarInt("InteractedDoorLever", 1);
+		
+		SetMessage("Ch02Level21", "LeverIsNotWorking", 0);
+		
+		PlaySoundAtEntity("notworking", "21_lever_fail", "LeverSounds", 0.1f, false);
+	}
+}
+
+void TimerStopSounds(string &in asTimer)
+{
+	StopSound(asTimer, 3.0f);
+	StopSound(asTimer+2, 3.0f);
+	PlaySoundAtEntity("workins", "21_ignite.snt", "LeverSounds", 1.0f, false);
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// FEED WATER LURKER AND GET SLIME SUBSTANCE
+////////////////////////////////////////////
+
+//------------------------------------------
+
+//If rope is up and ready for interaction!
+void CollideRopeInteraction(string &in asParent, string &in asChild, int alState)
+{
+	//Set the variable that decides if the rope is up or not.
+	SetLocalVarInt("RopeIsUp", alState==1 ? 1 : 0);
+	
+	AddDebugMessage("Rope up: "+alState, false);
+}
+
+//------------------------------------------
+
+//If rope is down at bottom, at the lurker
+void CollideRopeDown(string &in asParent, string &in asChild, int alState)
+{
+	if(alState!=1) return;
+	
+	AddDebugMessage("Rope is down!", false);
+	
+	if(GetLocalVarInt("MeatOnRope")!=1) return;
+	
+	SetLocalVarInt("MeatOnRope",0);
+	
+	PlayMusic("21_event_pit.ogg", false, 1.0f, 0.0f, 10, false);
+	
+	//Remove normal meat for the eaten one.
+	RemoveAttachedPropFromProp("invisible_box_mass_2_1", "fresh_meat_onrope_1");
+	
+	//Make it possible to pick up bone + have correct icon
+	SetEntityPlayerInteractCallback("invisible_box_mass_2_1", "InteractSlimeBone", true);
+	SetEntityCustomFocusCrossHair("invisible_box_mass_2_1","Pick"); 
+	
+	//need to turn off this area, else it is not possible to interact with entity on rope!
+	SetEntityActive("AreaRopeInteraction", false);
+	
+	//Lever get stuck for a while, hinting that the water lurker is tugging on it.
+	SetWheelStuckState("crank_iron_2", 1, true);
+	SetEntityPlayerInteractCallback("crank_iron_2","InteractStuckWellLever", false);
+	
+	//Stop any ambience.
+	StopWaterLurkerAmbience();
+	
+	//Lurker screams
+	PlayEnemySoundAtEntity("hunt_rev.snt", "AreaWellSounds", "waterlurker");
+
+	//Look at well
+	StartPlayerLookAt("AreaWellLookAt", 10, 5, "");
+	PlayerReact(true,0.5f);
+	
+	//Some timers for events
+	AddTimer("LurkerEat", 0.8f, "TimerLurkerEat");
+	AddTimer("LurkerEat", 3.3f, "TimerLurkerEat");
+	AddTimer("LurkerEat", 6.3f, "TimerLurkerEat");
+	AddTimer("LurkerEat", 8.5f, "TimerLurkerEat");
+	
+	for(int i=1;i<=8; ++i) AddTimer("LurkerEat", 8.5f, "TimerLurkerEatRopeImpulseOnly");
+	
+	AddTimer("StopLookAtWheel", 1.5f,"TimerStopLookAtWheel");
+	AddTimer("LurkerDoneEating", 10.0f,"TimerLurkerDoneEating");
+}
+
+//------------------------------------------
+
+void InteractStuckWellLever(string &in asEntity)
+{
+	SetMessage("Ch02Level21", "WellLeverStuck", 0);	
+}
+
+void TimerLurkerEat(string &in asTimer)
+{
+	//Grunt makes eating sound.
+	PlayEnemySoundAtEntity("eat_rev.snt", "AreaWellSounds", "waterlurker");
+	
+	//Make the rope bounce a little
+	AddPropImpulse("invisible_box_mass_2_1", RandFloat(-2,2), RandFloat(1,3), RandFloat(-2,2), "World");
+}
+
+void TimerLurkerEatRopeImpulseOnly(string &in asTimer)
+{
+	AddPropImpulse("invisible_box_mass_2_1", RandFloat(-1,1), 0, RandFloat(-1,1), "World");
+}
+
+
+void TimerStopLookAtWheel(string &in asTimer)
+{
+	StopPlayerLookAt();	
+}
+
+void TimerLurkerDoneEating(string &in asTimer)
+{
+	//Reset stuck callback
+	SetWheelStuckState("crank_iron_2", 0, true);
+	SetEntityPlayerInteractCallback("crank_iron_2","", false);
+	
+	//Add the remains.
+	AddAttachedPropToProp("invisible_box_mass_2_1", "fresh_meat_remains_onrope_1", "fresh_meat_remains_onrope.ent", 0,0,0, 0,0,0);
+	
+			
+	//Okay to start ambience again
+	StartWaterLurkerAmbience();
+}
+
+//------------------------------------------
+
+void InteractSlimeBone(string &in asEntity)
+{
+	RemoveAttachedPropFromProp("invisible_box_mass_2_1", "fresh_meat_remains_onrope_1");
+	GiveItemFromFile("fresh_meat_remains_1", "fresh_meat_remains.ent");
+	
+	//Increase count.
+	AddGlobalVarInt("IngredientCount",1);
+	
+	//Need to do like this or else a message is not shown!
+	SetMessage("Ch02Level21", "PickUpFreshMeatRemains", 0);
+	
+	//also need to play pucik sound
+	PlaySoundAtEntity("PickUpItem", "pick_meat.snt", "Player", 0.1f, false);
+	
+	//Give a sanity boost.
+	GiveSanityBoostSmall();
+	PlayMusic("15_puzzle_hole.ogg", false, 0.8f, 0.5f, 9, false);
+}
+
+//------------------------------------------
+
+void UseMeatOnRope(string &in asItem, string &in asEntity)
+{
+	//////////////////////////////
+	//Rope is in right position
+	if(GetLocalVarInt("RopeIsUp")==1)
+	{
+		AddAttachedPropToProp("invisible_box_mass_2_1", "fresh_meat_onrope_1", "fresh_meat_onrope.ent", 0,0,0, 0,0,0);
+		RemoveItem(asItem);
+		
+		SetLocalVarInt("MeatOnRope", 1);
+		
+		PlaySoundAtEntity("attach", "21_meat_long.snt", "AreaRopeInteraction", 0.0f, false);
+	}
+	//////////////////////////////
+	//Rope is too low
+	else 
+	{
+		SetMessage("Ch02Level21", "RopeTooLow", 0);	
+	}
+}
+
+//------------------------------------------
+
+void CollideCrankSound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("ropes", "06_rope_strain", "CrankSound_3", RandFloat(0.0,1.0f), false);
+}
+
+///////////////////////////////////////////
+// WATER LURKER EXTRA SOUNDS
+//  Ambient sounds and effects when things are thrown into well.
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void InitWaterLurkerSounds()
+{
+	StartWaterLurkerAmbience();
+	
+	//add callbacks for any junk thrown down.
+	AddEntityCollideCallback("rock_debris*","AreaRopeDown", "CollideJunkInWell", true, 1);
+	AddEntityCollideCallback("stone_small*","AreaRopeDown", "CollideJunkInWell", true, 1);
+	AddEntityCollideCallback("bread_rotten*","AreaRopeDown", "CollideJunkInWell", true, 1);
+	AddEntityCollideCallback("bag01*","AreaRopeDown", "CollideJunkInWell", true, 1);
+	AddEntityCollideCallback("rotten_apple*","AreaRopeDown", "CollideJunkInWell", true, 1);
+	AddEntityCollideCallback("wood_box*","AreaRopeDown", "CollideJunkInWell", true, 1);
+}
+
+//------------------------------------------
+
+void CollideJunkInWell(string &in asParent, string &in asChild, int alState)
+{
+	//Wait 3 seconds to remove so a splash can be heard.
+	AddTimer(asParent, 3, "TimerRemoveJunkInWell");	
+}
+
+void TimerRemoveJunkInWell(string &in asTimer)
+{
+	AddDebugMessage("Removed: "+asTimer, false);
+	
+	//Remove the entity and play a sound with a 1/3 chance
+	SetEntityActive(asTimer, false);
+	PlayEnemySoundAtEntity("attack_rev.snt", "AreaWellSoundsLow", "waterlurker");
+}
+	
+//------------------------------------------
+
+void StartWaterLurkerAmbience()
+{
+	AddTimer("WaterLurkerAmbience", RandFloat(1,5), "TimerWaterLurkerAmbience");
+}
+
+void StopWaterLurkerAmbience()
+{
+	RemoveTimer("WaterLurkerAmbience");
+}
+
+//------------------------------------------
+
+void TimerWaterLurkerAmbience(string &in asTimer)
+{
+	AddDebugMessage("Water lurker amb sound.", false);
+		
+	//Play sound in the lower part of the well.
+	PlayEnemySoundAtEntity("idle_rev.snt", "AreaWellSoundsLow", "waterlurker");
+	
+	AddTimer(asTimer, RandFloat(5,16), "TimerWaterLurkerAmbience");
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// PLAYER FALLS INTO WELL
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void CollideWellKillPlayer(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("checkFallWell", "PlayerStartArea_4", "CheckPointFallWell", "Hints", "DeathFall_21_TortureNave");	
+	
+	PlaySoundAtEntity("fallaaaaaah", "11_fall", "Player", 0, false);
+	PlaySoundAtEntity("fallaaaaaah2", "scare_male_terrified5", "Player", 0, false);
+	
+	FadeOut(0.5);
+	
+	AddTimer("death1", 0.5f, "TimerFallDeath");	
+	AddTimer("death2", 1, "TimerFallDeath");	
+
+	AddTimer("meat", 1.6f, "TimerFallDeath");	
+	AddTimer("meatb", 1.8f, "TimerFallDeath");
+	AddTimer("meatl", 1.9f, "TimerFallDeath");	
+	AddTimer("meat", 1.0f, "TimerFallDeath");	
+	AddTimer("meatb", 1.2f, "TimerFallDeath");	
+	AddTimer("meatl", 1.4f, "TimerFallDeath");	
+	AddTimer("meat", 2.1f, "TimerFallDeath");	
+	AddTimer("meatb", 2.3f, "TimerFallDeath");	
+	AddTimer("meatl", 2.4f, "TimerFallDeath");		
+}
+
+void TimerFallDeath(string &in asTimer)
+{	
+	if(asTimer == "meat"){
+		PlayGuiSound("21_meat.snt",RandFloat(0.4f,0.9f));
+		return;
+	}
+	if(asTimer == "meatb"){
+		PlayGuiSound("21_meat_snap.snt",RandFloat(0.4f,0.9f));
+		return;
+	}
+	if(asTimer == "meatl"){
+		PlayGuiSound("21_meat_long.snt",RandFloat(0.4f,0.9f));;
+		return;
+	}
+	
+	//If first timer, just play a bump
+	if(asTimer == "death1"){
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+	
+	//Kill player without making a sound
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	
+	//Lurker attacks player
+	PlayEnemySoundAtEntity("attack_rev.snt", "AreaRopeDown", "waterlurker");
+	
+	//Players gets some pain
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+}
+
+//------------------------------------------
+
+void CheckPointFallWell(string &in asName, int alCount)
+{
+	//START HARD MODE ENDING CHECK
+	if(GetHardModeEndingOn())
+	{
+		StartHardModeEnding("");
+		return;
+	}
+	
+	SetPlayerGlobalDeathCount(GetPlayerGlobalDeathCount() + 1);
+	//END HARD MODE ENDING CHECK
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// ALEXANDER VOICE
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void CollideStartAlexanderVoice(string &in asParent, string &in asChild, int alState)
+{
+	AddEffectVoice("CH02L21_Alexander_01", "", "Voice", "CH02L21_Alexander_01", false, "", 0.0f, 0.0f);	
+	
+	AddTimer("AlexVoiceRumble", 3.0f, "TimerAlexVoiceRumble");
+}
+
+void TimerAlexVoiceRumble(string &in asTimer)
+{
+	PlayerReact(true,0.8f);
+	
+	StartScreenShake(0.02f, 6, 2, 2);
+
+	PlayGuiSound("21_alex_low_freq_rumble", 0.7f);
+	AddTimer("AlexVoiceRumbleFadeOut", 6.0f, "TimerTimerAlexVoiceRumbleFadeOut");
+}
+
+void TimerTimerAlexVoiceRumbleFadeOut(string &in asTimer)
+{
+	StopSound("AlexanderRumbleLoop", 2);
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// PICK UP AGRIPPA CHANNELS WEYER NOTE
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void PickupChannelWeyerNote(string &in asEntity, string &in asType)
+{
+	PlayMusic("01_puzzle_passage.ogg", false, 1.0f, 0, 10, false);
+	
+	SetLocalVarInt("PickedWeyerNote", 1);
+	SetGlobalVarInt("WeyerNoteIsPicked", 1);
+
+	AddQuest("21FoundTonicNote", "21FoundTonicNote");
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// ALL ORBS HOWL EVENT
+//  When player enters map with all orbs, do some howling!
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void TimerAllOrbsHowlEvent(string &asTimer)
+{
+	//Shake screen and make it blurry
+	StartScreenShake(0.03f, 0.2f, 5.0f, 0.2f);
+	
+	SetRadialBlurStartDist(0.2f);
+	FadeRadialBlurTo(0.09, 0.015f);
+	
+	PlaySoundAtEntity("guard1", "guardian_distant2", "Player", 0, false);
+	
+	GiveSanityDamage(15.0f, false);
+	
+	AddTimer("AllOrbsHowlEventStop",5,"TimerAllOrbsHowlEventStop"); 
+}
+
+void TimerAllOrbsHowlEventStop(string &asTimer)
+{
+	FadeRadialBlurTo(0.0, 0.02f);
+}
+
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// PLAYER FALLS INTO FIRST WELL
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void CollideFirstWellKillPlayer(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("checkFallFirstWell", "PlayerStartArea_6", "CheckPointFallFirstWell", "Hints", "DeathFall_21_TortureNave");	
+	
+	PlaySoundAtEntity("fallaaaaaah", "11_fall", "Player", 0, false);
+	PlaySoundAtEntity("fallaaaaaah2", "scare_male_terrified5", "Player", 0, false);
+	
+	FadeOut(0.5);
+	
+	AddTimer("death1", 0.5f, "TimerFirstWellFallDeath");	
+	AddTimer("death2", 1, "TimerFirstWellFallDeath");	
+}
+
+//------------------------------------------
+
+void TimerFirstWellFallDeath(string &in asTimer)
+{	
+	//If first timer, just play a bump
+	if(asTimer == "death1"){
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+	
+	//Kill player without making a sound
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	
+	//Players gets some pain
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+	
+}
+
+
+//------------------------------------------
+
+//When player falls down first well, add some extra events to make a creepy atmosphere.
+void CheckPointFallFirstWell(string &in asName, int alCount)
+{
+	//START HARD MODE ENDING CHECK
+	if(GetHardModeEndingOn())
+	{
+		StartHardModeEnding("");
+		return;
+	}
+	
+	SetPlayerGlobalDeathCount(GetPlayerGlobalDeathCount() + 1);
+	//END HARD MODE ENDING CHECK
+	
+	if(alCount != 0) return; //Only do it the first time!
+	
+	SetSwingDoorLocked("cellar_wood01_2", true, false);
+	SetEntityPlayerInteractCallback("cellar_wood01_2", "InteractCellarWood0102", true);
+}
+
+void TimerFallFirstWellDeath(string &in asTimer)
+{
+	///////////////
+	//Guardian scream
+	if(asTimer == "falldeath1")
+	{
+		StartScreenShake(0.03f, 0.2f, 5.0f, 0.2f);
+		
+		PlayerReact(true, 0.8f);
+		
+		SetRadialBlurStartDist(0.2f);
+		FadeRadialBlurTo(0.09f, 0.015f);
+	
+		PlaySoundAtEntity("guard1", "guardian_distant2", "Player", 0, false);		
+	}
+	///////////////
+	//Stop Effects
+	else if(asTimer == "falldeath2")
+	{
+		FadeRadialBlurTo(0.0f, 0.015f);
+	}
+	///////////////
+	//Unlock door
+	else if(asTimer == "falldeath3")
+	{
+		PlayerReact(false, 0.8f);
+		SetSwingDoorLocked("cellar_wood01_2", false, false);	
+		SetPropActiveAndFade("Slime_Door", false, 4.0f);
+		PlaySoundAtEntity("dissolve", "gameplay_acid_web.snt", "cellar_wood01_2", 3.0f, false);
+		PlayGuiSound("guardian_idle.snt", 0.8f);
+		StartScreenShake(0.005f, 0.0f, 1.0f, 2.0f);
+	}
+}
+
+void InteractCellarWood0102(string &in asEntity)
+{
+	SetPropActiveAndFade("slime_*", true, 2.0f);
+	
+	AddTimer("falldeath1", 0.0f, "TimerFallFirstWellDeath");
+	AddTimer("falldeath2", 5.0f, "TimerFallFirstWellDeath");
+	AddTimer("falldeath3", 8.0f, "TimerFallFirstWellDeath");
+	
+	PlaySoundAtEntity("slime1", "slime_loop.snt", "SlimeArea_1", 2.0f, true);
+	PlaySoundAtEntity("slime2", "slime_loop.snt", "SlimeArea_2", 3.0f, true);
+	PlaySoundAtEntity("slime3", "slime_loop.snt", "SlimeArea_3", 4.0f, true);
+	
+	SetEntityActive("SlimeDamageArea_1", true);
+	SetEntityActive("SlimeDamageArea_2", true);
+	
+	CreateParticleSystemAtEntity("slimeps1", "ps_slime_fog.ps", "SlimeArea_1", true);
+	CreateParticleSystemAtEntity("slimeps1", "ps_slime_fog.ps", "SlimeArea_2", true);
+	CreateParticleSystemAtEntity("slimeps1", "ps_slime_fog.ps", "SlimeArea_3", true);
+}
+//------------------------------------------
+
+
+///////////////////////////////////////////
+// JAMMED DOOR
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void InteractJammedDoor(string &in asEntity)
+{
+	SetMessage("Ch02Level21", "DoorJammed", 0);	
+	
+	AddTimer(asEntity, 1.0f, "TimerJammedDoor");
+}
+void TimerJammedDoor(string &in asTimer)
+{
+	SetEntityPlayerInteractCallback(asTimer, "InteractJammedDoor", true);
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// FIRST WELL INTERACTION
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void InteractFirstWellHole(string &in asEntity)
+{
+	SetMessage("Ch02Level21", "CanNotClimbFirstWell", 0);
+	PlayGuiSound("18_touch_bridge.snt", RandFloat(0.4f, 1.0f));
+	AddTimer(asEntity, 1.0f, "TimerFirstWellHole");
+}
+void TimerFirstWellHole(string &in asTimer)
+{
+	SetEntityPlayerInteractCallback(asTimer, "InteractFirstWellHole", true);
+}
+//------------------------------------------
+
+
+
+////////////MISC STUF//////////////
+
+//Some chain sounds if walking through them
+void CollideAreaChains(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("general_chain_rattle_single.snt", RandFloat(0.0f, 0.7f));
+}
+
+
+//A girl cries in a small cell, stops when door opens.
+void InteractGirlCellDoor(string &in asEntity)
+{
+	AddLocalVarInt("PrisonDoors", 1);
+	StopSound("GirlCry", 0);
+	PlayerReact(true,1.0f);
+	PlaySoundAtEntity("ghost", "03_in_a_bottle.snt", "AreaGirl", 0.0f, false);
+	CreateParticleSystemAtEntity("ghostp", "ps_ghost_release.ps", "AreaGirl", false);
+}
+
+
+//Pick Daniels Diary
+void EntityCallDiary(string &in asEntity, string &in type)
+{
+	PlayMusic("21_paper_daniel01.ogg", false, 0.5f, 0.0f, 10, false);
+}
+
+//Misc messages for using potion ingredient on agrippa
+void UseStuffOnAgrippa(string &in asItem, string &in asEntity)
+{
+	if(asItem == "fresh_meat_2")
+	{
+		if(GetLocalVarInt("PickedWeyerNote") == 0)
+			SetMessage("Ch02Level21", "AgrippaMeatNoNote", 0);
+		else
+			SetMessage("Ch02Level21", "AgrippaMeatNote", 0);
+	}
+			
+	if(asItem == "fresh_meat_remains_1")
+	{
+		if(GetLocalVarInt("PickedWeyerNote") == 0)
+			SetMessage("Ch02Level21", "AgrippaBoneNoNote", 0);
+		else
+			SetMessage("Ch02Level21", "AgrippaMeatNote", 0);
+	}
+	
+	if(asItem == "poison_gland")
+		SetMessage("Ch03Level26", "UseGlandOnAgrippa", 0);
+	
+	if(asItem == "glass_container_blood")
+		SetMessage("Ch03Level26", "UseBloodOnAgrippa", 0);
+}
+
+//Player Reactions
+void PlayerReact(bool bDamage, float fTime)
+{
+	if(bDamage)
+		AddTimer("sanity", fTime, "TimerPlayerReactions");
+	else
+		AddTimer("scare", fTime, "TimerPlayerReactions");
+	
+	AddTimer("breath", fTime+2, "TimerPlayerReactions");
+	AddTimer("breathl", fTime+2, "TimerPlayerReactions");
+	
+}
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "sanity"){
+		GiveSanityDamage(15.0f, true);
+		PlayGuiSound("react_scare", 0.9f);
+	}
+	if(asTimer == "scare"){
+		GiveSanityDamage(10.0f, false);
+		PlayGuiSound("react_scare", 0.9f);
+	}
+	if(asTimer == "breath")
+		PlayGuiSound("react_breath", 0.7f);
+		
+	if(asTimer == "breathl")
+		PlayGuiSound("react_breath", 0.5f);
+}
+
+
+//Collide with spikes by agrippa
+void CollideAreaSpikes(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1){
+		if(GetLocalVarInt("GotSpiked") == 1) return;
+		GivePlayerDamage(5.0f, "BloodSplat", false, false);
+		PlayGuiSound("21_meat.snt", 1);
+		SetLocalVarInt("GotSpiked", 1);
+	}
+	
+	if(alState == -1){
+		SetLocalVarInt("GotSpiked", 0);
+	}
+}
+
+void InteractPrisonDoor(string &in asEntity)
+{
+	AddLocalVarInt("PrisonDoors", 1);
+}
+
+
+//Interact on door for prisoner Vision
+void InteractVisionDoor(string &in asEntity)
+{
+	AddLocalVarInt("PrisonDoors", 1);
+	SetEntityActive("FlashbackArea_3", true);
+	SetEntityActive("FlashbackArea_3_C", true);
+}
+
+void TimerRandSound(string &in asTimer)
+{
+	PlaySoundAtEntity("ambrand"+RandInt(1,4), "03_rock_move.snt", "ScriptArea_"+RandInt(1,4), RandFloat(0.0f, 2.0f), false);
+	
+	AddTimer(asTimer, RandFloat(15.0f, 30.0f), "TimerRandSound");
+}
+void TimerRandSound02(string &in asTimer)
+{
+	PlaySoundAtEntity("ambrand"+RandInt(1,4), "15_man01_whimp.snt", "ScriptArea_"+RandInt(1,4), RandFloat(0.0f, 2.0f), false);
+	
+	AddTimer(asTimer, RandFloat(15.0f, 30.0f), "TimerRandSound02");
+}
+
+
+//////////////////////////
+//Cell event on low sanity
+//----------------------------------
+//Check for when to do the cell event
+
+//Entering waiting room from agrippa room or level 22
+void CollideAreaCellEvent(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("CellEvent") == 1) return;
+	
+	if(GetLocalVarInt("PrisonDoors") == 8)
+	{
+		SetLocalVarInt("CellEvent", 1);
+		
+		AddTimer("TimerCellEvent", 0.1f, "TimerCellEvent");
+		AddDebugMessage("Do Cell Event, player has explored all the cells", false);
+		GiveSanityDamage(7.5f, false);
+	}
+	else if(GetPlayerSanity() > GetLocalVarInt("SanityForCellEvent"))
+	{
+		AddDebugMessage("No Cell event as sanity in good shape", false);
+		return;
+	}
+	else
+	{
+		SetLocalVarInt("CellEvent", 1);
+		
+		AddTimer("TimerCellEvent", 0.1f, "TimerCellEvent");
+		AddDebugMessage("Do Cell Event, sanity below "+GetLocalVarInt("SanityForCellEvent"), false);
+		GiveSanityDamage(7.5f, false);
+	}
+}
+
+//Vision(s) in waitroom begins - no cell event
+void CollideFlashbackArea_23(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Flashback begin, block cell event!", false);
+	SetEntityActive("AreaCellEvent", false);
+}
+
+//Vision(s) in waitroom over - allow cell event
+void WaitRoomOver()
+{
+	AddDebugMessage("Flashback Over!", false);
+	
+	AddTimer("AllowCellEvent", 10.0f, "TimerAllowCellEvent");
+}
+
+//When a vision is over, after 10 second allow for the cell event again
+void TimerAllowCellEvent(string &in asTimer)
+{
+	SetEntityActive("AreaCellEvent", true);
+}
+
+//-----------------------------------------
+//Cell event functions
+
+void TimerCellEvent(string &in asTimer)
+{
+	string sEvent = asTimer;	//Do not edit, sets timer loop function name.
+	AddLocalVarInt(sEvent, 1);	//Do not edit, steps through timer loop events.
+	bool bPauseAtStep = false;	//Do not edit, to pause or end the timer loop at specified step.
+
+	float fEventSpeed = RandFloat(0.7f, 1.4f);	//Set to preferred default time for the timer loop.
+
+	switch(GetLocalVarInt(sEvent)){
+		//////////
+		//Begin event with a bang!
+		case 1:
+			AddDebugMessage("Step 1", false);
+			
+			GiveSanityDamage(10.0f, false);
+			
+			PlayMusic("00_event_gallery.ogg", false, 1.0f, 0.1f, 10, false);
+			
+			StartScreenShake(0.1f, 0, 0.2f, 0.8f);
+			
+			PlayGuiSound("scare_wall_stomp.snt", 0.8f);
+			PlaySoundAtEntity("scream", "21_intro_scream", "Player", 1, false);
+			
+			FadeImageTrailTo(2,1);
+			
+			SetLampLit("torch_static01_40", false, true);
+			SetLampLit("torch_static01_44", false, true);
+			SetLampLit("torch_static01_22", false, true);
+			SetLampLit("torch_static01_28", false, true);
+			SetLampLit("torch_static01_43", false, true);
+			SetLampLit("torch_static01_47", false, true);
+			SetLampLit("chandelier_simple_2", false, true);
+			SetLampLit("hanging_lantern_ceiling_8", false, true);
+			SetLampLit("hanging_lantern_ceiling_5", false, true);
+			
+			FadeLightTo("PointLight_83", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_77", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("SpotLight_6", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			//FadeLightTo("PointLight_8", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("SpotLight_9", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_78", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_82", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_12", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_94", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_87", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_90", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_91", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+			FadeLightTo("PointLight_92", 0.0f, 0.0f, 0.0f, 0.0f, -1, 1);
+
+			fEventSpeed = 1.0f;
+		break;
+		
+		//////////
+		//Stop intro scream
+		case 3:
+			BangOnCellDoor();
+			StopSound("scream", 1.0f);
+		break;
+				
+		//////////
+		//Whisper fades in
+		case 5:
+			BangOnCellDoor();
+			PlaySoundAtEntity("whisper1", "insanity_whisper.snt", "Player", 0.0f, false);
+		break;
+		
+		//////////
+		//A second whisper fades in
+		case 7:
+			BangOnCellDoor();
+			PlaySoundAtEntity("whisper2", "insanity_whisper.snt", "Player", 0.0f, false);
+		break;
+		
+		//////////
+		//Event ends abruptly, did it happen or not?
+		case 12:
+			StartScreenShake(0.3f, 0.0f, 0.1f, 0.1f);
+			FadeImageTrailTo(0.0f, 1);
+			
+			PlayGuiSound("sanity_flick", 0.4f);
+			
+			StopMusic(0.5f, 10);
+			
+			StopSound("whisper1", 0.5f);
+			StopSound("whisper2", 0.5f);
+			StopSound("chain", 5.0f); StopSound("chain", 5.0f); StopSound("chain", 5.0f); StopSound("chain", 5.0f);
+			StopSound("chain", 5.0f); StopSound("chain", 5.0f); StopSound("chain", 5.0f); StopSound("chain", 5.0f);
+			StopSound("scream", 1.0f); StopSound("scream", 1.0f); StopSound("scream", 1.0f); StopSound("scream", 1.0f);
+			StopSound("scream", 1.0f); StopSound("scream", 1.0f); StopSound("scream", 1.0f); StopSound("scream", 1.0f);
+			
+			PlayerReact(false,0.5f);
+			GiveSanityDamage(10.0f, false);
+			
+			bPauseAtStep = true;
+		break;
+		
+		//////////
+		//Bang door on empty event steps
+		default:
+			BangOnCellDoor();
+		break;
+	}
+
+	if(!bPauseAtStep) AddTimer(sEvent, fEventSpeed, sEvent);
+}
+
+//A general random effect for banging on doors.
+void BangOnCellDoor()
+{	
+	int iDoor = RandInt(1, 8);
+	
+	if(iDoor == 1 or iDoor == 4 or iDoor == 5 or iDoor == 8)
+		PlaySoundAtEntity("chain", "general_chain_rattle.snt", "prison_"+iDoor, RandFloat(0.0f, 1.0f), false);
+		
+	PlaySoundAtEntity("scream", "21_screams.snt", "prison_"+iDoor, RandFloat(0.0f, 1.0f), false);
+		
+	PlaySoundAtEntity("bang"+iDoor, "21_bang_door.snt", "prison_"+iDoor, RandFloat(0.0f, 1.0f), false);
+	
+	//CreateParticleSystemAtEntity("psbang"+iDoor, "ps_dust_impact_vert.ps", "prison_"+iDoor, false);
+	
+	FadeLightTo("light_prison_"+iDoor, 0.9f, 0.15f, 0.05f, 1, -1, 0.2f);
+	
+	AddPropImpulse("prison_"+iDoor, RandFloat(-8.0f, 8.0f), 0, 0, "World");
+	
+	StartScreenShake(0.02f, 0, 0.2f, 0.3f);
+	
+	AddTimer("light_prison_"+iDoor, 0.6f, "TimerEventCellLight");
+		
+	AddDebugMessage("Bang on Door "+iDoor, false);
+}
+
+//Fade out light in cell
+void TimerEventCellLight(string &in asTimer)
+{
+	FadeLightTo(asTimer, 0, 0, 0, 0, -1, 0.4f);
+}
+
+
+////////////////////////////
+// Run first time starting map
+void OnStart()
+{
+	SetMapDisplayNameEntry("Nave");
+	
+	// Clear previously saved maps!
+	ClearSavedMaps();
+	
+	////////////////////
+	// Hub start sanity boost
+	GiveSanityBoost();
+		
+	//////////////////////
+	//Load Screen Setup
+	SetupLoadScreen("LoadingText", "Ch02_Diary07_", 6, "game_loading_strappado.jpg");
+	
+	///////////////////////////
+	// Init entities
+	InitCeilingCogWheels();
+	InitWaterLurkerSounds();
+	
+	
+	///////////////////////////
+	// Variables
+	SetLocalVarInt("AgrippaAwake",0);		//If agrippa is awake yet.
+	SetLocalVarInt("AgrippaVoiceMachineOn",0); 	//If the machine that lets Agrippa talk is on.
+	SetLocalVarInt("PlayerInAgrippaTalkRange",0);	//If the player is in Agrippa talk range
+	
+	///////////////////////////
+	// Connections
+	InteractConnectPropWithRope("WellRope","crank_iron_2", "RopeArea_1", false, 3,5,5, false, 0);
+	
+	///////////////////////////
+	// UseItem
+	AddUseItemCallback("MeatOnRope", "fresh_meat_2", "AreaRopeInteraction", "UseMeatOnRope", false);
+	
+	
+	AddUseItemCallback("MeatOnAgrippa", "fresh_meat_2", "AreaAgrippa_1", "UseStuffOnAgrippa", false);
+	AddUseItemCallback("BoneOnAgrippa", "fresh_meat_remains_1", "AreaAgrippa_1", "UseStuffOnAgrippa", false);
+	
+	AddUseItemCallback("GlandOnAgrippa","poison_gland", "AreaAgrippa_1", "UseStuffOnAgrippa", false);
+	AddUseItemCallback("BloodOnAgrippa","glass_container_blood", "AreaAgrippa_1", "UseStuffOnAgrippa", false);
+	
+	///////////////////////////
+	// Collide Callbacks
+	AddEntityCollideCallback("Player", "AreaWakeUpAgrippa", "CollideWakeUpAgrippa", false, 1);
+		
+	AddEntityCollideCallback("Player", "AreaAgrippaStartTalk", "CollideAgrippaStartTalk", false, 1);	
+	AddEntityCollideCallback("Player", "AreaAgrippaStopTalk", "CollideAgrippaStopTalk", false, -1);	
+	
+	AddEntityCollideCallback("Player", "AreaWellKillPlayer", "CollideWellKillPlayer", false, 1);
+	
+	AddEntityCollideCallback("Player", "AreaStartAlexanderVoice", "CollideStartAlexanderVoice", true, 1);
+	
+	AddEntityCollideCallback("invisible_box_mass_2_1", "AreaRopeInteraction","CollideRopeInteraction", false, 0);
+	AddEntityCollideCallback("invisible_box_mass_2_1", "AreaRopeDown","CollideRopeDown", false, 0);
+	
+	AddEntityCollideCallback("Player", "AreaFirstWellKillPlayer", "CollideFirstWellKillPlayer", false, 1);
+	
+	AddEntityCollideCallback("crank_iron_2", "CrankSound_2", "CollideCrankSound", false, 1);
+	AddEntityCollideCallback("crank_iron_2", "CrankSound_1", "CollideCrankSound", false, 1);
+	
+	AddEntityCollideCallback("Player", "AreaChains", "CollideAreaChains", false, 1);
+	
+	AddEntityCollideCallback("Player", "AreaAgrippaRandom", "CollideAgrippaRandomArea", false, 0);
+	
+	AddEntityCollideCallback("Player", "AreaSpikes", "CollideAreaSpikes", false, 0);
+	AddEntityCollideCallback("Player", "AreaSpikes_1", "CollideAreaSpikes", false, 0);
+	AddEntityCollideCallback("Player", "AreaSpikes_2", "CollideAreaSpikes", false, 0);
+	
+	AddEntityCollideCallback("Player", "AreaCellEvent", "CollideAreaCellEvent", false, 1);
+	AddEntityCollideCallback("Player", "FlashbackArea_2_C", "CollideFlashbackArea_23", true, 1);
+	AddEntityCollideCallback("Player", "FlashbackArea_3_C", "CollideFlashbackArea_23", true, 1);
+	
+	AddTimer("TimerRandSound", RandFloat(1.0f, 4.0f), "TimerRandSound");
+	AddTimer("TimerRandSound02", RandFloat(5.0f, 8.0f), "TimerRandSound02");
+	
+	SetLocalVarInt("SanityForCellEvent", 50);	//Sanity below this value triggers an event in waiting room
+	
+	///////////////////////////
+	// Debug
+	if(ScriptDebugOn())
+	{
+		//SetLocalVarInt("SanityForCellEvent", 100);
+		
+		if(HasItem("lantern") == false) GiveItemFromFile("lantern", "lantern.ent");
+		
+		//GiveItemFromFile("poison_gland", "poison_gland.ent");
+		//GiveItem("glass_container_blood", "Puzzle", "glass_container_blood", "glass_container_blood.tga", 0);
+		
+		
+		//GiveItemFromFile("fresh_meat_2", "fresh_meat.ent");
+		//SetGlobalVarInt("PlayerHasVisitedLevel22",1);
+		//SetGlobalVarInt("ChoirOrbCount",3);
+		//SetGlobalVarInt("TranseptOrbCount",3);
+		//SetEntityActive("AreaStartAlexanderVoice", true);
+	}
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{	
+	/////////////////////////////////
+	// Play music!
+	PlayMusic("21_amb.ogg", true, 0.8f, 5, 0, true);
+	
+	PreloadSound("21_loop"); PreloadSound("agrippa_wake"); PreloadSound("21_cm_reverse_low"); PreloadSound("21_channeling_machine");
+	PreloadSound("21_cog_slide"); PreloadSound("21_cog_wheel_big"); PreloadSound("21_lever_success"); PreloadSound("21_ignite");
+	PreloadSound("waterlurker_eat_rev.snt"); PreloadSound("waterlurker_attack_rev.snt"); PreloadSound("waterlurker_idle_rev.snt"); PreloadSound("guardian_distant2");
+	PreloadSound("player_bodyfall"); PreloadSound("waterlurker_hunt_rev.snt"); PreloadSound("21_meat_long"); PreloadSound("06_rope_strain");
+	PreloadSound("21_bang_door"); PreloadSound("general_chain_rattle"); PreloadSound("21_screams"); PreloadSound("insanity_whisper");
+	PreloadSound("slime_loop"); PreloadSound("03_rock_move"); PreloadSound("15_man01_whimp"); PreloadSound("21_intro_scream");
+	PreloadSound("general_chain_rattle_single"); PreloadSound("21_meat"); PreloadSound("21_meat_long"); PreloadSound("21_meat_snap");
+	PreloadSound("21_alex_low_freq_rumble"); PreloadSound("guardian_idle"); PreloadSound("react_breath"); PreloadSound("react_scare");
+	PreloadSound("scare_wall_stomp"); PreloadSound("sanity_flick");
+	
+	/////////////////////////////////
+	// Check if WaitRoom flashback should be enabled!
+	if(GetGlobalVarInt("PlayerHasVisitedLevel22")==1 && GetLocalVarInt("WaitRoomFlashBackActivated")==0)
+	{
+		SetEntityActive("FlashbackArea_2", true);
+		SetEntityActive("FlashbackArea_2_C", true);
+		SetLocalVarInt("WaitRoomFlashBackActivated",1);
+	}
+	
+	/////////////////////////////////
+	// Check if Player has all Orbs, then to howl event
+	if(GetGlobalVarInt("ChoirOrbCount")==3 && GetGlobalVarInt("TranseptOrbCount")==3 && 
+	   GetLocalVarInt("AllOrbsHowlEventActivated")==0)
+	{
+		SetLocalVarInt("AllOrbsHowlEventActivated",1);
+		
+		AddTimer("AllOrbsHowlEvent", 3.0, "TimerAllOrbsHowlEvent");
+	}
+	
+	SetupCurrentMapBasedOnExtraModes();
+	
+	if(ScriptDebugOn() == false && GetToughModeOn() <= 1)
+	{
+		AutoSave();
+	}
+	
+	string sEnemyName = "";
+	
+	sEnemyName = "waterlurker";
+	PreloadEnemySound("attack.snt", sEnemyName);
+	PreloadEnemySound("attack_rev.snt", sEnemyName);
+	PreloadEnemySound("eat.snt", sEnemyName);
+	PreloadEnemySound("eat_rev.snt", sEnemyName);
+	PreloadEnemySound("hunt.snt", sEnemyName);
+	PreloadEnemySound("hunt_rev.snt", sEnemyName);
+	PreloadEnemySound("idle.snt", sEnemyName);
+	PreloadEnemySound("idle_rev.snt", sEnemyName);
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	
+}

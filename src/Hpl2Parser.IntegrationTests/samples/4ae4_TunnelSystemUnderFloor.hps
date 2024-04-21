@@ -1,0 +1,754 @@
+// Intro sequence
+
+void Enemy1Patrol()
+{
+}
+
+void TimerEIntro(string &in asTimer)
+{
+	string sEvent = asTimer;	//Do not edit, sets timer loop function name.
+	AddLocalVarInt(sEvent, 1);	//Do not edit, steps through timer loop events.
+	bool bPauseAtStep = false;	//Do not edit, to pause or end the timer loop at specified step.
+
+	float fEventSpeed = 1.0f;	//Set to preferred default time for the timer loop.
+	
+	// Player wakes up on bed, hears enemy, looks briefly at enemy, passes out and falls out of bed
+	// wakes up and gets up and game begins
+	switch(GetLocalVarInt(sEvent))
+	{
+		case 1:
+		                FadeIn(4.0f);
+			StartPlayerLookAt("AreaIntroLook_2", 0.05f, 0.05f, "");
+			FadePlayerRollTo(-45, 0.8, 8);
+			fEventSpeed = 2.0f;
+		break;
+		
+		case 2:
+			StartPlayerLookAt("AreaIntroLook_2", 0.2f, 0.2f, "");
+			Enemy1Patrol();
+			fEventSpeed = 2.0f;
+		break;
+		
+		case 3:
+			FadeOut(3.0f);
+		break;
+		
+		case 4:
+			FadeIn(6.0f);
+			SetPlayerLookSpeedMul(0.06f);
+			StartPlayerLookAt("enemie", 0.4f, 0.4f, "");
+                        AddEffectVoice("ch4harry.ogg", "", "Voice", "00_Ch4harry", false, "", 0, 0 );
+		break;
+		
+		case 5:
+			FadeOut(8.0f);
+			fEventSpeed = 4.0f;
+		break;
+		
+		case 6:
+			StartPlayerLookAt("AreaIntroLook_4", 0.2f, 0.2f, "");
+			FadePlayerRollTo(0, 0.8, 4);
+			fEventSpeed = 3.0f;
+		break;
+		
+		case 7:
+			FadeIn(4.0f);
+			SetPlayerLookSpeedMul(0.1f);
+			StartPlayerLookAt("AreaIntroLook_3", 0.6f, 0.6f, "");
+			FadePlayerRollTo(30, 15, 30);
+                        SetEntityActive("enemie", false);
+			fEventSpeed = 1.5f;
+		break;	
+		
+		case 8:
+			FadeIn(3.0f);
+			StartPlayerLookAt("AreaIntroLook_5", 0.5f, 0.5f, "");
+			SetRadialBlurStartDist(0.3f);
+			FadeRadialBlurTo(0.1f, 0.1f);
+			FadePlayerRollTo(0, 5, 10);
+			SetPlayerCrouching(false);
+			MovePlayerHeadPos(-1.0f, -0.3f, 0.0f, 1.0f, 0.1f);
+			fEventSpeed = 1.5f;
+		break;	
+		
+		case 9:
+			StartPlayerLookAt("AreaIntroLook_2", 2, 2, "");
+			SetPlayerCrouching(true);
+			FadeOut(3.0f);
+		break;
+		
+		case 10:
+			StartPlayerLookAt("AreaIntroLook_1", 0.5f, 0.5f, "");
+			MovePlayerHeadPos(0, -0.3f, 0.0f, 1.0f, 0.1f);
+			PlayGuiSound("player_stand.snt", 1);
+			AddTimer("extra", 1.0f, "TimerExtraSound");
+			fEventSpeed = 4.0f;
+		break;
+		
+		case 11:
+			StartPlayerLookAt("AreaIntroLook_3", 10, 10, "");
+		break;
+		
+		case 12:
+			SetRadialBlurStartDist(0.1f);
+			FadeIn(4.0f);
+			fEventSpeed = 4.0f;
+		break;
+		
+		case 13:
+			FadeRadialBlurTo(0, 0.01f);
+			FadePlayerRollTo(-45, 0.8, 8);
+			StartPlayerLookAt("AreaIntroLook_2", 0.1f, 0.1f, "");
+			fEventSpeed = 3.0f;
+		break;
+		
+		case 14:
+			SetPlayerMoveSpeedMul(0.1f);
+			SetPlayerLookSpeedMul(0.1f);
+			FadePlayerRollTo(0, 0.4, 4);
+			MovePlayerHeadPos(0.5, -0.3f, 0.0f, 1.0f, 0.1f);
+		break;
+		
+		case 15:
+			SetPlayerMoveSpeedMul(0.2f);
+			SetPlayerLookSpeedMul(0.3f);
+			MovePlayerHeadPos(-0.5, -0.3f, 0.0f, 1.0f, 0.1f);
+			PlayGuiSound("step_sneak_female_dirt.snt", 1);
+			SetPlayerCrouching(false);
+		break;
+		
+		case 16:
+			SetPlayerMoveSpeedMul(0.4f);
+			SetPlayerLookSpeedMul(0.5f);
+			StartPlayerLookAt("AreaIntroLook_4", 1.2f, 1.2f, "");
+			PlayGuiSound("step_sneak_female_dirt.snt", 1);
+			MovePlayerHeadPos(0, 0, 0.0f, 0.5f, 0.1f);
+		break;
+		
+		case 17:
+			SetPlayerMoveSpeedMul(0.6f);
+			SetPlayerLookSpeedMul(0.8f);
+			FadePlayerRollTo(0, 2, 8);
+		break;
+		
+		case 18:
+			SetPlayerMoveSpeedMul(1.0f);
+			SetPlayerLookSpeedMul(1.0f);
+                        SetPlayerRunSpeedMul(1.0f);
+			SetPlayerCrouchDisabled(false);
+			SetPlayerJumpDisabled(false);
+			SetInventoryDisabled(false);
+			AddTimer("more", 0.1f, "TimerDoBlurPounding");
+			StopPlayerLookAt();
+                        AddTimer("enemie", 15, "enemie");
+                        SetMessage("Messages", "ch4hide", 4);
+                        AddQuest("Ch4escape", "Ch4escape");
+		break;
+		
+		//////////
+		//End timer when no more steps in the event found.
+		default:
+			bPauseAtStep = true;
+		break;
+	}
+
+	if(!bPauseAtStep)
+		AddTimer(sEvent, fEventSpeed, sEvent);
+}
+
+void TimerDoBlurPounding(string &in asTimer)
+{
+	if(asTimer == "more")
+	{
+		SetRadialBlurStartDist(0.7f);
+		FadeRadialBlurTo(0.2f, 0.1f);
+		AddTimer("less", 2, "TimerDoBlurPounding");
+	}
+	else
+	{
+		FadeRadialBlurTo(0.01f, 0.04f);
+		AddTimer("more", 5, "TimerDoBlurPounding");
+	}
+}
+
+void OnStart()
+{
+AddEntityCollideCallback("enemie2", "OpenCloset", "Closet", true, 1);
+AddEntityCollideCallback("Player", "cockroach_1", "cockroach1", true, 1);
+AddEntityCollideCallback("Player", "cockroach_2", "cockroach2", true, 1);
+AddEntityCollideCallback("Player", "cockroach_3", "cockroach3", true, 1);
+AddEntityCollideCallback("Player", "cockroach_4", "cockroach4", true, 1);
+AddEntityCollideCallback("Player", "cockroach_5", "cockroach5", true, 1);
+AddEntityCollideCallback("Player", "AreaCross", "Cross", true, 1);
+AddEntityCollideCallback("Player", "AreaQuest", "Quest", true, 1);
+AddEntityCollideCallback("Player", "AreaPlanks", "Wind", true, 1);
+AddEntityCollideCallback("Player", "AreaLeak", "GasLeak", true, 1);
+AddEntityCollideCallback("Player", "AreaFire", "Death", false, 1);
+AddEntityCollideCallback("Player", "AreaGas", "Gas", false, 1);
+AddEntityCollideCallback("Player", "AreaGas2", "Gas", false, 1);
+AddEntityCollideCallback("Player", "AreaGas3", "Gas", false, 1);
+AddEntityCollideCallback("Player", "AreaSafe", "Safe", false, 1);
+AddEntityCollideCallback("Player", "AreaSafe2", "Safe", false, 1);
+AddEntityCollideCallback("Player", "AreaSafe3", "Safe", false, 1);
+AddUseItemCallback("", "knife", "slime", "RemoveSlime", true);
+AddUseItemCallback("", "knife", "slime2", "RemoveSlime2", true);
+AddUseItemCallback("", "handle", "AreaLever", "Lever", true);
+PlaySoundAtEntity("Firesound", "general_fire_burning_low.snt", "AreaFire", 0, false);
+CreateParticleSystemAtEntity("Fireps", "ps_fire_orb_room_orange", "AreaFire", false);
+PlaySoundAtEntity("Firesound", "puzzle_gas.snt", "AreaSteam", 0, false);
+CreateParticleSystemAtEntity("Fireps", "ps_steam", "AreaSteam", false);
+RemoveItem("Lantern");
+RemoveItem("stone_hammer_chipper");
+RemoveItem("handle");
+RemoveItem("drill");
+RemoveItem("knife");
+RemoveItem("waxwaldon2");
+RemoveItem("waxemma");
+RemoveItem("waxharry");
+RemoveItem("waxmichael");
+RemoveItem("money4");
+RemoveItem("money6");
+RemoveItem("money7");
+FadeOut(0.0f);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+SetPlayerLookSpeedMul(0.03f);
+SetPlayerCrouching(true);
+SetPlayerCrouchDisabled(true);
+SetPlayerJumpDisabled(true);
+SetInventoryDisabled(true);
+MovePlayerHeadPos(0.5f, -0.3f, 0.0f, 1.0f, 0.1f);
+StartPlayerLookAt("AreaIntroLook_1", 10.0f, 10.0f, "");
+AddTimer("TimerEIntro", 2.0f, "TimerEIntro");
+AddEnemyPatrolNode("enemie", "node_2", 0.0f, "");
+SetEntityActive("enemie", true);
+PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+CompleteQuest("Ch4badwater", "Ch4badwater");
+CheckPoint("Checkpoint", "PlayerStartArea_1", "DeathSettings", "DeathHints", "Killed");
+SetPlayerPermaDeathSound("harry/harry_kill.snt");
+AutoSave();
+}
+
+void enemie(string &in asTimer)
+{
+SetEntityActive("enemie2", true);
+AddEnemyPatrolNode("enemie2","node_1",0,"");
+AddEnemyPatrolNode("enemie2","node_2",0,"");
+AddEnemyPatrolNode("enemie2","node_3",3,"");
+AddEnemyPatrolNode("enemie2","node_2",0,"");
+AddEnemyPatrolNode("enemie2","node_4",0,"");
+AddEnemyPatrolNode("enemie2","node_2",0,"");
+AddEnemyPatrolNode("enemie2","node_1",0,"");
+AddEnemyPatrolNode("enemie2","node_5",0,"");
+AddEnemyPatrolNode("enemie2","node_7",0,"");
+AddEnemyPatrolNode("enemie2","node_8",0,"");
+}
+
+void Closet(string &in asParent, string &in asChild, int alState)
+{	
+AddPropImpulse("closet", 30, 3, 3, "world");	
+}
+
+void lever_func(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        SetLeverStuckState("lever", 1, true);
+        CompleteQuest("Ch4fire2", "Ch4fire2");
+        StopSound("Firesound", 0.5f);
+        DestroyParticleSystem("Fireps");
+        SetEntityActive("AreaFire", false);
+        SetEntityActive("block", false);
+        SetEntityActive("enemie4", true);
+        AddEnemyPatrolNode("enemie4","node_41",5,"");
+        AddEnemyPatrolNode("enemie4","node_40",0,"");
+        AddEnemyPatrolNode("enemie4","node_37",0,"");
+        AddEnemyPatrolNode("enemie4","node_36",0,"");
+        AddEnemyPatrolNode("enemie4","node_27",0,"");
+        AddEnemyPatrolNode("enemie4","node_24",0,"");
+        AddEnemyPatrolNode("enemie4","node_22",0,"");
+        AddEnemyPatrolNode("enemie4","node_18",0,"");
+        AddEnemyPatrolNode("enemie4","node_14",0,"");
+        AddEnemyPatrolNode("enemie4","node_12",0,"");
+	return;
+} 
+	if (alState == -1) 
+	
+        SetLeverStuckState("lever", -1, true);
+        CompleteQuest("Ch4fire2", "Ch4fire2");
+        StopSound("Firesound", 0.5f);
+        DestroyParticleSystem("Fireps");
+        SetEntityActive("AreaFire", false);
+        SetEntityActive("block", false);
+        SetEntityActive("enemie4", true);
+        AddEnemyPatrolNode("enemie4","node_41",5,"");
+        AddEnemyPatrolNode("enemie4","node_40",0,"");
+        AddEnemyPatrolNode("enemie4","node_37",0,"");
+        AddEnemyPatrolNode("enemie4","node_36",0,"");
+        AddEnemyPatrolNode("enemie4","node_27",0,"");
+        AddEnemyPatrolNode("enemie4","node_24",0,"");
+        AddEnemyPatrolNode("enemie4","node_22",0,"");
+        AddEnemyPatrolNode("enemie4","node_18",0,"");
+        AddEnemyPatrolNode("enemie4","node_14",0,"");
+        AddEnemyPatrolNode("enemie4","node_12",0,"");
+}
+
+//---- Scares ----//
+
+void Wind(string &in asParent, string &in asChild, int alState)
+{	
+PlaySoundAtEntity("","scare_male_terrified5.snt", "AreaWind", 0, true);
+CreateParticleSystemAtEntity("", "ps_dust_whirl", "AreaWind", false);
+AddPropImpulse("lamp", 300, 5, 5, "world");	
+AddTimer("scare", 2, "scare");
+}
+
+void Cross(string &in asParent, string &in asChild, int alState)
+{	
+PlaySoundAtEntity("","03_in_a_bottle.snt", "body", 0, true);
+PlaySoundAtEntity("","00_faint.snt", "body", 0, true);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die", "body", false);
+SetEntityActive("body", false);
+SetEntityActive("block", true);
+AddTimer("scare", 1, "scare");
+}
+
+void scare(string &in asTimer)
+{
+GiveSanityDamage(10, true);
+PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.8f, false);
+}
+
+void doorbrute(string &in asEntity)
+{
+SetEntityActive("brute", true);
+AddTimer("doorbrute2", 2, "doorbrute2");
+SetEntityPlayerInteractCallback("metal_4", "", false);
+AddEnemyPatrolNode("brute", "node_34", 0.0f, "");
+}
+
+void doorbrute2(string &in asTimer)
+{
+FadeEnemyToSmoke("brute", true);
+}
+
+//---- Quests and etc ----//
+
+void cockroach1(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("cockroach_1", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "cockroach_1", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "cockroach_1", false);	
+}
+
+void cockroach2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("cockroach_2", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "cockroach_2", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "cockroach_2", false);		
+}
+
+void cockroach3(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("cockroach_3", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "cockroach_3", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "cockroach_3", false);		
+}
+
+void cockroach4(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("cockroach_4", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "cockroach_4", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "cockroach_4", false);		
+}
+
+void cockroach5(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("cockroach_5", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "cockroach_5", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "cockroach_5", false);		
+}
+
+void GasLeak(string &in asParent, string &in asChild, int alState) 
+{
+CreateParticleSystemAtEntity("", "ps_steam_puff", "AreaPipe", false);
+CreateParticleSystemAtEntity("", "ps_steam", "AreaPipe", false);
+PlaySoundAtEntity("", "17_break_wheel.snt", "AreaPipe", 0.0f, false);
+PlaySoundAtEntity("", "13_steam.snt", "AreaPipe", 0.0f, false);
+}
+
+void dust(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust2", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust3", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust4", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust5", false);
+PlaySoundAtEntity("","04_rock.snt", "Player", 0, false);
+StartScreenShake(0.03f,0.35f, 0.03f,4.5f);
+}
+
+void shower(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+DestroyParticleSystem("showerps");
+StopSound("showersound", 0.5f);
+}
+     if (alState == 1)
+     {
+PlaySoundAtEntity("showersound","16_water_stream_low.snt", "AreaWater", 0, true);
+CreateParticleSystemAtEntity("showerps", "ps_water_stream_sewer", "AreaWater", false);
+          return;
+     }
+}
+
+void RemoveSlime(string &in asItem, string &in asEntity)
+{
+SetEntityActive("slime", false);
+PlaySoundAtEntity("","slime_create.snt","slime", 0,false);
+CreateParticleSystemAtEntity("", "ps_slime_attack_normal", "slime", false);
+}
+
+void RemoveSlime2(string &in asItem, string &in asEntity)
+{
+SetEntityActive("slime2", false);
+PlaySoundAtEntity("","slime_create.snt","slime2", 0,false);
+CreateParticleSystemAtEntity("", "ps_slime_attack_normal", "slime2", false);
+}
+
+void Quest(string &in asParent, string &in asChild, int alState)
+{	
+AddQuest("Ch4fire2", "Ch4fire2");
+}
+
+void Death(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death2", 0.4, "death2");
+}
+
+void death2(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death3", 0.5, "death3");
+}
+
+void death3(string &in asTimer)
+{
+PlaySoundAtEntity("","24_burn2","Player", 0,false);
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death4", 0.5, "death4");
+SetPlayerCrouching(true);
+}
+
+void death4(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death5", 0.5, "death5");
+}
+
+void death5(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death6", 0.5, "death6");
+}
+
+void death6(string &in asTimer)
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(200, "BloodSplat", false, true);
+GivePlayerDamage(0, "BloodSplat", false, true);
+GivePlayerDamage(0, "BloodSplat", false, true);
+}
+
+void Gas(string &in asParent, string &in asChild, int alState) 
+{
+AddTimer("gas2", 20, "gas2");
+AddQuest("Ch4air", "Ch4air");
+SetEntityActive("AreaGas", false);
+SetEntityActive("AreaGas2", false);
+SetEntityActive("AreaGas3", false);
+}
+
+void gas2(string &in asTimer)
+{
+GivePlayerDamage(3, "BloodSplat", false, true);
+PlaySoundAtEntity("","player_cough","Player", 0,false);
+AddTimer("gas2", 20, "gas2");
+}
+
+void Safe(string &in asParent, string &in asChild, int alState) 
+{
+RemoveTimer("gas2");
+SetEntityActive("AreaGas", true);
+SetEntityActive("AreaGas2", true);
+SetEntityActive("AreaGas3", true);
+}
+
+void pickhandle(string &in asEntity)
+{
+AddLocalVarInt("VarIntItems", 1);
+	ItemsDone();
+}
+
+void picklantern(string &in asEntity)
+{
+AddLocalVarInt("VarIntItems", 1);
+	ItemsDone();
+}
+
+void diary(string &in asTimer)
+{
+SetMessage("Messages", "diarylucky", 12);
+AddDiary("DiaryLucky", "");
+}
+
+//---- Vision ----//
+//Player picks up a note and is having a vision as a result
+
+void picknote(string &in asEntity)
+{
+AddTimer("picknote2", 0.5, "picknote2");
+SetPlayerActive(false);
+AddLocalVarInt("VarIntItems", 1);
+SetEntityActive("enemie4", false);
+	ItemsDone();
+}
+
+void picknote2(string &in asTimer)
+{
+GiveSanityDamage(201, true);
+AddTimer("picknote3", 0.5, "picknote3");
+}
+
+void picknote3(string &in asTimer)
+{
+AddTimer("picknote4", 15, "picknote4");
+FadeOut(3.0f);
+}
+
+void picknote4(string &in asTimer)
+{
+AddTimer("picknote5", 2, "picknote5");
+AddTimer("music", 30, "music");
+TeleportPlayer("PlayerStartArea_2");
+SetEntityActive("enemiesaw", true);
+AddEnemyPatrolNode("enemiesaw","node_9",10,"");
+FadeIn(1.0f);
+StartPlayerLookAt("look", 5, 50, "");
+PlayMusic("11_event_dog.ogg", true, 1, 5.0f, 0, false);  
+}
+
+void picknote5(string &in asTimer)
+{
+AddTimer("picknote6", 2, "picknote6");
+StartPlayerLookAt("enemiesaw", 5, 50, "");
+}
+
+void picknote6(string &in asTimer)
+{
+AddTimer("picknote7", 5, "picknote7");
+StartPlayerLookAt("look2", 5, 50, "");
+}
+
+void picknote7(string &in asTimer)
+{
+AddTimer("picknote8", 2, "picknote8");
+GivePlayerDamage(1, "Claw", true, false);
+PlaySoundAtEntity("", "attack_claw_hit.snt", "Player", 0.0f, false);
+StartPlayerLookAt("enemiesaw", 5, 50, "");
+}
+
+void picknote8(string &in asTimer)
+{
+AddTimer("picknote9", 3, "picknote9");
+GivePlayerDamage(1, "Claw", true, false);
+PlaySoundAtEntity("", "attack_claw_hit.snt", "Player", 0.0f, false);
+FadeOut(3.0f);
+}
+
+void picknote9(string &in asTimer)
+{
+AddTimer("picknote10", 3, "picknote10");
+TeleportPlayer("PlayerStartArea_3");
+}
+
+void picknote10(string &in asTimer)
+{
+AddTimer("picknote11", 3, "picknote11");
+MovePlayerHeadPos(0.0f, -1.1f, 0.0f, 1.0f, 0.5f);
+StartPlayerLookAt("AreaCross2", 5, 50, "");
+}
+
+void picknote11(string &in asTimer)
+{
+AddTimer("picknote12", 6, "picknote12");
+FadeIn(5.0f);
+}
+
+void picknote12(string &in asTimer)
+{
+MovePlayerHeadPos(0.0, 0, 0, 1.0f, 0.5f);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddQuest("Ch4alma", "Ch4alma");
+CompleteQuest("Ch4escape", "Ch4escape");
+SetMessage("Messages", "ch4not", 5);
+AddTimer("diary", 7, "diary");
+AddEffectVoice("ch4not.ogg", "", "Voice", "00_Ch4not", false, "", 0, 0 );
+AddEffectVoice("ch4not2.ogg", "", "Voice", "00_Ch4not", false, "", 0, 0 );	
+}
+
+void ItemsDone(){
+
+	if(GetLocalVarInt("VarIntItems") == 3){
+		
+                SetEntityActive("block", false);
+	}
+}
+
+void music(string &in asTimer)
+{
+PlayMusic("02_amb_strange.ogg", true, 1, 5.0f, 0, true); 
+}
+
+//---- Last event ----//
+//Player must wait for the elevator to arrive
+
+void Lever(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("lever2", false);
+SetEntityActive("lever3", true);
+PlaySoundAtEntity("", "puzzle_place_jar.snt", "Player", 0.0f, false);
+}
+
+void lever_elevator(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        GiveItem("handle", "", "lever", "lever_l03.tga", 0);
+        SetEntityActive("lever3", false);
+        SetEntityActive("lever2", true);
+        CompleteQuest("Ch4lever", "Ch4lever");
+        SetMessage("Messages", "holdout", 7);
+        PlaySoundAtEntity("","14_elevator_clank.snt", "Player", 0, true);
+        AddTimer("elevator", 25, "elevator");
+        CheckPoint("Checkpoint2", "PlayerStartArea_4", "DeathSettings2", "DeathHints", "Holdout");
+        SetEntityActive("enemie3", true);
+        AddEnemyPatrolNode("enemie3","node_12",0,"");
+        AddEnemyPatrolNode("enemie3","node_14",0,"");
+        AddEnemyPatrolNode("enemie3","node_16",0,"");
+        AddEnemyPatrolNode("enemie3","node_17",0,"");
+        AddEnemyPatrolNode("enemie3","node_18",0,"");
+        AddEnemyPatrolNode("enemie3","node_19",3,"");
+        AddEnemyPatrolNode("enemie3","node_20",1,"");
+        AddEnemyPatrolNode("enemie3","node_19",10,"");
+	return;
+} 
+	if (alState == -1) 
+	
+        GiveItem("handle", "", "lever", "lever_l03.tga", 0);
+        SetEntityActive("lever3", false);
+        SetEntityActive("lever2", true);
+        CompleteQuest("Ch4lever", "Ch4lever");
+        SetMessage("Messages", "holdout", 7);
+        PlaySoundAtEntity("","14_elevator_clank.snt", "Player", 0, true);
+        AddTimer("elevator", 25, "elevator");
+        CheckPoint("Checkpoint2", "PlayerStartArea_4", "DeathSettings2", "DeathHints", "Holdout");
+        SetEntityActive("enemie3", true);
+        AddEnemyPatrolNode("enemie3","node_12",0,"");
+        AddEnemyPatrolNode("enemie3","node_14",0,"");
+        AddEnemyPatrolNode("enemie3","node_16",0,"");
+        AddEnemyPatrolNode("enemie3","node_17",0,"");
+        AddEnemyPatrolNode("enemie3","node_18",0,"");
+        AddEnemyPatrolNode("enemie3","node_19",3,"");
+        AddEnemyPatrolNode("enemie3","node_20",1,"");
+        AddEnemyPatrolNode("enemie3","node_19",10,"");
+}
+
+void elevator(string &in asTimer)
+{
+SetMoveObjectState("gate", 1.0f);
+PlaySoundAtEntity("","elevator_stop.snt", "gate", 0, true);
+}
+
+void endmap(string &in asEntity)
+{
+ChangeMap("TunnelSystem.map", "PlayerStartArea_4", "","");
+PlaySoundAtEntity("","14_elevator_clank.snt", "Player", 0, true);
+CompleteQuest("Ch4air", "Ch4air");
+}
+
+//---- Messages ----//
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+void alreadyhere(string &in asEntity)
+{
+SetMessage("Messages", "alreadyhere", 4);
+}
+
+void nothere(string &in asEntity)
+{
+SetMessage("Messages", "nothere", 5);
+AddQuest("Ch4lever", "Ch4lever");
+}
+
+void slime(string &in asEntity)
+{
+SetMessage("Messages", "slime", 6);
+GivePlayerDamage(1, "BloodSplat", true, true);
+PlaySoundAtEntity("","impact_organic_low.snt", "Player", 0, true);
+}
+
+void slime2(string &in asEntity)
+{
+GivePlayerDamage(1, "BloodSplat", true, true);
+PlaySoundAtEntity("","impact_organic_low.snt", "Player", 0, true);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("02_amb_strange.ogg", true, 1, 5.0f, 0, true);  
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("02_amb_strange.ogg", true, 1, 5.0f, 0, true);  
+AddTimer("elevator", 20, "elevator");
+SetEntityActive("enemie3", true);
+AddEnemyPatrolNode("enemie3","node_12",0,"");
+AddEnemyPatrolNode("enemie3","node_14",0,"");
+AddEnemyPatrolNode("enemie3","node_16",0,"");
+AddEnemyPatrolNode("enemie3","node_17",0,"");
+AddEnemyPatrolNode("enemie3","node_18",0,"");
+AddEnemyPatrolNode("enemie3","node_19",3,"");
+AddEnemyPatrolNode("enemie3","node_20",1,"");
+AddEnemyPatrolNode("enemie3","node_19",10,"");
+}
+
+void OnEnter()
+{	
+StopMusic(0, 1);
+SetSanityDrainDisabled(false);
+SetPlayerRunSpeedMul(1.0f);
+PlayMusic("02_amb_strange.ogg", true, 1, 5.0f, 0, true);    
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_escape.png");
+}

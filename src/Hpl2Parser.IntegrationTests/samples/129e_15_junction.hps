@@ -1,0 +1,435 @@
+/////////////////////////////
+//On Game Start//
+////////////////////////////
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelJunction");
+	
+		PlayMusic("23_amb.ogg", true, 1, 1, 0, true);	
+
+		AddDebugMessage("script loaded!", false);
+
+		SetPlayerMoveSpeedMul(1);
+		
+		/////
+		AddUseItemCallback("", "Container", "AreaUseContainer", "ItemContainerOnLiquid", false);
+
+	//DEBUG
+	if(ScriptDebugOn())
+	{
+	SetPlayerLampOil(100.0f);
+	GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+	SetLocalVarInt("MachineWorks", 1);
+	}
+	
+	AddEntityCollideCallback("Player", "AreaQuestPoison", "GiveTipPoison", true, 1);
+	AddEntityCollideCallback("Player", "AreaDieFall", "EventDeathFall", true, 1);
+	
+	/* Death hint 
+	*/
+	SetDeathHint("DeathHint", "DHint2");
+	
+	
+	////Collides for leaving events
+	AddEntityCollideCallback("Player", "AreaEvent_1", "LeavingEvent_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_2", "LeavingEvent_2", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_3", "LeavingEvent_3", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_4", "LeavingEvent_4", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_8", "LeavingEvent_8", true, 1);
+	AddEntityCollideCallback("Player", "AreaEvent_9", "LeavingEvent_9", true, 1);
+	
+	//Display
+	SetMapDisplayNameEntry("LevelJunction");
+	
+	AutoSave();
+	CheckPoint("junction1", "PlayerStartArea_1", "", "DeathHint", "DHint2");
+}
+
+//////////////////
+//BEGIN LIQUID //
+
+/* First message of poison
+ */
+ 
+void GiveTipPoison(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("TextOne", "15Poison", 2);
+	
+	PlayGuiSound("player_cough2.ogg", 1.0f);
+	
+	GivePlayerDamage(1, "BloodSplat", true, false);
+}
+
+/* Message to let player know it needs container
+ */
+ 
+void TouchLiquid(string &in asEntity)
+{
+	SetMessage("TextOne", "15Liquid1", 2);
+}
+ 
+ /* Get liquid and set it on edge of pool
+ */
+ 
+void ItemContainerOnLiquid(string &in asItem, string &in asEntity)
+{
+	SetPlayerActive(false);
+	
+	StartPlayerLookAt("LookAtMe!", 1, 2, "");
+
+	PlaySoundAtEntity("fill", "12_epoxy_fill", "AreaDrinkLiquid", 0, false);
+	
+	SetPropActiveAndFade("ContainerPart_Full", true, 1);
+	SetEntityActive("ContainerPart_Area", true);
+	
+	AddTimer("", 2, "TimerEndLook");
+	
+	RemoveItem(asItem);
+}
+ 
+  /* drink
+ */
+ 
+void EventsLoopy(string &in asEntity)
+{
+	FadeOut(2);
+	SetPlayerActive(false);
+	
+	PlayGuiSound("26_agrippa_drink.ogg", 1.0f);
+	
+	AddTimer("", 4, "TimerLoopy");
+}
+
+/*End Look
+*/
+void TimerEndLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+}
+
+void TimerEndLook2(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+/* Goofy ahh events
+*/
+void TimerLoopy(string &in asTimer)
+{	
+	AddLocalVarInt("WhatStep", 1);
+	float fEventSpeed = 2.0f;
+
+
+	switch(GetLocalVarInt("WhatStep")) 
+	{
+		case 1:
+			FadeIn(1);
+			SetPropActiveAndFade("ContainerPart_Full", false, 1);
+			SetPropActiveAndFade("ContainerPart_Empty", true, 1);
+			
+			PlaySoundAtEntity("amb", "00_loop", "Player", 0, false);
+			
+			/*Screen events
+			*/
+			FadePlayerFOVMulTo(1.3, 2);
+			FadePlayerRollTo(12, 10, 15);
+			MovePlayerHeadPos(0, -1, 0, 20, 1);
+			FadeSepiaColorTo(1, 1);
+			
+			StartInsanityEvent("Bugs_Swarm");
+		break;
+		case 2:
+			FadePlayerRollTo(0, 10, 15);
+			FadePlayerFOVMulTo(1.4, 2);
+			MovePlayerHeadPos(0, -1.5, -0.2, 1, 1);
+			FadeRadialBlurTo(1, 1);
+			PlayGuiSound("player_cough2.ogg", 1.0f);
+		break;
+		case 3:
+			PlayGuiSound("react_sigh4.ogg", 0.0f);
+		break;
+		case 4:
+			MovePlayerHeadPos(0, 0, 0, 20, 25);
+		break;
+		case 5:
+			FadePlayerFOVMulTo(1, 2);
+			FadeRadialBlurTo(0, 1);
+			FadeSepiaColorTo(0, 1);
+			PlayGuiSound("15_breath.ogg", 1.0f);
+			StopSound("amb", 1);
+		break;
+		case 6:
+			SetPlayerActive(true);
+		break;
+		case 7:
+			GiveSanityBoost();
+			PlayMusic("17_puzzle.ogg", false, 1, 1, 10, true);
+			
+			SetEntityActive("BlockPoison", false);
+			SetEntityActive("AreaQuestPoison", false);
+			
+			AddEntityCollideCallback("Player", "AreaSpawnBrute", "EventBrute", true, 1);
+			
+			AutoSave();
+		break;
+	}
+	
+	if(GetLocalVarInt("WhatStep") <= 7) AddTimer("", fEventSpeed, "TimerLoopy");
+}
+
+//END LIQUID//
+//////////////////
+
+/* Brute Spawns
+*/
+void EventBrute(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Brute", true);
+	SetPropHealth("prison_2", 0);
+	
+	/*idk if this will do anything but its worth a try
+	*/
+	PlaySoundAtEntity("break", "15_ripp_door", "prison_2", 0, false);
+	
+	GiveSanityDamage(1, true);
+	
+	/* Nodes
+	*/
+	AddEnemyPatrolNode("Brute", "Node_2", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Node_4", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Node_6", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Node_7", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Node_8", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Node_11", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Node_13", 0.001, "");
+	AddEnemyPatrolNode("Brute", "Node_14", 0.001, "");
+}
+
+////////////////////////////////////
+///////////////////////////////////
+/////PLAYER FALLS TO THEIR DEATH//
+void EventDeathFall(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(100, "BloodSplat", false, true);
+	CheckPoint("fallhole", "StartMiddle", "", "DeathHint", "DHint2");
+}
+
+/////////
+
+///////
+//Lock Text
+void LockText(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2);
+}
+
+
+/////////////////////////
+////////////////////////
+//-------------------//
+//MAJOR LEAVING EVENTS
+//-------------------//
+///////////////////////
+//////////////////////
+void LeavingEvent_1(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.04f, 3, 1, 1);
+	PlaySoundAtEntity("rock1", "03_rock_move", "ScriptArea_1", 0, false);
+}
+
+void LeavingEvent_2(string &in asParent, string &in asChild, int alState)
+{
+	StartInsanityEvent("Steps_SlimeyRun01");
+}
+
+void LeavingEvent_3(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("creak", "00_creak", "Player", 0, false);
+	PlaySoundAtEntity("scrape", "scrape_rock", "ScriptArea_4", 0, false);
+	
+	StartScreenShake(0.01f, 2, 1, 1);
+	SetPropActiveAndFade("galnuch", false, 2);
+	
+	AddTimer("timer3leave1", 2, "TimerEvents3");
+	AddTimer("timer3leave2", 4, "TimerEvents3");
+	AddTimer("timer3leave3", 5, "TimerEvents3");
+	AddTimer("timer3leave4", 6, "TimerEvents3");
+}
+
+/* Timer for events 3
+*/
+void TimerEvents3(string &in asTimer)
+{
+	if(asTimer == "timer3leave1")
+	{
+		PlaySoundAtEntity("creak", "00_laugh", "ScriptArea_5", 0, false);
+	}
+	
+	if(asTimer == "timer3leave2")
+	{
+		PlaySoundAtEntity("creak", "scare_walk_ghost", "ScriptArea_6", 0, false);
+	}
+		
+	if(asTimer == "timer3leave3")
+	{
+		PlaySoundAtEntity("creak", "scare_walk_ghost", "ScriptArea_7", 0, false);
+		StopSound("creak", 1);
+		StopSound("scrape", 1);
+	}
+	
+	if(asTimer == "timer3leave4")
+	{
+		StartInsanityEvent("Steps_SlimeyRun01");
+		PlayGuiSound("react_scare1.ogg", 0.0f);
+	}
+}
+
+/* events 4
+*/
+void TimerEvents4(string &in asTimer)
+{
+	PlaySoundAtEntity("scarymonster", "enemy/brute/amb_idle_whimp", "ScriptArea_9", 0, false);
+}
+
+/* extremely horrific terrifying monster spawn
+*/
+void LeavingEvent_8(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Brute_2", true);
+	
+	AddEnemyPatrolNode("Brute_2", "2Node_1", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_2", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_3", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_4", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_5", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_6", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_7", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_8", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_9", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_11", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_12", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_13", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_14", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_15", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_16", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_17", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_18", 0.001, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_19", 0.001, "");
+	
+	CheckPoint("secondmonster", "StartMonster", "", "DeathHint", "DHint4");
+}
+
+/* ANCIENT TUNNELS & UNDERGROUND EXIT
+*/
+void LeavingEvent_9(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("08_amb_success.ogg", false, 1, 1, 10, true);	
+	
+	StartPlayerLookAt("door", 1, 2, "");
+	AddTimer("", 6, "TimerEndThe");
+	
+	SetupLoadScreen("TextOne", "Load17", 0, "int_loading_creature.jpg");
+	AutoSave();
+}
+
+void TimerEndThe(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+//---------------------------------------------	
+
+/////////////////////////////
+// BEGIN MEMORY STONE
+/////////////////////////////
+
+//---------------------------------------------	
+
+void BeginMemory1(string &in asEntity)
+{
+	StopMusic(3, 0);
+	SetPlayerActive(false);
+	RemoveItem(asEntity);
+	AddTimer("", 3.0f, "TimerMemory");
+	FadeOut(3.0f);
+	//PlayMusic("01_paper_self.ogg", false, 1.0f, 0.5f, 10.0f, true);
+	FadePlayerFOVMulTo(0.8f, 1.0f);
+	FadeImageTrailTo(2, 1);
+	
+	FadeLightTo("PointLight_Piece", 0, 0, 0, 0, 1, 3);
+	CreateParticleSystemAtEntity("portal", "ps_orb_light.ps", "AreaParticle", false);
+	}
+	
+void TimerMemory(string &in asTimer)
+{	
+	AddLocalVarInt("TCon", 1);
+	float fTVar = 4.0f;
+	
+	switch(GetLocalVarInt("TCon")) 
+	{
+		case 1:
+			SetPlayerCrouching(true);
+			SetLanternDisabled(true);
+			FadeOut(0.5f);
+			TeleportPlayer("MemPlace");
+			//FadePlayerFOVMulTo(1.4f, 0.4f);
+			FadePlayerRollTo(-20, 0.3f, 0.8f);
+		break;
+		case 2:
+			FadeIn(1.5f);
+			FadePlayerFOVMulTo(1.4f, 0.4f);
+			SetMessage("TextOne", "15Memory1", 5.0f);
+			fTVar = 5.0f;
+			PlaySoundAtEntity("int", "amb_eerie_dunk", "Player", 0.0f, false);
+		break;
+		case 3:
+			PlaySoundAtEntity("", "03_rock_move", "Player", 0.0f, false);
+			StartScreenShake(0.02, 0.3, 1, 1);
+			FadePlayerRollTo(20, 0.3f, 0.8f);
+			FadeOut(3.0f);
+			FadePlayerFOVMulTo(0.8f, 0.4f);
+			fTVar = 5.0f;
+		break;
+		case 4:
+			FadeIn(1.5f);
+			SetMessage("TextOne", "15Memory2", 5.0f);
+			StartScreenShake(0.02, 2, 0.5, 0.5);
+			FadeOut(3.0f);
+			FadePlayerFOVMulTo(0.8f, 0.4f);
+			fTVar = 5.0f;
+		break;
+		case 5:
+			FadeOut(3.0f);
+		break;
+		case 6:
+			FadeIn(2.5f);
+			SetMessage("TextOne", "15Memory3", 5.0f);
+			StartScreenShake(0.02, 2, 0.5, 0.5);
+			FadePlayerFOVMulTo(1.3f, 0.4f);
+		break;
+		case 7:
+			FadeOut(3.0f);
+			FadePlayerRollTo(0, 0.3f, 0.8f);
+			FadePlayerFOVMulTo(1.0f, 0.4f);
+			FadeImageTrailTo(0, 1);
+			SetPlayerActive(true);
+		break;		
+		case 8:
+			TeleportPlayer("DebugSpawn");
+			FadeIn(5.0f);
+			SetLanternDisabled(false);
+			StopSound("int", 5.0f);
+			PlayMusic("23_amb.ogg", true, 0.7f, 5.0f, 0.0f, true);
+			PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1, false);
+		break;
+	}
+	
+	if(GetLocalVarInt("TCon") < 10) AddTimer("", fTVar, "TimerMemory");
+	
+	}
+	
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load17", 0, "int_loading_creature.jpg");
+}

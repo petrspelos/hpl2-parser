@@ -1,0 +1,525 @@
+void OnStart()
+{
+FadeOut(0.0f);
+FadeIn(3.0f);
+SetSanityDrainDisabled(true);
+SetPlayerJumpDisabled(true);
+SetPlayerRunSpeedMul(0.7f);
+AddUseItemCallback("","hotelkey","roomdoor","UsedKeyOnDoor",false);
+AddUseItemCallback("","money","BuyArea","Buying",false);
+AddUseItemCallback("","money2","BuyArea","Buying2",false);
+AddUseItemCallback("","money3","BuyArea","Buying3",false);
+AddUseItemCallback("","money5","BuyArea","Buying5",false);
+AddUseItemCallback("","money8","BuyArea","Buying8",false);
+AddUseItemCallback("","money9","BuyArea","Buying9",false);
+AddUseItemCallback("","money","BuyArea2","BuyingOil",false);
+AddUseItemCallback("","money2","BuyArea2","BuyingOil",false);
+AddUseItemCallback("","money3","BuyArea2","BuyingOil",false);
+AddUseItemCallback("","money5","BuyArea2","BuyingOil2",false);
+AddUseItemCallback("","money8","BuyArea2","BuyingOil2",false);
+AddUseItemCallback("","money9","BuyArea2","BuyingOil2",false);
+AddEntityCollideCallback("Player", "Wake", "Wakeup", false, 1);
+AddEntityCollideCallback("Player", "RestStop", "RestStop", false, 1);
+AddEntityCollideCallback("Player", "DeskStop", "DeskStop", false, 1);
+AddEntityCollideCallback("Player", "DeskStop2", "DeskStop", false, 1);
+AddEntityCollideCallback("Player", "HotelRoom", "HotelRoom", true, 1);
+AddEntityCollideCallback("Player", "WalkSlow", "WalkSlow", true, 1);
+AddEntityCollideCallback("Player", "Quest", "Quest", true, 1);
+AddEntityCollideCallback("Player", "AreaNote", "ActivateNote", false, 1);
+AddEntityCollideCallback("Player", "AreaTalk", "Talk", true, 1);
+AddEntityCollideCallback("Player", "AreaEnemie", "Enemie", true, 1);
+AddEntityCollideCallback("Player", "MerchantTalk", "MerchantTalk", true, 1);
+AutoSave();
+AddTimer("screams", 45, "screams");
+SetMapDisplayNameEntry("Hotel");
+}
+
+void Wakeup(string &in asParent, string &in asChild, int alState)
+{
+AddDebugMessage("Begin Intro", false);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeOut(0.0f);
+	FadeIn(12.0f);
+	FadeImageTrailTo(1, 2);
+	StartPlayerLookAt("LookWake", 10, 100, "");
+    FadeRadialBlurTo(0.10, 2);
+    FadeRadialBlurTo(0.10, 2);
+	AddTimer("1", 5, "IntroTimer");
+	AddTimer("2", 6.5f, "IntroTimer");
+	AddTimer("3", 8.5f, "IntroTimer");
+	AddTimer("4", 10, "IntroTimer");
+	AddTimer("5", 12, "IntroTimer");
+	AddTimer("6", 14, "IntroTimer");
+SetPlayerHealth(100);
+SetPlayerSanity(100);
+MovePlayerHeadPos(0.0f, -1.1f, 0.0f, 1.0f, 0.5f);
+}
+
+void IntroTimer(string &in asTimer)
+{
+	if(asTimer == "1"){
+		StopPlayerLookAt();
+                 }
+	else if(asTimer == "2"){
+		FadePlayerRollTo(85, 1, 1);                 // "Tilts" the players head
+		SetPlayerCrouching(true);
+                FadeOut(1);
+	}
+	else if(asTimer == "3"){
+		StartPlayerLookAt("LookWake", 1, 2.0f, "");
+	}
+	else if(asTimer == "4"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("LookWake2", 1, 2.0f, "");
+		PlayGuiSound("react_breath_slow", 0.7f);
+                FadeIn(1.0f);
+	}
+	else if(asTimer == "5"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("LookWake2", 1, 2.0f, "");
+	}
+	else if(asTimer == "6"){
+		StopPlayerLookAt();
+		FadeImageTrailTo(0, 1.0f);
+		FadePlayerRollTo(0, 33, 33);        // Change all settings to defaults
+		FadeRadialBlurTo(0.0, 1);
+		SetMessage("Message", "Hint0", 0);
+		AddDebugMessage("End Intro", false);
+		SetPlayerCrouching(false);
+                FadeOut(3);
+                AddTimer("start", 3, "start");
+                  }
+}
+
+void start(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_5");
+FadeIn(1.0f);
+SetPlayerActive(true);
+SetPlayerCrouching(false);
+AddQuest("Explore", "Explore");
+AddQuest("Explore2", "Explore2");
+AddQuest("Explore3", "Explore3");
+AddQuest("Explore4", "Explore4");
+MovePlayerHeadPos(0.0, 0, 0, 1.0f, 0.5f);
+AutoSave();
+}
+
+void sleep(string &in asEntity)
+{
+SetPlayerActive(false);
+FadeOut(3);
+AddTimer("sleep2", 3, "sleep2");
+}
+
+void sleep2(string &in asTimer)
+{
+ChangeMap("HotelNight.map", "PlayerStartArea_4", "","");
+}
+
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+
+////////////////////////////
+
+void Talk(string &in asParent, string &in asChild, int alState) 
+{
+AddEffectVoice("hotel3.ogg", "", "Voice", "00_Hotel3", false, "", 0, 0 );
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	if (GetSwingDoorLocked("roomdoor") == true)
+		{
+			SetSwingDoorLocked("roomdoor", false, true);
+			PlaySoundAtEntity("", "unlock_door.snt", "roomdoor", 0, false);
+		}
+	else if (GetSwingDoorLocked("roomdoor") == false)
+		{
+			if (GetSwingDoorClosed("roomdoor") == true)
+			{
+				SetSwingDoorLocked("roomdoor", true, true);
+				PlaySoundAtEntity("", "lock_door.snt", "roomdoor", 0, false);
+			}
+			else if (GetSwingDoorClosed("roomdoor") == false)
+			{
+				SetMessage("Messages", "mustclose", 4);
+			}
+		}
+}
+
+void autoclose(string &in asEntity)
+{
+SetSwingDoorClosed("roomdoor", false, false);
+SetSwingDoorLocked("roomdoor",true, true);
+SetEntityActive("Sleep", true);
+SetEntityActive("Quest", true);
+}
+
+void Buying(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("beer", true);
+SetEntityActive("wine", true);
+}
+
+void Buying2(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("beer2", true);
+SetEntityActive("wine2", true);
+}
+
+void Buying3(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("beer3", true);
+SetEntityActive("beer4", true);
+}
+
+void Buying5(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("beer5", true);
+SetEntityActive("wine5", true);
+}
+
+void Buying8(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("wine8", true);
+SetEntityActive("wine9", true);
+}
+
+void Buying9(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetEntityActive("beer8", true);
+SetEntityActive("beer9", true);
+}
+
+void BuyingOil(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetPlayerLampOil(100.0f);
+AddEffectVoice("oilmerchant7.ogg", "", "Voice", "00_Oilmerchant7", false, "", 0, 0 );
+}
+
+void BuyingOil2(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","ui_use_health.snt","Player", 0,false);
+SetPlayerLampOil(100.0f);
+AddEffectVoice("oilmerchant8.ogg", "", "Voice", "00_Oilmerchant8", false, "", 0, 0 );
+}
+
+void music(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+PlaySoundAtEntity("","Lovethisbar.snt","MusicArea", 0,false);
+          return;
+     }
+}
+
+void music2(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+PlaySoundAtEntity("","Divorce.snt","MusicArea2", 0,false);
+          return;
+     }
+}
+
+void rest(string &in asEntity)
+{
+TeleportPlayer("PlayerStartArea_2");
+SetPlayerCrouching(true);
+SetEntityActive("RestArea", false);
+}
+
+void RestStop(string &in asParent, string &in asChild, int alState) 
+{
+SetPlayerCrouching(false);
+RemoveTimer("recovery");
+SetEntityActive("RestArea", true);
+}
+
+void desk(string &in asEntity)
+{
+TeleportPlayer("PlayerStartArea_3");
+SetPlayerCrouching(true);
+SetEntityActive("DeskArea", false);
+}
+
+void DeskStop(string &in asParent, string &in asChild, int alState) 
+{
+SetPlayerCrouching(false);
+RemoveTimer("recovery");
+SetEntityActive("DeskArea", true);
+}
+
+void piano(string &in asEntity)
+{
+PlaySoundAtEntity("Piano", "Piano.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano2(string &in asEntity)
+{
+PlaySoundAtEntity("Piano2", "Piano2.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano3(string &in asEntity)
+{
+PlaySoundAtEntity("Piano3", "Piano3.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano4(string &in asEntity)
+{
+PlaySoundAtEntity("Piano4", "Piano4.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void piano5(string &in asEntity)
+{
+PlaySoundAtEntity("Piano5", "Piano5.snt", "piano", 0.0f, false);
+AddTimer("pianodone", 6, "pianodone");
+SetEntityActive("PianoArea", false);
+SetEntityActive("PianoArea2", false);
+SetEntityActive("PianoArea3", false);
+SetEntityActive("PianoArea4", false);
+SetEntityActive("PianoArea5", false);
+}
+
+void pianodone(string &in asTimer)
+{
+SetEntityActive("PianoArea", true);
+SetEntityActive("PianoArea2", true);
+SetEntityActive("PianoArea3", true);
+SetEntityActive("PianoArea4", true);
+SetEntityActive("PianoArea5", true);
+}
+
+void Quest(string &in asParent, string &in asChild, int alState) 
+{
+SetPlayerActive(false);
+AddTimer("stoplooking", 4, "stoplooking");
+StartPlayerLookAt("LookDoor", 5, 50, "");
+AddGlobalVarInt("HotelNight", 1);
+AddQuest("HotelCellar", "HotelCellar");
+}
+
+void stoplooking(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+}
+
+void manager(string &in asEntity)
+{
+SetMessage("Messages", "manager", 6);
+}
+
+void ActivateNote(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("hammer"))
+	{
+SetEntityActive("note", true);
+SetEntityActive("money2", true);
+StartPlayerLookAt("LookNote", 10, 100, "");
+SetMessage("Messages", "letter", 6);
+AddGlobalVarInt("Guard", 1);
+	}
+	
+}
+
+void letter(string &in asEntity)
+{
+StopPlayerLookAt();
+PlayMusic("03_paper_daniel01.ogg", false, 1.0, 0, 0, false);
+SetEntityActive("AreaNote", false);
+CompleteQuest("Ch2back", "Ch2back");
+AddQuest("Ch2endchapter", "Ch2endchapter");
+}
+
+void Enemie(string &in asParent, string &in asChild, int alState)
+{	
+AddEnemyPatrolNode("enemie","node_1",0,"");	
+SetEntityActive("enemie", true);	
+}
+
+void MerchantTalk(string &in asParent, string &in asChild, int alState) 
+{
+AddEffectVoice("oilmerchant1.ogg", "", "Voice", "00_Oilmerchant1", false, "", 0, 0 );
+SetPlayerActive(false);
+AddTimer("MerchantTalk2", 4, "MerchantTalk2");
+StartPlayerLookAt("LookMerchant", 5, 50, "");
+}
+
+void MerchantTalk2(string &in asTimer)
+{
+AddEffectVoice("oilmerchant2.ogg", "", "Voice", "00_Oilmerchant2", false, "", 0, 0 );
+AddTimer("MerchantTalk3", 4, "MerchantTalk3");
+}
+
+void MerchantTalk3(string &in asTimer)
+{
+AddEffectVoice("oilmerchant3.ogg", "", "Voice", "00_Oilmerchant3", false, "", 0, 0 );
+AddTimer("MerchantTalk4", 4, "MerchantTalk4");
+}
+
+void MerchantTalk4(string &in asTimer)
+{
+AddEffectVoice("oilmerchant4.ogg", "", "Voice", "00_Oilmerchant4", false, "", 0, 0 );
+AddTimer("MerchantTalk5", 9, "MerchantTalk5");
+}
+
+void MerchantTalk5(string &in asTimer)
+{
+AddEffectVoice("oilmerchant5.ogg", "", "Voice", "00_Oilmerchant5", false, "", 0, 0 );
+AddTimer("MerchantTalk6", 9, "MerchantTalk6");
+}
+
+void MerchantTalk6(string &in asTimer)
+{
+AddEffectVoice("oilmerchant6.ogg", "", "Voice", "00_Oilmerchant6", false, "", 0, 0 );
+AddTimer("stoplooking", 3, "stoplooking");
+}
+
+//---- Random sounds ----//
+// Random sounds playing once in a while
+
+void screams(string &in asTimer)
+{
+AddTimer("screams", 176, "screams");
+AddTimer("screams2", 25, "screams2");
+AddTimer("screams3", 46, "screams3");
+AddTimer("screams4", 78, "screams4");
+AddTimer("screams5", 99, "screams5");
+AddTimer("screams6", 116, "screams6");
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea6", 0, false);
+}
+
+void screams2(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_loon_single.snt", "SoundArea", 0, false);
+}
+
+void screams3(string &in asTimer)
+{
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea2", 0, false);
+}
+
+void screams4(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_loon_single.snt", "SoundArea3", 0, false);
+}
+
+void screams5(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea4", 0, false);
+}
+
+void screams6(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea5", 0, false);
+}
+
+void OnEnter()
+{	
+StopMusic(10, 0);
+SetSanityDrainDisabled(true);
+SetPlayerJumpDisabled(true);
+SetPlayerRunSpeedMul(0.7f);
+SetEntityInteractionDisabled("pig", true);
+SetMapDisplayNameEntry("Hotel");
+
+if(GetGlobalVarInt("HotelDay")==1)
+	{
+		SetEntityActive("man", false);
+		SetEntityActive("SignArea_7", false);
+		SetEntityActive("goblet_10", false);
+		SetEntityActive("bottle4", false);
+		SetEntityActive("pig", true);
+		SetEntityActive("blood", true);
+		SetEntityActive("bottle1", true);
+		SetEntityActive("bottle2", true);
+		SetEntityActive("bottle3", true);
+	}
+
+if(GetGlobalVarInt("HotelDay")==2)
+	{
+		SetEntityActive("pig", false);
+		SetEntityActive("blood", false);
+		SetEntityActive("SignArea_7", false);
+		SetEntityActive("bottle1", false);
+		SetEntityActive("bottle2", false);
+		SetEntityActive("bottle3", false);
+		SetEntityActive("man2", true);
+		SetEntityActive("SignArea_8", true);
+	}
+
+if(GetGlobalVarInt("HotelDay")==3)
+	{
+		SetEntityActive("man", true);
+                SetEntityActive("SignArea_7", true);
+		SetEntityActive("bottle5", true);
+	}
+
+if(GetGlobalVarInt("Trophy1")==1)
+	{
+		SetEntityActive("SignArea_10", true);
+                SetEntityActive("angel_statue_2", true);
+	}
+
+if(GetGlobalVarInt("Trophy2")==1)
+	{
+		SetEntityActive("SignArea_11", true);
+                SetEntityActive("angel_statue_3", true);
+	}
+
+if(GetGlobalVarInt("Trophy3")==1)
+	{
+		SetEntityActive("SignArea_12", true);
+                SetEntityActive("angel_statue_4", true);
+                SetEntityActive("oil_barrel_1", true);
+	}
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_hotel.png");
+}

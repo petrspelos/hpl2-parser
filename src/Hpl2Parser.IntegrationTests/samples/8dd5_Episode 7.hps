@@ -1,0 +1,95 @@
+/////////////////////////////////////////////////////////////////////////////////////
+//Episode 7//
+//All of this is for the maps .hps file///
+//Start by creating in your map a key and a door to open and then name them//
+//This first line goes in your main functions ex.(OnStart, OnEnter, OnLeave)//
+
+//Remember this can be either OnStart, OnEnter, OnLeave//
+void OnStart() 
+{
+	AddUseItemCallback("", "*KeyName*", "*DoorName*", "*FunctionName*", true);
+} 
+//It doesn't even have to be in those main functions but that is the best way to utilize it//
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+//When using the following//
+AddUseItemCallback("", "*KeyName*", "*DoorName*", "*FunctionName*", true);
+//You declared a new function named...//
+*FunctionName*
+//Which means when the ItemCallback is triggered it will run a new function//
+//This new function will be called...//
+*FunctionName*
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+//To run this new function you must declare it//
+void *FuntionName*(string &in asItem, string &in asEntity)
+{
+
+}
+//This looks similar to the OnStart, OnEnter, OnLeave functions except this line...//
+(string &in asItem, string &in asEntity)
+//That addition defines it as a function that can be ran when the function is called//
+
+string &in asItem, string &in asEntity //asItem and asEntity show that its triggered by Items and Entities//
+
+//Now to wrap it up we will need commands to go inside of this function to make the key open a certain door//
+
+//Below the function is going to change something about a swing door (the kind of doors that can be opened)//
+SetSwingDoorLocked("*DoorName*", false, true);				
+//*DoorName* will be the name of the door you want to open//
+//false states weather the door will be locked or unlocked in this case locked is false (meaning the door will unlock)//
+//true states weather the playings lantern will go off upon opening this door with the key//
+
+//Now we will use a function that will play a sound upon the door being unlocked//
+
+PlaySoundAtEntity("*NameWhatever*", "unlock_door", "Player", 0, false);	
+//*NameWhatever* can be called anything but I perfer to leave it blank like this PlaySoundAtEntity("", etc.//
+//unlock_door is the name of the sound effect that will be played upon running this function//
+//Player is so that the sound will be played to the player//
+//0 stands for the time it will take to fade away the sound effect, in this case the sound will just stop instead of fading//
+//false means that the repeat is false, so if this were true the sound would continue to loop//
+
+//Finally this function will remove the key from the players inventory//
+RemoveItem("*KeyName*"); 
+//*KeyName* being the name of the key//
+
+//Now lets put it all together to see how it will actually look in the .hps file//
+void OnStart() 
+{
+	AddUseItemCallback("", "*KeyName*", "*DoorName*", "*FunctionName*", true);
+} 
+
+void *FuntionName*(string &in asItem, string &in asEntity)
+{
+    SetSwingDoorLocked("*DoorName*", false, true);
+	PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+	RemoveItem("*KeyName*"); 
+}
+//Now let's see it with the actual information filled out, I'm going to make up some names//
+void OnStart() 
+{
+	AddUseItemCallback("", "storageroomkey", "storageroomdoor", "openstorageroom", true);
+} 
+
+void openstorageroom(string &in asItem, string &in asEntity)
+{
+    SetSwingDoorLocked("storageroomdoor", false, true);
+	PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+	RemoveItem("storageroomkey"); 
+}
+//So in this case the key is named in the map as storageroomkey//
+//The door to be unlocked is named storageroomdoor//
+//openstorageroom is the name of the function//
+//It is named openstorageroom just to help with identifying what door will be opened but...//
+//It can easily be renamed to something random like pickle...//
+//But openstorageroom helps when you need to look back at all your code//
+
+//Lastly to input the key name and description use the following//
+//In the .lang file//
+  <CATEGORY Name="Inventory">
+    <Entry Name="ItemName_*KeySubName*">*YourKeyName*</Entry>
+    <Entry Name="ItemDesc_*KeySubName*">*KeyDescription*</Entry>
+     </CATEGORY>
+//////////////////////////////////////////////////////////////////////////////////////////////

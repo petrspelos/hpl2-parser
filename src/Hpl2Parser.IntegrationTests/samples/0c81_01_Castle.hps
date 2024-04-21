@@ -1,0 +1,984 @@
+void OnStart()
+{	
+	//SETUP
+	AddEntityCollideCallback("Player", "AreaRespawn", "PlayerCollideRespawn", false, 0);
+	for(int i = 0; i < 100; i++) 
+	{
+		//WALLS
+		AddEntityCollideCallback("AreaPlayerFront", "AreaWall_"+i, "PlayerCollideWall", false, 0);
+		
+		//DOORS
+		string door = "door_"+i;
+		AddEntityCollideCallback("AreaPlayerFront", door, "PlayerCollideDoor", false, 0);
+		SetEntityInteractionDisabled(door, true);
+		
+		//ITEMS
+		string item = "item_"+i;
+		AddEntityCollideCallback("AreaPlayerFront", item, "PlayerCollideItem", false, 0);
+		SetEntityInteractionDisabled(item, true);
+		
+		//BONFIRES
+		string bonfire = "AreaBonfire_"+i;
+		AddEntityCollideCallback("AreaPlayerFront", bonfire, "PlayerCollideBonfire", false, 0);
+		
+		//SLIMES
+		string slime = "AreaSlime_"+i;
+		AddEntityCollideCallback("AreaPlayerFront", slime, "PlayerCollideEnemy", false, 0);
+		SetEntityInteractionDisabled(slime, true);
+		SetupEnemy(slime);
+		
+		//GRUNTS
+		string grunt = "AreaGrunt_"+i;
+		AddEntityCollideCallback("AreaPlayerFront", grunt, "PlayerCollideEnemy", false, 0);
+		SetEntityInteractionDisabled(grunt, true);
+		SetupEnemy(grunt);
+		
+		//Lever
+		string lever = "lever_"+i;
+		AddEntityCollideCallback("AreaPlayerFront", lever, "PlayerCollideLever", false, 0);
+	}
+	
+	//Setup player control
+	AddEntityCollideCallback("Player", "AreaPlayerJump", "PlayerCollideControl", false, 1);
+	AddEntityCollideCallback("Player", "AreaPlayer_0", "PlayerCollideControl", false, 1);
+	AddEntityCollideCallback("Player", "AreaPlayer_1", "PlayerCollideControl", false, 1);
+	AddEntityCollideCallback("Player", "AreaPlayer_2", "PlayerCollideControl", false, 1);
+	AddEntityCollideCallback("Player", "AreaPlayer_3", "PlayerCollideControl", false, 1);
+	
+	//Music
+	PlayMusic("01_amb_darkness", true, 0.5f, 0.0f, 10, true);
+}
+
+void OnEnter()
+{
+	Respawn();
+}
+
+void OnLeave()
+{
+	
+}
+
+//MAP//
+void ChangeMap_Prison(string &in asEntity)
+{
+	SetRespawnArea("PlayerStartArea_2", 3);
+}
+
+void ChangeMap_Mansion(string &in asEntity)
+{
+	SetRespawnArea("PlayerStartArea_1", 1);
+}
+
+void TouchPortcullis(string &in asEntity)
+{
+	AddQuest("Portcullis", "Portcullis");
+}
+
+void PlayerCollideLever(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1) SetString("lever", asChild, false);
+	else if(GetString("lever", false) == asChild) SetString("lever", "", false);
+}
+
+//////////////////////////////////////////////////////////////COPY FROM HERE//////////////////////////////////////////////////////////////////////
+//RESPAWN//
+void Respawn()
+{
+	//Setup player
+	TeleportPlayer(GetRespawnArea());
+	SetTurnState(GetRespawnTurnState());
+	SetString("enemy", "", false);
+	
+	//Stats
+	SetHealth(GetHealthMax());
+	
+	//Control
+	Position p = GetPlayerPosition();
+	SetPosition("Player", p, false);
+	SetControlsPosition(p);
+	SetControlsEnabled(true);
+	StartPlayerLookAtFront();
+	SetPlayerEnabled(true);
+	
+	SetupEnemies();
+}
+
+void RespawnTimer(string &in asTimer)
+{
+	if(asTimer == "init")
+	{
+		Respawn();
+		AddTimer("fade", 1.0f, "RespawnTimer");
+	}
+	else if(asTimer == "fade")
+	{
+		FadeIn(1.0f);
+	}
+}
+
+void PlayerCollideRespawn(string &in asParent, string &in asChild, int alState)
+{
+	Respawn();
+	SetMessage("Messages", "OutOfMap", 0);
+}
+
+void SetRespawnArea(string area, int turnState)
+{
+	SetString("respawn", area, true);
+	SetInt("respawn_turn", turnState, true);
+}
+
+string GetRespawnArea()
+{
+	return GetString("respawn", true);
+}
+
+int GetRespawnTurnState()
+{
+	return GetInt("respawn_turn", true);
+}
+
+//PLAYER//
+void SetPlayerMovement(float mul)
+{
+	SetPlayerMoveSpeedMul(mul);
+	SetPlayerRunSpeedMul(mul);
+}
+
+void EnablePlayerTimer(string &in asTimer)
+{
+	SetPlayerEnabled(true);
+}
+
+void SetPlayerEnabled(bool enabled)
+{
+	SetPlayerActive(enabled);
+	int i = enabled ? 1 : 0;
+	SetInt("enabled", i, false);
+}
+
+bool IsPlayerEnabled()
+{
+	return GetInt("enabled", false) == 1;
+}
+
+int GetDamage()
+{
+	int damage = GetInt("Player_damage", true);
+	
+	//Main hand
+	if(HasItem("hand_main")) damage += 10;
+	else if(HasItem("hand_main_crowbar")) damage += 20;
+	else if(HasItem("hand_main_spear")) damage += 30;
+	else if(HasItem("hand_main_knife")) damage += 50;
+	
+	//Off hand
+	if(HasItem("hand_off_acid")) damage += 20;
+	
+	return damage;
+}
+
+int GetBlock()
+{
+	if(HasItem("hand_off_chipper")) return 20;
+	else if(HasItem("hand_off_shield")) return 100;
+	return 0;
+}
+
+void SetHealthMax(int value)
+{
+	SetInt("Player_health_max", value, true);
+}
+
+int GetHealthMax()
+{
+	return GetInt("Player_health_max", true);
+}
+
+int GetHealth()
+{
+	return GetInt("Player_health", true);
+}
+
+void AddHealth(int value)
+{
+	SetHealth(GetHealth() + value);
+}
+
+void SetHealth(int value)
+{
+	print("SET HEALTH: "+value);
+	SetInt("Player_health", value, true);
+	if(GetHealth() > GetHealthMax()) SetInt("Player_health", GetHealthMax(), true);
+	UpdatePlayerHealth();
+	
+	if(!IsAlive())
+	{
+		FadeOut(0.0f);
+		SetMessage("Messages", "Dead", 0);
+		AddTimer("init", 1.0f, "RespawnTimer");
+	}
+}
+
+void UpdatePlayerHealth()
+{
+	float max = GetHealthMax();
+	float val = GetHealth();
+	float perc = val / max;
+	
+	if(perc > 0.9f) SetPlayerHealth(100.0f);
+	else if(perc > 0.75f) SetPlayerHealth(75.0f);
+	else if(perc > 0.5f) SetPlayerHealth(50.0f);
+	else if(perc > 0.25f) SetPlayerHealth(25.0f);
+	else SetPlayerHealth(10.0f);
+}
+
+bool IsAlive()
+{
+	return GetHealth() > 0;
+}
+
+void AddExp(int value)
+{
+	SetExp(GetInt("Player_exp", true) + value);
+	
+	int val = GetInt("Player_exp", true);
+	int max = GetInt("Player_exp_max", true);
+	
+	if(val >= max) //Level up
+	{
+		SetInt("Player_exp_max", max+5, true);
+		SetExp(val-max);
+		SetMessage("Messages", "LevelUp", 0);
+		AddInt("Player_damage", 1, true);
+		GiveItemFromFile("tinderbox", "tinderbox");
+		PlaySoundAtEntity("", "quest_added.snt", "Player", 0.0f, true);
+	}
+}
+
+void SetExp(int value)
+{
+	SetInt("Player_exp", value, true);
+	
+	float val = value;
+	float max = GetInt("Player_exp_max", true);
+	float perc = val / max;
+	SetPlayerLampOil(perc * 100.0f);
+}
+
+//ENEMIES//
+void SetupEnemies()
+{
+	for(int i = 0; i < 100; i++)
+	{
+		SetupEnemy("AreaSlime_"+i);
+		SetupEnemy("AreaGrunt_"+i);
+		SetupEnemy("AreaBrute_"+i);
+	}
+}
+
+void SetupEnemy(string enemy)
+{
+	if(!GetEntityExists(enemy)) return;
+	
+	int damage, health, exp, cooldown;
+	string psHit, soundHit;
+	
+	string name = GetEnemyName(enemy);
+	
+	SetFloat("Enemy_"+enemy+"_damage", GetInt("enemy_damage_"+name, true), false);
+	SetInt("Enemy_"+enemy+"_health", GetInt("enemy_health_"+name, true), false);
+	SetInt("Enemy_"+enemy+"_exp", GetInt("enemy_exp_"+name, true), false);
+	SetInt("Enemy_"+enemy+"_cooldown", GetInt("enemy_cooldown_"+name, true), false);
+	ResetEnemyAttackCooldown(enemy);
+	SetString("Enemy_"+enemy+"_pshit", GetString("enemy_pshit_"+name, true), false);
+	SetString("Enemy_"+enemy+"_soundhit", GetString("enemy_soundhit_"+name, true), false);
+	
+	SetEntityActive(enemy, true);
+	SetEntityActive("ent_"+enemy, true);
+}
+
+string GetEnemyName(string area)
+{
+	if(StringContains(area, "Slime")) return "slime";
+	else if(StringContains(area, "Grunt")) return "grunt";
+	else if(StringContains(area, "Brute")) return "brute";
+	return "";
+}
+
+float GetEnemyDamage(string enemy)
+{
+	return GetFloat("Enemy_"+enemy+"_damage", false);
+}
+
+int GetEnemyHealth(string enemy)
+{
+	return GetInt("Enemy_"+enemy+"_health", false);
+}
+
+void SetEnemyHealth(string enemy, int value)
+{
+	SetInt("Enemy_"+enemy+"_health", value, false);
+}
+
+bool IsEnemyAlive(string enemy)
+{
+	return GetEnemyHealth(enemy) > 0;
+}
+
+int GetEnemyExp(string enemy)
+{
+	return GetInt("Enemy_"+enemy+"_exp", false);
+}
+
+int GetEnemyCooldown(string enemy)
+{
+	return GetInt("Enemy_"+enemy+"_cooldown", false);
+}
+
+int GetEnemyAttackCooldown(string enemy)
+{
+	return GetInt("Enemy_"+enemy+"_attackcd", false);
+}
+
+void AddEnemyAttackCooldown(string enemy, int value)
+{
+	AddInt("Enemy_"+enemy+"_attackcd", value, false);
+}
+
+void ResetEnemyAttackCooldown(string enemy)
+{
+	SetInt("Enemy_"+enemy+"_attackcd", GetEnemyCooldown(enemy), false);
+}
+
+string GetEnemyHitPS(string enemy)
+{
+	return GetString("Enemy_"+enemy+"_pshit", false);
+}
+
+string GetEnemyHitSound(string enemy)
+{
+	return GetString("Enemy_"+enemy+"_soundhit", false);
+}
+
+void AttackEnemy(string enemy, int damage)
+{
+	string psCD = "Enemy_"+enemy+"_cooldown";
+	
+	SetEnemyHealth(enemy, GetEnemyHealth(enemy) - damage); //Reduce health
+	CreateParticleSystemAtEntity("Enemy_"+enemy+"_hitps", GetEnemyHitPS(enemy), enemy, true);
+	PlaySoundAtEntity("Enemy_"+enemy+"_hitsound", GetEnemyHitSound(enemy), enemy, 0.0f, true);
+	
+	if(!IsEnemyAlive(enemy)) //Enemy is dead
+	{
+		SetEntityActive(enemy, false);
+		SetEntityActive("ent_"+enemy, false);
+		SetString("enemy", "", false);
+		SetString("attacking_enemy", "", false);
+		AddExp(GetEnemyExp(enemy));
+		PlaySoundAtEntity("", "brute/amb_idle_whimp.snt", enemy, 0.0f, true);
+		PlaySoundAtEntity("", "slime_attack_normal_hit.snt", enemy, 0.0f, true);
+		CreateParticleSystemAtEntity("", "ps_slime_attack_normal.ps", enemy, true);
+		DestroyParticleSystem(psCD);
+		return;
+	}
+	else if(GetEnemyAttackCooldown(enemy) <= 0) //enemy attacks
+	{
+		DestroyParticleSystem(psCD);
+		ResetEnemyAttackCooldown(enemy);
+		SetString("attacking_enemy", "", false);
+		
+		int damage = GetEnemyDamage(enemy) - GetBlock();
+		if(damage > 0)
+		{
+			AddHealth(-damage);
+			GivePlayerDamage(0.01f, "BloodSplat", false, false);
+			PlaySoundAtEntity("", "grunt/attack_claw_hit.snt", enemy, 0.0f, true);
+		}
+		else
+		{
+			PlaySoundAtEntity("", "grunt/attack_claw.snt", enemy, 0.0f, true);
+			PlaySoundAtEntity("", "impact_metal_high.snt", "Player", 0.0f, true);
+		}
+	}
+	else //Reduce enemy attack cooldown
+	{
+		AddEnemyAttackCooldown(enemy, -1);
+		if(GetEnemyAttackCooldown(enemy) == 0) 
+		{
+			CreateParticleSystemAtEntity(psCD, "ps_magic_pink.ps", enemy, true);
+			SetString("attacking_enemy", enemy, false);
+		}
+	}
+}
+
+void EnemyMissAttack(string enemy)
+{
+	if(GetEnemyAttackCooldown(enemy) > 0) return; //Not ready to attack
+	CreateParticleSystemAtEntity("Enemy_"+enemy+"_attack", "ps_guardian_appear_explosion.ps", "Player", true);
+	PlaySoundAtEntity("", "grunt/attack_claw.snt", enemy, 0.0f, true);
+	DestroyParticleSystem("Enemy_"+enemy+"_cooldown");
+	ResetEnemyAttackCooldown(enemy);
+}
+
+//ITEMS//
+void CollectItem(string item)
+{
+	string name, type, image, sound = "";
+	
+	if(item == "item_1")
+	{
+		name = "stone_chipper";
+		type = "stone_chipper";
+	}
+	else if(item == "item_2")
+	{
+		name = "copper_tube";
+		type = "copper_tube";
+	}
+	
+	//Give item
+	if(image == "") image = type + ".tga";
+	GiveItem(name, type, name, image, 1);
+	
+	//Play sound
+	if(sound == "") sound = "pick_generic";
+	PlaySoundAtEntity("", sound, "Player", 0.0f, false);
+	
+	//Show message
+	SetMessage("Messages", "PickItem", 0);
+	
+	//Clean up
+	SetEntityActive(item, false);
+	SetEntityActive("ent_"+item, false);
+}
+
+void ItemUnlockDoor(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetSwingDoorLocked(asEntity, false, true);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0.0f, false);
+}
+
+void ItemBreakDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	SetPropHealth(asEntity, 0.0f);
+	SetEntityActive(asEntity, false);
+	SetString("door", "", false);
+}
+
+//CONTROLS//
+void SetControlsEnabled(bool enabled)
+{
+	for(int i = 0; i < 4; i++) SetEntityActive("AreaPlayer_"+i, enabled);
+	SetEntityActive("AreaPlayerJump", enabled);
+}
+
+void SetControlsPosition(Position p)
+{
+	SetEntityPosition("AreaPlayerJump", p.Add(GetControlsPosition(-1)));
+	SetEntityPosition("AreaPlayer_0", p.Add(GetControlsPosition(0)));
+	SetEntityPosition("AreaPlayer_1", p.Add(GetControlsPosition(1)));
+	SetEntityPosition("AreaPlayer_2", p.Add(GetControlsPosition(2)));
+	SetEntityPosition("AreaPlayer_3", p.Add(GetControlsPosition(3)));
+	SetFrontCheckPosition(p);
+}
+
+Position GetControlsPosition(int state)
+{
+	float offsetx = 0.8f;
+	float offsety = 1.6f;
+	switch(state)
+	{
+		case -1: return Position(0.0f, 2.25f, 0.0f);
+		case 0: return Position(0.0f, offsety, offsetx);
+		case 1: return Position(-offsetx, offsety, 0.0f);
+		case 2: return Position(0.0f, offsety, -offsetx);
+		case 3: return Position(offsetx, offsety, 0.0f);
+		default: return Position(0.0f, 0.0f, 0.0f);
+	}
+	
+	return Position(0.0f, 0.0f, 0.0f);
+}
+
+void SetFrontCheckPosition(Position p)
+{
+	float offsety = 2.0f;
+	float offsetx = 2.0f;
+	int turn = GetTurnState();
+	if(turn == 0) SetEntityPosition("AreaPlayerFront", Position(p.x, p.y+offsety, p.z+offsetx));
+	else if(turn == 1) SetEntityPosition("AreaPlayerFront", Position(p.x-offsetx, p.y+offsety, p.z));
+	else if(turn == 2) SetEntityPosition("AreaPlayerFront", Position(p.x, p.y+offsety, p.z-offsetx));
+	else if(turn == 3) SetEntityPosition("AreaPlayerFront", Position(p.x+offsetx, p.y+offsety, p.z));
+}
+
+//WALL
+void PlayerCollideWall(string &in asParent, string &in asChild, int alState)
+{
+	AddInt("wall", alState, false);
+	//print("COLLIDE WALL: " + alState);
+}
+
+bool FacingWall()
+{
+	return GetInt("wall", false) >= 1;
+}
+
+//DOOR
+void PlayerCollideDoor(string &in asParent, string &in asChild, int alState)
+{
+	print("door: "+asChild+" "+alState);
+	if(alState == 1) SetString("door", asChild, false);
+	else if(GetString("door", false) == asChild) SetString("door", "", false);
+}
+
+bool FacingDoor()
+{
+	return GetString("door", false) != "";
+}
+
+//ITEM
+void PlayerCollideItem(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1) SetString("item", asChild, false);
+	else if(GetString("item", false) == asChild) SetString("item", "", false);
+}
+
+bool FacingItem()
+{
+	return GetString("item", false) != "";
+}
+
+//BONFIRE
+void PlayerCollideBonfire(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1) SetString("bonfire", asChild, false);
+	else if(GetString("bonfire", false) == asChild) SetString("bonfire", "", false);
+}
+
+bool FacingBonfire()
+{
+	return GetString("bonfire", false) != "";
+}
+
+void SetBonfire(string bonfire)
+{
+	if(bonfire == "AreaBonfire_1")
+	{
+		SetRespawnArea("PlayerStart"+bonfire, 0);
+	}
+	
+	SetPlayerSanity(90.0f);
+	AddPlayerSanity(10.0f);
+	Respawn();
+}
+
+//ENEMY
+void PlayerCollideEnemy(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1) SetString("enemy", asChild, false);
+	else if(GetString("enemy", false) == asChild) SetString("enemy", "", false);
+}
+
+bool FacingEnemy()
+{
+	return GetString("enemy", false) != "";
+}
+
+//CONTROL
+void PlayerCollideControl(string &in asParent, string &in asChild, int alState)
+{
+	Position pos = GetPosition("Player", false);
+	SetPlayerPos(pos.x, pos.y, pos.z);
+	
+	int area = 0;
+	
+	if(asChild == "AreaPlayerJump")
+	{
+		AddPlayerBodyForce(0.0f, -100000.0f, 0.0f, false);
+		PlayerControl(-1);
+		return;
+	}
+	else if(asChild == "AreaPlayer_0")
+	{
+		area = 0;
+	}
+	else if(asChild == "AreaPlayer_1")
+	{
+		area = 1;
+	}
+	else if(asChild == "AreaPlayer_2")
+	{
+		area = 2;
+	}
+	else if(asChild == "AreaPlayer_3")
+	{
+		area = 3;
+	}
+	
+	int offset = GetTurnState();
+	int action = (area - offset) % 4;
+	if(action < 0) action += 4;
+	else if(action > 4) action += -4;
+	
+	PlayerControl(action);
+}
+
+void PlayerControl(int action)
+{	
+	//print("ACTION: " + action);
+	if(!IsPlayerEnabled()) return;
+	if(action == -1) //JUMP
+	{
+		//DO NOTHING
+	}
+	else if(action == 0) //FORWARD
+	{
+		SetPlayerEnabled(false);
+		
+		if(GetString("lever", false) != "")
+		{
+			string lever = GetString("lever", false);
+			SetString("lever", "", false);
+			AddInt("levers", 1, false);
+			SetLeverStuckState("ent_"+lever, 1, true);
+			SetEntityActive(lever, false);
+			
+			if(GetInt("levers", false) >= 3)
+			{
+				SetEntityActive("AreaWall_42", false);
+				SetMoveObjectState("portcullis", 1.0f);
+				CompleteQuest("Portcullis", "Portcullis");
+				SetPlayerSanity(90.0f);
+				AddPlayerSanity(10.0f);
+			}
+			
+			AddTimer("", 0.5f, "EnablePlayerTimer");
+			return;
+		}
+		else if(FacingEnemy())
+		{
+			//Attack enemy
+			string enemy = GetString("enemy", false);
+			AttackEnemy(enemy, GetDamage());
+			AddTimer("", 0.5f, "EnablePlayerTimer");
+			return;
+		}
+		else if(FacingItem())
+		{
+			//Collect item
+			string item = GetString("item", false);
+			SetString("item", "", false);
+			CollectItem(item);
+			AddTimer("", 0.5f, "EnablePlayerTimer");
+			return;
+		}
+		else if(FacingBonfire())
+		{
+			//Use bonfire
+			string bonfire = GetString("bonfire", false);
+			SetBonfire(bonfire);
+			SetPlayerEnabled(false);
+			AddTimer("", 0.5f, "EnablePlayerTimer");
+			return;
+		}
+		else if(FacingDoor())
+		{
+			//Open door
+			string door = GetString("door", false);
+			if(GetSwingDoorLocked(door)) 
+			{
+				SetMessage("Messages", "Locked", 0);
+				PlaySoundAtEntity("", "locked_door", door, 0.0f, false);
+			}
+			else 
+			{
+				SetEntityActive(door, false);
+				SetString("door", "", false);
+				PlaySoundAtEntity("", "open_door", door, 0.0f, false);
+			}
+			AddTimer("", 0.5f, "EnablePlayerTimer");
+			return;
+		}
+		else if(FacingWall())
+		{
+			AddTimer("", 0.5f, "EnablePlayerTimer");
+			return;
+		}
+		else
+		{
+			string attacking = GetString("attacking_enemy", false);
+			if(attacking != "") EnemyMissAttack(attacking); //Enemy miss
+			MoveForward();
+		}
+	}
+	else if(action == 1) //TURN RIGHT
+	{
+		SetPlayerEnabled(false);
+		PlayerTurn(1);
+	}
+	else if(action == 2) //GO BACKWARDS
+	{
+		//DO NOTHING
+	}
+	else if(action == 3) //TURN LEFT
+	{
+		SetPlayerEnabled(false);
+		PlayerTurn(-1);
+	}
+}
+
+void OnChangeMap(string startArea, int turnState)
+{
+	SetRespawnArea(startArea, turnState);
+}
+
+//MOVEMENT//
+Position[] arrMove;
+int idxMove;
+bool moving = false;
+
+void MoveForward()
+{	
+	int offset = GetTurnState();
+	Position pPlayer = GetPosition("Player", false);
+	Position end;
+	if(offset == 0) end = pPlayer.Add(Position(0.0f, 0.0f, 4.0f));
+	else if(offset == 1) end = pPlayer.Add(Position(-4.0f, 0.0f, 0.0f));
+	else if(offset == 2) end = pPlayer.Add(Position(0.0f, 0.0f, -4.0f));
+	else if(offset == 3) end = pPlayer.Add(Position(4.0f, 0.0f, 0.0f));
+	MoveTo(end, 15, 0.25f);
+	
+	PlaySoundAtEntity("", "step_walk_dirt", "Player", 0.0f, false);
+}
+
+void MoveTo(Position end, int ticks, float time)
+{
+	if(moving) return;
+	moving = true;
+	
+	//Remove controls
+	StopPlayerLookAt();
+	SetControlsPosition(end);
+	SetControlsEnabled(false);
+	
+	//Move
+	idxMove = 0;
+	arrMove.resize(ticks);
+	
+	Position start = GetPosition("Player", false);
+	Position dir = end.Subtract(start);
+	float timePerTick = time / ticks;
+	float t = 1.0f / ticks;
+	for(int i = 0; i < ticks; i++)
+	{
+		arrMove[i] = start.Add(dir.Times(t*i));
+		AddTimer("", timePerTick*i, "MoveToTimer");
+	}
+	
+	//End
+	SetPosition("Player", start.Add(dir), false);
+	//print(time);
+	AddTimer("", time, "MoveToFinished");
+}
+
+void MoveToFinished(string &in asTimer)
+{
+	StartPlayerLookAtFront();
+	SetPlayerEnabled(true);
+	SetControlsEnabled(true);
+	moving = false;
+}
+
+void MoveToTimer(string &in asTimer)
+{
+	idxMove++;
+	Position p = arrMove[idxMove];
+	SetPlayerPos(p.x, p.y, p.z);
+}
+
+float GetDistance(Position start, Position end)
+{
+	return MathSqrt(MathPow(start.x - end.x, 2.0f) + MathPow(start.y - end.y, 2.0f) + MathPow(start.z - end.z, 2.0f));
+}
+
+//TURN//
+void PlayerTurn(int dir)
+{
+	int offset = (GetTurnState() + dir) % 4;
+	if(offset < 0) offset += 4;
+	else if(offset > 4) offset += -4;
+	
+	SetTurnState(offset);
+	SetFrontCheckPosition(GetPosition("Player", false));
+	
+	//Turn player
+	moving = true;
+	PlaySoundAtEntity("", "step_sneak_dirt", "Player", 0.0f, false);
+	StartPlayerLookAtFront();
+	AddTimer("", 0.25f, "PlayerTurnFinished");
+}
+
+void PlayerTurnFinished(string &in asTimer)
+{
+	moving = false;
+	SetPlayerEnabled(true);
+}
+
+void StartPlayerLookAtFront()
+{
+	StartPlayerLookAt("AreaPlayer_"+GetTurnState(), 10.0f, 10.0f, "");
+}
+
+int GetTurnState()
+{
+	return GetInt("PlayerTurnOffset", true);
+}
+
+void SetTurnState(int value)
+{
+	SetInt("PlayerTurnOffset", value, true);
+}
+
+//MISC//
+void print(string s)
+{
+	AddDebugMessage(s, false);
+}
+
+void print(int i)
+{
+	print("" + i);
+}
+
+void print(float f)
+{
+	print("" + f);
+}
+
+void print (bool b)
+{
+	print("" + b);
+}
+
+//VARIABLES//
+void SetInt(string name, int value, bool global)
+{
+	if(global) SetGlobalVarInt(name, value);
+	else SetLocalVarInt(name, value);
+}
+
+void AddInt(string name, int value, bool global)
+{
+	int i = GetInt(name, global);
+	SetInt(name, i+value, global);
+}
+
+int GetInt(string name, bool global)
+{
+	if(global) return GetGlobalVarInt(name);
+	else return GetLocalVarInt(name);
+}
+
+void SetFloat(string name, float value, bool global)
+{
+	if(global) SetGlobalVarFloat(name, value);
+	else SetLocalVarFloat(name, value);
+}
+
+float GetFloat(string name, bool global)
+{
+	if(global) return GetGlobalVarFloat(name);
+	else return GetLocalVarFloat(name);
+}
+
+void SetString(string name, string value, bool global)
+{
+	if(global) SetGlobalVarString(name, value);
+	else SetLocalVarString(name, value);
+}
+
+string GetString(string name, bool global)
+{
+	if(global) return GetGlobalVarString(name);
+	else return GetLocalVarString(name);
+}
+
+void SetPosition(string name, Position p, bool global)
+{
+	string n = "Position_"+name;
+	
+	SetFloat(n+"_x", p.x, global);
+	SetFloat(n+"_y", p.y, global);
+	SetFloat(n+"_z", p.z, global);
+}
+
+void SetPosition(string name, string entity, bool global)
+{
+	float x = GetEntityPosX(entity);
+	float y = GetEntityPosY(entity);
+	float z = GetEntityPosZ(entity);
+	Position p = Position(x, y, z);
+	SetPosition(name, p, global);
+}
+
+Position GetPosition(string name, bool global)
+{
+	float x = GetFloat("Position_"+name+"_x", global);
+	float y = GetFloat("Position_"+name+"_y", global);
+	float z = GetFloat("Position_"+name+"_z", global);
+	return Position(x, y, z);
+}
+
+Position GetPlayerPosition()
+{
+	return Position(GetPlayerPosX(), GetPlayerPosY(), GetPlayerPosZ());
+}
+
+void SetEntityPosition(string entity, Position p)
+{
+	SetEntityPos(entity, p.x, p.y, p.z);
+}
+
+//Classes
+class Position {
+	float x;
+	float y;
+	float z;
+	
+	Position(float x, float y, float z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+	
+	Position(string entity)
+	{
+		x = GetEntityPosX(entity);
+		y = GetEntityPosY(entity);
+		z = GetEntityPosZ(entity);
+	}
+	
+	Position Subtract(Position b)
+	{
+		return Position(x-b.x, y-b.y, z-b.z);
+	}
+	
+	Position Add(Position b)
+	{
+		return Position(x+b.x, y+b.y, z+b.z);
+	}
+	
+	Position Times(float t)
+	{
+		return Position(x*t, y*t, z*t);
+	}
+	
+	void P()
+	{
+		AddDebugMessage("Position("+x+", "+y+", "+z+")", false);
+	}
+}

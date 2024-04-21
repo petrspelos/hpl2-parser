@@ -1,0 +1,180 @@
+void OnStart(){
+	AddEntityCollideCallback("Player", "ScriptArea_4", "NoticeAcidUse", true, 1);
+	AddEntityCollideCallback("KILLER", "ScriptArea_3", "spawnSurprise", true, 1);
+	AddEntityCollideCallback("KILLER", "ScriptArea_2", "breakChilling", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "ifHearBrute", false, 1);
+	AddUseItemCallback("", "east_wing_key", "level_wood_4", "UnlockWing", true);
+	AddUseItemCallback("", "assembled", "mansion_4", "drillLock", true);
+	SetEntityPlayerInteractCallback("full_acid", "DisableBlock", true);
+	SetEntityPlayerInteractCallback("target_room", "targetRoomMessage", false);
+	AddEntityCollideCallback("KILLER", "servant_brute_1", "HitBrute", false, 1);
+	SetEntityPlayerInteractCallback("dining_1", "diningMessage", false);
+	SetEntityPlayerInteractCallback("chilling_1", "chilling1Message", false);
+	SetEntityPlayerInteractCallback("chilling_2", "chilling2Message", false);
+	SetEntityPlayerInteractCallback("mansion_1", "Mansion1Locked", false);
+	SetEntityPlayerInteractCallback("mansion_2", "Mansion2Locked", false);
+	SetEntityPlayerInteractCallback("mansion_3", "Mansion3Locked", false);
+	SetEntityPlayerInteractCallback("mansion_4", "Mansion4Locked", false);
+	SetEntityPlayerInteractCallback("PICKER", "hearScream", true);
+	AddUseItemCallback("", "pot", "acid", "FillPot", true);
+	AddUseItemCallback("", "PICKER", "level_wood_3", "unlockNorth", true);
+	SetLocalVarInt("Mansion1Lock", 1);
+	SetLocalVarInt("Mansion2Lock", 1);
+	SetLocalVarInt("Mansion3Lock", 1);
+	SetLocalVarInt("Mansion4Lock", 1);
+	SetLocalVarInt("targetRoomLocked", 1);
+	SetLocalVarInt("bruteHeard", 0);
+	SetEntityPlayerInteractCallback("acid", "hurt", false);
+	SetDeathHint("Messages", "fightback");
+	SetLocalVarInt("BruteHealth", 1);
+	SetEntityConnectionStateChangeCallback("lever", "useLever");
+	SetLocalVarInt("leverpulled", 0);
+}
+
+void OnEnter(){
+	PlayMusic("brute_amb.ogg", true, 0.5, 0, 0, true);
+}
+
+void OnLeave(){
+}
+
+void Mansion1Locked(string &in entity){
+	SetMessage("Messages", "doorlocked1", 0);
+}
+
+void Mansion2Locked(string &in entity){
+	SetMessage("Messages", "doorlocked1", 0);
+}
+
+void Mansion3Locked(string &in entity){
+	SetMessage("Messages", "doorlocked1", 0);
+}
+
+void Mansion4Locked(string &in entity){
+	if (GetLocalVarInt("Mansion4Lock") == 1){
+		SetMessage("Messages", "doorlocked4", 0);
+	}
+}
+
+void UnlockWing(string &in item, string &in door){
+	SetLevelDoorLocked("level_wood_4", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}
+
+void NoticeAcidUse(string &in asParent, string &in asChild, int alState){
+	AddQuest("isacid", "isacid");
+}
+
+void FillPot(string &in item, string &in entity){
+	RemoveItem(item);
+	SetMessage("Messages", "filled", 0);
+	CompleteQuest("isacid", "isacid");
+	SetEntityActive("full_acid", true);
+	SetEntityActive("block", true);
+	SetPlayerActive(false);
+	AddTimer("T4", 1.0f, "Reactivate");
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+}
+
+void DisableBlock(string &in entity){
+	SetEntityActive("Block", false);
+}
+
+void hurt(string &in entity){
+	GivePlayerDamage(25.0f, "BloodSplat", false, false);
+	SetMessage("Messages", "acid_discover", 0);
+	PlayGuiSound("puzzle_acid.snt", 100);
+}
+
+void Reactivate(string &in asTimer){
+	SetPlayerActive(true);
+}
+
+void drillLock(string &in item, string &in door){
+	PlayGuiSound("impact_metal_high.snt", 1000);
+	SetSwingDoorLocked("mansion_4", false, true);
+	SetLocalVarInt("Mansion4Lock", 0);
+}
+
+void ifHearBrute(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("bruteHeard") == 0){
+		if (HasItem("assembled")){
+			PlayGuiSound("brute_sound.snt", 1000000);
+			AddTimer("T1", 1.5f, "hearBrute");
+			SetLocalVarInt("bruteHeard", 1);
+		}
+	}
+}
+
+void hearBrute(string &in asTimer){
+	PlayGuiSound("break_wood.snt", 1000000);
+}
+
+void targetRoomMessage(string &in entity){
+	if (GetLocalVarInt("targetRoomLocked") == 1){
+		SetMessage("Messages", "doorlocked3", 0);
+	}
+}
+
+void diningMessage(string &in entity){
+	SetMessage("Messages", "doorlocked1", 0);
+}
+
+void chilling1Message(string &in entity){
+	SetMessage("Messages", "reallyweak", 0);
+}
+
+void chilling2Message(string &in entity){
+	SetMessage("Messages", "doorlocked1", 0);
+}
+
+void spawnSurprise(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_brute_1", true);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+	GiveSanityDamage(25, true);
+}
+
+void HitBrute(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("BruteHealth") == 1){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetLocalVarInt("BruteHealth", 0);
+	}else if (GetLocalVarInt("BruteHealth") == 0){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetEnemyIsHallucination("servant_brute_1", true);
+	}
+}
+
+void breakChilling(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("break_wood.snt", 100000);
+	SetEntityActive("chilling_broken", true);
+	SetEntityActive("chilling_1", false);
+}
+
+void useLever(string &in asEntity, int alState){
+	if (GetLocalVarInt("leverpulled") == 0){
+		PlayGuiSound("move_gate.snt", 100);
+		AddTimer("Timer1", 2.5f, "sanityeffect");
+		SetLocalVarInt("leverpulled", 1);
+	}
+}
+
+void sanityeffect(string &in asTimer){
+	AddPlayerSanity(25);
+	SetSwingDoorLocked("target_room", false, true);
+	SetLocalVarInt("targetRoomLocked", 0);
+	PlayGuiSound("unlock_door.snt", 100);
+}
+
+void hearScream(string &in entity){
+	SetMessage("Messages", "fromGuests", 0);
+	PlayGuiSound("21_intro_scream.snt", 1000000);
+}
+
+void unlockNorth(string &in item, string &in door){
+	SetLevelDoorLocked("level_wood_3", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	SetMessage("Messages", "broke", 0);
+	RemoveItem(item);
+}

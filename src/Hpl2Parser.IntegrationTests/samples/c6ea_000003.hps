@@ -1,0 +1,51 @@
+void OnStart()
+{
+	if(ScriptDebugOn() == true)
+		GiveItem("lantern","Lantern","lantern","lantern.tga", 100.0f);
+	CompleteQuest("door_unlock", "unlock2");
+	AddEntityCollideCallback("Player", "BodyPush", "PushPlayer_1", true, 0);
+	AddEntityCollideCallback("Player", "AreaInsanity_1", "Insanity", false, 0);
+}
+
+void PushPlayer_1(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=12; ++i) SetEntityActive("torch_static_green_"+i, true);
+	AddPlayerBodyForce(0.0f, 0.0f, -100000.0f, false);
+	for(int i=1; i<=8; ++i)	PlayGuiSound("15_body_impact", 1.0f);
+	AddEntityCollideCallback("Player", "ScareArea_2", "scare_2", true, 0);
+}
+
+void Insanity(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1)
+	{
+		AddTimer("insanity", 0.1f, "InsanityTimer");
+		PlaySoundAtEntity("insanity_sound_at"+asChild, "ui_torture", asChild, 2.0f, false);
+		FadeImageTrailTo(0.9f, 0.2f);
+	}
+	else
+	{
+		RemoveTimer("insanity");
+		StopSound("insanity_sound_at"+asChild, 0.1f);
+		FadeImageTrailTo(0.0f, 0.1f);
+	}
+}
+
+void InsanityTimer(string &in asTimer)
+{
+	if(GetPlayerSanity() >= 50)
+		GiveSanityDamage(0.1f * 1.2f, false);
+	else
+		GiveSanityDamage(0.9f * 0.9f, false);
+}
+
+void ScareLast(string &in asEntity)
+{
+	for(int i=1; i<=4; ++i)	SetEntityActive("corpse_male_"+i, true);
+	for(int i=1; i<=10; ++i)	PlayGuiSound("24_iron_maiden", 1.0f);
+	AddPropImpulse("corpse_male_1", -20.0f, -20.0f, 0.0f, "world");
+	AddPropImpulse("corpse_male_2", 10.0f, 0.0f, -20.0f, "world");
+	AddPropImpulse("corpse_male_3", 20.0f, 0.0f, 20.0f, "world");
+	AddPropImpulse("corpse_male_4", -20.0f, 0.0f, 10.0f, "world");
+	SetLevelDoorLocked(asEntity, false);
+}

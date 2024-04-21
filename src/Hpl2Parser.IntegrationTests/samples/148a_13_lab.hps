@@ -1,0 +1,200 @@
+void OnStart(){
+	initPlayer();
+	initEvents();
+	initVariables();
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.5f, 0, 0, true);
+}
+
+void OnLeave(){
+
+}
+
+///////////////////////////
+///START CUSTOM COMMANDS//
+//////////////////////////
+void AUIC(string i, string o, string fu, bool tf){
+	AddUseItemCallback("", i, o, fu, tf);
+}
+
+void PGS(string sndfile){
+	PlayGuiSound(sndfile, 100);
+}
+
+void UnlockLevelDoor(string k, string d, string s){
+	SetLevelDoorLocked(d, false);
+	PlayGuiSound(s, 100);
+	RemoveItem(k);
+}
+
+void UnlockSwingDoor(string k, string d, string s){
+	SetSwingDoorLocked(d, false, true);
+	PlayGuiSound(s, 100);
+	RemoveItem(k);
+}
+
+void SEPIC(string i, string fu, bool tf){
+	SetEntityPlayerInteractCallback(i, fu, tf);
+}
+
+void AECC(string c, string a, string fu, bool tf){
+	AddEntityCollideCallback(c, a, fu, tf, 1);
+}
+
+void HurtEnemyUsingHammer(string enemy, string weapon, string sound, string var){
+	PlayGuiSound(sound, 100);
+	
+	if (GetLocalVarInt(var) == 1){
+		SetLocalVarInt(var, 0);
+	}else{
+		SetEnemyIsHallucination(enemy, true);
+	}
+	
+	CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", weapon, false);
+	CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", weapon, false);
+}
+
+void HurtEnemyUsingBrick(string enemy, string weapon, string sound, string var){
+	PlayGuiSound(sound, 100);
+	
+	if (GetLocalVarInt(var) == 1){
+		SetLocalVarInt(var, 0);
+	}else{
+		SetEntityActive(enemy, false);
+	}
+	
+	CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", weapon, false);
+	ChangePlayerStateToNormal();
+}
+///////////////////////////
+//FINISH CUSTOM COMMANDS//
+//////////////////////////
+
+void initPlayer(){
+	SetEntityConnectionStateChangeCallback("special_burner_1", "rollCrank"); // Triggers "rollCrank" function when crank is rolled //
+	AUIC("burner_fluid", "special_burner_1", "supplyBurner", true); // Triggers "supplyBurner" when player uses burner fluid on burner //
+	AUIC("aqua_fortis", "special_burner_1", "addChemicalAquaFortis", false); // Triggers "addChemicalAquaFortis" when aqua fortis is used on burner //
+	AUIC("orpiment", "aqua_fortis_placed", "addOrpiment", false); // Triggers "addOrpiment" when orpiment is added to the mix //
+	AUIC("aqua_regia", "aqua_fortis_placed", "addAquaR", false); // Triggers "addAquaR" when orpiment is added to the mix //
+	AUIC("cuprite", "aqua_fortis_placed", "addCuprite", false); // Triggers "addCuprite" when orpiment is added to the mix //
+	SEPIC("complete_potion", "brewPotion", true);
+}
+
+void initEvents(){
+
+}
+
+void initVariables(){
+	SetLocalVarInt("burnerHasFluid", 0); // This is set to 0 when the burner does not have burner fluid, and to 1 when it does //
+	SetLocalVarInt("burnerIsLit", 0); // For technical purposes, this will be 0 when burner is inactive and 1 when it's active //
+	SetLocalVarInt("hasBoiled", 0); // For technical purposes, this will be 0 when chemical is not boiled and 1 when boiled //
+	SetLocalVarInt("ingredientsAdded", 0); // This counts the number of ingredients added, to ensure that player adds them in the correct order //
+}
+
+
+// Triggered when burner crank is rolled, this checks wether the burner has burner fluid, if it does, it activates the burner. If it does not, it sends the player a message to search for Burner Fluid
+void rollCrank(string &in asEntity, int alState){
+	if (GetLocalVarInt("burnerHasFluid") == 1){
+		if (GetLocalVarInt("burnerIsLit") == 0){
+			SetLampLit("burner_fire", true, true);
+			SetLocalVarInt("burnerIsLit", 1);
+		}else if (GetLocalVarInt("burnerIsLit") == 1){
+			SetLampLit("burner_fire", false, true);
+			SetLocalVarInt("burnerIsLit", 0);
+		}
+	}else if (GetLocalVarInt("burnerHasFluid") == 0){
+		SetMessage("Messages", "noFluid", 0);
+	}
+}
+
+
+// Creates the illusion of filling the burner by playing a sound and removing fluid from inv. Also sets a var to 1 for technical purposes 
+void supplyBurner(string &in item, string &in entity){ 
+	PGS("supply_burner.ogg");
+	RemoveItem("burner_fluid");
+	SetLocalVarInt("burnerHasFluid", 1);
+}
+
+void addChemicalAquaFortis(string &in item, string &in entity){ // This checks the variables and sends a message & makes an action according to the conditions //
+	if (GetLocalVarInt("burnerHasFluid") == 0){
+		SetMessage("Messages", "needsFluidFirst", 0);
+	}else if (GetLocalVarInt("burnerHasFluid") == 1){
+		if (GetLocalVarInt("burnerIsLit") == 0){
+			SetMessage("Messages", "turnBurnerOn", 0);
+		}else if (GetLocalVarInt("burnerIsLit") == 1){
+			SetEntityActive("aqua_fortis_placed", true);
+			PGS("puzzle_place_jar.snt");
+			AddTimer("", 10.0f, "boilChemical");
+			SetMessage("Messages", "waitToBoil", 0);
+			RemoveItem("aqua_fortis");
+		}
+	}
+}
+
+void boilChemical(string &in asTimer){ // This triggers the boiling sound when chemical boils. It also modifies a variable //
+	PGS("puzzle_boil.snt");
+	SetLocalVarInt("hasBoiled", 1);
+	SetMessage("Messages", "isBoiled", 0);
+}
+
+void addOrpiment(string &in item, string &in entity){ // This checks if orpiment was added in the correct correlation with the other chemicals and acts accordingly //
+	if (GetLocalVarInt("hasBoiled") == 1){
+		if (GetLocalVarInt("ingredientsAdded") == 0){
+			RemoveItem("orpiment");
+			PGS("puzzle_acid.ogg");
+			SetLocalVarInt("ingredientsAdded", 1);
+		}else{
+			SetMessage("Messages", "wrongMove", 0);
+		}
+	}else if (GetLocalVarInt("hasBoiled") == 0){
+		SetMessage("Messages", "mustBoilFirst", 0);
+	}
+}
+
+void addAquaR(string &in item, string &in entity){ // This checks if aqua regia was added in the correct correlation with the other chemicals and acts accordingly //
+	if (GetLocalVarInt("hasBoiled") == 1){
+		if (GetLocalVarInt("ingredientsAdded") == 1){
+			RemoveItem("aqua_regia");
+			PGS("puzzle_acid.ogg");
+			SetLocalVarInt("ingredientsAdded", 2);
+		}else{
+			SetMessage("Messages", "wrongMove", 0);
+		}
+	}else if (GetLocalVarInt("hasBoiled") == 0){
+		SetMessage("Messages", "mustBoilFirst", 0);
+	}
+}
+
+void addCuprite(string &in item, string &in entity){ // This checks if cuprite was added in the correct correlation with the other chemicals and acts accordingly //
+	if (GetLocalVarInt("hasBoiled") == 1){
+		if (GetLocalVarInt("ingredientsAdded") == 2){
+			RemoveItem("cuprite");
+			PGS("puzzle_acid.ogg");
+			SetLocalVarInt("ingredientsAdded", 3);
+			AddTimer("", 1.0f, "waitingFunc");
+		}else{
+			SetMessage("Messages", "wrongMove", 0);
+		}
+	}else if (GetLocalVarInt("hasBoiled") == 0){
+		SetMessage("Messages", "mustBoilFirst", 0);
+	}
+}
+
+void waitingFunc(string &in asTimer){ // This sets a message to let the player know that the mixture is almost complete //
+	SetMessage("Messages", "completing", 0);
+	AddTimer("", 10.0f, "takeFinalBoil");
+}
+
+void takeFinalBoil(string &in asTimer){ // This makes the mixture able to pick up by the player and sounds another boil effect //
+	PGS("puzzle_boil.snt");
+	SetMessage("Messages", "mixtureDone", 0);
+	SetEntityActive("aqua_fortis_placed", false);
+	SetEntityActive("complete_potion", true);
+}
+
+void brewPotion(string &in entity){
+	SetLevelDoorLocked("level_celler_1", false);
+	CompleteQuest("pickupNote", "pickupNote");
+}

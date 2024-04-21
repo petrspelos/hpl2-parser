@@ -1,0 +1,126 @@
+void OnStart()
+{
+	PlayMusic("03_paper_daniel02", true, 1, 3, 0, true);
+	SetLocalVarInt("orbpieces", 0);
+	
+	/*test
+	GiveItemFromFile("orbpiece_obsidian_1", "orbpiece_obsidian.ent");
+	GiveItemFromFile("orbpiece_crimson_1", "orbpiece_crimson.ent");
+	GiveItemFromFile("orbpiece_emerald_1", "orbpiece_emerald.ent");
+	GiveItemFromFile("orbpiece_indigo_1", "orbpiece_indigo.ent");
+	GiveItemFromFile("orbpiece_scarlet_1", "orbpiece_scarlet.ent");
+	GiveItemFromFile("orbpiece_turquoise_1", "orbpiece_turquoise.ent");
+	*/
+	
+	AddUseItemCallback("", "orbpiece_obsidian_1", "PutOrb", "UseSoul1", true);
+	AddUseItemCallback("", "orbpiece_crimson_1", "PutOrb", "UseSoul2", true);
+	AddUseItemCallback("", "orbpiece_emerald_1", "PutOrb", "UseSoul3", true);
+	AddUseItemCallback("", "orbpiece_indigo_1", "PutOrb", "UseSoul4", true);
+	AddUseItemCallback("", "orbpiece_scarlet_1", "PutOrb", "UseSoul5", true);
+	AddUseItemCallback("", "orbpiece_turquoise_1", "PutOrb", "UseSoul6", true);
+	
+	AddTimer("restorehealth", 5, "RestoreHealth");
+	AutoSave();
+}
+
+void RestoreHealth(string &in asTimer)
+{
+	SetPlayerHealth(100);
+	RemoveTimer("restorehealth");
+	AddTimer("restorehealth", 5, "RestoreHealth");
+}
+
+void UseSoul() {
+	PlaySoundAtEntity("", "pick_orb_piece", "PutOrb", 0, false);
+	SetLocalVarInt("orbpieces", GetLocalVarInt("orbpieces")+1);
+	switch (GetLocalVarInt("orbpieces")) {
+		case 1:
+			SetEntityActive("orb_1_of_6", true);
+		break;
+		case 2:
+			SetEntityActive("orb_1_of_6", false);
+			SetEntityActive("orb_2_of_6", true);
+		break;
+		case 3:
+			SetEntityActive("orb_2_of_6", false);
+			SetEntityActive("orb_3_of_6", true);
+		break;
+		case 4:
+			SetEntityActive("orb_3_of_6", false);
+			SetEntityActive("orb_4_of_6", true);
+		break;
+		case 5:
+			SetEntityActive("orb_4_of_6", false);
+			SetEntityActive("orb_5_of_6", true);
+		break;
+		case 6:
+			SetEntityActive("orb_5_of_6", false);
+			SetEntityActive("orb_6_of_6", true);
+			AddTimer("asd", 2.5, "ASD");
+			SetPlayerActive(false);
+		break;
+	}
+}
+
+void UseSoul1(string &in asItemA, string &in asItemB)
+{
+	UseSoul();
+	SetPlayerSanity(40);
+	RemoveItem("orbpiece_obsidian_1");
+}
+
+void UseSoul2(string &in asItemA, string &in asItemB)
+{
+	UseSoul();
+	SetPlayerHealth(30);
+	RemoveTimer("restorehealth");
+	RemoveItem("orbpiece_crimson_1");
+}
+
+void UseSoul3(string &in asItemA, string &in asItemB)
+{
+	UseSoul();
+	SetPlayerRunSpeedMul(0.3);
+	RemoveItem("orbpiece_emerald_1");
+}
+
+void UseSoul4(string &in asItemA, string &in asItemB)
+{
+	UseSoul();
+	SetPlayerMoveSpeedMul(0.5);
+	RemoveItem("orbpiece_indigo_1");
+}
+
+void UseSoul5(string &in asItemA, string &in asItemB)
+{
+	UseSoul();
+	SetPlayerLookSpeedMul(0.6);
+	RemoveItem("orbpiece_scarlet_1");
+}
+
+void UseSoul6(string &in asItemA, string &in asItemB)
+{
+	UseSoul();
+	FadeSepiaColorTo(80, 3);
+	FadeRadialBlurTo(3, 4);
+	RemoveItem("orbpiece_turquoise_1");
+}
+void ASD(string &in asTimer)
+{
+	if (GetLanternActive() == true) {
+		SetLanternActive(false, true);
+	}
+	SetLanternDisabled(true);
+	FadeOut(3);
+	AddTimer("changemap", 4, "ChangeMap");
+}
+void ChangeMap(string &in asTimer)
+{
+	ChangeMap("oc_zero_09", "PlayerStartArea_1", "", "");
+}
+
+void OnLeave()
+{
+	SetPlayerActive(true);
+	SetupLoadScreen("", "", 0, "cs_loadscreen9");
+}

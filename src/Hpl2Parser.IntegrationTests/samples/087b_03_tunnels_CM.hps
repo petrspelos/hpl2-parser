@@ -1,0 +1,116 @@
+void OnStart()
+{
+	AutoSave();
+	PlaySoundAtEntity("whisperstart", "insanity_whisper.snt", "Player", 0.0f, false);
+	AddEntityCollideCallback("Player", "goup", "goup", true, 0);
+	AddEntityCollideCallback("Player", "keybehindya", "keybehindya", true, 0);
+	AddEntityCollideCallback("Player", "activategoup", "activategoup", true, 0);
+	SetEntityPlayerInteractCallback("key_study_1", "gobackdownafterkey", false);
+	AddEntityCollideCallback("Player", "acaveinmem", "acaveinmem", true, 0);
+	AddUseItemCallback("", "key_study_1", "level_wood_1", "openstudydoorafterscare", true);
+	AddEntityCollideCallback("Player", "returntonormalscare", "returntonormalscare", true, 0);
+	AddTimer("ineedfindpapi", 6, "ineedfindpapi");
+}
+
+void OnEnter()
+{
+	PlayMusic("tunnel_ambience", true, 1.0f, 2.0f, 0, true);
+	PlaySoundAtEntity("tunnelvoid", "amb_guardian.snt", "Player", 1.0f, false);
+}
+
+void OnLeave()
+{
+
+}
+
+////////////////////////////////////
+////////////////START///////////////
+////////////////////////////////////
+
+void ineedfindpapi(string &in asTimer)
+{
+	SetMessage("Messages", "imustfindadwhatisgoingon", 0.0f);
+}
+
+////////////////////////////////////
+////////////////EVENT///////////////
+////////////////////////////////////
+
+void activategoup(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("goup", true);
+	SetLampLit("candle_floor_diamond_3", false, true);
+	SetLampLit("candle_floor_diamond_4", false, true);
+	SetLampLit("candle_floor_diamond_1", false, true);
+	SetLampLit("candle_floor_diamond_5", false, true);
+	SetLampLit("candle_floor_diamond_6", false, true);
+}
+
+void goup(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("teleporttrapped", 1, "teleporttrapped");
+	StartScreenShake(0.1f, 2.5f, 0.3f, 1.5f);
+	PlaySoundAtEntity("rumble", "general_rock_rumble_nolooper.snt", "Player", 1.0f, false);
+	PlaySoundAtEntity("scaredfromtp", "react_breath.snt", "Player", 1.0f, false);
+	StopMusic(1.0f, 0);
+	StopSound("tunnelvoid", 1.0f);
+}
+
+void teleporttrapped(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_2");
+}
+
+void keybehindya(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("chair_metal_1", true);
+	SetEntityActive("key_study_1", true);
+}
+
+void gobackdownafterkey(string &in asEntity)
+{
+	TeleportPlayer("PlayerStartArea_3");
+	StartScreenShake(0.1f, 0.3f, 0.0f, 0.0f);
+	PlaySoundAtEntity("bleeptunnel", "psychobleep_cm.snt", "Player", 0, false);
+	StartPlayerLookAt("lookatwhencomeback", 100.0f, 100.0f, "");
+	AddTimer("nomorelookkey", 0.1f, "nomorelookkey");
+	SetEntityActive("returntonormalscare", true);
+}
+
+void nomorelookkey(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void returntonormalscare(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candle_floor_diamond_3", true, true);
+	SetLampLit("candle_floor_diamond_4", true, true);
+	SetLampLit("candle_floor_diamond_1", true, true);
+	SetLampLit("candle_floor_diamond_5", true, true);
+	SetLampLit("candle_floor_diamond_6", true, true);
+	PlayMusic("tunnel_ambience", true, 1.0f, 2.0f, 0, true);
+	PlaySoundAtEntity("tunnelvoid", "amb_guardian.snt", "Player", 1.0f, false);
+	AutoSave();
+}
+
+//////////////////////////////////////
+////////////////JOURNAL///////////////
+//////////////////////////////////////
+
+void acaveinmem(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("mem4", "memento4");
+	SetMessage("Messages", "atunnelcavein", 0.0f);
+}
+
+////////////////////////////////////
+////////////////DOORS///////////////
+////////////////////////////////////
+
+void openstudydoorafterscare(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("level_wood_1", false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+}

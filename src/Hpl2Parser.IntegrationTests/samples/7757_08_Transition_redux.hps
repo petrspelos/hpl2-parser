@@ -1,0 +1,175 @@
+void OnStart()
+	{
+		AddEntityCollideCallback("Player", "script_begin_confront", "begin_confront", true, 1);
+	}
+
+void begin_confront(string &in asParent, string &in asChild, int alState)
+	{
+		if(HasItem("emerald_piece") == true){
+			AddTimer("trig1", 0.0f, "begin_confrontation");
+		}
+		else{
+		AddEntityCollideCallback("Player", "to_earth_script", "to_earth", false, 1);
+		}
+	}
+
+void to_earth(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerMoveSpeedMul(0.5);
+		SetPlayerRunSpeedMul(0.5);
+		SetPlayerLookSpeedMul(0.5);
+		ChangeMap("09_V1_Ending", "PlayerStartArea_1", "", "");
+	}
+
+/////Confrontation/////
+
+void begin_confrontation(string &in asTimer)
+	{
+		SetPlayerActive(false);
+		SetEntityActive("confrontation_enemy", true);
+		SetEnemyDisableTriggers("confrontation_enemy", true);
+		AddEnemyPatrolNode("confrontation_enemy", "PathNodeArea_1", 30, "");
+		SetSanityDrainDisabled(true);
+		AddTimer("trig1", 3.0f, "confrontation1");
+		SetMessage("Messages", "confront1", 2);
+	}
+
+void confrontation1(string &in asTimer)
+	{
+		StartPlayerLookAt("confrontation_enemy", 8, 8, "");
+		AddTimer("trig1", 0.5f, "confrontation2");
+	}
+
+void confrontation2(string &in asTimer)
+	{
+		SetMessage("Messages", "confront2", 4);
+		AddTimer("trig1", 5.0f, "confrontation3");
+	}
+
+void confrontation3(string &in asTimer)
+	{
+		SetMessage("Messages", "confront3", 3);
+		AddTimer("trig1", 4.0f, "confrontation4");
+	}
+
+void confrontation4(string &in asTimer)
+	{
+		SetMessage("Messages", "confront4", 6);
+		AddTimer("trig1", 7.0f, "confrontation5");
+	}
+
+void confrontation5(string &in asTimer)
+	{
+		SetMessage("Messages", "confront5", 8);
+		AddTimer("trig1", 8.0f, "confrontation6");
+	}
+
+void confrontation6(string &in asTimer)
+	{
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+		AddEntityCollideCallback("Player", "script_choose_agree", "agreement_ending", true, 1);
+		AddEntityCollideCallback("Player", "script_choose_run", "run_endings", true, 1);
+	}
+
+/////Agreement Ending/////
+
+void agreement_ending(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("confrontation_enemy", 5, 5, "");
+		SetMessage("Messages", "confront_agree1", 5);
+		AddTimer("trig1", 6.0f, "agreement_ending1");
+	}
+
+void agreement_ending1(string &in asTimer)
+	{
+		FadeOut(1);
+		SetMessage("Messages", "confront_agree2", 6);
+		AddTimer("trig1", 7.0f, "agreement_ending2");
+	}
+
+void agreement_ending2(string &in asTimer)
+	{
+		SetMessage("Messages", "ending_agreement", 7);
+		AddTimer("trig1", 8.0f, "credits_agreement");
+	}
+
+void credits_agreement(string &in asTimer)
+	{
+		StartCredits("ending_agrippa.ogg", true, "Credits", "MainCredits", 3);
+	}
+
+/////End Agreement Ending/////
+
+/////Run Endings/////
+void run_endings(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("confrontation_enemy", 8, 8, "");
+		SetMessage("Messages", "confront_run1", 4);
+		AddTimer("trig1", 4.0f, "run_endings1");
+		AddEntityCollideCallback("Player", "escape_script", "escape1", true, 1);
+		CheckPoint("player_dies_ending_cp", "PlayerStartArea_1", "invasion_endingv2", "Messages", "confront_run3");
+	}
+
+void run_endings1(string &in asTimer)
+	{
+		SetEnemyDisableTriggers("confrontation_enemy", false);
+		ShowEnemyPlayerPosition("confrontation_enemy");
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+	}
+
+///Player Escapes - Destruction Ending///
+
+void escape1(string &in asParent, string &in asChild, int alState)
+	{
+		FadeEnemyToSmoke("confrontation_enemy", false);
+		SetPlayerActive(false);
+		FadeOut(2);
+		SetMessage("Messages", "confront_run2", 6);
+		AddTimer("trig1", 10.0f, "destruction_ending1");
+	}
+
+void destruction_ending1(string &in asTimer)
+	{
+		SetMessage("Messages", "ending_destruction", 7);
+		AddTimer("trig1", 8.0f, "credits_destruction");
+	}
+
+void credits_destruction(string &in asTimer)
+	{
+		StartCredits("ending_daniel.ogg", true, "Credits", "MainCredits", 3);
+	}
+
+///End Player Escapes - Destruction Ending///
+
+///Player Dies - Invasion Ending V2///
+
+void invasion_endingv2(string &in asName, int alCount)
+	{
+		FadeOut(0.0f);
+		AddTimer("trig1", 5.0f, "invasion_endv2_1");
+	}
+
+void invasion_endv2_1(string &in asTimer)
+	{
+		SetMessage("Messages", "ending_invasion2", 7);
+		AddTimer("trig1", 8.0f, "credits_invasionv2");
+	}
+
+void credits_invasionv2(string &in asTimer)
+	{
+		StartCredits("ending_alexander.ogg", true, "Credits", "MainCredits", 3);
+	}
+
+///End Player Dies - Invasion Ending V2///
+
+/////End Run Endings/////
+
+/////End Confrontation/////
+
+void OnExit()
+	{
+	}

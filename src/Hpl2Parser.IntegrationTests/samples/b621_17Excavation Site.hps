@@ -1,0 +1,357 @@
+void OnStart()
+{  
+	AutoSave();
+	AddEntityCollideCallback("Player", "AreaMusic_1", "Music1", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_1", "Chase", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_2", "ChaseEnd", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_3", "Chaseeffects", true, 1);
+	AddUseItemCallback("", "key_temple", "Hatch", "HatchUnlock", true);
+	AddEntityCollideCallback("Player", "AreaCollide_4", "RopeSpeed", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_5", "Fall", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_6", "Landing", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_7", "FallDamage", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_8", "RedLight_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_9", "RedLight_2", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_10", "RedLight_3", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_11", "RedLight_4", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_12", "RedLight_5", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_13", "RedLight_6", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_14", "RedLight_7", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_15", "RedLightOff", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_16", "MusicOff", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_17", "Blockbox_1", true, 1);
+	
+}
+
+
+
+
+
+void OnEnter()
+{ 
+	AddTimer("PlayerCough", 30, "TimerCough");
+	StopMusic(6.0f, 10);
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen14", 0, "game_loading_rose.jpg");
+}
+
+////////////////////////////////////Descent//////////////////////////////
+void Music1(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Brennenburg_Theme", false, 1, 0.1, 10, false);
+}
+
+////////////////////////////////////Henryk Final Chase//////////////////
+
+void Chase(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth("door_break", 0);
+	SetEntityActive("Henryk_1", true);
+	ShowEnemyPlayerPosition("Henryk_1");
+	SetEntityActive("block_box_39", true);
+	SetEntityActive("block_box_41", true);
+	
+	AddEnemyPatrolNode("Henryk_1", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("Henryk_1", "PathNodeArea_12", .001, "");
+	AddEnemyPatrolNode("Henryk_1", "PathNodeArea_14", 0.001, "");
+	
+	CheckPoint("Chase", "PlayerStartArea_6", "FinalChase", "", "");
+}
+
+
+
+void FinalChase(string &in asName, int alCount)
+{
+	SetEntityActive("Henryk_1", true);
+} 
+
+void ChaseEnd(string &in asParent, string &in asChild, int alState)
+{
+	AddPlayerBodyForce(30000, 20000, 0, false);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 0, false);
+	SetEntityActive("Henryk_1", false);
+	SetEntityActive("cave_in_1", true);
+	PlaySoundAtEntity("", "break_stairs.snt", "cave_in_1", 0, false);
+	SetEntityActive("cave_in_2", true);
+	SetEntityActive("blood_1", true);
+	SetEntityActive("blood_2", true);
+	SetEntityActive("blood_3", true);
+	SetEntityActive("HenrykArm", true);
+	SetEntityActive("key_temple", true);
+	GivePlayerDamage(60, "BloodSplat", false, false);
+	SetPlayerActive(false);
+	PlayMusic("05_event_falling", false, 0.3, 0.1, 10, false);
+	PlaySoundAtEntity("", "player_falldamage_min.snt", "Player", 0, false);
+	SetPlayerCrouching(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	AddTimer("Look1", 3, "Timermovehead");
+	AddTimer("Look2", 7, "Timermovehead");
+	AddTimer("StandUp", 12, "Timermovehead");
+	StartScreenShake(0.4, 0.2, 0.5, 0.1);
+	SetSwingDoorLocked("castle_arched01_1", false, true);
+}
+
+void Timermovehead(string &in asTimer)
+{
+	if(asTimer == "Look1") {
+	StartPlayerLookAt("AreaLook_2", 1, 1, "");
+	PlaySoundAtEntity("", "react_sigh.snt", "Player", 0, false);
+	}	
+		
+		else if(asTimer == "Look2") {
+		PlaySoundAtEntity("", "player_cough.snt", "Player", 0, false);
+		StartPlayerLookAt("key_temple", 1, 1, "");
+		}
+		
+		
+			else if(asTimer == "StandUp") {
+			StopPlayerLookAt();
+			SetPlayerActive(true);
+			SetPlayerCrouching(false);
+			SetPlayerJumpDisabled(false);
+			SetPlayerCrouchDisabled(false);
+			PlaySoundAtEntity("", "react_breath_slow.snt", "Player", 0, false);
+			}
+}
+
+void Chaseeffects(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("stone_small01_1", true);
+	SetEntityActive("stone_small01_2", true);
+	SetEntityActive("stone_small01_3", true);
+	SetEntityActive("stone_small01_4", true);
+	SetEntityActive("stone_small01_5", true);
+	SetEntityActive("stone_small01_6", true);
+	PlaySoundAtEntity("", "03_rock_move", "Player", 0, false);
+	StartPlayerLookAt("AreaLook_1", 1, 1, "");
+}
+
+
+
+///////////////////////////Use Temple Key///////////////////////////////
+
+void HatchUnlock(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("Hatch", false, true);
+	PlaySoundAtEntity("", "07_pick_lock", asEntity, 0, false);
+}
+
+//////////////////////////////Descent///////////////////////////////////
+
+void RopeSpeed(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerFallDamageDisabled(true);
+}
+
+void Fall(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.1, 0.2, 0.2, 0.1);
+	PlaySoundAtEntity("", "guardian_activated", "Player", 0, false);
+	SetEntityActive("1", true);
+	SetEntityActive("2", true);
+	SetEntityActive("3", true);
+	SetEntityActive("4", true);
+	SetEntityActive("5", true);
+	SetEntityActive("6", true);
+	SetEntityActive("7", true);
+	SetEntityActive("8", true);
+	AddTimer("FallLook_1", 1, "Timerfall");
+	AddTimer("FallLook_2", 2, "Timerfall");
+	AddTimer("FadeOut", 2.5f, "Timerfall");
+	AddTimer("TP1", 3, "Timerfall");
+	AddTimer("FadeIn", 8, "Timerfall");
+	AddTimer("PlayerLookLand", 10, "Timerfall");
+	AddTimer("PlayerLookLand2", 13, "Timerfall");
+	AddTimer("PlayerLookLand3", 16, "Timerfall");
+	AddTimer("PlayerLookLand4", 20, "Timerfall");
+	AddTimer("PlayerActive", 22, "Timerfall");
+	StartPlayerLookAt("AreaLook_3", 5, 5, "");
+	PlaySoundAtEntity("", "react_scare.snt", "Player", 1, false);
+	GiveSanityDamage(90, true);
+}
+
+void Timerfall(string &in asTimer)
+{
+	if(asTimer == "FallLook_1") {
+	StartPlayerLookAt("AreaLook_4", 5, 5, "");
+	}
+	
+	else if(asTimer == "FallLook_2") {
+	StartPlayerLookAt("AreaLook_5", 5, 5, "");
+	}
+	
+	else if(asTimer == "FadeOut") {
+	FadeOut(0.1f);
+	SetPlayerActive(false);
+	
+	}
+	
+	else if(asTimer == "TP1") {
+	TeleportPlayer("PlayerStartArea_4");
+	
+	SetPlayerCrouching(true);
+	StartPlayerLookAt("AreaLandLook_1", 0.5f, 0.5f, "");
+	}
+	
+	else if(asTimer == "FadeIn") {
+		FadeIn(1);
+		PlaySoundAtEntity("", "react_pant.snt", "Player", 1, false);
+	}
+	
+	else if(asTimer == "PlayerLookLand1") {
+		StartPlayerLookAt("AreaLandLook_2", 0.5f, 0.5f, "");
+	}
+	
+	else if(asTimer == "PlayerLookLand2") {
+		StartPlayerLookAt("AreaLandLook_3", 0.5f, 0.5f, "");
+		PlaySoundAtEntity("", "react_sigh.snt", "Player", 1, false);
+	}
+	
+	else if(asTimer == "PlayerLookLand3") {
+		StartPlayerLookAt("AreaLandLook_4", 0.5f, 0.5f, "");
+		PlaySoundAtEntity("", "player_cough.snt", "Player", 1, false);
+	}
+	
+	else if(asTimer == "PlayerLookLand4") {
+		StartPlayerLookAt("AreaLandLook_5", 0.5f, 0.5f, "");
+	}
+	
+	else if(asTimer == "PlayerActive") {
+		StopPlayerLookAt();
+		SetPlayerActive(true);
+		GiveSanityBoostSmall();
+		SetPlayerCrouching(false);
+		
+	}
+	
+	
+}
+
+void Landing(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(30, "BloodSplat", false, false);
+}
+
+void FallDamage(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerFallDamageDisabled(false);
+}
+
+/////////////////////////////Flashback effects//////////////////////////
+
+void RedLight_1(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candlestick_floor_red_1", true, true);
+	StartPlayerLookAt("safety_large_vert_1", 5, 5, "");
+	
+}
+
+void RedLight_2(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candlestick_floor_red_2", true, true);
+}
+
+void RedLight_3(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candlestick_floor_red_3", true, true);
+}
+
+void RedLight_4(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candlestick_floor_red_4", true, true);
+}
+
+void RedLight_5(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candlestick_floor_red_5", true, true);
+}
+
+void RedLight_6(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candlestick_floor_red_6", true, true);
+}
+
+void RedLight_7(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("candlestick_floor_red_7", true, true);
+}
+
+void RedLightOff(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("candlestick_floor_red_1", false);
+	SetEntityActive("candlestick_floor_red_2", false);
+	SetEntityActive("candlestick_floor_red_3", false);
+	SetEntityActive("candlestick_floor_red_4", false);
+	SetEntityActive("candlestick_floor_red_5", false);
+	SetEntityActive("candlestick_floor_red_6", false);
+	SetEntityActive("candlestick_floor_red_7", false);
+	
+	AddTimer("PlayerStopLook", 10, "TimerLook");
+}
+
+void TimerLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void MusicOff(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(6, 10);
+}
+
+void Blockbox_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("block_box_40", true);
+}
+
+///////////////////////////////Cough////////////////////////////////////
+
+void TimerCough(string &in asTimer)
+{
+		if(asTimer == "PlayerCough") {
+	
+		SetLocalVarInt("RandomInt", RandInt(1,4));
+		
+		GetLocalVarInt("RandomInt");
+		
+		}
+		
+		
+		if(GetLocalVarInt("RandomInt") == 1) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 16, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 2) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 35, "TimerCough");
+		}
+		
+		
+		else if(GetLocalVarInt("RandomInt") == 3) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 23, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 4) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 25, "TimerCough");
+		}
+		
+
+		
+}
+
+/////////////////////////////////Messgaes///////////////////////////////
+
+void messagelocked(string &in asEntity) {
+	SetMessage("Message", "CellarLocked", 3);
+}

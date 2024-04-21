@@ -1,0 +1,96 @@
+
+float TP_distance = 59.25000000 - 0.0625 - 0.03125 - 0.015625 - 0.0078125 -.00390625 - 0.001953125 - 0.0009765625; //geometric series, r = 1/2
+
+
+void OnStart()
+	{
+		
+	}
+
+void OnEnter()
+	{
+		SetMapDisplayNameEntry("TrainStation");
+	
+		SetLocalVarInt("Loops", 0);
+		AutoSave();	
+		AddDebugMessage(""+TP_distance, false);
+		SetUpInsanity();
+		StartPlayerSpawnPS("dkf_fog.sps");
+		//SetEnemySanityDecreaseActive("Doll_1", false);
+		
+		//PlayMusic("24_amb2.ogg", true, 1.0f, 1.0f, 1,true);
+		//SetInDarknessEffectsActive(false);
+		//SetPlayerSanity(60.0f);
+
+		AddEntityCollideCallback("Player", "Teleport_Area_1", "TP1", false, 1);
+		AddEntityCollideCallback("Player", "Teleport_Area_2", "TP2", false, 1);
+		AddTimer("", 20.0, "Bells");
+	}
+	
+
+void OpenHatch()
+{
+	if( GetLocalVarInt("Loops") == 0 )
+	{
+		SetEntityActive("Hatch_closed", false);
+		SetEntityActive("Hatch_open", true);
+		PlaySoundAtEntity("", "15_bang_far_away.snt", "Hatch_open", 0.0 , false);
+		PlaySoundAtEntity("", "scare_tingeling.snt", "Player", 0.0 , false);
+		PlaySoundAtEntity("", "scare_wall_stomp_far.snt", "Hatch_open", 0.0 , false);
+		PlaySoundAtEntity("", "27_spark.snt", "tech_electric_cabinet_4", 0.0 , false);
+	}
+}
+
+void Bells(string &in asTimer)
+{
+	StartInsanityEvent("Far_Bells_3");
+}
+	
+void TP1(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerPos(GetPlayerPosX() + TP_distance, GetPlayerPosY(), GetPlayerPosZ());
+	//SetPlayerPos(17.0f + 7.25f, GetPlayerPosY(), GetPlayerPosZ());
+	OpenHatch();
+	AddLocalVarInt("Loops", 1);
+}
+
+void TP2(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerPos(GetPlayerPosX() - TP_distance, GetPlayerPosY(), GetPlayerPosZ());
+	//SetPlayerPos(-25.5f -7.25f, GetPlayerPosY(), GetPlayerPosZ());
+	OpenHatch();
+	AddLocalVarInt("Loops", 1);
+}
+	
+
+void OnLeave()
+	{
+		StopMusic(1.0f, 1);
+		//StopPlayerSpawnPS();
+	}
+	
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+	
+

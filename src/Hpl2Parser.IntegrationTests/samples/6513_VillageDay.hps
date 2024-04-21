@@ -1,0 +1,663 @@
+void OnStart()
+{
+AddUseItemCallback("","money","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money2","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money3","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money4","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money5","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money6","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money7","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money8","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money9","AreaBeggar","GiveMoney",false);
+SetSanityDrainDisabled(true);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.3f);
+AddTimer("screams", 45, "screams");
+AddEntityCollideCallback("Player", "HasLantern", "LanternCheck", false, 1);
+AddEntityCollideCallback("Player", "AreaEnd", "ChapterEnd", false, 1);
+AddEntityCollideCallback("Player", "AreaGuard1", "GuardFirstTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaGuard2", "GuardSecondTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaGuard3", "GuardThirdTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaGuard4", "GuardFourthTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaGuard5", "GuardFifthTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaGuard6", "GuardSixthTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaGuard7", "GuardSeventhTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaGuardIdle1", "GuardIdleTalk1", false, 1);
+AddEntityCollideCallback("Player", "AreaSecondGuardIdle1", "GuardSecondIdleTalk1", false, 1);
+AddEntityCollideCallback("Player", "AreaThirdGuardIdle1", "GuardThirdIdleTalk1", false, 1);
+AddEntityCollideCallback("Player", "AreaFourthGuardIdle1", "GuardFourthIdleTalk1", false, 1);
+CheckPoint ("Checkpoint", "PlayerStartArea_1", "DeathSettings1", "DeathHints", "Fall");
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+SetMapDisplayNameEntry("Village");
+AutoSave();
+}
+
+void Explore1(string &in asEntity)
+{
+AddLocalVarInt("VarIntExplore", 1);
+CompleteQuest("Explore4", "Explore4");
+	ExploreDone();
+}
+
+void Explore2(string &in asEntity)
+{
+AddLocalVarInt("VarIntExplore", 1);
+	ExploreDone();
+}
+
+void Explore3(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+AddTimer("stoplooking", 4, "stoplooking");
+StartPlayerLookAt("LookBarn", 5, 50, "");
+SetMessage("Messages", "lookbarn", 7);
+CompleteQuest("Explore3", "Explore3");
+AddQuest("Barnnight", "Barnnight");
+AddLocalVarInt("VarIntExplore", 1);
+	ExploreDone();
+}
+
+void Explore4(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("11_paper_howl.ogg", false, 1.0, 0, 0, true);
+}
+
+void ExploreDone(){
+
+	if(GetLocalVarInt("VarIntExplore") == 4){
+                SetEntityActive("NotLantern", true);
+                AddGlobalVarInt("HotelDay", 1);
+	}
+}
+
+void LanternCheck(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("Lantern"))
+	{
+SetEntityActive("NotLantern", false);
+SetLevelDoorLocked("hotel", false);
+SetEntityPlayerInteractCallback("hotel", "", false);
+	}
+	
+}
+
+void stoplooking(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+}
+
+void Chapel(string &in asParent, string &in asChild, int alState) 
+{
+StopSound("outsidesound", 0.9f);
+PlaySoundAtEntity("chapelsound","ambience_swoop_myst.snt","Player", 0,false);
+CheckPoint ("Checkpoint2", "PlayerStartArea_5", "DeathSettings", "DeathHints", "Fall");
+}
+
+void Outside(string &in asParent, string &in asChild, int alState) 
+{
+StopSound("chapelsound", 0.9f);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+}
+
+void Quest(string &in asEntity)
+{
+AddQuest("Secret", "Secret");
+CompleteQuest("Explore", "Explore");
+SetMessage("Messages", "secret", 6);
+SetEntityPlayerInteractCallback("Secret", "", false);
+SetLightVisible("PointLight_1", false);
+AddLocalVarInt("VarIntExplore", 1);
+	ExploreDone();
+AddLocalVarInt("VarIntChapelDone", 1);
+	Teleport();
+}
+
+void Teleport(){
+
+	if(GetLocalVarInt("VarIntChapelDone") == 2){
+        SetMessage("Messages", "chapeldone", 6);
+        FadeOut(6);
+        AddTimer("Teleport2", 6, "Teleport2");
+	}
+}
+
+void Teleport2(string &in asTimer)
+{
+FadeIn(2);
+TeleportPlayer("PlayerStartArea_6");
+StopSound("chapelsound", 0.9f);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+}
+
+void ChapterEnd(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("hammer"))
+	{
+SetMessage("Messages", "chapterend", 6);
+AddTimer("chapterend2", 10, "chapterend2");
+PlayMusic("08_amb_success.ogg", false, 1.0, 0, 0, true);
+SetPlayerActive(false);
+CompleteQuest("Ch2endchapter", "Ch2endchapter");
+	}
+	
+}
+
+void chapterend2(string &in asTimer)
+{	
+ChangeMap("JeffersonMansion.map", "PlayerStartArea_1", "","");
+}
+
+void GuardFirstTalk(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("armour_nice_boot_24", false);
+SetEntityActive("armour_nice_boot_25", true);
+SetPlayerActive(false);
+StartPlayerLookAt("LookGuard", 5, 50, "");
+AddEffectVoice("guard1.ogg", "", "Voice", "00_Guard1", false, "", 0, 0 );
+AddTimer("GuardFirstTalk2", 5, "GuardFirstTalk2");
+}
+
+void GuardFirstTalk2(string &in asTimer)
+{
+AddEffectVoice("guard2.ogg", "", "Voice", "00_Guard2", false, "", 0, 0 );
+AddTimer("GuardFirstTalk3", 4, "GuardFirstTalk3");
+}
+
+void GuardFirstTalk3(string &in asTimer)
+{
+SetEntityActive("armour_nice_boot_24", true);
+SetEntityActive("armour_nice_boot_25", false);
+SetEntityActive("AreaGuard1", false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddTimer("GuardFirstTalk4", 10, "GuardFirstTalk4");
+}
+
+void GuardFirstTalk4(string &in asTimer)
+{
+SetEntityActive("AreaGuard2", true);
+}
+
+void GuardSecondTalk(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("armour_nice_boot_24", false);
+SetEntityActive("armour_nice_boot_25", true);
+SetPlayerActive(false);
+StartPlayerLookAt("LookGuard", 5, 50, "");
+AddEffectVoice("guard7.ogg", "", "Voice", "00_Guard7", false, "", 0, 0 );
+AddTimer("GuardSecondTalk2", 5, "GuardSecondTalk2");
+}
+
+void GuardSecondTalk2(string &in asTimer)
+{
+SetEntityActive("armour_nice_boot_24", true);
+SetEntityActive("armour_nice_boot_25", false);
+SetEntityActive("AreaGuard2", false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddTimer("GuardSecondTalk3", 10, "GuardSecondTalk3");
+}
+
+void GuardSecondTalk3(string &in asTimer)
+{
+SetEntityActive("AreaGuard3", true);
+}
+
+void GuardThirdTalk(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("armour_nice_boot_24", false);
+SetEntityActive("armour_nice_boot_25", true);
+SetPlayerActive(false);
+StartPlayerLookAt("LookGuard", 5, 50, "");
+AddEffectVoice("guard4.ogg", "", "Voice", "00_Guard4", false, "", 0, 0 );
+AddTimer("GuardThirdTalk2", 6, "GuardThirdTalk2");
+}
+
+void GuardThirdTalk2(string &in asTimer)
+{
+SetEntityActive("armour_nice_boot_24", true);
+SetEntityActive("armour_nice_boot_25", false);
+SetEntityActive("AreaGuard3", false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+AddTimer("GuardThirdTalk3", 10, "GuardThirdTalk3");
+}
+
+void GuardThirdTalk3(string &in asTimer)
+{
+SetEntityActive("AreaGuardIdle1", true);
+}
+
+void GuardFourthTalk(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("armour_nice_boot_24", false);
+SetEntityActive("armour_nice_boot_25", true);
+SetPlayerActive(false);
+StartPlayerLookAt("LookGuard", 5, 50, "");
+AddEffectVoice("guard5.ogg", "", "Voice", "00_Guard5", false, "", 0, 0 );
+AddTimer("GuardFourthTalk2", 7, "GuardFourthTalk2");
+}
+
+void GuardFourthTalk2(string &in asTimer)
+{
+SetEntityActive("armour_nice_boot_24", true);
+SetEntityActive("armour_nice_boot_25", false);
+SetEntityActive("AreaGuard4", false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddTimer("GuardThirdTalk3", 10, "GuardThirdTalk3");
+}
+
+void GuardFifthTalk(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("armour_nice_boot_24", false);
+SetEntityActive("armour_nice_boot_25", true);
+SetPlayerActive(false);
+StartPlayerLookAt("LookGuard", 5, 50, "");
+AddEffectVoice("guard3.ogg", "", "Voice", "00_Guard3", false, "", 0, 0 );
+AddTimer("GuardFifthTalk2", 7, "GuardFifthTalk2");
+}
+
+void GuardFifthTalk2(string &in asTimer)
+{
+SetEntityActive("armour_nice_boot_24", true);
+SetEntityActive("armour_nice_boot_25", false);
+SetEntityActive("AreaGuard5", false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddTimer("GuardFifthTalk3", 10, "GuardFifthTalk3");
+}
+
+void GuardFifthTalk3(string &in asTimer)
+{
+SetEntityActive("AreaGuard6", true);
+}
+
+void GuardSixthTalk(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("armour_nice_boot_24", false);
+SetEntityActive("armour_nice_boot_25", true);
+SetPlayerActive(false);
+StartPlayerLookAt("LookGuard", 5, 50, "");
+AddEffectVoice("guard8.ogg", "", "Voice", "00_Guard8", false, "", 0, 0 );
+AddTimer("GuardSixthTalk2", 7, "GuardSixthTalk2");
+}
+
+void GuardSixthTalk2(string &in asTimer)
+{
+SetEntityActive("armour_nice_boot_24", true);
+SetEntityActive("armour_nice_boot_25", false);
+SetEntityActive("AreaGuard6", false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddTimer("GuardThirdTalk3", 10, "GuardThirdTalk3");
+}
+
+void GuardSeventhTalk(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("armour_nice_boot_24", false);
+SetEntityActive("armour_nice_boot_25", true);
+SetPlayerActive(false);
+StartPlayerLookAt("LookGuard", 5, 50, "");
+AddEffectVoice("guard6.ogg", "", "Voice", "00_Guard6", false, "", 0, 0 );
+AddTimer("GuardSeventhTalk2", 7, "GuardSeventhTalk2");
+}
+
+void GuardSeventhTalk2(string &in asTimer)
+{
+SetEntityActive("armour_nice_boot_24", true);
+SetEntityActive("armour_nice_boot_25", false);
+SetEntityActive("AreaGuard7", false);
+SetPlayerActive(true);
+StopPlayerLookAt();
+AddTimer("GuardThirdTalk3", 10, "GuardThirdTalk3");
+}
+
+void GuardIdleTalk1(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("AreaGuardIdle1", false);
+AddEffectVoice("guard9.ogg", "", "Voice", "00_Guard9", false, "", 0, 0 );
+AddTimer("GuardIdleTalk2", 10, "GuardIdleTalk2");
+}
+
+void GuardIdleTalk2(string &in asTimer)
+{
+SetEntityActive("AreaSecondGuardIdle1", true);
+}
+
+void GuardSecondIdleTalk1(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("AreaSecondGuardIdle1", false);
+AddEffectVoice("guard10.ogg", "", "Voice", "00_Guard10", false, "", 0, 0 );
+AddTimer("GuardSecondIdle2", 10, "GuardSecondIdle2");
+}
+
+void GuardSecondIdle2(string &in asTimer)
+{
+SetEntityActive("AreaThirdGuardIdle1", true);
+}
+
+void GuardThirdIdleTalk1(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("AreaThirdGuardIdle1", false);
+AddEffectVoice("guard11.ogg", "", "Voice", "00_Guard11", false, "", 0, 0 );
+AddTimer("GuardThirdIdle2", 10, "GuardThirdIdle2");
+}
+
+void GuardThirdIdle2(string &in asTimer)
+{
+SetEntityActive("AreaFourthGuardIdle1", true);
+}
+
+void GuardFourthIdleTalk1(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("AreaFourthGuardIdle1", false);
+AddEffectVoice("guard12.ogg", "", "Voice", "00_Guard12", false, "", 0, 0 );
+AddTimer("GuardFourthIdle2", 10, "GuardFourthIdle2");
+}
+
+void GuardFourthIdle2(string &in asTimer)
+{
+SetEntityActive("AreaGuardIdle1", true);
+}
+
+//---- Etc ----//
+
+void gauntletnote(string &in asEntity)
+{
+SetEntityActive("Gauntlet", true);
+}
+
+void gauntlet(string &in asEntity)
+{
+ChangeMap("GauntletChallange.map", "PlayerStartArea_3", "","");
+SetEntityActive("Gauntlet", false);
+}
+
+void morality(string &in asEntity)
+{
+SetEntityActive("Rose", false);
+CompleteQuest("Lantern", "Lantern");
+AddLocalVarInt("VarIntChapelDone", 1);
+	Teleport();
+}
+
+void rose(string &in asEntity)
+{
+SetEntityActive("Lantern", false);
+AddLocalVarInt("VarIntChapelDone", 1);
+	Teleport();
+}
+
+void GiveMoney(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("AreaBeggar", false);
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+AddEffectVoice("beggar.ogg", "", "Voice", "00_Beggar", false, "", 0, 0 );
+}
+
+void plssign(string &in asEntity)
+{
+SetEntityActive("SignHere", false);
+SetMessage("Messages", "plssign", 5);
+SetPlayerActive(false);
+AddTimer("plssign2", 5, "plssign2");
+}
+
+void plssign2(string &in asTimer)
+{
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+SetPlayerActive(true);
+}
+
+//---- Collide ground ----//
+//If player hits the ground too hard
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint2", "PlayerStartArea_5", "DeathSettings", "DeathHints", "Fall");
+}
+
+void CollideAreaGround2(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint3", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+}
+
+//---- Random sounds ----//
+// Random sounds playing once in a while
+
+void screams(string &in asTimer)
+{
+AddTimer("screams", 176, "screams");
+AddTimer("screams2", 25, "screams2");
+AddTimer("screams3", 46, "screams3");
+AddTimer("screams4", 78, "screams4");
+AddTimer("screams5", 99, "screams5");
+AddTimer("screams6", 116, "screams6");
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea6", 0, false);
+}
+
+void screams2(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_loon_single.snt", "SoundArea", 0, false);
+}
+
+void screams3(string &in asTimer)
+{
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea2", 0, false);
+}
+
+void screams4(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_loon_single.snt", "SoundArea3", 0, false);
+}
+
+void screams5(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea4", 0, false);
+}
+
+void screams6(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea5", 0, false);
+}
+
+//---- Messages ----//
+
+void explorefirst(string &in asEntity)
+{
+SetMessage("Messages", "explorefirst", 4);
+}
+
+void barnlocked(string &in asEntity)
+{
+SetMessage("Messages", "barn", 4);
+}
+
+void nolantern(string &in asEntity)
+{
+SetMessage("Messages", "nolantern", 6);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+}
+
+void OnEnter()
+{	
+StopMusic(10, 0);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.3f);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+SetSanityDrainDisabled(true);
+AddEntityCollideCallback("Player", "Chapel", "Chapel", false, 1);
+AddEntityCollideCallback("Player", "Outside", "Outside", false, 1);
+AddEntityCollideCallback("Player", "Explore4", "Explore4", true, 1);
+AddEntityCollideCallback("Player", "Explore3", "Explore3", true, 1);
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaGround2", "CollideAreaGround2", false, 1);
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+SetMapDisplayNameEntry("Village");
+
+if(GetGlobalVarInt("Village")==1)
+	{
+		SetEntityActive("guy", true);
+		SetEntityActive("pillow", true);
+		SetEntityActive("blanket", true);
+		SetEntityActive("block_box_68", true);
+	}
+
+if(GetGlobalVarInt("Village")==2)
+	{
+		SetEntityActive("guy", false);
+		SetEntityActive("pillow", false);
+		SetEntityActive("blanket", false);
+		SetEntityActive("block_box_68", false);
+		SetEntityActive("armor1", false);
+		SetEntityActive("armor2", false);
+		SetEntityActive("armor3", false);
+		SetEntityActive("armor4", false);
+		SetEntityActive("armor5", false);
+		SetEntityActive("armor6", false);
+		SetEntityActive("armor7", true);
+		SetEntityActive("armor8", true);
+		SetEntityActive("armor9", true);
+		SetEntityActive("armor10", true);
+		SetEntityActive("armor11", true);
+		SetEntityActive("armor12", true);
+	}
+
+if(GetGlobalVarInt("Village")==3)
+	{
+		SetEntityActive("drunk", true);
+		SetEntityActive("SignArea_7", true);
+		SetEntityActive("block_box_70", true);
+	}
+
+if(GetGlobalVarInt("Guard")==1)
+	{
+                 SetEntityActive("AreaGuard1", false);
+                 SetEntityActive("AreaGuard2", false);
+                 SetEntityActive("AreaGuard3", false);
+                 SetEntityActive("AreaGuard4", true);
+                 SetEntityActive("AreaGuardIdle1", false);
+                 SetEntityActive("AreaSecondGuardIdle1", false);
+                 SetEntityActive("AreaThirdGuardIdle1", false);
+                 SetEntityActive("AreaFourthGuardIdle1", false);
+                 RemoveTimer("GuardFirstTalk2");
+                 RemoveTimer("GuardFirstTalk3");
+                 RemoveTimer("GuardFirstTalk4");
+                 RemoveTimer("GuardSecondTalk2");
+                 RemoveTimer("GuardSecondTalk3");
+                 RemoveTimer("GuardThirdTalk2");
+                 RemoveTimer("GuardThirdTalk3");
+                 RemoveTimer("GuardFourthTalk2");
+                 RemoveTimer("GuardFifthTalk2");
+                 RemoveTimer("GuardFifthTalk3");
+                 RemoveTimer("GuardSixthTalk2");
+                 RemoveTimer("GuardSeventhTalk2");
+                 RemoveTimer("GuardIdleTalk2");
+                 RemoveTimer("GuardSecondIdle2");
+                 RemoveTimer("GuardThirdIdle2");
+                 RemoveTimer("GuardFourthIdle2");
+	}
+
+if(GetGlobalVarInt("Guard")==2)
+	{
+                 SetEntityActive("AreaGuard1", false);
+                 SetEntityActive("AreaGuard2", false);
+                 SetEntityActive("AreaGuard3", false);
+                 SetEntityActive("AreaGuard4", false);
+                 SetEntityActive("AreaGuard5", true);
+                 SetEntityActive("AreaGuardIdle1", false);
+                 SetEntityActive("AreaSecondGuardIdle1", false);
+                 SetEntityActive("AreaThirdGuardIdle1", false);
+                 SetEntityActive("AreaFourthGuardIdle1", false);
+                 RemoveTimer("GuardFirstTalk2");
+                 RemoveTimer("GuardFirstTalk3");
+                 RemoveTimer("GuardFirstTalk4");
+                 RemoveTimer("GuardSecondTalk2");
+                 RemoveTimer("GuardSecondTalk3");
+                 RemoveTimer("GuardThirdTalk2");
+                 RemoveTimer("GuardThirdTalk3");
+                 RemoveTimer("GuardFourthTalk2");
+                 RemoveTimer("GuardFifthTalk2");
+                 RemoveTimer("GuardFifthTalk3");
+                 RemoveTimer("GuardSixthTalk2");
+                 RemoveTimer("GuardSeventhTalk2");
+                 RemoveTimer("GuardIdleTalk2");
+                 RemoveTimer("GuardSecondIdle2");
+                 RemoveTimer("GuardThirdIdle2");
+                 RemoveTimer("GuardFourthIdle2");
+	}
+
+if(GetGlobalVarInt("Guard")==3)
+	{
+                 SetEntityActive("AreaGuard1", false);
+                 SetEntityActive("AreaGuard2", false);
+                 SetEntityActive("AreaGuard3", false);
+                 SetEntityActive("AreaGuard4", false);
+                 SetEntityActive("AreaGuard5", false);
+                 SetEntityActive("AreaGuard6", false);
+                 SetEntityActive("AreaGuard7", true);
+                 SetEntityActive("AreaGuardIdle1", false);
+                 SetEntityActive("AreaSecondGuardIdle1", false);
+                 SetEntityActive("AreaThirdGuardIdle1", false);
+                 SetEntityActive("AreaFourthGuardIdle1", false);
+                 RemoveTimer("GuardFirstTalk2");
+                 RemoveTimer("GuardFirstTalk3");
+                 RemoveTimer("GuardFirstTalk4");
+                 RemoveTimer("GuardSecondTalk2");
+                 RemoveTimer("GuardSecondTalk3");
+                 RemoveTimer("GuardThirdTalk2");
+                 RemoveTimer("GuardThirdTalk3");
+                 RemoveTimer("GuardFourthTalk2");
+                 RemoveTimer("GuardFifthTalk2");
+                 RemoveTimer("GuardFifthTalk3");
+                 RemoveTimer("GuardSixthTalk2");
+                 RemoveTimer("GuardSeventhTalk2");
+                 RemoveTimer("GuardIdleTalk2");
+                 RemoveTimer("GuardSecondIdle2");
+                 RemoveTimer("GuardThirdIdle2");
+                 RemoveTimer("GuardFourthIdle2");
+	}
+}
+
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_day.png");
+}

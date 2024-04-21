@@ -1,0 +1,57 @@
+void OnStart()
+{		SetPlayerMoveSpeedMul(0.8f);
+		FadeImageTrailTo(1.2f, 5.0f);
+		AddEntityCollideCallback("Player", "ScriptArea_1", "memento", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_3", "wind", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_4", "myplan", true, 1);
+		if(GetGlobalVarInt("amnesia")==1)	{	AddEntityCollideCallback("Player", "AmbienceArea_1", "Amb_Library", false, 0);	}
+		AddUseItemCallback("onphono1", "waxroll_record_1", "phonograph", "Place_VideCorMeum", false);
+		SetEntityPlayerInteractCallback("phonograph", "quest", true);
+}
+void quest(string &in entity)
+{		AddQuest("notape","notape");
+}
+void myplan(string &in asParent, string &in asChild, int alState)
+{		PlayMusic("plan.ogg", false, 20, 0, 0, true);
+}
+void memento(string &in asParent, string &in asChild, int alState)
+{		PlayMusic("Sinclair_pt2.ogg", false, 20, 0, 0, true);
+}
+void wind(string &in asParent, string &in asChild, int alState)
+{		//PlayMusic("general_wind_whirl2", false, 20, 0, 0, true);
+		SetLampLit("candlestick02_1", false, true);
+		CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ParticleArea_1", false);
+		CreateParticleSystemAtEntity("", "ps_dust_push.ps", "ParticleArea_1_2", false);
+		AddTimer("", 2, "nextSec");
+}
+void nextSec(string &in asTimer)
+{		CreateParticleSystemAtEntity("", "ps_dust_paper_blow.ps", "ParticleArea_2", false);
+		PlayGuiSound("general_wind_whirl2.ogg", 20);
+		SetLampLit("candlestick_floor_1", false, true);
+}
+/////Phonography Playing Music "Vide Cor Meum"///////
+
+void Place_VideCorMeum(string &in asItem, string &in asEntity)
+{		SetEntityPlayerInteractCallback("phonograph", "Play_VideCorMeum", true);
+		StopMusic(1, 0);
+		PlaySoundAtEntity("", "12_make_drill.snt", asEntity, 0.0f,false);
+		//StopSound("ptest_phono_loop", 3);
+		CompleteQuest("notape","notape");
+		StopSound("phonograph", 1.0f);
+		}
+void Play_VideCorMeum(string &in entity)
+{		//PlaySoundAtEntity("help", "ptest_phono_loop.ogg", "phonograph", 0.0f, false); //Schalten nicht ab
+		PlayMusic("videcormeum.ogg", false, 1.0f, 0, 0, true);
+		AddTimer("", 230, "EndPhonoLoop");
+		}
+void EndPhonoLoop(string &in asTimer)
+{		StopSound("ptest_phono_loop.ogg", 3); //Schalten nicht ab
+}
+
+void OnEnter()
+{		SetMapDisplayNameEntry("candle");	
+		AutoSave();	}}
+
+void OnLeave()
+{		SetupLoadScreen("LoadingText", "Level03", 1, "02_loadingScreen.jpg");
+}

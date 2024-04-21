@@ -1,0 +1,71 @@
+void OnStart()
+{
+	SetLightVisible("SpotLight_1", false);
+	AddUseItemCallback("", "stencil01_1_pumpkin", "light_box_1", "input_stencil_pumpkin", true);
+	AddEntityCollideCallback("Player", "doorswingopen_london", "doorswingopen_london", true, 0);
+	SetEntityPlayerInteractCallback("note_generic_1", "getnoteonlightboxstencil", false);
+	AddUseItemCallback("", "key_alleyway_1", "level_celler_1", "openalleywaydoorlondon", true);
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("gruntlyhouselondon", "03_amb.snt", "Player", 0, true);
+	StopMusic(1.0f, 1);
+	AutoSave();
+}
+
+void OnLeave()
+{
+
+}
+
+////////////////////////////////////
+////////////////PUZZLE///////////////
+////////////////////////////////////
+
+void input_stencil_pumpkin(string &in asItem, string &in asEntity)
+{
+	SetLightVisible("SpotLight_1", true);
+	SetLightVisible("SpotLight_2", false);
+	RemoveItem(asItem);
+	SetEntityActive("stencil01_static_1", true);
+	PlaySoundAtEntity("placestencilpumpkin", "pick_paper.snt", "soundofplacestencil", 0, false);
+	AddTimer("unlockdoor_grunthouse", 2.5f, "unlockdoor_grunthouse");
+	PlaySoundAtEntity("witchlaugh", "witch_laugh_gruntly.snt", "Player", 0, false);
+	CompleteQuest("mem1", "memento1");
+	AutoSave();
+}
+
+void unlockdoor_grunthouse(string &in asTimer)
+{
+	SetSwingDoorLocked("mansion_1", false, false);
+	PlaySoundAtEntity("unlockgrunthousedoor", "unlock_door", "Player", 0, false);
+	SetMessage("Messages", "somethingunlockedingruntlylondon", 0.0f);
+}
+
+////////////////////////////////////
+////////////////EVENT///////////////
+////////////////////////////////////
+
+void doorswingopen_london(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorDisableAutoClose("cabinet_nice_1", true);
+	AddPropForce("cabinet_nice_1",0,0,-3000,"world");
+}
+
+void getnoteonlightboxstencil(string &in asEntity)
+{
+	SetEntityActive("stencil01_1_pumpkin", true);
+	AddQuest("mem1", "memento1");
+}
+
+//////////////////////////////////
+////////////////KEY///////////////
+//////////////////////////////////
+
+void openalleywaydoorlondon(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("level_celler_1", false);
+	PlaySoundAtEntity("", "unlock_door", "level_celler_1", 0, false);
+	RemoveItem(asItem);
+}

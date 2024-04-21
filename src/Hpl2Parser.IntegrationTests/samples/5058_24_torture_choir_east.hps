@@ -1,0 +1,2648 @@
+
+//-------------------------------------------------
+
+//////////////////////////////
+// EXTRAMODES AND CUSTOM CODE
+//////////////////////////////
+
+//-------------------------------------------------
+
+string gsCurrentMapName = "24_torture_choir_east";
+
+string gsFunnyEasierEntry = "FunnyEasier";
+string gsFunnyEasierSuffix = "_funny_easier";
+string gsFunnyEasyEntry = "FunnyEasy";
+string gsFunnyEasySuffix = "_funny_easy";
+string gsFunnyTougherEntry = "FunnyTougher";
+string gsFunnyTougherSuffix = "_funny_tougher";
+string gsFunnyToughEntry = "FunnyTough";
+string gsFunnyToughSuffix = "_funny_tough";
+string gsFunnyEntry = "Funny";
+string gsFunnySuffix = "_funny";
+string gsStandardEasierEntry = "StandardEasier";
+string gsStandardEasierSuffix = "_easier";
+string gsStandardEasyEntry = "StandardEasy";
+string gsStandardEasySuffix = "_easy";
+string gsStandardTougherEntry = "StandardTougher";
+string gsStandardTougherSuffix = "_tougher";
+string gsStandardToughEntry = "StandardTough";
+string gsStandardToughSuffix = "_tough";
+string gsStandardEntry = "Standard";
+string gsStandardSuffix = "";
+
+string gsHealthPotion = "potion_health";
+string gsLargeOilPotion = "potion_oil_large";
+string gsOilPotion = "potion_oil";
+string gsSanityPotion = "potion_sanity";
+string gsTinderbox = "tinderbox";
+
+int[] gviEasierTinderboxesCodesArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+int[] gviEasierOilPotionsCodesArray = {1, 2, 3, 4};
+int[] gviEasierHealthPotionsCodesArray = {1, 2};
+int[] gviEasierSanityPotionsCodesArray = {1};
+int[] gviEasierLargeOilPotionsCodesArray = {0};
+
+int[] gviEasyTinderboxesCodesArray = gviEasierTinderboxesCodesArray;
+int[] gviEasyOilPotionsCodesArray = gviEasierOilPotionsCodesArray;
+int[] gviEasyHealthPotionsCodesArray = gviEasierHealthPotionsCodesArray;
+int[] gviEasySanityPotionsCodesArray = gviEasierSanityPotionsCodesArray;
+int[] gviEasyLargeOilPotionsCodesArray = gviEasierLargeOilPotionsCodesArray;
+
+int[] gviNormalTinderboxesCodesArray = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+int[] gviNormalOilPotionsCodesArray = {1, 2};
+int[] gviNormalHealthPotionsCodesArray = {1};
+int[] gviNormalSanityPotionsCodesArray = {1};
+int[] gviNormalLargeOilPotionsCodesArray = {0};
+
+int[] gviToughTinderboxesCodesArray = {3, 11, 12, 15};
+int[] gviToughOilPotionsCodesArray = {1, 3};
+int[] gviToughHealthPotionsCodesArray = {1};
+int[] gviToughSanityPotionsCodesArray = {1};
+int[] gviToughLargeOilPotionsCodesArray = {0};
+
+int[] gviTougherTinderboxesCodesArray = {15};
+int[] gviTougherOilPotionsCodesArray = {3};
+int[] gviTougherHealthPotionsCodesArray = {0};
+int[] gviTougherSanityPotionsCodesArray = {1};
+int[] gviTougherLargeOilPotionsCodesArray = {0};
+
+int giMaxGlobalDeathCount = 9;
+
+void PlayEnemySoundAtEntity(string asSound, string asEntity, string asType) //HELPER FUNCTION.
+{
+	PlaySoundAtEntity(asEntity + "_" + asSound, GetStringWithReplacedFunnySubString(asType + "_" + asSound, asType), asEntity, 0.0f, false);
+}
+
+//START STRING MANAGEMENT FUNCTIONS
+int GetSubStringIndex(string asString, string asSubString, int aiOffset) //RETURNS THE STARTING POINT/INDEX OF A DEFINED SUBSTRING CONTAINED IN A STRING, IF THE DEFINED SUBSTRING COULD NOT BE FOUND IT RETURNS THE NEGATIVE VALUE -1. THE THIRD ARGUMENT DEFINES THE STARTING POINT/INDEX OF THE STRING TO START THE SEARCH.
+{
+	if(aiOffset >= asString.length() || aiOffset < 0)
+	{
+		return -1;
+	}
+	
+	string sExaminedString = StringSub(asString, aiOffset, asString.length() - aiOffset);
+	int iStringLength = sExaminedString.length();
+	int iSubStringLength = asSubString.length();
+	
+	if(iStringLength == iSubStringLength)
+	{
+		if(sExaminedString == asSubString)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else
+	if(iSubStringLength > iStringLength)
+	{
+		return -1;
+	}
+	else
+	{
+		int iFirstMatchIndex = 0;
+		int iLastMatchIndex = 0;
+		int iMatchCount = 0;
+		
+		for(int i=0; i<iStringLength; i++)
+		{
+			if(sExaminedString[i] == asSubString[iMatchCount])
+			{
+				iLastMatchIndex = i;
+				
+				if(iMatchCount < iSubStringLength)
+				{
+					iMatchCount = iMatchCount + 1;
+					
+					if(iMatchCount == 1)
+					{
+						iFirstMatchIndex = i;
+					}
+					
+					if(iMatchCount == iSubStringLength)
+					{
+						break;
+					}
+				}
+			}
+			else
+			if(iMatchCount > 0)
+			{
+				iMatchCount = 0;
+				
+				if(asString[i] == asSubString[iMatchCount])
+				{
+					iLastMatchIndex = i;
+					iMatchCount = iMatchCount + 1;
+					iFirstMatchIndex = i;
+				}
+			}
+		}
+		
+		if(iMatchCount == iSubStringLength)
+		{
+			return iFirstMatchIndex;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+}
+
+string GetStringWithReplacedSubString(string asString, string asSearchedSubString, string asReplacedSubString) //RETURNS THE ORIGINAL STRING BUT IT HAS DEFINED SUBSTRINGS REPLACED, IF NO DEFINED SUBSTRINGS ARE FOUND THEN IT RETURNS JUST THE ORIGINAL STRING. FIRST ARGUMENT: ORIGINAL STRING, SECOND ARGUMENT: SUBSTRING THAT MUST BE CONTAINED INSIDE THE ORIGINAL STRING, THIRD ARGUMENT: STRING THAT WILL REPLACE ALL THE SECOND ARGUMENT SUBSTRINGS INSIDE THE ORIGINAL STRING.
+{
+	string sUnchangedFirstMatchSection = "";
+	string sOriginalFirstMatchSection = "";
+	string sReplacedFirstMatchSection = "";
+	int iFirstMatchIndex = GetSubStringIndex(asString, asSearchedSubString, 0);
+	
+	if(iFirstMatchIndex == -1)
+	{
+		return asString;
+	}
+	else
+	if(iFirstMatchIndex > 0)
+	{
+		sUnchangedFirstMatchSection = StringSub(asString, 0, iFirstMatchIndex);
+	}
+	
+	sOriginalFirstMatchSection = sUnchangedFirstMatchSection + asSearchedSubString;
+	sReplacedFirstMatchSection = sUnchangedFirstMatchSection + asReplacedSubString;
+	
+	if(sOriginalFirstMatchSection.length() < asString.length())
+	{
+		return sReplacedFirstMatchSection + GetStringWithReplacedSubString(StringSub(asString, sOriginalFirstMatchSection.length(), asString.length() - sOriginalFirstMatchSection.length()), asSearchedSubString, asReplacedSubString);
+	}
+	else
+	{
+		return sReplacedFirstMatchSection;
+	}
+}
+
+string GetStringWithoutSubString(string asString, string asSubString) //RETURNS THE REMAINING STRING WITHOUT THE SUBSTRING DEFINED AS THE SECOND ARGUMENT.
+{
+	return GetStringWithReplacedSubString(asString, asSubString, "");
+}
+
+string GetSubString(string asString, int aiOffset) //RETURNS THE REMAINING SUBSTRING STARTING FROM THE OFFSET DEFINED AS THE SECOND ARGUMENT.
+{
+	int iLength = asString.length() - aiOffset;
+	
+	if(iLength <= 0)
+	{
+		return asString;
+	}
+	else
+	{
+		return StringSub(asString, aiOffset, iLength);
+	}
+}
+//END STRING MANAGEMENT FUNCTIONS
+
+void TimerTunePlayerLanternOil(string asTimer) //USED AS A TIMER TO CHECK AND ADJUST PLAYER LANTERN OIL VALUE.
+{
+	AddTimer(asTimer, 2.0f, "TimerTunePlayerLanternOil");
+	
+	if(asTimer == "oilspeedslow")
+	{
+		if(GetPlayerLampOil() < 99.0f)
+		{
+			AddPlayerLampOil(0.2f);
+		}
+	}
+	else
+	if(asTimer == "oilspeedquick")
+	{
+		if(GetPlayerLampOil() > 1.0f)
+		{
+			AddPlayerLampOil(-0.2f);
+		}
+	}
+	else
+	if(asTimer == "oilspeedoff")
+	{
+		SetPlayerLampOil(100.0f);
+	}
+}
+
+void LanternLitOilSpeedSlow(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SLOWS DOWN PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeedslow", 2.0f, "TimerTunePlayerLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeedslow");
+	}
+}
+
+void LanternLitOilSpeedQuick(bool abLit) //LANTERNLITCALLBACK FUNCTION. WHEN SET IT SPEEDS UP PLAYER LANTERN OIL CONSUMPTION.
+{
+	if(abLit)
+	{
+		AddTimer("oilspeedquick", 2.0f, "TimerTunePlayerLanternOil");
+	}
+	else
+	{
+		RemoveTimer("oilspeedquick");
+	}
+}
+
+float GetDifficultyDirectFactor() //RETURNS THE VALUE OF THE DIRECT DIFFICULTY FACTOR.
+{
+	return GetGlobalVarFloat("DifficultyDirectFactor");
+}
+
+float GetDifficultyInverseFactor() //RETURNS THE VALUE OF THE INVERSE DIFFICULTY FACTOR.
+{
+	return GetGlobalVarFloat("DifficultyInverseFactor");
+}
+
+int GetEasyModeOn() //RETURNS 1 IF THE EASY MODE IS ENABLED, 2 IF THE EASIER MODE IS ENABLED, 0 ELSE.
+{
+	return GetGlobalVarInt("EasyModeOn");
+}
+
+string GetExtraModesSuffix() //RETURNS THE SUFFIX OF THE EXTRAMODES.
+{
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 6);
+	
+	switch(iChecker)
+	{
+		case 1:
+			return gsFunnySuffix;
+		case 2:
+			return gsStandardEasySuffix;
+		case 3:
+			return gsFunnyEasySuffix;
+		case 4:
+			return gsStandardEasierSuffix;
+		case 5:
+			return gsFunnyEasierSuffix;
+		case 6:
+			return gsStandardToughSuffix;
+		case 7:
+			return gsFunnyToughSuffix;
+		case 12:
+			return gsStandardTougherSuffix;
+		case 13:
+			return gsFunnyTougherSuffix;
+		default:
+			return gsStandardSuffix;
+	}
+	
+	return "";
+}
+
+bool GetFunnyModeOn() //RETURNS TRUE IF THE FUNNY MODE IS ENABLED.
+{
+	return (GetGlobalVarInt("FunnyModeOn") >= 1);
+}
+
+string GetStringWithExtraModesSuffix(string asString) //RETURNS THE NAME + THE EXTRAMODES SUFFIX IF SOME EXTRAMODES ARE ACTIVE.
+{
+	return asString + GetExtraModesSuffix();
+}
+
+string GetStringWithReplacedFunnySubString(string asString, string asSearchedSubString) //RETURNS A MODIFIED VERSION OF THE STRING GIVEN AS THE FIRST ARGUMENT IF FUNNY MODE IS ACTIVE.
+{
+	if(GetFunnyModeOn())
+	{
+		if(StringContains(asString, asSearchedSubString))
+		{
+			return GetStringWithReplacedSubString(asString, asSearchedSubString, asSearchedSubString + gsFunnySuffix);
+		}
+		else
+		{
+			AddDebugMessage("ERROR: Could not find " + asSearchedSubString + " in " + asString + "! Could not replace it with " + asSearchedSubString + gsFunnySuffix + "!", false);
+			return asString;
+		}
+	}
+	else
+	{
+		return asString;
+	}
+}
+
+int GetToughModeOn() //RETURNS 1 IF THE TOUGH MODE IS ENABLED, 2 IF THE TOUGHER MODE IS ENABLED, 0 ELSE.
+{
+	return GetGlobalVarInt("ToughModeOn");
+}
+
+void SetDifficultyDirectFactor(float afAmount) //CHANGES THE VALUE OF THE DIRECT DIFFICULTY FACTOR.
+{
+	SetGlobalVarFloat("DifficultyDirectFactor", afAmount);
+}
+
+void SetDifficultyInverseFactor(float afAmount) //CHANGES THE VALUE OF THE INVERSE DIFFICULTY FACTOR.
+{
+	SetGlobalVarFloat("DifficultyInverseFactor", afAmount);
+}
+
+void SetEasyModeOn(int aiState) //CHANGES THE VALUE OF THE EASY DIFFICULTY MODE. 0 -> off, 1 -> on, 2 -> easier mode on.
+{
+	if(aiState < 0)
+	{
+		aiState = 0;
+	}
+	else
+	if(aiState > 2)
+	{
+		aiState = 2;
+	}
+	
+	if(aiState > 0)
+	{
+		SetGlobalVarInt("ToughModeOn", 0);
+	}
+	
+	SetGlobalVarInt("EasyModeOn", aiState);
+}
+
+void SetFunnyModeOn(bool abState) //CHANGES THE VALUE OF THE FUNNY MODE. false -> off, true -> on.
+{
+	if(abState)
+	{
+		SetGlobalVarInt("FunnyModeOn", 1);
+	}
+	else
+	{
+		SetGlobalVarInt("FunnyModeOn", 0);
+	}
+}
+
+void SetToughModeOn(int aiState) //CHANGES THE VALUE OF THE TOUGH DIFFICULTY MODE. 0 -> off, 1 -> on, 2 -> tougher mode on.
+{
+	if(aiState < 0)
+	{
+		aiState = 0;
+	}
+	else
+	if(aiState > 2)
+	{
+		aiState = 2;
+	}
+	
+	if(aiState > 0)
+	{
+		SetGlobalVarInt("EasyModeOn", 0);
+	}
+	
+	SetGlobalVarInt("ToughModeOn", aiState);
+}
+
+void GiveItemFromFile(string asItem) //GIVES AN ITEM THAT CAN BE EITHER USED AS A DEBUG ITEM OR AS A GOODY.
+{
+	string sItem = GetStringWithoutSubString(asItem, ".ent");
+	int i = 0;
+	
+	do
+	{
+		i = i + 1;
+	}
+	while(HasItem(sItem + "_" + i));
+	
+	GiveItemFromFile(sItem + "_" + i, sItem + ".ent");
+}
+
+void TimerTunePlayerState(string asTimer)
+{
+	float fCooldown = 10.0f;
+	float fHealth = GetPlayerHealth();
+	float fOil = GetPlayerLampOil();
+	float fSanity = GetPlayerSanity();
+	int iRand = RandInt(0, 4);
+	
+	if(StringContains(asTimer, "Blessing"))
+	{
+		if(asTimer == "BlessingRegainHealth")
+		{
+			if(fHealth <= 99.0f)
+			{
+				SetPlayerHealth(fHealth + 1.0f);
+			}
+			else
+			if(fHealth < 100.0f)
+			{
+				SetPlayerHealth(100.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "BlessingRegainSanity")
+		{
+			if(fSanity <= 99.0f)
+			{
+				SetPlayerSanity(fSanity + 1.0f);
+			}
+			else
+			if(fSanity < 100.0f)
+			{
+				SetPlayerSanity(100.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "BlessingRegainLanternOil")
+		{
+			if(fOil <= 95.0f)
+			{
+				SetPlayerLampOil(fOil + 5.0f);
+			}
+			else
+			if(fOil < 100.0f)
+			{
+				SetPlayerLampOil(100.0f);
+			}
+			
+			fCooldown = 90.0f;
+		}
+		else
+		if(asTimer == "BlessingRandomGoodies")
+		{
+			fCooldown = RandFloat(240.0f, 480.0f);
+			
+			if(iRand == 0)
+			{
+				GiveItemFromFile(gsTinderbox + ".ent");
+				PlayGuiSound("pick_generic.snt", 0.5f);
+			}
+			else
+			if(iRand == 1)
+			{
+				GiveItemFromFile(gsOilPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+			else
+			if(iRand == 2)
+			{
+				GiveItemFromFile(gsHealthPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+			else
+			if(iRand == 3)
+			{
+				GiveItemFromFile(gsSanityPotion + ".ent");
+				PlayGuiSound("pick_potion.snt", 0.5f);
+			}
+		}
+	}
+	else
+	if(StringContains(asTimer, "Curse"))
+	{
+		if(asTimer == "CurseRegainHealth")
+		{
+			if(fHealth < 50.0f && fHealth > 5.0f)
+			{
+				SetPlayerHealth(fHealth - 1.0f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "CurseRegainSanity")
+		{
+			if(fSanity < 50.0f && fSanity > 5.0f)
+			{
+				SetPlayerSanity(fSanity - 0.4f);
+			}
+			
+			fCooldown = RandFloat(6.0f, 9.0f);
+		}
+		else
+		if(asTimer == "CurseRegainLanternOil")
+		{
+			if(fOil < 50.0f && fOil > 5.0f)
+			{
+				SetPlayerLampOil(fOil - 5.0f);
+			}
+			
+			fCooldown = 90.0f;
+		}
+		else
+		if(asTimer == "CurseRandomGoodies")
+		{
+			fCooldown = RandFloat(240.0f, 480.0f);
+			int i = 0;
+			
+			if(iRand == 0)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsTinderbox + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsTinderbox + "_" + i))
+				{
+					RemoveItem(gsTinderbox + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 1)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsOilPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsOilPotion + "_" + i))
+				{
+					RemoveItem(gsOilPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 2)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsHealthPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsHealthPotion + "_" + i))
+				{
+					RemoveItem(gsHealthPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+			else
+			if(iRand == 3)
+			{
+				do
+				{
+					i = i + 1;
+				}
+				while(HasItem(gsSanityPotion + "_" + i) == false && i <= 20);
+				
+				if(HasItem(gsSanityPotion + "_" + i))
+				{
+					RemoveItem(gsSanityPotion + "_" + i);
+					PlayGuiSound("impact_glass_low.snt", 0.5f);
+				}
+			}
+		}
+	}
+	
+	AddTimer(asTimer, fCooldown, "TimerTunePlayerState");
+}
+
+void SetupCurrentMapBasedOnExtraModes()
+{
+	string sPrefix = "";
+	float fDifficultyDirectFactor = 0.0f;
+	float fDifficultyInverseFactor = 0.0f;
+	int[] viTinderboxesCodesArray;
+	int[] viOilPotionsCodesArray;
+	int[] viHealthPotionsCodesArray;
+	int[] viSanityPotionsCodesArray;
+	int[] viLargeOilPotionsCodesArray;
+	int iChecker = (GetGlobalVarInt("FunnyModeOn") * 1) + (GetGlobalVarInt("EasyModeOn") * 2) + (GetGlobalVarInt("ToughModeOn") * 6);
+	bool bFunnyModeOn = (iChecker == 1 || iChecker == 3 || iChecker == 5 || iChecker == 7 || iChecker == 13);
+	bool bEasierModeOn = (iChecker == 4 || iChecker == 5);
+	bool bEasyModeOn = (iChecker == 2 || iChecker == 3);
+	bool bToughModeOn = (iChecker == 6 || iChecker == 7);
+	bool bTougherModeOn = (iChecker == 12 || iChecker == 13);
+	RemoveTimer("oilspeedquick");
+	RemoveTimer("oilspeedslow");
+	RemoveTimer("BlessingRandomGoodies");
+	RemoveTimer("BlessingRegainHealth");
+	RemoveTimer("BlessingRegainLanternOil");
+	RemoveTimer("BlessingRegainSanity");
+	RemoveTimer("CurseRandomGoodies");
+	RemoveTimer("CurseRegainHealth");
+	RemoveTimer("CurseRegainLanternOil");
+	RemoveTimer("CurseRegainSanity");
+	
+	if(bEasierModeOn)
+	{
+		sPrefix = "Blessing";
+		fDifficultyDirectFactor = 0.25f;
+		fDifficultyInverseFactor = 1.75f;
+		viTinderboxesCodesArray = gviEasierTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviEasierOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviEasierHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviEasierSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviEasierLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedSlow");
+		LanternLitOilSpeedSlow(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(true);
+		SetSanityDrainDisabled(true);
+		AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bEasyModeOn)
+	{
+		sPrefix = "Blessing";
+		fDifficultyDirectFactor = 0.5f;
+		fDifficultyInverseFactor = 1.5f;
+		viTinderboxesCodesArray = gviEasyTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviEasyOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviEasyHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviEasySanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviEasyLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedSlow");
+		LanternLitOilSpeedSlow(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(true);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bToughModeOn)
+	{
+		sPrefix = "Curse";
+		fDifficultyDirectFactor = 1.5f;
+		fDifficultyInverseFactor = 0.5f;
+		viTinderboxesCodesArray = gviToughTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviToughOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviToughHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviToughSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviToughLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedQuick");
+		LanternLitOilSpeedQuick(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	if(bTougherModeOn)
+	{
+		sPrefix = "Curse";
+		fDifficultyDirectFactor = 1.75f;
+		fDifficultyInverseFactor = 0.25f;
+		viTinderboxesCodesArray = gviTougherTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviTougherOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviTougherHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviTougherSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviTougherLargeOilPotionsCodesArray;
+		SetLanternLitCallback("LanternLitOilSpeedQuick");
+		LanternLitOilSpeedQuick(GetLanternActive());
+		SetEntityActive("oil_barrel_*", false);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	else
+	{
+		sPrefix = "";
+		fDifficultyDirectFactor = 1.0f;
+		fDifficultyInverseFactor = 1.0f;
+		viTinderboxesCodesArray = gviNormalTinderboxesCodesArray;
+		viOilPotionsCodesArray = gviNormalOilPotionsCodesArray;
+		viHealthPotionsCodesArray = gviNormalHealthPotionsCodesArray;
+		viSanityPotionsCodesArray = gviNormalSanityPotionsCodesArray;
+		viLargeOilPotionsCodesArray = gviNormalLargeOilPotionsCodesArray;
+		SetLanternLitCallback("");
+		//LanternLitOilSpeedNormal(GetLanternActive());
+		SetEntityActive("oil_barrel_*", true);
+		SetPlayerFallDamageDisabled(false);
+		SetSanityDrainDisabled(false);
+		//AddTimer(sPrefix + "RandomGoodies", 60.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainHealth", 2.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainSanity", 3.0f, "TimerTunePlayerState");
+		//AddTimer(sPrefix + "RegainLanternOil", 4.0f, "TimerTunePlayerState");
+	}
+	
+	SetDifficultyDirectFactor(fDifficultyDirectFactor);
+	SetDifficultyInverseFactor(fDifficultyInverseFactor);
+	//SetEnemyMinIdleTime(2.0f * fDifficultyDirectFactor);
+	//DISABLES ALL GOODIES.
+	if(gviEasierTinderboxesCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierTinderboxesCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsTinderbox + "_" + gviEasierTinderboxesCodesArray[i]))
+			{
+				SetEntityActive(gsTinderbox + "_" + gviEasierTinderboxesCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsOilPotion + "_" + gviEasierOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsOilPotion + "_" + gviEasierOilPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierHealthPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierHealthPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsHealthPotion + "_" + gviEasierHealthPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsHealthPotion + "_" + gviEasierHealthPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierSanityPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierSanityPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsSanityPotion + "_" + gviEasierSanityPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsSanityPotion + "_" + gviEasierSanityPotionsCodesArray[i], false);
+			}
+		}
+	}
+	
+	if(gviEasierLargeOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<gviEasierLargeOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsLargeOilPotion + "_" + gviEasierLargeOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsLargeOilPotion + "_" + gviEasierLargeOilPotionsCodesArray[i], false);
+			}
+		}
+	}
+	//ENABLES SPECIFIC GOODIES BASED ON EXTRAMODES.
+	if(viTinderboxesCodesArray[0] != 0)
+	{
+		for(int i=0; i<viTinderboxesCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsTinderbox + "_" + viTinderboxesCodesArray[i]))
+			{
+				SetEntityActive(gsTinderbox + "_" + viTinderboxesCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsOilPotion + "_" + viOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsOilPotion + "_" + viOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viHealthPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viHealthPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsHealthPotion + "_" + viHealthPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsHealthPotion + "_" + viHealthPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viSanityPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viSanityPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsSanityPotion + "_" + viSanityPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsSanityPotion + "_" + viSanityPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(viLargeOilPotionsCodesArray[0] != 0)
+	{
+		for(int i=0; i<viLargeOilPotionsCodesArray.length(); i++)
+		{
+			if(GetEntityExists(gsLargeOilPotion + "_" + viLargeOilPotionsCodesArray[i]))
+			{
+				SetEntityActive(gsLargeOilPotion + "_" + viLargeOilPotionsCodesArray[i], true);
+			}
+		}
+	}
+	
+	if(gsCurrentMapName == "00_rainy_hall")
+	{
+		AddEntityCollideCallback("Player", "AreaExtraModes", "OnAreaExtraModesCollide", true, 1);
+		SetLightVisible("ButtonBoxLight" + gsStandardSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardToughSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardTougherSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardEasySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsStandardEasierSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyToughSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyTougherSuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyEasySuffix, false);
+		SetLightVisible("ButtonBoxLight" + gsFunnyEasierSuffix, false);
+	}
+	else
+	if(gsCurrentMapName == "01_old_archives")
+	{
+		if(bEasierModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("AreaHintLean", true);
+		}
+		else
+		{
+			SetEntityActive("AreaHintLean", false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "04_wine_cellar_lab")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.16f, 0.18f, 0.22f, 0.7f);
+			SetFogProperties(6.0f, 24.0f, 1.0f, false);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.14f, 0.16f, 0.2f, 0.7f);
+			SetFogProperties(5.0f, 20.0f, 1.0f, false);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.1f, 0.12f, 0.16f, 0.7f);
+			SetFogProperties(3.0f, 12.0f, 1.0f, false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.08f, 0.1f, 0.14f, 0.7f);
+			SetFogProperties(2.0f, 8.0f, 1.0f, false);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogColor(0.12f, 0.14f, 0.18f, 0.7f);
+			SetFogProperties(4.0f, 16.0f, 1.0f, false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "05_wine_cellar")
+	{
+		if(bEasierModeOn)
+		{
+			SetEntityActive("chest_small_2", true);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(10.0f, 30.0f, 1.0f, false);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetEntityActive("chest_small_2", true);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(8.0f, 26.0f, 1.0f, false);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(4.0f, 18.0f, 1.0f, false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(2.0f, 14.0f, 1.0f, false);
+		}
+		else
+		{
+			SetEntityActive("chest_small_2", false);
+			SetFogActive(true);
+			SetFogColor(0.15f, 0.16f, 0.18f, 1.0f);
+			SetFogProperties(6.0f, 22.0f, 1.0f, false);
+		}
+	}
+	else
+	if(gsCurrentMapName == "06_distillery")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.16f, 0.18f, 0.22f, 0.7f);
+			SetFogProperties(6.0f, 24.0f, 1.0f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.14f, 0.16f, 0.2f, 0.7f);
+			SetFogProperties(5.0f, 20.0f, 1.0f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.1f, 0.12f, 0.16f, 0.7f);
+			SetFogProperties(3.0f, 12.0f, 1.0f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogColor(0.08f, 0.1f, 0.14f, 0.7f);
+			SetFogProperties(2.0f, 8.0f, 1.0f, true);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogColor(0.12f, 0.14f, 0.18f, 0.7f);
+			SetFogProperties(4.0f, 16.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "07_archives_cellar")
+	{
+		if(bEasierModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 0);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 0);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 2);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetLocalVarInt("MeatReducer", 3);
+		}
+		else
+		{
+			SetLocalVarInt("MeatReducer", 1);
+		}
+	}
+	else
+	if(gsCurrentMapName == "12_storage")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogActive(false);
+			SetSkyBoxActive(false);
+			SetLocalVarInt("GruntDoorMaxBangs", 3);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(4.0f, 35.0f, 1.2f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 3);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(2.0f, 29.0f, 0.8f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 1);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogActive(true);
+			SetFogProperties(1.0f, 26.0f, 0.6f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 1);
+		}
+		else
+		{
+			SetFogActive(true);
+			SetFogProperties(3.0f, 32.0f, 1.0f, false);
+			SetSkyBoxActive(true);
+			SetLocalVarInt("GruntDoorMaxBangs", 2);
+		}
+	}
+	else
+	if(gsCurrentMapName == "15_prison_north")
+	{
+		if(bEasierModeOn)
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+		else
+		if(bEasyModeOn)
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetEntityActive("tinderbox_13", false);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetEntityActive("tinderbox_13", false);
+		}
+		else
+		{
+			if(GetGlobalVarInt("PrisonTinderboxCollected") != 1)
+			{
+				SetEntityActive("tinderbox_13", true);
+			}	
+			else
+			{
+				SetEntityActive("tinderbox_13", false);
+			}
+		}
+	}
+	else
+	if(gsCurrentMapName == "20_sewer")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(9.0f, 28.0f, 1.2f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(7.0f, 24.0f, 1.1f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(3.0f, 16.0f, 0.9f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(1.0f, 12.0f, 0.8f, true);
+		}
+		else
+		{
+			SetFogProperties(5.0f, 20.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "23_torture_transept")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(5.0f, 20.0f, 1.2f, true);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(4.0f, 17.5f, 1.1f, true);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(2.0f, 12.5f, 0.9f, true);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(1.0f, 10.0f, 0.8f, true);
+		}
+		else
+		{
+			SetFogProperties(3.0f, 15.0f, 1.0f, true);
+		}
+	}
+	else
+	if(gsCurrentMapName == "24_torture_choir_east")
+	{
+		if(bEasierModeOn)
+		{
+			SetFogProperties(6.0f, 45.0f, 0.4f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 47.0f);
+		}
+		else
+		if(bEasyModeOn)
+		{
+			SetFogProperties(4.5f, 37.5f, 0.35f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 39.0f);
+		}
+		else
+		if(bToughModeOn)
+		{
+			SetFogProperties(1.5f, 22.5f, 0.25f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 23.0f);
+		}
+		else
+		if(bTougherModeOn)
+		{
+			SetFogProperties(0.0f, 15.0f, 0.2f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 15.0f);
+		}
+		else
+		{
+			SetFogProperties(3.0f, 30.0f, 0.3f, true);
+			SetLocalVarFloat("MinEnemyPlayerDistance", 31.0f);
+		}
+	}
+}
+
+void SetExtraModesOn(string asInput) //HELPER FUNCTION TO ENABLE THE CORRECT EXTRAMODES, ITS BASED ON THE EXTRAMODES SUFFIX CONTAINED INSIDE THE ARGUMENT.
+{
+	string sSuffix = "ModeChosen";
+	
+	if(StringContains(asInput, gsFunnyEasierSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(2);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEasierEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyEasySuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(1);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEasyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyTougherSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(2);
+		SetMessage("MainMenu", gsFunnyTougherEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnyToughSuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(1);
+		SetMessage("MainMenu", gsFunnyToughEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsFunnySuffix))
+	{
+		SetFunnyModeOn(true);
+		SetEasyModeOn(0);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsFunnyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardEasierSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(2);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEasierEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardEasySuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(1);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEasyEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardTougherSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(2);
+		SetMessage("MainMenu", gsStandardTougherEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardToughSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(1);
+		SetMessage("MainMenu", gsStandardToughEntry + sSuffix, 8.0f);
+	}
+	else
+	if(StringContains(asInput, gsStandardSuffix))
+	{
+		SetFunnyModeOn(false);
+		SetEasyModeOn(0);
+		SetToughModeOn(0);
+		SetMessage("MainMenu", gsStandardEntry + sSuffix, 8.0f);
+	}
+	
+	SetupCurrentMapBasedOnExtraModes();
+}
+
+////////////////
+////////////////
+
+float GetEnemyIdleTime(float afTime)
+{
+	if(GetEasyModeOn() >= 2)
+	{
+		return afTime;
+	}
+	else
+	if(GetToughModeOn() >= 2)
+	{
+		return (RandFloat(((GetDifficultyDirectFactor() * afTime) * 1.0f), ((GetDifficultyDirectFactor() * afTime) * 2.0f)));
+	}
+	else
+	{
+		return (GetDifficultyDirectFactor() * afTime);
+	}
+}
+
+int GetPlayerGlobalDeathCount() //RETURNS THE VALUE OF THE PLAYER GLOBAL DEATH COUNT.
+{
+	return GetGlobalVarInt("PlayerGlobalDeathCount");
+}
+
+void SetPlayerGlobalDeathCount(int aiCount) //CHANGES THE VALUE OF THE PLAYER GLOBAL DEATH COUNT.
+{
+	SetGlobalVarInt("PlayerGlobalDeathCount", aiCount);
+}
+
+bool GetHardModeEndingOn()
+{
+	return ((GetToughModeOn() == 1 && (GetPlayerGlobalDeathCount() + 1) > giMaxGlobalDeathCount) || (GetToughModeOn() == 2));
+}
+
+void StartHardModeEnding(string asInput)
+{
+	if(asInput == "HardModeDeath")
+	{
+		StartCredits("", false, "Hints", "HardModeDeath", 3);
+	}
+	else
+	{
+		ChangePlayerStateToNormal();
+		ExitInventory();
+		FadeGlobalSoundVolume(0.0f, 0.01f);
+		FadeOut(0.01f);
+		SetInDarknessEffectsActive(false);
+		SetInventoryDisabled(true);
+		SetLanternActive(false, false);
+		SetLanternDisabled(true);
+		SetPlayerActive(false);
+		SetPlayerHealth(999.999f);
+		SetPlayerLampOil(999.999f);
+		SetPlayerSanity(999.999f);
+		SetSanityDrainDisabled(true);
+		ShowPlayerCrossHairIcons(false);
+		StopMusic(0.01f, 0);
+		StopMusic(0.01f, 1);
+		StopMusic(0.01f, 2);
+		StopMusic(0.01f, 3);
+		StopMusic(0.01f, 4);
+		StopMusic(0.01f, 5);
+		StopMusic(0.01f, 6);
+		StopMusic(0.01f, 7);
+		StopMusic(0.01f, 8);
+		StopMusic(0.01f, 9);
+		StopMusic(0.01f, 10);
+		StopPlayerLookAt();
+		AddTimer("HardModeDeath", 6.0f, "StartHardModeEnding");
+	}
+}
+
+void OnPlayerDeath(string asName) //COUNTS HOW MANY TIMES THE PLAYER DIED THROUGH THE WHOLE STORY. CONTAINS THE HARD MODE GAME OVER ENDING LOGIC.
+{
+	if(GetHardModeEndingOn())
+	{
+		StartHardModeEnding("");
+		return;
+	}
+	
+	SetPlayerGlobalDeathCount(GetPlayerGlobalDeathCount() + 1);
+}
+
+//CURRENT MAP SPECIFIC
+string[] gvsDangerousLampsArray = {
+	"torch_static01_torch_static01_17", "torch_static01_torch_static01_18", "torch_static01_torch_static01_4", "torch_static01_torch_static01_3", "torch_static01_torch_static01_20", 
+	"torch_static01_torch_static01_6", "torch_static01_torch_static01_5", "torch_static01_torch_static01_10", "torch_static01_torch_static01_9", "torch_static01_torch_static01_19", 
+	"torch_static01_torch_static01_21", "torch_static01_torch_static01_15", "torch_static01_torch_static01_16", "torch_static01_torch_static01_1", "torch_static01_torch_static01_2", 
+	"torch_static01_torch_static01_22", "torch_static01_torch_static01_12", "torch_static01_torch_static01_11", "torch_static01_torch_static01_13", "torch_static01_torch_static01_14"
+};
+
+float GetEntityPlayerDistance(string asEntity)
+{
+	float fPlayerPosX = GetPlayerPosX();
+	float fPlayerPosY = GetPlayerPosY();
+	float fPlayerPosZ = GetPlayerPosZ();
+	float fEntityPosX = GetEntityPosX(asEntity);
+	float fEntityPosY = GetEntityPosY(asEntity);
+	float fEntityPosZ = GetEntityPosZ(asEntity);
+	float fDistance = MathSqrt(MathPow((fEntityPosX - fPlayerPosX), 2.0f) + MathPow((fEntityPosY - fPlayerPosY), 2.0f) + MathPow((fEntityPosZ - fPlayerPosZ), 2.0f));
+	return fDistance;
+}
+
+void OnLampStateChange(string asEntity, string asType)
+{
+	string[] vsDangerousEnemiesArray = {
+		"servant_brute_1", "servant_brute_2", "servant_brute_3", 
+		"servant_brute_4", "servant_brute_5", "servant_brute_6"
+	};
+	
+	if(asType == "OnIgnite")
+	{
+		if(GetToughModeOn() >= 1)
+		{
+			for(int i=0; i<vsDangerousEnemiesArray.length(); i++)
+			{
+				string sEnemyName = GetStringWithExtraModesSuffix(vsDangerousEnemiesArray[i]);
+				string sEnemyState = GetEnemyStateName(sEnemyName);
+				
+				if(sEnemyState != "Idle" && sEnemyState != "GoHome" && sEnemyState != "Dead" && sEnemyState != "NULL" && sEnemyState != "")
+				{
+					if((GetToughModeOn() == 1 && GetEntityPlayerDistance(sEnemyName) <= 20.0f) || (GetToughModeOn() >= 2))
+					{
+						AlertEnemyOfPlayerPresence(sEnemyName);
+						AddDebugMessage("DEBUG: Enemy " + sEnemyName + " is now in alert state!", false);
+						return;
+					}
+				}
+			}
+		}
+		
+		AddDebugMessage("DEBUG: Could not trigger enemy alert from enviroment lamp lit!", false);
+	}
+}
+
+void PreloadEnemySound(string asSound, string asType) //HELPER FUNCTION.
+{
+	PreloadSound(GetStringWithReplacedFunnySubString(asType + "_" + asSound, asType));
+}
+
+//-------------------------------------------------
+
+//////////////////////////////
+// CUSTOM CODE END
+//////////////////////////////
+
+//-------------------------------------------------
+
+//-------------------------------
+
+////////////////////////////
+//FALL IN CHASM
+////////////////////////////
+
+//-------------------------------
+
+void CollideFallDeath(string &in asParent, string &in asChild, int alState)
+{
+	if(GetGlobalVarInt("ChoirOrbCount") == 3)
+	{
+		CheckPoint("checkFallFirstWell", "PlayerStartArea_" + RandInt(2,4), "CheckPointFallChasm", "Hints", "DeathFall_21_TortureNave");
+	}
+	else
+	{
+		CheckPoint("checkFallFirstWell", "PlayerStartArea_1", "CheckPointFallChasm", "Hints", "DeathFall_21_TortureNave");
+	}
+	
+	PlaySoundAtEntity("fallaaaaaah", "11_fall", "Player", 0, false);
+	PlaySoundAtEntity("fallaaaaaah2", "scare_male_terrified5", "Player", 0, false);
+	
+	FadeOut(1);
+	
+	AddTimer("death1", 0.5f, "TimerFallDeath");	
+	AddTimer("death2", 1, "TimerFallDeath");	
+}
+
+void TimerFallDeath(string &in asTimer)
+{	
+	if(asTimer == "death1"){
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+	
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+	
+	//Need to reset the brute events!
+	ResetBruteEvent();
+}
+
+void ResetDoorIfBroken(string asDoor)
+{
+	if(GetPropHealth(asDoor) <= 0.0f)
+	{
+		ResetProp(asDoor);
+	}
+}
+
+void CheckPointFallChasm(string &in asName, int alCount)
+{
+	//START HARD MODE ENDING CHECK
+	if(GetHardModeEndingOn())
+	{
+		StartHardModeEnding("");
+		return;
+	}
+	
+	SetPlayerGlobalDeathCount(GetPlayerGlobalDeathCount() + 1);
+	//END HARD MODE ENDING CHECK
+	ResetDoorIfBroken("prison_1");
+	ResetDoorIfBroken("prison_2");
+	ResetDoorIfBroken("prison_3");
+	ResetDoorIfBroken("prison_4");
+	
+	ResetBruteEvent();
+	InitEnemies(); //Reset all enemy paths
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// TERROR AREA
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void CollideTerrorArea(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Terror area: "+asChild+" State: "+alState, false);
+		
+	////////////////////////
+	// Enter
+	if(alState == 1)
+	{
+		PlaySoundAtEntity(asChild+"terror", "ui_torture.ent", asChild, 10, true);
+		AddTimer(asChild+"terror", 2, "TimerTerrorDrain");
+		
+		FadeImageTrailTo(1.0f, 0.5f);
+		
+		//////////////////
+		// A bit of extra ambient track if been in contact with all terror rooms machines
+		if(GetLocalVarInt(asChild) != 2) SetLocalVarInt(asChild, 1);
+		
+		if(GetLocalVarInt("AreaInsanityEffect_1") == 1 && GetLocalVarInt("AreaInsanityEffect_2") == 1 && 
+			GetLocalVarInt("AreaInsanityEffect_3") == 1){
+			PlaySoundAtEntity("amb_out", "24_amb_out.snt", "AreaPlant_2", 4.0f, true);
+			SetLocalVarInt(asChild, 2);
+			
+			AddDebugMessage(asChild, false);
+		}
+	}
+	////////////////////////
+	// Leave
+	else
+	{
+		FadeImageTrailTo(0.0f, 0.5f);
+		StopSound(asChild+"terror", 2);
+		RemoveTimer(asChild+"terror");
+	}
+	
+}
+
+//------------------------------------------
+
+void TimerTerrorDrain(string & asTimer)
+{
+	if(GetPlayerSanity() < 35)
+		GiveSanityDamage(0.05f*0.15f, false);
+	else
+		GiveSanityDamage(0.05f*0.5f, false);
+		
+	AddTimer(asTimer, 0.05f, "TimerTerrorDrain");
+}
+
+//------------------------------------------
+
+////////////////////////////
+// IRON MAIDEN EVENT
+////////////////////////////
+
+//-------------------------------
+
+///////////////////////////////////////////////////
+// Iron Maiden doors opening scare
+void OpenIronMaiden(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Scary iron maiden opening", false);
+	
+	SetSwingDoorDisableAutoClose("iron_maiden_2", true);
+	SetSwingDoorClosed("iron_maiden_2", false, false);
+	
+	/////////////////////////////////////////////
+	// Open iron maiden doors
+	AddBodyImpulse("iron_maiden_2_leftDoor", -0.7, 0 , -0.7, "world");
+	AddBodyImpulse("iron_maiden_2_rightDoor", -0.7, 0 , 0.7, "world");
+	
+	AddTimer("TimerExtraMaidenImpulse", 0.1, "TimerExtraMaidenImpulse");
+	
+	PlaySoundAtEntity("AreaIronMaidenEffect", "24_iron_maiden", "AreaIronMaidenEffect", 0.0f, false);
+	
+	PlayerReact(0.5f);
+	
+	CreateParticleSystemAtEntity("maidensmoke","ps_iron_maiden_event_smoke.ps", "AreaIronMaidenEffect", false);
+	StartScreenShake(0.1f, 0.1f, 0.0f, 0.1f);
+	
+	// Disable trigger area and activate room sanity drain
+	SetEntityActive("AreaIronMaidenOpen", false);
+	SetEntityActive("AreaInsanityEffect_1", true);
+	
+	GiveSanityDamage(10.0f, true);
+	SetRadialBlurStartDist(0.4f);
+	FadeRadialBlurTo(0.2f, 0.4f);
+	
+	AddTimer("TimerActiveMaidenEmotion",1.5f,"TimerActiveMaidenEmotion");
+}
+
+void TimerExtraMaidenImpulse(string &asTimer)
+{
+	AddBodyImpulse("iron_maiden_2_leftDoor", -0.7, 0 , -0.7, "world");
+	AddBodyImpulse("iron_maiden_2_rightDoor", -0.7, 0 , 0.7, "world");
+}
+
+//Activate an emotion event area.
+void TimerActiveMaidenEmotion(string &asTimer)
+{
+	SetEntityActive("AreaEmotionEffectIronMaiden", true);
+	FadeRadialBlurTo(0.0f, 0.4f);
+}
+
+
+//-------------------------------
+
+////////////////////////////
+// BRAZEN BULL EVENT
+////////////////////////////
+
+//-------------------------------
+
+///////////////////////////////////////////////////
+// Event when lighting bonfire under brazen bull
+void IgniteBonfire(string &in asEntityName, string &in asType)
+{
+	if(asType!="OnIgnite")
+		return;
+		
+	AddDebugMessage("Activating brazen bull scream event", false);
+
+	AddTimer("BrazenBullScream01", 3.0f, "TimedBrazenBullScream");
+}
+
+///////////////////////////////////////////////////
+// The screams from the brazen bull.
+void TimedBrazenBullScream(string &in asTimer)
+{
+	float fNextScreamTime = 0.5f;
+	int lIdx = GetLocalVarInt("BrazenBullScreamCount");
+	
+	string sScreamSound = "";
+	bool bAddNewTimer = true;
+	
+	if(lIdx==0)
+	{
+		sScreamSound = "24_bang.snt";
+		
+		SetLeverStuckState("brazen_bull_2", -1, true);//Slam the hatch shut
+		AddBodyImpulse("brazen_bull_2_hatch",0,-1,-2, "World");
+
+		PlaySoundAtEntity("brazen_bull_2", "24_hatch_imp.snt", "brazen_bull_2", 0.0f, false);
+		
+		PlayerReact(0.5f);
+		
+		SetEntityActive("AreaInsanityEffect_3", true);
+		
+		SetRadialBlurStartDist(0.3f);
+		FadeRadialBlurTo(0.1f, 0.5f);
+		
+		GiveSanityDamage(20.0f, true);
+	}
+	else if(lIdx==1)
+	{
+		sScreamSound = "24_burn.snt";
+		
+		AddTimer("24_burn2", 1.0f, "TimerBurnMore");
+		AddTimer("24_burn3", 2.0f, "TimerBurnMore");
+		AddTimer("stopradial_trigger_enemy", 5.0f, "TimerBurnMore");
+		fNextScreamTime = 2.5f;
+	}
+	else if(lIdx==2)
+	{
+		sScreamSound = "24_bull.snt";
+
+		bAddNewTimer = false;	
+	}
+	
+	//Add index var
+	AddLocalVarInt("BrazenBullScreamCount",1);
+	
+	//Play sound
+	if(sScreamSound != "")
+		PlaySoundAtEntity("BrazenScream", sScreamSound, "AreaBrazenBullScream", 0, false);
+	
+	AddDebugMessage("Brazen bull scream "+lIdx+" screamsound: '"+sScreamSound+"'", false);
+	
+	//Run event again
+	if(bAddNewTimer)
+		AddTimer("BrazenBullScream01", fNextScreamTime, "TimedBrazenBullScream");
+}
+
+void TimerBurnMore(string &in asTimer)
+{
+	if(asTimer == "stopradial_trigger_enemy"){
+		FadeRadialBlurTo(0.0f, 0.1f);
+		
+		//TODO: TRIGGER ENEMY SO HE DOES NOT RUIN THE OTHER ENEMIES AND SO THAT HE DOES NOT 
+		//		GO INTO THE BULL ROOM (ROOM STRUCTURE MAKES HIS BEHAVIOR IMPOSSIBLE).
+		//AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_7"), "PathNodeArea_1", 0, "");
+		//AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_7"), "PathNodeArea_385", 10.0f, "");
+		//AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_7"), "PathNodeArea_52", 0, "");
+		//SetEntityActive(GetStringWithExtraModesSuffix("servant_brute_7"), true);
+	}
+	
+	PlaySoundAtEntity(asTimer, asTimer, "AreaBrazenBullScream", 0, false);
+}
+//-------------------------------
+
+////////////////////////////
+// POISON FUNGI
+/////////////////////////
+
+//-------------------------------
+
+void InteractPoisionFungi(string &in asEntity)
+{
+	////////////////////////////////////
+	//If player clicks fast enough, the fungi will break.
+	AddLocalVarInt("PosionFungiClickCount",1);
+	AddTimer("DecClickCount", 0.9, "TimerDecClickCount");
+	
+	if(GetLocalVarInt("PosionFungiClickCount")==6)
+	{
+		SetPropHealth(asEntity, 0);
+		return;
+	}	
+	
+	
+	////////////////////////////////////
+	//Check if interact message + squish sound should be shown and played	
+	if(GetTimerTimeLeft("PoisonInteract")>0) return;
+	
+	SetMessage("Ch02Level24", "InteractPoisonFungi", -1);
+	
+	PlayGuiSound("26_touch_fungu.snt", 1.0f);
+	
+	AddTimer("PoisonInteract", 1, "");
+}
+
+void TimerDecClickCount(string &in asTimer)
+{
+	AddLocalVarInt("PosionFungiClickCount",-1);	
+}
+
+//-------------------------------
+
+void CollidePlayerWithFungi(string &in asParent, string &in asChild, int alState)
+{
+	//Check so speed is high enough for breaking with a stomp
+	float fSpeed = GetPlayerYSpeed();
+	AddDebugMessage("Land on fungi speed:"+fSpeed, false);
+	if(fSpeed<-5)
+	{
+		SetPropHealth(asChild, 0);
+	}
+}
+
+//-------------------------------
+
+void UseChipperOnFungi(string &in asItem, string &in asEntity)
+{
+	SetPropHealth(asEntity, 0);	
+}
+
+//-------------------------------
+
+void PosionFungiBreak(string &in asEntity, string &in asType)
+{
+	SetEntityActive("poison_gland", true);
+	
+	FadeLightTo("PointLight_5", 0, 0.6, 0.8, 0.8, -1, 2);//Add extra glow to posion gland.
+	
+	PlayGuiSound("26_break_fungu.ogg", 0.8f);
+	
+	SetEntityActive("AreaPlant_14", false);
+	SetEntityActive("AreaPlant_24", false);
+	
+	AddDebugMessage("Broke the fungi!", false);
+}
+
+//-------------------------------
+
+// Player picks up poison gland
+void PickPoisonGland(string &in asEntityName, string &in asType)
+{
+	AddDebugMessage("Picked up poison gland, incrementing ingredient count", false);
+	
+	FadeLightTo("PointLight_5", 0,0,0,0, -1, 2);
+		
+	AddLocalVarInt("IngredientCount", 1);
+	
+	GiveSanityBoostSmall();
+	PlayMusic("15_puzzle_hole.ogg", false, 0.8f, 0.5f, 9, false);
+}
+
+//-------------------------------
+
+////////////////////////////
+// BRUTE
+/////////////////////////
+
+//INFO:
+// The way the following works is that there are areas wich enable a Brute connected to that area.
+// When an area is triggered it is disabled, and no more area can be triggered until brute is disabled.
+// Brute will be disabled if the player enters a torture room corrdidor (and each its end) or by normal
+// means (player cannot see brute and its path is over). After this new areas can be triggered.
+
+
+//-------------------------------
+
+int glNumOfBrutes=7;
+
+//-------------------------------
+
+void InitEnemies()
+{
+	////////////////////////////
+	//General setup
+	for(int i=1; i<=glNumOfBrutes; ++i)
+	{
+		SetEntityActive(GetStringWithExtraModesSuffix("servant_brute_"+i), false);
+		SetEnemyDisabled(GetStringWithExtraModesSuffix("servant_brute_"+i), false);
+		SetEnemyDisableTriggers(GetStringWithExtraModesSuffix("servant_brute_"+i), false);
+		ClearEnemyPatrolNodes(GetStringWithExtraModesSuffix("servant_brute_"+i));
+	}
+	
+	////////////////////////////
+	//1
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_1"), "PathNodeArea_152", GetEnemyIdleTime(2.0f), "");
+	
+	if(RandInt(0,1)==1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_1"), "PathNodeArea_217", GetEnemyIdleTime(2.0f), "");
+	else			AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_1"), "PathNodeArea_213", GetEnemyIdleTime(2.0f), "");
+	
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_1"), "PathNodeArea_225", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_1"), "PathNodeArea_218", GetEnemyIdleTime(2.0f), "");
+	if(GetToughModeOn() >= 1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_1"), "PathNodeArea_163", 2.0f, "");
+	
+	////////////////////////////
+	//2
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_2"), "PathNodeArea_74", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_2"), "PathNodeArea_88", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_2"), "PathNodeArea_158", GetEnemyIdleTime(2.0f), "");
+	if(GetToughModeOn() >= 1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_2"), "PathNodeArea_163", 2.0f, "");
+	
+	////////////////////////////
+	//3
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_3"), "PathNodeArea_373", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_3"), "PathNodeArea_60", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_3"), "PathNodeArea_74", GetEnemyIdleTime(2.0f), "");
+	if(GetToughModeOn() >= 1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_3"), "PathNodeArea_163", 2.0f, "");
+	
+	////////////////////////////
+	//4
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_4"), "PathNodeArea_95", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_4"), "PathNodeArea_251", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_4"), "PathNodeArea_318", GetEnemyIdleTime(2.0f), "");
+	if(GetToughModeOn() >= 1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_4"), "PathNodeArea_163", 2.0f, "");
+	
+	////////////////////////////
+	//5
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_5"), "PathNodeArea_283", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_5"), "PathNodeArea_276", GetEnemyIdleTime(2.0f), "");
+	if(RandInt(0,1)==1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_5"), "PathNodeArea_294", GetEnemyIdleTime(2.0f), "");
+	else			AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_5"), "PathNodeArea_251", GetEnemyIdleTime(2.0f), "");
+	
+	if(GetToughModeOn() >= 1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_5"), "PathNodeArea_163", 2.0f, "");
+	
+	////////////////////////////
+	//6
+	if(RandInt(0,1)==1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_6"), "PathNodeArea_37", GetEnemyIdleTime(2.0f), "");
+	else			AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_6"), "PathNodeArea_54", GetEnemyIdleTime(2.0f), "");
+	
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_6"), "PathNodeArea_52", GetEnemyIdleTime(2.0f), "");
+	
+	if(RandInt(0,1)==1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_6"), "PathNodeArea_359", GetEnemyIdleTime(2.0f), "");
+	else			AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_6"), "PathNodeArea_33", GetEnemyIdleTime(2.0f), "");
+	
+	if(GetToughModeOn() >= 1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_6"), "PathNodeArea_163", 2.0f, "");
+	
+	////////////////////////////
+	//7
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_7"), "PathNodeArea_173", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_7"), "PathNodeArea_337", GetEnemyIdleTime(2.0f), "");
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_7"), "PathNodeArea_142", GetEnemyIdleTime(2.0f), "");
+	if(GetToughModeOn() >= 1)	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_7"), "PathNodeArea_163", 2.0f, "");
+}
+
+//-------------------------------
+
+//Helper to reset all brute event related stuff
+void ResetBruteEvent()
+{	
+	AddDebugMessage("Resetting Brute event!", false);
+		
+	SetLocalVarInt("BruteEventActive",0); //Clear that any brute event is in progress!
+	SetLocalVarInt("PlayerAtTortureEntranceStart",0); //Reset this var.
+	
+	RemoveTimer("BruteEventStart"); //In case the timer has ended yet.
+	
+	//Enable a random area
+	int lIdx = RandInt(1,glNumOfBrutes);
+	SetEntityActive("AreaBruteEvent_"+lIdx, true);
+	AddDebugMessage("Brute Reset activated Random Area: "+lIdx, false);
+	
+	if(GetEasyModeOn() <= 0)
+	{
+		if(lIdx == glNumOfBrutes)
+			lIdx = lIdx - 1;
+		else
+			lIdx = lIdx + 1;
+		SetEntityActive("AreaBruteEvent_"+lIdx, true);
+		AddDebugMessage("Brute Reset activated Random Area: "+lIdx, false);
+		
+		if(GetToughModeOn() >= 1)
+		{
+			lIdx = RandInt(1,glNumOfBrutes);
+			SetEntityActive("AreaBruteEvent_"+lIdx, true);
+			AddDebugMessage("Brute Reset activated Random Area: "+lIdx, false);
+			
+			if(GetToughModeOn() >= 2)
+			{
+				lIdx = RandInt(1,glNumOfBrutes);
+				SetEntityActive("AreaBruteEvent_"+lIdx, true);
+				AddDebugMessage("Brute Reset activated Random Area: "+lIdx, false);
+			}
+		}
+	}
+}
+
+//-------------------------------
+
+void EnemyDisabled(string &in asEnemy, string &in asType)
+{
+	ResetBruteEvent();
+	
+	AddDebugMessage("Disabled Brute: "+ asEnemy, false);
+}
+
+//-------------------------------
+
+void EnemyCollideChasm(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asParent, false);
+	FadeEnemyToSmoke(asParent, false);
+	ResetBruteEvent();
+	InitEnemies(); //Reset all enemy paths
+	
+	AddDebugMessage("Brute: "+ asParent+" fell in chasm!", false);
+}
+
+//-------------------------------
+
+void TimerResetBruteEventArea(string asTimer)
+{
+	SetEntityActive(asTimer, true);
+	AddDebugMessage("DEBUG: BruteEventArea " + asTimer + " is active again!", false);
+}
+
+void CollideBruteEvent(string &in asParent, string &in asChild, int alState)
+{
+	/////////////////////////
+	//Check if OK to start event
+	
+	if(GetEasyModeOn() >= 1)
+	{
+		int iRand = RandInt(0, GetEasyModeOn());
+		
+		if(iRand > 0)
+		{
+			int iDelay = 10 * GetDifficultyInverseFactor();
+			SetEntityActive(asChild, false);
+			AddTimer(asChild, iDelay, "TimerResetBruteEventArea");
+			AddDebugMessage("DEBUG: Lucky you! No enemy spawn this time! Resetting " + asChild + " in " + iDelay + " seconds!", false);
+			return;
+		}
+	}
+	
+	//There can only be one brute event triggered at any time!
+	if(GetLocalVarInt("BruteEventActive")==1)
+	{
+		int iIdx = GetLocalVarInt("BruteEvent_Idx");
+		string sTemp = "servant_brute_" + iIdx;
+		string sTempExtra = GetStringWithExtraModesSuffix(sTemp);
+		
+		string sEnemyState = GetEnemyStateName(sTempExtra);
+		float fEnemyDistance = GetEntityPlayerDistance(sTempExtra);
+		if(StringContains(sEnemyState, "Hunt") == false && StringContains(sEnemyState, "Alert") == false && StringContains(sEnemyState, "Attack") == false && fEnemyDistance >= GetLocalVarFloat("MinEnemyPlayerDistance"))
+		{
+			SetEntityActive(sTempExtra, false);
+			SetEnemyDisableTriggers(sTempExtra, false);
+			FadeEnemyToSmoke(sTempExtra, false);
+			
+			if(GetToughModeOn() >= 1)
+			{
+				int lIdx = RandInt(1, glNumOfBrutes);
+				SetEntityActive("AreaBruteEvent_" + lIdx, true);
+				AddDebugMessage("Activated Random Area: " + lIdx, false);
+				
+				if(GetToughModeOn() >= 2)
+				{
+					lIdx = RandInt(1, glNumOfBrutes);
+					SetEntityActive("AreaBruteEvent_" + lIdx, true);
+					AddDebugMessage("Activated Random Area: " + lIdx, false);
+				}
+			}
+		}
+		else
+			return;
+	}
+	SetLocalVarInt("BruteEventActive",1);
+	
+	//Get index of area (and brute)
+	int lIdx = GetLocalVarInt(asChild+"_Idx"); 
+	SetLocalVarInt("BruteEvent_Idx",lIdx);
+	
+	/////////////////////////
+	//Start up event
+	
+	//Area only triggered once!
+	SetEntityActive(asChild, false); 
+		
+	//Use timer so it enconter feels more random
+	AddTimer("BruteEventStart", RandFloat(0.5f, 1.5f), "TimerBruteEventStart");
+	
+	/////////////////////////
+	//Setup checkpoint
+	string sCheckPointStartPos = "PlayerStartArea_1";
+	
+	//If player has all orbs, then we want to pick a start pos in one of the torture chambers
+	if(GetGlobalVarInt("ChoirOrbCount")==3) 
+	{
+		sCheckPointStartPos = "PlayerStartArea_"+RandInt(2,4);
+	}
+	
+	//This idx is only used to randomize hint messages.
+	int lHintIdx = RandInt(1,3);
+	CheckPoint("checkBrute"+lHintIdx, sCheckPointStartPos, "CheckPointBrute", "Hints", "DeathBrute_24_TortureChoir_0"+lHintIdx);	
+	
+	AddDebugMessage("Enter brute event area: "+ asChild, false);
+}
+
+//Used a delay start of enemy to make it feel more random.
+void TimerBruteEventStart(string &in asTimer)
+{
+	int lIdx = GetLocalVarInt("BruteEvent_Idx");
+	string sTemp = "servant_brute_" + lIdx;
+	
+	if(lIdx == 1)
+		TeleportEnemyToNode(GetStringWithExtraModesSuffix(sTemp), "PathNodeArea_160", true);
+	else if(lIdx == 2)
+		TeleportEnemyToNode(GetStringWithExtraModesSuffix(sTemp), "PathNodeArea_311", true);
+	else if(lIdx == 3)
+		TeleportEnemyToNode(GetStringWithExtraModesSuffix(sTemp), "PathNodeArea_395", true);
+	else if(lIdx == 4)
+		TeleportEnemyToNode(GetStringWithExtraModesSuffix(sTemp), "PathNodeArea_104", true);
+	else if(lIdx == 5)
+		TeleportEnemyToNode(GetStringWithExtraModesSuffix(sTemp), "PathNodeArea_312", true);
+	else if(lIdx == 6)
+		TeleportEnemyToNode(GetStringWithExtraModesSuffix(sTemp), "PathNodeArea_380", true);
+	else if(lIdx == 7)
+		TeleportEnemyToNode(GetStringWithExtraModesSuffix(sTemp), "PathNodeArea_158", true);
+	
+	SetEntityActive(GetStringWithExtraModesSuffix(sTemp), true);
+	SetEnemyDisableTriggers(GetStringWithExtraModesSuffix(sTemp), false);
+	SetEnemyDisabled(GetStringWithExtraModesSuffix(sTemp), false);
+	
+	if(GetGlobalVarInt("ChoirOrbCount")<3 && (GetToughModeOn() <= 1))
+	{
+		GiveSanityDamage(RandFloat(4.0f, 8.0f), false);
+		PlayerReact(0.75f);
+	}
+	else
+	if(GetGlobalVarInt("ChoirOrbCount") >= 3)
+	{
+		GiveSanityDamage(2.0f, false);
+	}
+	
+	if((GetToughModeOn() >= 2) || (GetToughModeOn() >= 1 && GetGlobalVarInt("ChoirOrbCount") == 3))
+	{
+		AddTimer(GetStringWithExtraModesSuffix(sTemp), 1.0f, "AlertEnemyOfPlayerPresence");
+	}
+	
+	AddDebugMessage("Started brute event: "+ GetStringWithExtraModesSuffix(sTemp), false);
+}
+
+//-----------------------------------------------------
+
+void CheckPointBrute(string &in asName, int alCount)
+{
+	//START HARD MODE ENDING CHECK
+	if(GetHardModeEndingOn())
+	{
+		StartHardModeEnding("");
+		return;
+	}
+	
+	SetPlayerGlobalDeathCount(GetPlayerGlobalDeathCount() + 1);
+	//END HARD MODE ENDING CHECK
+	ResetDoorIfBroken("prison_1");
+	ResetDoorIfBroken("prison_2");
+	ResetDoorIfBroken("prison_3");
+	ResetDoorIfBroken("prison_4");
+	
+	ResetBruteEvent();
+	
+	InitEnemies(); //Reset all enemy paths
+		
+	//Enable a random area
+	int lIdx = RandInt(1,glNumOfBrutes);
+	SetEntityActive("AreaBruteEvent_"+lIdx, true);
+	AddDebugMessage("Checkpoint activated Random Area: "+lIdx, false);
+	if(lIdx == glNumOfBrutes)
+	{
+		lIdx = RandInt(1,glNumOfBrutes-1);
+		SetEntityActive("AreaBruteEvent_"+lIdx, true);
+	}
+	else
+	{
+		lIdx = lIdx + 1;
+		SetEntityActive("AreaBruteEvent_"+lIdx, true);
+	}	
+	AddDebugMessage("Checkpoint activated Random Area: "+lIdx, false);
+}
+
+//-------------------------------
+
+//Player is at start of corridor, make the brute walk towards center of map.
+void CollideTortureEntranceStart(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("BruteEventActive")!=1) return; //No event so do nothing
+	if(GetLocalVarInt("PlayerAtTortureEntranceStart") == 1) return; //Player as already been in stat
+	
+	SetLocalVarInt("PlayerAtTortureEntranceStart",1); //Reset the var.
+		
+	int lIdx = GetLocalVarInt("BruteEvent_Idx");
+	
+	SetEnemyDisableTriggers(GetStringWithExtraModesSuffix("servant_brute_"+lIdx), true); //Disable enemy
+	ClearEnemyPatrolNodes(GetStringWithExtraModesSuffix("servant_brute_"+lIdx));
+	AddEnemyPatrolNode(GetStringWithExtraModesSuffix("servant_brute_"+lIdx), "PathNodeArea_157", 1.0f, ""); //Move towards center of map.
+	
+	AddDebugMessage("In start area: "+ asChild, false);
+}
+
+//-----------------------------------------------------
+
+//Player has been at start but turns back. Enable enemy again!
+void CollideTortureEntranceExit(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("BruteEventActive")!=1) return; //No event so do nothing
+	if(GetLocalVarInt("PlayerAtTortureEntranceStart") != 1) return; //Unless player has been at player start, do nothing here.
+	
+	SetLocalVarInt("PlayerAtTortureEntranceStart",0);
+	
+	int lIdx = GetLocalVarInt("BruteEvent_Idx");
+	
+	//Reset all enemies and set current to true!
+	InitEnemies();
+	SetEntityActive(GetStringWithExtraModesSuffix("servant_brute_"+lIdx), true);
+	SetEnemyDisableTriggers(GetStringWithExtraModesSuffix("servant_brute_"+lIdx), false);
+	
+	AddDebugMessage("In exit area: "+ asChild, false);
+}
+
+//-----------------------------------------------------
+
+//Enemy is disabled and player is at end of tunnel. Disable the enemy
+void CollideTortureEntranceEnd(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("BruteEventActive")!=1) return; //No event so do nothing
+	
+	//Reset all variables concerning the brute event
+	ResetBruteEvent();
+	InitEnemies(); //Reset all enemy paths
+		
+	int lIdx = GetLocalVarInt("BruteEvent_Idx");
+	
+	SetEntityActive(GetStringWithExtraModesSuffix("servant_brute_"+lIdx), false);
+	SetEnemyDisableTriggers(GetStringWithExtraModesSuffix("servant_brute_"+lIdx), false);
+	FadeEnemyToSmoke(GetStringWithExtraModesSuffix("servant_brute_"+lIdx), false);
+	
+	AddDebugMessage("In end area: "+ asChild, false);
+}
+
+//-----------------------------------------------------
+
+////////////////////////////
+// PICK UP ORBS
+////////////////////////////
+
+//------------------------------------------
+
+void PickOrbPiece(string &in asEntityName, string &in asType)
+{
+	AddDebugMessage("Picked up orb piece, incrementing count", false);
+	
+	AddGlobalVarInt("ChoirOrbCount", 1);
+	
+	if(asEntityName=="OrbPiece_4") FadeLightTo("PointLight_7", 0,0,0,0, -1, 2);
+	if(asEntityName=="OrbPiece_5") FadeLightTo("PointLight_8", 0,0,0,0, -1, 2);
+	if(asEntityName=="OrbPiece_6") FadeLightTo("PointLight_9", 0,0,0,0, -1, 2);
+	
+	//Enable random enemy area
+	int lIdx = RandInt(1,glNumOfBrutes);
+	SetEntityActive("AreaBruteEvent_"+lIdx, true);
+	AddDebugMessage("PickOrb activated Random Area: "+lIdx, false);
+	if(lIdx == glNumOfBrutes)
+	{
+		lIdx = RandInt(1,glNumOfBrutes-1);
+		SetEntityActive("AreaBruteEvent_"+lIdx, true);
+	}
+	else
+	{
+		lIdx = lIdx + 1;
+		SetEntityActive("AreaBruteEvent_"+lIdx, true);
+	}	
+	AddDebugMessage("PickOrb activated Random Area: "+lIdx, false);
+	
+	//When all orbs are collecting, give player some extra sanity and nice music.	
+	if(GetGlobalVarInt("ChoirOrbCount")==3)
+	{
+		PlayMusic("02_puzzle.ogg", false, 0.7f, 0, 10, false);
+		GiveSanityBoost();
+		
+		CompleteQuest("21OrbsLeftInChoir", "21OrbsLeftInChoir");
+		
+		SetEntityActive("AreaTriggerBones", true);
+	}
+}
+
+//------------------------------------------
+
+///////////////////////////////////////////
+// INTERACT TORTURE MACHINE
+////////////////////////////////////////////
+
+//------------------------------------------
+
+void InteractEmotionEffectBrazenBull(string &in asArea)
+{
+	StartEffectEmotionFlash("Ch02Level24", "TortureText_Bull", "ui_insanity_touch.snt");
+	
+	SetEntityActive(asArea, false);
+}
+
+//------------------------------------------
+
+void InteractEmotionEffectIronMaiden(string &in asArea)
+{
+	StartEffectEmotionFlash("Ch02Level24", "TortureText_Maiden", "ui_insanity_touch.snt");
+	
+	SetEntityActive(asArea, false);
+}
+
+//------------------------------------------
+
+void WheelFlashbackOver()
+{
+	SetEntityActive("AreaEmotionEventWheel", true);
+}
+
+
+void InteractEmotionEffectWheel(string &in asArea)
+{
+	StartEffectEmotionFlash("Ch02Level24", "TortureText_Wheel", "ui_insanity_touch.snt");
+	
+	SetEntityActive(asArea, false);
+}
+
+//------------------------------------------
+
+
+//ALEXANDER VOICE ON ENTRY
+void TimerAlexanderVoice(string &in asTimer)
+{
+	AddEffectVoice("CH02L24_Alexander_01", "", "Voice", "CH02L24_Alexander_01", false, "", 0,0 );
+	AddEffectVoice("CH02L24_Alexander_02", "", "Voice", "CH02L24_Alexander_02", false, "", 0,0 );
+	AddEffectVoice("CH02L24_Alexander_03", "", "Voice", "CH02L24_Alexander_03", false, "", 0,0 );
+	AddEffectVoice("CH02L24_Alexander_04", "", "Voice", "CH02L24_Alexander_04", false, "", 0,0 );
+}
+
+
+//Plant branch sounds
+void CollidePlant(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity(asChild, "24_bush.snt", asChild, RandFloat(0.5f,3.0f), false);
+}
+
+void PlayerReact(float fTime)
+{
+	AddTimer("scare", fTime, "TimerPlayerReact");
+	AddTimer("breath", 2.0+fTime, "TimerPlayerReact");
+	AddTimer("breathl", 4.0+fTime, "TimerPlayerReact");
+}
+void TimerPlayerReact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+}
+
+
+//Fungu description
+void descFungus(string &in asEntity)
+{
+	SetMessage("Ch02Level24", "DescFungus", 0);
+}
+
+
+//Maiden horror
+void CollideAreaInMaiden(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1)
+		SetEntityPlayerLookAtCallback("AreaLookMaiden", "LookAtAreaLookMaiden", true);
+	else
+		SetEntityPlayerLookAtCallback("AreaLookMaiden", "", true);
+}
+void LookAtAreaLookMaiden(string &in asEntity, int alState)
+{
+	if(GetLocalVarInt("MaidenEvent") == 1) return;
+	
+	AddBodyImpulse("iron_maiden_2_rightDoor", 10, 0 , -10, "world");
+	
+	GivePlayerDamage(30.0f, "Slash", false, false);
+	GiveSanityDamage(10.0f, true);
+	
+	PlayGuiSound("attack_claw_hit02.ogg", 0.8f);
+	
+	SetSwingDoorClosed("iron_maiden_2", true, true);
+	
+	PlayerReact(0.5f);
+	
+	SetLocalVarInt("MaidenEvent", 1);
+}
+
+//Random rock ambience
+void TimerAreaRock(string &in asTimer)
+{
+	int iRand = RandInt(1, 6);
+	
+	PlaySoundAtEntity(asTimer+iRand, "24_rock.snt", asTimer+iRand, 1, false);
+	
+	StartScreenShake(0.007f, 0.0f, 4.0f, 2.0f);
+	SetRadialBlurStartDist(0.8f);
+	FadeRadialBlurTo(0.1f, 0.03f);
+	
+	AddTimer("EndRadial", 4.0f, "TimerEndRadial");
+	AddTimer(asTimer, RandFloat(15.0f, 30.0f), "TimerAreaRock");
+}
+void TimerEndRadial(string &in asTimer)
+{
+	FadeRadialBlurTo(0.0f, 0.1f);
+}
+
+//It's raining bones! Hallelujah! It's raining bones! Amen!
+void CollideAreaTriggerBones(string &in asParent, string &in asChild, int alState)
+{
+	if(GetPlayerSanity() >= 75.0f && GetToughModeOn() <= 1) return;	//No event on sanity more or equal than 75
+	
+	StartScreenShake(0.1f, 0.0f, 2.0f, 4.0f);
+	
+	PlaySoundAtEntity("shake", "general_rock_rumble_no3d.snt", "Player", 2.0f, false);
+	
+	PlayerReact(2.0f);
+	
+	SetRadialBlurStartDist(0.3f);
+	FadeRadialBlurTo(0.3f, 0.1f);
+	
+	AddTimer("roar", 0.1f, "TimerStopBones");
+	AddTimer("drop", 0.2f, "TimerStopBones");
+	AddTimer("stopbones", 2.0f, "TimerStopBones");
+	
+	if(GetEasyModeOn() <= 0 && GetLocalVarInt("BruteEventActive") != 0)
+	{
+		if(GetToughModeOn() >= 2)
+		{
+			for(int i=1; i<=glNumOfBrutes; ++i)
+			{
+				ShowEnemyPlayerPosition(GetStringWithExtraModesSuffix("servant_brute_" + i));
+			}
+		}
+		else
+		{
+			for(int i=1; i<=glNumOfBrutes; ++i)
+			{
+				AlertEnemyOfPlayerPresence(GetStringWithExtraModesSuffix("servant_brute_" + i));
+			}
+		}
+	}
+	else
+	if(GetLocalVarInt("BruteEventActive") == 0)
+	{
+		CollideBruteEvent("Player", "AreaBruteEvent_1", 1);
+	}
+}
+void TimerStopBones(string &in asTimer)
+{
+	if(asTimer == "roar")
+		PlayGuiSound("insanity_monster_roar02.ogg", 0.7f);
+	if(asTimer == "drop")
+		SetEntityActive("Bone_*", true);
+	else{
+		StopSound("shake", 5.0f);
+		FadeRadialBlurTo(0.0f, 0.01f);
+		
+		if(GetEasyModeOn() <= 0 && GetLocalVarInt("BruteEventActive") != 0)
+		{
+			if(GetToughModeOn() >= 2)
+			{
+				for(int i=1; i<=glNumOfBrutes; ++i)
+				{
+					ShowEnemyPlayerPosition(GetStringWithExtraModesSuffix("servant_brute_" + i));
+				}
+			}
+			else
+			{
+				for(int i=1; i<=glNumOfBrutes; ++i)
+				{
+					AlertEnemyOfPlayerPresence(GetStringWithExtraModesSuffix("servant_brute_" + i));
+				}
+			}
+		}
+	}
+}
+
+
+//PIPE EVENT TO HINT ABOUT FOLLOWING
+void TimerPipeEvent(string &in asTimer)
+{
+	string sEvent = asTimer;	//Do not edit, sets timer loop function name.
+	AddLocalVarInt(sEvent, 1);	//Do not edit, steps through timer loop events.
+	bool bPauseAtStep = false;	//Do not edit, to pause or end the timer loop at specified step.
+
+	float fEventSpeed = 0.5f;	//Set to preferred default time for the timer loop.
+
+	switch(GetLocalVarInt(sEvent)){
+		//////////
+		//Pipe sound
+		case 1:
+			PlaySoundAtEntity("sound1", "24_pipe.snt", "AreaPipe_1", 0.0f, false);
+			SetPlayerRunSpeedMul(0.2f);
+		break;
+
+		//////////
+		//Pipe look at area 1
+		case 2:
+			StartPlayerLookAt("AreaPipe_1", 4.0f, 4.0f, "");
+			SetPlayerRunSpeedMul(0.4f);
+			SetPlayerMoveSpeedMul(0.4f);
+			PlayerReact(0.1f);
+			fEventSpeed = 1.5f;
+		break;
+		
+		//////////
+		//Pipe sound 2
+		case 3:
+			StartPlayerLookAt("AreaPipe_2", 0.8f, 0.8f, "");
+			SetPlayerRunSpeedMul(0.6f);
+			SetPlayerMoveSpeedMul(0.6f);
+			fEventSpeed = 1.5f;
+		break;
+		
+		//////////
+		//Pipe look at area 2
+		case 4:
+			FadeRadialBlurTo(0.0f, 0.1f);
+			PlaySoundAtEntity("sound2", "24_pipe.snt", "AreaPipe_2", 1.0f, false);
+			SetPlayerRunSpeedMul(0.8f);
+			SetPlayerMoveSpeedMul(0.8f);
+			SetPlayerLookSpeedMul(0.6f);
+		break;
+		
+		//////////
+		//End timer when no more steps in the event found.
+		default:
+			StopPlayerLookAt();
+			SetPlayerMoveSpeedMul(1.0f);
+			SetPlayerRunSpeedMul(1.0f);
+			SetPlayerLookSpeedMul(1.0f);
+			bPauseAtStep = true;
+		break;
+	}
+
+	if(!bPauseAtStep) AddTimer(sEvent, fEventSpeed, sEvent);
+}
+////////////////////////////
+// Run first time starting map
+void OnStart()
+{
+	for(int i=0; i<gvsDangerousLampsArray.length(); i++)
+	{
+		SetEntityCallbackFunc(gvsDangerousLampsArray[i], "OnLampStateChange");
+	}
+	
+	SetMapDisplayNameEntry("ChoirEast");
+
+	if(ScriptDebugOn())
+	{
+		if(HasItem("lantern") == false) GiveItemFromFile("lantern", "lantern.ent");
+			
+		//GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+		
+		AddTimer("alexander", 10.0f, "TimerAlexanderVoice");
+		AddTimer("TimerPipeEvent", 1.0f, "TimerPipeEvent");
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.0f);
+		SetPlayerLookSpeedMul(0.2f);
+		SetRadialBlurStartDist(0.3f);
+		FadeRadialBlurTo(0.1f, 0.1f);
+		PlayGuiSound("react_sigh.snt", 0.6f);
+		 
+	//PLAY ALEXANDER VOICE	
+	} else{ 
+		AddTimer("alexander", 10.0f, "TimerAlexanderVoice");
+		AddTimer("TimerPipeEvent", 1.0f, "TimerPipeEvent");
+		SetPlayerMoveSpeedMul(0.2f);
+		SetPlayerRunSpeedMul(0.0f);
+		SetPlayerLookSpeedMul(0.2f);
+		SetRadialBlurStartDist(0.3f);
+		FadeRadialBlurTo(0.1f, 0.1f);
+		PlayGuiSound("react_sigh.snt", 0.7f);
+	}
+	
+	AddTimer("AreaRock_", RandFloat(3.0f,10.f), "TimerAreaRock");
+	
+	///////////////////////////////////////////////
+	// USE ITEM CALLBACKS
+	AddUseItemCallback("hammer_chipper_on_fungi", "stone_hammer_chipper", "poison_fungi_breakable", "UseChipperOnFungi", false);
+	
+	///////////////////////////////////////////////
+	// COLLIDE CALLBACKS
+	// Torture rooms
+	for(int i=1;i<=3;++i)
+	{
+		AddEntityCollideCallback("Player", "AreaInsanityEffect_"+i, "CollideTerrorArea", false, 0);
+	}
+	AddEntityCollideCallback("Player", "AreaIronMaidenOpen", "OpenIronMaiden", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaInMaiden", "CollideAreaInMaiden", false, 0);
+	
+	// Poison fungi
+	AddEntityCollideCallback("Player", "poison_fungi_breakable", "CollidePlayerWithFungi", false, 1);
+	
+	// Bute event
+	for(int i=1; i<=glNumOfBrutes; ++i)
+	{
+		AddEntityCollideCallback("Player", "AreaBruteEvent_"+i, "CollideBruteEvent", false, 1);
+		SetLocalVarInt("AreaBruteEvent_"+i+"_Idx", i);
+		
+	}
+	for(int i=1; i<=3; ++i)
+	{
+		AddEntityCollideCallback("Player", "AreaTortureEntranceExit_"+i, "CollideTortureEntranceExit", false, 1);
+		AddEntityCollideCallback("Player", "AreaTortureEntranceStart_"+i, "CollideTortureEntranceStart", false, 1);
+		AddEntityCollideCallback("Player", "AreaTortureEntranceEnd_"+i, "CollideTortureEntranceEnd", false, 1);
+	}
+	
+	// Fall areas
+	for(int i=1; i<=3; ++i)
+	{
+		AddEntityCollideCallback("Player", "AreaFallDeath_"+i, "CollideFallDeath", false, 1);
+		AddEntityCollideCallback("servant_brute*", "AreaFallDeath_"+i, "EnemyCollideChasm", false, 1);
+	}
+	
+	
+	//Plant branch sound
+	for(int i=1;i<=23;i++)AddEntityCollideCallback("Player", "AreaPlant_"+i, "CollidePlant", false, 0);
+	
+	//Bones, bones, bones - Dr Brennan would be so proud.
+	AddEntityCollideCallback("Player", "AreaTriggerBones", "CollideAreaTriggerBones", true, 1);
+}
+
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{	
+	PlayMusic("24_amb.ogg", true, 0.7f, 4.0f, 0, true);
+	
+	PreloadSound("24_bull"); PreloadSound("24_burn"); PreloadSound("24_bang"); PreloadSound("11_fall");
+	PreloadSound("scare_male_terrified5"); PreloadSound("player_bodyfall"); PreloadSound("player_falldamage_max"); PreloadSound("ui_torture");
+	PreloadSound("24_iron_maiden"); PreloadSound("24_bush"); PreloadSound("general_rock_rumble_no3d"); PreloadSound("24_rock");
+	PreloadSound("react_breath"); PreloadSound("react_scare"); PreloadSound("insanity_monster_roar02");
+	
+	InitEnemies(); //Want to init all enemies on each init, so it is sure that they are all reset properly!
+	
+	//AutoSave();
+	
+	SetupCurrentMapBasedOnExtraModes();
+	
+	string sEnemyName = "";
+	
+	sEnemyName = "brute";
+	PreloadEnemySound("alert.snt", sEnemyName);
+	PreloadEnemySound("attack.snt", sEnemyName);
+	PreloadEnemySound("attack_hit.snt", sEnemyName);
+	PreloadEnemySound("attack_launch.snt", sEnemyName);
+	PreloadEnemySound("enabled.snt", sEnemyName);
+	PreloadEnemySound("flinch.snt", sEnemyName);
+	PreloadEnemySound("giveup.snt", sEnemyName);
+	PreloadEnemySound("hunt.snt", sEnemyName);
+	PreloadEnemySound("idle.snt", sEnemyName);
+	PreloadEnemySound("idle_extra.snt", sEnemyName);
+	PreloadEnemySound("notice.snt", sEnemyName);
+	PreloadEnemySound("notice_long.snt", sEnemyName);
+	PreloadEnemySound("run.snt", sEnemyName);
+	PreloadEnemySound("run_extra.snt", sEnemyName);
+	PreloadEnemySound("walk.snt", sEnemyName);
+	PreloadEnemySound("walk_extra.snt", sEnemyName);
+	
+	sEnemyName = "suitor";
+	PreloadEnemySound("alert.snt", sEnemyName);
+	PreloadEnemySound("attack.snt", sEnemyName);
+	PreloadEnemySound("attack_hit.snt", sEnemyName);
+	PreloadEnemySound("attack_launch.snt", sEnemyName);
+	PreloadEnemySound("enabled.snt", sEnemyName);
+	PreloadEnemySound("flinch.snt", sEnemyName);
+	PreloadEnemySound("giveup.snt", sEnemyName);
+	PreloadEnemySound("hunt.snt", sEnemyName);
+	PreloadEnemySound("idle.snt", sEnemyName);
+	PreloadEnemySound("idle_extra.snt", sEnemyName);
+	PreloadEnemySound("notice.snt", sEnemyName);
+	PreloadEnemySound("notice_long.snt", sEnemyName);
+	PreloadEnemySound("run.snt", sEnemyName);
+	PreloadEnemySound("run_extra.snt", sEnemyName);
+	PreloadEnemySound("walk.snt", sEnemyName);
+	PreloadEnemySound("walk_extra.snt", sEnemyName);
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	ResetBruteEvent();
+}

@@ -1,0 +1,67 @@
+////////////////////////////
+// Run when entering map
+void OnStart()
+{
+	SetPlayerMoveSpeedMul(0.89f);
+	AutoSave();
+    AddTimer("MSGtimer", 1.5, "MSGtimer");
+    AddUseItemCallback("", "realscrew", "SCRIPTONE", "LockUsedOnHatch", true);
+	SetPlayerActive(false);
+	FadeOut(0);
+	AddTimer("activate_player", 8, "FadeIn");
+	PlayMusic("IntroCar.ogg", false, 0.9, 1.0, 1, false);
+	AddEntityCollideCallback("Player", "DiaryFirst", "DiaryFirst", true, 1);
+}
+
+void FadeIn(string &in asTimer)
+{
+    SetPlayerActive(true);
+	FadeIn(2);
+	PlayMusic("Forest2.ogg", true, 1, 4, 1, true);
+}
+
+void DiaryFirst(string &in asParent, string &in asChild, int alState)
+{
+    SetMessage("ScreenText", "FirstDiary", 0);
+	AddDiary("NameOfDiaryCYKA", "NameOfDiaryCYKA");
+    PlaySoundAtEntity("","ui_add_quest.snt","Player", 0, false);
+}
+
+void MSGtimer(string &in asTimer)
+{
+    SetMessage("ScreenText", "ActMessage", 6);
+}
+
+void PickUpLantern(string &in asEntity, string &in type)
+{
+    AddQuest("note", "MissionOne");
+    AddQuest("hatch", "MissionTwo");	
+	SetEntityActive("fakescrew", false);
+	SetEntityActive("realscrew", true);
+}
+
+void FinishPickUp(string &in asEntity, string &in type)
+{
+    CompleteQuest("note", "MissionOne");
+}
+
+void LockUsedOnHatch(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","unlock_door","SCRIPTONE", 0,false);
+SetEntityPlayerInteractCallback("SCRIPTONE", "NewMap", false);
+CompleteQuest("hatch", "MissionTwo");
+}
+
+void NewMap(string &in asEntity)
+{
+ChangeMap("Underground.map", "PlayerStartArea_1", "","");
+}
+
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+    SetupLoadScreen("LoadingText", "textstart", 1, "game_loading_well.jpg");
+	StopMusic(2, 1);
+}

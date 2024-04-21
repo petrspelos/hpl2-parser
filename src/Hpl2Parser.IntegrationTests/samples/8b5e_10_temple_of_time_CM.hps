@@ -1,0 +1,168 @@
+void OnStart()
+{
+	AutoSave();
+	AddEntityCollideCallback("intotemple_brute", "killfriendlyboyos", "killfriendlyboyos", false, 0);
+	AddEntityCollideCallback("Player", "lockedintemple", "lockedintemple", true, 0);
+	SetEntityPlayerInteractCallback("note_finalechase", "finalenoteandchase", true);
+	SetEntityPlayerInteractCallback("doorneedsopenfindlever", "doorneedsopenfindlever", false);
+	SetEntityPlayerInteractCallback("clockman_estatedoor", "clockman_estatedoor", false);
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("templevoid", "amb_guardian.snt", "Player", 1.0f, false);
+	PlayMusic("timetemple_bell", true, 1.0f, 2.0f, 1, true);
+	StopMusic(1.0f, 0);
+}
+
+void OnLeave()
+{
+
+}
+
+/////////////////////////////////////
+////////////////PUZZLE///////////////
+/////////////////////////////////////
+
+void opentemplegatemonster(string &in asEntity, int LeverState)
+{
+        if(LeverState == 1) {
+				SetMoveObjectState("entrancegate", 1);
+				SetEntityActive("intotemple_grunt", true);
+				SetEntityActive("intotemple_brute", true);
+				SetLeverStuckState(asEntity, LeverState, true);
+				AddEnemyPatrolNode("intotemple_grunt", "PathNodeAreatemplewalk_1", 0, "");
+				AddEnemyPatrolNode("intotemple_grunt", "PathNodeAreatemplewalk_2", 0, "");
+				AddEnemyPatrolNode("intotemple_brute", "PathNodeAreatemplewalk_1", 0, "");
+				AddEnemyPatrolNode("intotemple_brute", "PathNodeAreatemplewalk_2", 0, "");
+				SetPlayerMoveSpeedMul(0.3f);
+				SetEntityActive("doorneedsopenfindlever", false);
+				AutoSave();
+        }
+}
+
+void killfriendlyboyos(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("intotemple_brute", false);
+	SetEntityActive("intotemple_grunt", false);
+	SetPlayerMoveSpeedMul(1.0f);
+}
+
+/////////////////////////////////////
+////////////////EVENTS///////////////
+/////////////////////////////////////
+
+void lockedintemple(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("entrancegate", 0);
+	SetEntityActive("blockexittemple", true);
+	AddTimer("starttoblackout", 10.0f, "starttoblackout");
+	StopMusic(12.0f, 1);
+}
+
+void starttoblackout(string &in asTimer)
+{
+	FadeOut(8.0f);
+	AddTimer("fallsoundanddie", 9.0f, "fallsoundanddie");
+}
+
+void fallsoundanddie(string &in asTimer)
+{
+	PlaySoundAtEntity("gotonotimeland", "player_bodyfall.snt", "Player", 0.0f, false);
+	AddTimer("openeyesinnewworld", 5.0f, "openeyesinnewworld");
+	TeleportPlayer("PlayerStartArea_2");
+    FadePlayerRollTo( 40, 40, 40);
+	SetPlayerCrouching(true);
+	StopSound("templevoid", 2.0f);
+	SetPlayerActive(false);
+	SetLanternDisabled(true);
+}
+
+void openeyesinnewworld(string &in asTimer)
+{
+	FadeIn(3.0f);
+    FadePlayerRollTo( 0, 20, 20);
+	SetPlayerActive(true);
+	PlaySoundAtEntity("awakenintimeland", "react_breath.snt", "Player", 1.0f, false);
+}
+
+void doorneedsopenfindlever(string &in asEntity)
+{
+	SetMessage("Messages", "ineedtofindwaytoleverpullupdoor", 0.0f);
+}
+
+/////////////////////////////////////
+////////////////FINALE///////////////
+/////////////////////////////////////
+
+void finalenoteandchase(string &in asEntity)
+{
+	SetEntityActive("getoutofheretable", false);
+	SetLightVisible("BoxLight_6", false);
+	PlaySoundAtEntity("scaredfromfinalenote", "react_breath.snt", "Player", 1.0f, false);
+	AddTimer("startsoundofcmchsase", 4.0f, "startsoundofcmchsase");
+	PlayMusic("Penumbra_CM_huntingmusic", true, 1.0f, 2.0f, 1, true);
+	SetLanternDisabled(false);
+	SetLanternActive(true, true);
+	AddTimer("cmisrightbehindme", 1.0f, "cmisrightbehindme");
+}
+
+void cmisrightbehindme(string &in asTimer)
+{
+	SetMessage("Messages", "cmisrightbehindme", 8.0f);
+}
+
+void startsoundofcmchsase(string &in asEntity)
+{
+	PlaySoundAtEntity("finaleclockmanhunter", "clockman_finale_chase.snt", "Player", 0.0f, false);
+	AddTimer("getkilledbytime", 29.0f, "getkilledbytime");
+}
+
+
+void getkilledbytime(string &in asTimer)
+{
+	GivePlayerDamage(10.0f, "Slash", true, false);
+	PlaySoundAtEntity("finaleclockmanhunter", "attack_claw_hit_cm.snt", "Player", 0.0f, false);
+    FadePlayerRollTo( 40, 40, 40);
+	SetPlayerActive(false);
+	SetLanternDisabled(true);
+	FadeOut(1.0f);
+	PlaySoundAtEntity("diebyclockmanslash", "player_bodyfall.snt", "Player", 0.0f, false);
+	SetPlayerCrouching(true);
+	StopMusic(6.0f, 1);
+	PlaySoundAtEntity("chap_end_cello", "starting_beat_CLOCKMAN.snt", "Player", 0.0f, false);
+	AddTimer("gotohouseonfirescene", 15.0f, "gotohouseonfirescene");
+}
+
+void gotohouseonfirescene(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_3");
+	FadeIn(3.0f);
+    FadePlayerRollTo( 0, 40, 40);
+	SetPlayerActive(true);
+	PlaySoundAtEntity("awakeasclockmaninexit", "react_breath.snt", "Player", 1.0f, false);
+}
+
+void clockman_estatedoor(string &in asEntity)
+{
+	FadeOut(0.0f);
+	PlaySoundAtEntity("endingdoorestateopencm", "door_large_castle_open.snt", "Player", 0.0f, false);
+	AddTimer("lastmessageonecm", 6.0f, "lastmessageonecm");
+}
+
+void lastmessageonecm(string &in asTimer)
+{
+	SetMessage("Messages", "clockmanendingcmone", 8.0f);
+	AddTimer("lastmessagetwoyaycm", 9.0f, "lastmessagetwoyaycm");
+}
+
+void lastmessagetwoyaycm(string &in asTimer)
+{
+	SetMessage("Messages", "clockmanendingcmtwoyay", 8.0f);
+	AddTimer("clockmancreditrollcm", 9.0f, "clockmancreditrollcm");
+}
+
+void clockmancreditrollcm(string &in asTimer)
+{
+	StartCredits("Clockman_Credits", false, "Credits", "EndingPossessed", 0);
+}

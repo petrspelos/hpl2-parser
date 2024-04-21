@@ -1,0 +1,549 @@
+//////////STAMINA SYSTEM SETTINGS//////////////
+///////////////////////////////////////////////
+const string STAMINA_TIMER_CALLBACK_NAME = "STAMINA_TIMER_CALLBACK";
+const string STAMINA_PLAYER_SPEED = "STAMINA_PLAYER_SPEED";
+const string STAMINA_PLAYER_LENGTH = "STAMINA_PLAYER_LENGTH";
+const string STAMINA_PLAYER_BREATH_SLOW = "STAMINA_PLAYER_BREATH_SLOW";
+const string STAMINA_PLAYER_BREATH_SNT = "react_breath_slow.snt";
+const string STAMINA_PLAYER_HEAD_BOB = "STAMINA_PLAYER_HEAD_BOB";
+
+const float STAMINA_TIMER_SPEED_TIME = 0.5f;
+const float STAMINA_PLAYER_HEAD_BOB_SPEED = 0.7f;
+
+enum StaminaStages
+    {
+        Full,
+        Low,
+        Exhausted
+    }
+
+class StaminaSystem
+    {
+        private int state;
+        private uint length;
+        private bool head_bobbing;
+        private bool is_running;
+
+        StaminaSystem()
+            {
+                PreloadSound(STAMINA_PLAYER_BREATH_SNT);
+                this.state = StaminaStages::Full;
+                this.length = 10;
+                this.head_bobbing = false;
+                this.is_running = false;
+            }
+
+        ~StaminaSystem()
+            {
+                this.Stop();
+            }
+
+        void AddDebugMessage(string &in message, bool check, bool to_file)
+            {
+                ::AddDebugMessage("Stamina system: " + message, check);
+                if (to_file) Print("Stamina system: " + message);
+            }
+
+        bool IsPlayerRunning() const
+            {
+                return this.is_running;
+            }
+
+        void PlayBreathSound()
+            {
+                PlaySoundAtEntity(STAMINA_PLAYER_BREATH_SLOW, STAMINA_PLAYER_BREATH_SNT, "Player", 0, false);
+            }
+
+        void Start()
+            {
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				AddTimer(STAMINA_PLAYER_SPEED, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerHeadBob()
+            {
+                if (this.head_bobbing)
+                    MovePlayerHeadPos(0, -0.35, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+                else
+                    MovePlayerHeadPos(0, 0, 0, STAMINA_PLAYER_HEAD_BOB_SPEED, 0.6);
+
+                this.head_bobbing = !this.head_bobbing;
+                AddTimer(STAMINA_PLAYER_HEAD_BOB, 0.75f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void StartPlayerTiredEffect()
+            {
+                this.PlayBreathSound();
+                AddTimer(STAMINA_PLAYER_BREATH_SLOW, 1.5f, STAMINA_TIMER_CALLBACK_NAME);
+            }
+
+        void Stop()
+            {
+                this.StopPlayerTiredEffect();
+                RemoveTimer(STAMINA_PLAYER_SPEED);
+                RemoveTimer(STAMINA_PLAYER_LENGTH);
+                SetPlayerRunSpeedMul(1);
+                SetPlayerMoveSpeedMul(1);
+				SetPlayerJumpDisabled(false);
+            }
+
+        void StopPlayerTiredEffect()
+            {
+                this.head_bobbing = false;
+                RemoveTimer(STAMINA_PLAYER_BREATH_SLOW);
+                RemoveTimer(STAMINA_PLAYER_HEAD_BOB);
+                MovePlayerHeadPos(0,0,0, 1, 1);
+				FadeImageTrailTo(0, 1); ////trail off
+                // StopSound(STAMINA_PLAYER_BREATH_SLOW, 1); // Crashes the game upon exit.
+            }
+
+        void SetStaminaLength(uint length)
+            {
+                if (length != 0)
+                    this.length = length;
+                else
+                    this.AddDebugMessage("Length cannot be 0!", false, true);
+            }
+
+        void Update(string &in timer_name)
+            {
+                if (timer_name == STAMINA_PLAYER_SPEED)
+                {
+                    this.is_running = (GetPlayerSpeed() > 3) ? true : false;
+
+                    if (this.is_running && GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) == 0)
+                        AddTimer(STAMINA_PLAYER_LENGTH, this.length, STAMINA_TIMER_CALLBACK_NAME);
+
+                    else if(!this.is_running)
+                    {
+                        if (GetTimerTimeLeft(STAMINA_PLAYER_LENGTH) > 0 && this.state == StaminaStages::Full)
+                            RemoveTimer(STAMINA_PLAYER_LENGTH);
+
+                        else if(this.state == StaminaStages::Low)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/4, STAMINA_TIMER_CALLBACK_NAME);
+
+                        else if(this.state == StaminaStages::Exhausted)
+                            AddTimer(STAMINA_PLAYER_LENGTH, this.length/2, STAMINA_TIMER_CALLBACK_NAME);
+                    }
+
+                    AddTimer(timer_name, STAMINA_TIMER_SPEED_TIME, STAMINA_TIMER_CALLBACK_NAME);
+                }
+
+                else if (timer_name == STAMINA_PLAYER_BREATH_SLOW)
+                    this.StartPlayerTiredEffect();
+
+                else if (timer_name == STAMINA_PLAYER_HEAD_BOB)
+                    this.StartPlayerHeadBob();
+
+                else if (timer_name == STAMINA_PLAYER_LENGTH)
+                {
+                    if (this.is_running)
+                    {
+                        if (this.state == StaminaStages::Full)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.5);
+                        }
+
+                        else if (this.state == StaminaStages::Low)
+                        {
+                            this.state++;
+                            SetPlayerRunSpeedMul(0.3);
+                            SetPlayerMoveSpeedMul(0.5);
+							FadeImageTrailTo(3,1); ////trail on
+                            SetPlayerJumpDisabled(true);
+                            ChangePlayerStateToNormal();
+                            this.StartPlayerTiredEffect();
+                            this.StartPlayerHeadBob();
+                        }
+                    }
+
+                    else
+                    {
+                        this.StopPlayerTiredEffect();
+
+                        SetPlayerRunSpeedMul(1);
+                        SetPlayerMoveSpeedMul(1);
+                        SetPlayerJumpDisabled(false);
+
+                        if (this.state == StaminaStages::Low)
+                            this.state = StaminaStages::Full;
+
+                        else if (this.state == StaminaStages::Exhausted)
+                            this.state = StaminaStages::Full;
+                    }
+                }
+            }
+    }
+
+StaminaSystem stamina_obj;
+
+void STAMINA_TIMER_CALLBACK(string &in timer_name)
+    { stamina_obj.Update(timer_name); } 
+//////////////////////////////////////
+void OnStart()
+{
+Syr();
+AddEntityCollideCallback("Player", "ScriptArea_5", "gate_scare", true, 1);
+AddEntityCollideCallback("Player", "Glitch_area_1" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_2" ,"aftersave_fall_fix", false, 1); 
+AddEntityCollideCallback("Player", "Glitch_area_3" ,"aftersave_fall_fix", false, 1); 
+SetMapDisplayNameEntry("Storage");
+AddEntityCollideCallback("Player", "ScriptArea_4", "doorunlock", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_3", "boom", false, 1);
+}
+void sanit(string &in asTimer)
+{
+SetPlayerSanity(90);
+SetSanityDrainDisabled(true);
+AutoSave();
+SetEntityCustomFocusCrossHair("ScriptArea_2", "LevelDoor");
+}
+void ventdestr(string &in asEntity, string &in asType)
+{
+if (asType == "Break")
+{
+FadeLightTo("PointLight_6", -1, -1, -1, -1, 0, 0.45);
+SetEntityActive("ScriptArea_2", true);
+SetEntityCustomFocusCrossHair("ScriptArea_2", "LevelDoor");
+}
+}
+void gate_scare(string &in asParent, string &in asChild, int alState)
+{
+SetMoveObjectState("Grate_1", 0.15);
+}
+void vent_transit(string &in asEntity)
+{
+ShowPlayerCrossHairIcons(false);
+FadePlayerFOVMulTo(0.8, 1.2);
+if (GetLanternActive() == true){
+SetLocalVarInt("glow", 1);
+SetLanternActive(false, false);
+}
+SetPlayerActive(false);
+StartPlayerLookAt("ScriptArea_2", 1.2, 1.2, "");
+FadeOut(3);
+PlayGuiSound("player_climb2.ogg", 1.0f);
+AddTimer("", 3.5, "venttransit");
+}
+void venttransit(string &in asTimer)
+{
+SetPlayerActive(true);
+ShowPlayerCrossHairIcons(true);
+FadePlayerFOVMulTo(1, 1);
+PlayGuiSound("player_climb5.ogg", 1.0f);
+StopPlayerLookAt();
+FadeIn(2);
+if (GetLocalVarInt("glow") == 1){
+SetLanternActive(true, false);
+}
+if (GetLocalVarInt("tr") == 0){
+SetLocalVarInt("tr", 1);
+TeleportPlayer("PlayerStartArea_2");
+return;
+}
+if (GetLocalVarInt("tr") == 1){
+SetLocalVarInt("tr", 0);
+TeleportPlayer("PlayerStartArea_3");
+return;
+}
+}
+void doorunlock(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorLocked("door_1", false, false);
+}
+////GRAB////
+void grabhand(string &in asEntity)
+{
+   if (GetPropIsInteractedWith(asEntity) == true){
+   StartInsanityEvent("grab");
+   }
+   AddTimer(asEntity, 0.01,"grabcheck");
+}
+void grabcheck(string &in asTimer)
+{
+AddTimer(asTimer, 0.01,"grabcheck");
+if (GetPropIsInteractedWith(asTimer) == false){
+StopCurrentInsanityEvent();
+RemoveTimer(asTimer);
+}
+}
+////LASER////
+void boom(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("ScriptArea_3", false);
+SetPlayerActive(false);
+StopSound("Sound_5", 1);
+PlayGuiSound("03_laser_trip1.ogg", 4.0f);
+AddTimer("", 0.3, "boomtimer");
+}
+void boomtimer(string &in asTimer)
+{
+StartScreenShake(0.03, 0.3, 0.1, 0.1);
+CreateParticleSystemAtEntity("", "particle_explosion_bomb.ps", "Dust_1", true);
+for (int i=1; i<=4; i++){
+SetLightVisible("Laser_light_"+i, false);
+}
+PlayGuiSound("03_explosion1.ogg", 10.0f);
+StartInsanityEvent("DamageHit");
+AddTimer("", 0.3, "boomtimer_2");
+}
+void boomtimer_2(string &in asTimer)
+{
+GivePlayerDamage(200, "BloodSplat", false, true);
+SetPlayerActive(true);
+FadeOut(1);
+}
+void pointsave(string &in asName, int alCount) 
+{
+PlayMusic("Penumbra_BP_A14.ogg", true, 0.5, 10, 1, true);
+FadeInSound("Sound_5", 1, true);
+for (int i=1; i<=4; i++){
+SetLightVisible("Laser_light_"+i, true);
+}
+SetEntityActive("ScriptArea_3", true);
+SetEntityActive("character_infected_nomus_3mov_2", true);
+for (int k=14; k<=21; k++){
+AddEnemyPatrolNode("character_infected_nomus_3mov_2", "PathNodeArea_"+k, 0.01, "");
+}
+}
+///////////
+//SAVE STATION///
+////////////////
+void SaveSpot(string &in asEntity)
+{
+if(GetLocalVarInt("firstsave") == 0){
+CheckPoint("second", "PlayerStartArea_5", "pointsave", "", "");
+AddTimer("", 2, "artefact_effect");
+SetLocalVarInt("firstsave", 1);
+}
+ShowPlayerCrossHairIcons(false);
+SetPlayerActive(false);
+GiveSanityBoostSmall();
+SetEntityActive("ScriptArea_1", false);
+PlayGuiSound("ui_emotion_stone.snt", 3.0f);
+///FadePlayerFOVMulTo(0.17, 1.6);
+///StartEffectFlash(2.5, 1, 2);
+FadeImageTrailTo(2, 100);
+AddTimer("waittim_save", 2, "waittim");
+AddTimer("", 5, "waittim2");
+if (GetLocalVarInt("first_artefact_touch") == 0){
+SetLocalVarInt("first_artefact_touch", 1);
+StartEffectEmotionFlash("Artefacts", "VisionArc01", "horror_flashback.snt");
+return;
+}
+else if (GetLocalVarInt("first_artefact_touch") == 1){
+PlayGuiSound("ui_emotion_stone.snt", 3.0f);
+FadePlayerFOVMulTo(0.17, 1.6);
+StartEffectFlash(2.5, 1, 2);
+return;
+}
+}
+void waittim(string &in asTimer)
+{
+SetPlayerSanity(90);
+ShowPlayerCrossHairIcons(true);
+FadePlayerFOVMulTo(1, 100);
+FadeImageTrailTo(0, 100);
+SetSanityDrainDisabled(true);
+SetPlayerActive(true);
+AutoSave();
+}
+void waittim2(string &in asTimer)
+{
+SetEntityActive("ScriptArea_1", true);
+}
+void artefact_effect(string &in asTimer)
+{
+SetEntityActive("old_mine_spider_examinated_1", true);
+SetEntityActive("old_mine_spider_examinated_2", true);
+}
+void Vilmarspeak(string &in asEntity, string &in type)
+{
+SetEntityActive("ScriptArea_5", true);
+///NYI
+}
+void speaknow(string &in asTimer)
+{
+AddEffectVoice("WILMOR_4_1", "", "Voice", "Wilmar_4_1", false, "narrator_voice_1", 9, 16);
+}
+/////////////
+///VILMAR END//
+void Vilmarend(string &in asEntity, string &in type)
+{
+SetGlobalVarInt("Vilmar_mutation", 1);
+AddTimer("", 1.8, "speaknow");
+PlayGuiSound("general_speaker_noise_loud.snt", 0.85f);
+}
+/////////////
+//SAVE FIX//////
+void aftersave_fall_fix(string &in asParent, string &in asChild, int alState)
+{
+if (asChild == "Glitch_area_1"){
+TeleportPlayer("PlayerStartArea_1");
+}
+if (asChild == "Glitch_area_2"){
+TeleportPlayer("PlayerStartArea_5");
+}
+if (asChild == "Glitch_area_3"){
+TeleportPlayer("PlayerStartArea_6");
+}
+}
+//////////////
+void blockeddoor(string &in asEntity)
+{
+if (GetSwingDoorLocked("door_1") == true){
+SetMessage("06_Storage", "BlockedDoor", -1);
+}
+}
+/////////////
+void brokenentcheck(string &in asEntity, string &in asType)
+{
+if (asEntity == "thing_33"){
+    if (asType == "Break"){
+    AddTimer("ac_1", 0.3, "apply_callback");
+    }
+	}
+if (asEntity == "thing_34"){
+    if (asType == "Break"){
+    AddTimer("ac_2", 0.3, "apply_callback");
+    }
+}
+if (asEntity == "thing_35"){
+    if (asType == "Break"){
+    AddTimer("ac_3", 0.3, "apply_callback");
+    }
+}
+if (asEntity == "thing_1"){
+    if (asType == "Break"){
+    AddTimer("ac_4", 0.3, "apply_callback");
+    }
+}
+}
+void apply_callback(string &in asTimer)
+{
+if (asTimer == "ac_1"){
+SetEntityPlayerInteractCallback("thing_33_broken", "grabhand", false);
+return;
+}
+if (asTimer == "ac_2"){
+SetEntityPlayerInteractCallback("thing_34_broken", "grabhand", false);
+return;
+}
+if (asTimer == "ac_3"){
+SetEntityPlayerInteractCallback("thing_35_broken", "grabhand", false);
+return;
+}
+if (asTimer == "ac_4"){
+SetEntityPlayerInteractCallback("thing_1_broken", "grabhand", false);
+return;
+}
+}
+///////////
+//////////SYRINE////////////
+/////////////////////////////
+void Syr()
+{
+AddTimer("san1", 0.6, "sanity1");
+}
+void sanity1(string &in asTimer)
+{
+AddTimer("san1", 0.6, "sanity1");
+if (GetPlayerSanity() == 85){
+SetPlayerSanity(90);
+if (GetLocalVarInt("adrenalin_inject") == 0){
+stamina_obj.Stop();
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1.1);
+SetPlayerRunSpeedMul(1.05);
+SetPlayerLookSpeedMul(1.15);
+SetPlayerJumpForceMul(1.1);
+}
+AddPlayerHealth(30);
+SetLocalVarInt("adrenalin_inject", 1);
+FadeSepiaColorTo(0.7, 0.5);
+AddTimer("adren", 45 ,"adrenalin_end");
+}
+}
+}
+void adrenalin_end(string &in asTimer)
+{
+if (GetLocalVarInt("iscutscene") == 0){
+SetPlayerMoveSpeedMul(1);
+SetPlayerRunSpeedMul(1);
+SetPlayerLookSpeedMul(1);
+SetPlayerJumpForceMul(1);
+}
+SetLocalVarInt("adrenalin_inject", 0);
+FadeSepiaColorTo(0, 0.5);
+stamina_obj.Start(); 
+}
+//////////////
+/////SIGN/////////
+void Sign_box(string &in asEntity)
+{
+if (asEntity == "signs_1"){
+SetMessage("06_Storage", "infected01", -1);
+}
+if (asEntity == "signs_2"){
+SetMessage("06_Storage", "infected02", -1);
+}
+if (asEntity == "signs_3"){
+SetMessage("06_Storage", "deadman", -1);
+}
+}
+////////
+void weakventilation(string &in asEntity)
+{
+PlayGuiSound("01_lid_stuck1.ogg", 1.0f);
+SetMessage("06_Storage", "WeakVent", -1);
+}
+////////
+void OnEnter()
+{
+SetEntityCustomFocusCrossHair("ScriptArea_2", "LevelDoor");
+PreloadParticleSystem("particle_explosion_bomb.ps");
+stamina_obj.Start(); 
+if(GetLocalVarInt("firstsave") == 1){
+CheckPoint("second", "PlayerStartArea_5", "pointsave", "", "");
+}
+else if(GetLocalVarInt("firstsave") == 0){
+CheckPoint("first", "PlayerStartArea_1", "pointsave", "", "");
+}
+SetEntityActive("character_infected_nomus_3mov_2", true);
+for (int k=14; k<=21; k++){
+AddEnemyPatrolNode("character_infected_nomus_3mov_2", "PathNodeArea_"+k, 0.01, "");
+}
+PlayMusic("Penumbra_BP_A14.ogg", true, 0.5, 10, 1, true);
+if (GetGlobalVarInt("first_card") == 0){
+SetEntityActive("character_infected_nomus_3mov_1", true);
+for (int i=1; i<=13; i++){
+AddEnemyPatrolNode("character_infected_nomus_3mov_1", "PathNodeArea_"+i, 0.01, "");
+}
+}
+if (GetGlobalVarInt("first_card") == 1){
+SetEntityActive("signs_1", false);
+SetEntityActive("Grate_1", false);
+SetEntityActive("Grate_2", true);
+}
+///
+SetSanityDrainDisabled(true);
+SetPlayerSanity(90);
+AddTimer("", 0.5, "sanit");
+GiveSanityBoostSmall();
+///
+}
+
+void OnLeave()
+{
+   if (GetLocalVarInt("loadingText") == 0){
+    SetLocalVarInt("loadingText", 1);
+    SetupLoadScreen("LoadingText", "06_Reacrortwo", 1, "loadscreen_reactor.jpg"); 
+    }
+else if (GetLocalVarInt("loadingText") == 1){ 
+    SetupLoadScreen("", "", 1, "loadscreen_reactor.jpg");
+    }
+StopMusic(1, 1);
+stamina_obj.Stop();
+}

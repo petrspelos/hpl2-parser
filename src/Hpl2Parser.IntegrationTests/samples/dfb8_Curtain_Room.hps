@@ -1,0 +1,133 @@
+void OnStart()
+{
+		
+}
+
+void OnEnter()
+{
+	//StartPlayerSpawnPS("null.sps"); //For no fog - needs to be called because the spawn particle is saved on map change.
+	SetMapDisplayNameEntry("CurtainRoom"); //put an appropriate lang entry from the Levels category. It's for save names
+	AutoSave(); //always save on enter, just in case
+	
+	if(ScriptDebugOn()) GiveItemFromFile("flashlight", "Flashlight_lantern_dkf.ent");
+	
+	//Collide callbacks:
+	AddEntityCollideCallback("Walker_1", "MonsterCollide", "MonsterArrivedCallback", true, 1);
+	
+	AddUseItemCallback("", "KeyX", "DoorX", "OpenDoor", true); //Generic door opening
+	
+	PlayMusic("mors_underdrone.ogg", true, 0.7f, 3.0f, 1, true); //prio 1
+	
+	//Set-ups
+	SetInventoryDisabled(true);
+	SetLanternDisabled(true);
+	SetUpInsanity();
+	SetEnemySanityDecreaseActive("Walker_*", false);
+	SetEntityActive("Walker_*", false);
+	
+	//chair swing 
+	AddPropForce("chair_metal_1", 0, 0, 700, "world");
+	AddTimer("chair_metal_1", 0, "Timer_PushLamp");
+}
+
+void OnLeave()
+{
+	StopMusic(2.0, 1);
+	SetInventoryDisabled(false);
+	SetLanternDisabled(false);
+}
+
+void Timer_PushLamp(string &in timer)
+{
+	//AddDebugMessage("chair timer", false);
+    AddPropForce("chair_metal_1", 700, 0, 700, "world");
+    AddTimer("chair_metal_1", 4.8, "Timer_PushLamp");
+}	
+
+
+//------EVENTS------//
+
+void AfterFlashback()
+{
+	AddDebugMessage("Flashback over", false);
+	AddTimer("", 3.0f, "ClockLamp");
+}
+ 
+void ClockLamp(string &in asTimer) 
+{
+	PlaySoundAtEntity("", "11_glass_crack.snt", "Lamp", 0.0f , false);
+	SetLampLit("Lamp", false, true);
+	StopMusic(2.0, 1);
+	PlayMusic("dkf_mors_loop.ogg", true, 1.0f, 2.0f, 1, true); //prio 1
+	AddTimer("", 10.0f, "ClockTimer");
+
+}
+
+
+void ClockTimer(string &in asTimer) 
+{
+	PlaySoundAtEntity("", "clock_scare_dkf.snt", "ClockSource", 0.0f , false);
+	AddTimer("", 20.0f, "WalkTimer");
+}
+
+void WalkTimer(string &in asTimer) 
+{
+	SetEntityActive("Walker_1", true);
+	AddEnemyPatrolNode("Walker_1", "PathNodeArea_7", 0.0, "");
+	AddEnemyPatrolNode("Walker_1", "PathNodeArea_1", 0.0, "");
+	
+}
+
+void MonsterArrivedCallback(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Walker_*", true);
+	ClearEnemyPatrolNodes("Walker_1");
+	AddTimer("", 5.0f, "ParticleTimer");
+}
+
+void ParticleTimer(string &in asTimer) 
+{
+	CreateParticleSystemAtEntity("portal", "ps_orb_room_portal_open.ps", "PortalSource", false);
+	PlaySoundAtEntity("", "29_hole_open.snt", "PortalSource", 0.0, false);
+	SetLampLit("Lamp", true, true);
+	//SetPlayerSanity(10.0f);
+	StartPlayerLookAt("PortalSource", 1.0, 2.0f, "StopLookAt");
+
+	AddTimer("", 3.0f, "Finish");
+}
+
+void Finish(string &in asTimer) 
+{
+	ChangeMap("Eldritch_Cove_A.map", "ExitNightmare", "transgression_dkf.snt", ""); 
+	StopMusic(5.0, 1);
+}
+void StopLookAt()
+{
+	StopPlayerLookAt();
+}
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+	
+	if(GetPlayerSanity() == 0.0f) SetPlayerSanity(29.0f);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	
+

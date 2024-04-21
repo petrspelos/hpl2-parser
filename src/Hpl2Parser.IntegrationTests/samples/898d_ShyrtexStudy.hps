@@ -1,0 +1,103 @@
+void OnStart()
+{
+    SetEntityPlayerInteractCallback("RoomKey", "BruteSpawn", true);
+	AddUseItemCallback("", "keylocker", "locker", "UsedKeyOnDoor2", true);
+	AddUseItemCallback("", "ToolRoomKey", "ToolRoomDoor", "UnlockToolRoom", true);
+	SetEntityPlayerInteractCallback("keylocker", "keymessage", true);	
+	AddEntityCollideCallback("Player", "SoundCollide", "SoundTimer", true, 1);
+	SetEntityPlayerInteractCallback("Hammer", "ActivateScripts", true);
+	AddEntityCollideCallback("Player", "HammerScare", "Scare1", true, 1);
+	AddEntityCollideCallback("Player", "DeactivateDoor", "Brokenmessage", true, 1);
+	AutoSave();
+	PlayMusic("amb_06.ogg", true, 1, 5, 1, false);
+}
+
+
+
+void UsedKeyOnDoor2(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("locker",false, true);
+PlaySoundAtEntity("","unlock_door","locker", 0,false);
+RemoveItem(asItem);
+}
+
+void UnlockToolRoom(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("ToolRoomDoor",false, true);
+PlaySoundAtEntity("","unlock_door","ToolRoomDoor", 0,false);
+RemoveItem(asItem);
+CompleteQuest("GetKey", "GetKey");
+}
+
+void keymessage(string &in asEntity)
+{
+SetMessage("Messages", "keymessage1", 0);
+}
+
+void toolroomdoorlocked(string &in entity)
+{
+if(GetSwingDoorLocked("ToolRoomDoor")==true)
+        SetMessage("Messages", "DoorMessage2", 6); 
+		AddQuest("GetKey", "GetKey");
+    }
+	
+void stuckdoor(string &in entity)
+{
+if(GetSwingDoorLocked("StuckDoor")==true)
+        SetMessage("Messages", "DoorMessage3", 6); 
+    }
+	
+void ActivateScripts(string &in asEntity)
+{
+SetEntityActive("HammerScare", true);
+SetEntityActive("DeactivateDoor", true);
+}
+
+void Scare1(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "break_wood_metal.snt", "Player", 0.0f, false);
+AddTimer("BruteSound", 1, "BruteSound");
+
+SetEntityActive("ActiveDoor", false);
+SetEntityActive("BrokenDoor", true);
+GiveSanityDamage(15, true);
+
+}
+
+void Brokenmessage(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "insanity_imageflash01.snt", "Player", 0.0f, false);
+SetMessage("Messages", "DoorIsBroken", 6);
+StartPlayerLookAt("LookBook", 5.0f, 17.0f, "");
+AddTimer("", 3.0f, "NoMoreLook");
+}
+
+void BruteSound(string &in asTimer)
+{
+PlaySoundAtEntity("", "brute/amb_idle.snt", "Player", 0.0f, false);
+
+}
+
+
+
+
+void NoMoreLook(string &in asTimer)
+{
+StopPlayerLookAt();
+}
+
+
+
+
+
+
+
+
+
+void OnEnter()
+{
+}
+
+void OnLeave()
+{
+}

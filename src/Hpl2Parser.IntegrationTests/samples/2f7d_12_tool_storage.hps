@@ -1,0 +1,453 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelDrills");
+	AutoSave();
+	
+	if(ScriptDebugOn())
+	{
+	SetPlayerLampOil(100.0f);
+	GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+	GiveItem("Bar", "Puzzle", "", "wriggle_prison_bar.tga", 1);
+	GiveItem("Pipe", "Puzzle", "", "pipe_piece.tga", 1);
+	}
+	
+	
+	SetDeathHint("DeathHint", "DHint1");
+	AddUseItemCallback("", "HandDrill", "prison_1", "BeginDrillLock", true);
+	
+	//Cogs
+		RotatePropToSpeed("Cog1", 3, 3, 0, 0, 1, false, "");
+		RotatePropToSpeed("Cog2", 3, 3, 0, 0, -1, false, "");
+		//Sounds4cogs
+		PlaySoundAtEntity("machines", "20_wheel_run", "AreaSOUND", 0.0f, false);
+		
+		
+		/*Random Whirl
+		*/
+		
+		AddTimer("randwhirl", 1, "RandomWhirl");
+		AddTimer("randshake", 4, "RandomShake");
+		
+		/* COLLIDE CALLBACKS
+		*/
+		AddEntityCollideCallback("Wriggle_Bar", "AreaWriggleBarBreak_1", "CollideWriggleBarBreak", false, 1);
+		AddEntityCollideCallback("Wriggle_Bar", "AreaWriggleBarBreak_2", "CollideWriggleBarBreak", false, 1);
+		AddEntityCollideCallback("Elec", "AreaLever", "LeverDown", true, 1);
+		
+		/* USE ITEM CALLBACKS
+		*/
+		AddUseItemCallback("", "Bar", "prison_1", "UseBarOnDoor", false);
+		AddUseItemCallback("", "Bar", "Pipe_Static", "UseBarOnPipe", true);
+		AddUseItemCallback("", "Pipe", "prison_1", "UsePipeOnDoor", false);
+		AddUseItemCallback("", "Hammer", "Pipe_Static", "HammerFail", false);
+		
+		
+		/*
+		
+		NOTE -- POSSIBLE ITEMS
+		
+		HAMMER
+		IRON BAR
+		ETHERS TOME
+		TEMPREALES TOME
+		PIPE 
+			
+		*/
+		
+		}
+
+void OnEnter()
+{
+	PlayMusic("23_amb02.ogg", true, 0.5f, 3, 0, false);
+		}
+		
+void PickDrill(string &in asEntity, string &in asType)
+{
+	AddGlobalVarInt("DrillParts", 1);
+		}
+
+//////////////////////
+//BEGIN DRILL SCRIPT//
+void BeginDrillLock(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("DrillStatic", true);
+	AddTimer("", 0.2f, "BeginSpinDrill");
+		}
+	
+void BeginSpinDrill(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("drillparticle", "ps_dust_drilling.ps", "DrillParticles", false);
+	RotatePropToSpeed("DrillStatic", 10, 10, 1, 0, 0, false, "RotateAroundArea");
+	AddTimer("", 1.8f, "EndSpinDrill");
+	PlaySoundAtEntity("drillsound", "12_drill", "AreaUseDrill", 0.0f, false);
+		}
+		
+void EndSpinDrill(string &in asTimer)
+{
+	DestroyParticleSystem("drillparticle");
+	StopSound("drillsound", 0.0f);
+	StopPropMovement("DrillStatic");
+	SetEntityActive("DrillStatic", false);
+	
+	SetEntityActive("Static1", true);
+	SetEntityActive("Static2", true);
+	SetEntityActive("Static3", true);
+	
+	PlaySoundAtEntity("", "unlock_door", "AreaUseDrill", 0.0f, false);
+	SetSwingDoorLocked("prison_1", false, true);
+		}
+
+void LeverDown(string &in asParent, string &in asChild, int alState)
+{
+	SetLeverStuckState("Elec", 1, true);
+	SetLampLit("Creepylamp", false, true);
+	StopSound("machines", 1.0f);
+	StopMusic(1, 0);
+	PlaySoundAtEntity("", "ui_use_tinderbox", "CreepyLamp", 0.0f, false);
+	
+	StopPropMovement("Cog1");
+	StopPropMovement("Cog2");
+	
+	SetSwingDoorLocked("ImportantDoor", false, true);
+	
+	/*Lights Come off!
+	*/
+	SetLampLit("Torch_*", false, true);
+	SetLampLit("hanging_lantern_ceiling_*", false, true);
+	SetLampLit("hanging_lantern_wall_*", false, true);
+	
+	SetLightVisible("TorchLight_1", false);
+	SetLightVisible("TorchLight_2", false);
+	SetLightVisible("TorchLight_3", false);
+	SetLightVisible("TorchLight_4", false);
+	SetLightVisible("TorchLight_5", false);
+	SetLightVisible("TorchLight_6", false);
+	SetLightVisible("TorchLight_7", false);
+	SetLightVisible("TorchLight_8", false);
+	
+	SetLightVisible("PointLight_1", false);
+	SetLightVisible("PointLight_2", false);
+	SetLightVisible("PointLight_3", false);
+	SetLightVisible("PointLight_4", false);
+	SetLightVisible("PointLight_5", false);
+	SetLightVisible("PointLight_6", false);
+	SetLightVisible("PointLight_7", false);
+	SetLightVisible("PointLight_8", false);
+	SetLightVisible("PointLight_9", false);
+	SetLightVisible("PointLight_10", false);
+	SetLightVisible("PointLight_11", false);
+	SetLightVisible("PointLight_12", false);
+	SetLightVisible("PointLight_13", false);
+	SetLightVisible("PointLight_14", false);
+	SetLightVisible("PointLight_15", false);
+	SetLightVisible("PointLight_16", false);
+	SetLightVisible("PointLight_17", false);
+	SetLightVisible("PointLight_18", false);
+	SetLightVisible("PointLight_19", false);
+	SetLightVisible("PointLight_20", false);
+	SetLightVisible("PointLight_21", false);
+	
+	CompleteQuest("12DoorMachine", "12Machine");
+		}
+
+////////////////////////
+//Exit creature chase//
+void ActivateChase(string &in asEntity)
+{
+	AddEntityCollideCallback("Player", "AreaChase", "BeginScaryChase", true, 1);
+	AddEntityCollideCallback("Player", "AreaChase_1", "ChaseFirstEvents", true, 1);
+		}
+
+void ChaseFirstEvents(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("brute1", "enemy/brute/metal_run", "AreaBruteSound", 0, false);
+	PlaySoundAtEntity("brute2", "enemy/brute/amb_idle_whimp", "AreaBruteSound", 0, false);
+	AddTimer("", 0.5f, "TimerBruteDelay");
+	GiveSanityDamage(10, true);
+}
+
+void TimerBruteDelay(string &in asTimer)
+{
+	PlaySoundAtEntity("brute2", "enemy/brute/metal_walk", "AreaBruteSound", 0, false);
+	PlaySoundAtEntity("brute3", "scare_wall_scratch", "AreaBruteSound", 0, false);
+}
+
+void BeginScaryChase(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("GHOUL", true);
+	ShowEnemyPlayerPosition("GHOUL");
+	PlaySoundAtEntity("", "ghoul_enabled01.ogg", "Player", 0.0f, false);
+	AddEnemyPatrolNode("GHOUL", "Node", 0.0f, "");
+	PlayMusic("att_brute.ogg", true, 1.0f, 1.0f, 10, false);
+	GiveSanityDamage(10, true);
+		}
+		
+
+//////////////////////////////////////
+//----------------------------------//
+///////////////MISC///////////////////
+//----------------------------------//
+//////////////////////////////////////
+
+/* Text for locked doors
+*/
+void DoorText1(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2);
+}
+
+void DoorText2(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor2", 2);
+}
+
+//-----//
+
+void DoorText2Mech(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor2", 2);
+	AddQuest("12DoorMachine", "12Machine");
+}
+
+/* FOr the metal door
+*/
+void IntTheDoor(string &in asEntity)
+{
+	SetMessage("TextOne", "12DoorMessage", 2);
+	SetLocalVarInt("DoorFound", 1);
+}
+
+/* Over time, the torches go out randomly
+*/
+void RandomWhirl(string &in asTimer)
+{
+	int iWhirl = RandInt(1, 8);
+	float fWhirl = RandInt(14.5, 24.5);
+	
+	CreateParticleSystemAtEntity("wind", "ps_dust_whirl.ps", "AreaWhirl_"+iWhirl, false);
+	PlaySoundAtEntity("whirl", "general_wind_whirl.snt", "AreaWhirl_"+iWhirl, 0, false);
+	FadeLightTo("TorchLight_"+iWhirl, 0, 0, 0, 0, 0, 1);
+	SetLampLit("Torch_"+iWhirl, false, true);
+	
+	AddDebugMessage("Whirling NOW at AreaWhirl_"+iWhirl, false);
+	
+	AddTimer("", fWhirl, "RandomWhirl");
+}
+
+/*A little rumbling over the player's head randomly
+*/
+void RandomShake(string &in asTimer)
+{
+	float fShake = RandInt(25.75f, 40.5f);
+	float fShake2 = RandInt(2.5f, 3.5f);
+	
+	PlaySoundAtEntity("scaryrumble", "18_pump_rumble.snt", "Player", 1, false);
+	StartScreenShake(0.02, 2, 0.5, 0.5);
+	SetPlayerMoveSpeedMul(0.6);
+	
+	AddDebugMessage("Shaking NOW, shaking next in"+fShake, false);
+	
+	AddTimer("randshake", fShake, "RandomShake");
+	AddTimer("endshake", 2, "EndRumble");
+}
+
+/* End the shaking
+*/
+void EndRumble(string &in asTimer)
+{
+	int iShake = RandInt(1, 6);
+	
+	StopSound("scaryrumble", 1);
+	SetPlayerMoveSpeedMul(1);
+	
+	AddDebugMessage("Shake num is"+iShake, false);
+	
+	if(iShake < 4)
+	{
+		PlaySoundAtEntity("scare", "react_scare.snt", "Player", 0, false);
+		PlaySoundAtEntity("", "03_rock_move.snt", "Player", 1, false);
+	}
+}
+
+///////////////////////
+//WRIGGLE BAR BREAK
+//////////////////////
+
+void CollideWriggleBarBreak(string &in asParent, string &in asChild, int alState)
+{
+	AddLocalVarInt("wriggle", 1);
+
+	/* Only break one of the bars
+	*/
+	if(GetLocalVarInt("wriggle") == 5)
+	{
+		SetEntityActive("Wriggle_Bar", false);
+		SetEntityActive("Bar", true);
+		
+		PlaySoundAtEntity("breakb", "17_break_wheel.snt", asChild, 0.2f, false);
+		PlaySoundAtEntity("breakb2", "25_bar_drop.snt", asChild, 0.2f, false);
+		CreateParticleSystemAtEntity("sparks", "ps_hit_metal.ps", "Wriggle_Bar", false);
+		
+		FadeLightTo("PointLight_1", 0, 0, 0, 0, 1, 1);
+	}
+	
+}
+
+///////////////////////
+//PIPE AND BAR
+//////////////////////
+
+/* Messages
+*/
+void IntPipe(string &in asEntity)
+{
+	if(GetLocalVarInt("DoorFound") == 1)
+	{
+		SetMessage("TextOne", "12Pipe2", 2);
+	} else {
+		SetMessage("TextOne", "12Pipe1", 2);
+	}
+}
+
+void UseBarOnDoor(string &in asItem, string &in asEntity)
+{
+	
+	SetMessage("TextOne", "12MetalError", 2);
+	
+	PlaySoundAtEntity("doorsound", "25_bar_drop.snt", "DoorEffect", 0.2f, false);
+	CreateParticleSystemAtEntity("sparks2", "ps_hit_metal.ps", "DoorEffect", false);
+}
+
+/* Break pipe with bar
+*/
+void UseBarOnPipe(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	
+	SetEntityActive("Pipe_Static", false);
+	SetEntityActive("Pipe", true);
+	
+	PlaySoundAtEntity("breakp", "17_break_wheel.snt", "AreaPipeEffects", 0.2f, false);
+	CreateParticleSystemAtEntity("sparksp", "ps_hit_metal.ps", "AreaPipeEffects", false);
+}
+/* Pipe on door
+*/
+void UsePipeOnDoor(string &in asItem, string &in asEntity)
+{
+	AddLocalVarInt("PipeHitCount", 1);
+	
+	if(GetLocalVarInt("PipeHitCount") == 1)
+	{
+		SetPropHealth("prison_1", 60);
+	}
+	
+	if(GetLocalVarInt("PipeHitCount") == 2)
+	{
+		SetPropHealth("prison_1", 20);
+		SetMessage("TextOne", "12DoorBreak", 2);
+	}
+	
+	if(GetLocalVarInt("PipeHitCount") == 3)
+	{
+		RemoveItem(asItem);
+		SetPropHealth("prison_1", 0);
+		GiveSanityBoost();
+	}
+}
+
+///////////////////////
+//VARIOUS MESSAGES
+void HammerFail(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "12HammerNo", 2);
+}
+
+void NoUse(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "NoUse", 2);
+}
+
+//---------------------------------------------	
+
+/////////////////////////////
+// BEGIN MEMORY STONE
+/////////////////////////////
+
+//---------------------------------------------	
+
+void BeginMemory1(string &in asEntity)
+{
+	StopMusic(3, 0);
+	SetPlayerActive(false);
+	RemoveItem(asEntity);
+	AddTimer("", 3.0f, "TimerMemory");
+	FadeOut(3.0f);
+	//PlayMusic("01_paper_self.ogg", false, 1.0f, 0.5f, 10.0f, true);
+	FadePlayerFOVMulTo(0.8f, 1.0f);
+	FadeImageTrailTo(2, 1);
+	
+	FadeLightTo("PointLight_2", 0, 0, 0, 0, 1, 3);
+	}
+	
+void TimerMemory(string &in asTimer)
+{	
+	AddLocalVarInt("TCon", 1);
+	float fTVar = 4.0f;
+	
+	switch(GetLocalVarInt("TCon")) 
+	{
+		case 1:
+			FadeImageTrailTo(1.5, 1);
+			SetLanternDisabled(true);
+			FadeOut(0.5f);
+			TeleportPlayer("MemPlace");
+			//FadePlayerFOVMulTo(1.4f, 0.4f);
+			FadePlayerRollTo(-20, 0.3f, 0.8f);
+		break;
+		case 2:
+			FadeIn(1.5f);
+			FadePlayerFOVMulTo(1.4f, 0.4f);
+			SetMessage("TextOne", "12Memory1", 5.0f);
+			fTVar = 5.0f;
+			PlaySoundAtEntity("int", "amb_eerie_dunk", "Player", 0.0f, false);
+		break;
+		case 3:
+			PlaySoundAtEntity("", "03_rock_move", "Player", 0.0f, false);
+			PlaySoundAtEntity("", "03_crew_talk", "TalkyTalk", 0.0f, false);
+			StartScreenShake(0.02, 0.3, 1, 1);
+			FadePlayerRollTo(20, 0.3f, 0.8f);
+			FadeOut(5.0f);
+			FadePlayerFOVMulTo(0.8f, 0.4f);
+			fTVar = 5.0f;
+		break;
+		case 4:
+			TeleportPlayer("MemPlace_1");
+			FadeIn(2.5f);
+			SetMessage("TextOne", "12Memory2", 5.0f);
+			PlayGuiSound("03_in_a_bottle.ogg", 0.5f);
+			PlayGuiSound("insanity_monster_roar03.ogg", 0.3f);
+		break;
+		case 5:
+			FadeOut(3.0f);
+		break;
+		case 6:
+			TeleportPlayer("DebugSpawn");
+			FadePlayerRollTo(0, 0.3f, 0.8f);
+			FadePlayerFOVMulTo(1.0f, 0.4f);
+			FadeImageTrailTo(0, 1);
+			SetPlayerActive(true);
+		break;		
+		case 7:
+			TeleportPlayer("DebugSpawn");
+			FadeIn(5.0f);
+			SetLanternDisabled(false);
+			StopSound("int", 5.0f);
+			PlayMusic("23_amb02.ogg", true, 0.7f, 5.0f, 0.0f, true);
+			PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1, false);
+			FadeImageTrailTo(1, 1);
+		break;
+	}
+	
+	if(GetLocalVarInt("TCon") < 10) AddTimer("", fTVar, "TimerMemory");
+	
+	}

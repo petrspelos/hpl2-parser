@@ -1,0 +1,80 @@
+void OnStart()
+	{
+		SetEntityConnectionStateChangeCallback("shelf_lever", "func_shelf");
+		AddEntityCollideCallback("Player", "script_spawnlurker", "spawn_lurker1", false, 1);
+		SetEntityPlayerInteractCallback("orbpiece_turquoise_1", "turquoise_effect", true);
+		AutoSave();
+	}
+
+void OnEnter()
+	{
+		PlayMusic("12_amb.ogg", true, 1, 1, 1, true);
+		CompleteQuest("old_library_blocked_quest", "oldlibraryblocked");
+	}
+
+void func_shelf(string &in asEntity, int alState)
+	{
+		if (alState == 1)
+			{
+				SetMoveObjectState("secret_shelf", 1.0f);
+					return;
+			}
+	}
+
+void locked_door1(string &in asEntity)
+	{
+		SetMessage("Messages", "door_locked1", 2);
+	}
+
+void spawn_lurker1(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("waterlurker_1", true);
+	}
+
+
+/////Turquoise Effect/////
+
+void turquoise_effect(string &in asEntity)
+	{
+		SetPlayerMoveSpeedMul(0);
+		SetPlayerRunSpeedMul(0);
+		SetPlayerLookSpeedMul(0.5);
+		SetSanityDrainDisabled(true);
+		SetMessage("Messages", "turquoise_effect1", 3);
+		AddTimer("trig1", 5.0f, "turquoise_effect2_timer");
+	}
+
+void turquoise_effect2_timer(string &in asTimer)
+	{
+		SetMessage("Messages", "turquoise_effect2", 3);
+		PlaySoundAtEntity("", "15_player_burn.snt", "Player", 0, false);
+		GivePlayerDamage(20, "BloodSplat", false, false);
+		AddTimer("trig1", 6.0f, "turquoise_effect3_timer");
+	}
+
+void turquoise_effect3_timer(string &in asTimer)
+	{
+		SetMessage("Messages", "turquoise_effect3", 3);
+		PlaySoundAtEntity("", "15_player_burn.snt", "Player", 0, false);
+		GivePlayerDamage(40, "BloodSplat", false, false);
+		AddTimer("trig1", 6.0f, "turquoise_effect4_timer");
+	}
+
+void turquoise_effect4_timer(string &in asTimer)
+	{
+		SetMessage("Messages", "turquoise_effect4", 4);
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+		SetPlayerLookSpeedMul(1);
+		GivePlayerDamage(40, "BloodSplat", false, false);
+		SetPlayerSanity(100);
+		GiveSanityBoost();
+		SetSanityDrainDisabled(false);
+	}
+
+/////Turquoise Effect/////
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

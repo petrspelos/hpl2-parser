@@ -1,0 +1,209 @@
+void OnStart()
+{
+	ClearSavedMaps();
+	SetLocalVarInt("GuardianStep", 0);
+	AddEntityCollideCallback("Player", "Area_Guardian", "Guardian", true, 1);
+	AddEntityCollideCallback("Player", "Area_Behind", "Behind", true, 1);
+	CheckPoint("chk1", "To_TestingCenter4", "Respawn", "Deaths", "guardian");
+	
+	SetEntityCustomFocusCrossHair("easter_egg_12", "Pick");
+	SetEntityPlayerInteractCallback("easter_egg_12", "CollectEasterEgg", true);
+	
+	SetPlayerActive(false);
+	SetLanternActive(false, false);
+	
+	FadeOut(0);
+	AddTimer("", 0.6, "Start");
+	AddTimer("", 0.05, "Start0");
+	TeleportPlayer("TP_Scene");
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("testing-center");
+	SetPlayerMoveSpeedMul(0.8);
+	SetPlayerRunSpeedMul(0.8);
+	SetInventoryDisabled(true);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetInventoryDisabled(false);
+	SetupLoadScreen("LoadingScreens", "to_end_outside", 0, "");
+	StopMusic(1, 1);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+//////////////////////////////////////
+
+void Respawn(string &in asName, int alCount)
+{
+	PlayGuiSound("guardian_activated.snt", 1);
+	SetPlayerHealth(10);
+	SetPlayerSanity(20);
+	AddTimer("until_kill", 35, "TooSlow");
+}
+
+void TooSlow(string &in asTimer)
+{
+	GivePlayerDamage(101, "BloodSplat", true, true);
+	PlayGuiSound("slime_attack_normal_hit.snt", 1);
+}
+
+void RandomSoundLoop(string &in asTimer)
+{
+	PlaySoundAtEntity("", "guardian_idle.snt", "Area_RandomSound_"+RandInt(1, 7), 0.4, false);
+	AddTimer("sound_loop", RandFloat(3, 7), "RandomSoundLoop");
+}
+
+//////////////////////////////////////
+
+void Start0(string &in asTimer)
+{
+	TeleportPlayer("TP_Scene");
+}
+
+void Start(string &in asTimer)
+{
+	AddPropImpulse("chandelier_large_2", 1, 0, 0.2, "world");
+	AddPropImpulse("chandelier_nice_3", 1, 0, 0, "world");
+	//AddPropImpulse("chandelier_nice_4", 0.8, 0, -0.1, "world");//stops swinging too soon to notice
+	FadeIn(0);
+	StartEffectFlash(0.08, 0.05, 0.15);
+	PlayGuiSound("react_pant.snt", 1);
+	PlayGuiSound("scare_wall_stomp.snt", 1);
+	AddTimer("", 0.2, "Start2");
+}
+
+void Start2(string &in asTimer)
+{
+	PlayGuiSound("guardian_activated.snt", 1);
+	FadeOut(0.1);
+	AddTimer("", 0.5, "Start3");
+}
+
+void Start3(string &in asTimer)
+{
+	TeleportPlayer("To_TestingCenter4");
+	AddTimer("", 0.1, "Start4");
+	FadePlayerFOVMulTo(0.5, 20);
+	StartScreenShake(0.02, 4.2, 0, 5);
+	FadeRadialBlurTo(0.02, 1);
+	AddPropImpulse("chandelier_nice_3", 0, 0, 0.8, "world");
+}
+
+void Start4(string &in asTimer)
+{
+	PlayMusic("amb_eerie_dunk.ogg", true, 1, 2, 1, false);
+	FadeIn(3.5);
+	SetPlayerActive(true);
+	SetPlayerHealth(10);
+	SetPlayerSanity(20);
+	FadePlayerFOVMulTo(1, 1.5);
+	AddTimer("", 1.2, "Start5");
+	AddTimer("until_kill", 50, "TooSlow");
+	AddTimer("sound_loop", 5, "RandomSoundLoop");
+}
+
+void Start5(string &in asTimer)
+{
+	PlayGuiSound("react_breath.snt", 1);
+}
+
+//////////////////////////////////////
+
+void Guardian(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("Guardian_Floor", true, 0.25);
+	SetEntityPos("Guardian_Move", -75.25, GetEntityPosY("Guardian_Move"), GetEntityPosZ("Guardian_Move"));
+	PlayGuiSound("insanity_monster_roar02.ogg", 1);
+	PlayMusic("04_event_stairs.ogg", false, 2, 0, 2, false);
+	AddTimer("guardian_move_timer", 0, "GuardianMoveLoop");
+	RemoveTimer("until_kill");
+	AddTimer("until_kill", 30, "TooSlow");
+}
+
+void GuardianMoveLoop(string &in asTimer)
+{
+	if(GetLocalVarInt("GuardianStep")<40)
+	{
+		SetEntityPos("Guardian_Move", GetEntityPosX("Guardian_Move")+0.25, GetEntityPosY("Guardian_Move"), GetEntityPosZ("Guardian_Move"));
+		AddLocalVarInt("GuardianStep", 1);
+		AddTimer("guardian_move_timer", 0.01, "GuardianMoveLoop");
+		
+		if(GetLocalVarInt("GuardianStep")==25)
+		{
+			SetPlayerSanity(100);
+			GiveSanityDamage(75, true);
+			PlayGuiSound("react_pant.snt", 1);
+			PlayGuiSound("player_react_guardian2.snt", 1);
+		}
+		else if(GetLocalVarInt("GuardianStep")==32)
+		{
+			AddPlayerBodyForce(150000, 65000, -1000, false);
+			PlayGuiSound("25_guardian_slime_appear.snt", 1);
+			PlayGuiSound("slime_attack_normal_hit.snt", 0.8);
+			SetPlayerCrouching(false);
+			AddTimer("", 0.4, "BodyFall");
+		}
+	}
+	else
+	{
+		AddTimer("", 5, "GuardianFinish");
+		AddTimer("", 2, "PlayerReact");
+		AddTimer("", 3.3, "PlayerReact");
+		AddTimer("", 4.2, "PlayerReact2");
+		SetEntityActive("block_guardian", false);
+		SetEntityActive("block_guardian_1", false);
+		SetEntityActive("block_guardian_2", false);
+	}
+}
+
+void BodyFall(string &in asTimer)
+{
+	PlayGuiSound("player_bodyfall.snt", 0.7);
+}
+
+void GuardianFinish(string &in asTimer)
+{
+	SetPropActiveAndFade("Guardian_Move", false, 1.5);
+}
+
+void PlayerReact(string &in asTimer)
+{
+	PlayGuiSound("player_cough.snt", 1);
+}
+
+void PlayerReact2(string &in asTimer)
+{
+	PlayGuiSound("react_sigh.snt", 1);
+}
+
+//////////////////////////////////////
+
+void Behind(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("slime_behind_1", true, 0.7);
+	SetPropActiveAndFade("slime_behind_2", true, 0.7);
+	SetEntityActive("SlimeDamageAppear_*", true);
+	PlaySoundAtEntity("", "guardian_activated.snt", "slime_behind_1", 0, false);
+	StartScreenShake(0.02, 4.2, 0, 5);
+	FadeRadialBlurTo(0, 0.2);
+	CheckPoint("chk2", "Respawn", "Respawn", "Deaths", "guardian");
+	AddTimer("", 0.25, "Behind_Step2");
+}
+
+void Behind_Step2(string &in asTimer)
+{
+	GiveSanityDamage(5, true);
+}

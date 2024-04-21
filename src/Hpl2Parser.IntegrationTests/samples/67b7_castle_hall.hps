@@ -1,0 +1,234 @@
+int swings = 0;
+
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "enter", "playit", true, 1);
+	AddEntityCollideCallback("Player", "joo", "FUNC", true, 1);
+	AddEntityCollideCallback("Player", "kato", "ilmestys", true, 1);
+	AddEntityCollideCallback("gr", "kuole", "ilmestys2", true, 1);
+	AddEntityCollideCallback("vipu", "area", "done", true, 1);
+	AddEntityCollideCallback("valmis", "area2", "done2", true, 1);
+	AddUseItemCallback("", "hammer", "areause", "HammerAnimation", true);
+	AddUseItemCallback("", "key", "metalli", "FUNCTION", true);
+	SetLightVisible("show", false);
+	SetEntityPlayerInteractCallback("pullo", "juose", true);
+	AddEntityCollideCallback("Player", "sanominen", "oivallus", true, 1);
+    ClearSavedMaps();
+	AutoSave();
+}
+
+void juose(string &in asEntity)
+{
+	RemoveItem("pullo");
+	AddTimer("", 1.0f, "drinknow");
+}
+
+void drinknow(string &in asTimer)
+{
+	PlayGuiSound("26_agrippa_drink.ogg", 1.0f);
+	AddTimer("", 3.0f, "sanitygood");
+}
+
+void sanitygood(string &in asTimer)
+{
+	GiveSanityBoost();
+}
+
+void HammerAnimation(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("ObjectHammer", true);
+	
+	swings = 1;
+	
+	StartPlayerLookAt("ObjectHammer", 2, 2, "");
+	
+	AddTimer("movehammer", 0.1, "TimerMoveHammer");
+	AddTimer("hammersound", 0.27, "TimerMoveHammer");
+	AddTimer("resethammer", 0.4, "TimerMoveHammer");
+	AddTimer("repeat", 0.6, "TimerMoveHammer");
+	
+	PlaySoundAtEntity("", "15_rock_break", "wooden", 0, false);
+	PlaySoundAtEntity("", "15_make_hammer", "Player", 0.25, false);
+	PlaySoundAtEntity("", "03_rock_move", "wooden", 2, false);
+}
+
+void TimerMoveHammer(string &in asTimer)
+{
+	if(asTimer == "movehammer") SetMoveObjectState("ObjectHammer", 0.4);
+	
+	else if(asTimer == "hammersound") {
+		StopPlayerLookAt();
+		PlaySoundAtEntity("", "impact_wood_high", "wooden", 0, false);
+		PlaySoundAtEntity("", "hit_wood", "wooden", 0, false);
+	}
+	
+	else if(asTimer == "resethammer") SetMoveObjectState("ObjectHammer", 0);
+	
+	if(swings < 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.01, "TimerMoveHammer");
+		AddTimer("hammersound", 0.17, "TimerMoveHammer");
+		AddTimer("resethammer", 0.3, "TimerMoveHammer");
+		AddTimer("repeat", 0.5, "TimerMoveHammer");
+		
+		swings = swings + 1;
+	}
+	
+	else if(swings == 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.2, "TimerMoveHammer");
+		AddTimer("hammersound", 0.37, "TimerMoveHammer");
+		AddTimer("resethammer", 0.5, "TimerMoveHammer");
+		AddTimer("repeat", 0.8, "TimerMoveHammer");
+		
+		AddTimer("break", 0.42, "TimerMoveHammer");
+		
+		swings = swings + 1;
+	}
+	
+	else if(swings == 4 && asTimer == "break") FinishAnimation();
+	
+	else if(swings == 4 && asTimer == "repeat") SetEntityActive("ObjectHammer", false);
+}
+
+void FinishAnimation()
+{
+	SetPropHealth("wooden", 0);
+	GiveSanityBoost();
+	PlaySoundAtEntity("", "break_wood.snt", "wooden", 0, false);
+	RemoveItem("hammer");
+	SetSwingDoorLocked("heh", false, true);
+	SetEntityActive("areause", false);
+}
+
+void FUNCTION (string &in item, string &in door)
+{
+	SetSwingDoorLocked("metalli", false, true);
+	PlaySoundAtEntity("", "unlock_door", "metalli", 0, false);
+	RemoveItem("key");
+}
+
+void oivallus(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "linnanherranhuone", 5.0f);
+}
+
+void done(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("vipu", false);
+	SetEntityActive("reika", false);
+	SetEntityActive("valmis", true);	
+	PlayGuiSound("impact_wood_high2.ogg", 0.7f);
+	SetLightVisible("secretlig", false);
+}
+
+void done2(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("03_puzzle_secret.ogg", false, 0.8f, 0.8f, 40, false);
+	PlaySoundAtEntity("", "06_rope_loose.snt", "valmis", 0, false);
+	SetLevelDoorLocked("level", false);
+	GiveSanityBoost();
+}
+
+void playit(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("19_puzzle_inject.ogg", false, 0.8f, 0.8f, 40, false);
+}
+
+void FUNC(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("kato", true);
+}
+
+void ilmestys(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerSanity(80);
+	AddTimer("", 0.01, "lookn");
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	SetEntityActive("gr", true);
+	AddEnemyPatrolNode("gr", "PathNodeArea_1", 20.0f, ""); 
+	AddTimer("", 6.32f, "spawn");
+	AddPlayerBodyForce(0.0f, 0.0f, 18000.0f, false);
+	SetLanternActive(false, false);
+	SetPlayerCrouchDisabled(true);
+}
+
+void lookn(string &in asTimer)
+{
+	StartPlayerLookAt("gr", 2.0f, 2.0f, "");
+	AddTimer("timer", 0.01, "lookn");
+}
+
+void spawn(string &in asTimer)
+{
+	SetPlayerLookSpeedMul(0.0f);
+	SetEntityActive("st", true);
+	AddTimer("", 0.01f, "push");
+}
+
+void push(string &in asTimer)
+{
+	AddPropImpulse("st", 0, 0.16, -0.18, "");
+	AddTimer("", 0.01, "push");
+}
+
+void ilmestys2(string &in asParent, string &in asChild, int alState)
+{
+	RemoveTimer("timer");
+	PlayGuiSound("impact_rock_high2.ogg", 1.0f);
+	SetEntityActive("gr", false);
+	SetEntityActive("gr2", true);
+	AddTimer("", 1.2f, "poistu");
+	AddTimer("", 1.1f, "stoplook");
+	AddTimer("", 1.2f, "lookhim");
+	AddTimer("", 0.4f, "rouh");
+	AddPropImpulse("gr2", 0.0f, 0.0f, -1.0f, "world");
+}
+
+void lookhim(string &in asTimer)
+{
+	StartPlayerLookAt("st", 2.0f, 2.0f, "");
+}
+
+void rouh(string &in asTimer)
+{
+	PlayGuiSound("attack_launch01.ogg", 0.75f);
+}
+
+void koske(string &in asEntity)
+{
+	PlaySoundAtEntity("", "close_gate.snt", "ovi", 0, false);
+	SetMessage("Messages", "lukos", 3.5f);
+}
+
+void poistu(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "st", false);
+	PlayGuiSound("dis.ogg", 0.2f);
+	AddTimer("", 1.0f, "normal");
+	SetEntityActive("st", false);
+	PlayMusic("23_puzzle.ogg", false, 0.7f, 0.7f, 40, false);
+	SetEntityActive("key", true);
+	SetLightVisible("show", true);
+}
+
+void otase(string &in asEntity)
+{
+	SetLightVisible("show", false);
+}
+
+void stoplook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void normal(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerLookSpeedMul(1.0f);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	StopPlayerLookAt();
+}
+

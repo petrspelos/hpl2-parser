@@ -1,0 +1,341 @@
+void OnStart()
+{
+	ClearSavedMaps();
+	for(int i=1; i<5; i++)
+	{
+		SetEntityPlayerInteractCallback("join_"+i, "InteractMissing", false);
+		for(int j=1; j<5; j++) AddEntityCollideCallback("lever_"+i, "join_"+j, "leverFunc", true, 1);
+		SetEntityConnectionStateChangeCallback("lever_full_"+i, "CheckLever");
+	}
+	AddEntityCollideCallback("Player", "AreaBrute_1", "AreaBrute_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaBrute_2", "AreaBrute_2", true, 1);
+	AddEntityCollideCallback("Player", "AreaBrute_3", "AreaBrute_3", true, 1);
+	AddEntityCollideCallback("brute_1", "AreaBruteDisappear_1", "AreaBruteDisappear_1", true, 1);
+	AddEntityCollideCallback("brute_2", "AreaBruteDisappear_2", "AreaBruteDisappear_2", true, 1);
+	AddEntityCollideCallback("crowbar_joint_1", "AreaCrowbar_1", "AreaCrowbar_1", true, 1);
+	AddEntityCollideCallback("cabinet_simple_1", "AreaScare_1", "scared", true, 1);
+	AddEntityCollideCallback("grunt_1", "AreaGruntDisappear_1", "AreaGruntDisappear_1", true, 1);
+	SetEntityCallbackFunc("note_scroll_1", "note_1");
+	SetEntityCallbackFunc("note_letter_1", "note_2");
+	SetEntityCallbackFunc("note_numbers_1", "note_3");
+	AddUseItemCallback("", "offices_key_1", "mansion_1", "key_on_door_1", true);
+	AddUseItemCallback("", "crowbar_item_1", "mansion_11", "crowbar_on_door_1", true);
+	
+	SetEntityCustomFocusCrossHair("easter_egg_2", "Pick");
+	SetEntityPlayerInteractCallback("easter_egg_2", "CollectEasterEgg", true);
+	
+	SetLocalVarInt("lever_full_1", 0);
+	SetLocalVarInt("lever_full_2", 0);
+	SetLocalVarInt("lever_full_3", 0);
+	SetLocalVarInt("lever_full_4", 0);
+	SetLocalVarInt("done", 0);
+	CheckPoint("chck1", "Checkpoint_1", "whenDead", "Deaths", "offices_chck1");
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("offices");
+	if(GetLocalVarInt("done")==1) PlaySoundAtEntity("machineRunning", "21_lever_success", "AreaMachine_1", 1, true);
+	PlayMusic("07_amb.ogg", true, 1, 0.2, 1, false);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	CompleteQuest("offices_done", "offices_done");
+	SetupLoadScreen("LoadingScreens", "to_testing_center", 0, "");
+	StopMusic(5, 1);
+	StopMusic(5, 2);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+void whenDead(string &in asName, int alCount)
+{
+	PlayMusic("07_amb.ogg", true, 1, 0.2, 1, false);
+}
+
+void AutosaveDelay(string &in asTimer)
+{
+	AutoSave();
+}
+
+////////scary_effects//////////////
+
+void scared(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("corpse_male_leg_1", true);
+	AddTimer("scared1", 0.25, "scared1");
+}
+
+void scared1(string &in asTimer)
+{
+	GiveSanityDamage(25, true);
+	PlayMusic("05_event_falling.ogg", false, 1, 0.01, 258, false);
+}
+
+/////////adding_mementos_for_notes///////////
+
+void note_1(string &in asEntity, string &in type) 
+{
+	AddQuest("offices_combination", "offices_combination");
+	SetEntityActive("nail_static_1", false);
+	SetEntityActive("nail_static_2", false);
+}
+
+void note_2(string &in asEntity, string &in type) 
+{
+	AddQuest("offices_hint", "offices_hint");
+}
+
+void note_3(string &in asEntity, string &in type) 
+{
+	//AddQuest("offices_numbers", "offices_numbers"); //too stupid
+}
+
+////////////////////////////
+/////////doors/////////////
+
+void key_on_door_1(string &in item, string &in door)
+{
+	SetSwingDoorLocked("mansion_1", false, true);
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(item);
+	GiveSanityBoostSmall();
+}
+
+void crowbar_on_door_1(string &in item, string &in door)
+{
+	PlaySoundAtEntity("crowbar_door_1", "puzzle_place_jar.snt", "AreaCrowbarEffect_1", 0, false);
+	PlayGuiSound("player_crouch.snt", 1);
+	RemoveItem(item);
+	SetEntityActive("crowbar_joint_1", true);
+}
+
+void AreaCrowbar_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaCrowbar_2", true);
+	AddEntityCollideCallback("crowbar_joint_1", "AreaCrowbar_2", "AreaCrowbar_2", true, 1);
+}
+
+void AreaCrowbar_2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("crowbar_joint_1", false);
+	SetEntityActive("crowbar_broken_1", true);
+	PlaySoundAtEntity("crowbar_door_2", "break_wood_metal.snt", "AreaCrowbarEffect_1", 0, false);
+	CreateParticleSystemAtEntity("door_broken", "ps_hit_wood.ps", "AreaCrowbarEffect_1", false);
+	GiveSanityBoostSmall();
+	SetSwingDoorLocked("mansion_11", false, true);
+	SetSwingDoorDisableAutoClose("mansion_11", true);
+	SetSwingDoorClosed("mansion_11", false, true);
+	AddPropForce("mansion_11", 0, 0, 1000, "world");
+	AddTimer("", 0.1, "DoorOpenLoop");
+	AddTimer("", 0.2, "DoorOpenLoop");
+	AddTimer("", 0.3, "DoorOpenLoop");
+	AddTimer("autoCloseTimer", 1.2, "autoCloseTimer");
+}
+
+void DoorOpenLoop(string &in asTimer)
+{
+	AddPropForce("mansion_11", 0, 0, 500, "world");
+}
+
+void autoCloseTimer(string &in asTimer)
+{
+	SetSwingDoorDisableAutoClose("mansion_11", false);
+}
+
+////////levers////////////
+
+void InteractMissing(string &in asEntity)
+{
+	SetMessage("Messages", "lever_missing", 0);
+}
+
+void leverFunc(string &in asParent, string &in asChild, int alState)
+{
+	string lvr = StringSub(asChild, 5, 1);
+	SetEntityActive(asParent, false);
+	SetEntityActive(asChild, false);
+	SetEntityActive("mount_"+lvr, false);
+	SetEntityActive("lever_full_"+lvr, true);
+	PlayGuiSound("05_attach_ladder.snt", 1);
+}
+
+void CheckLever(string &in asEntity, int alState)
+{
+	SetLocalVarInt(asEntity, alState);
+	if(alState==0) return;
+	SetLeverStuckState(asEntity, alState, true);
+	
+	if(GetLocalVarInt("lever_full_1")==-1 && GetLocalVarInt("lever_full_2")==-1 && GetLocalVarInt("lever_full_3")==1 && GetLocalVarInt("lever_full_4")==-1)
+	{
+		for(int i=1; i<5; i++)
+		{
+			SetLeverStuckState("lever_full_"+i, GetLocalVarInt("lever_full_"+i), true);
+			SetLeverInteractionDisablesStuck("lever_full_"+i, false);
+		}
+		ChangePlayerStateToNormal();
+		SetPlayerSanity(GetPlayerSanity()-1);
+		GiveSanityBoost();
+		PlayMusic("02_puzzle.ogg", false, 1, 0.2, 2, true);
+		SetLevelDoorLocked("level_cistern_3", false);
+		PlaySoundAtEntity("machineRunning", "21_lever_success", "AreaMachine_1", 1, true);
+		CompleteQuest("offices_hint", "offices_hint");
+		CompleteQuest("offices_combination", "offices_combination");
+		CompleteQuest("offices_numbers", "offices_numbers");
+		AddQuest("offices_done", "offices_done");
+		SetLocalVarInt("done", 1);
+		AddEntityCollideCallback("Player", "AreaGrunt_1", "AreaGrunt_1", true, 1);
+		CheckPoint("chck2", "Checkpoint_1", "whenDead", "Deaths", "offices_end");
+		AddTimer("", 1.5, "AutosaveDelay");
+	}
+}
+
+/////////////////////////////
+/////////MONSTERS///////////
+
+void AreaBrute_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaBrute_2", true);
+}
+
+void AreaBrute_2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("brute_1", true);
+	AddTimer("", 0.4, "brute1react");
+	AddTimer("", 1, "brute1timer");
+	AddEnemyPatrolNode("brute_1", "brute1path_1", 0.2, "");
+	AddEnemyPatrolNode("brute_1", "brute1path_2", 0.001, "");
+	AddEnemyPatrolNode("brute_1", "brute1path_3", 0.001, "");
+	AddEnemyPatrolNode("brute_1", "brute1path_4", 0.001, "");
+}
+
+void brute1react(string &in asTimer)
+{
+	PlayGuiSound("react_scare.snt", 1);
+}
+
+void brute1timer(string &in asTimer)
+{
+	SetPropHealth("mansion_5", 0);
+	PlaySoundAtEntity("destroyed_door_1", "break_wood_metal.snt", "AreaPlayBreakDoor_1", 0, false);
+	GiveSanityDamage(20, true);
+}
+
+void AreaBruteDisappear_1(string &in asParent, string &in asChild, int alState)
+{
+	FadeEnemyToSmoke("brute_1", false);
+}
+
+void AreaBrute_3(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("mansion_1", true, true);
+	PlaySoundAtEntity("", "lurker_hit_wood.snt", "mansion_1", 0, false);
+	StopMusic(0.1, 1);
+	AddTimer("", 0.2, "StartBrute_2");
+}
+
+void StartBrute_2(string &in asTimer)
+{
+	GiveSanityDamage(20, true);
+	AddTimer("", 0.7, "brute2music");
+	AddTimer("brutetimer2", 1.5, "brute2timer");
+}
+
+void brute2music(string &in asTimer)
+{
+	PlayMusic("11_event_dog.ogg", false, 1, 0.1, 257, false);
+}
+
+void brute2timer(string &in asTimer)
+{
+	SetEntityActive("brute_2", true);
+	AddEnemyPatrolNode("brute_2", "brute2path_1", 0.5, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_2", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_3", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_4", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_5", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_6", 1, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_7", 1, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_8", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_9", 5, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_10", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_11", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_12", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_13", 0.001, "");
+	AddEnemyPatrolNode("brute_2", "brute2path_14", 1, "");
+	AddTimer("brutetimer2x", 2, "brute2timerX");
+}
+
+void brute2timerX(string &in asTimer)
+{
+	SetPropHealth("mansion_10", 0);
+	//AutoSave();
+}
+
+void AreaBruteDisappear_2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("brute_2", false);
+	PlayMusic("07_amb.ogg", true, 1, 0.2, 1, false);
+}
+
+void BruteBreakdoor(string &in asEntity, string &in type)
+{
+	if(type=="Break") AddTimer("", 1.3, "BruteRun");
+}
+
+void BruteRun(string &in asTimer)
+{
+	SetEnemyIsHallucination("brute_2", true);
+	SetEnemyDisableTriggers("brute_2", false);
+	ShowEnemyPlayerPosition("brute_2");
+	AddTimer("", 1.55, "BruteCheckPoof");
+	AddTimer("", 1.6, "BrutePoof");
+}
+
+float bruteLastPos;
+void BruteCheckPoof(string &in asTimer)
+{
+	bruteLastPos = GetEntityPosX("brute_2")*GetEntityPosZ("brute_2");
+}
+
+void BrutePoof(string &in asTimer)
+{
+	if(GetEntityPosX("brute_2")*GetEntityPosZ("brute_2") != bruteLastPos) FadeEnemyToSmoke("brute_2", true);
+	PlayMusic("07_amb.ogg", true, 1, 0.2, 1, false);
+	PlayMusic("08_amb_success.ogg", false, 1, 0.3, 257, false);
+}
+
+void AreaGrunt_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("grunt_1", true);
+	ShowEnemyPlayerPosition("grunt_1");
+	AddEntityCollideCallback("Player", "AreaGrunt_2", "AreaGrunt_2", true, 1);
+	AddEntityCollideCallback("Player", "AreaGrunt_3", "AreaGrunt_3", true, 1);
+	AddEnemyPatrolNode("grunt_1", "grunt1path_1", 0.001, "");
+	AddEnemyPatrolNode("grunt_1", "grunt1path_19", 0.001, "");
+}
+
+void AreaGrunt_2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaGrunt_3", false);
+	AddEnemyPatrolNode("grunt_1", "grunt1path_20", 0.001, "");
+}
+
+void AreaGrunt_3(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaGrunt_2", false);
+	AddEnemyPatrolNode("grunt_1", "grunt1path_21", 0.001, "");
+}
+
+void AreaGruntDisappear_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEnemyIsHallucination("grunt_1", true);
+}

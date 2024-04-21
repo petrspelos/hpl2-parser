@@ -1,0 +1,98 @@
+void OnStart(){
+StopSound("ScorchNoise", 0);
+SetLocalVarInt("ScorchAOETrue", 0);
+SetLocalVarInt("ScorchAOEBlocked", 0);
+AddEntityCollideCallback("Player", "ScorchAOE", "ScorchFunc", false, 1);
+AddEntityCollideCallback("Player", "ScorchAOE2", "ScorchFunc2", false, -1);
+AddTimer("", 0.25f, "ScorchHandler");
+AddTimer("", 1.0f, "ScorchBlockHandler");
+}
+
+void ScorchFunc(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerMoveSpeedMul(0.5f);
+SetPlayerLookSpeedMul(0.5f);
+SetLocalVarInt("ScorchAOETrue", 1);
+FadeInSound("ScorchNoise", 4.0f, false);
+}
+
+void ScorchFunc2(string &in asParent, string &in asChild, int alState)
+{
+StopSound("ScorchNoise", 10.0f);
+SetPlayerMoveSpeedMul(1.0f);
+SetPlayerLookSpeedMul(1.0f);
+SetLocalVarInt("ScorchAOETrue", 0);
+FadeSepiaColorTo(0.0f, 0.1f);
+FadeRadialBlurTo(0.0f, 0.01f);
+FadePlayerRollTo(0, 0.2f, 0.2f);
+}
+
+void ScorchHandler(string &in asTimer)
+{
+if(GetLocalVarInt("ScorchAOETrue") == 1 && GetPlayerSanity() > 19.5 && GetLocalVarInt("ScorchAOEBlocked") < 1)
+{
+AddPlayerSanity(-0.8f);
+StartScreenShake(0.01f, 3.25f, 0.5f, 0.5f);
+FadeRadialBlurTo(RandFloat(0.04f, 0.12f), 0.06f);
+FadePlayerRollTo(RandFloat(-10, 10), 2.2f, 2.2f);
+FadeSepiaColorTo(1.0f, 0.2f);
+SetPlayerMoveSpeedMul(0.8f);
+SetPlayerLookSpeedMul(0.8f);
+}
+if(GetLocalVarInt("ScorchAOETrue") == 1 && GetPlayerSanity() < 19.5 && GetLocalVarInt("ScorchAOEBlocked") < 1)
+{
+AddPlayerHealth(-1.25f);
+StartScreenShake(0.04f, 3.25f, 0.01f, 0.01f);
+FadeRadialBlurTo(RandFloat(0.12f, 0.34f), 0.06f);
+FadePlayerRollTo(RandFloat(-30, 30), 4.2f, 4.2f);
+SetPlayerMoveSpeedMul(0.3f);
+SetPlayerLookSpeedMul(0.3f);
+}
+if(GetLocalVarInt("ScorchAOETrue") == 1 && GetPlayerSanity() > 21.5 && GetLocalVarInt("ScorchAOEBlocked") >= 1)
+{
+FadeRadialBlurTo(RandFloat(0.001f, 0.01f), 0.06f);
+FadeSepiaColorTo(0.0f, 0.1f);
+FadeRadialBlurTo(0.0f, 0.01f);
+FadePlayerRollTo(0, 0.2f, 0.2f);
+AddPlayerSanity(-0.1f);
+}
+if(GetLocalVarInt("ScorchAOETrue") == 1 && GetPlayerSanity() < 21.5 && GetLocalVarInt("ScorchAOEBlocked") >= 1)
+{
+FadeRadialBlurTo(RandFloat(0.005f, 0.015f), 0.06f);
+FadeSepiaColorTo(0.0f, 0.1f);
+FadePlayerRollTo(RandFloat(-1, 1), 4.2f, 4.2f);
+AddPlayerHealth(-0.1f);
+}
+AddTimer("", 0.25f, "ScorchHandler");
+}
+
+void SanityHeal(string &in asEntity)
+{
+AddLocalVarInt("ScorchAOEBlocked", 20);
+SetMessage("Test", "Elixir", 4.0f);
+PlayGuiSound("pick_potion", 1.0f);
+}
+
+void ScorchBlockHandler(string &in asTimer)
+{
+if(GetLocalVarInt("ScorchAOEBlocked") >= 1)
+{
+AddLocalVarInt("ScorchAOEBlocked", -1);
+FadeGlobalSoundVolume(0.5f, 3.0f);
+FadeGlobalSoundSpeed(0.2f, 3.0f);
+if(GetPlayerSanity() < 100)
+{
+SetPlayerSanity(GetPlayerSanity() + 1.5f);
+if(GetPlayerSanity() > 50)
+{
+SetPlayerHealth(GetPlayerHealth() + 1.0f);
+}
+}
+}
+if(GetLocalVarInt("ScorchAOEBlocked") < 1)
+{
+FadeGlobalSoundVolume(1.0f, 5.0f);
+FadeGlobalSoundSpeed(1.0f, 5.0f);
+}
+AddTimer("", 1.0f, "ScorchBlockHandler");
+}

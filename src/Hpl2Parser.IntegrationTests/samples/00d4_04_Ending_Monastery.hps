@@ -1,0 +1,103 @@
+void OnStart()
+{
+	AddEntityCollideCallback("BerthDoor", "EndingTrigger", "Ending", true, 1);
+	WakeUp();
+	SetMapDisplayNameEntry("Ending");
+}
+
+void OnEnter()
+{
+	TeleportPlayer("Start");
+	SetSanityDrainDisabled(true);
+	SetInventoryDisabled(true);
+	SetPlayerCrouching(true);
+	//SetPlayerMoveSpeedMul(0.6);
+	//SetPlayerRunSpeedMul(0.6);
+	//SetPlayerLookSpeedMul(0.8);
+}
+
+void OnLeave()
+{
+	
+}
+
+//========================================
+
+void WakeUp()
+{
+	FadeOut(0);
+	AddTimer("WakeMove",0.01,"WakeMove");
+	StartPlayerLookAt("RoomLook_1", 1, 1, "");
+}
+
+void WakeMove(string &in asTimer)
+{
+	AddLocalVarInt("SceneVar", 1);	//What step to play in the event
+	float fEventSpeedScene = 1.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("SceneVar")) 
+	{
+		case 1:
+			SetPlayerMoveSpeedMul(0.01f);
+			SetPlayerRunSpeedMul(0.01f);
+			SetPlayerLookSpeedMul(0.4);
+			
+			MovePlayerHeadPos(0,-0.9, 0, 1, 1);
+			FadePlayerFOVMulTo(0.9, 0.5f);
+			
+			fEventSpeedScene = 2.0f;
+			
+			SetPlayerJumpDisabled(false);
+			SetPlayerCrouchDisabled(false);
+			AddDebugMessage("1", false);
+		break;
+		case 2:
+			FadeIn(4);
+			fEventSpeedScene = 2.0f;
+			AddDebugMessage("2", false);
+		break;
+		case 3:
+			FadeOut(1);
+			AddDebugMessage("3", false);
+		break;
+		case 4:
+			FadeIn(3);
+			StartPlayerLookAt("RoomLook_2", 1, 1, "");
+			FadePlayerFOVMulTo(0.86, 0.5f);
+			fEventSpeedScene = 3.5f;
+			AddDebugMessage("4", false);
+		break;
+		case 5:
+			FadeOut(0.8);
+			StopPlayerLookAt();
+			fEventSpeedScene = 2.0f;
+			FadePlayerFOVMulTo(1.0f, 0.7f);
+			AddDebugMessage("5", false);
+		break;
+		case 6:
+			FadeIn(0.5);
+			TeleportPlayer("Start_1");
+			SetPlayerCrouching(false);
+			MovePlayerHeadPos(0,0, 0, 1, 0.8);
+			
+			SetPlayerMoveSpeedMul(0.6);
+			SetPlayerRunSpeedMul(0.6);
+			SetPlayerLookSpeedMul(0.8);
+			
+			AddDebugMessage("6", false);
+		break;
+	}
+	
+	if(GetLocalVarInt("SceneVar") < 7)  AddTimer("WakeMove", fEventSpeedScene, "WakeMove");
+}
+
+void Ending(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("smw_what_edit.ogg", false, 1, 0, 0, true);
+	AddTimer("",16.1,"Credits");
+}
+
+void Credits(string &in asTimer)
+{
+	StartCredits("", true, "Ending", "Simulacrum_Credits", -1);
+}

@@ -1,0 +1,47 @@
+void OnStart()
+{
+	CompleteQuest("levelfour", "g4");
+	CompleteQuest("sword_of_heroes", "soh");
+	SetPlayerRunSpeedMul(0.0f);
+	FadeImageTrailTo(0.5f, 0.1f);
+	GiveSanityBoostSmall();
+	PlayMusic("01_amb_darkness.ogg", true, 1.0f, 0.0f, 1.0f, false);
+	AddEntityCollideCallback("Player", "TriggerWind_1", "TriggerWind", true, 0);
+	AddEntityCollideCallback("Player", "AreaBeginTerror", "TerrorBegin", true, 0);
+}
+
+////Triggers
+void TriggerWind(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("Wind_on_"+asChild, "general_whirl", asParent, 4.0f, false);
+	AddTimer("1", 1.0f, "TimerEventsInt");
+	GiveSanityDamage(1.0f, true);
+	CreateParticleSystemAtEntity("Wind_atarea_"+asChild, "ps_dust_whirl_large.ps", asChild, false);
+}
+
+void TerrorBegin(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerRunSpeedMul(1.0f);
+	SetSwingDoorClosed("prison_1", false, false);
+	for(int i=1; i<=3; ++i)	PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	for(int i=1; i<=5; ++i) PlayGuiSound("10_event_coming.snt", 1.0f);
+	CreateParticleSystemAtEntity("Scaresmoke", "ps_iron_maiden_event_smoke.ps", "AreaMaidenSmoke", false);
+	for(int i=1; i<=3; ++i)	SetEntityActive("flying_demon_fast_"+i, true);
+	for(int i=1; i<=3; ++i)	ShowEnemyPlayerPosition("flying_demon_fast_"+i);
+}
+
+////TimerEvents
+void TimerEventsInt(string &in asTimer)
+{
+	switch(StringToInt(asTimer)){
+	case 1:
+		CreateParticleSystemAtEntity("dust_boom", "ps_dust_impact.ps", "AreaImpact", false);
+		AddTimer("2", 0.5, "TimerEventsInt");
+		break;
+	case 2:
+		PlaySoundAtEntity("Scare_"+asTimer, "scare_scratch", "AreaScratch_1", 4, false);
+		StartScreenShake(0.02f, 0.5f, 0.25, 0.75f);
+		PlayGuiSound("react_breath.snt", 1.0f);
+		break;
+	}
+}

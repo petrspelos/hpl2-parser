@@ -1,0 +1,189 @@
+void OnStart()
+	{
+		intro();
+		PreloadSound("21_alex_low_freq_rumble.snt");
+		AddEntityCollideCallback("Player", "rumble3", "rumble3", true, 0);
+		AddEntityCollideCallback("Player", "rumble4", "rumble4", true, 0);
+		AddEntityCollideCallback("Player", "opening", "opening", true, 0);
+		AddEntityCollideCallback("Player", "opening_script", "transport", true, 0);
+		SetPlayerLampOil(50);
+	}
+
+//////////   INTRO SEQUENCE   //////////
+
+///// Wake Scene /////
+
+void intro()
+	{
+		PlayMusic("18_paper_daniel03", true, 1, 0.1, 0.5, false);
+		FadeOut(0);
+		SetPlayerActive(false);
+		SetMessage("Messages", "intro1", 3);
+		AddTimer("trig1", 4.0f, "nextmessage");
+	}
+
+void nextmessage(string &in asTimer)
+	{
+		SetMessage("Messages", "intro2", 5);
+		AddTimer("trig1", 6.0f, "nextmessage2");
+	}
+
+void nextmessage2(string &in asTimer)
+	{
+		SetMessage("Messages", "intro3", 3);
+		AddTimer("trig1", 4.0f, "wakeup");
+		AddTimer("trig1", 4.0f, "stop_intro_music");
+	}
+
+void stop_intro_music(string &in asTimer)
+	{
+		StopMusic(1, 0.5);
+	}
+
+void wakeup(string &in asTimer)
+	{
+		FadeIn(3);
+		SetLampLit("bonfire_1", true, true);
+		PlaySoundAtEntity("rumble1", "21_alex_low_freq_rumble.snt", "Player", 0, false);
+		StartScreenShake(0.005, 8, 1, 2);
+		AddTimer("trig1", 3.0f, "look1");
+		AddTimer("trig1", 10.0f, "stoprumble1");
+		PlayMusic("02_amb_safe.ogg", true, 0.4, 3, 1, false);
+	}
+
+void stoprumble1(string &in asTimer)
+	{
+		StopSound("rumble1", 0);
+	}
+
+void look1(string &in asTimer)
+	{
+		StartPlayerLookAt("lookhere1", 2, 2, "");
+		AddTimer("trig1", 2.0f, "looktext1");
+	}
+
+void looktext1(string &in asTimer)
+	{
+		SetMessage("Messages", "looktxt1", 3);
+		AddTimer("trig1", 3.0f, "look2");
+	}
+
+void look2(string &in asTimer)
+	{
+		StartPlayerLookAt("lookhere2", 2, 2, "");
+		AddTimer("trig1", 2.0f, "looktext2");
+	}
+
+void looktext2(string &in asTimer)
+	{
+		SetMessage("Messages", "looktxt2", 5);
+		StopPlayerLookAt();
+		AddTimer("trig1", 5.0f, "rumble2");
+		AddTimer("trig1", 6.0f, "rumblenotice1");
+	}
+
+void rumble2(string &in asTimer)
+	{
+		PlaySoundAtEntity("rumble2", "21_alex_low_freq_rumble.snt", "Player", 0, false);
+		StartScreenShake(0.01, 8, 1, 2);
+		AddTimer("trig1", 10.0f, "stoprumble2");
+	}
+
+void stoprumble2(string &in asTimer)
+	{
+		StopSound("rumble2", 0);
+		SetPlayerActive(true);
+		SetPlayerMoveSpeedMul(0.75);
+		AddQuest("investigate_quest1", "investigate1");
+	}
+
+///// Player gains control /////
+
+void rumblenotice1(string &in asTimer)
+	{
+		SetMessage("Messages", "rumble1", 7);
+	}
+
+///// Player exits Bedroom and encounters third rumble /////
+
+void rumble3(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerMoveSpeedMul(0.1);
+		PlaySoundAtEntity("rumble3", "21_alex_low_freq_rumble.snt", "Player", 0, false);
+		StartScreenShake(0.03, 8, 1, 2);
+		SetMessage("Messages", "rumbletxt3", 7);
+		AddTimer("trig1", 10.0f, "stoprumble3");
+	}
+
+void stoprumble3(string &in asTimer)
+	{
+		StopSound("rumble3", 0);
+		SetPlayerMoveSpeedMul(0.65);
+	}
+
+///// Fourth Rumble, after Player leaves Sideroom /////
+
+void rumble4(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerMoveSpeedMul(0.05);
+		PlaySoundAtEntity("rumble4", "21_alex_low_freq_rumble.snt", "Player", 0, false);
+		StartScreenShake(0.055, 8, 1, 2);
+		SetMessage("Messages", "rumbletxt4", 5);
+		AddTimer("trig1", 10.0f, "stoprumble4");
+	}
+
+void stoprumble4(string &in asTimer)
+	{
+		StopSound("rumble4", 0);
+		SetPlayerMoveSpeedMul(0.55);
+	}
+
+///// Final rumble and Opening Event /////
+
+void opening(string &in asParent, string &in asChild, int alState)
+	{
+		PlaySoundAtEntity("opening", "21_alex_low_freq_rumble.snt", "Player", 0, false);
+		StartScreenShake(0.09, 8, 1, 2);
+		SetMessage("Messages", "openingtxt", 7);
+		SetPlayerActive(false);
+		StartPlayerLookAt("opening_script", 1, 1, "");
+		AddTimer("trig1", 10.0f, "stopopeningsound");
+		AddTimer("trig1", 3.0f, "breakdoor");
+		StopMusic(3, 1);
+	}
+
+void stopopeningsound(string &in asTimer)
+	{
+		StopSound("opening", 0);
+	}
+
+///// Door at end of corridor breaks /////
+
+void breakdoor(string &in asTimer)
+	{
+		SetPropHealth("opening_door", 0.0f);
+		AddTimer("trig1", 4.0f, "pull1");
+	}
+
+///// Player is pulled towards Rift /////
+
+void pull1(string &in asTimer)
+	{
+		AddPlayerBodyForce(0, 0, 100000, true);
+		SetEntityActive("opening_door", false);
+	}
+
+///// Player is taken to next map /////
+
+void transport(string &in asParent, string &in asChild, int alState)
+	{
+		FadeOut(2);
+		StopPlayerLookAt();
+		AddTimer("trig1", 6.0f, "transition");
+		CompleteQuest("investigate_quest1", "investigate1");
+	}
+
+void transition(string &in asTimer)
+	{
+		ChangeMap("02_Transition.map", "PlayerStartArea_1", "", "");
+	}

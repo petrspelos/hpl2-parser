@@ -1,0 +1,430 @@
+void OnStart()
+{	
+	FadeOut(0);
+	StopMusic(0.05, 1);
+	SetPlayerLampOil(0);
+	BlockHint("SanityHit");
+	ExitInventory();
+	SetPlayerCrouching(true);
+	MovePlayerHeadPos(0, -0.5, 0, 10, 0.1);
+	SetLightVisible("HutLight", false);
+	SetPlayerActive(false);
+	SetSanityDrainDisabled(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	SetLanternDisabled(true);
+	SetPlayerRunSpeedMul(0.3);
+	
+	SetEntityCallbackFunc("lantern_pre", "PickLantern");
+	SetEntityCallbackFunc("the_tinderbox_of_truth", "TINDERBOX");
+	SetEntityPlayerInteractCallback("Area_NeedLantern", "NeedLanternMsg", false);
+	AddUseItemCallback("unlock_hut", "key_hut", "door_hut", "unlockHutDoor", true);
+	AddEntityCollideCallback("Player", "CutScene2-start", "cutScene2_1", true, 1);
+	AddEntityCollideCallback("door_hut", "door_hut_collide", "door_hut_open", true, 1);
+	AddEntityCollideCallback("door_hut", "door_hut_solid", "door_hut_freeze", true, 1);
+	AddEntityCollideCallback("Player", "keyHutPickupCollide", "keyHutPickup1", true, 1);
+	AddEntityCollideCallback("Player", "CutScene3-changeWalk", "walkingChange", true, 1);
+	
+	SetGlobalVarInt("the_tinderbox", 0);
+	SetGlobalVarInt("easter_eggs", 0);
+	
+	StartPlayerLookAt("CutScene1-look1", 100, 100, "");
+	AddTimer("cutScene1_1", 2.2, "cutScene1_1");
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("home");
+}
+
+///////////////////cutscene_1///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void cutScene1_1(string &in asTimer)
+{
+	PlaySoundAtEntity("hut_knock", "hit_wood.snt", "door_hut", 0, false);
+	AddPropImpulse("door_hut", 1, 0, 0, "world");
+	FadeIn(0.5);
+	AddTimer("cutScene1_2", 0.3, "cutScene1_2");
+}
+
+void cutScene1_2(string &in asTimer)
+{
+	PlayGuiSound("react_scare.snt", 1);
+	GiveSanityDamage(5, true);
+	StartPlayerLookAt("CutScene1-look2", 11, 16, "");
+	AddTimer("", 0.7, "cutScene1_3");
+	PlayMusic("29_amb.ogg", true, 1, 0.2, 1, false);
+}
+
+void cutScene1_3(string &in asTimer)
+{
+	PlaySoundAtEntity("hut_knock", "hit_wood.snt", "door_hut", 0, false);
+	AddPropImpulse("door_hut", 1, 0, 0, "world");
+	SetMessage("Messages", "start_wake_up", 0);
+	AddTimer("", 0.9, "cutScene1_4");
+}
+
+void cutScene1_4(string &in asTimer)
+{
+	PlaySoundAtEntity("hut_knock", "hit_wood.snt", "door_hut", 0, false);
+	AddPropImpulse("door_hut", 1, 0, 0, "world");
+	AddTimer("", 0.5, "cutScene1_5");
+}
+
+void cutScene1_5(string &in asTimer)
+{
+	PlayGuiSound("react_breath.snt", 1);
+	AddTimer("", 1.8, "cutScene1_6");
+}
+
+void cutScene1_6(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene1-look3", 2, 4, "cutScene1_7");
+}
+
+void cutScene1_7()
+{
+	SetLampLit("Candle", true, true);
+	SetLightVisible("HutLight", true);
+	PlayGuiSound("ui_use_tinderbox.snt", 1);
+	StopPlayerLookAt();
+	AddTimer("", 0.7, "cutScene1_8");
+}
+
+void cutScene1_8(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene1-look4", 2, 2.5, "cutScene1_9");
+}
+
+void cutScene1_9()
+{
+	StopPlayerLookAt();
+	MovePlayerHeadPos(0.5, -0.6, 1.8, 2, 1.7);
+	FadePlayerRollTo(-50, 8, 10);
+	StartPlayerLookAt("CutScene1-look5", 3, 3.5, "cutScene1_11");
+	AddTimer("", 0.5, "cutScene1_10");
+}
+
+void cutScene1_10(string &in asTimer)
+{
+	FadePlayerRollTo(0, 4, 7);
+}
+
+void cutScene1_11()
+{
+	StartPlayerLookAt("CutScene1-look6", 1.8, 2.5, "cutScene1_12");
+	SetPlayerCrouching(false);
+}
+
+void cutScene1_12()
+{
+	StopPlayerLookAt();
+	MovePlayerHeadPos(0, 0, 0, 40, 0.5);
+	TeleportPlayer("TP_from_bed");
+	SetPlayerActive(true);
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////
+
+void TINDERBOX(string &in asEntity, string &in type)
+{
+	SetGlobalVarInt("the_tinderbox", 1);
+}
+
+void PickLantern(string &in asEntity, string &in type)
+{
+	if(type=="OnPickup")
+	{
+		SetEntityActive("Area_NeedLantern", false);
+		SetPlayerLampOil(8);
+	}
+}
+
+void NeedLanternMsg(string &in asEntity)
+{
+	SetMessage("Messages", "start_need_lantern", 0);
+}
+
+void keyHutPickup1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("hut_knock", "hit_wood.snt", "door_hut", 0, false);
+	AddPropImpulse("door_hut", 1, 0, 0, "world");
+	AddTimer("keyHutPickup2", 0.9, "keyHutPickup2");
+	PlayGuiSound("react_scare.snt", 0.8);
+}
+
+void keyHutPickup2(string &in asTimer)
+{
+	PlaySoundAtEntity("hut_knock", "hit_wood.snt", "door_hut", 0, false);
+	AddPropImpulse("door_hut", 1, 0, 0, "world");
+	AddTimer("keyHutPickup3", 0.9, "keyHutPickup3");
+}
+
+void keyHutPickup3(string &in asTimer)
+{
+	PlaySoundAtEntity("hut_knock", "hit_wood.snt", "door_hut", 0, false);
+	AddPropImpulse("door_hut", 1, 0, 0, "world");
+}
+
+void door_hut_open(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityInteractionDisabled("door_hut", true);
+	ChangePlayerStateToNormal();
+	AddPropImpulse("door_hut", -5, 0, 0, "world");
+}
+
+void door_hut_freeze(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics("door_hut", true);
+}
+
+void unlockHutDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("door_hut", false, true);
+	SetSwingDoorDisableAutoClose("door_hut", true);
+	PlaySoundAtEntity("", "unlock_door.snt", "door_hut", 0, false);
+	RemoveItem("key_hut");
+	if(!HasItem("lantern_pre")) SetEntityActive("Area_NeedLantern", true);
+}
+
+///////////////////////////cutscene_2//////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void cutScene2_1(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	SetLanternDisabled(false);
+	
+	StartPlayerLookAt("CutScene2-look1", 2.5, 3.5, "");
+	AddPlayerBodyForce(-18000, 0, 0, false);
+	AddTimer("", 1.6, "cutScene2_2");
+}
+
+void cutScene2_2(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene2-look2", 1.8, 2.5, "");
+	AddTimer("", 1.8, "cutScene2_3");
+}
+
+void cutScene2_3(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene2-look3", 1.8, 2.5, "");
+	AddPlayerBodyForce(-15000, 0, 0, false);
+	AddTimer("", 1.8, "cutScene2_4");
+}
+
+void cutScene2_4(string &in asTimer)
+{
+	PlaySoundAtEntity("grunt_idle", "grunt/amb_idle.snt", "GruntSound1", 0, false);
+	SetPropStaticPhysics("door_hut", false);
+	AddPropImpulse("door_hut", 1, 0, 1, "world");
+	AddTimer("", 0.3, "cutScene2_5");
+}
+
+void cutScene2_5(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene2-look5", 2.5, 5.5, "");
+	SetPropStaticPhysics("door_hut", true);
+	AddTimer("", 0.65, "cutScene2_6");
+}
+
+void cutScene2_6(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene2-look4", 28, 30, "");
+	PlaySoundAtEntity("grunt_idle", "grunt/attack_claw.snt", "GruntSound1", 0, false);
+	GivePlayerDamage(1, "BloodSplat", false, false);
+	AddTimer("", 0.08, "cutScene2_6x5");
+	PlayMusic("05_event_falling.ogg", false, 65, 0.1, 1, false);
+}
+
+void cutScene2_6x5(string &in asTimer)
+{
+	FadeOut(0.1);
+	FadePlayerRollTo(90, 60, 90);
+	MovePlayerHeadPos(0, -1, 0, 10, 0.1);
+	AddPlayerBodyForce(-16000, 400, 18000, false);
+	AddTimer("", 0.2, "cutScene2_7");
+}
+
+void cutScene2_7(string &in asTimer)
+{
+	FadeIn(0.1);
+	AddTimer("", 0.3, "cutScene2_8");
+	AddTimer("", 0.25, "cutScene2_7x5");
+}
+
+void cutScene2_7x5(string &in asTimer)
+{
+	PlayGuiSound("player_bodyfall.snt", 0.8);
+}
+
+void cutScene2_8(string &in asTimer)
+{
+	FadeOut(5);
+	StartPlayerLookAt("CutScene2-look2", 20, 25, "");
+	PlaySoundAtEntity("grunt_idle", "grunt/leather_walk.snt", "GruntSound1", 0, false);
+	AddTimer("", 1.5, "cutScene2_9");
+}
+
+void cutScene2_9(string &in asTimer)
+{
+	PlaySoundAtEntity("grunt_idle", "grunt/leather_walk.snt", "GruntSound1", 0, false);
+	AddTimer("", 1.5, "cutScene2_10");
+}
+
+void cutScene2_10(string &in asTimer)
+{
+	PlaySoundAtEntity("grunt_idle", "grunt/leather_walk.snt", "GruntSound1", 0, false);
+	PlaySoundAtEntity("grunt_idle", "grunt/amb_idle.snt", "GruntSound1", 0, false);
+	AddTimer("", 2.5, "cutScene2_11");
+}
+
+void cutScene2_11(string &in asTimer)
+{
+	SetMapDisplayNameEntry("start-outside");
+	SetPlayerCrouching(true);
+	StopPlayerLookAt();
+	RemoveItem("lantern_pre");
+	TeleportPlayer("TP_CutScene3");
+	MovePlayerHeadPos(0, 0, 0, 10, 0.1);
+	FadePlayerRollTo(0, 60, 90);
+	StartPlayerLookAt("CutScene3-look1", 2, 6, "");
+	AddTimer("", 3, "cutScene3_1");
+}
+
+////////////////////////walking-loop////////////////////////////////////////////////////////////
+
+void headBobbingLoop(string &in asTimer)
+{
+	if(GetPlayerSpeed()<1.05) AddPlayerBodyForce(0, 0, -600, false);
+	AddTimer("bobbingTimer1", 0.016, "headBobbingLoop");
+}
+
+void walkingChange(string &in asParent, string &in asChild, int alState)
+{
+	RemoveTimer("bobbingTimer1");
+	AddTimer("", 0.016, "headBobbingLoop2");
+}
+
+void headBobbingLoop2(string &in asTimer)
+{
+	if(GetPlayerSpeed()<0.95) AddPlayerBodyForce(-140, 0, -600, false);
+	AddTimer("bobbingTimer2", 0.016, "headBobbingLoop2");
+}
+
+/////////////////////////////////////////////////////
+
+void cutscene_fadeOut(string &in asTimer)
+{
+	FadeOut(1);
+}
+
+void cutscene_fadeIn(string &in asTimer)
+{
+	FadeIn(1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////cutscene_3////////////////////////////////////////////////////////////////////////////////
+
+void cutScene3_1(string &in asTimer)
+{
+	SetEntityActive("silent_grunt_1", true);
+	SetEntityActive("silent_grunt_2", true);
+	SetEntityActive("silent_grunt_3", true);
+	SetEntityActive("silent_grunt_4", true);
+	AddEnemyPatrolNode("silent_grunt_1", "Path_1_1", 0.001, "");
+	AddEnemyPatrolNode("silent_grunt_1", "Path_1_2", 9999, "");
+	AddEnemyPatrolNode("silent_grunt_2", "Path_2_1", 0.001, "");
+	AddEnemyPatrolNode("silent_grunt_2", "Path_2_2", 9999, "");
+	AddEnemyPatrolNode("silent_grunt_3", "Path_3_1", 9999, "");
+	AddEnemyPatrolNode("silent_grunt_3", "Path_3_1", 9999, "");
+	AddEnemyPatrolNode("silent_grunt_4", "Path_4_1", 9999, "");
+	AddEnemyPatrolNode("silent_grunt_4", "Path_4_1", 9999, "");
+	SetEnemySanityDecreaseActive("silent_grunt_1", false);
+	SetEnemySanityDecreaseActive("silent_grunt_2", false);
+	SetEnemySanityDecreaseActive("silent_grunt_3", false);
+	SetEnemySanityDecreaseActive("silent_grunt_4", false);
+	
+	SetPlayerSanity(10);
+	SetPlayerHealth(40);
+	FadeIn(2.2);
+	AddTimer("", 0.01, "headBobbingLoop");
+	AddTimer("", 2.8, "cutScene3_2");
+	PlayMusic("05_paper_transformation.ogg", false, 65, 0.5, 1, false);
+}
+
+void cutScene3_2(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene3-look2", 1, 3, "");
+	FadePlayerRollTo(-35, 4, 15);
+	AddTimer("", 4, "cutScene3_3");
+	AddTimer("", 2.5, "cutscene_fadeOut");
+	AddTimer("", 4.1, "cutscene_fadeIn");
+}
+
+void cutScene3_3(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene3-look3", 1, 3, "");
+	FadePlayerRollTo(35, 5, 20);
+	AddTimer("", 5, "cutScene3_4");
+	AddTimer("", 4, "cutscene_fadeOut");
+	AddTimer("", 5.5, "cutscene_fadeIn");
+}
+
+void cutScene3_4(string &in asTimer)
+{
+	FadePlayerRollTo(0, 10, 25);
+	StartPlayerLookAt("CutScene3-look4", 1, 3, "");
+	AddTimer("", 3, "cutScene3_5");
+}
+
+void cutScene3_5(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene3-look5", 1, 3, "");
+	AddTimer("", 3.5, "cutScene3_6");
+}
+
+void cutScene3_6(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene3-look6", 1, 3, "");
+	SetPlayerSanity(10);
+	SetPlayerHealth(40);
+	AddTimer("", 5, "cutScene3_7");
+	AddTimer("", 1, "cutscene_fadeOut");
+	AddTimer("", 2.5, "cutscene_fadeIn");
+}
+
+void cutScene3_7(string &in asTimer)
+{
+	StartPlayerLookAt("CutScene3-look7", 0.5, 3, "");
+	AddTimer("", 4, "cutScene3_8");
+}
+
+void cutScene3_8(string &in asTimer)
+{
+	FadeOut(4.5);
+	AddTimer("", 5.1, "cutScene3_9");
+	AddTimer("", 4.85, "cutscene_gruntNoiseClaw");
+}
+
+void cutscene_gruntNoiseClaw(string &in asTimer)
+{
+	PlayGuiSound("grunt/attack_claw.snt", 1);
+}
+
+void cutScene3_9(string &in asTimer)
+{
+	RemoveTimer("bobbingTimer2");
+	StopPlayerLookAt();
+	SetPlayerSanity(100);
+	SetPlayerHealth(100);
+	StopMusic(1, 1);
+	SetEntityActive("silent_grunt_*", false);
+	
+	SetupLoadScreen("LoadingScreens", "to_prison", 0, "");
+	ChangeMap("test_subject_holding_area.map", "TP_StartGame", "door_safety_open.snt", "");
+}

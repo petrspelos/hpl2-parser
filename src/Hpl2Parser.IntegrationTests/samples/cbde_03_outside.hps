@@ -1,0 +1,107 @@
+void OnEnter()
+{
+	PreloadParticleSystem("ps_area_fog");
+	PreloadParticleSystem("ps_area_fog_large");
+	PreloadParticleSystem("ps_water_rain");
+	PreloadSound("03_outside_IWillBeYourDeath");
+	PreloadSound("guardian_ontop");
+	PreloadSound("react_scare");
+	PreloadSound("react_breath");
+	SetInDarknessEffectsActive(false);
+	SetMapDisplayNameEntry("Outside");
+}
+
+void OnLeave()
+{
+	SetInDarknessEffectsActive(false);
+}
+
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "AreaStairs", "CollideAreaStairs", true, 1);
+	AddEntityCollideCallback("Player", "AreaRoad_1", "CollideAreaRoad", true, 1);
+	AddEntityCollideCallback("Player", "AreaRoad_2", "CollideAreaRoad", true, 1);
+	AddEntityCollideCallback("Player", "AreaEndOfTheRoad", "CollideAreaEndOfTheRoad", true, 1);
+	PreloadParticleSystem("ps_area_fog");
+	PreloadParticleSystem("ps_area_fog_large");
+	PreloadParticleSystem("ps_water_rain");
+	PreloadSound("03_outside_IWillBeYourDeath");
+	PreloadSound("guardian_ontop");
+	PreloadSound("react_scare");
+	PreloadSound("react_breath");
+	SetInDarknessEffectsActive(false);
+	SetMapDisplayNameEntry("Outside");
+	SetPlayerLampOil(100.0f);
+	SetPlayerLookSpeedMul(0.4f);
+	SetPlayerMoveSpeedMul(0.2f);
+	SetPlayerRunSpeedMul(0.2f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	StopMusic(0.3f, 10);
+	StopMusic(0.2f, 1);
+	StopMusic(0.1f, 0);
+}
+
+void CollideAreaStairs(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("03_outside_epilogue", false, 1.0f, 0.1f, 0, false);
+	SetMessage("Dialogue", "OutsideMaze", 25.0f);
+}
+
+void CollideAreaRoad(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("scare", 1.0f, "TimerPlayerReactions");
+	AddTimer("breath", 3.0f, "TimerPlayerReactions");
+	AddTimer("breathl", 5.0f, "TimerPlayerReactions");
+	if(asChild == "AreaRoad_1")
+	{
+		PlaySoundAtEntity("woman", "03_outside_IWillBeYourDeath.snt", "angel_statue_1", 0.1f, false);
+		SetMessage("Dialogue", "IWillBeYourDeath", 5.5f);
+		SetPlayerLookSpeedMul(0.5f);
+		SetPlayerMoveSpeedMul(0.4f);
+		SetPlayerRunSpeedMul(0.4f);
+		SetPropActiveAndFade("angel_statue_2", true, 1.0f);
+	}
+	if(asChild == "AreaRoad_2")
+	{
+		PlayGuiSound("guardian_ontop.snt", 0.9f);		
+		for(int i=1;i<24;i++) SetPropActiveAndFade("slime_"+i, true, 1.0f);
+	}
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scare"){
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breath"){
+		PlayGuiSound("react_breath", 0.7f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "breathl"){
+		PlayGuiSound("react_breath", 0.4f);
+	}
+}
+
+void CollideAreaEndOfTheRoad(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("freedom", 6.5f, "TimerEndCredits");
+	FadeOut(6.0f);
+	SetMessage("Dialogue", "EndOfTheRoad", 6.0f);
+	SetPlayerActive(false);
+	StartPlayerLookAt("AreaLookAt", 1.6f, 1.6f, "");
+	StopMusic(6.0f, 10);
+}
+
+void TimerEndCredits(string &in asTimer)
+{
+	FadeGlobalSoundVolume(0.0f, 1.0f);
+	if(asTimer == "eternallove") StartCredits("01_maze_eternal_love.ogg", false, "EndCredits", "EternalLove", 0);
+	if(asTimer == "transformation") StartCredits("01_maze_transformation.ogg", false, "EndCredits", "Transformation", 1);
+	if(asTimer == "freedom") StartCredits("03_outside_freedom.ogg", false, "EndCredits", "Freedom", 2);
+}

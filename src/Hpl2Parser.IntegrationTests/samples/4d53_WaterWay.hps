@@ -1,0 +1,156 @@
+void OnStart()
+{
+AddEntityCollideCallback("Handle", "AreaConnect", "AttachLever", true, 1);
+AddUseItemCallback("", "Handle2", "AreaConnect2", "AttachLever2", true);
+ConnectEntities("FirstGate", "Lever1", "Gate1", true, -1, "PullLever1");
+ConnectEntities("SecondGate", "Lever2", "Gate2", true, -1, "PullLever2");
+AddEntityCollideCallback("Player", "SpawnKaernk1", "SpawnKaernk1", true, 1);
+AddEntityCollideCallback("Player", "DespawnKaernk1", "DespawnKaernk1", true, 1);
+AddEntityCollideCallback("Player", "SpawnKaernk2", "SpawnKaernk2", false, 1);
+AddEntityCollideCallback("Player", "DespawnKaernk2", "DespawnKaernk2", true, 1);
+AddEntityCollideCallback("Player", "SpawnKaernk3", "SpawnKaernk3", true, 1);
+AddEntityCollideCallback("Player", "DespawnKaernk3", "DespawnKaernk3", true, 1);
+}
+
+void AttachLever(string &in asParent, string &in asChild, int alState)
+{
+   SetEntityActive("Lever1", true);
+   SetEntityActive(asParent, false);
+   SetEntityActive("Mount", false);
+}
+
+void AttachLever2(string &in asItem, string &in asEntity)
+{
+   SetEntityActive("Lever2", true);
+   SetEntityActive("AreaConnect2", false);
+   SetEntityActive("Mount2", false);
+   RemoveItem("Lever2");
+}
+
+void PullLever1(string &in asConnectionName, string &in asMainEntity, string &in asConnectEntity, int alState)
+{
+   SetLeverStuckState(asMainEntity, -1, true);
+
+   SetLocalVarInt("Gate1", 1);
+   SetEntityPlayerInteractCallback("Gate1", "", true);
+
+   PlaySoundAtEntity("clonk", "07_lever", asMainEntity, 0, false);
+   PlaySoundAtEntity("clonk2", "07_lever2", asMainEntity, 0, false);
+   PlaySoundAtEntity("ticking1", "07_tick", asMainEntity, 1, true);
+   PlaySoundAtEntity("ticking2", "07_tick", asConnectEntity, 1, true);
+
+   float fTime =  8.0f + GetLocalVarFloat("TimeAdd");
+   AddTimer("Gate1Down", fTime, "TimerGate1GoesDown");
+   AddTimer("clonk2", 0.5f, "TimerStopLeverSound");
+   AddLocalVarFloat("TimeAdd", 2.5f);
+}
+
+void TimerGate1GoesDown(string &in asTimer)
+{
+   SetMoveObjectState("Gate1", 0);
+   SetLeverStuckState("Lever1", 0, true);
+
+   SetEntityPlayerInteractCallback("Gate1", "InteractGate", true);
+   SetLocalVarInt("Gate1", 0);
+}
+
+void TimerStopLeverSound(string &in asTimer)
+{
+	StopSound(asTimer, 1.0f);
+}
+
+void PullLever2(string &in asConnectionName, string &in asMainEntity, string &in asConnectEntity, int alState)
+{
+   SetLeverStuckState(asMainEntity, -1, true);
+
+    SetLocalVarInt("Gate2", 1);
+    SetEntityPlayerInteractCallback("Gate2", "", true);
+
+    PlaySoundAtEntity("clonk", "07_lever", asMainEntity, 0, false);
+    PlaySoundAtEntity("clonk2", "07_lever2", asMainEntity, 0, false);
+    PlaySoundAtEntity("ticking1", "07_tick", asMainEntity, 1, true);
+    PlaySoundAtEntity("ticking2", "07_tick", asConnectEntity, 1, true);
+
+    float fTime =  8.0f + GetLocalVarFloat("TimeAdd");
+    AddTimer("Gate2Down", fTime, "TimerGate2GoesDown");
+    AddTimer("clonk2", 0.5f, "TimerStopLeverSound2");
+    AddLocalVarFloat("TimeAdd", 2.5f);
+}
+
+void TimerGate2GoesDown(string &in asTimer)
+{
+    SetMoveObjectState("Gate2", 0);
+    SetLeverStuckState("Lever2", 0, true);
+
+    SetEntityPlayerInteractCallback("Gate2", "InteractGate", true);
+    SetLocalVarInt("Gate2", 0);
+}
+
+void TimerStopLeverSound2(string &in asTimer)
+{
+	StopSound(asTimer, 1.0f);
+}
+
+void SpawnKaernk1(string &in asParent, string &in asChild, int alState)
+{
+   SetEntityActive("Kaernk1", true);
+   ShowEnemyPlayerPosition("Kaernk1");
+}
+
+void DespawnKaernk1(string &in asParent, string &in asChild, int alState)
+{
+   SetEntityActive("Kaernk1", false);
+}
+
+void SpawnKaernk2(string &in asParent, string &in asChild, int alState)
+{
+   if(HasItem("Handle2"))
+   {
+      SetLocalVarInt("01", 1);
+      AddLocalVarInt("Handle2", 1);
+   }
+   if(GetLocalVarInt("Handle2")==1) 
+   {
+    SetEntityActive("SpawnKaernk2", true);
+    SetEntityActive("Kaernk2", true);
+    ShowEnemyPlayerPosition("Kaernk2");
+   }
+}
+
+void DespawnKaernk2(string &in asParent, string &in asChild, int alState)
+{
+    SetEntityActive("Kaernk2", false);
+}
+
+void SpawnKaernk3(string &in asParent, string &in asChild, int alState)
+{
+    SetEntityActive("Kaernk3", true);
+    ShowEnemyPlayerPosition("Kaernk3");
+}
+
+void Success(string &in asParent, string &in asChild, int alState)
+{
+    PlayMusic("18_amb_success.ogg", true, 1, 4, 3, true);
+}
+
+void DespawnKaernk3(string &in asParent, string &in asChild, int alState)
+{
+    SetEntityActive("Kaernk3", false);
+    AddTimer("", 1, "SuccessMusic");
+}
+
+void SuccessMusic(string &in asTimer)
+{
+     PlayMusic("08_amb_success.ogg", true, 1, 4, 2, true);
+}
+
+void OnEnter()
+{
+     PlayMusic("07_amb.ogg", true, 1, 4, 2, true);
+}
+ 
+
+void OnLeave()
+{
+
+}

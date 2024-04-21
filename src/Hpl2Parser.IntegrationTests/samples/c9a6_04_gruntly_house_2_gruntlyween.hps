@@ -1,0 +1,181 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "world_bend_enter", "world_bend_enter", true, 0);
+	SetEntityPlayerInteractCallback("mansion_2", "world_flip_sfxgruntly", true);
+	AddUseItemCallback("", "key_laboratory_1", "mansion_1", "unlock_second_circuspart", true);
+	AddEntityCollideCallback("Player", "crow_craw_outsidebit", "crow_craw_outsidebit", true, 0);
+	AddEntityCollideCallback("Player", "lock_door_finalclown_area", "lock_door_finalclown_area", true, 0);
+	AddEntityCollideCallback("Player", "lightsout_clown_scare", "lightsout_clown_scare", true, 0);
+	AddEntityCollideCallback("Player", "clown_master_appeargruntly", "clown_master_appeargruntly", true, 0);
+	SetLightVisible("PointLight_44", false);
+	SetLightVisible("PointLight_45", false);
+	AddEntityCollideCallback("Player", "gothroughdoor_resetdeath", "gothroughdoor_resetdeath", false, 0);
+	AddEntityCollideCallback("Player", "brutelysad_walkthrough", "brutelysad_walkthrough", true, 0);
+	SetEntityPlayerInteractCallback("brutely_dead_moan", "touchbrutely_face_annoy", false);	
+	AddEntityCollideCallback("Player", "quick_dinkle_postkey1", "quick_dinkle_postkey1", true, 0);
+}
+
+void OnEnter()
+{
+	PlayMusic("clown_amb_theme_gruntly", true, 1.0f, 3.0f, 1, false);
+	AutoSave();
+	SetEntityActive("clownmaster_stage", false);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "load01", 1, "");
+}
+
+/////////////////////////////////////////
+////////////////WORLD-BEND///////////////
+/////////////////////////////////////////
+
+void world_bend_enter(string &in asParent, string &in asChild, int alState)
+{
+	FadePlayerRollTo(-360.0f, 15.0f, 20.0f);
+	PlaySoundAtEntity("world_rotate", "00_creak.snt", "Player", 0, false);
+	AddTimer("stopcreakingworld", 17.0f, "stopcreakingworld");
+	SetPlayerRunSpeedMul(0.0f);
+}
+
+void stopcreakingworld(string &in asTimer)
+{
+	StopSound("world_rotate", 2.0f);
+	SetPlayerRunSpeedMul(1.0f);
+}
+
+void world_flip_sfxgruntly(string &in asEntity)
+{
+	PlaySoundAtEntity("world_upside_down_discover", "worldflip_gruntly.snt", "Player", 0, false);
+}
+
+void unlock_second_circuspart(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("mansion_1", false, false);
+	PlaySoundAtEntity("", "unlock_door", "mansion_1", 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+
+/////////////////////////////////////////////
+////////////////CLOWN GHOST 1////////////////
+/////////////////////////////////////////////
+
+void keyclownghost_pickup(string &in asEntity)
+{
+	SetEntityActive("quick_dinkle_postkey1", true);
+}
+
+void quick_dinkle_postkey1(string &in asParent, string &in asChild, int alState)
+{
+	FadePlayerRollTo(0.0f, 90.0f, 90.5f);
+	PlaySoundAtEntity("quickflip_squigglesoundflippysmall_1", "quickflip_squigglesound.snt", "Player", 0, false);
+}
+
+
+/////////////////////////////////////////////
+////////////////ETC BITS/////////////////////
+/////////////////////////////////////////////
+
+void crow_craw_outsidebit(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("crowcaw_sfx_gruntlyhalloween", "crow_caw_gruntly_hallowween.snt", "crow_loc_caw", 0, false);
+}
+
+void lock_door_finalclown_area(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("mansion_4", true, true);
+	SetSwingDoorLocked("mansion_4", true, false);
+	SetLanternDisabled(true);
+}
+
+void lightsout_clown_scare(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(0.5f, 1);
+	SetLampLit("candlestick_wall_blue_1", false, true);
+	SetLampLit("candlestick_wall_blue_2", false, true);
+	SetLampLit("candlestick_wall_blue_3", false, true);
+	SetLampLit("candlestick_wall_blue_4", false, true);
+	SetLampLit("candlestick_wall_blue_5", false, true);
+	SetLampLit("candlestick_wall_blue_6", false, true);
+	SetLightVisible("PointLight_35", false);
+	SetLightVisible("PointLight_36", false);
+	SetLightVisible("PointLight_37", false);
+	SetLightVisible("PointLight_38", false);
+	SetLightVisible("PointLight_42", false);
+	SetLightVisible("PointLight_41", false);
+	SetLightVisible("PointLight_39", false);
+	SetLightVisible("PointLight_40", false);
+	PlaySoundAtEntity("whisper_lightsout_wilhelmclown", "insanity_whisper.snt", "whisper_lightsout_wilhelmclown", 0, false);
+}
+
+
+/////////////////////////////////////////////////
+////////////////CLOWN/MASTER/////////////////////
+/////////////////////////////////////////////////
+
+void clown_master_appeargruntly(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(false);
+	StartPlayerLookAt("lookhere_clowmnasterstart", 2.5f, 3.5f, "");
+	AddTimer("circusmaster_appear", 3.0f, "circusmaster_appear");
+	PlaySoundAtEntity("clownlightson_stage", "clown_lights_on.snt", "Player", 0, false);
+	SetLightVisible("PointLight_44", true);
+	SetLightVisible("PointLight_45", true);
+	SetLampLit("candlestick_floor_red_2", true, false);
+	SetLampLit("candlestick_floor_red_1", true, false);
+	SetPropHealth("mansion_5_blowup", 0.0f);
+}
+
+void circusmaster_appear(string &in asTimer)
+{
+	AddTimer("circusmaster_arrive", 0.5f, "circusmaster_arrive");
+	PlayMusic("circus_master_theme_gruntly_halloween", true, 1.0f, 3.0f, 1, false);
+}
+
+void circusmaster_arrive(string &in asTimer)
+{
+	SetEntityActive("clownmaster_stage", true);
+	AddEnemyPatrolNode("clownmaster_stage", "PathNodeAreastage_1", 0.001, "");
+	AddEnemyPatrolNode("clownmaster_stage", "PathNodeAreastage_2", 0.001, "");
+	AddEnemyPatrolNode("clownmaster_stage", "PathNodeAreastage_3", 0.001, "");
+	AddEnemyPatrolNode("clownmaster_stage", "PathNodeAreastage_4", 0.001, "");
+	AddEnemyPatrolNode("clownmaster_stage", "PathNodeAreastage_5", 0.001, "");
+	AddEnemyPatrolNode("clownmaster_stage", "PathNodeAreastage_6", 0.001, "");
+	AddTimer("teleportaway_clownmaster", 5.0f, "teleportaway_clownmaster");	
+	SetEntityActive("safety_normal_vert_1", true);
+	SetEntityActive("block_box_1", true);
+}
+
+void teleportaway_clownmaster(string &in asTimer)
+{
+	SetEnemyDisableTriggers("clownmaster_stage", false);
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+	ShowEnemyPlayerPosition("clownmaster_stage");
+	SetMessage("Messages", "runfromclownmaster_awayrun", 0.0f);
+	SetLanternDisabled(false);
+	AutoSave();
+}
+
+void gothroughdoor_resetdeath(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("safety_normal_vert_1", false);
+	SetEntityActive("block_box_1", false);
+	SetSwingDoorLocked("mansion_4", false, false);
+}
+
+
+void brutelysad_walkthrough(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("brutely_dead_moan", "brutely_dead_amb_idle_whimp.snt", "Player", 0, false);
+}
+
+
+void touchbrutely_face_annoy(string &in asEntity)
+{
+	PlaySoundAtEntity("brutely_dead_touchface_annoy", "brutely_dead_amb_idle_whimp.snt", "Player", 0, false);
+	PlaySoundAtEntity("brutely_dead_touchface_impactorganic", "impact_organic_high.snt", "Player", 0, false);
+}

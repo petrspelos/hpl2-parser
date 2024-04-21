@@ -1,0 +1,550 @@
+void OnStart()
+{
+
+	StopMusic(1, 0);
+	SetLocalVarInt("key1used", 0);
+	AddPlayerHealth(20);
+	AddTimer("atmostart", 1, "StartAtmosphere");
+	for (int i = 1; i < 13; i++)
+	{
+		SetEntityInteractionDisabled("Cig_"+i, true);
+	}
+	SetEntityInteractionDisabled("cannon_ignite", true);
+	SetEntityInteractionDisabled("Key_Mechanical_2", true);
+	SetEntityInteractionDisabled("Key_Mechanical_1", true);
+	
+	SetEntityPlayerInteractCallback("Lighter_1", "ActCig", true);
+	SetEntityPlayerInteractCallback("key_tomb_rusty_1", "CellarKeyEvent", true);
+	
+	AddUseItemCallback("", "key_laboratory_1", "FancyDoor_1", "UseKey1", true);
+	AddUseItemCallback("", "key_laboratory_1", "mansion_7", "UseKey1", true);
+	AddUseItemCallback("", "key_laboratory_1", "mansion_6", "UseKeyWrong", false);
+	AddUseItemCallback("", "key_laboratory_1", "castle_1", "UseKeyWrong", false);
+	AddUseItemCallback("", "key_tomb_rusty_1", "castle_1", "UseKey2", true);
+	AddUseItemCallback("", "key_tomb_rusty_1", "mansion_6", "UseKeyWrong", false);
+	AddUseItemCallback("", "Key_Mechanical_1", "level_engine_1", "UseKey3", true);
+	AddUseItemCallback("", "Lighter_1", "Ignite", "IgniteCannon", true);
+	AddUseItemCallback("", "Lighter_1", "cannon", "IgniteCannonWrong", false);
+	AddUseItemCallback("", "Lighter_1", "cannon_ignite", "IgniteCannonWrong2", false);
+	
+	AddUseItemCallback("", "ladder_item_1", "WorkshopArea", "AssembleLadder", false);
+	AddUseItemCallback("", "ladder_item_2", "WorkshopArea", "AssembleLadder", false);
+	AddUseItemCallback("", "ladder_item_3", "WorkshopArea", "AssembleLadder", false);
+	
+	AddEntityCollideCallback("Player", "PigSqueal", "WretchSqueal", true, 1);
+	AddEntityCollideCallback("Player", "WretchRun", "WretchRun", true, 1);
+	AddEntityCollideCallback("wretch_nospawnsound_1", "Wretch1_Deact", "WretchDeact", true, 1);
+	AddEntityCollideCallback("Player", "Wretch1_Deact", "ToysDeact", true, 1);
+	AddEntityCollideCallback("ladder_grab_1", "LadderAttach", "LadderAttach", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_2", "RemoveTeslaQuest", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_3", "GruntSpawns", true, 1);
+	AddEntityCollideCallback("Player", "Tesla1Event", "Tesla1Event", true, 1);
+	AddEntityCollideCallback("tesla_silent_1", "Tesla1Deact", "Tesla1Deact", true, 1);
+	AddEntityCollideCallback("Player", "earthquake", "Explosion", true, 1);
+	AddEntityCollideCallback("Player", "wretch_invasion", "WretchInvasion", true, 1);
+	AddEntityCollideCallback("pigskinball_1", "BallPlace", "PigBall", true, 1);
+	AddEntityCollideCallback("cannonball", "BallPlace", "CannonBallPlaced", true, 1);
+	AddEntityCollideCallback("cannonball_3", "BallPlace", "CannonBallPlaced", true, 1);
+	AddEntityCollideCallback("Player", "BruteReappear", "BruteTeleport", false, 1);
+}
+///////////
+
+void StartAtmosphere(string &in asTimer)
+{
+	PlayGuiSound("react_scare.snt", 0);
+	PlayMusic("Penumbra_BP_A3", false, 1, 1, 0, true);
+}
+
+void Save(string &in asEntity)
+{
+	AddEffectVoice("silence3_sec.ogg", "", "Voice", "00_gamesaved", false, "", 0, 0);
+	SetEntityActive("ScriptArea_1", false);
+	SetEntityActive("Pumpkin_save_deact", true);
+	SetEntityActive("Pumpkin_save_1", false);
+	PlayGuiSound("save_game.snt", 0.5f);
+	AutoSave();
+}
+
+void ActCig(string &in asEntity)  /////// Cigarettes now usable
+{
+	for (int i = 1; i < 13; i++)
+	{
+		SetEntityInteractionDisabled("Cig_"+i, false);
+	}
+}
+
+void GateQuest(string &in asEntity)
+{
+	AddQuest("gate", "Gate");
+}
+
+//////Starting Wretch
+
+void WretchSqueal(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("afx_factory_event_wretch_vocalisations.snt", 1.0f);
+}
+void WretchRun(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerRunSpeedMul(0.2);
+	SetPlayerMoveSpeedMul(0.4);
+	StartPlayerLookAt("wretch_nospawnsound_1", 1, 3, "");
+	PlaySoundAtEntity("", "afx_factory_event_wretch_vocalisations.snt", "candle_floor_1", 0, false);
+	AddEnemyPatrolNode("wretch_nospawnsound_1", "Wretch1_node_1", 0, "");
+	AddEnemyPatrolNode("wretch_nospawnsound_1", "Wretch1_node_2", 3, "");
+	PlayGuiSound("react_scare", 1.0f);
+}
+void WretchDeact(string &in asParent, string &in asChild, int alState)
+{
+	StopPlayerLookAt();
+	SetPlayerRunSpeedMul(1);
+	SetPlayerMoveSpeedMul(1);
+	SetEntityActive("wretch_nospawnsound_1", false);
+	PlayGuiSound("react_breath_slow", 1.0f);
+	GiveSanityDamage(20, true);
+}
+void ToysDeact(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("music_church_pig_ambient_3", true, 1, 8, 0, true);
+	SetEntityActive("ghi3_1", false);
+	SetEntityActive("mno5_1", false);
+	SetEntityActive("wooden_block_pile_1", false);
+	SetEntityActive("def2_1", false);
+	SetEntityActive("abc1_1", false);
+	SetEntityActive("jkl4_1", false);
+}
+
+void UseKeyWrong(string &in asItemA, string &in asItemB)
+{
+	SetMessage("Message", "KeyDoesNotFit", 4);
+}
+
+void UseKey1(string &in asItem, string &in asEntity) ////// Cellar Doors unlock
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	if (GetLocalVarInt("key1used") == 0) {
+		SetLocalVarInt("key1used", GetLocalVarInt("key1used")+1);
+		SetEntityPlayerInteractCallback("FancyDoor_1", "GruntsComing", true);
+	}
+	else {
+		RemoveItem("key_laboratory_1");
+	}
+}
+
+void GruntsComing(string &in asEntity)  /////// Grunt in room and from corridor
+{
+	CheckPoint("check01","PlayerStartArea_2", "CheckPoint01", "", "");
+	SetEntityActive("grunt_silent_2",true);
+	ShowEnemyPlayerPosition("grunt_silent_2");
+}
+
+void GruntSpawns(string &in asParent, string &in asChild, int alState) 
+{
+	SetEntityActive("grunt_silent_1",true);
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_1", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_2", 4, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_3", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_4", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_5", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_3", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_1", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_6", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_7", 70, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_8", 0, "");
+}
+
+void CheckPoint01(string &in asName, int alCount)
+{
+	PlayMusic("music_church_pig_ambient_3", true, 1, 0, 0, true);
+	SetEntityActive("grunt_silent_1",true);
+	ClearEnemyPatrolNodes("grunt_silent_1");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_1", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_2", 4, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_3", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_4", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_5", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_3", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_1", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_6", 0, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_7", 70, "");
+	AddEnemyPatrolNode("grunt_silent_1", "grunt1_node_8", 0, "");
+}
+
+/// Ladder quest
+
+void LadderGrab(string &in asEntity)
+{
+	AddQuest("ladder", "Ladder");
+	SetLampLit("elevator_lamp_1", true, false);
+}
+
+void AssembleLadder(string &in asItemA, string &in asItemB)
+{
+	if (HasItem("ladder_item_1") && HasItem("ladder_item_2") && HasItem("ladder_item_3")) {
+		RemoveItem("ladder_item_1");
+		RemoveItem("ladder_item_2");
+		RemoveItem("ladder_item_3");
+		SetPlayerActive(false);
+		FadeOut(2);
+		AddTimer("makeLadder1", 2.5f, "MakeLadder1");
+		AddTimer("makeLadder2", 4, "MakeLadder2");
+		CompleteQuest("ladder", "Ladder");
+		SetEntityActive("WorkshopArea", false);
+	}
+	else {
+		SetMessage("Message", "LadderNotReady", 6);
+	}
+}
+
+void MakeLadder1(string &in asTimer) {
+	TeleportPlayer("PlayerStartArea_6");
+	PlayGuiSound("15_make_hammer", 1.0f);
+}
+
+void MakeLadder2(string &in asTimer) {
+	SetPlayerActive(true);
+	SetEntityActive("ladder_grab_1", true);
+	FadeIn(2);
+}
+
+void LadderAttach(string &in asParent, string &in asChild, int alState)   //// Attach Ladder Cellar
+{
+	PlaySoundAtEntity("", "05_attach_ladder", "LadderAttach", 0, false);
+	SetEntityActive("ladder4m_tileable_1", true);
+	SetEntityActive("LadderArea_1", true);
+	SetEntityActive("ladder_grab_1", false);
+	FadeEnemyToSmoke("suitor_silent_1", false);
+	FadeEnemyToSmoke("grunt_silent_1", false);
+}
+
+/////////////////
+
+void CellarKeyEvent(string &in asEntity)  /////// Tesla area activate
+{
+	SetEntityActive("Tesla1Event", true);
+	SetEntityActive("ScriptArea_2", true);
+}
+void RemoveTeslaQuest(string &in asParent, string &in asChild, int alState)   //// Attach Ladder Cellar
+{
+	SetEntityActive("Tesla1Event", false);
+	CompleteQuest("ladder", "Ladder");
+}
+void Tesla1Event(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("tesla_silent_1", true);
+	AddEnemyPatrolNode("tesla_silent_1", "Tesla1_node_1", 0, "");
+	AddEnemyPatrolNode("tesla_silent_1", "Tesla1_node_2", 2, "");
+	AddEnemyPatrolNode("tesla_silent_1", "Tesla1_node_3", 0, "");
+}
+void Tesla1Deact(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("tesla_silent_1", false);
+}
+
+void UseKey2(string &in asItemA, string &in asItemB)   ///// Candle Corridor Door unlock
+{
+	SetSwingDoorLocked("castle_1", false, true);
+	PlaySoundAtEntity("", "unlock_door", "castle_1", 0, false);
+	RemoveItem("key_tomb_rusty_1");
+}
+
+void Explosion(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("music_bilge_ambience_01", true, 0.4f, 3, 0, true);
+	CompleteQuest("ladder", "Ladder");
+	StartScreenShake(0.3, 4, 1, 3);
+	PlaySoundAtEntity("", "afx_events_streets_explosionplayer", "Player", 0, false);
+	CheckPoint("check02","PlayerStartArea_3", "CheckPoint02", "", "");
+	AutoSave();
+}
+
+void SuitorActivate(string &in asEntity)
+{
+	FadeEnemyToSmoke("grunt_silent_1", false);
+	SetEntityActive("suitor_silent_1", true);
+	TeleportEnemyToNode("suitor_silent_1", "PathNodeArea_20", true);
+	ClearEnemyPatrolNodes("suitor_silent_1");
+	for(int i = 1; i <= 999; i++)
+	{
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_20", 2, "");
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_19", 0, "");
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_18", 0, "");
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_25", 0, "");
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_24", 0, "");
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_23", 0, "");
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_22", 0, "");
+		AddEnemyPatrolNode("suitor_silent_1", "PathNodeArea_21", 0, "");
+	}
+}
+
+void CheckPoint02(string &in asName, int alCount)
+{
+	PlayMusic("music_bilge_ambience_01", true, 0.4f, 0, 0, true);
+	ResetProp("mansion_9");
+	SetEntityPlayerInteractCallback("mansion_9", "SuitorActivate", true);
+}
+
+void ExamineCannonballs(string &in asEntity)
+{
+	SetMessage("Message", "ExamineCannonBalls", 6);
+}
+
+///// Surrounded by wretches, the butcher is coming
+
+void WretchInvasion(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("corpse_bloody_1", false);
+	SetEntityActive("Hardhat_2", false);
+	SetEntityActive("Hardhat_3", false);
+	SetLightVisible("PointLight_36", false);
+	SetPropStaticPhysics("wood_box01_1", false);
+	CompleteQuest("gate", "Gate");
+	AddQuest("balls", "Balls");
+	SetEntityActive("gatequest", false);
+	FadeEnemyToSmoke("suitor_silent_1", false);
+	FadeOut(3);
+	AddTimer("wretches1", 3, "Wretches1");
+	AddTimer("wretches2", 5, "Wretches2");
+	AddTimer("wretches3", 10, "Wretches3");
+	AddTimer("wretches4", 12, "Wretches4");
+	AddTimer("wretches5", 18, "Wretches5");
+	AddTimer("wretches6", 26, "Wretches6");
+}
+void Wretches1(string &in asTimer)
+{
+	SetEntityActive("castle_1", false);
+	SetEntityActive("mansion_8", true);
+	SetPlayerActive(false);
+	ResetProp("mansion_9");
+	PlaySoundAtEntity("", "player_bodyfall", "Player", 0, false);
+	TeleportPlayer("PlayerStartArea_4");
+	SetPlayerCrouching(true);
+}
+void Wretches2(string &in asTimer)
+{
+	SetPropHealth("mansion_8", 0);
+	SetEntityActive("mansion_7", false);
+	SetEntityActive("mansion_10", true);
+	SetEntityActive("wretch_nospawnsound_nomusic_1", true);
+	SetEntityActive("wretch_nospawnsound_nomusic_2", true);
+	SetEntityActive("wretch_nospawnsound_nomusic_3", true);
+	PlaySoundAtEntity("", "react_sigh", "Player", 0, false);
+	FadeIn(4);
+}
+void Wretches3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_pant", "Player", 0, false);
+	ChangeManPigPose("wretch_nospawnsound_nomusic_3", "Quadruped");
+	PlaySoundAtEntity("", "brute_activate", "Player", 0, false);
+}
+void Wretches4(string &in asTimer)
+{
+	PlayMusic("penumbra_BP_F3", false, 0.7, 0, 0, true);
+	for (int i = 1; i<=3; i++)
+	{
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_26", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_16", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_15", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_14", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_14", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "grunt1_node_3", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "grunt1_node_1", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "grunt1_node_6", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_4", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "grunt1_node_7", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_29", 0, "");
+		AddEnemyPatrolNode("wretch_nospawnsound_nomusic_"+i, "PathNodeArea_30", 0, "");
+	}
+}
+void Wretches5(string &in asTimer)
+{
+	CheckPoint("check03","PlayerStartArea_4", "CheckPoint03", "", "");
+	GiveSanityDamage(30, true);
+	SetEntityActive("brute_silent_1", true);
+	SetEntityActive("BruteReappear", true);
+	SetPlayerActive(true);
+	SetPlayerCrouching(false);
+	for(int i = 1; i <= 99; i++)
+	{
+		AddEnemyPatrolNode("brute_silent_1", "PathNodeArea_16", 0, "");
+		AddEnemyPatrolNode("brute_silent_1", "PathNodeArea_17", 0, "");
+	}
+}
+void Wretches6(string &in asTimer)
+{
+	FadeEnemyToSmoke("wretch_nospawnsound_nomusic_1", true);
+	FadeEnemyToSmoke("wretch_nospawnsound_nomusic_2", false);
+	FadeEnemyToSmoke("wretch_nospawnsound_nomusic_3", false);
+	FadeEnemyToSmoke("suitor_silent_1", false);
+}
+
+void CheckPoint03(string &in asName, int alCount)
+{
+	PlayMusic("penumbra_BP_F3", true, 0.4, 0, 0, true);
+	SetLampLit("tesla_lamp_ball_5", true, true);
+	SetLampLit("tesla_lamp_ball_6", true, true);
+	SetLampLit("tesla_lamp_ball_7", true, true);
+	ResetProp("mansion_9");
+	ResetProp("cannonball_*");
+	SetEntityActive("BruteReappear", true);
+	SetEntityActive("brute_silent_1", true);
+	ClearEnemyPatrolNodes("brute_silent_1");
+	for(int i = 1; i <= 99; i++)
+	{
+		AddEnemyPatrolNode("brute_silent_1", "PathNodeArea_16", 0, "");
+		AddEnemyPatrolNode("brute_silent_1", "PathNodeArea_17", 0, "");
+	}
+}
+
+void BruteTeleport(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("music_transition_07tunnels_08sewers", true, 1, 5, 0, true);
+	// checking if the brute is far
+	if  (MathAbs(GetEntityPosX("brute_silent_1") - GetPlayerPosX()) > 20) 
+	{
+		
+		SetEntityActive("brute_silent_1", false);
+		SetEntityActive("BruteReappear", false);
+		SetEntityActive("brute_silent_2", true);
+		ClearEnemyPatrolNodes("brute_silent_2");
+		AddEnemyPatrolNode("brute_silent_2", "Wretch1_node_1", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_45", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_29", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "grunt1_node_7", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_4", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_3", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_5", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_1", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "grunt1_node_6", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "grunt1_node_1", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "grunt1_node_3", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_14", 0, "");
+		AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_15", 0, "");
+		for(int i = 1; i <= 99; i++)
+		{
+			AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_16", 0, "");
+			AddEnemyPatrolNode("brute_silent_2", "PathNodeArea_17", 0, "");
+		}
+	}
+}
+
+///////////// Cannon Event
+void IgniteCannonWrong(string &in asItemA, string &in asItemB)
+{
+	SetMessage("Message", "IgniteFail", 4);
+}
+void IgniteCannonWrong2(string &in asItemA, string &in asItemB)
+{
+	SetMessage("Message", "NoBall", 4);
+}
+
+void PigBall(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Message", "PigBall", 4);
+}
+
+void CannonBallPlaced(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("player_ladder_metal_attach", 1.5f);
+	SetEntityActive("cannonball", false);
+	SetEntityActive("cannonball_3", false);
+	SetEntityActive("cannonball_2", true);
+	SetEntityActive("Ignite", true);
+}
+
+void IgniteCannon(string &in asItemA, string &in asItemB)
+{
+	FadeEnemyToSmoke("brute_silent_1", false);
+	FadeEnemyToSmoke("brute_silent_2", false);
+	PlayGuiSound("ui_use_tinderbox", 1.0f);
+	AddTimer("shoot", 4, "Shoot");
+	AddTimer("finalpigs", 7, "FinalPigs");
+	SetPlayerRunSpeedMul(0);
+	SetPlayerMoveSpeedMul(0);
+	CreateParticleSystemAtEntity("cannonfire", "ps_fire_candle_large.ps", "Ignite", false);
+	
+}
+
+void Shoot(string &in asTimer)
+{
+	SetEntityInteractionDisabled("Key_Mechanical_1", false);
+	CompleteQuest("balls", "Balls");
+	DestroyParticleSystem("cannonfire");
+	PlaySoundAtEntity("", "explosion_rock_large", "block_gate_destroyed", 0, false);
+	SetEntityActive("block_gate_destroyed", true);
+	SetEntityActive("block_gate", false);
+	SetEntityActive("cannonball_1", true);
+	SetEntityActive("cannonball_2", false);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerMoveSpeedMul(1);
+	SetEntityActive("Ignite", false);
+	CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke.ps", "cannonball_2", false);
+	CreateParticleSystemAtEntity("", "ps_dust_elevator_crash.ps", "GateExplosion", false);
+}
+
+void FinalPigs(string &in asTimer)
+{
+	CheckPoint("check04","PlayerStartArea_5", "CheckPoint04", "", "");
+	PlayMusic("Penumbra_BP_C9", false, 1, 0, 10, true);
+	SetEntityActive("engineer_1", true);
+	SetEntityActive("engineer_2", true);
+	for(int i = 1; i <= 99; i++)
+	{
+		AddEnemyPatrolNode("engineer_2", "PathNodeArea_31", 9999, "");
+	}
+	for(int i = 1; i <= 99; i++)
+	{
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_32", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_36", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_46", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_37", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_46", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_35", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_39", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_41", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_42", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_43", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_44", 0, "");
+	}
+}
+
+void CheckPoint04(string &in asName, int alCount)
+{
+	PlayMusic("Penumbra_BP_C9", false, 1, 0, 0, true);
+	ClearEnemyPatrolNodes("engineer_1");
+	ClearEnemyPatrolNodes("engineer_2");
+	SetEntityActive("engineer_1", true);
+	SetEntityActive("engineer_2", true);
+	for(int i = 1; i <= 99; i++)
+	{
+		AddEnemyPatrolNode("engineer_2", "PathNodeArea_31", 9999, "");
+	}
+	for(int i = 1; i <= 99; i++)
+	{
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_32", 6, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_36", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_46", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_37", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_46", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_35", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_39", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_41", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_42", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_43", 0, "");
+		AddEnemyPatrolNode("engineer_1", "PathNodeArea_44", 0, "");
+	}
+}
+////////////////
+
+void UseKey3(string &in asItemA, string &in asItemB) ////// Level door unlock
+{
+	SetLevelDoorLocked("level_engine_1", false);
+	SetEntityActive("Key_Mechanical_2", true);
+	RemoveItem("Key_Mechanical_1");
+	PlaySoundAtEntity("", "door_sewer_unlock", "level_engine_1", 0, false);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("", "", 0, "menu_loading_screen.jpg");
+}

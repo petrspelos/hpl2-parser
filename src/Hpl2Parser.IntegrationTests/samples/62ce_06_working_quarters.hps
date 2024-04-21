@@ -1,0 +1,498 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelWorking");
+	AutoSave();
+	
+	AddUseItemCallback("", "adhesive_remover", "adhesive", "DenatureAdhesive", true);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "ChangeToNext", true, 1);
+	AddEntityCollideCallback("Player", "AreaMemAd", "AdAdMem", true, 1);
+	SetEntityCustomFocusCrossHair("LevelDoor_Workshop", "LevelDoor");
+	
+	//Template...
+	//AddEntityCollideCallback("Player", "Area", "Effect", true, 1); , void Func(string &in asParent, string &in asChild, int alState)
+	
+	AddTimer("", 2.0f, "BeginDustBlow");
+	////////////////////////////////
+	//Collides
+	AddEntityCollideCallback("Player", "AreaBeginChains", "EffectChains", true, 1);
+	AddEntityCollideCallback("Player", "AreaPushBottle", "EffectBottle", true, 1);
+	AddEntityCollideCallback("Player", "AreaExt", "EffectTorch", true, 1);
+	AddEntityCollideCallback("Player", "AreaDoorCloses", "EventBeginDoorCloses", true, 1);
+	AddEntityCollideCallback("Player", "MaidenForce", "EventMaidenDoor", true, 1);
+	AddEntityCollideCallback("Player", "AreaPrisClose", "PrisClose", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_3", "Event_PrisDoor", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_5", "Event_Outside", true, 1);
+	AddEntityCollideCallback("Player", "AreaGrunt", "Event_Grunt", true, 1);
+	
+	//AddEntityCollideCallback("Player", "Area", "Event", true, 1);
+	////////////////////////
+	
+	//Sounds timer
+	AddTimer("", 2, "TimerVoices"); //random human voices
+	AddTimer("", 3, "TimerCreaks"); //Random ceiling creaking
+	AddTimer("", 4, "TimerSteps"); //Random big steps sounds
+	
+	////////////////////
+	
+	AddUseItemCallback("", "glass_container_mix_done_1", "adhesive", "NoUseChemical", false);
+	AddUseItemCallback("", "bone_saw_1", "adhesive", "NoUseSaw", false);
+	AddUseItemCallback("", "fresh_meat_1", "adhesive", "NoUseMeat", false);
+	AddUseItemCallback("", "Bone", "adhesive", "NoUseBone", false);
+	
+	AddUseItemCallback("", "glass_container_mix_done_1", "prison_5", "NoUseDoor", false);
+	AddUseItemCallback("", "bone_saw_1", "prison_5", "NoUseDoor", false);
+	AddUseItemCallback("", "fresh_meat_1", "prison_5", "NoUseDoor", false);
+	AddUseItemCallback("", "Bone", "prison_5", "NoUseDoor", false);
+	AddUseItemCallback("", "crowbar_1", "prison_5", "NoUseCrowbar", false);
+	AddUseItemCallback("", "crowbar_1", "adhesive", "NoUseCrowbarTrap", false);
+	
+	//Debug
+	if(ScriptDebugOn())
+	{
+		SetPlayerLampOil(100.0f);
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+	}
+}
+
+////////////////////////////
+//In relation to trapdoor//
+void Sticky(string &in asEntity)
+{
+	PlaySoundAtEntity("", "step_walk_organic", "hatch_ceiling_1", 0.0f, false);
+	SetMessage("TextOne", "StickySeal", 2.0f);
+}
+
+void DenatureAdhesive(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	CreateParticleSystemAtEntity("", "ps_acid_web_dissolve.ps", "ScriptArea_2", false);
+	PlaySoundAtEntity("", "gameplay_acid_web", "ScriptArea_2", 0.0f, false);
+	
+	SetPropActiveAndFade("adhesive", false, 3.0f);
+	
+	GiveSanityBoostSmall();
+	PlayMusic("12_puzzle_epoxy.ogg", false, 1, 1, 10, true);
+	
+	CompleteQuest("Adhesive1", "Adhesive1");
+}
+//End trapdoor code block//
+//////////////////////////
+
+//Change map
+void ChangeToNext(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(0.1f);
+	ChangeMap("07_workshop.map", "PlayerStartArea_1", "", "");
+}
+
+void OnEnter()
+{
+	PlayMusic("18_amb_edit.ogg", true, 0.5f, 1.0f, 0, true);
+	
+	//no idea what this does
+	PreloadSound("general_chain_rattle.snt");
+	PreloadSound("insanity_step_crawl.snt");
+}
+////////////////////////
+//Change to work
+void LevelWork(string &in asEntity)
+{
+  ChangeMap("07_workshop.map", "PlayerStartArea_1", "player_climb", "");
+}
+/////////////////////////////////////
+
+////////////EFFECTS/////////////////
+
+////////////////////////////////////
+
+////Dust blows towards player
+	//Dust blows after 2 seconds
+void BeginDustBlow(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_push.ps", "DustBlowArea", false);
+	PlaySoundAtEntity("", "general_wind_whirl", "DustBlowArea", 0.01f, false);
+	}
+////////////////////////////////
+///////////////////////////////
+
+//Scary sound and sanity damage effect + shaking
+void EffectChains(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_tingeling", "Player", 0.01f, false);
+	//Delay while tingeling scare plays, then chain effects
+	AddTimer("", 2.0f, "ChainsNow");
+}
+
+void ChainsNow(string &in asTimer)
+{
+	AddLocalVarInt("MControl", 1);
+	float fTime = 1.5f;
+	
+	switch(GetLocalVarInt("MControl")) 
+		{
+		case 1:
+			GiveSanityDamage(1, true);
+	
+			PlaySoundAtEntity("", "general_chain_rattle", "R", 0.00f, false);
+			PlaySoundAtEntity("", "scare_ghost", "Player", 0.01f, false);
+	
+			StartScreenShake(0.02f, 1.0f, 1.0f, 1.0f);
+		break;
+		case 2:
+			CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "WhirlArea", false);
+			PlaySoundAtEntity("", "general_wind_whirl", "WhirlArea", 0.01f, false);
+			AddTimer("", 1.5f, "Steps");
+		break;
+		case 3:
+			CreateParticleSystemAtEntity("", "ps_dust_falling_door_quick.ps", "DustSteps", false);
+			PlaySoundAtEntity("", "scare_steps_big", "SoundSteps", 0.01f, false);
+		break;
+		}
+		
+	if(GetLocalVarInt("MControl") < 10) AddTimer("", fTime, "ChainsNow");
+}
+/////////////////////////////
+//Bottle falls down and scare
+void EffectBottle(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("Bottle", 0, 0, -100, "world");
+	
+	AddTimer("", 0.9f, "BottleEvent");
+	AddTimer("", 4.0f, "End");
+	
+	PlaySoundAtEntity("creak", "00_creak", "Player", 0.01f, false);
+	
+	StartScreenShake(0.01f, 0.0f, 3.0f, 1.0f);
+	}
+
+void BottleEvent(string &in asTimer)
+{
+	GiveSanityDamage(1, true);
+	}
+	
+void End(string &in asTimer)
+{
+	StopSound("creak", 0.3f);
+	}
+//////////////////////////////////
+//Torch BlowsOut
+void EffectTorch(string &in asParent, string &in asChild, int alState)
+{
+	SetLampLit("Torch", false, true);
+	
+	CreateParticleSystemAtEntity("", "ps_dust_push.ps", "BlowTorchArea", false);
+	PlaySoundAtEntity("", "27_wind", "Player", 0.01f, false);
+	}
+/////////////////////////////////////////
+
+///////////RANDOM SOUNDS/////////////////
+
+/////////////////////////////////////////
+
+/*
+void TimerVoices(string &in asTimer)
+{
+	float fVoices = RandFloat(12.0f, 25.0f);
+	
+	PlaySoundAtEntity("", "scare_human_noices", "Player", 0.0f, false);
+	AddTimer("", 0.5f+fVoices, "TimerVoices");
+	}
+	*/
+void TimerCreaks(string &in asTimer)
+{
+	float fCreaks = RandFloat(15.0f,22.0f);
+	
+	PlaySoundAtEntity("", "general_chain_rattle.snt", "AreaChains_"+RandInt(1, 8), 0.0f, false);
+	AddTimer("", 0.5f+fCreaks, "TimerCreaks");
+	}
+	
+
+void TimerSteps(string &in asTimer)
+{
+	float fSteps = RandFloat(10.0f,20.0f);
+	
+	PlaySoundAtEntity("", "insanity_step_crawl.snt", "AreaScratch_"+RandInt(1, 12), 0.0f, false);
+	AddTimer("", 0.5f+fSteps, "TimerSteps");
+	}
+	
+////////////////////////////////
+///////////MEMORY STONE EVENT//
+
+void BeginMemory1(string &in asEntity)
+{
+	StopMusic(3, 0);
+	SetPlayerActive(false);
+	RemoveItem(asEntity);
+	AddTimer("", 3.0f, "TimerMemory");
+	FadeOut(3.0f);
+	//PlayMusic("01_paper_self.ogg", false, 1.0f, 0.5f, 10.0f, true);
+	FadePlayerFOVMulTo(0.8f, 1.0f);
+	FadeImageTrailTo(2, 1);
+	}
+	
+void TimerMemory(string &in asTimer)
+{	
+	AddLocalVarInt("TCon", 1);
+	float fTVar = 4.0f;
+	
+	switch(GetLocalVarInt("TCon")) 
+	{
+		case 1:
+			SetLanternDisabled(true);
+			FadeOut(0.5f);
+			TeleportPlayer("MemPlace");
+			FadePlayerFOVMulTo(1.4f, 0.4f);
+			FadePlayerRollTo(-20, 0.3f, 0.8f);
+		break;
+		case 2:
+			FadeIn(1.5f);
+			SetMessage("TextOne", "MemoryText1_1", 5.0f);
+			fTVar = 5.0f;
+			PlaySoundAtEntity("int", "amb_eerie_dunk", "Player", 0.0f, false);
+		break;
+		case 3:
+			PlaySoundAtEntity("", "general_thunder", "Player", 0.0f, false);
+			FadePlayerRollTo(20, 0.3f, 0.8f);
+			FadeOut(5.0f);
+			FadePlayerFOVMulTo(0.8f, 0.4f);
+			fTVar = 5.0f;
+		break;
+		case 4:
+			TeleportPlayer("MemPlace_1");
+			FadeIn(2.5f);
+			SetMessage("TextOne", "MemoryText1_2", 5.0f);
+		break;
+		case 5:
+			FadeOut(3.0f);
+		break;
+		case 6:
+			TeleportPlayer("DebugSpawn");
+			FadePlayerRollTo(0, 0.3f, 0.8f);
+			FadePlayerFOVMulTo(1.0f, 0.4f);
+			FadeImageTrailTo(0, 1);
+			SetPlayerActive(true);
+		break;		
+		case 7:
+			TeleportPlayer("DebugSpawn");
+			FadeIn(5.0f);
+			PlaySoundAtEntity("", "00_laugh", "Player", 0.0f, false);
+			SetLanternDisabled(false);
+			StopSound("int", 5.0f);
+			PlayMusic("04_amb.ogg", true, 0.7f, 5.0f, 0.0f, true);
+		break;
+	}
+	if(GetLocalVarInt("TCon") < 10) AddTimer("", fTVar, "TimerMemory");
+	}
+///////END MEM STONE//////////
+/////////////////////////////
+
+///////////////////////////////////
+////////DOOR///////////////////////
+void Bruh(string &in asEntity)
+{
+	//AddEffectVoice("CH02L24_TortureWheelbs_01", "", "TextOne", "DoorCreepy", false, "", 0.0f, 0.0f);	
+	GiveSanityDamage(0.01f, true);
+	}
+/////////////////////////////
+
+////////////////////////////////
+/////SCARY DOOR CLOSE/LOCK////////
+void EventBeginDoorCloses(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("castle_6", true, true);
+	SetSwingDoorClosed("castle_6", true, true);
+	SetSwingDoorDisableAutoClose("castle_6", true);
+	
+	SetEntityPlayerInteractCallback("castle_6", "DoorTimer", true);
+	}	
+	
+void DoorTimer(string &in asTimer)
+{
+	AddTimer("", 0.01f, "DoorEventsBegin");
+	}
+void DoorEventsBegin(string &in asEntity)
+{
+	AddLocalVarInt("Brutes", 1);
+	float fTimeBrute = 1.5f;
+	
+	switch(GetLocalVarInt("Brutes"))
+	{
+	case 1:
+		StopMusic(1, 0);
+		FadeImageTrailTo(2, 1);
+		PlaySoundAtEntity("", "enemy/brute/metal_walk", "ScriptArea_3", 0.0f, false);
+		PlaySoundAtEntity("whine", "05_whine", "ScriptArea_3", 0.0f, false);
+	break;
+	case 2:
+		PlaySoundAtEntity("", "enemy/brute/metal_walk", "ScriptArea_3", 0.0f, false);
+	break;
+	case 3:
+		PlaySoundAtEntity("", "enemy/brute/metal_walk", "ScriptArea_3", 0.0f, false);
+	break;
+	case 4:
+		PlaySoundAtEntity("", "enemy/brute/attack_claw", "castle_6", 0.0f, false);
+		GiveSanityDamage(10, true);
+		SetPropHealth("castle_6", 0.0f);
+		AddLocalVarInt("Brutes", 11);
+		FadeImageTrailTo(0, 1);
+		PlayMusic("04_amb.ogg", true, 0.7f, 1.0f, 0, true);
+	break;
+	}
+	
+		if(GetLocalVarInt("Brutes") < 10) AddTimer("dusts", fTimeBrute, "DoorEventsBegin");	
+		
+}
+///////////////////////////////////////
+//                                   //
+///////////LANG RELATED///////////////
+//									//
+/////////////////////////////////////
+void AdAdMem(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Adhesive1", "Adhesive1");
+	SetMessage("TextOne", "06Adhesive", 2);
+	}
+	
+void OnLeave()
+{
+	
+	//nifty. thanks florian.
+  ShowPlayerCrossHairIcons(true);
+  SetSanityDrainDisabled(false);
+  FadePlayerFOVMulTo(1, 1);
+  FadePlayerAspectMulTo(1, 1);
+  FadePlayerRollTo(1, 1, 1);
+  MovePlayerHeadPos(0, 0, 0, 1, 1);
+  StopPlayerLookAt();
+  SetPlayerMoveSpeedMul(1);
+  SetPlayerRunSpeedMul(1);
+  SetPlayerLookSpeedMul(1);
+  SetPlayerJumpDisabled(false);
+  SetPlayerCrouchDisabled(false);
+  SetLanternDisabled(false);
+  StopMusic(5, 0);
+  //
+
+	SetupLoadScreen("TextOne", "Load6", 0, "int_load_hall_3");
+}
+	
+//INTERRACT IRON MAIDEM
+void MaidenInteract(string &in asEntity)
+{
+	AddTimer("bot_1", 1.0, "TimerBotiglia");
+	AddTimer("bot_2", 3.3, "TimerBotiglia");
+	AddTimer("bot_3", 5.2, "TimerBotiglia");
+	
+	SetPropActiveAndFade("m_roach_*", true, 1.0);
+}
+
+void TimerBotiglia(string &in asTimer)
+{
+	if(asTimer == "bot_1")
+	{
+		PlaySoundAtEntity("Botiglia", "step_run_water.snt", "AreaBotiglia_3", 0.0f, false);
+	}
+	
+	if(asTimer == "bot_2")
+	{
+		PlaySoundAtEntity("Botiglia", "step_run_water.snt", "AreaBotiglia_2", 0.0f, false);
+		//GiveSanityDamage(1, true);
+	}
+	
+	if(asTimer == "bot_3")
+	{
+		PlaySoundAtEntity("Botiglia", "break_glass_display.snt", "AreaBotiglia_1", 0.0f, false);
+		StartScreenShake(0.01, 0.1, 0.5, 0.5);
+	}
+}
+
+void EventMaidenDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("iron_maiden_1", false, true);
+	AddPropForce("iron_maiden_1", 0, 0, -1000, "world");
+}
+
+void PrisClose(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("prison_7", true, true);
+	AddPropForce("prison_7", -1000, 0, 0, "world");
+}
+
+void LockDoorInt(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2.0f);
+}
+
+//void Template(string &in asParent, string &in asChild, int alState)
+//void Template(string &in asParent, string &in asChild, int alState)
+
+void Event_PrisDoor(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("insanity_whisper01.ogg", 0.2f);
+	AddPropForce("prison_3", 0, 0, -1000, "world");
+	
+	AddTimer("generalscared", 1.5, "TimerBreath");
+	AddTimer("generalshake", 1, "TimerShake");
+}
+
+void TimerBreath(string &in asTimer)
+{
+	PlaySoundAtEntity("scared", "react_scare.snt", "Player", 0.3f, false);
+}
+
+void TimerShake(string &in asTimer)
+{
+	StartScreenShake(0.03, 0.2, 0.1, 0.2);
+}
+
+void Event_Outside(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("door", "door_prison_open.snt", "ScriptArea_6", 0.3f, false);
+	
+	AddTimer("CreepyStep", 1.0, "CreepyStepTimer");
+}
+
+void CreepyStepTimer(string &in asTimer)
+{
+	PlaySoundAtEntity("creepystep", "insanity_step_slime_sneak.snt", "ScriptArea_7", 0.3f, false);
+}
+
+void Event_Grunt(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("idle", "amb_idle_whimp_edit.snt", "ScriptArea_8", 0.3f, false);
+}
+
+void NoUseChemical(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "ChemicalNoUse", 2.0f);
+}
+
+void NoUseSaw(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "SawNoUse", 2.0f);
+}
+
+void NoUseMeat(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "MeatNoUse", 2.0f);
+}
+
+void NoUseBone(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "BoneNoUse", 2.0f);
+}
+
+void NoUseDoor(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "NoUseDoor", 2.0f);
+}
+
+void NoUseCrowbar(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "NoUseCrowbar", 2.0f);
+}
+
+void NoUseCrowbarTrap(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "NoUseCrowbarTrap", 2.0f);
+}

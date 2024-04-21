@@ -1,0 +1,125 @@
+void OnStart()
+{
+	AddUseItemCallback("", "blue", "userod", "userod", false);
+	AddEntityCollideCallback("Player", "deathtime", "deathtime", true, 1);
+	AddEntityCollideCallback("Player", "firstbang", "firstbang", true, 1);
+	AddEntityCollideCallback("Player", "secondbang", "firstbang", true, 1);
+	AddEntityCollideCallback("Player", "monstertime", "monstertime", true, 1);
+	AddEntityCollideCallback("Player", "secondboy", "secondboy", true, 1);
+	AddEntityCollideCallback("Player", "oof", "oof", true, 1);
+}
+
+void OnEnter()
+{
+	PlayMusic("04_amb", true, 1, 5, 0, true);
+}
+
+void OnLeave()
+{
+
+}
+
+///////////////
+
+////PUZZLES////
+
+void levertime(string &in asEntity, int LeverState)
+{
+		if(LeverState == 1)
+		{
+		
+				SetEntityActive("open", true);
+				SetEntityActive("closed", false);
+				SetLeverStuckState("lever_small01_1", 1, false);
+		
+		}
+}
+
+///////////////
+
+////ENDING/////
+
+void deathtime(string parent, string child, int state)
+{
+    SetPlayerActive(false);  
+	StartPlayerLookAt("endboy", 5.0f, 8.0f, "");	
+	SetEntityActive("endboy", true);
+	SetPlayerCrouching(true);  
+	PlayGuiSound("player_ladder_metal_dettach.snt", 100);	
+	SetEntityActive("boyo", false);
+    FadeOut(5.0f);    
+    AddTimer("death", 6.0f, "death");   
+}
+
+void firstbang(string parent, string child, int state)
+{
+	PlayGuiSound("pounding_low.snt", 100);
+	
+}
+
+void monstertime(string parent, string child, int state)
+{
+    StopMusic(1.0f, 1);	
+	PlayMusic("att_suitor.ogg", false, 1.0f, 0.0f, 1, false);
+	GiveSanityDamage(5.0f, true);
+	AddEnemyPatrolNode("boyo", "PathNodeArea_1", 0.001, "");
+	AddEnemyPatrolNode("boyo", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("boyo", "PathNodeArea_3", 0.001, "");
+	AddEnemyPatrolNode("boyo", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("boyo", "PathNodeArea_5", 0.001, "");
+	AddEnemyPatrolNode("boyo", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("boyo", "PathNodeArea_7", 0, "");
+	SetEntityActive("boyo", true);
+	SetMessage("Messages", "runtime", 0.0f);
+}
+
+void doorbreaktime(string parent, string child, int state)
+{
+	SetPropHealth("cellar_wood01_3", 0);
+	PlayGuiSound("pounding_low.snt", 100);
+	SetEntityActive("boyo", false);
+}
+
+void secondboy(string parent, string child, int state)
+{
+    PlayMusic("att_suitor.ogg", false, 1.0f, 0.0f, 1, false);
+	GiveSanityDamage(5.0f, true);
+	AddEnemyPatrolNode("newboy", "newnode_1", 0.001, "");
+	AddEnemyPatrolNode("newboy", "newnode_2", 0.001, "");
+	AddEnemyPatrolNode("newboy", "newnode_3", 0.001, "");
+	AddEnemyPatrolNode("newboy", "newnode_4", 0, "");
+	SetPropHealth("cellar_wood01_3", 0);
+	PlayGuiSound("pounding_low.snt", 100);
+	SetEntityActive("boyo", false);
+	SetEntityActive("newboy", true);
+}
+
+void death(string &in asTimer)
+{
+	PlayGuiSound("explosion_rock_large.snt", 100);
+    AddTimer("tonew", 5.0f, "tonew");  
+    StopMusic(0.5f, 1);	
+	SetEntityActive("endboy", false);
+	SetEntityActive("boyo", false);
+	SetEntityActive("newboy", false);
+	SetLanternDisabled(true);
+}
+
+void tonew(string &in asTimer)
+{
+	ChangeMap("08.map", "PlayerStartArea_1", "", "");
+	StopPlayerLookAt();
+    SetPlayerActive(true);  
+}
+
+void oof(string parent, string child, int state)
+{
+    SetPlayerActive(false);  
+	SetPlayerCrouching(true);  
+    PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0.1, false);
+    FadeImageTrailTo(2, 2);
+    FadeSepiaColorTo(0, 0);
+    FadePlayerRollTo( 40, 40, 40);                 
+    FadeRadialBlurTo(0.55, 2);
+	PlayGuiSound("player_ladder_metal_dettach.snt", 100);	
+}

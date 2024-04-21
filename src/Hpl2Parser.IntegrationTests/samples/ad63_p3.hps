@@ -1,0 +1,328 @@
+int swings = 0;
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+    AddUseItemCallback("", "Chip", "InteractChip", "ChipHammerAnimation", true);
+	AddEntityCollideCallback("Player", "AreaStartRumble", "Rumble", true, 1);
+	AddEntityCollideCallback("Player", "AreaFallBreakLeg", "Leg", true, 1);
+	AddEntityCollideCallback("Player", "SpawnMonster", "Monster", true, 1);
+	AddEntityCollideCallback("Player", "Music", "StartMusic", true, 1);
+	AddEntityCollideCallback("Player", "SpawnServants", "TheyAreTheResult", true, 1);
+	SetEntityPlayerInteractCallback("Piece_4", "TurnOffLight", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnEnter
+//////////////////////////////////////////////////////////////////////////////////////
+
+void OnEnter()
+{
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Music
+//////////////////////////////////////////////////////////////////////////////////////
+
+void StartMusic(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Track21.ogg", true, 2, 1, 1, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Orb Light
+//////////////////////////////////////////////////////////////////////////////////////
+
+void TurnOffLight(string &in item)
+{
+	SetLightVisible("OrbLight", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Monsters
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Monster(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("P3Check", 0);
+	SetEntityActive("Monster", true);
+	CheckPoint ("", "PlayerStartArea_2", "Reset", "DeathHint", "Run");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_1", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_2", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_3", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_4", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_5", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_6", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_7", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_8", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_9", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_10", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_11", 0.001f, "");
+}
+
+void TheyAreTheResult(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("P3Check", 1);
+	SetEntityActive("Experiment_1", true);
+	SetEntityActive("Experiment_2", true);
+	ShowEnemyPlayerPosition("Experiment_1");
+	ShowEnemyPlayerPosition("Experiment_2");
+	CheckPoint ("", "PlayerStartArea_3", "Reset2", "DeathHint", "RunFast");
+	int victims = RandInt(1, 20);
+	if(victims == 3)SetEntityActive("SecretSkull_1", true);
+	if(victims == 4)SetEntityActive("SecretSkull_1", true);
+	if(victims == 6)SetEntityActive("SecretSkull_1", true);
+	if(victims == 20)for(int i = 1; i <= 22; i++) SetEntityActive("SecretSkull_"+i, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Checkpoint Death
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Reset(string &in asName, int alCount)
+{
+	if(GetLocalVarInt("P3Check")== 0)
+	{
+	TeleportPlayer("PlayerStartArea_2");
+	SetEnemyDisabled("Monster", false);
+	SetEntityActive("Monster", false);
+	AddTimer("", 1, "SetActive");
+	}
+	if(GetLocalVarInt("P3Check")== 1)
+	{
+	TeleportPlayer("PlayerStartArea_3");
+	SetEnemyDisabled("Experiment_1", false);
+	SetEnemyDisabled("Experiment_2", false);
+	SetEntityActive("Experiment_1", false);
+	SetEntityActive("Experiment_2", false);
+	AddTimer("", 1, "Active");
+	}
+}
+
+void Reset2(string &in asName, int alCount)
+{
+	if(GetLocalVarInt("P3Check")== 0)
+	{
+	TeleportPlayer("PlayerStartArea_2");
+	SetEnemyDisabled("Monster", false);
+	SetEntityActive("Monster", false);
+	AddTimer("", 1, "SetActive");
+	}
+	if(GetLocalVarInt("P3Check")== 1)
+	{
+	TeleportPlayer("PlayerStartArea_3");
+	SetEnemyDisabled("Experiment_1", false);
+	SetEnemyDisabled("Experiment_2", false);
+	SetEntityActive("Experiment_1", false);
+	SetEntityActive("Experiment_2", false);
+	AddTimer("", 1, "Active");
+	}
+}
+
+void SetActive(string &in asTimer)
+{
+	SetEntityActive("Monster", true);
+	AddEnemyPatrolNode("Monster", "PathNodeArea_1", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_2", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_3", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_4", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_5", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_6", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_7", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_8", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_9", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_10", 0.001f, "");
+	AddEnemyPatrolNode("Monster", "PathNodeArea_11", 0.001f, "");
+}
+
+void Active(string &in asTimer)
+{
+	SetEntityActive("Experiment_1", true);
+	SetEntityActive("Experiment_2", true);
+	ShowEnemyPlayerPosition("Experiment_1");
+	ShowEnemyPlayerPosition("Experiment_2");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Lever
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Puzzle(string &in asEntity, int LeverState)
+{
+        if(GetLeverState("Lever") == 1
+			&& HasItem("Piece_4") == true)
+		{
+			SetLeverStuckState("Lever", 1, true);
+			SetEntityActive("Chip", true);
+		}
+		}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Player Effects
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Rumble(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("water", "water_splurt.snt", "AreaWaterFlood", 2, false);
+	StartScreenShake(0.01, 2, 3, 7);
+	StartPlayerLookAt("LookAtPipe", 1, 1, "");
+	AddTimer("", 7, "Flood");
+}
+
+void Flood(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("","ps_water_dump_fall.ps", "AreaWaterFlood", false);
+	CreateParticleSystemAtEntity("","ps_water_dump_fall.ps", "AreaWaterCover", false);
+	SetEntityActive("TrollLadderArea", false);
+}
+
+void Leg(string &in asParent, string &in asChild, int alState)
+{
+	StopPlayerLookAt();
+	AddEffectVoice("leg_hurt.ogg" ,"", "Dialogue", "Leg", false, "", 0, 0);
+	SetEffectVoiceOverCallback("Memento");
+	SetPlayerMoveSpeedMul(0.9);
+	SetPlayerRunSpeedMul(1);
+	if(GetPlayerYSpeed() <= 0.9)
+	{
+		AddTimer("", 0.5f, "Stop");
+	}
+	
+	if(GetPlayerYSpeed() == 1)
+	{
+		AddTimer("", 0.3f, "Stop");
+	}
+}
+
+void Stop(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	AddTimer("", 0.1f, "Start");
+}
+
+void Start(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(0.9);
+	SetPlayerRunSpeedMul(1);
+	if(GetPlayerYSpeed() <= 0.9)
+	{
+		AddTimer("", 0.5f, "Stop");
+	}
+	
+	if(GetPlayerYSpeed() == 1)
+	{
+		AddTimer("", 0.3f, "Stop");
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+//Memento
+//////////////////////////////////////////////////////////////////////////
+
+void Memento()
+{
+	AddQuest("MyLeg", "BreakLeg");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Chip
+//////////////////////////////////////////////////////////////////////////////////////
+
+void ChipHammerAnimation(string &in asItem, string &in asEntity)
+{
+		RemoveItem(asItem);
+		RemoveItem("ItemHammer");
+        SetEntityActive("ObjectChip", true);
+        SetEntityActive("ObjectHammer", true);
+       
+        swings = 1;
+       
+        StartPlayerLookAt("ObjectHammer", 2, 2, "");
+       
+        AddTimer("movehammer", 0.1, "TimerMoveHammer");
+        AddTimer("hammersound", 0.27, "TimerMoveHammer");
+        AddTimer("resethammer", 0.4, "TimerMoveHammer");
+        AddTimer("repeat", 0.6, "TimerMoveHammer");
+       
+        PlaySoundAtEntity("", "15_rock_break", "FakeWall", 0, false);
+        PlaySoundAtEntity("", "15_make_hammer", "Player", 0.25, false);
+        PlaySoundAtEntity("", "03_rock_move", "FakeWall", 2, false);
+}
+ 
+void TimerMoveHammer(string &in asTimer)
+{
+        if(asTimer == "movehammer") SetMoveObjectState("ObjectHammer", 0.4);
+       
+        else if(asTimer == "hammersound") {
+                StopPlayerLookAt();
+                PlaySoundAtEntity("", "impact_rock_high", "Player", 0, false);
+                PlaySoundAtEntity("", "15_hammer", "Player", 0, false);
+        }
+       
+        else if(asTimer == "resethammer") SetMoveObjectState("ObjectHammer", 0);
+       
+        if(swings < 3 && asTimer == "repeat") {
+                AddTimer("movehammer", 0.01, "TimerMoveHammer");
+                AddTimer("hammersound", 0.17, "TimerMoveHammer");
+                AddTimer("resethammer", 0.3, "TimerMoveHammer");
+                AddTimer("repeat", 0.5, "TimerMoveHammer");
+               
+                swings = swings + 1;
+        }
+       
+        else if(swings == 3 && asTimer == "repeat") {
+                AddTimer("movehammer", 0.2, "TimerMoveHammer");
+                AddTimer("hammersound", 0.37, "TimerMoveHammer");
+                AddTimer("resethammer", 0.5, "TimerMoveHammer");
+                AddTimer("repeat", 0.8, "TimerMoveHammer");
+               
+                AddTimer("break", 0.42, "TimerMoveHammer");
+               
+                swings = swings + 1;
+        }
+       
+        else if(swings == 4 && asTimer == "break") FinishAnimation();
+       
+        else if(swings == 4 && asTimer == "repeat") SetEntityActive("ObjectHammer", false);
+		SetEntityActive("ObjectChip", false);
+}
+ 
+void FinishAnimation()
+{
+		for(int i = 1; i <= 14; i++) SetEntityActive("Block_"+i, false);
+        GiveSanityBoost();
+        PlaySoundAtEntity("", "03_break_wall", "Block_2", 0, false);
+		CreateParticleSystemAtEntity("Fog", "ps_area_fog_sewer.ps", "Block_2", true);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("MyLeg", "BreakLeg");
+}

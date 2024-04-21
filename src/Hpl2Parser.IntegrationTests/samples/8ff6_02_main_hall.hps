@@ -1,0 +1,172 @@
+//When the players first loads into the map from the opening//
+//--------Hub Level--------//
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelHall");
+	AutoSave();
+
+	StopMusic(0.1f, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "Quest", true, 1);
+	AddQuest("Progress1", "goals");
+	
+	AddUseItemCallback("", "crowbar_1", "wooden_boards_block_1", "UseCrowbarOnWood", true);
+	AddUseItemCallback("", "hollow_needle_1", "level_wood_1", "UseNeedleArchives", true);
+	
+	AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_2", "BreakDoor", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaWindEffect", "CreateWind", true, 1);
+	AddEntityCollideCallback("Player", "AreaDemoEnd", "FinishDemo", true, 1);
+	
+	AddTimer("windy", 1, "TimerWind");
+	AddTimer("rumble", 1, "TimerRumble");
+	
+	if(ScriptDebugOn())
+	{
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+	}
+}
+
+void Quest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Progress2", "lower");
+}
+
+///////////////////
+//Crowbar Script//
+
+void UseCrowbarOnWood(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05f, false);
+	AddTimer(asEntity, 0.2f, "TimerPlaceCrowbar");
+}
+
+void TimerPlaceCrowbar(string &in asTimer)
+{
+	SetEntityActive("crowbar_joint_1", true);
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0, false);
+}
+
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("crowbar_joint_1", false);
+	SetPropHealth("wooden_boards_block_1", 0);
+	
+	PlaySoundAtEntity("", "break_wood_metal", "AreaEffect", 0, false);
+ 
+	GiveSanityBoostSmall();
+	
+	PlayMusic("15_puzzle_whole", false, 0.7f, 3, 10, false);
+	
+	if (HasItem("lantern_1") == false)
+		{
+			SetMessage("TextOne", "NoLantern", 2.0f);
+		}
+ 
+	CompleteQuest("Progress2", "lower");
+	CompleteQuest("Progress1", "goals");
+}
+
+//end crowbar script//
+/////////////////////
+
+///////////////////
+//Unlock Archives Door//
+void UseNeedleArchives(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "07_pick_lock.snt", "level_wood_1", 0.05f, false);
+	SetLevelDoorLocked("level_wood_1", false);
+	GiveSanityBoostSmall();
+	RemoveItem(asItem);
+	
+	CompleteQuest("01Archives", "01Archives");
+}
+//end//
+//////
+
+
+void OnEnter()
+{
+	PlayMusic("10_amb", true, 0.7f, 1.0f, 0.0f, false);
+
+	if (GetGlobalVarInt("HasLantern") == 1)
+	{
+		SetEntityActive("BlockBox", false);
+	}
+	
+	if(GetGlobalVarInt("LanternGetOK") == 1)
+	{
+		SetPropActiveAndFade("stat1", true, 2.0f);
+		SetPropActiveAndFade("stat2", true, 2.0f);
+		SetPropActiveAndFade("stat3", true, 2.0f);
+		SetPropActiveAndFade("stat4", true, 2.0f);
+		StopMusic(0.0f, 0);
+		PlayMusic("01_amb_darkness.ogg", true, 0.3f, 1.5f, 0.0f, false);
+		
+		SetLevelDoorLocked("FoodDoor", true);
+		SetSwingDoorLocked("castle_1", false, true);
+		SetLampLit("CS1", false, true);
+		SetLevelDoorLocked("level_wood_2", true);
+	}
+}
+
+/////////////////////////////////////////
+//EFFECTS
+
+//Wind
+
+void CreateWind(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "AreaWindParticles", false);
+	PlaySoundAtEntity("", "general_wind_whirl", "AreaWindParticles", 0.05f, false);
+	}
+
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load2", 0, "int_loading_2.jpg");
+	}
+	
+void Note(string &in asEntity)
+{
+	PlayMusic("05_paper_transformation.ogg", false, 0.7f, 0.0f, 10.0f, false);
+	}
+	
+///////////////////////
+
+void Lock2(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor2", 2);
+}
+
+//--RANDOM WINDOW WIND--//
+void TimerWind(string &in asTimer)
+{
+	PlaySoundAtEntity("wind", "general_wind_whirl", "AreaWind_"+RandInt(1, 3), 0.0f, false);
+	
+	AddTimer("windy", RandFloat(10.5, 15.5), "TimerWind");
+}
+
+//--ARCHIVES DOOR-//
+void ArchivesQuest(string &in asEntity)
+{
+	AddQuest("01Archives", "01Archives");
+}
+
+//--TINDERBOX SCALE--//
+void Tinder(string &in asEntity)
+{
+	AddPropForce("pot_2", 0, 0, -600, "World");
+	AddTimer("", 1, "TimerScary");
+}
+
+void TimerScary(string &in asTimer)
+{
+	GiveSanityDamage(10, true);
+}
+
+//--RANDOM RUMBLE EFFECTS--//
+void TimerRumble(string &in asTimer)
+{
+	PlaySoundAtEntity("rockrumble", "03_rock_move", "AreaRumble", 0.0f, false);
+	
+	AddTimer("rumble", RandFloat(10.5, 15.5), "TimerRumble");
+}

@@ -1,0 +1,255 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelKitchen");
+	AutoSave();
+	
+	StopMusic(0.0f, 0);
+	AddUseItemCallback("", "hollow_needle_1", "castle_8", "PickLock", true);
+	
+	AddEntityCollideCallback("Player", "AreaBruteWalk", "StartBruteWalk", true, 1);
+	AddEntityCollideCallback("Brute", "AreaBruteGone", "EndBrute", true, 1);
+	AddEntityCollideCallback("Player", "AreaShakeStart", "BeginShake", true, 1);
+	AddEntityCollideCallback("Player", "AreaDoor", "CloseDoor", true, 1);
+	AddEntityCollideCallback("Player", "CL", "LampSwing", true, 1);
+	AddEntityCollideCallback("Player", "CHE", "HallEvent", true, 1);
+	AddEntityCollideCallback("Player", "AreaViewChange", "LookChange", true, 1);
+	
+	AddUseItemCallback("", "hollow_needle_1", "AreaBangEffects", "UseNeedleCeller", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("amb_extra01", true, 0.7f, 3, 0, false);
+}
+
+///////////
+//Cave in//
+void CaveInHappens(string &in asEntity)
+{
+	AddGlobalVarInt("HasLantern", 1);
+	StartScreenShake(0.1f, 2, 1.0f, 0.3f);
+	SetPlayerMoveSpeedMul(0.5f);
+	FadePlayerFOVMulTo(1.3f, 1.0f);
+	CreateParticleSystemAtEntity("", "ps_dust_falling_rumble.ps", "ScriptArea_4", false);
+	CreateParticleSystemAtEntity("", "ps_dust_falling_rumble.ps", "ScriptArea_5", false);
+	AddGlobalVarInt("LanternGetOK", 1);
+	
+		//Activate rocks
+		SetEntityActive("cave_in_1", true);
+		SetEntityActive("cave_in_2", true);
+		SetEntityActive("cave_in_3", true);
+		SetEntityActive("cave_in_4", true);
+		
+		PlaySoundAtEntity("rocks", "general_rock_rumble", "Player", 1.0f, false);
+		
+		AddTimer("", 2, "Cave");
+
+		PlayMusic("03_event_books", false, 0.7f, 3, 10, false);
+		StopMusic(0.0f, 0);
+		
+		//Memento collides
+		AddEntityCollideCallback("Player", "ScriptArea_1", "Mem1", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_2", "Mem2", true, 1);
+		
+		SetPlayerLampOil(40.0f);
+}
+
+void Cave(string &in asTimer)
+{
+	PlaySoundAtEntity("", "explosion_rock_large", "Player", 0.0f, false);
+	SetPlayerMoveSpeedMul(1.0f);
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	StopSound("rocks", 0.2f);
+	
+	CreateParticleSystemAtEntity("", "ps_dust_break_25.ps", "ParticleCave_1", false);
+	CreateParticleSystemAtEntity("", "ps_dust_break_25.ps", "ParticleCave_2", false);
+}
+//Cave in//
+//////////
+////////////
+//Mementos//
+void Mem1(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("blocked", "blocked");
+	RemoveEntityCollideCallback("Player", "ScriptArea_2");	
+}
+
+void Mem2(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("blocked", "blocked");
+	RemoveEntityCollideCallback("Player", "ScriptArea_1");	
+}
+//End Mementos Code//
+////////////////////
+
+////////////////////////
+//Hollow needle unlock//
+void PickLock(string &in asItem, string &in asEntity)
+{
+	StartPlayerLookAt("ScriptArea_3", 3, 3, "");
+	AddTimer("", 2, "FinishPickLock");
+	PlaySoundAtEntity("", "gameplay_open_chest", "ScriptArea_3", 0.0f, false);
+	SetPlayerActive(false);
+}
+
+void FinishPickLock(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_hit_metal.ps", "ScriptArea_3", false);
+	SetSwingDoorLocked("castle_8", false, true);
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	
+	CompleteQuest("blocked", "blocked");
+	
+	if(HasItem("lantern_1") == false)
+	{
+	SetMessage("TextOne", "05NoLantern", 2);
+	}
+}
+//End hollow needle//
+////////////////////
+
+///
+//Walking Brute
+void StartBruteWalk(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Brute", true);
+	AddEnemyPatrolNode("Brute", "PathNodeArea_1", 0.001f, "");
+	GiveSanityDamage(1.0f, true);
+	}
+	
+void EndBrute(string &in asParent, string &in asChild, int alState)
+{
+	FadeEnemyToSmoke("Brute", false);
+	}
+	
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load5", 0, "int_loading_dragon.jpg");
+	}
+	
+////////////////////////////////////////////
+
+//EFFECTS
+void BeginShake(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0.5f);
+	StartScreenShake(0.03f, 4.0f, 1.0f, 0.5f);
+	PlaySoundAtEntity("rumble", "00_creak", "Player", 1.0f, false);
+	PlaySoundAtEntity("rumble", "general_chain_rattle", "Player", 1.0f, false);
+	AddTimer("", 3.0f, "EndShake");
+	AddPropForce("CH1", 0, 0, 500, "world");
+	AddPropForce("CH2", 0, 0, -500, "world");
+	AddPropForce("CH3", 500, 0, 0, "world");
+	CreateParticleSystemAtEntity("", "ps_dust_falling_rumble.ps", "D1", false);
+	CreateParticleSystemAtEntity("", "ps_dust_falling_rumble.ps", "D2", false);
+	CreateParticleSystemAtEntity("", "ps_dust_falling_rumble.ps", "D3", false);
+	FadePlayerFOVMulTo(1.2f, 1.0f);
+	}
+	
+void EndShake(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(1.0f);
+	StopSound("rumble", 0.5f);
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	}
+
+//DOOR CLOSE
+void CloseDoor(string &in asParent, string &in asChild, int alState)
+{
+	AddPropForce("Door4Close", -3000.0f, 0.0f, 0.0f, "world");
+	StartPlayerLookAt("Door4Close", 2.0f, 3.0f, "");
+	AddTimer("", 3.0f, "FinishLook");
+	PlaySoundAtEntity("", "27_wind", "Door4Close", 1.0f, false);
+	FadePlayerFOVMulTo(1.3f, 1.0f);
+	FadePlayerRollTo(-30, 1.0f, 1.5f);
+	}
+	
+void FinishLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	PlaySoundAtEntity("", "react_scare", "Player", 0.0f, false);
+	FadePlayerRollTo(0.0f, 1.0f, 1.5f);
+	}
+///////////////////////////////////
+//Lamp Swing
+void LampSwing(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityDamage(1.0f, true);
+	SetLampLit("LAMP", false, true);
+	PlaySoundAtEntity("", "general_wind_whirl", "PSwind", 1.0f, false);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "D1", false);
+	}
+///////////////////////
+//Hall Event
+void HallEvent(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "00_faint", "Player", 1.0f, false);
+	SetPlayerMoveSpeedMul(0.8f);
+	FadePlayerFOVMulTo(1.4f, 1.0f);
+	AddTimer("", 3.0f, "FinishHall");
+	FadePlayerRollTo(-40, 1.0f, 1.5f);
+	AddPropForce("CH4", 0.0f, 0.0f, -500.0f, "world");
+	}
+	
+void FinishHall(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	FadePlayerRollTo(0.0f, 1.0f, 1.5f);
+	SetPlayerMoveSpeedMul(1.0f);
+	}
+///////////////////////////
+//Bang Event
+void AddBangEvent(string &in asEntity)
+{
+	AddEntityCollideCallback("Player", "BA", "CreateBang", true, 1);
+	}
+	
+void CreateBang(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaBangEffects", false);
+	PlaySoundAtEntity("", "lurker_hit_wood", "AreaBangEffects", 0.0f, false);
+	}
+//
+
+//Random screen effect in buttery
+void LookChange(string &in asParent, string &in asChild, int alState)
+{
+	FadePlayerFOVMulTo(1.2f, 1.0f);
+	FadePlayerRollTo(-30.0f, 1.0f, 1.5f);
+	AddTimer("", 4.0f, "Part2");
+	}
+	
+void Part2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_breath_slow", "Player", 2.0f, false);
+	FadePlayerFOVMulTo(1.3f, 1.0f);
+	FadePlayerRollTo(30.0f, 1.0f, 1.5f);
+	AddTimer("", 4.0f, "EndAll");
+	}
+	
+void EndAll(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1.0f, 1.0f);
+	FadePlayerRollTo(0.0f, 1.0f, 1.5f);
+	}
+	
+//////////////////
+//Door
+void DoorText(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2);
+}
+
+void DoorText2(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor2", 2);
+}
+
+//////
+//cellar door
+void UseNeedleCellar(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "NoUse", 2);
+}

@@ -1,0 +1,190 @@
+void OnStart()
+{
+	RemoveItem("bone_saw_1");
+	RemoveItem("fresh_meat_1");
+	SetEntityPlayerInteractCallback("note_generic_1", "noteonpedastal", true);
+	AddEntityCollideCallback("Player", "rockscarewalk", "rockscarewalk", true, 1);
+	AddEntityCollideCallback("Player", "turnonstepsound", "turnonstepsound", true, 1);
+	AddUseItemCallback("", "key_study_1", "castle_no_grav_1", "keytodoorinsancs", true);
+	SetEntityPlayerInteractCallback("clickseenopiep", "clickseenopiep", true);
+	AddUseItemCallback("", "pipe_piece_1", "usepipeforplug", "usepipeontheempty", true);
+	AddUseItemCallback("", "key_torture_chamber_1", "treasure_chest_1", "keytostoragechest", true);
+	SetEntityPlayerInteractCallback("orbpiece_emerald_1", "grabgreenorb", true);
+	AddUseItemCallback("", "orbpiece_emerald_1", "orb_pedestal_1", "activateorbonpedastal", true);
+	CompleteQuest("mem7", "memento7");
+	CompleteQuest("mem4", "memento4");
+}
+
+void OnEnter()
+{
+	PlayMusic("06_amb", true, 0.6f, 4.0f, 0, true);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "", 1, "");
+}
+
+///////////////////////////////////////////////
+//////////////////INTERACTIONS/////////////////
+///////////////////////////////////////////////
+
+void noteonpedastal(string &in asEntity)
+{
+	AddQuest("mem8", "memento8");
+}
+
+void useleverdoorfail(string &in asEntity, int LeverState)
+{
+        if(LeverState == 1) {
+				AddQuest("mem9", "memento9");
+				SetMessage("Messages", "leverworkbutnothing", 0);
+				PlaySoundAtEntity("", "17_strain_wheel", "lever_simple01_1", 0, false);
+				SetEntityActive("angel_statue_2", true);
+				SetEntityActive("angel_statue_1", false);
+				AutoSave();
+        }
+}
+
+void leverpullsuccess(string &in asEntity, int LeverState)
+{
+        if(LeverState == 1) {
+				CompleteQuest("mem9", "memento9");
+				SetMessage("Messages", "leverworkwhenpulled", 0);
+				PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+				SetEntityActive("safety_normal_vert_1", false);
+				SetEntityActive("block_box_1", false);
+				SetEntityActive("safety_normal_vert_2", true);
+				AutoSave();
+        }
+}
+
+
+void usepipeontheempty(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("pipe_piece_static_1", true);
+	DestroyParticleSystem("ParticleSystem_2");
+	PlaySoundAtEntity("placethepipeon", "puzzle_place_jar.snt", "Player", 0.0f, false);
+	CompleteQuest("mem10", "memento10");
+	SetEntityActive("lever_simple01_1", false);
+	SetEntityActive("lever_simple01_2", true);
+	SetEntityActive("angel_statue_3", true);
+	SetEntityActive("angel_statue_2", false);
+	RemoveItem(asItem);
+}
+
+void clickseenopiep(string &in asEntity)
+{
+	AddQuest("mem10", "memento10");
+	SetMessage("Messages", "missingpipenote", 0);
+}
+/////////////////////////////////////////
+////////////////SCARES///////////////////
+/////////////////////////////////////////
+
+void turnonstepsound(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("rockscarewalk", true);
+}
+
+void rockscarewalk(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "customrockwalkscare.snt", "hearstepesmon", 0, false);
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 0, false);
+}
+
+/////////////////////////////////////////
+////////////////DOORS////////////////////
+/////////////////////////////////////////
+
+void keytodoorinsancs(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("castle_no_grav_1", false, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+void keytostoragechest(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("treasure_chest_1", 0, false);
+	SetLeverStuckState("treasure_chest_1", 0, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	SetEntityActive("pipe_piece_1", true);
+	AutoSave();
+}
+
+///////////////////////////////////////////////
+/////////////////G/ORB/EVENT///////////////////
+///////////////////////////////////////////////
+
+void grabgreenorb(string &in asEntity)
+{
+	SetLightVisible("orbgreenlight", false);
+	SetEntityActive("angel_statue_3", false);
+	SetEntityActive("angel_statue_1", false);
+	SetEntityActive("angel_statue_4", true);
+	SetEntityActive("angel_statue_2", false);
+	AddTimer("thevernhascome", 3, "thevernhascome");
+}
+
+void thevernhascome(string &in asTimer)
+{
+	PlaySoundAtEntity("scareofvern", "react_breath.snt", "Player", 0.0f, false);
+	GiveSanityDamage(5.0f, true);
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_9", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_11", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_13", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_14", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_15", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_16", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_18", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_19", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_20", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_21", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_22", 0, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_23", 0.001, "");
+	AddEnemyPatrolNode("monster_vern", "PathNodeArea_24", 0, "");
+	SetEntityActive("monster_vern", true);
+}
+
+void activateorbonpedastal(string &in asItem, string &in asEntity)
+{
+	TeleportPlayer("PlayerStartArea_2");
+	FadeOut(0); 
+	SetPlayerActive(false);	
+	PlaySoundAtEntity("greenorbusecomplete", "guardian_activated.snt", "Player", 0.0f, false);
+	CompleteQuest("mem8", "memento8");
+	SetEntityActive("monster_vern", false);
+	StopMusic(1.0f, 0);
+	AddTimer("textofdelma", 15, "textofdelma");
+}
+
+void textofdelma(string &in asTimer)
+{
+	SetMessage("Messages", "delmatalksone", 10);
+	AddTimer("textofdelmatwo", 13, "textofdelmatwo");
+}
+
+void textofdelmatwo(string &in asTimer)
+{
+	SetMessage("Messages", "delmatalkstwo", 10);
+	AddTimer("leavetotruelair", 13, "leavetotruelair");
+}
+
+void leavetotruelair(string &in asTimer)
+{
+	ChangeMap("10_thebrightlair", "PlayerStartArea_1", "", "");
+}

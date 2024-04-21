@@ -1,0 +1,459 @@
+void OnStart()
+{
+SetPlayerActive(false);
+FadeOut(0.0f);
+AddEntityCollideCallback("Player", "AreaForest", "Forest", false, 1);
+AddEntityCollideCallback("Player", "AreaTunnel", "Tunnel", false, 1);
+AddEntityCollideCallback("Player", "AreaCar", "Car", true, 1);
+AddEntityCollideCallback("Player", "AreaBlock", "Block", false, 1);
+AddEntityCollideCallback("Player", "AreaZombie", "ZombieTunnel", true, 1);
+AddEntityCollideCallback("Player", "AreaFire", "Death", false, 1);
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddUseItemCallback("","gas1","AreaFuel","Fuel1",true);
+AddUseItemCallback("","gas2","AreaFuel","Fuel2",true);
+AddUseItemCallback("","gas3","AreaFuel","Fuel3",true);
+PlayMusic("TunnelAmb", true, 1, 5, 0, true);
+SetMapDisplayNameEntry("Riverside");
+SetMessage("Messages", "hourslater", 5);
+CheckPoint ("Checkpoint2", "PlayerStartArea_1", "DeathSettings2", "DeathHints", "Stupid");
+
+
+//---- BEGIN INTRO ----//
+if(!ScriptDebugOn()) Intro(); //no intro when you are testing
+else AddDebugMessage("Skipping Intro", false);
+
+
+//---- DEBUG ----//
+	if(ScriptDebugOn())
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		SetPlayerLampOil(100.0f);
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		
+	}
+
+//---- BEGIN INTRO ----//
+	if(!ScriptDebugOn()) Intro(); //no intro when you are testing
+	
+ConnectEntities("door_connection",		//Name of connection
+		"secret_lever", 	//Parent entity (Affects)
+		"secret_door",	//Child entity 	(Affected) 
+		false,		//Invert the state sent
+		1, 		//States used (0=both), checked before invertion.
+		"CreateDust");	//callback	
+		
+		ConnectEntities("shelf_connection",		//Name of connection
+		"secret_lever", 	//Parent entity (Affects)
+		"secret_shelf",	//Child entity 	(Affected) 
+		false,		//Invert the state sent
+		1, 		//States used (0=both), checked before invertion.
+		"");	//callback	
+		
+		//SetMoveObjectAngularOffsetArea("secret_shelf", "rotatearea");
+	UnBlockHint("SanityAdd"); UnBlockHint("LanternNoItem"); UnBlockHint("LanternNoOil"); UnBlockHint("LeanHint");
+	UnBlockHint("PushHint"); UnBlockHint("ThrowHint"); UnBlockHint("EntitySlide"); UnBlockHint("EntityLever"); 
+	UnBlockHint("SanityHit");
+}
+
+void Intro()
+{
+	AddDebugMessage("Begin Intro", false);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeOut(0.0f);
+        SetPlayerHealth(35);
+        SetPlayerSanity(50);
+	FadeImageTrailTo(1, 2);
+	StartPlayerLookAt("Look1", 10, 100, "");
+    FadeRadialBlurTo(0.10, 2);
+    FadeRadialBlurTo(0.10, 2);
+	AddTimer("1", 3, "IntroTimer");
+	AddTimer("2", 4.5f, "IntroTimer");
+	AddTimer("3", 6.5f, "IntroTimer");
+	AddTimer("4", 9, "IntroTimer");
+	AddTimer("5", 11, "IntroTimer");
+	AddTimer("6", 14, "IntroTimer");
+}
+
+void IntroTimer(string &in asTimer)
+{
+	if(asTimer == "1"){
+		StopPlayerLookAt();
+	SetMessage("Messages", "intro1", 7);
+                 }
+	else if(asTimer == "2"){
+		FadePlayerRollTo(85, 1, 1);                 // "Tilts" the players head
+		SetPlayerCrouching(true);
+	        FadeIn(3.0f);
+	}
+	else if(asTimer == "3"){
+		StartPlayerLookAt("Look2", 1, 2.0f, "");
+                PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+	}
+	else if(asTimer == "4"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("Look1", 1, 2.0f, "");
+	}
+	else if(asTimer == "5"){
+		StopPlayerLookAt();
+		StartPlayerLookAt("Look3", 1, 2.0f, "");
+	}
+	else if(asTimer == "6"){
+		StopPlayerLookAt();
+		FadeImageTrailTo(0, 1.0f);
+		FadePlayerRollTo(0, 33, 33);        // Change all settings to defaults
+		FadeRadialBlurTo(0.0, 1);
+                PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+		SetPlayerActive(true);
+                SetPlayerRunSpeedMul(0.2f);
+		SetMessage("Message", "Hint0", 0);
+		AddDebugMessage("End Intro", false);
+		SetPlayerCrouching(true);
+                SetSanityDrainDisabled(true);
+                SetInventoryDisabled(false);
+                SetPlayerJumpDisabled(false);
+                ShowPlayerCrossHairIcons(true);
+                SetPlayerCrouchDisabled(false);
+                AddQuest("RiverMission", "RiverMission");
+                AutoSave();
+                  }
+}
+
+//---- Quest and encounters ----//
+
+void Car(string &in asParent, string &in asChild, int alState) 
+{
+StartPlayerLookAt("Look5", 1, 2.0f, "");
+SetMessage("Messages", "car", 7);
+AddQuest("Car", "Car");
+AddTimer("stop", 2, "stop");
+}
+
+void wheel(string &in asEntity)
+{
+CheckPoint ("Checkpoint", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Forest");
+SetEntityActive("Wheel", false);
+SetEntityActive("AreaForest", false);
+SetEntityActive("AreaTunnel", false);
+SetEntityActive("gas11", false);
+SetEntityActive("gas22", false);
+SetEntityActive("gas33", false);
+SetEntityActive("gas1", true);
+SetEntityActive("gas2", true);
+SetEntityActive("gas3", true);
+SetEntityActive("AreaFuel", true);
+SetMessage("Messages", "nofuel", 7);
+AddQuest("Fuel", "Fuel");
+CompleteQuest("Car", "Car");
+PlaySoundAtEntity("","AyaSigh.snt","Player", 0,false);
+SetPlayerActive(false);
+AddTimer("zombie", 5, "zombie");
+}
+
+void zombie(string &in asTimer)
+{
+SetEntityActive("zombie2", true);
+StartPlayerLookAt("Look4", 5, 50, "");
+AddTimer("zombie2", 3, "zombie2");
+}
+
+void zombie2(string &in asTimer)
+{
+StartPlayerLookAt("Look5", 1, 2.0f, "");
+AddTimer("zombie3", 2, "zombie3");
+}
+
+void zombie3(string &in asTimer)
+{
+PlaySoundAtEntity("","Button.snt","Player", 0,false);
+SetLampLit("lamp1", false, false);
+SetLampLit("lamp2", false, false);
+SetEntityActive("zombie2", false);
+AddTimer("zombie4", 2, "zombie4");
+}
+
+void zombie4(string &in asTimer)
+{
+StartPlayerLookAt("Look4", 4, 30, "");
+PlayMusic("Notoriety", true, 1, 5, 0, true);
+AddTimer("stop", 2, "stop");
+AddTimer("zombie5", 3, "zombie5");
+}
+
+void zombie5(string &in asTimer)
+{
+SetEntityActive("zombie", true);
+AddEnemyPatrolNode("zombie","node_1",5,"");
+AddEnemyPatrolNode("zombie","node_2",3,"");
+AddEnemyPatrolNode("zombie","node_3",3,"");
+AddEnemyPatrolNode("zombie","node_4",5,"");
+AddEnemyPatrolNode("zombie","node_5",3,"");
+AddEnemyPatrolNode("zombie","node_6",5,"");
+AddEnemyPatrolNode("zombie","node_7",5,"");
+AddEnemyPatrolNode("zombie","node_8",2,"");
+AddEnemyPatrolNode("zombie","node_9",4,"");
+AddEnemyPatrolNode("zombie","node_10",3,"");
+AddEnemyPatrolNode("zombie","node_11",5,"");
+AddEnemyPatrolNode("zombie","node_12",2,"");
+AddEnemyPatrolNode("zombie","node_13",5,"");
+AddEnemyPatrolNode("zombie","node_14",2,"");
+AddEnemyPatrolNode("zombie","node_15",4,"");
+AddEnemyPatrolNode("zombie","node_16",3,"");
+AddEnemyPatrolNode("zombie","node_17",5,"");
+AddEnemyPatrolNode("zombie","node_18",2,"");
+AddEnemyPatrolNode("zombie","node_19",5,"");
+AddEnemyPatrolNode("zombie","node_20",5,"");
+AddEnemyPatrolNode("zombie","node_21",4,"");
+AddEnemyPatrolNode("zombie","node_22",3,"");
+AddEnemyPatrolNode("zombie","node_23",3,"");
+AddEnemyPatrolNode("zombie","node_24",2,"");
+}
+
+void Fuel1(string &in asItem, string &in asEntity)
+{
+AddTimer("stop", 4.5f, "stop");
+SetEntityActive("gas4", true);
+SetPlayerActive(false);
+PlaySoundAtEntity("","Fuel.snt","Player", 0,false);
+RemoveItem(asItem);
+AddLocalVarInt("VarIntFuel", 1);
+	Fuelcar();
+}
+
+void Fuel2(string &in asItem, string &in asEntity)
+{
+AddTimer("stop", 4.5f, "stop");
+SetEntityActive("gas4", true);
+SetPlayerActive(false);
+PlaySoundAtEntity("","Fuel.snt","Player", 0,false);
+RemoveItem(asItem);
+AddLocalVarInt("VarIntFuel", 1);
+	Fuelcar();
+}
+
+void Fuel3(string &in asItem, string &in asEntity)
+{
+AddTimer("stop", 4.5f, "stop");
+SetEntityActive("gas4", true);
+SetPlayerActive(false);
+PlaySoundAtEntity("","Fuel.snt","Player", 0,false);
+RemoveItem(asItem);
+AddLocalVarInt("VarIntFuel", 1);
+	Fuelcar();
+}
+void Fuelcar(){
+
+	if(GetLocalVarInt("VarIntFuel") == 3){
+
+          CompleteQuest("Fuel", "Fuel");
+          AddQuest("Car2", "Car2");
+          SetEntityActive("StartCar", true); 
+          SetMessage("Messages", "enoughfuel", 7);         
+	}
+}
+
+void startcar(string &in asEntity)
+{
+CompleteQuest("Car2", "Car2");
+CompleteQuest("RiverMission", "RiverMission");
+PlaySoundAtEntity("","Car.snt","Player", 0,false);
+SetPlayerActive(false);
+SetEntityActive("corpse", false);
+AddTimer("startcar2", 2, "startcar2");
+}
+
+void startcar2(string &in asTimer)
+{
+ChangeMap("PoolEP.map", "PlayerStartArea_3", "","");
+}	
+
+void stop(string &in asTimer)
+{
+SetPlayerActive(true);
+SetEntityActive("gas4", false);
+StopPlayerLookAt();
+}	
+
+void Forest(string &in asParent, string &in asChild, int alState) 
+{
+PlayMusic("Forest2", true, 1, 5, 0, true);
+SetPlayerRunSpeedMul(1.0f);
+}
+
+void Tunnel(string &in asParent, string &in asChild, int alState) 
+{
+PlayMusic("TunnelAmb", true, 1, 5, 0, true);
+}
+
+void entercar(string &in asEntity)
+{
+FadeOut(1);
+SetPlayerJumpDisabled(true);
+SetPlayerCrouchDisabled(true);
+SetEntityActive("LeaveCar", true);
+SetEntityActive("EnterCar", false);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+AddTimer("entercar2", 1, "entercar2");	
+}
+
+void entercar2(string &in asTimer)
+{
+FadeIn(1);
+SetPlayerCrouching(true);
+TeleportPlayer("PlayerStartArea_2");
+}
+
+void leavecar(string &in asEntity)
+{
+FadeOut(1);
+SetPlayerJumpDisabled(false);
+SetPlayerCrouchDisabled(false);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+SetEntityActive("LeaveCar", false);
+SetEntityActive("EnterCar", true);
+AddTimer("leavecar2", 1, "leavecar2");	
+}
+
+void leavecar2(string &in asTimer)
+{
+FadeIn(1);
+SetPlayerCrouching(true);
+TeleportPlayer("PlayerStartArea_3");
+}
+
+void lightson(string &in asEntity)
+{
+PlaySoundAtEntity("","Button.snt","Player", 0,false);
+SetLampLit("lamp1", true, true);
+SetLampLit("lamp2", true, true);
+}	
+
+void lightsoff(string &in asEntity)
+{
+PlaySoundAtEntity("","Button.snt","Player", 0,false);
+SetLampLit("lamp1", false, false);
+SetLampLit("lamp2", false, false);
+}
+
+void activatezombie(string &in asEntity)
+{
+SetEntityActive("AreaZombie", true);
+}
+
+void ZombieTunnel(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("zombie3", true);
+AddEnemyPatrolNode("zombie3","node_27",3,"");
+AddEnemyPatrolNode("zombie3","node_28",1,"");
+AddEnemyPatrolNode("zombie3","node_29",0,"");
+AddEnemyPatrolNode("zombie3","node_30",0,"");
+AddEnemyPatrolNode("zombie3","node_31",2,"");
+AddEnemyPatrolNode("zombie3","node_32",0,"");
+AddEnemyPatrolNode("zombie3","node_33",0,"");
+AddEnemyPatrolNode("zombie3","node_34",0,"");
+AddEnemyPatrolNode("zombie3","node_11",0,"");
+AddEnemyPatrolNode("zombie3","node_26",0,"");
+AddEnemyPatrolNode("zombie3","node_14",0,"");
+AddEnemyPatrolNode("zombie3","node_13",0,"");
+AddEnemyPatrolNode("zombie3","node_34",0,"");
+}
+
+//---- Etc ----//
+
+void Death(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death2", 0.4, "death2");
+}
+
+void death2(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death3", 0.5, "death3");
+}
+
+void death3(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death4", 0.5, "death4");
+SetPlayerCrouching(true);
+}
+
+void death4(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+PlaySoundAtEntity("","AyaScream","Player", 0,false);
+AddTimer("death5", 0.5, "death5");
+}
+
+void death5(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death6", 0.5, "death6");
+}
+
+void death6(string &in asTimer)
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(200, "BloodSplat", false, true);
+GivePlayerDamage(0, "BloodSplat", false, true);
+GivePlayerDamage(0, "BloodSplat", false, true);
+}
+
+void powerup(string &in asEntity)
+{
+SetMessage("Messages", "powerup8", 7);
+AddGlobalVarInt("Powerup8", 1);
+RemoveItem("syringe_1");
+SetSanityDrainDisabled(true);
+}
+
+//---- Messages ----//
+
+void Block(string &in asParent, string &in asChild, int alState) 
+{
+SetMessage("Messages", "blockedcar", 7);
+}
+
+void cute(string &in asEntity)
+{
+SetMessage("Messages", "cute", 7);
+}
+
+void deadgirl(string &in asEntity)
+{
+SetMessage("Messages", "deadgirl", 10);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("Notoriety", true, 1, 5, 0, true);
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("TunnelAmb", true, 1, 5, 0, true);
+}	
+	
+void OnEnter()
+{	
+if(GetGlobalVarInt("Powerup7")==1)
+	{
+AddPlayerSanity(30);
+	}
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

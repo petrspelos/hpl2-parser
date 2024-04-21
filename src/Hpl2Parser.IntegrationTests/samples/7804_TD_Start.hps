@@ -1,0 +1,1352 @@
+void OnStart(){
+SetMapDisplayNameEntry("LVL0Name");
+SetGlobalVarInt("DreamPoint", 0);
+SetGlobalVarInt("DeathType", 0);
+SetLocalVarInt("RequiredTinderboxes", 0);
+SetLocalVarInt("TeleportActive", 0);
+SetLocalVarInt("Scared", 0);
+SetLocalVarInt("AirlockState", 0);
+SetLocalVarInt("ALightState", 0);
+FadeOut(0.0f);
+SetPlayerLampOil(0);
+SetPlayerActive(false);
+SetPlayerCrouching(true);
+FadeGlobalSoundVolume(0.0f, 0.0f);
+AddTimer("", 1.5f, "IntroStart");
+PlayMusic("TD_Dreamscape.ogg", true, 1.0f, 6.0f, 1, false);
+SetInDarknessEffectsActive(false);
+FadeSepiaColorTo(0.7f, 0.5f);
+FadeRadialBlurTo(0.04f, 0.02f);
+FadePlayerRollTo(RandFloat(-50, 50), 8.2f, 8.2f);
+StopSound("ElevNoise", 0.0f);
+StopSound("AirlockAmb", 0.0f);
+StopSound("Amb1", 0.0f);
+StopSound("Amb2", 0.0f);
+StopSound("Amb3", 0.0f);
+StopSound("AmbWindy1", 0.0f);
+StopSound("AmbElec1", 0.0f);
+StopSound("AmbWindy2", 0.0f);
+StopSound("AmbElec2", 0.0f);
+StopSound("Cog1S", 0.0f);
+AddEntityCollideCallback("Player", "LanternForcer", "TPBackToLant", false, 0);
+AddEntityCollideCallback("Player", "LightTrigger", "TriggerLights", true, 0);
+AddEntityCollideCallback("Player", "SecretChestFiller", "FillSecretChest", true, 0);
+AddEntityCollideCallback("Player", "ElevatorLightTrigger", "ElevLightTrig", true, 0);
+AddEntityCollideCallback("Player", "Phono1Highlighter", "Phono1Highlight", true, 0);
+AddEntityCollideCallback("Player", "Gate_1Script", "Gate1Appear", true, 0);
+AddEntityCollideCallback("Player", "Gate_6Script", "Gate6Appear", true, 0);
+AddEntityCollideCallback("Player", "Gate_15Script", "Gate15Appear", true, 0);
+AddEntityCollideCallback("Player", "Maze_TrapPlayer", "MazeTrap", true, 0);
+AddEntityCollideCallback("Player", "MazeDoorShut", "MazeDoorEvent", true, 0);
+AddEntityCollideCallback("Player", "Mans_LightOff", "LightsOffEvent", true, 0);
+AddUseItemCallback("LockPick1", "Lockpick", "Chesty", "LockpickChest", false);
+AddTimer("", 6.0f, "Chapter1Add");
+AddTimer("", 0.25f, "BrokenBlinking");
+AddTimer("", 1.0f, "RedBlinking1");
+AddTimer("", 0.25f, "DischargeBolts");
+SetEntityInteractionDisabled("BlinkLight1", true);
+SetEntityInteractionDisabled("BlinkLight2", true);
+SetEntityInteractionDisabled("BlinkLight3", true);
+SetEntityInteractionDisabled("BlinkLight4", true);
+SetEntityInteractionDisabled("bridge_torch_10", true);
+SetEntityInteractionDisabled("bridge_torch_11", true);
+SetEntityInteractionDisabled("bridge_torch_12", true);
+SetEntityInteractionDisabled("bridge_torch_13", true);
+SetEntityInteractionDisabled("bridge_torch_14", true);
+SetEntityInteractionDisabled("bridge_torch_15", true);
+SetEntityInteractionDisabled("bridge_torch_16", true);
+SetEntityInteractionDisabled("bridge_torch_17", true);
+SetEntityInteractionDisabled("bridge_torch_18", true);
+SetEntityInteractionDisabled("AlchLamp1", true);
+SetEntityInteractionDisabled("AlchLamp2", true);
+SetEntityInteractionDisabled("AlchLamp3", true);
+SetEntityInteractionDisabled("AlchLamp4", true);
+SetEntityInteractionDisabled("AlchLamp5", true);
+SetEntityInteractionDisabled("AlchLamp6", true);
+SetEntityInteractionDisabled("AlchLamp7", true);
+SetEntityInteractionDisabled("AlchLamp8", true);
+SetEntityInteractionDisabled("AlchLamp9", true);
+SetEntityInteractionDisabled("AlchLamp10", true);
+SetEntityInteractionDisabled("torch_static01_3", true);
+SetEntityInteractionDisabled("PhonoLight1", true);
+SetEntityInteractionDisabled("PhonoLight2", true);
+SetEntityInteractionDisabled("hanging_lantern_ceiling_2", true);
+SetEntityInteractionDisabled("hanging_lantern_ceiling_1", true);
+SetEntityInteractionDisabled("AirlockDoor1L", true);
+SetEntityInteractionDisabled("AirlockLight_1", true);
+SetEntityInteractionDisabled("AirlockLight_2", true);
+SetEntityInteractionDisabled("AirlockLight_3", true);
+SetEntityInteractionDisabled("AirlockLight_4", true);
+SetEntityInteractionDisabled("AirlockLight_5", true);
+SetMoveObjectStateExt("TeleporterGate1", -1.1, 5, 5, 0, false);
+SetMoveObjectStateExt("TeleporterGate2", -1.1, 5, 5, 0, false);
+SetMoveObjectStateExt("ElevDoorBottom", -1.0, 5, 5, 0, false);
+SetEntityConnectionStateChangeCallback("StartTeleporter2", "InitiateTeleport2");
+AddTimer("", RandFloat(3.0f, 6.0f), "HeartbeatTimer");
+AddTimer("", 0.5f, "ALights1");
+}
+
+void Chapter1Add(string &in asTimer)
+{
+AddQuest("Chapter1Only", "CHP1");
+}
+
+void DischargeBolts(string &in asTimer)
+{
+if(GetLocalVarInt("TeleportActive") == 1)
+{
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea2_" + RandInt(1, 9), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere2", 0, false);
+}
+AddTimer("", RandFloat(0.02f, 3.25f), "DischargeBolts");
+}
+
+void IntroStart(string &in asTimer)
+{
+FadeIn(12.0f);
+FadeGlobalSoundVolume(1.0f, 9.0f);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+SetPlayerActive(true);
+FadePlayerRollTo(0, 1.2f, 1.2f);
+}
+
+void InitiateTeleport1_Fail(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp1", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp2", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp3", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp4", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp5", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("Cog1", 0.5, 0, 1, 0, 0, false, "");
+SetLampLit("AlchLamp1", false, true);
+SetLampLit("AlchLamp2", false, true);
+SetLampLit("AlchLamp3", false, true);
+SetLampLit("AlchLamp4", false, true);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_alex_die.ps", "DischargeArea1_" + RandInt(1, 10), false);
+PlaySoundAtEntity("", "21_cm_forward_low.snt", "FogHere1", 0, false);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("21_alex_low_freq_rumble.snt", 1);
+PlayGuiSound("27_jam.snt", 1);
+StopSound("Amb3", 0.0f);
+StopSound("AmbWindy1", 0.0f);
+StopSound("AmbWindy2", 0.0f);
+StopSound("Cog1S", 0.0f);
+StartScreenShake(0.1f, 5.0f, 1, 1);
+StartScreenShake(0.2f, 0.5f, 0, 0.5);
+DestroyParticleSystem("TeleFog1_1");
+DestroyParticleSystem("TeleFog1_2");
+DestroyParticleSystem("CStickFog1_1");
+DestroyParticleSystem("CStickFog1_2");
+DestroyParticleSystem("CStickFog1_3");
+DestroyParticleSystem("CStickFog1_4");
+SetLocalVarInt("TeleportActive", 0);
+AddTimer("", 10.0f, "InitiateTeleport1_FailReset");
+AddTimer("", 5.0f, "TeleportFailRemark");
+}
+
+void TeleportFailRemark(string &in asTimer)
+{
+
+}
+
+void InitiateTeleport1_FailReset(string &in asTimer)
+{
+SetMoveObjectStateExt("TeleporterGate1", -1.1, 0.3, 0.6, 0, false);
+SetMoveObjectStateExt("TeleporterGate2", -1.1, 0.3, 0.6, 0, false);
+SetLeverStuckState("StartTeleporter", 0, true);
+SetLeverStuckState("StartTeleporter2", 0, true);
+PlayGuiSound("07_pick_lock.snt", 1);
+}
+
+void TeleportTingeling(string &in asTimer)
+{
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+}
+
+void TeleportTingeling2(string &in asTimer)
+{
+PlayGuiSound("scare_whine_loop4.snt", 1);
+}
+
+void InitiateTeleport_Disturb(string &in asTimer)
+{
+FadeOut(0.0f);
+PlayMusic("11_event_dog", false, 1, 0.5f, 257, false);
+StopSound("AmbWindy1", 0.0f);
+StopSound("AmbElec1", 0.0f);
+StopSound("AmbWindy2", 0.0f);
+StopSound("AmbElec2", 0.0f);
+StopSound("Cog1S", 0.0f);
+TeleportPlayer("RandTele3");
+SetLocalVarInt("Scared", 1);
+FadeIn(1.0f);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_wall_stomp.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+StartScreenShake(0.2f, 0.5f, 0, 0.5);
+FadeSepiaColorTo(0.7f, 0.5f);
+FadeRadialBlurTo(0.04f, 0.02f);
+AddTimer("", 12.0f, "InitiateTeleport_Disturb2");
+}
+
+void InitiateTeleport_Disturb2(string &in asTimer)
+{
+FadeOut(0.0f);
+TeleportPlayer("RandTele4");
+FadeIn(1.0f);
+PlayGuiSound("scare_wall_stomp.snt", 1);
+PlayGuiSound("scare_tingeling_rev2.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+StartScreenShake(0.2f, 0.5f, 0, 0.5);
+AddTimer("", 12.0f, "InitiateTeleport_Disturb3");
+}
+
+void InitiateTeleport_Disturb3(string &in asTimer)
+{
+FadeOut(0.0f);
+SetPlayerActive(false);
+TeleportPlayer("RandTele1");
+FadeIn(0.5f);
+PlayGuiSound("scare_wall_stomp.snt", 1);
+StartScreenShake(0.2f, 0.5f, 0, 0.5);
+AddTimer("", 0.5f, "InitiateTeleport_DisturbEND");
+}
+
+void InitiateTeleport_DisturbEND(string &in asTimer)
+{
+FadeOut(0.5f);
+SetLocalVarInt("Scared", 0);
+PlayGuiSound("scare_wall_stomp.snt", 1);
+StartScreenShake(0.2f, 0.5f, 0, 0.5);
+FadeInSound("Amb1", 3.0f, false);
+FadePlayerAspectMulTo(1.6f, 0.4f);
+StartScreenShake(0.3f, 2.0f, 2, 0);
+FadeRadialBlurTo(0.4f, 0.05f);
+FadeGlobalSoundSpeed(0.0f, 2.0f);
+FadePlayerFOVMulTo(0.2f, 0.5f);
+PlayGuiSound("29_elec_burst.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "Player", false);
+AddTimer("", 4.0f, "InitiateTeleport2_8");
+AddTimer("", 9.0f, "InitiateTeleport2_9");
+AddTimer("", 3.5f, "TeleportTingeling2");
+}
+
+void InitiateTeleport1_1(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp1", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp5", 1, 2, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog1_1", "ps_magic_pink.ps", "CStickPS1_1", false);
+SetLampLit("AlchLamp1", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+AddTimer("", RandFloat(2.0f, 6.0f), "InitiateTeleport1_2");
+}
+
+void InitiateTeleport1_2(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp2", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp5", 1, 4, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog1_2", "ps_magic_pink.ps", "CStickPS1_2", false);
+SetLampLit("AlchLamp2", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+AddTimer("", RandFloat(2.0f, 6.0f), "InitiateTeleport1_3");
+}
+
+void InitiateTeleport1_3(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp3", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp5", 1, 6, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog1_3", "ps_magic_pink.ps", "CStickPS1_3", false);
+SetLampLit("AlchLamp3", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+AddTimer("", RandFloat(2.0f, 6.0f), "InitiateTeleport1_4");
+}
+
+void InitiateTeleport1_4(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp4", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp5", 2, 10, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog1_4", "ps_magic_pink.ps", "CStickPS1_4", false);
+SetLampLit("AlchLamp4", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+int TeleportCrashX = RandInt(1, 12);
+if(TeleportCrashX == 1)
+{
+AddTimer("", 14.0f, "InitiateTeleport1_Fail");
+}
+else if(TeleportCrashX >= 1)
+{
+AddTimer("", RandFloat(6.0f, 10.0f), "InitiateTeleport1_5");
+}
+}
+
+void InitiateTeleport1_5(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp1", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp2", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp3", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp4", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp5", 2, 12, 0, 1, 0, false, "");
+FadeInSound("AmbWindy1", 3.0f, false);
+FadeInSound("AmbWindy2", 3.0f, false);
+SetLocalVarInt("TeleportActive", 1);
+StartScreenShake(0.02f, 12.0f, 1, 1);
+CreateParticleSystemAtEntity("TeleFog1_1", "ps_orb_light.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("TeleFog1_2", "ps_orb_light.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere1", false);
+PlayGuiSound("29_elec_burst.snt", 1);
+AddTimer("", 7.0f, "InitiateTeleport1_6");
+}
+
+void InitiateTeleport1_6(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp5", 6, 35, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp1", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp2", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp3", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp4", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 6, 35, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp6", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp7", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp8", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp9", 3, 25, 0, 1, 0, false, "");
+SetLampLit("AlchLamp5", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+StartScreenShake(0.04f, 16.0f, 1, 1);
+CreateParticleSystemAtEntity("TeleSparks1_1", "ps_electro_charge.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("TeleSparks1_2", "ps_electro_charge.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("TeleCore", "ps_orb_light_core.ps", "FogHere1", false);
+FadeSepiaColorTo(0.7f, 0.5f);
+FadeRadialBlurTo(0.04f, 0.01f);
+FadeImageTrailTo(0.37f, 0.16f);
+PlayGuiSound("29_elec_burst.snt", 1);
+FadeInSound("AmbElec1", 3.0f, false);
+FadeInSound("AmbElec2", 3.0f, false);
+AddTimer("", 11.0f, "InitiateTeleport1_Stun");
+AddTimer("", 12.0f, "InitiateTeleport1_7");
+}
+
+void InitiateTeleport1_Stun(string &in asTimer)
+{
+StartScreenShake(0.2f, 0.5f, 0, 0.25);
+FadeSepiaColorTo(1.0f, 0.5f);
+FadeRadialBlurTo(0.1f, 0.05f);
+FadeImageTrailTo(0.8f, 0.3f);
+FadePlayerAspectMulTo(0.6f, 0.4f);
+PlayGuiSound("scare_wall_stomp.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere1", false);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "Player", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+SetPlayerActive(false);
+FadeGlobalSoundSpeed(0.8f, 1.0f);
+StartPlayerLookAt("FogHere1", 5, 10, "");
+FadePlayerFOVMulTo(0.6f, 0.2f);
+}
+
+void InitiateTeleport1_7(string &in asTimer)
+{
+FadeOut(2.0f);
+StopSound("Amb1", 0);
+FadePlayerAspectMulTo(0.6f, 0.4f);
+StartScreenShake(0.3f, 4.0f, 2, 0);
+FadeRadialBlurTo(0.4f, 0.05f);
+FadeGlobalSoundSpeed(0.0f, 5.0f);
+FadePlayerFOVMulTo(3.2f, 0.5f);
+PlayGuiSound("29_elec_burst.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere1", false);
+AddTimer("", 4.0f, "InitiateTeleport1_8");
+AddTimer("", 9.0f, "InitiateTeleport1_9");
+AddTimer("", 3.75f, "TeleportTingeling");
+}
+
+void InitiateTeleport1_8(string &in asTimer)
+{
+StartPlayerLookAt("FogHere2", 5, 10, "");
+TeleportPlayer("TeleporterArea1");
+SetLampLit("AlchLamp5", false, true);
+SetLampLit("AlchLamp1", false, true);
+SetLampLit("AlchLamp2", false, true);
+SetLampLit("AlchLamp3", false, true);
+SetLampLit("AlchLamp4", false, true);
+SetLampLit("AlchLamp6", true, true);
+SetLampLit("AlchLamp7", true, true);
+SetLampLit("AlchLamp8", true, true);
+SetLampLit("AlchLamp9", true, true);
+CreateParticleSystemAtEntity("CStickFog2_1", "ps_magic_pink.ps", "CStickPS2_1", false);
+CreateParticleSystemAtEntity("CStickFog2_2", "ps_magic_pink.ps", "CStickPS2_2", false);
+CreateParticleSystemAtEntity("CStickFog2_3", "ps_magic_pink.ps", "CStickPS2_3", false);
+CreateParticleSystemAtEntity("CStickFog2_4", "ps_magic_pink.ps", "CStickPS2_4", false);
+RotatePropToSpeed("AlchLamp1", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp2", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp3", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp4", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp5", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("Cog1", 0.5, 0, 1, 0, 0, false, "");
+StopSound("AmbWindy1", 0.0f);
+StopSound("AmbElec1", 0.0f);
+StopSound("AmbWindy2", 0.0f);
+StopSound("AmbElec2", 0.0f);
+StopSound("Cog1S", 0.0f);
+DestroyParticleSystem("TeleFog1_1");
+DestroyParticleSystem("TeleCore");
+DestroyParticleSystem("TeleSparks1_1");
+DestroyParticleSystem("TeleSparks1_2");
+DestroyParticleSystem("TeleFog1_2");
+DestroyParticleSystem("CStickFog1_1");
+DestroyParticleSystem("CStickFog1_2");
+DestroyParticleSystem("CStickFog1_3");
+DestroyParticleSystem("CStickFog1_4");
+}
+
+void InitiateTeleport1_9(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+StartScreenShake(0.12f, 6.0f, 0, 4);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere2", false);
+StopPlayerLookAt();
+RotatePropToSpeed("AlchLamp10", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp6", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp7", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp8", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp9", 1, 0, 0, 1, 0, false, "");
+FadePlayerAspectMulTo(1.0f, 0.4f);
+FadeIn(0);
+StartEffectFlash(0.0, 1.0, 0.25f);
+FadePlayerFOVMulTo(1.0f, 0.3f);
+FadeGlobalSoundSpeed(1.0f, 13.0f);
+SetPlayerActive(true);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.025f);
+FadeImageTrailTo(0.0f, 0.05f);
+AddTimer("", 22.0f, "InitiateTeleport1_PREFIN");
+AddTimer("", 30.0f, "InitiateTeleport1_FIN");
+AddTimer("", 0.1f, "InitiateTeleport1_9A");
+}
+
+void InitiateTeleport1_9A(string &in asTimer)
+{
+PlaySoundAtEntity("", "27_orb_implode.snt", "Player", 0, false);
+}
+
+void InitiateTeleport1_PREFIN(string &in asTimer)
+{
+SetMoveObjectStateExt("TeleporterGate1", -1.1, 0.3, 0.6, 0, false);
+SetMoveObjectStateExt("TeleporterGate2", -1.1, 0.3, 0.6, 0, false);
+SetLampLit("AlchLamp6", false, true);
+SetLampLit("AlchLamp7", false, true);
+SetLampLit("AlchLamp8", false, true);
+SetLampLit("AlchLamp9", false, true);
+}
+
+void InitiateTeleport1_FIN(string &in asTimer)
+{
+SetLocalVarInt("TeleportActive", 0);
+DestroyParticleSystem("CStickFog2_1");
+DestroyParticleSystem("CStickFog2_2");
+DestroyParticleSystem("CStickFog2_3");
+DestroyParticleSystem("CStickFog2_4");
+SetLeverStuckState("StartTeleporter", 0, true);
+SetLeverStuckState("StartTeleporter2", 0, true);
+SetEntityInteractionDisabled("StartTeleporter2", false);
+SetEntityInteractionDisabled("StartTeleporter", false);
+PlayGuiSound("07_pick_lock.snt", 1);
+StopSound("AmbWindy1", 6.0f);
+StopSound("AmbWindy2", 6.0f);
+StopSound("Amb3", 3.0f);
+}
+
+void InitiateTeleport2_1(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp6", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 1, 2, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog2_1", "ps_magic_pink.ps", "CStickPS2_1", false);
+SetLampLit("AlchLamp6", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+AddTimer("", RandFloat(1.0f, 3.0f), "InitiateTeleport2_2");
+}
+
+void InitiateTeleport2_2(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp7", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 1, 4, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog2_2", "ps_magic_pink.ps", "CStickPS2_2", false);
+SetLampLit("AlchLamp7", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+AddTimer("", RandFloat(1.0f, 3.0f), "InitiateTeleport2_3");
+}
+
+void InitiateTeleport2_3(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp8", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 1, 6, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog2_3", "ps_magic_pink.ps", "CStickPS2_3", false);
+SetLampLit("AlchLamp8", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+AddTimer("", RandFloat(1.0f, 3.0f), "InitiateTeleport2_4");
+}
+
+void InitiateTeleport2_4(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp9", 2, 4, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 2, 10, 0, 1, 0, false, "");
+CreateParticleSystemAtEntity("CStickFog2_4", "ps_magic_pink.ps", "CStickPS2_4", false);
+SetLampLit("AlchLamp9", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+SetLocalVarInt("TeleportActive", 1);
+AddTimer("", RandFloat(3.0f, 8.0f), "InitiateTeleport2_5");
+}
+
+void InitiateTeleport2_5(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp6", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp7", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp8", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp9", 6, 12, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 2, 12, 0, 1, 0, false, "");
+SetLocalVarInt("TeleportActive", 1);
+FadeInSound("AmbWindy1", 3.0f, false);
+FadeInSound("AmbWindy2", 3.0f, false);
+StartScreenShake(0.02f, 12.0f, 1, 1);
+CreateParticleSystemAtEntity("TeleFog2_1", "ps_orb_light.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("TeleFog2_2", "ps_orb_light.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere2", false);
+PlayGuiSound("29_elec_burst.snt", 1);
+AddTimer("", RandFloat(3.0f, 5.0f), "InitiateTeleport2_6");
+}
+
+void InitiateTeleport2_6(string &in asTimer)
+{
+RotatePropToSpeed("AlchLamp5", 6, 35, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp1", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp2", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp3", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp4", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 6, 35, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp6", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp7", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp8", 3, 25, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp9", 3, 25, 0, 1, 0, false, "");
+SetLampLit("AlchLamp10", true, true);
+PlayGuiSound("12_valve_stuck.snt", 1);
+CreateParticleSystemAtEntity("TeleSparks2_1", "ps_electro_charge.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("TeleSparks2_2", "ps_electro_charge.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere2", false);
+CreateParticleSystemAtEntity("TeleCore2", "ps_orb_light_core.ps", "FogHere2", false);
+FadeSepiaColorTo(0.7f, 0.5f);
+FadeRadialBlurTo(0.04f, 0.01f);
+FadeImageTrailTo(0.37f, 0.16f);
+PlayGuiSound("29_elec_burst.snt", 1);
+FadeInSound("AmbElec1", 3.0f, false);
+FadeInSound("AmbElec2", 3.0f, false);
+int TeleportRandsX = RandInt(1, 5);
+if(TeleportRandsX == 1)
+{
+AddTimer("", 4.0f, "InitiateTeleport_Disturb");
+StartScreenShake(0.04f, 32.0f, 1, 1);
+}
+else if(TeleportRandsX >= 1)
+{
+AddTimer("", 6.0f, "InitiateTeleport2_7");
+StartScreenShake(0.04f, 16.0f, 1, 1);
+AddTimer("", 5.0f, "InitiateTeleport2_Stun");
+}
+}
+
+void InitiateTeleport2_Stun(string &in asTimer)
+{
+StartScreenShake(0.2f, 0.5f, 0, 0.25);
+FadeSepiaColorTo(1.0f, 0.5f);
+FadeRadialBlurTo(0.1f, 0.05f);
+FadeImageTrailTo(0.8f, 0.3f);
+FadePlayerAspectMulTo(0.6f, 0.4f);
+PlayGuiSound("scare_wall_stomp.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere2", false);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "Player", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+SetPlayerActive(false);
+FadeGlobalSoundSpeed(1.2f, 1.0f);
+StartPlayerLookAt("FogHere2", 5, 10, "");
+FadePlayerFOVMulTo(1.4f, 0.2f);
+}
+
+void InitiateTeleport2_7(string &in asTimer)
+{
+FadeOut(2.0f);
+FadeInSound("Amb1", 3.0f, false);
+FadePlayerAspectMulTo(1.6f, 0.4f);
+StartScreenShake(0.3f, 2.0f, 2, 0);
+FadeRadialBlurTo(0.4f, 0.05f);
+FadeGlobalSoundSpeed(0.0f, 5.0f);
+FadePlayerFOVMulTo(0.2f, 0.5f);
+PlayGuiSound("29_elec_burst.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere2", false);
+AddTimer("", 4.0f, "InitiateTeleport2_8");
+AddTimer("", 9.0f, "InitiateTeleport2_9");
+AddTimer("", 3.5f, "TeleportTingeling2");
+}
+
+void InitiateTeleport2_8(string &in asTimer)
+{
+StartPlayerLookAt("FogHere1", 5, 10, "");
+TeleportPlayer("TeleporterArea2");
+SetLampLit("AlchLamp1", true, true);
+SetLampLit("AlchLamp2", true, true);
+SetLampLit("AlchLamp3", true, true);
+SetLampLit("AlchLamp4", true, true);
+SetLampLit("AlchLamp6", false, true);
+SetLampLit("AlchLamp7", false, true);
+SetLampLit("AlchLamp8", false, true);
+SetLampLit("AlchLamp10", false, true);
+SetLampLit("AlchLamp9", false, true);
+CreateParticleSystemAtEntity("CStickFog1_1", "ps_magic_pink.ps", "CStickPS1_1", false);
+CreateParticleSystemAtEntity("CStickFog1_2", "ps_magic_pink.ps", "CStickPS1_2", false);
+CreateParticleSystemAtEntity("CStickFog1_3", "ps_magic_pink.ps", "CStickPS1_3", false);
+CreateParticleSystemAtEntity("CStickFog1_4", "ps_magic_pink.ps", "CStickPS1_4", false);
+RotatePropToSpeed("AlchLamp6", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp7", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp8", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp9", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp10", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("Cog1", 0.5, 0, 1, 0, 0, false, "");
+StopSound("AmbWindy1", 0.0f);
+StopSound("AmbElec1", 0.0f);
+StopSound("AmbWindy2", 0.0f);
+StopSound("AmbElec2", 0.0f);
+StopSound("Cog1S", 0.0f);
+DestroyParticleSystem("TeleFog2_1");
+DestroyParticleSystem("TeleCore2");
+DestroyParticleSystem("TeleSparks2_1");
+DestroyParticleSystem("TeleSparks2_2");
+DestroyParticleSystem("TeleFog2_2");
+DestroyParticleSystem("CStickFog2_1");
+DestroyParticleSystem("CStickFog2_2");
+DestroyParticleSystem("CStickFog2_3");
+DestroyParticleSystem("CStickFog2_4");
+}
+
+void InitiateTeleport2_9(string &in asTimer)
+{
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "FogHere1", false);
+StartScreenShake(0.12f, 6.0f, 0, 4);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "FogHere1", false);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+CreateParticleSystemAtEntity("", "ps_orb_on_player.ps", "Player", false);
+StopPlayerLookAt();
+RotatePropToSpeed("AlchLamp5", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp4", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp3", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp2", 1, 0, 0, 1, 0, false, "");
+RotatePropToSpeed("AlchLamp1", 1, 0, 0, 1, 0, false, "");
+FadePlayerAspectMulTo(1.0f, 0.4f);
+FadeIn(0);
+StartEffectFlash(0.0, 1.0, 0.25f);
+FadePlayerFOVMulTo(1.0f, 0.3f);
+FadeGlobalSoundSpeed(1.0f, 13.0f);
+SetPlayerActive(true);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.025f);
+FadeImageTrailTo(0.0f, 0.05f);
+AddTimer("", 15.0f, "InitiateTeleport2_PREFIN");
+AddTimer("", 22.0f, "InitiateTeleport2_FIN");
+AddTimer("", 0.1f, "InitiateTeleport2_9A");
+}
+
+void InitiateTeleport2_9A(string &in asTimer)
+{
+PlaySoundAtEntity("", "27_orb_implode.snt", "Player", 0, false);
+}
+
+void InitiateTeleport2_PREFIN(string &in asTimer)
+{
+SetMoveObjectStateExt("TeleporterGate1", -1.1, 0.3, 0.6, 0, false);
+SetMoveObjectStateExt("TeleporterGate2", -1.1, 0.3, 0.6, 0, false);
+SetLampLit("AlchLamp1", false, true);
+SetLampLit("AlchLamp2", false, true);
+SetLampLit("AlchLamp3", false, true);
+SetLampLit("AlchLamp4", false, true);
+}
+
+void InitiateTeleport2_FIN(string &in asTimer)
+{
+SetLocalVarInt("TeleportActive", 0);
+DestroyParticleSystem("CStickFog1_1");
+DestroyParticleSystem("CStickFog1_2");
+DestroyParticleSystem("CStickFog1_3");
+DestroyParticleSystem("CStickFog1_4");
+SetLeverStuckState("StartTeleporter", 0, true);
+SetLeverStuckState("StartTeleporter2", 0, true);
+SetEntityInteractionDisabled("StartTeleporter2", false);
+SetEntityInteractionDisabled("StartTeleporter", false);
+PlayGuiSound("07_pick_lock.snt", 1);
+StopSound("AmbWindy1", 6.0f);
+StopSound("AmbWindy2", 6.0f);
+StopSound("Amb3", 3.0f);
+}
+
+void AddTindPoint(string &in asEntity)
+{
+AddLocalVarInt("RequiredTinderboxes", 1);
+if(GetLocalVarInt("RequiredTinderboxes") == 5)
+{
+SetLeverStuckState("StartTeleporter", 0, true);
+SetMessage("TD_Custom", "TinderboxesGotten", 4.0f);
+CompleteQuest("Chapter1Only2", "CHP1_1");
+SetEntityActive("DoTeleportQuest", false);
+SetEntityConnectionStateChangeCallback("StartTeleporter", "InitiateTeleport1");
+}
+}
+
+void GiveQuest1_1(string &in asEntity)
+{
+AddQuest("Chapter1Only2", "CHP1_1");
+}
+
+void InitiateTeleport1(string &in asEntity, int alState)
+{
+if(alState == -1)
+{
+SetMessage("TD_Custom", "TeleportDown", 4.0f);
+}
+if(alState == 1)
+{
+SetLeverStuckState("StartTeleporter", alState, true);
+SetEntityInteractionDisabled("StartTeleporter2", true);
+FadeInSound("Amb3", 3.0f, false);
+PlayGuiSound("07_pick_lock.snt", 1);
+SetMessage("TD_Custom", "TeleportUp", 1.0f);
+RotatePropToSpeed("Cog1", 3, 6, 1, 0, 0, false, "");
+FadeInSound("Cog1S", 3.0f, false);
+SetMoveObjectStateExt("TeleporterGate1", 0, 5, 5, 0, false);
+SetMoveObjectStateExt("TeleporterGate2", 0, 5, 5, 0, false);
+AddTimer("", 3.0f, "InitiateTeleport1_1");
+}
+}
+
+void InitiateTeleport2(string &in asEntity, int alState)
+{
+if(alState == -1)
+{
+SetMessage("TD_Custom", "TeleportDown", 4.0f);
+}
+if(alState == 1)
+{
+SetLeverStuckState("StartTeleporter2", alState, true);
+SetEntityInteractionDisabled("StartTeleporter", true);
+FadeInSound("Amb3", 3.0f, false);
+PlayGuiSound("07_pick_lock.snt", 1);
+SetMessage("TD_Custom", "TeleportUp", 1.0f);
+RotatePropToSpeed("Cog1", 3, 6, 1, 0, 0, false, "");
+FadeInSound("Cog1S", 3.0f, false);
+SetMoveObjectStateExt("TeleporterGate1", 0, 5, 5, 0, false);
+SetMoveObjectStateExt("TeleporterGate2", 0, 5, 5, 0, false);
+AddTimer("", 3.0f, "InitiateTeleport2_1");
+}
+}
+
+void RedBlinking1(string &in asTimer)
+{
+PlaySoundAtEntity("", "15_hammer.snt", "BlinkLight1", 0.0f, false);
+SetLampLit("BlinkLight1", true, true);
+SetLampLit("BlinkLight2", false, true);
+SetLampLit("BlinkLight3", true, true);
+SetLampLit("BlinkLight4", false, true);
+AddTimer("", RandFloat(0.1f, 4.25f), "RedBlinking2");
+}
+
+void RedBlinking2(string &in asTimer)
+{
+PlaySoundAtEntity("", "15_hammer.snt", "BlinkLight2", 0.0f, false);
+SetLampLit("BlinkLight1", false, true);
+SetLampLit("BlinkLight2", true, true);
+SetLampLit("BlinkLight3", false, true);
+SetLampLit("BlinkLight4", true, true);
+AddTimer("", RandFloat(0.1f, 4.25f), "RedBlinking1");
+}
+
+void GivePointFX(string &in asTimer)
+{
+PlayGuiSound("DPChord.snt", 1.0f);
+FadeIn(6.0f);
+}
+
+void MazeTrapEnd(string &in asTimer)
+{
+FadeOut(0);
+PlayGuiSound("scare_tingeling_rev2.snt", 1.0f);
+PlayGuiSound("scare_thump_flash.snt", 1.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+TeleportPlayer("MazeTrapTele");
+SetLocalVarInt("Scared", 0);
+FadeIn(5.0f);
+}
+
+void GivePointTimer(string &in asTimer)
+{
+AddGlobalVarInt("DreamPoint", 1);
+FadeOut(0.1f);
+AddTimer("", 0.1f, "GivePointFX");
+}
+
+void LanternGrab(string &in asEntity)
+{
+SetMessage("TD_Custom", "LanternMSG", 4.0f);
+}
+
+void LockpickGrab(string &in asEntity)
+{
+SetMessage("TD_Custom", "LockpickMSG", 4.0f);
+PlayGuiSound("pick_pipe.snt", 1);
+}
+
+void GivePoint(string &in asEntity)
+{
+AddGlobalVarInt("DreamPoint", 1);
+FadeOut(0.1f);
+AddTimer("", 0.1f, "GivePointFX");
+}
+
+void TDDiscovered(string &in asEntity)
+{
+SetMessage("TD_Custom", "TD", 6.0f);
+AddTimer("", 0.25f, "GivePointTimer");
+}
+
+void TriggerLights(string &in asParent, string &in asChild, int alState)
+{
+SetLampLit("bridge_torch_1", true, false);
+SetLampLit("bridge_torch_2", true, false);
+SetLampLit("bridge_torch_3", true, false);
+SetLampLit("bridge_torch_4", true, false);
+SetLampLit("bridge_torch_5", true, false);
+SetLampLit("bridge_torch_6", true, false);
+SetLampLit("bridge_torch_7", true, false);
+SetLampLit("bridge_torch_8", true, false);
+SetLampLit("bridge_torch_9", true, false);
+PlayGuiSound("13_ignite.snt", 1.0f);
+PlayGuiSound("scare_tingeling.snt", 1.0f);
+FadeInSound("Amb1", 3.0f, false);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetEntityActive("Tindy3", true);
+}
+
+void Gate1Appear(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("scare_tingeling.snt", 1.0f);
+PlayGuiSound("12_valve_stuck.snt", 1.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetEntityActive("Gate_1", true);
+}
+
+void Gate6Appear(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("scare_tingeling.snt", 1.0f);
+PlayGuiSound("12_valve_stuck.snt", 1.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetEntityActive("Gate_6", true);
+}
+
+void Gate15Appear(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("scare_tingeling.snt", 1.0f);
+PlayGuiSound("12_valve_stuck.snt", 1.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetEntityActive("Gate_15", true);
+SetEntityActive("Gate_7", false);
+}
+
+void MazeTrap(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("scare_tingeling.snt", 1.0f);
+PlayGuiSound("12_valve_stuck.snt", 1.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetEntityActive("Gate_11", true);
+FadeOut(10.0f);
+SetLocalVarInt("Scared", 1);
+AddTimer("", 8.0f, "MazeTrapEnd");
+}
+
+void MazeDoorEvent(string &in asParent, string &in asChild, int alState)
+{
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeInSound("Amb2", 3.0f, false);
+SetLampLit("bridge_torch_10", false, true);
+SetLampLit("bridge_torch_11", false, true);
+SetLampLit("bridge_torch_12", false, true);
+SetLampLit("bridge_torch_13", false, true);
+SetLampLit("bridge_torch_14", false, true);
+SetLampLit("bridge_torch_15", false, true);
+SetLampLit("bridge_torch_16", false, true);
+SetLampLit("bridge_torch_17", false, true);
+SetLampLit("bridge_torch_18", false, true);
+PlayGuiSound("scare_wind_reverse.snt", 1.0f);
+PlayGuiSound("12_valve_stuck.snt", 1.0f);
+StopMusic(9.0f, 1);
+}
+
+void TPBackToLant(string &in asParent, string &in asChild, int alState)
+{
+if(HasItem("Lantern") == false)
+{
+FadeOut(0);
+PlayGuiSound("scare_thump_flash.snt", 1.0f);
+PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+TeleportPlayer("Start");
+FadeIn(5.0f);
+SetMessage("TD_Custom", "LeaveLantern", 4.0f);
+}
+if(HasItem("Lantern") == true)
+{
+RemoveEntityCollideCallback("Player", "LanternForcer");
+}
+}
+
+void LightsOffEvent(string &in asParent, string &in asChild, int alState)
+{
+SetLampLit("Chandelier", false, true);
+AddPropImpulse("Chandelier", 2, 0.5f, 0, "World");
+AddPropImpulse("HangLantern", 2, 2.5f, 0, "World");
+PlayGuiSound("general_wind_whirl.snt", 1.0f);
+}
+
+void LockpickChest(string &in asItem, string &in asEntity)
+{
+PlayGuiSound("lock_door.snt", 1);
+SetLeverStuckState("Chesty", 0, true);
+RemoveUseItemCallback("LockPick1");
+}
+
+void WoodTug(string &in asEntity)
+{
+PlayGuiSound("step_run_wood_squeaky.snt", 1);
+PlayGuiSound("step_run_wood_squeaky.snt", 1);
+SetMessage("TD_Custom", "WoodTugMSG", 3.0f);
+}
+
+void TorchExam(string &in asEntity)
+{
+SetMessage("TD_Custom", "TorchExamMSG", 3.0f);
+}
+
+void InitPhono1(string &in asEntity, int alState)
+{
+PlayMusic("PhonoAmb1.ogg", false, 0.5f, 0.0f, 5, false);
+AddGlobalVarInt("Achiev2", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeGlobalSoundVolume(0.2f, 0.5f);
+SetEntityActive("PhonoBlock1", true);
+SetEntityActive("PhonoBlock2", true);
+SetWheelStuckState("PhonoGraph1", alState, true);
+AddEffectVoice("TD_Phono11.ogg", "", "TD_Voice", "Phono1_1", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono12.ogg", "", "TD_Voice", "Phono1_2", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono13.ogg", "", "TD_Voice", "Phono1_3", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono14.ogg", "", "TD_Voice", "Phono1_4", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono15.ogg", "", "TD_Voice", "Phono1_5", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono16.ogg", "", "TD_Voice", "Phono1_6", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono17.ogg", "", "TD_Voice", "Phono1_7", false, asEntity, 0, 20);
+SetEffectVoiceOverCallback("GivePointPhono");
+SetInventoryDisabled(true);
+}
+
+void GivePointPhono()
+{
+StopMusic(0.0f, 5);
+SetEntityActive("PhonoBlock1", false);
+SetEntityActive("PhonoBlock2", false);
+FadeGlobalSoundVolume(1.0f, 6.0f);
+SetEntityActive("PhonoLight1", false);
+SetEntityActive("PhonoLight2", false);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("lock_door.snt", 1);
+SetInventoryDisabled(false);
+AddTimer("", 0.25f, "GivePointTimer");
+}
+
+void Phono1Highlight(string &in asParent, string &in asChild, int alState)
+{
+SetLampLit("PhonoLight1", true, true);
+SetLampLit("PhonoLight2", true, true);
+PlayGuiSound("03_in_a_bottle.snt", 1);
+}
+
+void ExtraTindy(string &in asEntity)
+{
+SetMessage("TD_Custom", "ExtraTinderbox", 4.0f);
+PlayGuiSound("scare_tingeling.snt", 1);
+}
+
+void ElevLightTrig(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("AirlockDoor1L", true);
+SetMoveObjectState("AirlockDoor1", -1.0f);
+SetLocalVarInt("AirlockState", 1);
+PlayGuiSound("lm_light_flicker.snt", 1.0f);
+}
+
+void ATrigger(string &in asEntity, int alState)
+{
+if(alState == 1)
+{
+if(GetLocalVarInt("AirlockState") == 1)
+{
+SetMoveObjectState("AirlockDoor1", 0.0f);
+SetLocalVarInt("ALightState", 1);
+SetLeverStuckState("AirlockTrigger", alState, true);
+}
+if(GetLocalVarInt("AirlockState") == -1)
+{
+SetMoveObjectState("AirlockDoor2", 0.0f);
+SetLocalVarInt("ALightState", -1);
+SetLeverStuckState("AirlockTrigger", alState, true);
+}
+AddTimer("", 5.0f, "Airlocking");
+}
+}
+
+void ALights1(string &in asTimer)
+{
+if(GetLocalVarInt("ALightState") == 0)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", true, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+if(GetLocalVarInt("ALightState") == 1)
+{
+SetLampLit("AirlockLight_1", true, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+if(GetLocalVarInt("ALightState") == -1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", true, true);
+}
+AddTimer("", 0.5f, "ALights2");
+}
+
+void ALights2(string &in asTimer)
+{
+if(GetLocalVarInt("ALightState") == 1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", true, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+if(GetLocalVarInt("ALightState") == -1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", true, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+AddTimer("", 0.5f, "ALights3");
+}
+
+void ALights3(string &in asTimer)
+{
+if(GetLocalVarInt("ALightState") == 1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", true, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+if(GetLocalVarInt("ALightState") == -1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", true, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+AddTimer("", 0.5f, "ALights4");
+}
+
+void ALights4(string &in asTimer)
+{
+if(GetLocalVarInt("ALightState") == 1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", true, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+if(GetLocalVarInt("ALightState") == -1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", true, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+AddTimer("", 0.5f, "ALights5");
+}
+
+void ALights5(string &in asTimer)
+{
+if(GetLocalVarInt("ALightState") == 1)
+{
+SetLampLit("AirlockLight_1", false, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", true, true);
+}
+if(GetLocalVarInt("ALightState") == -1)
+{
+SetLampLit("AirlockLight_1", true, true);
+SetLampLit("AirlockLight_2", false, true);
+SetLampLit("AirlockLight_3", false, true);
+SetLampLit("AirlockLight_4", false, true);
+SetLampLit("AirlockLight_5", false, true);
+}
+AddTimer("", 0.5f, "ALights1");
+}
+
+void Airlocking(string &in asTimer)
+{
+CreateParticleSystemAtEntityExt("AirlockSteamFlow1", "ps_steam.ps", "ASteamFlow1", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+CreateParticleSystemAtEntityExt("AirlockSteamFlow2", "ps_steam.ps", "ASteamFlow2", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+CreateParticleSystemAtEntityExt("AirlockSteamFlow3", "ps_steam.ps", "ASteamFlow3", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+CreateParticleSystemAtEntityExt("AirlockSteamCloud1", "ps_dust_flowing_up.ps", "ASteamCloud_1", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+CreateParticleSystemAtEntityExt("AirlockSteamCloud2", "ps_dust_flowing_up.ps", "ASteamCloud_2", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+CreateParticleSystemAtEntityExt("AirlockSteamCloud3", "ps_dust_flowing_up.ps", "ASteamCloud_3", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+FadeInSound("AirlockAmb", 0.5f, false);
+FadeRadialBlurTo(0.04f, 0.02f);
+AddTimer("", 3.0f, "Airlocking2");
+}
+
+void Airlocking2(string &in asTimer)
+{
+CreateParticleSystemAtEntityExt("AirlockSteamCloud4", "ps_dust_flowing_up.ps", "ASteamCloud_4", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+CreateParticleSystemAtEntityExt("AirlockSteamCloud5", "ps_dust_flowing_up.ps", "ASteamCloud_5", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+CreateParticleSystemAtEntityExt("AirlockSteamCloud6", "ps_dust_flowing_up.ps", "ASteamCloud_6", false, 0, 0, 1, 1, false, 0, 0, 0, 0);
+AddTimer("", 6.0f, "Airlocking3");
+}
+
+void Airlocking3(string &in asTimer)
+{
+DestroyParticleSystem("AirlockSteamFlow1");
+DestroyParticleSystem("AirlockSteamFlow2");
+DestroyParticleSystem("AirlockSteamFlow3");
+StopSound("AirlockAmb", 0.5f);
+FadeRadialBlurTo(0.013f, 0.005f);
+AddTimer("", 6.0f, "Airlocking4");
+}
+
+void Airlocking4(string &in asTimer)
+{
+DestroyParticleSystem("AirlockSteamCloud1");
+DestroyParticleSystem("AirlockSteamCloud2");
+DestroyParticleSystem("AirlockSteamCloud3");
+DestroyParticleSystem("AirlockSteamCloud4");
+DestroyParticleSystem("AirlockSteamCloud5");
+DestroyParticleSystem("AirlockSteamCloud6");
+AddTimer("", 6.0f, "Airlocking5");
+}
+
+void Airlocking5(string &in asTimer)
+{
+SetLocalVarInt("ALightState", 0);
+if(GetLocalVarInt("AirlockState") == 1)
+{
+SetMoveObjectState("AirlockDoor2", -1.0f);
+AddTimer("", 3.0f, "AirlockingEND1");
+}
+if(GetLocalVarInt("AirlockState") == -1)
+{
+SetMoveObjectState("AirlockDoor1", -1.0f);
+SetLocalVarInt("ALightState", 0);
+AddTimer("", 3.0f, "AirlockingEND2");
+}
+}
+
+void AirlockingEND1(string &in asTimer)
+{
+SetLocalVarInt("AirlockState", -1);
+SetLeverStuckState("AirlockTrigger", 0, true);
+}
+
+void AirlockingEND2(string &in asTimer)
+{
+SetLocalVarInt("AirlockState", 1);
+SetLeverStuckState("AirlockTrigger", 0, true);
+}
+
+void DreamSecret(string &in asEntity)
+{
+if(GetGlobalVarInt("DreamPoint") < 3)
+{
+SetMessage("TD_Custom", "DreamSecretText", 3.0f);
+}
+if(GetGlobalVarInt("DreamPoint") >= 3)
+{
+SetPropHealth("SecretDoor", 0);
+SetMessage("TD_Custom", "DreamSecretText2", 3.0f);
+AddGlobalVarInt("DreamPoint", -3);
+}
+}
+
+void FillSecretChest(string &in asParent, string &in asChild, int alState)
+{
+SetLeverStuckState("SecretChest", 0, true);
+SetEntityActive("SecretHealth", true);
+SetEntityActive("SecretSani", true);
+SetGlobalVarInt("Achiev1", 1);
+AddTimer("", 1.5f, "FillSecretChest2");
+}
+
+void FillSecretChest2(string &in asTimer)
+{
+AddPropImpulse("SecretChest", 0, 0, 15, "");
+}
+
+void BrokenBlinking(string &in asTimer)
+{
+SetLampLit("HallwayLight_Broken", false, true);
+AddTimer("", 0.1f, "BrokenBlinking2");
+}
+
+void BrokenBlinking2(string &in asTimer)
+{
+SetLampLit("HallwayLight_Broken", true, false);
+PlaySoundAtEntity("", "lm_light_flicker.snt", "HallwayLight_Broken", 0, false);
+AddTimer("", RandFloat(0.5f, 1.5f), "BrokenBlinking");
+}
+
+void ElevMoveUp(string &in asEntity, int alState)
+{
+if(alState == -1)
+{
+SetLeverStuckState(asEntity, alState, true);
+SetMoveObjectStateExt("ElevDoorBottom", 0.0, 0.75, 1, 0, false);
+SetMoveObjectStateExt("ExitLift", -12.0, 1, 1.5, 0, false);
+AddEntityCollideCallback("ExitLift", "ElevStopTop", "ElevStopUp", false, 1);
+FadeInSound("ElevNoise", 0.5f, false);
+PlayGuiSound("14_elevator_clank.snt", 1);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+}
+}
+
+void ElevMoveDown(string &in asEntity, int alState)
+{
+if(alState == 1)
+{
+SetLeverStuckState(asEntity, alState, true);
+SetMoveObjectStateExt("ElevDoorTop", 0.1, 0.25, 1, 0, false);
+SetMoveObjectStateExt("ExitLift", 0.0, 0.5, 1.5, 0, false);
+AddEntityCollideCallback("ExitLift", "ElevStopBottom", "ElevStopDown", false, 1);
+FadeInSound("ElevNoise", 0.5f, false);
+PlayGuiSound("14_elevator_clank.snt", 1);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+}
+}
+
+void ElevStopUp(string &in asParent, string &in asChild, int alState)
+{
+StopPropMovement("ExitLift");
+SetLeverStuckState("ElevTopSwitch", 0, true);
+SetMoveObjectStateExt("ElevDoorTop", 1.0, 0.25, 1, 0, false);
+StopSound("ElevNoise", 0);
+PlayGuiSound("14_elevator_activate.snt", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+}
+
+void ElevStopDown(string &in asParent, string &in asChild, int alState)
+{
+StopPropMovement("ExitLift");
+SetLeverStuckState("ElevBottomSwitch", 0, true);
+SetMoveObjectStateExt("ElevDoorBottom", -1.0, 0.25, 2, 0, false);
+StopSound("ElevNoise", 0);
+PlayGuiSound("14_elevator_activate.snt", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+}
+
+void KeypadExam(string &in asEntity)
+{
+SetMessage("TD_Custom", "KeypadMSG", 4.0f);
+}
+
+void ChangeLoadScreenRemoveQuest(string &in asEntity)
+{
+SetupLoadScreen("TD_Custom", "LVL1Screen", 1, "");
+}
+
+void OnEnter()
+{
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+PreloadSound("27_orb_implode.snt");
+PreloadSound("ui_add_quest.snt");
+PreloadSound("27_jam.snt");
+PreloadSound("TD_Phono11.snt");
+PreloadSound("TD_Phono12.snt");
+PreloadSound("TD_Phono13.snt");
+PreloadSound("TD_Phono14.snt");
+PreloadSound("TD_Phono15.snt");
+PreloadSound("TD_Phono16.snt");
+PreloadSound("TD_Phono17.snt");
+PreloadSound("DPChord.snt");
+}

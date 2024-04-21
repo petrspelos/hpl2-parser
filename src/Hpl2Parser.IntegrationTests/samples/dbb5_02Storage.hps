@@ -1,0 +1,503 @@
+
+void OnStart()
+{
+	
+if(ScriptDebugOn())
+    {
+		GiveItem("jarro", "Puzzle", "herramienta", "glass_container_empty", 0);
+		GiveItem("jarro_listo", "Puzzle", "herramienta", "liquid_jar_blue", 0);
+    }
+	
+	PlayPropAnimation("Charmander_1", "Asustado", 0.0f, true, "");
+	
+	SetSanityDrainDisabled(true);
+	SetInDarknessEffectsActive(false);
+	PlayMusic("12_amb.ogg", true, 0.85f, 0.0f, 0, true);
+	SetLocalVarInt("frascos", 0);
+	SetLocalVarInt("auxilio", 0);
+	SetLocalVarInt("golpe_puerta", 0);
+	
+	AddUseItemCallback("", "llave_grunt", "puerta_laboratorio", "UseKeyOnDoor", true);
+	AddUseItemCallback("","jarro", "vino", "jarro_vino", true);
+	AddUseItemCallback("","jarro", "acido", "jarro_acido", true);
+	AddUseItemCallback("","jarro_listo", "puerta_charmander", "jarro_puerta", true);
+	AddUseItemCallback("","llave_charmander", "puerta_final", "desbloqueo_puerta", true);
+	
+	AddEntityCollideCallback("arma", "puerta_madera", "romper_puerta", true, 1);
+	AddEntityCollideCallback("Player", "area_grunt_1", "evento_grunt_1", true, 1);
+	AddEntityCollideCallback("Player", "area_brute_1", "evento_brute_1", true, 1);
+	AddEntityCollideCallback("Player", "area_brute_2", "evento_brute_2", true, 1);
+	AddEntityCollideCallback("Player", "revelado_puerta", "interaccion2", true, 1);
+	AddEntityCollideCallback("Player", "ayuda_puerta", "interaccion6", true, 1);
+	
+	SetEntityPlayerInteractCallback("puerta_charmander", "puerta_charmander_lockeada", true);
+	SetEntityPlayerInteractCallback("jarro", "tomada_jarro", true);
+	SetEntityPlayerInteractCallback("area_charmander", "rescate_charmander", true);
+	SetEntityPlayerInteractCallback("sub_1", "Luluvoz_sub_11", true);
+	SetEntityPlayerInteractCallback("puerta_final", "interaccion1", true);
+	SetEntityPlayerInteractCallback("puerta_grunt", "interaccion3", true);
+	SetEntityPlayerInteractCallback("puerta_madera", "interaccion4", true);
+	SetEntityPlayerInteractCallback("puerta_laboratorio", "interaccion5", true);
+	
+	SetEntityPlayerLookAtCallback("brute_2", "ultima_vista", true);
+	
+	AddTimer("", 1.0f, "Luluvoz_sub_1");
+	AddTimer("", 1.0f, "evento_grito");
+	AddTimer("", 1.0f, "evento_vozgrunt");
+	
+	CheckPoint("check1", "PlayerStartArea_1", "recargo", "Muertes", "muertegrunt");
+}
+
+
+	void evento_grito(string &in asTimer)
+	{
+	
+	if (GetLocalVarInt("auxilio")<1)
+		{
+			PlaySoundAtEntity("", "Char_rescate.snt", "voz_charmander", 0, false);
+			AddTimer("", 8.0f, "evento_grito"); 
+		}
+	}
+	
+	void evento_vozgrunt(string &in asTimer)
+	{
+	
+	if (GetLocalVarInt("gruñido")<1)
+		{
+			PlaySoundAtEntity("", "grunt/amb_idle_scratch.snt", "voz_grunt", 0, false);
+			AddTimer("", 6.0f, "evento_vozgrunt"); 
+		}
+	}
+	
+
+
+     //===========================================
+		//Interacciones del lugar
+     //===========================================
+
+
+	void interaccion2(string &in asParent, string &in asChild, int alState)
+	{
+		AddTimer("", 0.0f, "Luluvoz_sub_3");
+	}
+	
+	void interaccion1(string &in asEntity)
+	{
+		AddTimer("", 1.0f, "Luluvoz_sub_4");
+	}
+
+	void interaccion3(string &in asEntity)
+	{
+	if(GetSwingDoorLocked("puerta_grunt")==true){
+		AddTimer("", 1.0f, "Luluvoz_sub_5");
+		}
+	}
+	
+	void interaccion4(string &in asEntity)
+	{
+	if(GetSwingDoorLocked("puerta_madera")==true){
+		AddTimer("", 1.0f, "Luluvoz_sub_6");
+		}
+	}
+	
+	void interaccion5(string &in asEntity)
+	{
+	if(GetSwingDoorLocked("puerta_laboratorio")==true){
+		AddTimer("", 1.0f, "Luluvoz_sub_7");
+		}
+	}
+	
+	void interaccion6(string &in asParent, string &in asChild, int alState)
+	{
+	if(GetLocalVarInt("golpe_puerta")==0){	
+		AddTimer("", 1.0f, "Luluvoz_sub_15");
+		}
+	}
+
+
+     //===========================================
+		//Interacción con puerta de charmander
+     //===========================================
+
+
+	void puerta_charmander_lockeada(string &in asEntity)
+	{
+	SetEntityActive("area_grunt_1", true);
+	AddTimer("", 1.0f, "Luluvoz_sub_8");
+	AddLocalVarInt("gruñido", 1);
+	}
+	
+	
+	void evento_grunt_1(string &in asParent, string &in asChild, int alState)
+	{
+	SetEntityActive("grunt_1", true);
+	SetSwingDoorClosed("puerta_abrir", false, true);
+	SetSwingDoorDisableAutoClose("puerta_abrir", true);
+	SetSwingDoorLocked("puerta_grunt", false, true);
+	
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_3", 3, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_5", 4, "IdleExtra1");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_3", 0.0001, "");
+	AddEnemyPatrolNode("grunt_1", "PathNodeArea_117", 1, "");
+	
+	AddTimer("", 1.0f, "Luluvoz_sub_9");
+	}
+
+
+
+     //===========================================
+		//Desbloqueo Puertas llave y mazo
+     //===========================================
+
+	void UseKeyOnDoor(string &in asItem, string &in asEntity)
+	{
+	SetSwingDoorLocked(asEntity, false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	CompleteQuest("quest_con_2", "llave");
+	}
+
+	void romper_puerta(string &in asParent, string &in asChild, int alState)
+	{
+	PlaySoundAtEntity("", "break_wood_metal.snt", "Player", 0, false);
+	SetPropHealth("puerta_madera", 0.0f);
+	CompleteQuest("quest_con_1", "mazo");
+	AddLocalVarInt("golpe_puerta", 1);
+	}
+
+
+
+
+     //===========================================
+		//Tomada de jarro
+     //===========================================
+
+	void tomada_jarro(string &in asEntity)
+	{
+	AddTimer("", 2.0f, "evento_grunt_2");
+	AddTimer("", 0.5f, "Luluvoz_sub_12");
+	}
+	
+	void evento_grunt_2(string &in asTimer)
+	{
+	SetEntityActive("grunt_2", true);
+	
+	AddEnemyPatrolNode("grunt_2", "PathNodeArea_48", 3, "");
+	AddEnemyPatrolNode("grunt_2", "PathNodeArea_50", 0.0001, "");
+	AddEnemyPatrolNode("grunt_2", "PathNodeArea_52", 0.0001, "");
+	AddEnemyPatrolNode("grunt_2", "PathNodeArea_54", 0.0001, "");
+	AddEnemyPatrolNode("grunt_2", "PathNodeArea_38", 5, "");
+	AddEnemyPatrolNode("grunt_2", "PathNodeArea_4", 1, "");
+	
+	AddTimer("", 1.0f, "Luluvoz_sub_13");
+	
+	CheckPoint("check2", "PlayerStartArea_1", "recargo", "Muertes", "muertegrunt2");
+	}
+
+
+
+
+
+     //===========================================
+		//Mezcla de jarros
+     //===========================================
+
+	void jarro_vino(string &in asItem, string &in asEntity)
+	 {
+	 PlaySoundAtEntity("", "oil_tank_fill.snt", "Player", 0, false);
+	 RemoveItem(asItem);
+	 GiveItem("jarro", "Puzzle", "jarro_vino", "glass_container_blood", 0);
+	 AddLocalVarInt("frascos", 1);
+	 jarro_listo();
+	 ayuda_puerta();
+	 
+	 if(GetLocalVarInt("frascos")==2)
+		{
+			AddTimer("", 3.0f, "evento_grunt_4");
+			CheckPoint("check3", "PlayerStartArea_1", "recargo", "Muertes", "muertegrunt3");
+		}		
+	}
+	
+	void evento_grunt_4(string &in asTimer)
+	{
+	SetEntityActive("grunt_4", true);
+	
+	AddEnemyPatrolNode("grunt_4", "PathNodeArea_41", 6, "");
+	AddEnemyPatrolNode("grunt_4", "PathNodeArea_115", 1, "");
+	}
+	
+	
+	
+	void jarro_acido(string &in asItem, string &in asEntity)
+	 {
+	 PlaySoundAtEntity("", "puzzle_acid_success.snt", "Player", 0, false);
+	 RemoveItem(asItem);
+	 GiveItem("jarro", "Puzzle", "jarro_acido", "glass_container_mix_done", 0);
+	 AddLocalVarInt("frascos", 1);
+	 jarro_listo();
+	 
+	 if(GetLocalVarInt("frascos")==2)
+		{
+			AddTimer("", 3.5f, "evento_grunt_5");
+			CheckPoint("check4", "PlayerStartArea_1", "recargo", "Muertes", "muertegrunt3");
+		}	
+	}
+	
+	void evento_grunt_5(string &in asTimer)
+	{
+	SetEntityActive("grunt_5", true);
+	
+	AddEnemyPatrolNode("grunt_5", "PathNodeArea_76", 6, "");
+	AddEnemyPatrolNode("grunt_5", "PathNodeArea_115", 1, "");
+	}
+	
+	void ayuda_puerta()
+	 {
+	 if(GetLocalVarInt("frascos")<=1)
+		{		
+		SetEntityActive("ayuda_puerta", true);
+		}		
+	 }
+	
+	void jarro_listo()
+	 {
+	 if(GetLocalVarInt("frascos")==2)
+	{
+		RemoveItem("jarro");
+		GiveItem("jarro_listo", "Puzzle", "jarro_listo", "liquid_jar_blue", 0);
+		AddTimer("", 0.0f, "Luluvoz_sub_16");
+		AddTimer("", 4.5f, "Luluvoz_sub_14");
+	}		
+	 }
+
+
+
+
+     //===========================================
+		//Rescate Charmander
+     //===========================================
+	
+	void jarro_puerta(string &in asItem, string &in asEntity)
+	{
+	RemoveItem("jarro_listo");
+	SetPropActiveAndFade("puerta_charmander", false, 3.0f);
+	PlaySoundAtEntity("", "gameplay_acid_web.snt", "Player", 0, false);
+	CompleteQuest("quest_con_3", "desafio");
+	AddLocalVarInt("auxilio", 1);
+	}
+
+	void rescate_charmander(string &in asEntity)
+	{
+	PlayPropAnimation("Charmander_1", "Encontrado", 0.5f, false, "obtenido");
+	AddTimer("", 0.5f, "char_agradecido");
+	AddTimer("", 2.1f, "flash");
+	}
+	
+	void char_agradecido(string &in asTimer)
+	{ 
+		PlaySoundAtEntity("", "Char_habla.snt", "voz_charmander", 0, false);
+	}
+	
+	void flash(string &in asTimer)
+	{ 
+		StartEffectFlash(0.3f,0.1f,0.4f);
+	}
+	
+	void obtenido(string &in asProp)
+	{
+	SetEntityActive("charmander_1", false);
+	SetEntityActive("llave_charmander", true);
+	PlayMusic("02_puzzle.ogg", false, 1.00f, 0.0f, 5, false);
+	CreateParticleSystemAtEntity("charmander_particulas", "ps_rose_petals.ps", "particulas", false);
+	SetEntityActive("area_brute_1", true);
+	SetEntityActive("area_brute_2", true);
+	AddTimer("", 3.4f, "Luluvoz_sub_17");
+	}
+	
+	
+
+	
+     //===========================================
+		//Encuentros finales y salida
+     //===========================================
+	
+	void evento_brute_1(string &in asParent, string &in asChild, int alState)
+	{
+	SetEntityActive("brute_1", true);
+	
+	AddEnemyPatrolNode("brute_1", "PathNodeArea_14", 6, "");
+	AddEnemyPatrolNode("brute_1", "PathNodeArea_88", 1, "");
+	
+	AddTimer("", 1.0f, "Luluvoz_sub_19");
+	
+	CheckPoint("check5", "PlayerStartArea_1", "recargo", "Muertes", "muertebrute");
+	}
+	
+	void evento_brute_2(string &in asParent, string &in asChild, int alState)
+	{
+	
+	if(GetEnemyStateName("brute_1") != "Hunt"){
+		if(GetEnemyStateName("brute_1") != "Alert")
+		{
+		SetEntityActive("brute_1", false);
+		SetEntityActive("brute_2", true);
+		CheckPoint("check6", "PlayerStartArea_1", "recargo2", "Muertes", "muertebrute2");
+		}
+	}
+	}
+	
+	
+	void ultima_vista(string &in asEntity, int alState)
+	{
+		AddTimer("", 1.0f, "Luluvoz_sub_21");
+	}
+	
+	void desbloqueo_puerta(string &in asItem, string &in asEntity)
+	{
+	PlaySoundAtEntity("", "door_sewer_unlock.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	SetLevelDoorLocked("puerta_final", false);
+	}
+
+
+
+
+	 //===========================================
+		//Muertes
+     //===========================================
+	void recargo(string &in asName, int alCount)
+	{
+	SetSanityDrainDisabled(true);
+	SetInDarknessEffectsActive(false);
+	}
+	
+	void recargo2(string &in asName, int alCount)
+	{
+	SetSanityDrainDisabled(true);
+	SetInDarknessEffectsActive(false);
+	SetEntityActive("brute_2", true);
+	}
+
+		 
+void OnEnter()
+{
+	AutoSave();
+	SetPlayerHealth(100.0f);
+	ClearSavedMaps();
+}
+ 
+
+void OnLeave()
+{
+	SetPlayerSanity(100.0f);
+	SetupLoadScreen("Loading", "cargando2", 0, "02juventud.jpg");
+}	 
+
+
+
+	 //===========================================
+		//Luluvoces
+     //===========================================
+	 
+	void Luluvoz_sub_1(string &in asTimer)
+	{ 
+		AddEffectVoice("Puf.ogg", "", "Avisos", "Luluvoz_sub_1", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("Ha.ogg", "", "Avisos", "Luluvoz_sub_2", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_3(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo03.ogg", "", "Avisos", "Luluvoz_sub_3", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_4(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo02.ogg", "", "Avisos", "Luluvoz_sub_4", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_5(string &in asTimer)
+	{ 
+		AddEffectVoice("Pensativa.ogg", "", "Avisos", "Luluvoz_sub_5", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_6(string &in asTimer)
+	{ 
+		AddEffectVoice("Puf.ogg", "", "Avisos", "Luluvoz_sub_6", false, "" ,0.0f ,0.0f );
+		AddQuest("quest_con_1", "mazo");
+	}
+		
+	void Luluvoz_sub_7(string &in asTimer)
+	{ 
+		AddEffectVoice("Cansada.ogg", "", "Avisos", "Luluvoz_sub_7", false, "" ,0.0f ,0.0f );
+		AddQuest("quest_con_2", "llave");
+	}
+	
+	void Luluvoz_sub_8(string &in asTimer)
+	{ 
+		AddEffectVoice("Gemido.ogg", "", "Avisos", "Luluvoz_sub_8", false, "" ,0.0f ,0.0f );
+		AddQuest("quest_con_3", "charmander");
+	}
+	
+	void Luluvoz_sub_9(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo01.ogg", "", "Avisos", "Luluvoz_sub_9", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "", true, "area_lulu" ,4 ,12 );
+		AddEffectVoice("Cansada.ogg", "", "Avisos", "Luluvoz_sub_10", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_11(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo01.ogg", "", "Avisos", "Luluvoz_sub_11", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_12(string &in asTimer)
+	{ 
+		AddEffectVoice("Risa.ogg", "", "Avisos", "Luluvoz_sub_12", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_13(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo03.ogg", "", "Avisos", "Luluvoz_sub_13", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_14(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo02.ogg", "", "Avisos", "Luluvoz_sub_14", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_15(string &in asTimer)
+	{ 
+		AddEffectVoice("Gemido.ogg", "", "Avisos", "Luluvoz_sub_15", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_16(string &in asTimer)
+	{ 
+		AddEffectVoice("Risa.ogg", "", "Avisos", "Luluvoz_sub_16", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_17(string &in asTimer)
+	{ 
+		AddEffectVoice("Ha.ogg", "", "Avisos", "Luluvoz_sub_17", false, "" ,0.0f ,0.0f );
+		AddTimer("", 3.0f, "Luluvoz_sub_18");
+	}
+	
+	void Luluvoz_sub_18(string &in asTimer)
+	{ 
+		StopAllEffectVoices(0.0f);
+		AddEffectVoice("Que_persona_tan_mocosa.ogg", "", "Avisos", "Luluvoz_sub_18", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_19(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo01.ogg", "", "Avisos", "Luluvoz_sub_19", false, "" ,0.0f ,0.0f );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "", true, "area_lulu" ,4 ,12 );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "", true, "area_lulu" ,4 ,12 );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "", true, "area_lulu" ,4 ,12 );
+		AddEffectVoice("vacio.ogg", "", "Avisos", "", true, "area_lulu" ,4 ,12 );
+		AddEffectVoice("Cansada.ogg", "", "Avisos", "Luluvoz_sub_20", false, "" ,0.0f ,0.0f );
+	}
+	
+	void Luluvoz_sub_21(string &in asTimer)
+	{ 
+		AddEffectVoice("Expresivo01.ogg", "", "Avisos", "Luluvoz_sub_21", false, "" ,0.0f ,0.0f );
+	}

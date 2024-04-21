@@ -1,0 +1,430 @@
+int swings = 0;
+
+void OnStart()
+{
+	AutoSave();
+	AddEntityCollideCallback("Player", "huntarea", "demoninsynty", true, 1);
+	AddEntityCollideCallback("Player", "area", "music", true, 1);
+	AddEntityCollideCallback("Player", "areas", "musick", true, 1);
+	AddEntityCollideCallback("Player", "area3", "tapahtuu", true, 1);
+	AddEntityCollideCallback("Player", "area4", "tapahtuu2", true, 1);
+	AddEntityCollideCallback("Player", "area5", "tapahtuu3", true, 1);
+	AddEntityCollideCallback("brute", "area6", "tapahtuu4", true, 1);
+	AddEntityCollideCallback("demon", "door1", "rajahda", true, 1);
+	AddEntityCollideCallback("demon", "door2", "rajahda2", true, 1);
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerLookSpeedMul(0.0f);
+	FadeOut(0.0f);
+	SetPlayerLampOil(0);
+	AddTimer("", 6.5f, "moveagain");
+	AddTimer("", 3.4f, "message2");
+	SetMessage("Messages", "timegoes", 3.0f);
+	PlayMusic("forest.ogg", true, 1.0f, 1.0f, 10, true);
+	AddUseItemCallback("", "hammer", "areause", "HammerAnimation", true);
+	SetEntityPlayerInteractCallback("map", "TavaraSpawni", true);
+	AddEntityCollideCallback("Player", "leavearea", "letsgonow", true, 1);
+	AddUseItemCallback("", "avain", "varasto", "ovenavaus", true);
+	AddUseItemCallback("", "chip", "areause2", "laitase", true);
+	AddUseItemCallback("", "hammer", "areause3", "pammauta", true);
+	SetEntityPlayerInteractCallback("pullo", "juose", true);
+	AddEntityCollideCallback("Player", "tarpeet", "mielitekee", true, 1);
+}
+
+void mielitekee(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "needs", 5.0f);
+}
+
+void juose(string &in asEntity)
+{
+	RemoveItem("pullo");
+	AddTimer("", 1.0f, "drinknow");
+}
+
+void drinknow(string &in asTimer)
+{
+	PlayGuiSound("26_agrippa_drink.ogg", 1.0f);
+	AddTimer("", 3.0f, "sanitygood");
+}
+
+void sanitygood(string &in asTimer)
+{
+	GiveSanityBoost();
+}
+
+void pammauta(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("chip2", false);
+	SetSwingDoorLocked("ovi2", false, true);
+	PlaySoundAtEntity("", "impact_metal_high.snt", "ovi2", 0, false);
+	SetEntityActive("areause3", false);
+	RemoveItem("hammer");
+	AddTimer("", 0.6f, "souund");
+}
+
+void souund(string &in asTimer)
+{
+	PlaySoundAtEntity("", "06_break_wood.snt", "ovi2", 0, false);
+}
+
+void laitase(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("chip2", true);
+	PlaySoundAtEntity("", "impact_metal_med.snt", "chip2", 0, false);
+	SetEntityActive("areause3", true);
+	SetEntityActive("areause2", false);
+	RemoveItem("chip");
+}
+
+void ovenavaus(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("varasto", false, true);
+	PlaySoundAtEntity("", "unlock_door", "varasto", 0, false);
+	RemoveItem("avain");
+}
+
+void letsgonow(string &in asParent, string &in asChild, int alState)
+{	
+	FadeOut(3.0f);
+	AddTimer("", 3.2f, "toforest");
+}
+
+void toforest(string &in asTimer)
+{
+	ChangeMap("leave_village.map", "PlayerStartArea_1", "", "");
+}
+
+void TavaraSpawni(string &in asEntity)
+{
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerLookSpeedMul(0.0f);	
+	AddTimer("", 4.0f, "normalsettings");
+	AddTimer("", 1.2f, "lookmap");
+	SetEntityActive("leavearea", true);
+	RemoveItem("map");
+}
+
+void lookmap(string &in asTimer)
+{
+	SetMessage("Messages", "tieto", 6.0f);
+}
+
+void normalsettings(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerLookSpeedMul(1.0f);
+	AddTimer("", 4.0f, "iknow");
+}
+
+void iknow(string &in asTimer)
+{
+	SetMessage("Messages", "tieto2", 5.5f);
+}
+
+void HammerAnimation(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("ObjectHammer", true);
+	
+	swings = 1;
+	
+	StartPlayerLookAt("ObjectHammer", 2, 2, "");
+	
+	AddTimer("movehammer", 0.1, "TimerMoveHammer");
+	AddTimer("hammersound", 0.27, "TimerMoveHammer");
+	AddTimer("resethammer", 0.4, "TimerMoveHammer");
+	AddTimer("repeat", 0.6, "TimerMoveHammer");
+	
+	PlaySoundAtEntity("", "15_rock_break", "wooden", 0, false);
+	PlaySoundAtEntity("", "15_make_hammer", "Player", 0.25, false);
+	PlaySoundAtEntity("", "03_rock_move", "wooden", 2, false);
+}
+
+void TimerMoveHammer(string &in asTimer)
+{
+	if(asTimer == "movehammer") SetMoveObjectState("ObjectHammer", 0.4);
+	
+	else if(asTimer == "hammersound") {
+		StopPlayerLookAt();
+		PlaySoundAtEntity("", "impact_wood_high", "wooden", 0, false);
+		PlaySoundAtEntity("", "hit_wood", "wooden", 0, false);
+	}
+	
+	else if(asTimer == "resethammer") SetMoveObjectState("ObjectHammer", 0);
+	
+	if(swings < 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.01, "TimerMoveHammer");
+		AddTimer("hammersound", 0.17, "TimerMoveHammer");
+		AddTimer("resethammer", 0.3, "TimerMoveHammer");
+		AddTimer("repeat", 0.5, "TimerMoveHammer");
+		
+		swings = swings + 1;
+	}
+	
+	else if(swings == 3 && asTimer == "repeat") {
+		AddTimer("movehammer", 0.2, "TimerMoveHammer");
+		AddTimer("hammersound", 0.37, "TimerMoveHammer");
+		AddTimer("resethammer", 0.5, "TimerMoveHammer");
+		AddTimer("repeat", 0.8, "TimerMoveHammer");
+		
+		AddTimer("break", 0.42, "TimerMoveHammer");
+		
+		swings = swings + 1;
+	}
+	
+	else if(swings == 4 && asTimer == "break") FinishAnimation();
+	
+	else if(swings == 4 && asTimer == "repeat") SetEntityActive("ObjectHammer", false);
+}
+
+void FinishAnimation()
+{
+	SetPropHealth("wooden", 0);
+	GiveSanityBoost();
+	PlaySoundAtEntity("", "break_wood.snt", "wooden", 0, false);
+	SetSwingDoorLocked("ovi", false, true);
+	SetEntityActive("areause", false);
+}
+
+void rajahda(string &in asParent, string &in asChild, int alState)
+{	
+	SetPropHealth("door1", 0.0f);
+}
+
+void rajahda2(string &in asParent, string &in asChild, int alState)
+{	
+	SetPropHealth("door2", 0.0f);
+}
+
+void demoninsynty(string &in asParent, string &in asChild, int alState)
+{	
+	AddTimer("", 8.0f, "demontimers");
+}
+
+void tapahtuu(string &in asParent, string &in asChild, int alState)
+{	
+	SetEntityActive("mad", true);
+}
+
+void tapahtuu2(string &in asParent, string &in asChild, int alState)
+{	
+	PlaySoundAtEntity("", "ISeeYou.snt", "soundbox", 0, false);
+}
+
+void tapahtuu3(string &in asParent, string &in asChild, int alState)
+{	
+	StartPlayerLookAt("look", 2.0f, 2.0f, "");
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	AddTimer("", 4.0f, "stoplookk");
+	SetEntityActive("brute", true);
+	AddEnemyPatrolNode("brute", "PathNodeArea_1", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_2", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_3", 0, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_4", 0, ""); 
+	AddEntityCollideCallback("Player", "poista", "kuolepois", true, 1);
+}
+
+void stoplookk(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+}
+
+void kuolepois(string &in asParent, string &in asChild, int alState)
+{	
+	SetEntityActive("brute", false);
+}
+
+void tapahtuu4(string &in asParent, string &in asChild, int alState)
+{	
+	SetEntityActive("brute", false);
+}
+
+void message2(string &in asTimer)
+{
+	SetMessage("Messages", "timegoes2", 3.0f);
+}
+
+void moveagain(string &in asTimer)
+{
+	FadeIn(2.0f);
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerLookSpeedMul(1.0f);
+}
+
+void music(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1.0f, "vaihto");
+}
+
+void musick(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1.0f, "vaihtol");
+}
+
+void doitagain(string &in asParent, string &in asChild, int alState)
+{	
+	TeleportPlayer("checkpoint");
+	RemoveTimer("mytimer");
+	AddTimer("", 1.0f, "demontimers2");
+}
+
+void doitagain2(string &in asParent, string &in asChild, int alState)
+{	
+	TeleportPlayer("checkpoint");
+	RemoveTimer("mytimer");
+	AddTimer("", 1.0f, "demontimers3");
+}
+
+void demontimers(string &in asTimer)
+{
+	AddTimer("mytimer", 15.0f, "demonhunt");
+	AddTimer("mytimer", 22.0f, "aani");
+	AddTimer("mytimer", 17.0f, "aani2");
+	AddTimer("mytimer", 15.5f, "hearth");
+	CheckPoint ("", "move", "", "", "");
+	AddEntityCollideCallback("Player", "movearea", "doitagain", true, 1);
+}
+
+void aani(string &in asTimer)
+{
+	PlaySoundAtEntity("", "ISeeYou.snt", "demon", 0, false);
+	AddTimer("", 40.0f, "aani");
+}
+
+void aani2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "MYinsanity_whisper.snt", "demon", 0, false);
+	AddTimer("", 30.0f, "aani2");
+}
+
+void hearth(string &in asTimer)
+{
+	PlaySoundAtEntity("", "beat.snt", "demon", 0, false);
+	AddTimer("", 2.2f, "hearth");
+}
+
+void demonhunt(string &in asTimer)
+{
+	SetEntityActive("demon", true);
+}
+
+void demontimers2(string &in asTimer)
+{
+	AddTimer("mytimer", 5.0f, "demonhunt2");
+	AddTimer("mytimer", 12.0f, "aaniy");
+	AddTimer("mytimer", 7.0f, "aani22");
+	AddTimer("mytimer", 5.5f, "hearth2");
+	CheckPoint ("", "move", "", "", "");
+	AddEntityCollideCallback("Player", "movearea", "doitagain2", true, 1);
+}
+
+void aaniy(string &in asTimer)
+{
+	PlaySoundAtEntity("", "ISeeYou.snt", "demon2", 0, false);
+	AddTimer("", 40.0f, "aani");
+}
+
+void aani22(string &in asTimer)
+{
+	PlaySoundAtEntity("", "MYinsanity_whisper.snt", "demon2", 0, false);
+	AddTimer("", 30.0f, "aani2");
+}
+
+void hearth2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "beat.snt", "demon2", 0, false);
+	AddTimer("", 2.2f, "hearth");
+}
+
+void demonhunt2(string &in asTimer)
+{
+	SetEntityActive("demon2", true);
+}
+
+void demontimers3(string &in asTimer)
+{
+	AddTimer("mytimer", 5.0f, "demonhunt3");
+	AddTimer("mytimer", 12.0f, "aani3");
+	AddTimer("mytimer", 7.0f, "aani23");
+	AddTimer("mytimer", 5.5f, "hearth3");
+	CheckPoint ("", "checkpoint", "", "", "");
+}
+
+void aani3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "ISeeYou.snt", "demon3", 0, false);
+	AddTimer("", 40.0f, "aani");
+}
+
+void aani23(string &in asTimer)
+{
+	PlaySoundAtEntity("", "MYinsanity_whisper.snt", "demon3", 0, false);
+	AddTimer("", 30.0f, "aani2");
+}
+
+void hearth3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "beat.snt", "demon3", 0, false);
+	AddTimer("", 2.2f, "hearth");
+}
+
+void demonhunt3(string &in asTimer)
+{
+	SetEntityActive("demon3", true);
+}
+
+void music2(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1.0f, "vaihto2");
+}
+
+void music2l(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 1.0f, "vaihto2l");
+}
+
+void vaihto(string &in asTimer)
+{
+	StopMusic(1, 10);
+	PlayMusic("music_2.ogg", true, 0.8f, 0.8f, 5, true);
+	AddEntityCollideCallback("Player", "area2", "music2", true, 1);
+}
+
+void vaihtol(string &in asTimer)
+{
+	StopMusic(1, 10);
+	PlayMusic("music_2.ogg", true, 0.8f, 0.8f, 5, true);
+	AddEntityCollideCallback("Player", "area2s", "music2l", true, 1);
+}
+
+void vaihto2(string &in asTimer)
+{
+	StopMusic(2, 5);
+	PlayMusic("forest.ogg", true, 1.0f, 1.0f, 10, true);
+	AddEntityCollideCallback("Player", "area", "music", true, 1);
+}
+
+void vaihto2l(string &in asTimer)
+{
+	StopMusic(2, 5);
+	PlayMusic("forest.ogg", true, 1.0f, 1.0f, 10, true);
+	AddEntityCollideCallback("Player", "areas", "musick", true, 1);
+}
+
+
+
+
+
+
+
+
+
+
+
+

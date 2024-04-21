@@ -1,0 +1,385 @@
+void OnStart()
+{
+	SetLocalVarInt("WheelOK", 0);
+	SetLocalVarInt("LubrificateOK", 0);
+	SetMapDisplayNameEntry("Coal Mine");
+	AddUseItemCallback("", "HammerDoor", "Door", "DoorNoOpen", true);
+	AddUseItemCallback("", "KeyKitchen", "Door", "OpenDoor", true);
+	SetEntityInteractionDisabled("candlestick", true);
+	SetEntityInteractionDisabled("lever", true);
+	ClearSavedMaps();
+	PlaySoundAtEntity("", "15_rock_break", "Player", 0.8f, false);
+	AddEntityCollideCallback("Player", "AreaSlimeAppearTunnel", "TunnelShake", true, 1);
+	AddEntityCollideCallback("CogWheel1", "AreaCogWheel1", "MachinePuzzle1", true, 1);
+	AddEntityCollideCallback("CogWheel2", "AreaCogWheel2", "MachinePuzzle2", true, 1);
+	AddEntityCollideCallback("CogWheel3", "AreaCogWheel3", "MachinePuzzle3", true, 1);
+	SetPlayerCrouching(true);
+	FadeOut(0);
+	FadeIn(4);
+}
+
+void PickupDiary(string &in asEntity, string &in OnPickup)
+{
+	FadeImageTrailTo(2.5f, 3.5f);
+	SetPlayerRunSpeedMul(0.35f);
+	SetPlayerMoveSpeedMul(0.35f);
+	SetInventoryDisabled(true);
+	SetPlayerJumpDisabled(true);
+	StopMusic(2.5f, 1);
+	PlayMusic("03_paper_daniel01.ogg", false, 0.7f, 2.5f, 2, false);
+	AddTimer("ptsdstart", 0.5f, "TimerPTSD");
+	SetPlayerActive(false);
+}
+
+void TimerPTSD(string &in asTimer)
+{
+	PlaySoundAtEntity("", "15_bang_fall", "Player", 0, false);
+	FadeOut(2.5f);
+	AddTimer("", 3, "TimerChurchEvent");
+	StartScreenShake(0.1f, 2, 0.5f, 0.5f);
+	GiveSanityDamage(101, true);
+}
+
+void TimerChurchEvent(string &in asTimer)
+{
+	PlayGuiSound("react_breath_slow", 0.7f);
+	StartPlayerLookAt("organ", 0.5, 0.5, "");
+	AddTimer("", 6.5f, "TimerOrgan");
+	TeleportPlayer("ChurchSpawn");
+	FadeIn(2.5f);
+}
+
+void TimerOrgan(string &in asTimer)
+{
+	AddTimer("", 95.0f, "TimerEndBlock");
+	PlayGuiSound("react_breath_slow", 0.5f);
+	SetPlayerActive(true);
+	PlaySoundAtEntity("organ", "afx_church_organ_music_3D.snt", "organ", 0.5f, false);
+	PlaySoundAtEntity("organbackground", "Cue_under_organ_145.snt", "organ", 1.5f, false);
+	StartPlayerLookAt("alexander", 0.5, 0.5, "");
+	AddTimer("", 6.5f, "TimerAlex");
+}
+
+void TimerEndBlock(string &in asTimer)
+{
+	SetEntityActive("Block", false);
+}
+
+void TimerAlex(string &in asTimer)
+{
+	SetPlayerJumpDisabled(true);
+	PlayGuiSound("00_faint", 0.9f);
+	StopPlayerLookAt();
+	PlayGuiSound("react_breath_slow", 0.4f);
+}
+
+void ExitPTSD(string &in asEntity)
+{
+	PlayGuiSound("00_cuts", 1);
+	FadeOut(2.5f);
+	SetPlayerActive(false);
+	AddTimer("", 5.5f, "WakeUp");
+}
+
+void WakeUp(string &in asTimer)
+{
+	StopSound("organ", 5.5f);
+	StopSound("organbackground", 7.5f);
+	PlayMusic("06_amb.ogg", true, 0.8f, 3.5f, 1, true);
+	FadeImageTrailTo(0, 3.5f);
+	TeleportPlayer("WakeSpawn");
+	FadeIn(3);
+	SetPlayerCrouching(true);
+	SetPlayerActive(true);
+	SetPlayerRunSpeedMul(0.9f);
+	SetPlayerMoveSpeedMul(0.9f);
+	SetInventoryDisabled(false);
+	SetPlayerJumpDisabled(false);
+	PlayGuiSound("react_breath", 0.7f);
+}
+
+void Flashback()
+{
+	SetEntityInteractionDisabled("lever", false);
+}
+
+void OilInteract(string &in asEntity)
+{
+	AddUseItemCallback("PlaceContainer", "ContainerEmpty", "AreaOilPlace", "FillContainer", true);
+	SetEntityActive("AreaOilPlace", true);
+	SetEntityActive("AreaOil", false);
+	AddQuest("MementoO", "MO");
+	SetMessage("ScreenText", "oildrip", 4.5f);
+	PlayGuiSound("impact_organic_med", 0.7f);
+}
+
+void FillContainer(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("ContainerFillingOil", true);
+	SetEntityActive("AreaOilPlace", false);
+	StartPlayerLookAt("ContainerFillingOil", 1.5, 1.5, "");
+	RemoveItem(asItem);
+	AddTimer("AddContainer", 1.1f, "TimerAddContainer");	
+	AddTimer("StartCrouch", 0.8f, "TimerCrouch");	
+	AddTimer("StopCrouch", 1.4f, "TimerCrouch");		
+	AddTimer("AddContainer", 1.6f, "TimerStopLookAt");
+	SetEntityPlayerInteractCallback("AreaOil", "", false);
+}
+
+void TimerAddContainer(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("fill", "ps_oil_jar", "ContainerFillingOil", true);
+	PlaySoundAtEntity("slurp", "16_fill_oil", "ContainerFillingOil", 0.0f, false);
+}
+
+void TimerCrouch(string &in asTimer)
+{
+	if(asTimer == "StartCrouch")
+	{
+		SetEntityActive("ContainerFillingOil", false);
+		SetEntityActive("ContainerOil", true);
+		SetPlayerCrouching(true);
+		PlaySoundAtEntity("crouch", "player_crouch", "Player", 0.0f, false);
+		PlaySoundAtEntity("slurp2", "16_water_stream", "ContainerOil", 0.4f, false);
+		return;
+	}
+	CreateParticleSystemAtEntity("oilsplah", "ps_oil_splash.ps", "ContainerOil", true);
+	SetPlayerCrouching(false);
+	PlaySoundAtEntity("stand", "player_stand", "Player", 0.0f, false);
+}
+
+void TimerStopLookAt(string &in asTimer)
+{
+	StopPlayerLookAt();	
+	StopSound("slurp2", 4.0f);
+}
+
+void PickupOilContainer(string &in asEntity, string &in OnPickup)
+{
+	GiveSanityBoostSmall();
+	CompleteQuest("MementoO", "MO");
+	DestroyParticleSystem("fill");
+	DestroyParticleSystem("oilsplah");
+}
+
+void MachinePuzzle1(string &in asParent, string &in asChild, int alState)
+{
+	AddLocalVarInt("WheelOK", 1);
+	PlaySoundAtEntity("", "13_attach_wheel", "AreaCogWheel1", 0.9f, false);
+	SetEntityActive("CogWheel1", false);
+	SetEntityActive("Cog1Placed", true);
+}
+
+void MachinePuzzle2(string &in asParent, string &in asChild, int alState)
+{
+	AddLocalVarInt("WheelOK", 1);
+	PlaySoundAtEntity("", "13_attach_wheel", "AreaCogWheel2", 0.9f, false);
+	SetEntityActive("CogWheel2", false);
+	SetEntityActive("Cog2Placed", true);
+}
+
+void MachinePuzzle3(string &in asParent, string &in asChild, int alState)
+{
+	AddLocalVarInt("WheelOK", 1);
+	PlaySoundAtEntity("", "13_attach_wheel", "AreaCogWheel3", 0.9f, false);
+	SetEntityActive("CogWheel3", false);
+	SetEntityActive("Cog3Placed", true);
+}
+
+void Lubrificate(string &in asItem, string &in asEntity)
+{
+	AddLocalVarInt("LubrificateOK", 1);
+	RemoveItem(asItem);
+	GiveItem("ContainerEmpty", "glass_container", "", "glass_container.tga", 1);
+	CreateParticleSystemAtEntity("lubrificate", "ps_oil_grease", "machinecog1", false);
+	AddTimer("", 2.5f, "TimerEndOil");
+	PlaySoundAtEntity("soundlubrificate", "16_grease_lever", "machinecog1", 0.9f, false);
+}
+
+void TimerEndOil(string &in asTimer)
+{
+	SetEntityActive("AreaContainerPlace", false);
+	DestroyParticleSystem("lubrificate");
+}
+
+void PullCoalLever(string &in asEntity, int LeverState)
+{
+	if(LeverState == 1)
+	{
+		PlaySoundAtEntity("", "13_ignite", "AreaCoalPlace", 0.9f, false);
+		SetMessage("ScreenText", "coalfull", 4.5f);
+	}
+}
+
+void PullMachineLever(string &in asEntity, int alState)
+{
+	if(GetLocalVarInt("WheelOK") == 3 && GetLocalVarInt("LubrificateOK") == 1 && alState == 1)
+	{
+		StartScreenShake(0.01f, 3.5f, 0.5f, 0.5f);
+		CompleteQuest("MementoM", "MM");
+		SetMoveObjectState("gate", 1);
+		CompleteQuest("MementoG", "MG");
+		RunWheels(1.0f,-1.0f);
+		SetLeverStuckState(asEntity, 1, false);
+		PlaySoundAtEntity("", "13_machine_run", "MachineLever", 1, false);
+		PlayMusic("13_puzzle_machine.ogg", false, 0.8f, 2.5f, 2, false);
+		GiveSanityBoostSmall();
+	}
+	if(GetLocalVarInt("WheelOK") <= 3 && GetLocalVarInt("LubrificateOK") < 1 && alState == 1)
+	{
+		PlaySoundAtEntity("", "13_machine_fail", "MachineLever", 1, false);
+		SetMessage("ScreenText", "needscog", 4.5f);
+	}
+}
+
+void RunWheels(float fSpeed1, float fSpeed2)
+{
+	RotatePropToSpeed("machinecog2", 1, fSpeed2*3, 1, 0, 0, false, "");
+	RotatePropToSpeed("machinecog1", 1, fSpeed1*3, 0, 0, 1, false, "");
+	RotatePropToSpeed("machinecog3", 1, fSpeed2*3, 1, 0, 0, false, "");
+	RotatePropToSpeed("elevator_machine_cog_main_1", 1, fSpeed1, 1, 0, 0, false, "");
+	RotatePropToSpeed("Cog3Placed", 1, fSpeed2, 1, 0, 0, false, "");
+	RotatePropToSpeed("Cog2Placed", 1, fSpeed1, 1, 0, 0, false, "");
+	RotatePropToSpeed("Cog1Placed", 1, fSpeed2, 1, 0, 0, false, "");
+}
+
+void LeverElevator(string &in asEntity, int LeverState)
+{
+	if(LeverState == 1)
+	{
+		PlaySoundAtEntity("elevatorstart", "14_elevator_clank", "Player", 0, false);
+		StartScreenShake(0.01f, 3.5f, 0.5f, 0.5f);
+		AddTimer("elevator", 3.5f, "Elevator");
+	}
+}
+
+void Elevator(string &in asTimer)
+{
+	PlaySoundAtEntity("elevatorend", "14_elevator_activate", "Player", 0.5f, false);
+	ChangeMap("Elevator.map", "PlayerStartArea_1", "", "");
+}
+
+void DoorLocked(string &in asEntity)
+{
+	AddQuest("MementoD", "MD");
+	SetMessage("ScreenText", "globaldoorclosed", 4.5f);
+}
+
+void GateInteract(string &in asEntity)
+{
+	AddQuest("MementoG", "MG");
+	PlayGuiSound("17_attach_crank", 0.5f);
+	SetMessage("ScreenText", "gateclosed", 4.5f);
+	SetMoveObjectState(asEntity, 0.05f);
+	AddTimer(asEntity, 0.4f, "TimerCloseGate");
+	AddTimer("sound", 0.8f, "TimerCloseGate");
+}
+
+void TimerCloseGate(string &in asTimer)
+{
+	if(asTimer == "sound")
+	{
+		PlayGuiSound("close_gate.ogg", 0.5f);
+	}
+	else
+	{
+		SetMoveObjectState(asTimer, 0.00f);
+		if(GetLocalVarInt(asTimer) != 1)
+		SetEntityPlayerInteractCallback(asTimer, "GateInteract", true);	
+	}
+}
+
+void OpenDoor(string &in asItem, string &in asEntity)
+{
+	CompleteQuest("MementoD", "MD");
+	SetSwingDoorLocked("Door", false, true);
+	RemoveItem(asItem);
+	PlaySoundAtEntity("unlock", "unlock_door", "Door", 0.9f, false);
+}
+
+void TunnelShake(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("slimetunnel", true, 1.5f);
+	AddTimer("", 4, "TunnelShakeEnd");
+	CreateParticleSystemAtEntity("tunnelparticle", "ps_dust_break_25", "candlestick", false);
+	StartScreenShake(0.03f, 1.5f, 1, 1);
+	GiveSanityDamage(10, true);
+	PlaySoundAtEntity("scream", "guardian_idle", "candlestick", 0.8f, false);
+}
+
+void TunnelShakeEnd(string &in asTimer)
+{
+	StopSound("scream", 4.5f);
+	PlaySoundAtEntity("", "slime_loop", "slimetunnel", 0.9f, true);
+	PlayGuiSound("react_breath_slow", 0.7f);
+	DestroyParticleSystem("tunnelparticle");
+}
+
+void OnEnter()
+{
+	PlayMusic("06_amb.ogg", true, 0.8f, 2.5f, 1, true);
+}
+
+void OnLeave()
+{
+	StopMusic(2.5f, 1);
+	SetupLoadScreen("LoadingScreen", "Load6", 0,"");
+}
+
+void PickupManual(string &in asEntity, string &in OnPickup)
+{
+	AddUseItemCallback("StartLubrificate", "ContainerOil", "machinecog1", "Lubrificate", true);
+	SetEntityActive("brute", false);
+	AddEntityCollideCallback("Player", "MonsterArea", "SpawnMonster", true, 1);
+	AddQuest("MementoM", "MM");
+}
+
+void SuitorEnd(string &in asEntity, string &in OnAutoDisabled)
+{
+	PlayGuiSound("react_breath_slow", 0.8f);
+	PlaySoundAtEntity("", "15_drag_body", "coaldoor", 0.9f, false);
+}
+
+void SpawnMonster(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("CheckPointTunnel", "TunnelSpawn", "", "DeathHint", "DMonster");
+	AddEnemyPatrolNode("suitor", "Node_1", 0, "");
+	AddEnemyPatrolNode("suitor", "Node_2", 0.01f, "");
+	AddEnemyPatrolNode("suitor", "Node_3", 0.01f, "");
+	AddEnemyPatrolNode("suitor", "Node_4", 0.01f, "");
+	AddEnemyPatrolNode("suitor", "Node_5", 0.01f, "");
+	AddEnemyPatrolNode("suitor", "Node_6", 0, "");
+	GiveSanityDamage(5, true);
+	SetEntityActive("suitor", true);
+	PlayGuiSound("react_scare", 0.7f);
+}
+
+void KeyPickup(string &in asEntity, string &in OnPickup)
+{
+	CheckPoint("CheckPointMachine", "MachineSpawn", "", "DeathHint", "DMonster");
+	AddEnemyPatrolNode("brute", "BNode_1", 0, "");
+	AddEnemyPatrolNode("brute", "BNode_2", 0.01f, "");
+	AddEnemyPatrolNode("brute", "BNode_3", 0.01f, "");
+	AddEnemyPatrolNode("brute", "BNode_4", 0.01f, "");
+	AddEnemyPatrolNode("brute", "BNode_5", 0.01f, "");
+	AddEnemyPatrolNode("brute", "BNode_6", 0.001f, "");
+	AddEnemyPatrolNode("brute", "BNode_7", 0, "");
+	SetEntityActive("brute", true);
+	PlayGuiSound("react_scare", 0.6f);
+}
+
+void PlaySong(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		StopMusic(2.5f, 1);
+		PlaySoundAtEntity("song", "Partisan.snt", "phonograph", 0.5f, false);
+		AddTimer("endmusic", 58.0f, "EndMusic");
+	}
+}
+
+void EndMusic(string &in asTimer)
+{
+	PlayMusic("06_amb.ogg", true, 0.8f, 3.5f, 1, true);
+	StopSound("song", 2.5f);
+}

@@ -1,0 +1,287 @@
+void OnStart(){
+	AddEntityCollideCallback("Player", "AreaGruntScare", "gruntWalker", true, 1);
+	enemy();
+	AddEntityCollideCallback("Player", "AreaLeave", "leaveSewers", false, 1);
+	AddEntityCollideCallback("Player", "AreaCheckPoint_1", "addCheckPoint_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaMusicDebug", "runMusicDebug", false, 1);
+	AddEntityCollideCallback("grunt_notriggers", "AreaDespawnSelf", "despawnSelf", true, 1);
+	SetEntityPlayerInteractCallback("UnknownRoom", "wontOpen", false);
+	SetEntityPlayerInteractCallback("experiments", "prepare", true);
+	SetSanityDrainDisabled(false);
+	ladder();
+	monsterSounds();
+	SetGlobalVarInt("flow", 1);
+	SetLocalVarInt("ladderPlaced", 0);
+	SetLocalVarInt("hasReadExperiments", 0);
+	SetLocalVarInt("hasHeard", 0);
+	flow();
+}
+
+void OnEnter(){
+	SetSkyBoxActive(false);
+	if (GetGlobalVarInt("flow") == 1){
+		PlayMusic("water_flow.ogg", true, 0.75f, 0, 0, true);
+	}else if (GetGlobalVarInt("flow") == 0){
+		PlayMusic("grunt_amb.ogg", true, 1.5f, 0, 0, true);
+	}
+	//beg/debug//
+	// ChangeMap("10_passage.map", "PlayerStartArea_1", "", "");
+	//end/debug//
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "02AscentTo03", 1, "02SewerToMine.jpg");
+}
+
+void prepare(string &in entity){
+	AddTimer("", 0.1f, "giveNewQuest");
+	SetLocalVarInt("hasReadExperiments", 1);
+}
+
+void giveNewQuest(string &in asTimer){
+	AddQuest("defenseadv", "defenseadv");
+}
+
+void wontOpen(string &in entity){
+	SetMessage("Messages", "lockedNoEnter", 0);
+}
+
+void runMusicDebug(string &in asParent, string &in asChild, int alState){
+	if (GetGlobalVarInt("flow") == 1){
+		StopMusic(0, 0);
+		PlayMusic("water_flow.ogg", true, 0.75f, 0, 0, true);
+	}else if (GetGlobalVarInt("flow") == 0){
+		StopMusic(0, 0);
+		PlayMusic("grunt_amb.ogg", true, 1.5f, 0, 0, true);
+	}
+}
+
+void addCheckPoint_1(string &in asParent, string &in asChild, int alState){
+	CheckPoint("CheckPoint_1", "CheckPoint_1", "", "Messages", "death_1");
+}
+
+void monsterSounds(){
+	AddEntityCollideCallback("Player", "AreaSound_1", "playScareSoundScary", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_2", "doFunctions", false, 1);
+	AddEntityCollideCallback("Player", "AreaSound_3", "playScareSound", true, 1);
+	AddEntityCollideCallback("Player", "AreaSound_4", "playScareSound", true, 1);
+	AddEntityCollideCallback("Player", "AreaWatersteps", "makeWaterstep1", true, 1);
+	SetEntityPlayerInteractCallback("ControlRoom", "playScareSoundInteract", true);
+}
+
+void playScareSoundScary(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_grunt_2.ogg", 1000);
+}
+
+void gruntWalker(string &in asParent, string &in asChild, int alState){
+	StartPlayerLookAt("grunt_notriggers", 3.0f, 3.0f, "");
+	SetPlayerActive(false);
+	SetInventoryDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerCrouching(false);
+	ChangePlayerStateToNormal();
+	SetEntityActive("grunt_notriggers", true);
+	PlayGuiSound("grunt_sound.snt", 1000);
+	GiveSanityDamage(26, true);
+	SetEnemyDisableTriggers("grunt_notriggers", true);
+	AddEnemyPatrolNode("grunt_notriggers", "Path_notriggers_1", 0, "");
+	AddTimer("", 4.0f, "enablePlayer");
+}
+
+void enablePlayer(string &in asTimer){
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	SetInventoryDisabled(false);
+	SetPlayerCrouchDisabled(false);
+	ChangePlayerStateToNormal();
+}
+
+void despawnSelf(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("grunt_notriggers", false);
+	AddQuest("selfdefense", "selfdefense");
+}
+
+void playScareSoundInteract(string &in entity){
+	PlayGuiSound("scare_grunt_2.ogg", 1000);
+}
+
+void playScareSound(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("scare_grunt_1.ogg", 1000);
+}
+
+void makeWaterstep1(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("impact_water_low.snt", 1000);
+	AddTimer("", 0.75f, "makeWaterstep2");
+}
+
+void makeWaterstep2(string &in asTimer){
+	PlayGuiSound("impact_water_low.snt", 1000);
+	AddTimer("", 0.75f, "makeWaterstep3");
+}
+
+void makeWaterstep3(string &in asTimer){
+	PlayGuiSound("impact_water_low.snt", 1000);
+}
+
+void flow(){
+	SetEntityPlayerInteractCallback("LeverControlFlow", "controlFlow", false);
+	AddEntityCollideCallback("LeverControlFlow", "AreaDisableFlow", "disableFlow", false, 1);
+	AddEntityCollideCallback("LeverControlFlow", "AreaEnableFlow", "enableFlow", false, 1);
+	AddEntityCollideCallback("LeverControlFlow", "AreaEnableAction", "enableAction", false, 1);
+}
+
+void enableAction(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("AreaDisableFlow", true);
+	SetEntityActive("AreaEnableFlow", true);
+}
+
+void controlFlow(string &in entity){
+	if (GetLocalVarInt("hasReadExperiments") == 1){
+		SetLeverStuckState("LeverControlFlow", 2, true);
+	}else if (GetLocalVarInt("hasReadExperiments") == 0){
+		SetMessage("Messages", "readNote", 0);
+	}
+}
+
+void disableFlow(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("door_level_wood_close.snt", 100);
+	SetMessage("Messages", "flowDisabled", 0);
+	StopMusic(0, 0);
+	PlayMusic("grunt_amb.ogg", true, 1.5f, 0, 0, true);
+	SetGlobalVarInt("flow", 0);
+	SetEntityActive("flow_1", false);
+	SetEntityActive("flow_2", false);
+	SetEntityActive("flow_3", false);
+	SetEntityActive("flow_4", false);
+	AddTimer("", 1.0f, "spawnEnemy");
+}
+
+void enableFlow(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("move_gate.snt", 100);
+	SetMessage("Messages", "flowEnabled", 0);
+	SetGlobalVarInt("flow", 1);
+	StopMusic(0, 0);
+	PlayMusic("water_flow.ogg", true, 0.5f, 0, 0, true);
+	SetEntityActive("flow_1", true);
+	SetEntityActive("flow_2", true);
+	SetEntityActive("flow_3", true);
+	SetEntityActive("flow_4", true);
+}
+
+void ladder(){
+	AddUseItemCallback("", "adjustable_ladder", "AreaUseLadder", "adjustLadder", true);
+	AddEntityCollideCallback("Player", "AreaIfFlowDisabled", "checkOk", false, 1);
+	SetEntityPlayerInteractCallback("adjustable_ladder", "makeWaterstep_Interact", true);
+}
+
+void adjustLadder(string &in item, string &in entity){
+	SetEntityActive("ladder_adjusted", true);
+	SetEntityActive("AreaClimbToMine", true);
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+	RemoveItem(item);
+	SetLocalVarInt("ladderPlaced", 1);
+}
+
+void makeWaterstep_Interact(string &in entity){
+	PlayGuiSound("impact_water_low.snt", 1000);
+	AddTimer("", 0.75f, "makeWaterstep2");
+}
+
+void checkOk(string &in asParent, string &in asChild, int alState){
+	if (GetGlobalVarInt("flow") == 1){
+		SetMessage("Messages", "flowIsOn", 0);
+		SetEntityActive("box_invisible", true);
+	}else if(GetGlobalVarInt("flow") == 0){
+		SetEntityActive("box_invisible", false);
+	}
+}
+
+void leaveSewers(string &in asParent, string &in asChild, int alState){
+	ChangeMap("03_main_mines_entrance.map", "PlayerStartArea_1", "", "");
+}
+
+void doFunctions(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("hasHeard") == 0){
+		AddQuest("drain", "drain");
+		AddTimer("", 4.0f, "scareSound");
+		SetLocalVarInt("hasHeard", 1);
+	}
+	SetMessage("Messages", "mustDrainSewer", 0);
+}
+
+void scareSound(string &in asTimer){
+	PlayGuiSound("scare_grunt_2.ogg", 1000);
+}
+
+void spawnEnemy(string &in asTimer){
+	if (GetLocalVarInt("hasSpawned") == 0){
+		SetEntityActive("grunt", true);
+		AddEnemyPatrolNode("grunt", "PathNodeArea_1", 0.0f, "");
+		SetEnemyDisableTriggers("grunt", true);
+		PlayGuiSound("grunt_sound.snt", 1000);
+		SetLocalVarInt("hasSpawned", 1);
+		GiveSanityDamage(25, true);
+	}
+}
+
+void enemy(){
+	AddEntityCollideCallback("grunt", "AreaBreakDoor", "breakDoor", true, 1);
+	AddEntityCollideCallback("grunt", "AreaEnableTriggers", "enableTriggers", true, 1);
+	AddEntityCollideCallback("weapon_1", "grunt", "hitGrunt", false, 1);
+	AddEntityCollideCallback("thrown_1", "grunt", "throwHitGrunt1", false, 1);
+	AddEntityCollideCallback("thrown_2", "grunt", "throwHitGrunt2", false, 1);
+	SetLocalVarInt("gruntHealth", 1);
+	SetLocalVarInt("hasSpawned", 0);
+}
+
+void enableTriggers(string &in asParent, string &in asChild, int alState){
+	SetEnemyDisableTriggers("grunt", false);
+}
+
+void breakDoor(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("ControlRoom", false);
+	SetEntityActive("ControlRoomBroken", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+}
+
+void hitGrunt(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("gruntHealth") == 1){
+		PlayGuiSound("grunt_attack.snt", 100);
+		SetLocalVarInt("gruntHealth", 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", "weapon_1", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "weapon_1", false);
+	}else if (GetLocalVarInt("gruntHealth") == 0){
+		PlayGuiSound("grunt_attack.snt", 100);
+		SetEnemyIsHallucination("grunt", true);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", "weapon_1", false);
+		CreateParticleSystemAtEntity("", "ps_blood_tiny_splash.ps", "weapon_1", false);
+	}
+}
+
+void throwHitGrunt1(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("gruntHealth") == 1){
+		PlayGuiSound("grunt_attack.snt", 100);
+		SetLocalVarInt("gruntHealth", 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", "thrown_1", false);
+		ChangePlayerStateToNormal();
+	}else if (GetLocalVarInt("gruntHealth") == 0){
+		PlayGuiSound("grunt_attack.snt", 100);
+		SetEntityActive("grunt", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", "thrown_1", false);
+		ChangePlayerStateToNormal();
+	}
+}
+
+void throwHitGrunt2(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("gruntHealth") == 1){
+		PlayGuiSound("grunt_attack.snt", 100);
+		SetLocalVarInt("gruntHealth", 0);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", "thrown_2", false);
+		ChangePlayerStateToNormal();
+	}else if (GetLocalVarInt("gruntHealth") == 0){
+		PlayGuiSound("grunt_attack.snt", 100);
+		SetEntityActive("grunt", false);
+		CreateParticleSystemAtEntity("", "ps_break_wood_small.ps", "thrown_2", false);
+		ChangePlayerStateToNormal();
+	}
+}

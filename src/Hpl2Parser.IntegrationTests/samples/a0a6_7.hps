@@ -1,0 +1,482 @@
+void OnStart()
+{
+//SetMessage("TheVoice", "system_7", 5.0);
+AddEntityCollideCallback("Player", "area_christine", "talk_to_her", true, 1);
+AddUseItemCallback("", "keyhatch", "cc_hatch", "hatch_unlock", true);
+//AddEntityCollideCallback("Player", "area_loading_1", "loading_1", false, 1);
+//AddEntityCollideCallback("Player", "area_loading_2", "loading_2", false, 1);
+// block
+AddEntityCollideCallback("Player", "block_area", "nope", true, 1);
+
+// lever
+AddEntityCollideCallback("paka", "area_paka", "kill_her", true, 1);
+
+// crowbar
+AddUseItemCallback("", "crowbar1", "padlock_christine", "UsedCrowbarOnDoor1", true);
+AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_1", "CollideAreaBreakDoor1", true, 1);
+
+// in case of chased by christine
+AddEntityCollideCallback("Player", "cc_area_1", "closethedoor", true, 1);
+
+AddEntityCollideCallback("Player", "catch_me_if_you_can_haha_reminds_me_mirana", "catchmepls", true, 1);
+}
+
+void UsedCrowbarOnDoor1(string &in asItem, string &in asEntity)
+{
+SetLeverStuckState("paka", -1, false);
+RemoveItem("crowbar1");
+AddTimer("", 0.2, "TimerSwitchShovel1");
+}
+ 
+void TimerSwitchShovel1(string &in asTimer)
+{
+AutoSave();
+CheckPoint("cp_christine", "cp1", "christine_is_hungry", "smrt", "christine_hint_cellar");
+PlaySoundAtEntity("","puzzle_place_jar.snt", "", 0, false);
+SetEntityActive("crowbar_joint_1", true);
+}
+
+void CollideAreaBreakDoor1(string &in asParent, string &in asChild, int alState)
+ {
+ // no sanity, if you're breaking door leading to Christin, buddy
+ //AddPlayerSanity(25);
+RemoveTimer("reactivate_timer");
+PlaySoundAtEntity("","break_wood_metal", "padlock_christine", 0, false);
+CreateParticleSystemAtEntity("", "ps_hit_wood", "padlock_christine", false);
+SetEntityActive("crowbar_joint_1", false);
+SetSwingDoorLocked("door_christine", false, true);
+GiveItem("crowbar1", "item", "crowbar1", "crowbar.tga", 1);
+SetEntityActive("padlock_christine", false);
+SetEntityActive("padlock_christine_broken", true);
+//AddPropForce("door_christine", -25.0, -10.0, 0.0, "world");
+FadeOut(0.1);
+SetEntityActive("door_christine", false);
+SetEnemyDisableTriggers("christine", false);
+ShowEnemyPlayerPosition("christine");
+AddTimer("", 0.2, "openyoureyes");
+StartScreenShake(0.3, 1.5, 0.5, 1.0);
+SetEntityActive("cc_area_1", true);
+SetEntityActive("cc_area_hatch", true);
+SetEntityActive("block_area", false);
+SetEntityActive("block_entity", false);
+//SetLevelDoorLocked("level_celler_1", true);
+SetupLoadScreen("loadingscreen", "load_12", 0, "loading_torture.jpg");
+SetEnemySanityDecreaseActive("christine", true);
+StopMusic(1000, 0.0);
+PlayMusic("Penumbra_BP_F1.ogg", true, 0.5, 3.0, 1000, true);
+} 
+
+void OnEnter()
+{
+if(GetGlobalVarInt("flashback_happened")==0)
+{
+AddDebugMessage("variable flashback is 0", false);
+SetEntityActive("christine", false);
+FadeOut(0);
+AddDebugMessage("porting should happen now", false);
+TeleportPlayer("playerstart_fb");
+AddTimer("", 1, "continue_the_fucking_fb_oh_so_maybe_ffb");
+PlayMusic("music_reactor_children_temp.ogg", true, 0.3, 3.0, 1000, true);
+}
+else
+{
+AddDebugMessage("ok... I... will.. do NOTHING... looks I'm useless here! Sincerely with anger: Your script.", false);
+// oh no, no script, please don't be mad... I'll find some job for you
+// here, play some music, ok?
+PlayMusic("penumbra_requiem_A1.ogg", true, 1.0, 3.0, 1000, true);
+AddDebugMessage("OK,playing music", false);
+
+// and you can also do this
+// or maybe don't, it doesn't work well
+//ShowEnemyPlayerPosition("christine");
+
+AddDebugMessage("I feel useless again :( poor script", false);
+}
+}
+
+void continue_the_fucking_fb_oh_so_maybe_ffb(string &in asTimer)
+{
+// no reason to do this shit again
+SetGlobalVarInt("flashback_happened", 1);
+FadeIn(1);
+SetPlayerJumpDisabled(true);
+SetPlayerCrouchDisabled(true);
+SetLanternDisabled(true);
+SetLanternActive(false, false);
+SetInventoryDisabled(true);
+ExitInventory();
+}
+
+void gobackyouidiot()
+{
+StopMusic(1.0, 1000);
+FadeOut(1);
+AddTimer("", 1, "backbackback");
+}
+
+void backbackback(string &in asTimer)
+{
+TeleportPlayer("playerstart_0");
+//TeleportPlayer("debug_christine");
+SetEntityActive("christine", true);
+//AddEnemyPatrolNode("christine", "pn_1", 0, "");
+FadeIn(0.5);
+PlayMusic("penumbra_requiem_A1.ogg", true, 1.0, 3.0, 1000, true);
+SetPlayerJumpDisabled(false);
+SetPlayerCrouchDisabled(false);
+SetLanternDisabled(false);
+SetInventoryDisabled(false);
+}
+
+void talk_to_her(string &in asParent, string &in asChild, int alState)
+{
+SetEnemySanityDecreaseActive("christine", false);
+//SetMoveObjectState("wheel",1);
+SetPlayerActive(false);
+StartPlayerLookAt("area_look_christine", 2.0, 4.0, "");
+AddTimer("", 1, "christine_0");
+}
+
+void christine_0(string &in asTimer)
+{
+PlaySoundAtEntity("", "arthur54_holyshit", "Player", 0, false);
+SetMessage("TheVoice", "arthur54", 2.0);
+AddTimer("", 3.0, "christine_1");
+}
+
+void christine_1(string &in asTimer)
+{
+PlaySoundAtEntity("", "arthur55_canttalk", "Player", 0, false);
+SetMessage("TheVoice", "arthur55", 9.0);
+AddTimer("", 9.7, "christine_2");
+AddTimer("", 2.0, "christine_25");
+}
+
+void christine_25(string &in asTimer)
+{
+StopPlayerLookAt();
+StartPlayerLookAt("area_look_christine2", 2.0, 4.0, "");
+AddTimer("", 2.0, "christine_26");
+}
+
+void christine_26(string &in asTimer)
+{
+StopPlayerLookAt();
+StartPlayerLookAt("area_look_christine3", 2.0, 4.0, "");
+AddTimer("", 2.0, "christine_27");
+}
+
+void christine_27(string &in asTimer)
+{
+StopPlayerLookAt();
+StartPlayerLookAt("area_look_christine", 2.0, 4.0, "");
+}
+
+void christine_2(string &in asTimer)
+{
+PlaySoundAtEntity("", "arthur56_saveorkill", "Player", 0, false);
+SetMessage("TheVoice", "arthur56", 9.0);
+StopPlayerLookAt();
+SetPlayerActive(true);
+AddTimer("", 8.0, "christine_28");
+}
+
+void christine_28(string &in asTimer)
+{
+SetLeverStuckState("paka", 0, false);
+}
+
+void openyoureyes(string &in asTimer)
+{
+FadeIn(0.1);
+SetPlayerActive(true);
+}
+
+void scream(string &in asTimer)
+{
+PlaySoundAtEntity("", "afx_gent_scream_02", "Player", 0.0f, false);
+PlaySoundAtEntity("", "2cry", "Player", 0.0f, false);
+StopMusic(1000, 1.0);
+PlayMusic("kai_engel _moonlight_reprise.ogg", true, 0.2, 3.0, 1000, true);
+AddTimer("", 1, "nasrana_evelin");
+SetEntityActive("keyhatch", true);
+SetPlayerMoveSpeedMul(0.3);
+SetPlayerRunSpeedMul(0.3);
+}
+
+void christine_is_hungry(string &in asName, int alCount)
+{
+SetEntityActive("nahradni_kristyna", true);
+AddTimer("", 3, "sezer_ho");
+}
+
+void sezer_ho(string &in asTimer)
+{
+ShowEnemyPlayerPosition("nahradni_kristyna");
+}
+
+void kill_her(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+AddDebugMessage("lever pressed", false);
+FadeOut(0.1);
+PlaySoundAtEntity("", "explosion_rock_large", "Player", 0.0f, false);
+SetEntityActive("door_christine", false);
+SetEntityActive("door_christine_1", true);
+SetEntityActive("christine", false);
+SetEntityActive("kamen", false);
+SetEntityActive("padlock_christine", false);
+SetEntityActive("dead_christine", true);
+SetEntityActive("kamen_2", true);
+AddTimer("", 0.5, "openyoureyes");
+AddTimer("", 0.8, "scream");
+StartScreenShake(0.3, 2.5, 0.5, 1.0);
+SetLeverStuckState("paka", 1, false);
+SetEntityActive("block_area", false);
+SetEntityActive("block_entity", false);
+SetGlobalVarInt("playerkilledchristine", 1);
+//SetLevelDoorLocked("level_celler_1", true);
+SetupLoadScreen("loadingscreen", "load_13", 0, "loading_torture.jpg");
+}
+
+void closethedoor(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorClosed("cc_door", true, true);
+SetSwingDoorClosed("cc_zavora", true, true);
+SetSwingDoorLocked("cc_door", true, true);
+SetSwingDoorLocked("cc_zavora", true, true);
+AddTimer("", 1, "cc_attack_door");
+}
+
+void cc_attack_door(string &in asTimer)
+{
+PlaySoundAtEntity("", "enemy_infected_attack_launch_claw", "cc_door", 0.0f, false);
+PlaySoundAtEntity("", "hit_wood", "cc_door", 0.0f, false);
+CreateParticleSystemAtEntity("cc_door_ps", "ps_hit_wood.ps", "cc_door_hit", false);
+AddTimer("", 1.5, "cc_attack_door");
+SetEntityActive("christine", false);
+SetEntityActive("nahradni_kristyna", false);
+}
+
+// you killed her
+void nasrana_evelin(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_evelin1", "Player", 0, false);
+SetMessage("TheVoice", "fb1_1", 1.5);
+AddTimer("", 2, "nasrana_evelin_1");
+}
+
+// what
+void nasrana_evelin_1(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_arthur5", "Player", 0, false);
+SetMessage("TheVoice", "fb1_2", 2.0);
+AddTimer("", 2.5, "nasrana_evelin_2");
+}
+
+// I can't believe you killed her
+void nasrana_evelin_2(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_evelin2", "Player", 0, false);
+SetMessage("TheVoice", "fb1_3", 2.0);
+AddTimer("", 2.5, "nasrana_evelin_3");
+}
+
+// she was a monster
+void nasrana_evelin_3(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_arthur6", "Player", 0, false);
+SetMessage("TheVoice", "fb1_4", 2.0);
+AddTimer("", 2.5, "nasrana_evelin_4");
+}
+
+// she was a person
+void nasrana_evelin_4(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_evelin3", "Player", 0, false);
+SetMessage("TheVoice", "fb1_5", 2.0);
+AddTimer("", 2.5, "nasrana_evelin_5");
+}
+
+// would you rather
+void nasrana_evelin_5(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_arthur7", "Player", 0, false);
+SetMessage("TheVoice", "fb1_6", 2.0);
+AddTimer("", 2.5, "nasrana_evelin_6");
+}
+
+// no I would
+void nasrana_evelin_6(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_evelin4", "Player", 0, false);
+SetMessage("TheVoice", "fb1_7", 3.0);
+AddTimer("", 3.5, "nasrana_evelin_7");
+}
+
+// I tried
+void nasrana_evelin_7(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_arthur8", "Player", 0, false);
+SetMessage("TheVoice", "fb1_8", 4.0);
+AddTimer("", 4.5, "nasrana_evelin_8");
+}
+
+// there's always something
+void nasrana_evelin_8(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_evelin5", "Player", 0, false);
+SetMessage("TheVoice", "fb1_9", 2.1);
+AddTimer("", 2.5, "nasrana_evelin_9");
+}
+
+// are you mad? (don't ever ask a woman if she's mad, it's a trap!)
+void nasrana_evelin_9(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_arthur9", "Player", 0, false);
+SetMessage("TheVoice", "fb1_10", 2.1);
+AddTimer("", 2.5, "nasrana_evelin_10");
+}
+
+// I thought you were different (and that's how the majority of marriages end)
+void nasrana_evelin_10(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_evelin6", "Player", 0, false);
+SetMessage("TheVoice", "fb1_11", 12);
+AddTimer("", 12.5, "nasrana_evelin_11");
+}
+
+// evelin wait
+void nasrana_evelin_11(string &in asTimer)
+{
+PlaySoundAtEntity("", "angry_arthur10", "Player", 0, false);
+SetMessage("TheVoice", "fb1_12", 9);
+AddTimer("", 6, "run_again");
+}
+
+void cc_area_hatch_script(string &in asEntity)
+{
+StopMusic(1000, 0.0);
+PlayMusic("penumbra_requiem_C1.ogg", true, 0.5, 3.0, 1000, true);
+SetPlayerActive(false);
+StartPlayerLookAt("cc_area_hatch", 2.0, 4.0, "");
+AddTimer("", 1, "cc_hatch_script_1");
+SetPlayerCrouching(true);
+SetPlayerActive(false);
+}
+
+void run_again(string &in asTimer)
+{
+SetPlayerMoveSpeedMul(1.0);
+SetPlayerRunSpeedMul(1.0);
+//SetLevelDoorLocked("level_celler_1", false);
+}
+
+void cc_hatch_script_1(string &in asTimer)
+{
+PlaySoundAtEntity("", "24_hatch_imp", "cc_area_hatch", 0.0f, false);
+AddTimer("", 1, "cc_hatch_script_2");
+}
+
+void cc_hatch_script_2(string &in asTimer)
+{
+PlaySoundAtEntity("", "joint_hatch_max", "cc_area_hatch", 0.0f, false);
+AddTimer("", 0.5, "cc_hatch_script_3");
+}
+
+void cc_hatch_script_3(string &in asTimer)
+{
+PlaySoundAtEntity("", "arthur57_hatch", "Player", 0, false);
+SetMessage("TheVoice", "arthur57", 1.5);
+AddTimer("", 1.5, "cc_hatch_script_4");
+}
+
+void cc_hatch_script_4(string &in asTimer)
+{
+StartPlayerLookAt("cc_door_hit", 3.0, 5.0, "");
+AddTimer("", 1.5, "cc_hatch_script_5");
+}
+
+void cc_hatch_script_5(string &in asTimer)
+{
+StartPlayerLookAt("cc_area_hatch", 3.0, 5.0, "");
+AddTimer("", 1.0, "cc_hatch_script_6");
+}
+
+void cc_hatch_script_6(string &in asTimer)
+{
+PlaySoundAtEntity("", "24_hatch_imp", "cc_area_hatch", 0.0f, false);
+PlaySoundAtEntity("", "arthur58_evelin", "Player", 0, false);
+AddTimer("", 1.5, "cc_hatch_script_45");
+SetMessage("TheVoice", "arthur58", 3.0);
+AddTimer("", 3.3, "cc_hatch_script_7");
+}
+
+void cc_hatch_script_7(string &in asTimer)
+{
+PlaySoundAtEntity("", "joint_hatch_max", "cc_area_hatch", 0.0f, false);
+PlaySoundAtEntity("", "arthur59_evelin2", "Player", 0, false);
+SetMessage("TheVoice", "arthur59", 1.0);
+AddTimer("", 1, "cc_hatch_script_8");
+}
+
+void cc_hatch_script_8(string &in asTimer)
+{
+PlaySoundAtEntity("", "evelin_magic2", "Player", 0, false);
+SetMessage("TheVoice", "evelin_magic2_text", 2.0);
+AddTimer("", 2.1, "cc_hatch_script_9");
+}
+
+void cc_hatch_script_9(string &in asTimer)
+{
+StopPlayerLookAt();
+SetSwingDoorLocked("cc_hatch", false, true);
+PlaySoundAtEntity("", "unlock_door", "Player", 0, false);
+SetPlayerActive(true);
+AddPropForce("cc_hatch", 0.0, 20.0, 0.0, "world");
+AddPropImpulse("cc_hatch", 0.0, 20.0, 0.0, "world");
+}
+
+void cc_hatch_script_45(string &in asTimer)
+{
+StartPlayerLookAt("cc_door_hit", 3.0, 5.0, "");
+AddTimer("", 1.5, "cc_hatch_script_55");
+}
+
+void cc_hatch_script_55(string &in asTimer)
+{
+StartPlayerLookAt("cc_area_hatch", 3.0, 5.0, "");
+}
+
+void catchmepls(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerHealth(80.0);
+FadeOut(0.3);
+ChangeMap("8.map", "playerstart_0", "", "");
+}
+
+void nope(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "arthur60", "Player", 0, false);
+SetMessage("TheVoice", "arthur60", 2.0);
+//SetEntityActive("block_area", false);
+//AddTimer("reactivate_timer", 10, "reactivate");
+}
+
+//void reactivate(string &in asTimer)
+//{
+//SetEntityActive("block_area", true);
+//}
+
+void hatch_unlock(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("cc_hatch", false, true);
+PlaySoundAtEntity("", "unlock_door", "cc_hatch", 0, false);
+RemoveItem("keyhatch");
+}
+
+void OnLeave()
+{
+StopMusic(1.0, 1000);
+}
+

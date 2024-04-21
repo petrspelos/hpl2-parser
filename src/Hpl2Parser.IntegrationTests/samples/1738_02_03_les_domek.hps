@@ -1,0 +1,169 @@
+void OnStart()
+{
+SetPlayerRunSpeedMul(0.9);
+SetPlayerCrouchDisabled(false);
+SetPlayerJumpDisabled(false);
+SetEntityCallbackFunc("dopis02", "denik_ukaz");
+AddEntityCollideCallback("Player", "lek1", "lek1_script", true, 1);
+AddEntityCollideCallback("Player", "lek2", "lek2_script", true, 1);
+AddEntityCollideCallback("Player", "lek3", "lek3_script", true, 1);
+AddEntityCollideCallback("Player", "lek4", "lek4_script", true, 1);
+AddEntityCollideCallback("Player", "odejit", "odejit_script", false, 1);
+SetEntityCallbackFunc("denik", "denik_script_2");
+AddLocalVarInt("has_dopis02", 0);
+AddLocalVarInt("knows_how_to_read_notes", 0);
+AddLocalVarInt("has_danieldiary1", 0);
+}
+
+void denik_ukaz(string &in asEntity, string &in type)
+{
+SetEntityActive("denik", true);
+SetEntityActive("odejit", true);
+SetLevelDoorLocked("level_wood_1", true);
+}
+
+void lek1_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+GiveSanityDamage(9.0f, true);
+StopPlayerLookAt();
+StartPlayerLookAt("telo", 10, 10, "");
+AddTimer("", 1, "stop_look");
+SetEntityActive("lek2", false);
+SetEntityActive("lek3", false);
+SetEntityActive("lek4", false);
+}
+
+void lek2_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+GiveSanityDamage(9.0f, true);
+StopPlayerLookAt();
+StartPlayerLookAt("telo", 10, 10, "");
+AddTimer("", 1, "stop_look");
+SetEntityActive("lek1", false);
+SetEntityActive("lek3", false);
+SetEntityActive("lek4", false);
+}
+
+void lek3_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+GiveSanityDamage(9.0f, true);
+StopPlayerLookAt();
+StartPlayerLookAt("telo", 10, 10, "");
+AddTimer("", 1, "stop_look");
+SetEntityActive("lek1", false);
+SetEntityActive("lek2", false);
+SetEntityActive("lek4", false);
+}
+
+void lek4_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+GiveSanityDamage(9.0f, true);
+StopPlayerLookAt();
+StartPlayerLookAt("telo", 10, 10, "");
+AddTimer("", 1, "stop_look");
+SetEntityActive("lek1", false);
+SetEntityActive("lek2", false);
+SetEntityActive("lek3", false);
+}
+
+void odejit_script(string &in asParent, string &in asChild, int alState)
+{
+if(HasItem("denik")==false)
+{
+SetMessage("TheVoice", "odejit_text", 5.0);
+}
+}
+
+void denik_script(string &in asEntity, string &in type)
+{
+SetEntityActive("odejit", false);
+}
+
+void stop_look(string &in asTimer)
+{
+StopPlayerLookAt();
+}
+
+void denik_script_2(string &in asEntity, string &in type)
+{
+SetMessage("TheVoice", "oswald_denik", 5.0);
+SetLevelDoorLocked("level_wood_1", false);
+SetEntityActive("odejit", false);
+SetLocalVarInt("has_danieldiary1", 1);
+}
+
+//void zavri_oci(string &in asTimer)
+//{
+//FadeOut(4);
+//AddTimer("", 5, "zmen_mapu");
+//}
+
+//void zmen_mapu(string &in asTimer)
+//{
+//ChangeMap("02_les2_zpatky.map", "playerstart", "", "");
+//}
+
+void dopispick_0(string &in asEntity){
+if(GetLocalVarInt("has_dopis02") == 0)
+{
+AddNote("dopis02", "");
+SetLocalVarInt("has_dopis02", 1);
+}
+if(GetLocalVarInt("knows_how_to_read_notes") == 0)
+{
+SetMessage("TheVoice", "note_hint", 13.0);
+SetLocalVarInt("knows_how_to_read_notes", 1);
+}
+if(GetLocalVarInt("has_danieldiary1") == 0)
+{
+SetEntityActive("denik", true);
+SetEntityActive("odejit", true);
+SetLevelDoorLocked("level_wood_1", true);
+}
+SetPlayerActive(false);
+FadeOut(1);
+AddTimer("", 1.1, "dopispick_0_1");
+SetLanternActive(false, true);
+SetLanternDisabled(true);
+SetSanityDrainDisabled(true);
+SetInventoryDisabled(true);
+}
+
+void dopispick_0_1(string &in asTimer){
+TeleportPlayer("area_dopis_0");
+FadeIn(1);
+SetPlayerActive(true);
+StartPlayerLookAt("lookat_dopis_0", 10.0, 10.0, "");
+StopPlayerLookAt();
+}
+
+void dopis_look_0_callback(string &in asEntity, int alState){
+if(alState==1){
+SetPlayerActive(false);
+FadeOut(1);
+AddTimer("", 1.1, "dopispick_0_2");
+}//==============================================================
+else if(alState==-1){}}
+
+void dopispick_0_2(string &in asTimer){
+TeleportPlayer("dopis_back_0");
+//SetLanternActive(false, true);
+SetLanternDisabled(false);
+SetSanityDrainDisabled(false);
+SetInventoryDisabled(false);
+FadeIn(1);
+SetPlayerActive(true);
+}
+
+void OnEnter()
+{
+AutoSave();
+}
+
+void OnExit()
+{
+}

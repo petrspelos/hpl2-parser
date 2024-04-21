@@ -1,0 +1,144 @@
+void AMFP_LevelSetup() {
+
+	// set up in game effects as it is in AMFP's gameplay
+	
+	SetInDarknessEffectsActive(false);
+	NoSanityVisionForEnemyTypes();
+}
+
+// list of enemy entities with certain formats to deactivate sanity vision for
+// expand if you want to add more
+
+void NoSanityVisionForEnemyTypes() {
+
+	SetEnemySanityDecreaseActive("wretch_*", false);
+	SetEnemySanityDecreaseActive("engineer_*", false);
+	SetEnemySanityDecreaseActive("tesla_*", false);
+	SetEnemySanityDecreaseActive("child_*", false);
+	SetEnemySanityDecreaseActive("enemy_*", false);
+	SetEnemySanityDecreaseActive("servant_*", false);
+}
+
+//////////////////////////////////////////////////////
+//////// RECREATING AMFP FUNCTIONS ON TDD
+//////////////////////////////////////////////////////
+
+
+/////// Remaking AddHint method
+// which worked as observations based on events in game, instead of mementos from TDD
+// Quest format is replaced here with diaries with a fake memento notification effect
+
+int MementoIterator = 0;
+
+void AddHint(string& asNameAndTextEntry, string& asImage) {
+	MementoIterator = RandInt(0, 1000);  // this might cirvumvent not having memento notifications because of identical quest names
+	AddQuest("commonDiary_" + MementoIterator, "CommonDiary"); // if player checks questlog they are notified of a new diary added
+	AddTimer("commonDiary_" + MementoIterator, 5.0f, "CompleteQuest_Timer");
+	
+	// the lang entry setup for hints and diaries are different between the games, but the parameters are the same
+	// In AMFP hints: The entry must be in category "Journal" and use the format Hint_MyHint_Name for the title and Hint_MyHint_Text 
+	// In TDD diaries: Must be in category "Journal", start with "Diary_" and end with _NameX and _TextY whereas X and Y are numbers of the parts (_Name1: first diary, _Text1: first page)
+	
+	if (asImage == "") {
+		AddDiary(asNameAndTextEntry, "diary_page");
+	} else {
+		AddDiary(asNameAndTextEntry, asImage);
+	}
+}
+
+// this removes the entry from the quest log in case players can access it, so there's always one entry notifying you of new diaries
+void CompleteQuest_Timer(string &in asTimer) {
+	CompleteQuest(asTimer, "CommonDiary");
+}
+
+////// WIP
+// Opening a door to a certain amount. Until a better solution comes along it either opens fully, or not at all
+
+void SetSwingDoorOpenAmount(string& asEntity, const float afOpenAmount, const float afTime, const bool abUnknown) {
+	if (afOpenAmount > 0.0f) {
+		SetSwingDoorClosed(asEntity, false, true);
+	} else {
+		SetSwingDoorClosed(asEntity, true, true);
+	}
+}
+
+///// WIP
+// Activating and deactivating a particle. Currently only deactivation works, other will need a more complex workaround to function properly
+
+void SetParticleSystemActive(string& asParticleSystem, const bool abActive) {
+	if (!abActive) {
+		DestroyParticleSystem(asParticleSystem);
+	} else {
+		// to-do: need to spawn the particle system somehow
+	}
+}
+
+///////////////////////////
+// Other small functions with minor differences from TDD
+///////////////////////////
+
+// this is basically identical to disabling inventory, as AMFP doesn't have one, only the journal
+
+void SetJournalDisabled(const bool abDisabled) {
+	SetInventoryDisabled(abDisabled);
+}
+
+// AMFP path-giving has an extra unused variable, I'm making it unused
+
+void AddEnemyPatrolNode(string& asEnemy, string& asPathNode, const float afWaitTime, string& asAnimation, const bool abUnknown) {
+	AddEnemyPatrolNode(asEnemy, asPathNode, afWaitTime, asAnimation);
+}
+
+//// Checkpoints in AMFP has a barely used Limbo mechanic, with a fadeout effect on respawn. For now it's been removed and checkpoint works as normal.
+
+void CheckPoint(string& asName, string& asStartArea, string& asFunction, string& asTextCat, string& asTextEntry, const bool abPlayerLimbo) {
+	CheckPoint (asName, asStartArea, asFunction, asTextCat, asTextEntry);
+}
+
+// no need to implement this here, as 1.5 update brought it to TDD with the same parameters
+// I provide here the old function for 1.3 and/or non steam versions
+   // You need to create a custom sanity event in misc/main_sanity_events.cfg
+   // The name and the image name should be the same, and you can provide FadeIn and FadeOut time in there instead
+
+void ShowScreenImageOld(string& asImageFile, int alX, int alY, const float afUnknown1, const bool abUnknown2, const float afDuration, const float afFadeInTime, const float afFadeOutTime) {
+	StopCurrentInsanityEvent();
+	RemoveTimer("showScreenTimer_Out");
+	StartInsanityEvent(asImageFile);
+	AddTimer("showScreenTimer_Out", afDuration + afFadeInTime + afFadeOutTime, "ShowScreenTimer_Out");
+}
+
+void ShowScreenTimer_Out(string &in asTimer)
+{
+	StopCurrentInsanityEvent();
+}
+
+
+/////////////////
+///////// Currently Unusuable functions
+////////////////
+
+/// This is a collection of functions from AMFP that cannot be used without TDD source code change, or without custom parameters / complex logic
+
+// Lantern flickering when enemies are nearby, needs more complex logic
+
+void SetLanternFlickerActive(const bool abActive) {
+	// for now we don't do anything here
+}
+
+//  Stationary lamps flickering Placeholder, might update it later when I figure out a reusable method for doing this
+
+void SetLampFlickerActive(string& asLamp, const bool abActive) {
+	// for now we don't do anything here either
+	// an idea I have is creating an Area aroudn said Lamp, and adding a callback for every possible enemy format to trigger the flicker
+	// flicker would involve activating the lamp's individual spotlight like the player hand's, or switching the entity for one with flicker enabled (requires custom lamp models to work)
+}
+
+// Placeholder function for playing enemy animation like a prop. This would probably only work if moved to a pathnode, which would need additional logic
+
+void PlayEnemyAnimation(string& asEnemy, string& asAnimation, const bool abLoop, const float afDelay) {
+	
+	PlayPropAnimation(asEnemy, asAnimation, afDelay, abLoop, "");
+	
+	AddDebugMessage(asEnemy + " enemy is supposed to play animation but cannot.", false);
+	AddDebugMessage("Use a custom Object/Static prop with PlayPropAnimation instead.", false);
+}

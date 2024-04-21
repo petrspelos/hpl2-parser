@@ -1,0 +1,316 @@
+void OnStart()
+{
+AddUseItemCallback("","labkey","labdoor","UsedKeyOnDoor",true);
+AddUseItemCallback("", "keylocker", "locker", "UsedKeyOnDoor2", true);
+AddUseItemCallback("CrowbarOnDoor", "Crowbar", "door", "CrowbarOnDoor", true);
+AddEntityCollideCallback("Player", "EnterLab", "Searching", true, 1);
+AddEntityCollideCallback("Player", "LeaveLab", "NotDone", false, 1);
+PlayMusic("amb_extra01.ogg", true, 0.7, 0, 0, false);
+SetMapDisplayNameEntry("Library");
+AutoSave();
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("labdoor",false, true);
+PlaySoundAtEntity("","unlock_door","labdoor", 0,false);
+RemoveItem(asItem);
+}
+
+void UsedKeyOnDoor2(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("locker",false, true);
+PlaySoundAtEntity("","unlock_door","locker", 0,false);
+RemoveItem(asItem);
+}
+
+void CrowbarOnDoor (string &in asItem, string &in asEntity) 
+{
+	RemoveItem(asItem);
+        CompleteQuest("Library", "Library");
+	PlaySoundAtEntity("","puzzle_place_jar", "Player", 0, false);
+	SetEntityActive("crowbar_joint_1", true);
+	AddEntityCollideCallback("crowbar_joint_1", "AreaCrowbarCollide", "BreakCrowbarDoor", true, 1);
+	SetPlayerActive(false);
+	StartPlayerLookAt("crowbar_joint_1", 1.3f, 1.3f, "");
+        AddGlobalVarInt("HotelNight", 1);
+	AddTimer ("", 1, "EnablePlayer");
+}
+
+void EnablePlayer (string &in asTimer)
+{
+	SetPlayerActive(true);
+	StopPlayerLookAt();
+}
+
+void BreakCrowbarDoor (string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityBoostSmall();
+	SetSwingDoorLocked("door", false, false);
+	SetSwingDoorDisableAutoClose("door", true);
+	SetSwingDoorClosed("door", false,false);
+	PlaySoundAtEntity("break","break_wood_metal", "AreaCrowbar", 0, false);
+	AddPropImpulse("cellar_wood01", 0, 0, -5, "world");
+	SetEntityActive("crowbar_joint_1", false);
+	SetEntityActive("crowbar_dyn_1", true);
+	AddTimer("timerpushdoor", 0.1, "TimerPushDoor");	
+	GiveSanityBoostSmall();
+	SetEntityPlayerInteractCallback("door", "", false);
+}
+
+void TimerPushDoor(string &in asTimer)
+{
+	AddPropImpulse("door", 2, 0, -2, "world");
+	AddTimer("doorclose", 1.1, "TimerDoorClose");
+}
+
+void TimerDoorClose(string &in asTimer)
+{
+	SetSwingDoorDisableAutoClose("door", false);
+}
+
+void Searching(string &in asParent, string &in asChild, int alState) 
+{
+SetPlayerCrouching(false);
+RemoveTimer("recovery");
+SetEntityActive("LeaveLab", true);
+SetEntityActive("block", true);
+}
+
+void NotDone(string &in asParent, string &in asChild, int alState) 
+{
+SetMessage("Messages", "lab", 9);
+}
+
+void Item(string &in asEntity)
+{
+AddLocalVarInt("VarIntItems", 1);
+	ItemsDone();
+}
+
+void Item2(string &in asEntity)
+{
+AddLocalVarInt("VarIntItems", 1);
+	ItemsDone();
+}
+
+void ItemsDone(){
+
+	if(GetLocalVarInt("VarIntItems") == 2){
+		
+                SetEntityActive("LeaveLab", false);
+                SetEntityActive("block", false);
+                FadeOut(4.0f);
+                SetMessage("Messages", "later", 7);
+                SetLevelDoorLocked("entrance", false);
+                SetEntityPlayerInteractCallback("entrance", "", false);
+                AddTimer("later", 7, "later");
+	}
+}
+
+void later(string &in asTimer)
+{
+ChangeMap("VillageNightHalloween.map", "PlayerStartArea_8", "","");
+}
+
+void notemusic(string &in asEntity)
+{
+PlayMusic("03_paper_daniel02.ogg", false, 1.0, 0, 0, false);
+AddQuest("Chapel", "Chapel");
+}
+
+void Key(string &in asEntity)
+{
+AddEffectVoice("leelibrary.ogg", "", "Voice", "00_Leelibrary", false, "", 0, 0 );
+SetLevelDoorLocked("entrance", true);
+SetEntityPlayerInteractCallback("entrance", "explorefirst", false);
+}
+
+void Quest(string &in asEntity)
+{
+AddQuest("Library", "Library");
+SetLevelDoorLocked("entrance", false);
+SetEntityPlayerInteractCallback("entrance", "", false);
+CompleteQuest("Explore2", "Explore2");
+}
+
+void explorefirst(string &in asEntity)
+{
+SetMessage("Messages", "explorefirst2", 4);
+}
+
+void morality(string &in asEntity)
+{
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+void morality2(string &in asEntity)
+{
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+//---- Alma event ----//
+//An event that will start if player picks up a diary page made by Alma
+
+void almaevent(string &in asEntity)
+{	
+PlayMusic("Alma3.ogg", false, 0.4f, 0, 10, false);
+FadeOut(0.0f);
+AddTimer("alma2", 2, "alma2");
+SetPlayerActive(false);
+SetLanternDisabled(true);
+SetMessage("Messages", "ch1almanote1", 6);
+AddTimer ("almaevent2", 6, "almaevent2");		
+}
+
+void almaevent2(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote2", 5);
+AddTimer ("almaevent3", 5, "almaevent3");
+}
+
+void almaevent3(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote3", 7);
+AddTimer ("almaevent4", 7, "almaevent4");
+}
+
+void almaevent4(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote4", 5);
+AddTimer ("almaevent5", 5, "almaevent5");
+TeleportPlayer("PlayerStartArea_2");
+}
+
+void almaevent5(string &in asTimer)
+{
+FadeIn(2.0f);
+StartPlayerLookAt("Look", 5, 50, "");
+AddTimer ("almaevent6", 3, "almaevent6");
+}
+
+void almaevent6(string &in asTimer)
+{
+StartPlayerLookAt("Look2", 5, 50, "");
+SetMessage("Messages", "ch1almanote5", 5);
+AddTimer ("almaevent7", 5, "almaevent7");
+}
+
+void almaevent7(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote6", 6);
+AddTimer ("almaevent8", 6, "almaevent8");
+}
+
+void almaevent8(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote7", 7);
+AddTimer ("almaevent9", 7, "almaevent9");
+}
+
+void almaevent9(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote8", 6);
+AddTimer ("almaevent10", 6, "almaevent10");
+}
+
+void almaevent10(string &in asTimer)
+{
+StartPlayerLookAt("Look3", 5, 50, "");
+FadeOut(5.0f);
+AddTimer ("almaevent11", 6, "almaevent11");
+}
+
+void almaevent11(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote9", 6);
+AddTimer ("almaevent12", 6, "almaevent12");
+}
+
+void almaevent12(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote10", 6);
+AddTimer ("almaevent13", 6, "almaevent13");
+}
+
+void almaevent13(string &in asTimer)
+{
+SetMessage("Messages", "ch1almanote11", 6);
+AddTimer ("almaevent14", 6, "almaevent14");
+}
+
+void almaevent14(string &in asTimer)
+{
+FadeIn(3.0f);
+TeleportPlayer("PlayerStartArea_3");
+StartPlayerLookAt("Look4", 5, 50, "");
+AddTimer ("almaevent15", 3, "almaevent15");
+}
+
+void almaevent15(string &in asTimer)
+{
+SetPlayerActive(true);
+SetLanternDisabled(false);
+StopPlayerLookAt();
+SetMessage("Messages", "diaryalma", 7);
+AddDiary("DiaryAlma", "");
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+//---- Morality point ----//
+
+void candle(string &in asEntityName, string &in asType)
+{
+AddLocalVarInt("VarIntCandles", 1);
+	Morality();
+}
+
+void candle2(string &in asEntityName, string &in asType)
+{
+AddLocalVarInt("VarIntCandles", 1);
+	Morality();
+}
+
+void candle3(string &in asEntityName, string &in asType)
+{
+AddLocalVarInt("VarIntCandles", 1);
+	Morality();
+}
+
+void candle4(string &in asEntityName, string &in asType)
+{
+AddLocalVarInt("VarIntCandles", 1);
+	Morality();
+}
+
+void candle5(string &in asEntityName, string &in asType)
+{
+AddLocalVarInt("VarIntCandles", 1);
+	Morality();
+}
+
+void Morality(){
+
+	if(GetLocalVarInt("VarIntCandles") == 5){
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+SetMessage("Messages", "schoolcandles", 8);
+AddGlobalVarInt("Morality", 1);
+	}
+}
+
+void OnEnter()
+{	
+SetSanityDrainDisabled(true);
+SetPlayerRunSpeedMul(1.0f);
+PlayMusic("amb_extra01.ogg", true, 0.7, 0, 0, false);
+SetMapDisplayNameEntry("GothfairLibrary");
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_day.png");
+}

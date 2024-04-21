@@ -1,0 +1,353 @@
+void OnStart()
+{
+	StopMusic(4.0, 1);
+	FadeOut(0.0f);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	AddTimer("TimerEIntro", 2.0f, "TimerEIntro");
+	AddEntityCollideCallback("Player", "AreaShadow1", "EvenShadow_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaPig", "EvenPig", true, 1);
+	AddEntityCollideCallback("elevator_cogwheel03_1", "AreaLeverActive_1", "ActiveLever", true, 1);;
+	AddEntityCollideCallback("elevator_cogwheel02_1", "AreaLeverActive_2", "ActiveLever_1", true, 1);;
+	AddEntityCollideCallback("Player", "AreaPigGoAway", "PigGoAway", true, 1);
+	AddEntityCollideCallback("Player", "AreaGirlCry", "GirlCry", true, 1);
+	AddEntityCollideCallback("Player", "AreaStartShake", "ShadowShake", true, 1);
+	AddEntityCollideCallback("Player", "SanityBoost", "SanityBoost", true, 1);
+	AddEntityCollideCallback("Player", "AreaOmg", "JimOmg", true, 1);
+	AddEntityCollideCallback("Player", "AreaMomento", "EvenMemento_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaMomento_1", "EvenMemento_2", true, 1);
+	AddUseItemCallback("", "ladder_item_1", "AreaLadder", "PlaceLadder_1", true);
+	SetupLoadScreen("LoadingText", "Load6", 1, "");
+}
+
+void OnEnter()
+{
+
+}
+
+void OnLeave()
+{
+
+}
+
+///////////////////////////////////////////
+//Sewer intro.
+
+void TimerEIntro(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 1, false);
+	PlaySoundAtEntity("", "step_sneak_rock_rev.snt", "Player", 1, false);
+	AddTimer("TimerEIntro1", 3.0f, "TimerEIntro1");
+}
+
+void TimerEIntro1(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 1, false);
+	PlaySoundAtEntity("", "step_sneak_rock_rev.snt", "Player", 1, false);
+	PlaySoundAtEntity("", "24_rock_move.snt", "Player", 1, false);
+	AddTimer("TimerEIntro2", 2.0f, "TimerEIntro2");
+}
+
+void TimerEIntro2(string &in asTimer)
+{
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 1, false);
+	PlaySoundAtEntity("", "step_sneak_rock_rev.snt", "Player", 1, false);
+	AddTimer("TimerEIntro3", 3.0f, "TimerEIntro3");
+	PlaySoundAtEntity("", "amb_sewer_largearea.snt", "Player", 4, false);
+}
+
+void TimerEIntro3(string &in asTimer)
+{
+	TeleportPlayer("PlayerStartArea_2");
+	PlaySoundAtEntity("", "react_breath.snt", "Player", 1, false);
+	SetPlayerActive(true);
+	AddTimer("TimerEIntro4", 1.5f, "TimerEIntro4");
+	FadeIn(4.0f);
+}
+
+///////////////////////////////////////////
+//A loud roar is heard from the distance.
+
+void EvenShadow_1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "guardian_distant.snt", "Player", 1, false);
+	StartScreenShake(0.03f, 6.5f, 1.0f, 4.0f);
+	SetPlayerMoveSpeedMul(0.2f);
+	FadeImageTrailTo(2,1);
+	AddTimer("TimerEShake", 7.5, "TimerEShake");
+}
+
+void TimerEShake(string &in asTimer)
+{
+	SetPlayerMoveSpeedMul(1.0f);
+	SetEntityActive("stone_med01_brown_2", true);
+	FadeImageTrailTo(0,1);
+}
+
+///////////////////////////////////////////
+//Player places cog on mount.
+
+void ActiveLever(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("lever_ON", true);
+	SetEntityActive("lever_OFF", false);
+}
+
+void ActiveLever_1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("elevator_machine_main_lever_2", true);
+	SetEntityActive("elevator_machine_main_lever_1", false);
+}
+
+///////////////////////////////////////////
+//Player pulls lever.
+
+void CogLever(string &in asEntity, int CogLeverState)
+{
+	if(CogLeverState == 1) {
+		SetMoveObjectState("wooden_slide_door_1", 1);
+		AlertEnemyOfPlayerPresence("wretch_1");
+		RotatePropToSpeed("elevator_cogwheel03_1", 1, 1, -1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_cogwheel02_mounted_1", -1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_cogwheel01_mounted_1", 1, 1, 1, 0, 0, false, "");
+		PlaySoundAtEntity("", "general_metal_cog.snt", "CogSound", 1, false);
+		StartScreenShake(0.01, 1.0, 0.1, 0.5);
+		AddTimer("TimerEPigSpawn_1", 3.5, "TimerEPigSpawn_1");
+		SetLeverStuckState("lever_ON", 1, false);
+		CompleteQuest("questsewer1", "questsewer1");
+	}
+}
+
+void MachineLever(string &in asEntity, int MachineLeverState)
+{
+	if(MachineLeverState == 1) {
+		SetMoveObjectState("wooden_slide_door_2", 1);
+		RotatePropToSpeed("elevator_cogwheel02_1", 1, 1, -1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_cogwheel01_mounted_2", -1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_cogwheel01_mounted_3", 1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_small_1", 1, 1, 1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_small_2", 1, 1, -1, 0, 0, false, "");
+		RotatePropToSpeed("elevator_machine_cog_main_1", 1, 1, 0, 0, -1, false, "");
+		RotatePropToSpeed("elevator_machine_cog_small_3", 1, 1, 0, 0, 1, false, "");
+		PlaySoundAtEntity("", "general_metal_cog.snt", "CogSound_1", 1, false);
+		StartScreenShake(0.01, 1.0, 0.1, 0.5);
+		SetLeverStuckState("elevator_machine_main_lever_1", 1, false);
+		CompleteQuest("questsewer2", "questsewer2");
+	}
+}
+
+void TimerEPigSpawn_1(string &in asTimer)
+{
+	AddTimer("TimerJimScared", 10, "TimerJimScared");
+	SetEntityActive("wretch_1", true);
+	PlaySoundAtEntity("", "afx_streets_crazy_pig_seq_01_occluded.snt", "wretch_1", 1, false);
+	AddTimer("TimerEShake_1", 2.25, "TimerEShake_1");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_4", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_6", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_9", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_11", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_12", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_13", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_14", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_15", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_16", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_18", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_19", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_20", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_21", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_22", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_23", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_24", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_25", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_26", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_27", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_28", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_29", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_30", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_31", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_32", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_33", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_34", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_35", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_36", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_37", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_38", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_39", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_40", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_41", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_42", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_43", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_44", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_45", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_46", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_47", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_48", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_49", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_50", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_51", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_52", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_53", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_54", 0, "");
+	AddEnemyPatrolNode("wretch_1", "PathNodeArea_55", 0, "");
+	CheckPoint ("", "Checkpoint", "PigRespawn", "Death_Hints", "DHint1");
+}
+
+void TimerJimScared(string &in asTimer)
+{
+	PlaySoundAtEntity("", "jim_scared_1.snt", "Player", 1, false);
+	AddEffectVoice("jim_scared_1", "", "Voice", "JimScar2", true, "Player", 1, 10);
+}
+
+void TimerEShake_1(string &in asTimer)
+{
+	StartScreenShake(0.05, 0.7, 0.1, 0.6);
+}
+
+void PigRespawn(string &in asName, int alCount)
+{
+	SetEntityActive("wretch_1", true);
+}
+
+///////////////////////////////////////////
+//Player opens hatch.
+
+void LeverLadder(string &in asEntity, int LeverLadderState)
+{
+	if(LeverLadderState == 1) {
+		SetEntityActive("hatch_ceiling_1", false);
+		SetEntityActive("hatch_ceiling_2", true);
+		SetLeverStuckState("lever_simple01_1", 1, false);
+		PlaySoundAtEntity("", "05_attach_ladder.snt", "Player", 0, false);
+	}
+
+}
+
+///////////////////////////////////////////
+//Player uses ladders on well beam.
+
+void PlaceLadder_1(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+	AddTimer(asEntity, 0.2, "TimerELadder");
+}
+
+void TimerELadder(string &in asTimer)
+{
+	SetPropActiveAndFade("ladder_static_1", true, 0.5f);
+	SetEntityActive("LadderArea_1", true);
+	PlaySoundAtEntity("", "05_attach_ladder.snt", "Player", 0, false);
+}
+
+///////////////////////////////////////////
+//Pickup ladder code.
+
+void LadderItem(string &in asEntity)
+{
+	SetEntityActive("AreaLadder", true);
+}
+
+///////////////////////////////////////////
+//Player climbs up and pig breaks through gate.
+
+void PigGoAway(string &in asParent, string &in asChild, int alState)
+{
+	FadeEnemyToSmoke("wretch_1", false);
+	PlaySoundAtEntity("", "afx_spooky_pig_scream.snt", "Player", 0, false);
+}
+
+///////////////////////////////////////////
+//Player aproaches stairs and hears girl cry.
+
+void GirlCry(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "spooky_childcry.snt", "CrySound", 0, false);
+}
+
+///////////////////////////////////////////
+//Something roars in the distance and the area starts shaking, causing the player to fall down the stairs.
+
+void ShadowShake(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "guardian_distant.snt", "Player", 1, false);
+	StartScreenShake(0.04f, 6.5f, 1.0f, 4.0f);
+	AddTimer("TimerEShake_2", 2.5, "TimerEShake_2");
+	FadeImageTrailTo(1,0.5);
+	SetPlayerJumpDisabled(true);
+	SetPlayerMoveSpeedMul(0.1f);
+}
+
+void TimerEShake_2(string &in asTimer)
+{
+	AddTimer("TimerEShake_3", 2.5, "TimerEShake_3");
+}
+
+void TimerEShake_3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "guardian_distant.snt", "Player", 1, false);
+	StartScreenShake(0.04f, 6.5f, 1.0f, 4.0f);
+	MovePlayerForward(3);
+	AddTimer("TimerEShake_4", 0.5, "TimerEShake_4");
+	PlaySoundAtEntity("", "explosion_rock_large", "Player", 1, false);
+}
+
+void TimerEShake_4(string &in asTimer)
+{
+	StartScreenShake(0.05f, 1.0f, 1.0f, 2.0f);
+	PlaySoundAtEntity("", "player_falldamage_min.snt", "Player", 1, false);
+	AddTimer("TimerEFall", 2.5, "TimerEFall");
+	FadeOut(0.3f);
+	StartPlayerLookAt("Look_1", 5.0f, 5.0f, "");
+}
+
+void TimerEFall(string &in asTimer)
+{
+	PlaySoundAtEntity("", "player_falldamage_max.snt", "Player", 1, false);
+	AddTimer("TimerEEndLevel", 2.5, "TimerEEndLevel");
+}
+
+///////////////////////////////////////////
+//Sanity boost.
+
+void SanityBoost(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityBoostSmall();
+}
+
+///////////////////////////////////////////
+//End level.
+void TimerEEndLevel(string &in asTimer)
+{
+	ChangeMap("00_02.map", "PlayerStartArea_1", "", "");
+}
+
+void JimOmg(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "jim_omg1.snt", "Player", 1.0, false);
+	PlayMusic("A2_2_5_Cistern_Theme.ogg", true, 1.0, 0, 2, false);
+	AddEffectVoice("jim_omg1", "", "Voice", "JimOmg", true, "Player", 1, 10);
+}
+
+void CogDoor(string &in asEntity)
+{
+	SetSwingDoorClosed("sewer_arched_3", true, true);
+	SetSwingDoorLocked("sewer_arched_3", true, true);
+}
+
+void EvenMemento_1(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("questsewer1", "questsewer1");
+}
+
+void EvenMemento_2(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("questsewer2", "questsewer2");
+}

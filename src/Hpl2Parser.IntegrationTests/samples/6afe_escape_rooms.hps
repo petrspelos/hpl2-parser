@@ -1,0 +1,347 @@
+void OnStart()
+{
+	FadeGlobalSoundVolume(1.0f, 1.0f);
+	FadeOut(0.0f);
+	AddTimer("", 3.5f, "heh");
+	AddTimer("", 1.5f, "aani");
+	SetPlayerSanity(30);
+	SetPlayerHealth(70);
+	PlayGuiSound("door_mansion_close.ogg", 1.0f);
+	SetPlayerCrouching(true);
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerLookSpeedMul(0.0f);
+	AddEntityCollideCallback("book1", "t1", "s1", true, 1);
+	AddEntityCollideCallback("book2", "t2", "s2", true, 1);
+	AddEntityCollideCallback("book3", "t3", "s3", true, 1);
+	AddEntityCollideCallback("book4", "t4", "s4", true, 1);
+	AddEntityCollideCallback("book5", "t5", "s5", true, 1);
+	AddEntityCollideCallback("book6", "t6", "s6", true, 1);
+	AddEntityCollideCallback("book7", "t7", "s7", true, 1);
+	AddEntityCollideCallback("book1", "a1", "y1", true, 1);
+	AddEntityCollideCallback("book2", "a2", "y2", true, 1);
+	AddEntityCollideCallback("book3", "a3", "y3", true, 1);
+	AddEntityCollideCallback("book4", "a4", "y4", true, 1);
+	AddEntityCollideCallback("book5", "a5", "y5", true, 1);
+	AddEntityCollideCallback("book6", "a6", "y6", true, 1);
+	AddEntityCollideCallback("book7", "a7", "y7", true, 1);
+	AddEntityCollideCallback("door", "sound", "soundstop", true, 0);
+	AddEntityCollideCallback("Player", "area2", "textshow", true, 0);
+	AddEntityCollideCallback("Player", "say", "text8", true, 0);
+	SetEntityPlayerInteractCallback("button", "buttonfunc", true);
+	SetEntityPlayerInteractCallback("orb", "found", true);
+	AddUseItemCallback("", "saw", "wood", "cut", true);
+	AddUseItemCallback("", "ready", "use", "lolol", true);
+	AddUseItemCallback("", "1", "area", "ob1", true);
+	AddUseItemCallback("", "orb", "area3", "orbgive", true);
+	AutoSave();
+	AddEntityCollideCallback("Player", "siirrytoiseen", "move", true, 1);
+}
+
+void move(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("tryagain.map", "PlayerStartArea_1", "", "");
+}
+
+void found(string &in asEntity)
+{
+	GiveSanityBoost();
+}
+
+void buttonfunc(string &in asEntity)
+{
+	AddTimer("", 0.5, "open");
+	PlayGuiSound("lever_wood_max.snt", 0.8f);
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerLookSpeedMul(1.0f);
+}
+
+void open(string &in asTimer)
+{
+	SetMoveObjectState("Secret", 1.0f);
+	AddTimer("deadtimer", 240.0f, "deadwait");
+	AddTimer("deadtimer", 180.0f, "left");
+	CheckPoint ("", "check", "", "DeathHints", "death");
+}
+
+void deadwait(string &in asTimer)
+{
+	AddTimer("dead", 0.5f, "dead");
+}
+
+void heh(string &in asTimer)
+{
+	FadeIn(5.0f);
+	SetMessage("Messages", "sanoma7", 4);
+	PlayMusic("29_amb.ogg", true, 0.8f, 4.0f, 0, true);
+	SetPlayerMoveSpeedMul(0.8f);
+	SetPlayerRunSpeedMul(0.8f);
+	SetPlayerLookSpeedMul(1.0f);
+	SetPlayerJumpDisabled(false);
+}
+
+void aani(string &in asTimer)
+{
+	PlayGuiSound("lock_door.snt", 1.0f);
+}
+
+void text8(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "sanoma8", 6);
+}
+
+void Func_wall(string &in asEntity, int alState)
+{ 
+	if (alState == 1)
+{ 
+        SetMoveObjectState("Secret", 1.0f);
+	return;
+} 
+	if (alState == -1) 
+	
+        SetMoveObjectState("Secret", 0.0f);
+}
+
+void cut(string &in asItem, string &in asEntity)
+{
+	AddTimer("", 4.5, "des");
+	PlayGuiSound("26_saw.ogg", 1.0f);
+}
+
+void des(string &in asTimer)
+{
+	SetPropHealth("wood", 0);
+	RemoveItem("saw");
+}
+
+void lolol(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("gameplay_acid_web.ogg", 0.9f);
+	SetPropActiveAndFade("rauta", false, 3);
+	RemoveItem("ready");
+}
+
+void ob1(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("12_epoxy_fill.ogg", 1.0f);
+	SetEntityActive("empty", false);
+	SetEntityActive("half", true);
+	AddUseItemCallback("", "2", "area", "ob2", true);
+	RemoveItem("1");
+}
+
+
+void ob2(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("12_epoxy_fill.ogg", 1.0f);
+	SetEntityActive("half", false);
+	SetEntityActive("full", true);
+	AddUseItemCallback("", "3", "area", "ob3", true);
+	RemoveItem("2");
+}
+
+void ob3(string &in asItem, string &in asEntity)
+{
+	PlayGuiSound("12_epoxy_fill.ogg", 1.0f);
+	SetEntityActive("full", false);
+	SetEntityActive("ready", true);
+	SetEntityActive("area", false);
+	RemoveItem("3");
+}
+
+void left(string &in asTimer)
+{
+	SetMessage("Messages", "timeleft", 4);
+}
+
+void dead(string &in asTimer)
+{
+	SetMessage("Messages", "timeend", 5);
+	SetEntityActive("brute", true);
+	AddEnemyPatrolNode("brute", "PathNodeArea_1", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_2", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_3", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_4", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_5", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_6", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_7", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_8", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_9", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_10", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_11", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_12", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_13", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_14", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_15", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_16", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_2", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_1", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_2", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_3", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_4", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_5", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_6", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_7", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_8", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_9", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_10", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_11", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_12", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_13", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_14", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_15", 0.0f, ""); 
+	AddEnemyPatrolNode("brute", "PathNodeArea_16", 0.0f, ""); 
+}
+
+void s1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("t2", true);
+}
+
+void s2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("t3", true);
+}
+
+void s3(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("t4", true);
+}
+
+void s4(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("t5", true);
+}
+
+void s5(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("t6", true);
+}
+
+void s6(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("t7", true);
+}
+
+void s7(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 0.2f, "opengate");
+}
+
+void y1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "16_lever_stuck", "book1", 0, false);
+}
+
+void y2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "16_lever_stuck", "book2", 0, false);
+}
+
+void y3(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "16_lever_stuck", "book3", 0, false);
+}
+
+void y4(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "16_lever_stuck", "book4", 0, false);
+}
+
+void y5(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "16_lever_stuck", "book5", 0, false);
+}
+
+void y6(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "16_lever_stuck", "book6", 0, false);
+}
+
+void y7(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "16_lever_stuck", "book7", 0, false);
+}
+
+void opengate(string &in asTimer)
+{
+	SetMoveObjectState("door", 1.0f);
+	AddTimer("", 3.4f, "func");
+	PlaySoundAtEntity("", "door_prison_open.snt", "Player", 0, false);
+	PlaySoundAtEntity("", "quest_completed.snt", "Player", 0, false);
+}
+
+void func(string &in asTimer)
+{
+	SetMoveObjectState("door", 1.0f);
+	AddTimer("", 0.01f, "func23");
+}
+
+void func23(string &in asTimer)
+{
+	SetMoveObjectState("door", 1.0f);
+	AddTimer("", 0.01f, "func");
+}
+
+void soundstop(string &in asParent, string &in asChild, int alState)
+{
+	PlayGuiSound("close_gate.snt", 0.8f);
+}
+
+void textshow(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "sanoma9", 4);
+}
+
+void orbgive(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("orb1", false);
+	SetEntityActive("orb2", true);
+	AddTimer("", 0.9, "start");
+	AddTimer("", 0.5, "orbdone");
+	PlaySoundAtEntity("", "pick_orb_piece.snt", "orb2", 0, false);
+	RemoveTimer("deadtimer");
+	RemoveTimer("deadtimer");
+	RemoveItem("orb");
+}
+
+void orbdone(string &in asTimer)
+{
+	PlaySoundAtEntity("", "27_orb_done.snt", "orb2", 0, true);
+}
+
+void start(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "orb2", false);
+	PlaySoundAtEntity("", "ui_fire_damage.snt", "orb2", 0, false);
+	AddTimer("", 2.0, "dooropens");
+	SetLampLit("ped", true, true);
+	SetEntityActive("brute", false);
+}
+
+void dooropens(string &in asTimer)
+{
+	SetSwingDoorLocked("metal", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", "metal", 0, false);
+	StartPlayerLookAt("look", 3, 5, "");
+	AddTimer("", 1.0f, "StopLook");
+	PlayMusic("01_paper_self.ogg", false, 1.0f, 4.0f, 0, false);
+}
+
+void StopLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+
+
+
+
+
+
+
+
+
+
+

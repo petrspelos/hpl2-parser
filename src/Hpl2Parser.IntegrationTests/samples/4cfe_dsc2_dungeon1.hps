@@ -1,0 +1,118 @@
+//////////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+SetPropStaticPhysics("hatch_ceiling_1", true);
+SetEntityPlayerInteractCallback("HatchOpen", "SpawnObjects", true);
+AddUseItemCallback("", "key_tomb_1", "prison_1", "UnlockDoor", true);
+AddUseItemCallback("", "key_tomb_1", "prison_2", "DoorCannotBeUnlocked", true);
+AddUseItemCallback("", "crowbar_1", "prison_2", "BeginBreakDoor", true);
+AddUseItemCallback("", "crowbar_2", "prison_2", "BeginBreakDoor", true);
+AddEntityCollideCallback("crowbar_joint_1", "BreakDoorCollide", "BreakDoor", true, 1);
+AddEntityCollideCallback("servant_grunt_1", "EnemyLeave", "EnemyLeaveDoor", true, 1);
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity) 
+{
+SetSwingDoorLocked("prison_1", false, true);
+PlaySoundAtEntity("", "unlock_door.snt", "prison_1", 0, false);
+RemoveItem("key_tomb_1");
+CompleteQuest("celldoorquest", "CellDoorQuest");
+}
+
+    void DoorCannotBeUnlocked(string &in asItem, string &in asEntity) 
+    {
+    SetMessage("Level5", "CannotUnlockBlockedDoor", 5);
+    }
+
+void blockeddoor(string &in asEntity)
+{
+SetMessage("Level5", "BlockedDoor", 4);
+AddQuest("celldoorquest", "CellDoorQuest");
+}
+
+void StatueSpook(string &in asEntity)
+{
+SetEntityActive("armour_rusty_complete_2", true);
+SetEntityPlayerLookAtCallback("LookArea", "StatueSpookRemove", true);
+}
+
+    void StatueSpookRemove(string &in asEntity, int alState)
+	{
+	AddTimer("StatueSpookRemoveStage2", 0.4, "StatueSpookRemoveStage2");
+	}
+	
+	    void StatueSpookRemoveStage2(string &in asTimer)
+        {
+    	SetEntityActive("armour_rusty_complete_2", false);
+		} 
+		
+		
+void BeginBreakDoor(string &in asItem, string &in asEntity) 
+{
+RemoveItem("crowbar_1");
+RemoveItem("crowbar_2");
+SetEntityActive("crowbar_joint_1", true);
+PlaySoundAtEntity("", "impact_metal_high.snt", "prison_2", 0, false);
+}
+
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("10_puzzle01.ogg", false, 0.7, 0.1, 10, false);
+SetSwingDoorLocked("prison_2", false, false);
+SetSwingDoorDisableAutoClose("prison_2", true);
+SetSwingDoorClosed("prison_2", false,false);
+CompleteQuest("celldoorquest", "CellDoorQuest");
+PlaySoundAtEntity("break","break_wood_metal", "prison_2", 0, false);
+CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "BreakDoorCollide", false);
+AddPropImpulse("prison_2", 0, 0, 3, "world");
+SetEntityActive("crowbar_joint_1", false);
+SetEntityActive("crowbar_1", true);
+SetEntityActive("servant_grunt_1", true);
+SetMessage("Level5", "EnemyComing", 3);
+    AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 2, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_2", 5, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_3", 5, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("servant_grunt_1", "PathNodeArea_4", 0, "");
+}
+
+void EnemyLeaveDoor(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("servant_grunt_1", false);
+PlaySoundAtEntity("","door_level_cellar_open.snt", "level_dungeon_1", 0, false);
+}
+
+    void SpawnObjects(string &in asEntity)
+    {
+	AddTimer("LockBreak", 0.8, "LockBreak");
+	PlaySoundAtEntity("", "impact_wood_high.snt", "hatch_ceiling_1", 0.0f, false);
+	PlaySoundAtEntity("", "scare_wood_creak_scuf.snt", "hatch_ceiling_1", 0.0f, false);
+    SetEntityActive("wine01_1", true);
+	SetEntityActive("wine01_2", true);
+	SetEntityActive("wine01_3", true);
+	SetEntityActive("wine01_4", true);
+	SetEntityActive("wine01_5", true);
+	SetEntityActive("wine01_6", true);
+	SetEntityActive("wine01_7", true);
+	SetEntityActive("wine01_8", true);
+	SetEntityActive("wine01_9", true);
+	SetEntityActive("wine01_10", true);
+	SetEntityActive("wine01_11", true);
+	SetEntityActive("wood_box02_2", true);
+	SetEntityActive("wood_box02_3", true);
+	SetEntityActive("wood_box02_4", true);
+    }
+	
+	    void LockBreak(string &in asTimer)
+        {
+        SetPropStaticPhysics("hatch_ceiling_1", false);
+		PlaySoundAtEntity("", "door_sewer_unlock.ogg", "hatch_ceiling_1", 0.0f, false);
+        }
+
+//////////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

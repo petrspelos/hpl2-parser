@@ -1,0 +1,350 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	StopMusic(0,1);
+	SetEntityPlayerInteractCallback("ChangeKey", "Switch", true);
+	AddEntityCollideCallback("Player","OpeningLines", "Lines", true, 1);
+	AddEntityCollideCallback("Player","SpawnSE", "PopUp", true, 1);
+	AddEntityCollideCallback("Player", "AreaFallDeath", "CollideFallDeath", false, 1);
+	AddEntityCollideCallback("Player", "MakeLethal", "LethalFall", false, 1);
+	AddEntityCollideCallback("Player", "StopLethality", "StopLethalFall", false, 1);
+	AddEntityCollideCallback("Player","StartMusic", "Music", true, 1);
+	AddEntityCollideCallback("Player","BarricadeDoor", "BlockWithRocks", true, 1);
+	AddEntityCollideCallback("Player", "Hint", "HideYourself", true, 1);
+	AddEntityCollideCallback("Player", "CloseDoorOption_1", "Close1", true, 1);
+	AddEntityCollideCallback("Player", "CloseDoorOption_2", "Close2", true, 1);
+	AddEntityCollideCallback("SESchizo_1","StartMumbles", "Murmurs", true, 1);
+	AddEntityCollideCallback("SESchizo","KillPlayer", "SetDeath", true, 1);
+	AddEntityCollideCallback("SESchizo_1","BreakDoor", "Break", true, 1);
+	AddEntityCollideCallback("Player","GrabbedKeyCheck", "CheckForLevelKey", false, 1);
+	AddEntityCollideCallback("Player","KeyMessage", "MessageForKey", false, 1);
+	AddUseItemCallback("", "ChangeKey", "RandomDoor", "UseKeyOnDoor", true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnEnter
+//////////////////////////////////////////////////////////////////////////////////////
+
+void OnEnter()
+{
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Opening Lines
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Lines(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpForceMul(0);
+	AddEffectVoice("s11_j1.ogg", "", "Dialogue", "Level7_1", false, "", 0, 0);
+	AddEffectVoice("s11_g1.ogg", "", "Dialogue", "Level7_2", false, "", 0, 0);
+	AddEffectVoice("s11_j2.ogg", "", "Dialogue", "Level7_3", false, "", 0, 0);
+	AddEffectVoice("s11_j3.ogg", "", "Dialogue", "Level7_4", false, "", 0, 0);
+	AddEffectVoice("s11_j4.ogg", "", "Dialogue", "Level7_5", false, "", 0, 0);
+	AddEffectVoice("s11_g2.ogg", "", "Dialogue", "Level7_6", false, "", 0, 0);
+	AddEffectVoice("s11_j5.ogg", "", "Dialogue", "Level7_7", false, "", 0, 0);
+	SetEffectVoiceOverCallback("Move");
+}
+
+void Move()
+{
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerJumpForceMul(1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Music
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Music(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("Track12.ogg", false, 2, 1, 1, true);
+	AddQuest("Examine_Church", "Church");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Door Messages
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Budge(string &in asEntity)
+{
+	SetMessage("Messages", "Never", 1);
+}
+
+void LockedDoor(string &in asEntity)
+{
+	SetMessage("Messages", "Locked", 1);
+	if(GetSwingDoorLocked("RandomDoor") == false)
+	{
+		SetMessage("Messages", "Blank", 1);
+	}
+	
+}
+
+void Break(string &in asParent, string &in asChild, int alState)
+{
+	SetPropHealth("MonsterOnlyDoor", 0);
+	AddTimer("", 3, "SetMonsterInactive");
+}
+
+////////////////////////////////////////////////////////////
+//Kill Player
+////////////////////////////////////////////////////////////
+
+void LethalFall(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaFallDeath", true);
+	SetLocalVarInt("CheckpointCheck", 0);
+	CheckPoint("", "Checkpoint_1", "Reset", "DeathHint", "Entry1");
+}
+
+void StopLethalFall(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaFallDeath", false);
+	SetDeathHint("DeathHint", "DefaultEntry");
+}
+
+void CollideFallDeath(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("death1", 0.5f, "TimerFallDeath");	
+	FadeOut(2);
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	PlayMusic("neck_snap.ogg", false, 10, 1, 1, false);
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+}
+
+void TimerFallDeath(string &in asTimer)
+{	
+	if(asTimer == "death1")
+	{
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+}	
+
+void SetDeath(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "Die", 3);
+	StopAllEffectVoices(0);
+	SetEntityActive("Screwed_Boards", true);
+	SetEntityActive("Unbreakable", false);
+	SetEntityActive("CloseDoorOption_1", false);
+	SetEntityActive("CloseDoorOption_2", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Switch Boards
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Switch(string &in item)
+{
+	for(int i = 1; i <= 29; i++) SetEntityActive("Shift_"+i, false);
+	for(int i = 31; i <= 60; i++) SetEntityActive("Shift_"+i, true);
+	SetLocalVarInt("CheckpointCheck", 1);
+	SetEntityActive("MakeLethal", false);
+	CheckPoint("", "Checkpoint_2", "Reset", "DeathHint", "Run");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Key Unlock
+//////////////////////////////////////////////////////////////////////////////////////
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("RandomDoor", false, true);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Cave In
+//////////////////////////////////////////////////////////////////////////////////////
+
+void BlockWithRocks(string &in asParent, string &in asChild, int alState)
+{
+	CompleteQuest("Examine_Church", "Church");
+	SetEntityActive("MainCave", true);
+	SetEntityActive("Checkpoint_1", false);
+	PlaySoundAtEntity("explosion", "explosion_rock_large.snt", "MainCave", 0, false);
+	SetLocalVarInt("CheckpointCheck", 2);
+	CreateParticleSystemAtEntity("dust1", "ps_area_fog_sewer.ps", "AreaDust_1", true);
+	CreateParticleSystemAtEntity("dust2", "ps_area_fog_sewer.ps", "AreaDust_2", true);
+	CreateParticleSystemAtEntity("dust3", "ps_area_fog_sewer.ps", "AreaDust_3", true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Spawn SE
+//////////////////////////////////////////////////////////////////////////////////////
+
+void PopUp(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("SESchizo", true);
+	AddEnemyPatrolNode("SESchizo", "Node_1", 0.001f, "");
+	AddEnemyPatrolNode("SESchizo", "Node_2", 0.001f, "");
+	AddEnemyPatrolNode("SESchizo", "Node_3", 17, "");
+	SetEntityActive("Temporary", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//SE Properties
+//////////////////////////////////////////////////////////////////////////////////////
+
+void SetMonsterInactive(string &in asTimer)
+{
+	SetEntityActive("SESchizo_1", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Reset
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Reset(string &in asName, int alCount)
+{
+	if(GetLocalVarInt("CheckpointCheck") == 0)
+	{
+		TeleportPlayer("Checkpoint_1");
+		}
+	if(GetLocalVarInt("CheckpointCheck") == 1)
+	{
+		TeleportPlayer("Checkpoint_2");
+		}
+	if(GetLocalVarInt("CheckpointCheck") == 2)
+	{
+	TeleportPlayer("SchizoCheckpoint");
+	SetEnemyDisabled("SESchizo", false);
+	SetEntityActive("Screwed_Boards", false);
+	SetEntityActive("SESchizo", true);
+	AddEnemyPatrolNode("SESchizo", "Node_1", 0.001f, "");
+	AddEnemyPatrolNode("SESchizo", "Node_2", 0.001f, "");
+	AddEnemyPatrolNode("SESchizo", "Node_3", 17, "");
+	SetEntityActive("Unbreakable", false);
+	SetEntityActive("CloseDoorOption_1", true);
+	SetEntityActive("CloseDoorOption_2", true);
+	AddEntityCollideCallback("Player", "Hint", "HideYourself", true, 1);
+	AddEntityCollideCallback("Player", "CloseDoorOption_1", "Close1", true, 1);
+	AddEntityCollideCallback("Player", "CloseDoorOption_2", "Close2", true, 1);
+	AddEntityCollideCallback("SESchizo_1","StartMumbles", "Murmurs", true, 1);
+	AddEntityCollideCallback("SESchizo","KillPlayer", "SetDeath", true, 1);
+	AddEntityCollideCallback("SESchizo_1","BreakDoor", "Break", true, 1);
+	AddEntityCollideCallback("Player","GrabbedKeyCheck", "CheckForLevelKey", false, 1);
+	AddEntityCollideCallback("Player","KeyMessage", "MessageForKey", false, 1);
+	}
+	PlayMusic("Track12.ogg", false, 2, 1, 1, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Hint
+//////////////////////////////////////////////////////////////////////////////////////
+
+void HideYourself(string &in asParent, string &in asChild, int alState)
+{
+	GiveHint ("GoInCabinet", "Hints", "Cellar", 15);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Close Closets
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Close1(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("Cabinet_1", true, false);
+	SetSwingDoorLocked("Cabinet_2", true, true);
+	SetEntityActive("StartMumbles", true);
+	SetEntityActive("BreakDoor", true);
+	SetEntityActive("KillPlayer", false);
+	SetEntityActive("SESchizo", false);
+	SetEntityActive("SESchizo_1", true);
+	AddEnemyPatrolNode("SESchizo_1", "Node_3", 17, "");
+}
+
+void Close2(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("Cabinet_2", true, false);
+	SetSwingDoorLocked("Cabinet_1", true, true);
+	SetEntityActive("StartMumbles", true);
+	SetEntityActive("BreakDoor", true);
+	SetEntityActive("KillPlayer", false);
+	SetEntityActive("SESchizo", false);
+	SetEntityActive("SESchizo_1", true);
+	AddEnemyPatrolNode("SESchizo_1", "Node_3", 17, "");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Murmur Scene
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Murmurs(string &in asParent, string &in asChild, int alState)
+{
+	AddEffectVoice("s12_1.ogg", "", "Dialogue", "Murmur1", true, "SESchizo_1", 0, 30);
+	AddEffectVoice("s12_2.ogg", "", "Dialogue", "Murmur2", true, "SESchizo_1", 0, 30);
+	AddEffectVoice("s12_3.ogg", "", "Dialogue", "Murmur3", true, "SESchizo_1", 0, 30);
+	AddEffectVoice("s12_4.ogg", "", "Dialogue", "Murmur4", true, "SESchizo_1", 0, 30);
+	SetEffectVoiceOverCallback("ToDoor");
+}
+
+void ToDoor()
+{
+	AddQuest("Listen", "Eavesdrop");
+	SetSwingDoorLocked("Cabinet_1", false, true);
+	SetSwingDoorLocked("Cabinet_2", false, true);
+	SetEntityActive("ToLevel8", true);
+	AddEnemyPatrolNode("SESchizo_1", "Node_4", 0.001f, "");
+	AddEnemyPatrolNode("SESchizo_1", "Node_5", 0.001f, "");
+	AddEnemyPatrolNode("SESchizo_1", "Node_6", 0.001f, "");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Check For Key
+//////////////////////////////////////////////////////////////////////////////////////
+
+void MessageForKey(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "GetKey", 3);
+}
+
+void CheckForLevelKey(string &in asParent, string &in asChild, int alState)
+{
+	if(HasItem("ToLevel8")== true)
+	{
+		SetEntityActive("KeyMessage", false);
+		SetEntityActive("KeyBlock", false);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("Examine_Church", "Church");
+CompleteQuest("Listen", "Eavesdrop");
+}

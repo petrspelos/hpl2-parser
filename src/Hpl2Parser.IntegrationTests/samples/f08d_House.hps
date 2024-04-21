@@ -1,0 +1,327 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("Altstadt House");
+	FadeOut(0);
+	FadeIn(2.5f);
+	SetEntityInteractionDisabled("diaryptsd", true);
+	AddEntityCollideCallback("Handle", "AreaConnect", "AttachLever", true, 1);
+	AddEntityCollideCallback("Player", "Area", "Look", true, 1);
+	AddUseItemCallback("", "KeyCellar", "cellardoor", "UnlockCellar", true);
+	AddUseItemCallback("", "KeyChest", "chest", "UnlockChest", true);
+}
+
+void PhonographInteract(string &in asEntity)
+{
+	PlaySoundAtEntity("phonosound", "ptest_phono_loop.snt", "phonograph", 0.5f, false);
+	AddTimer("phono", 3.5f, "phonographtimer");
+}
+
+void phonographtimer(string &in asTimer)
+{
+	SetEntityActive("doll", true);
+	AddTimer("phono2", 7.5f, "phonographend");
+	FadeImageTrailTo(0.8f, 2.5f);
+	PlayGuiSound("00_faint", 0.7);
+	SetPlayerRunSpeedMul(0.5);
+	SetPlayerMoveSpeedMul(0.5);
+	PlayGuiSound("react_scare", 0.7);
+	GiveSanityDamage(10, true);
+	PlaySoundAtEntity("", "ptest/cell_malo.snt", "phonograph", 0.5f, false);
+}
+
+void phonographend(string &in asTimer)
+{
+	StopSound("phonosound", 3.5f);
+	PlaySoundAtEntity("", "enemy/brute/enabled.snt", "mansionmonster", 0.5f, false);
+	PlayMusic("02_amb_strange.ogg", true, 0.6, 5, 1, true);
+	PlayGuiSound("react_breath_slow", 0.6);
+	FadeImageTrailTo(0, 3.5f);
+	SetPlayerRunSpeedMul(0.9);
+	SetPlayerMoveSpeedMul(0.9);
+}
+
+void AttachLever(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "gameplay_open_chest.snt", "Lever_1", 0, false);
+	SetEntityActive("Handle", false);
+	SetEntityActive("mount", false);
+	SetEntityActive("AreaConnect", false);
+	SetEntityActive("Lever_1", true);
+}
+
+void LeverMissing(string &in asEntity)
+{
+	SetMessage("ScreenText", "levermissing", 4.5f);
+}
+
+void GlowHandleEnd(string &in asEntity)
+{
+	FadeLightTo("glowhandle", 0, 0, 0, 0, -1, 0.5f);
+	AddTimer("glowhandleend", 1, "GlowHandleEndTimer");
+}
+
+void GlowHandleEndTimer(string &in asTimer)
+{
+	SetLightVisible("glowhandle", false);
+}
+
+void KeyCellarPickup(string &in asEntity, string &in OnPickup)
+{
+	DestroyParticleSystem("dust");
+	AddEntityCollideCallback("Player", "AreaPath", "MonsterPath", true, 1);
+	SetEntityActive("AreaPath", true);
+}
+
+void UnlockCellar(string &in asItem, string &in asEntity)
+{
+	CompleteQuest("Memento33", "M33");
+	SetSwingDoorLocked("CellarDoor", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", "cellardoor", 0, false);
+	RemoveItem("KeyCellar");
+}
+
+void LockedChest(string &in asEntity)
+{
+	PlaySoundAtEntity("", "door_prison_locked.snt", "chest", 0, false);
+	SetMessage("ScreenText", "chestlocked", 4);
+}
+
+void UnlockChest(string &in asItem, string &in asEntity)
+{
+	RemoveItem("KeyChest");
+	PlaySoundAtEntity("", "unlock_door.snt", "chest", 0, false);
+	GiveSanityBoostSmall();
+	SetLeverStuckState("chest", 0, true);
+}
+
+void MementoPuzzleAdd()
+{
+	SetEntityInteractionDisabled("diaryptsd", false);
+	AddQuest("Memento32", "M32");
+}
+
+void WarEvent(string &in asEntity)
+{
+	SetEntityActive("FlashbackPTSD", true);
+	SetPlayerJumpDisabled(true);
+	PlayMusic("03_paper_daniel02.ogg", false, 0.8, 1.5f, 2, false);
+	SetPlayerActive(false);
+	StopMusic(1.5f, 1);
+	AddTimer("warbegin", 0.5f, "WarBegin");
+}
+
+void War(string &in asTimer)
+{
+	PlaySoundAtEntity("warsounds", "gameplay/WarSounds.snt", "Player", 3.5f, false);
+	SetInDarknessEffectsActive(false);
+	SetEnemySanityDecreaseActive("gruntevent", false);
+	SetEntityActive("gruntevent", true);
+	AddTimer("monsterevent", 2.5f, "MonsterEvent");
+	FadeImageTrailTo(0.8f, 3);
+	AddTimer("lantern", 1.5f, "TimerLantern");
+	PlayGuiSound("00_faint", 0.7);
+	TeleportPlayer("WarSpawn");
+	PlayGuiSound("react_breath_slow", 1);
+	SetPlayerRunSpeedMul(0.35f);
+	SetPlayerMoveSpeedMul(0.35f);
+	SetInventoryDisabled(true);
+	FadeIn(4.5f);
+}
+
+void MonsterEvent(string &in asTimer)
+{
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_1", 0, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_2", 0.01, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_3", 0.01, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_4", 0.01, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_5", 0.01, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_6", 0.01, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_7", 0.01, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_8", 0, "");
+	AddEnemyPatrolNode("gruntevent", "GruntEventNode_9", 0, "");
+}
+
+void Flashback1()
+{
+	SetLanternActive(true, true);
+	SetPlayerJumpDisabled(true);
+	PlayGuiSound("scare_male_terrified", 0.8);
+}
+
+void EndWarEvent(string &in asEntity, string &in Type)
+{
+	SetPlayerLampOil(50);
+	SetLanternActive(false, true);
+	FadeEnemyToSmoke("gruntevent", true);
+	FadeOut(3.5f);
+	SetPlayerActive(false);
+	AddTimer("warend", 5, "WarEndTimer");
+}
+
+void WarEndTimer(string &in asTimer)
+{
+	StopSound("warsounds", 8);
+	StopMusic(5.5f, 10);
+	SetSwingDoorLocked("mansion", false, true);
+	SetPlayerCrouching(true);
+	StartPlayerLookAt("lookbed", 2.5f, 2.5f, "");
+	FadeImageTrailTo(0, 3);
+	PlayGuiSound("03_waking_up", 0.9);
+	SetPlayerRunSpeedMul(0.5);
+	SetPlayerMoveSpeedMul(0.5);
+	AddTimer("movenormal", 4, "MoveNormal");
+	SetPlayerJumpDisabled(false);
+	SetInventoryDisabled(false);
+	PlayGuiSound("scare_male_terrified5", 0.8);
+	FadeIn(3.5f);
+	TeleportPlayer("BedSpawn");
+	SetInDarknessEffectsActive(true);
+}
+
+void MoveNormal(string &in asTimer)
+{
+	StartPlayerLookAt("note", 2, 2, "");
+	SetPlayerActive(true);
+	SetPlayerRunSpeedMul(0.9);
+	SetPlayerMoveSpeedMul(0.9);
+}
+
+void NotePickup(string &in asEntity, string &in OnPickup)
+{
+	PlayMusic("02_amb_strange.ogg", true, 0.6, 5, 1, true);
+	StopPlayerLookAt();
+}
+
+void WarBegin(string &in asTimer)
+{
+	StartPlayerLookAt("gruntevent", 2.5, 2.5, "");
+	SetLanternActive(false, true);
+	PlayGuiSound("player_bodyfall", 0.8);
+	AddTimer("war", 6, "War");
+	FadeOut(4.5f);
+	PlayGuiSound("react_scare", 0.8);
+	StartScreenShake(0.1, 2, 1, 3);
+	GiveSanityDamage(101, true);
+}
+
+void TimerLantern(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	PlayMusic("Flashback.ogg", false, 4.5f, 3.5f, 10, false);
+	AddTimer("jumpdisable", 4.5f, "JumpDisable");
+}
+
+void KeyBarnPickup(string &in asEntity, string &in OnPickup)
+{
+	CompleteQuest("Memento31", "M31");
+	SetEntityPlayerInteractCallback("cellardoor", "Monster", true);
+}
+
+void MementoAdd(string &in asEntity)
+{
+	AddQuest("Memento33", "M33");
+	SetMessage("ScreenText", "cellardoorclosed", 4);
+}
+
+void DisableBrute(string &in asEntity, string &in OnAutoDisabled)
+{
+	PlaySoundAtEntity("", "15_slam_door", "mansionmonster", 0.5f, false);
+	PlayMusic("10_amb.ogg", true, 0.6, 5, 1, true);
+}
+
+void BruteEnd2(string &in asEntity, string &in OnAutoDisabled)
+{
+	PlaySoundAtEntity("", "15_slam_door", "mansionmonster", 0.5f, false);
+	PlayMusic("02_amb_strange.ogg", true, 0.6, 5, 1, true);
+}
+
+void Monster(string &in asEntity)
+{
+	CheckPoint("CheckPointCellar", "CellarSpawn", "", "DeathHint", "DMonster");
+	PlayGuiSound("react_scare", 1);
+	PlaySoundAtEntity("", "attack_claw", "Brute", 0.0f, false);
+	PlaySoundAtEntity("", "15_slam_door", "Brute", 0.5f, false);
+	PlaySoundAtEntity("", "break_wood", "mansionmonster", 0, false);
+	GiveSanityDamage(10, true);
+	SetEntityActive("Brute", true);
+	CompleteQuest("Memento32", "M32");
+	AddEnemyPatrolNode("Brute", "BruteNode_1", 3, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_2", 4, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_3", 5, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_4", 4, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_5", 3, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_6", 0.001, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_7", 0.001, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_8", 0.001, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_9", 0.001, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_10", 0.001, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_11", 0.001, "");
+	AddEnemyPatrolNode("Brute", "BruteNode_12", 0.001, "");
+}
+
+void LeverPuzzle(string &in asEntity, int LeverState)
+{
+	if(LeverState == 1)
+	{
+		SetEntityInteractionDisabled("Lever_2", false);
+		PlaySoundAtEntity("Sound1", "gameplay_tick", "Lever_1", 0.0f, false);
+		AddTimer("shelftimer", 6.5f, "ShelfTimer");
+		SetLeverStuckState("Lever_1", 1, true);
+		StartScreenShake(0.002f, 0.5f, 0.5f, 0.5f);
+		PlayGuiSound("16_lever_stuck", 0.3f);
+		SetEntityConnectionStateChangeCallback("Lever_2", "LeverPuzzle2");
+	}
+}
+
+void LeverPuzzle2(string &in asEntity, int LeverState)
+{
+	if(GetLeverState("Lever_2") == 1)
+	{
+		SetMoveObjectState("shelf", 1);
+		SetLeverStuckState("Lever_1", 1, true);
+		SetLeverStuckState("Lever_2", 1, true);
+		PlaySoundAtEntity("", "quest_completed", "shelf", 0, false);
+		CreateParticleSystemAtEntity("dust", "ps_dust_falling_door_quick", "AreaDoorParticle", false);
+		GiveSanityBoostSmall();
+		RemoveTimer("shelftimer");
+		StopSound("Sound1", 0.5f);
+		PlayMusic("03_puzzle_secret.ogg", false, 0.7f, 0, 10, false);
+		CompleteQuest("Memento32", "M32");
+	}
+}
+
+void ShelfTimer(string &in asTimer)
+{
+	SetEntityInteractionDisabled("Lever_2", true);
+	SetLeverStuckState("Lever_2", 0, true);
+	SetLeverStuckState("Lever_1", 0, true);
+	StopSound("Sound1", 0.5f);
+}
+
+void MonsterPath(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("CheckPointLibrary", "LibrarySpawn", "", "DeathHint", "DMonster");
+	SetEntityActive("brute2", true);
+	PlayGuiSound("react_breath_slow", 1);
+	GiveSanityDamage(10, true);
+	PlaySoundAtEntity("", "15_ripp_door", "mansion_2", 0, false);
+	AddEnemyPatrolNode("brute2", "Brute2Node_1", 1, "");
+	AddEnemyPatrolNode("brute2", "Brute2Node_2", 1, "");
+	AddEnemyPatrolNode("brute2", "Brute2Node_3", 0, "");
+	AddEnemyPatrolNode("brute2", "Brute2Node_4", 0, "");
+	AddEnemyPatrolNode("brute2", "Brute2Node_5", 0, "");
+	AddEnemyPatrolNode("brute2", "Brute2Node_6", 0.001, "");
+}
+
+void OnEnter()
+{
+	SetEntityActive("FlashbackPTSD", false);
+	PlayMusic("10_amb.ogg", true, 0.6, 5, 1, true);
+}
+
+void OnLeave()
+{
+	StopMusic(3, 10);
+	SetupLoadScreen("LoadingScreen", "Load31", 0,"");
+}

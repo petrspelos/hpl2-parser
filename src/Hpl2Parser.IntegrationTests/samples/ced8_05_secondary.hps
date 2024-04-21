@@ -1,0 +1,50 @@
+void OnStart(){
+	PlayerFunctions();
+	events();
+	enemy();
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 1.5f, 0, 0, true);
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "05Haunt", 1, "02SewerToMine.jpg");
+}
+
+void PlayerFunctions(){
+	AddEntityCollideCallback("Player", "AreaLeave", "leaveSewers", false, 1);
+	AddEntityCollideCallback("Player", "AreaCheckPoint", "addCheckPoint", true, 1);
+}
+
+void events(){
+	SetEntityPlayerInteractCallback("key", "scareAndEnemy", true);
+}
+
+void enemy(){
+	AddEntityCollideCallback("Player", "AreaSpawnEnemy", "spawnWater", true, 1);
+	AddEnemyPatrolNode("water", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("lurker", "PathNodeArea_2", 0, "");
+	AddEnemyPatrolNode("lurker", "PathNodeArea_3", 0.001, "");
+}
+
+void leaveSewers(string &in asParent, string &in asChild, int alState){
+	ChangeMap("03_main_mines_entrance.map", "PlayerStartArea_1", "", "");
+}
+
+void spawnWater(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("Water", true);
+}
+
+void scareAndEnemy(string &in entity){
+	SetEntityActive("weird", false);
+	SetEntityActive("BROKEN", true);
+	SetEntityActive("water", false);
+	SetEntityActive("lurker", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+	CreateParticleSystemAtEntity("", "ps_break_wood", "AreaParticleEffect", false);
+}
+
+void addCheckPoint(string &in asParent, string &in asChild, int alState){
+	CheckPoint("CheckPoint", "CheckPoint", "", "Messages", "death_3");
+}

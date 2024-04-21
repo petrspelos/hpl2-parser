@@ -1,0 +1,86 @@
+void OnStart()
+{
+	SetLocalVarInt("BarrelMoved", 0);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "door_appear", true, 1.0);
+	AddEntityCollideCallback("Player", "ScriptArea_2", "box_scare", true, 1.0);
+	AddEntityCollideCallback("Player", "ScriptArea_7", "notify", true, 1.0);
+	for(int i=3;i<=5;++i){
+		AddEntityCollideCallback("barrel01_18", "ScriptArea_"+i, "SetVar21", true, 0);
+		AddEntityCollideCallback("barrel01_19", "ScriptArea_"+i, "SetVar21", true, 0);
+		AddEntityCollideCallback("barrel01_20", "ScriptArea_"+i, "SetVar21", true, 0);
+	}
+}
+void KeyPickup(string &in entity, string &in type)
+{
+	SetEntityActive("debris_wheel_1", false);
+	AddEntityCollideCallback("Player", "ScriptArea_6", "barrel_scare", true, 0);
+}
+void barrel_scare(string &in asParent, string &in asChild, int alState)
+{
+	if (GetLocalVarInt("BarrelMoved") == 1)
+	{	
+		for(int i=18; i<=20; ++i)
+		{
+			SetEntityActive("barrel01_"+i, false);
+		}
+		for(int i=25; i<=27; ++i)
+		{
+			SetEntityActive("barrel01_"+i, true);
+			AddPropImpulse("barrel01_"+i, 110.0f, 0.0f, 0.0f, "world");
+		}
+	}
+	else
+	{
+		for(int i=18; i<=20; ++i)
+		{
+			AddPropImpulse("barrel01_"+i, 110.0f, 0.0f, 0.0f, "world");
+		}
+	}
+}
+
+void SetVar21(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("BarrelMoved", 1);
+}
+
+void NotePickUp(string &in entity, string &in type) 
+{
+	PlayMusic("01_paper_self.ogg", false, 0.7f, 0, 10, false);
+}
+
+void door_appear(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("hatch_metal01_absolute_force_1", true);
+}
+
+void box_scare(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=41; i<=63; ++i) AddPropImpulse("wood_box01_"+i, 500.0f, 0.0f, 0.0f, "world");
+}
+void notify(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "notify", -1.0f);
+}
+void PickUp(string &in entity, string &in type)
+{
+	if (type == "OnPickup")SetMessage("Messages", "notify", -1.0f);
+}
+
+void LookAtSword(string &in entity, int alState)
+{
+	if(alState == 1)
+	{
+		AddTimer("hurt", 0.25f, "timer");
+	}
+	else
+	{
+		RemoveTimer("hurt");
+	}
+}
+
+void timer(string &in asTimer)
+{
+	GivePlayerDamage(20.0f, "Slash", true, false);
+	PlayGuiSound("hurt_pant.snt", 1.0f);
+}
+

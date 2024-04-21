@@ -1,0 +1,146 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	PlayMusic("Track9.ogg", false, 2, 1, 1, true);
+	SetLightVisible("Lightning_Light", false);
+	SetLightVisible("Lightning_box", false);
+	AddEntityCollideCallback("Player", "Lightning", "Jumpscare", true, 1);
+	SetEntityPlayerInteractCallback("dirty_key","ActivateDoor", true);
+	SetSkyBoxTexture("level4sky.dds");
+	AddTimer("", 26, "Lightning");
+	AddTimer("", 1, "Whispers");
+	AddTimer("", 191, "ChangeTrack");
+	PlaySoundAtEntity("", "m_whispers.snt", "MaleWhispers", 1, true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+//OnEnter
+/////////////////////////////////////////////////////////////////////////////////////
+
+void OnEnter()
+{
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Music
+//////////////////////////////////////////////////////////////////////////////////////
+
+void ChangeTrack(string &in asTimer)
+{
+	PlayMusic("Track14.ogg", true, 2, 1, 1, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Whispers
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Whispers(string &in asTimer)
+{
+	int whisper = RandInt(1, 5);
+	if(whisper == 1) PlaySoundAtEntity("", "f_whisper_1.snt", "FemaleWhispers", 1, true);
+	if(whisper == 2) PlaySoundAtEntity("", "f_whisper_2.snt", "FemaleWhispers", 1, true);
+	if(whisper == 3) PlaySoundAtEntity("", "f_whisper_3.snt", "FemaleWhispers", 1, true);
+	if(whisper == 4) PlaySoundAtEntity("", "f_whisper_4.snt", "FemaleWhispers", 1, true);
+	if(whisper == 5) PlaySoundAtEntity("", "f_whisper_5.snt", "FemaleWhispers", 1, true);
+	AddTimer("", RandFloat(5, 10), "Whispers");
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Music Lightning
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Lightning(string &in asTimer)
+{
+	SetLightVisible("Lightning_box", true);
+	SetLightVisible("DarkLight", false);
+	AddTimer("", 0.1, "Darkness");
+}
+
+void Darkness(string &in asTimer)
+{
+	SetLightVisible("Lightning_box", false);
+	SetLightVisible("DarkLight", true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Silhouette
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Jumpscare(string &in asParent, string &in asChild, int alState)
+{
+	SetLanternDisabled(true);
+	SetLightVisible("Lightning_Light", true);
+	SetLightFlickerActive("Lightning_Light", true);
+	SetEntityActive("Silhouette", true);
+	AddTimer("", 1, "DestroyShadow");
+	 StartPlayerLookAt("Silhouette", 6, 10, "");
+	AddTimer("", 10, "DestroyLight");
+	GiveSanityDamage(20, true);
+}
+
+void DestroyShadow(string &in asTimer)
+{
+	SetEntityActive("Silhouette", false);
+}
+
+void DestroyLight(string &in asTimer)
+{
+	SetLanternDisabled(false);
+	SetLightVisible("Lightning_Light", false);
+	StopPlayerLookAt();
+	AddQuest("Mysterious", "Lightning");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Key
+//////////////////////////////////////////////////////////////////////////////////////
+
+void ActivateDoor(string &in item)
+{
+	SetSwingDoorLocked("Door", false, true);
+	SetEntityPlayerInteractCallback("Door", "PreviousLevel", true);
+}
+
+void PreviousLevel(string &in asEntity)
+{
+	FadeOut(1);
+    AddTimer("", 1, "TimerTransition");
+}
+	
+void TimerTransition(string &in asTimer)
+    {  
+        ChangeMap("level_4", "PlayerStartArea_2", "", "");
+    }
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnLeave
+//////////////////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 10);
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("Mysterious", "Lightning");
+StopMusic(0,1);
+}

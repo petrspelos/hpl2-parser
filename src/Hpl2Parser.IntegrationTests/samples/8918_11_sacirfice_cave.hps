@@ -1,0 +1,187 @@
+void OnStart(){
+	AddTimer("T4", 6.0f, "fadeAway");
+	AddEntityCollideCallback("Player", "ScriptArea_1", "findLocation", false, 1);
+	AddUseItemCallback("", "crowbar_1", "crowbarred", "insertCrowbar", false);
+	AddEntityCollideCallback("Player", "ScriptArea_4", "chestScare", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_7", "loseMonster", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_6", "activateArea", false, 1);
+	AddEntityCollideCallback("crowbar_joint_1", "ScriptArea_2", "burst", true, 1);
+	AddEntityCollideCallback("crowbarred", "ScriptArea_5", "spawnMonster", true, 1);
+	AddEntityCollideCallback("servant_brute_1", "ScriptArea_8", "break_crowbarred", true, 1);
+	SetEntityPlayerInteractCallback("crowbarred", "crowbarredMessage", false);
+	SetEntityPlayerInteractCallback("avenge", "setVar", true);
+	SetLocalVarInt("crowbarredLocked", 1);
+	SetLocalVarInt("hasNote", 0);
+	SetLocalVarInt("monsterSpawned", 0);
+	RemoveItem("lantern_1");
+	RemoveItem("assembled");
+	additionalFunctions();
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.25f, 0, 0, true);
+}
+
+void OnLeave(){
+
+}
+
+void additionalFunctions(){
+	SetLocalVarInt("equipmentPicked", 0);
+	SetGlobalVarInt("caveDoor", 1);
+	SetEntityPlayerInteractCallback("lantern_1_retrieved", "pickUpLantern", true);
+	SetEntityPlayerInteractCallback("assembled_retrieved", "pickUpDrill", true);
+	SetEntityPlayerInteractCallback("explosive_neutral", "pickUpExplosive", true);
+}
+
+void pickUpLantern(string &in entity){
+	if (GetLocalVarInt("equipmentPicked") == 0){
+		SetLocalVarInt("equipmentPicked", 1);
+	}else if (GetLocalVarInt("equipmentPicked") == 1){
+		SetLocalVarInt("equipmentPicked", 2);
+	}else if (GetLocalVarInt("equipmentPicked") == 2){
+		SetLevelDoorLocked("north_catacombs", false);
+		AddPlayerSanity(1);
+	}
+}
+
+void pickUpDrill(string &in entity){
+	if (GetLocalVarInt("equipmentPicked") == 0){
+		SetLocalVarInt("equipmentPicked", 1);
+	}else if (GetLocalVarInt("equipmentPicked") == 1){
+		SetLocalVarInt("equipmentPicked", 2);
+	}else if (GetLocalVarInt("equipmentPicked") == 2){
+		SetLevelDoorLocked("north_catacombs", false);
+		AddPlayerSanity(1);
+	}
+}
+
+void pickUpExplosive(string &in entity){
+	if (GetLocalVarInt("equipmentPicked") == 0){
+		SetLocalVarInt("equipmentPicked", 1);
+	}else if (GetLocalVarInt("equipmentPicked") == 1){
+		SetLocalVarInt("equipmentPicked", 2);
+	}else if (GetLocalVarInt("equipmentPicked") == 2){
+		SetLevelDoorLocked("north_catacombs", false);
+		AddPlayerSanity(1);
+	}
+	SetLightVisible("indicator", false);
+}
+
+void fadeAway(string &in asTimer){
+	FadeOut(0);
+	AddTimer("T1", 7.5f, "openEyes");
+	AddTimer("T5", 5.0f, "tiltHead");
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	FadeImageTrailTo(2, 2);
+	FadeSepiaColorTo(100, 4);
+	FadeRadialBlurTo(0.15, 2);
+	SetPlayerRunSpeedMul(0.05f);
+}
+
+void tiltHead(string &in asTimer){
+	FadePlayerRollTo(75, 220, 220);
+}
+
+void openEyes(string &in asTimer){
+	FadeIn(5);
+	AddTimer("T2", 2.0f, "wakeUp");
+}
+
+void wakeUp(string &in asTimer){
+	SetPlayerActive(true);
+	SetPlayerCrouching(false);
+	FadePlayerRollTo(0, 50, 50);
+	AddTimer("T3", 10.0f, "changeRender");
+	AddQuest("findEquipment", "findEquipment");
+}
+
+void changeRender(string &in asTimer){
+	FadeImageTrailTo(0, 5);
+	FadeSepiaColorTo(0, 5);
+	FadeRadialBlurTo(0, 5);
+	SetPlayerRunSpeedMul(1.0f);
+
+}
+
+void findLocation(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("monsterSpawned") == 0){
+		SetMessage("Messages", "location", 0);
+	}
+}
+
+void chestScare(string &in asParent, string &in asChild, int alState){
+	AddPropImpulse("scare_chest", 0, 250, 0, "World");
+	PlayGuiSound("react_pant.snt", 100);
+	SetLightVisible("scare_lure", false);
+	GiveSanityDamage(25, true);
+}
+
+void insertCrowbar(string &in item, string &in door){
+	if (GetLocalVarInt("hasNote") == 1){
+		AddTimer("T1", 0.2f, "activateJoint");
+		RemoveItem(item);
+	}else if (GetLocalVarInt("hasNote") == 0){
+		SetMessage("Messages", "shrineNote", 0);
+	}
+}
+
+void activateJoint(string &in asTimer){
+	SetEntityActive("crowbar_joint_1", true);
+	PlayGuiSound("puzzle_place_jar.snt", 100);
+	CompleteQuest("findEquipment", "findEquipment");
+}
+
+void burst(string &in asParent, string &in asChild, int alState){
+	SetSwingDoorLocked("crowbarred", false, true);
+	AddPropImpulse("crowbarred", 0, 0, -25, "World");
+	SetSwingDoorDisableAutoClose("crowbarred", true);
+	SetSwingDoorClosed("crowbarred", false, false);
+	SetMoveObjectState("crowbarred", 1);
+	PlaySoundAtEntity("", "break_wood_metal", "ScriptArea_3", 0, false);
+	CreateParticleSystemAtEntity("", "ps_hit_wood", "ScriptArea_3", false);
+	AddPlayerSanity(25);
+	SetLocalVarInt("crowbarredLocked", 0);
+	SetEntityActive("crowbar_joint_1", false);
+	SetEntityActive("crowbar_broken_1", true);
+}
+
+void crowbarredMessage(string &in entity){
+	if (GetLocalVarInt("crowbarredLocked") == 1){
+		SetMessage("Messages", "brokenLock", 0);
+	}
+}
+
+void setVar(string &in entity){
+	SetLocalVarInt("hasNote", 1);
+}
+
+void activateArea(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("crowbarredLocked") == 0){
+		SetEntityActive("ScriptArea_7", true);
+	}
+}
+
+void spawnMonster(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("servant_brute_1", true);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_5", 0, "");
+	GiveSanityDamage(25, true);
+	SetMessage("Messages", "danger1", 0);
+	SetLocalVarInt("monsterSpawned", 1);
+}
+
+void loseMonster(string &in asParent, string &in asChild, int alState){
+	SetMessage("Messages", "escaped", 0);
+	SetEntityActive("servant_brute_1", false);
+}
+
+void break_crowbarred(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("crowbarred", false);
+	SetEntityActive("crowbarred_broken", true);
+	PlayGuiSound("break_wood.snt", 1000000);
+}

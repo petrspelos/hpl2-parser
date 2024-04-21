@@ -1,0 +1,169 @@
+void OnStart()
+{
+    AddTimer("start", 10.0f, "start");   
+    SetPlayerActive(false);   
+    FadeOut(0);  
+    AddTimer("text", 5.0f, "text");   
+	AddUseItemCallback("", "key_tomb_1", "cellar_wood01_2", "tounlocktwo", true);
+	AddEntityCollideCallback("Player", "looktime", "looktime", true, 1);
+	SetLeverStuckState("lever_simple01_1", -1, false);
+	SetEntityPlayerInteractCallback("lever_simple01_1", "leverfunc", true);
+	AddUseItemCallback("", "glass_container_1", "pool_oil_1", "oiltime", true);
+	AddUseItemCallback("", "glass_container_oil", "lever_simple01_1", "lever", true);
+	AddUseItemCallback("", "glass_container_1", "pool_oil_2", "oiltime", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("23_amb.ogg", true, 1, 5, 0, true);
+}
+
+void OnLeave()
+{
+
+}
+
+//////////////////
+
+////STARTSCENE////
+
+void start(string &in asTimer)
+{
+    FadeOut(0);          
+    PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0.1, false);
+    FadeImageTrailTo(2, 2);
+    FadeSepiaColorTo(0, 0);
+    SetPlayerActive(false);   
+    FadePlayerRollTo( 40, 40, 40);                 
+    FadeRadialBlurTo(0.55, 2);
+    SetPlayerCrouching(true);              
+    AddTimer("trig1", 9.0f, "beginStory");   
+    AddTimer("fadeintime", 2.0f, "fadeintime");   
+}
+
+void beginStory(string &in asTimer)
+{
+	SetMessage("Messages", "hurt", 0.0f);
+	ChangePlayerStateToNormal();
+    SetPlayerActive(true);
+    PlaySoundAtEntity("Player", "react_breath.snt", "Player", 0.1, false);
+    FadePlayerRollTo(0, 33, 33);        
+    FadeRadialBlurTo(0.0, 3);
+    FadeSepiaColorTo(0, 0);
+    SetPlayerCrouching(false);
+    FadeImageTrailTo(0,1);
+    PlaySoundAtEntity("Player", "react_pant.snt", "Player", 0.1, false);
+	SetLanternDisabled(false);
+}
+
+void tounlocktwo(string &in item, string &in door)
+{
+	SetSwingDoorLocked("cellar_wood01_2", false, true);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem("key_tomb_1");
+}
+
+void fadeintime(string &in asTimer)
+{
+    FadeIn(5);
+}
+
+void text(string &in asTimer)
+{
+	SetMessage("Messages", "hours", 0.0f);
+}
+
+//////////////
+
+////DOORS////
+
+void lockedsad(string &in entity)
+ 
+{
+    if(GetSwingDoorLocked("cellar_wood01_2") == true)
+    {
+ 
+        SetMessage("Messages", "locked", 0.0f);
+ 
+    }
+}
+
+///////////////
+
+////EVENTS////
+
+void looktime(string parent, string child, int state)
+{
+	StartPlayerLookAt("look", 3.0f, 3.0f, "nolook");
+}
+
+void nolook()
+{
+	StopPlayerLookAt();
+	SetMessage("Messages", "way", 0.0f);
+	
+}
+
+void leverfunc(string &in asEntity)
+{
+        if(GetLeverState("lever_simple01_1") == -1)
+		{
+               
+			   SetMessage("Messages", "stuck", 0.0f);
+			   AddQuest("area2", "memento2");
+			   
+        }
+}
+		
+void oiltime(string &in item, string &in door)
+{
+	GiveItemFromFile("glass_container_oil", "glass_container_oil.ent");
+	RemoveItem("glass_container_1");
+	PlayGuiSound("puzzle_acid_success.snt", 100);
+	SetMessage("Messages", "oil", 0.0f); 
+}
+
+void lever(string &in item, string &in door)
+{
+	SetLeverStuckState("lever_simple01_1", 0, false);
+}
+
+void leverpull(string &in asEntity, int LeverState)
+{
+		if(LeverState == 1)
+		{
+		
+				SetEntityActive("raised", true);
+				SetEntityActive("closed", false);
+				PlaySoundAtEntity("", "unlock_door.snt", "closed", 0, false);
+				SetLeverStuckState("lever_simple01_1", 1, false);
+				CompleteQuest("area2", "memento2");
+				RemoveItem("glass_container_oil");
+		
+		}
+}
+
+///////////////
+
+///////////////
+
+////EXIT////
+
+void leave(string &in asEntity, int LeverState)
+{
+		if(LeverState == -1)
+		{
+		
+				SetPlayerActive(false);   
+				StartScreenShake(0.05f, 0.5f, 5.0f, 2.0f);
+				FadeOut(5.0f);  
+				AddTimer("exit", 6.0f, "exit");  		
+				PlayGuiSound("elevator_move_normal", 100);
+
+		}
+}
+
+void exit(string &in asTimer)
+{
+	ChangeMap("06.map", "PlayerStartArea_1", "", "");
+}

@@ -1,0 +1,450 @@
+void OnStart()
+	{
+		open();
+		StopMusic(2, 1);
+		SetEntityCallbackFunc("note_receiver1", "OnPickup");
+		SetEntityPlayerInteractCallback("locked_door1", "locked1", true);
+		AddEntityCollideCallback("cogwheel01_dyn", "cogwheel02", "CollideWrongWheel", false, 1);
+		AddEntityCollideCallback("cogwheel01_dyn", "cogwheel03", "CollideWrongWheel", false, 1);
+		AddEntityCollideCallback("cogwheel02_dyn", "cogwheel01", "CollideWrongWheel", false, 1);
+		AddEntityCollideCallback("cogwheel02_dyn", "cogwheel03", "CollideWrongWheel", false, 1);
+		AddEntityCollideCallback("cogwheel03_dyn", "cogwheel01", "CollideWrongWheel", false, 1);
+		AddEntityCollideCallback("cogwheel03_dyn", "cogwheel02", "CollideWrongWheel", false, 1);
+		AddUseItemCallback("", "key_receiverstorage", "locked_door1", "UsedKeyOnDoor1", true);
+		for(int i=1;i<=12;i++){
+			AddEntityCollideCallback("coal_"+i, "AreaBurner", "CollideCoalInBurner", true, 1);
+			SetPropEffectActive("coal_"+i, true, false);
+		}
+
+		for(int i=1;i<=3;i++) for(int j=1;j<=3;j++)
+			AddUseItemCallback("guiding_rod0"+i+"0"+j, "guiding_rod0"+i, "ra0"+j, "UseRod", false);
+	}
+
+void OnEnter()
+	{
+		PlayMusic("04_amb.ogg", true, 1, 1, 1, false);
+		PreloadSound("scrape_metal"); PreloadSound("impact_metal_low"); PreloadSound("general_fire_burning");
+		AutoSave();
+		if(HasItem("orbpiece_emerald_1") == true && HasItem("orbpiece_crimson_1") == true && HasItem("orbpiece_turquoise_1") == true &&
+			HasItem("orbpiece_indigo_1") == true && HasItem("orbpiece_scarlet_1") == true && HasItem("orbpiece_obsidian_1") == true){
+
+			SetEntityPlayerInteractCallback("OrbArea", "place_orb", false);
+		}
+	}
+
+void open()
+	{
+		FadeOut(0);
+		FadeIn(3);
+		SetPlayerMoveSpeedMul(0.8);
+		SetPlayerLookSpeedMul(0.7);
+		SetPlayerHealth(10);
+		GiveSanityDamage(300, false);
+		FadeRadialBlurTo(0.1, 1);
+		FadeImageTrailTo(0.2, 1);
+		AddTimer("trig1", 2.0f, "receivermessage1_timer");
+		AddTimer("trig1", 6.0f, "blink1");
+		AddTimer("trig1", 7.0f, "return_to_normal");
+	}
+
+void receivermessage1_timer(string &in asTimer)
+	{
+		SetMessage("Messages", "receivermessage1", 5);
+	}
+
+/////Blinking & Returning Screen to Normal/////
+
+void return_to_normal(string &in asTimer)
+	{
+		FadeRadialBlurTo(0.05, 1);
+		FadeImageTrailTo(0.1, 1);
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerLookSpeedMul(1);
+		SetPlayerRunSpeedMul(1);
+	}
+
+void blink1(string &in asTimer)
+	{
+		FadeOut(1);
+		AddTimer("trig1", 1.0f, "openblink");
+	}
+
+void openblink(string &in asTimer)
+	{
+		FadeIn(1);
+		AddTimer("trig1", 6.0f, "blink2");
+	}
+
+void blink2(string &in asTimer)
+	{
+		FadeOut(1);
+		AddTimer("trig1", 1.0f, "openblink2");
+		AddTimer("trig1", 1.0f, "return_to_normal2");
+	}
+
+void return_to_normal2(string &in asTimer)
+	{
+		FadeRadialBlurTo(0, 1);
+		FadeImageTrailTo(0, 1);
+		AddPlayerHealth(20);
+	}
+
+void openblink2(string &in asTimer)
+	{
+		FadeIn(1);
+	}
+
+/////End Blinking/////
+
+void OnPickup(string &in asEntity, string &in type)
+	{
+		AddQuest("fix_quest1", "repairreceiver");
+	}
+
+void locked1(string &in asEntity)
+	{
+		AddQuest("locked_quest1", "receiverfindkey");
+	}
+
+/////Cogwheels/////
+
+void AttachWheel(string &in asArea, string &in asBody)
+	{
+		AddTimer(asArea, 0.5f, "TimerWheel");
+
+		AddLocalVarInt("WheelOK", 1);
+		AddLocalVarInt("asArea", 1);
+
+		SetLocalVarString("WheelSound", asBody);
+		PlaySoundAtEntity(GetLocalVarString("WheelSound"), "scrape_metal.snt", asArea, 0.1f, false);
+		PlaySoundAtEntity(GetLocalVarString("WheelSound"), "13_attach_wheel.snt", asArea, 0.2f, false);
+
+		SetEntityActive("AreaSpokes", false);
+	}
+
+void TimerWheel(string &in asTimer)
+	{
+		StopSound(GetLocalVarString("WheelSound"), 0.5f);
+
+		SetEntityActive(asTimer+"_dyn", false);
+		SetEntityActive(asTimer+"_mounted", true);
+	}
+
+void CollideWrongWheel(string &in asParent, string &in asChild, int alState)
+	{
+		if(GetLocalVarInt(asChild) !=1){
+			PlaySoundAtEntity("clank", "impact_metal_low", asChild, 0.05f, false);
+			SetMessage("Messages", "WrongWheel", 0);
+		}
+	}
+
+/////End Cogwheels/////
+
+/////Coal Machine/////
+
+void CollideCoalInBurner(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityInteractionDisabled(asParent, true);
+
+		if(GetLocalVarInt("CoalOK") > 3){
+			AddTimer(asParent, 1, "TimerBurnerFull");
+
+			SetPropEffectActive(asParent, true, true);
+
+			SetMessage("Messages", "TooMuchCoal", 0);
+			return;
+		}
+
+		AddLocalVarInt("CoalOK", 1);
+
+		SetLocalVarString("CoalOnFire"+GetLocalVarInt("CoalOK"), asParent);
+
+		if(GetLocalVarInt("CoalOK") == 4)	SetMessage("Messages", "EnoughCoal", 0);
+	}
+
+void TimerBurnerFull(string &in asTimer)
+	{
+		SetPropActiveAndFade(asTimer, false, 5);
+	}
+
+void PullCoalLever(string &in asEntity, int alState)
+	{
+		if(alState == 1){
+			PlaySoundAtEntity("BurnerSoundTest", "13_ignite", "AreaBurnerParticle", 0, false);
+
+			if(GetLocalVarInt("CoalOK") < 4){
+				SetLampLit("13_burner", true, true);
+
+				PlaySoundAtEntity("BurnerSoundFail", "general_fire_burning", "AreaBurnerParticle", 0.2, false);
+
+				AddTimer("fail", 0.2f, "TimerBurnerFailed");
+				AddTimer(asEntity, 1, "TimerBurnerFailed");
+
+				SetLeverStuckState(asEntity, 2, false);
+				return;
+			}
+
+			SetLeverStuckState(asEntity, 1, false);
+
+			SetLampLit("13_burner", true, true);
+
+			PlaySoundAtEntity("BurnerSound", "general_fire_burning", "AreaBurnerParticle", 1, true);
+
+			for(int i=1;i<=4;i++){
+				string sTemp = i;
+
+				AddTimer(sTemp, RandFloat(1.0f, 1.0+i), "TimerBurnerStarted");
+			}
+		}
+	}
+
+void TimerBurnerFailed(string &in asTimer)
+	{
+		StopSound("BurnerSoundFail", 2);
+		SetLampLit("13_burner", false, true);
+
+		if(asTimer == "coal_lever"){
+			SetLeverStuckState(asTimer, 0, false);
+
+			if(GetLocalVarInt("CoalOK") == 0) SetMessage("Messages", "TooLittleCoal", 0);
+			else SetMessage("Messages", "TooLittleCoal02", 0);
+		}
+	}
+
+void TimerBurnerStarted(string &in asTimer)
+	{
+		if(asTimer == "1" or asTimer == "2" or asTimer == "3" or asTimer == "4"){
+			SetPropEffectActive(GetLocalVarString("CoalOnFire"+asTimer), true, true);
+			return;
+		}
+	}
+
+/////End Coal Machine/////
+
+/////Lever Machine/////
+
+void SixLevers(string &in asEntity, int alState)
+	{
+		if(alState == -1){
+			if(asEntity == "machine_lever_1") SetLocalVarInt("up_"+asEntity, 3);
+			else if(asEntity == "machine_lever_2") SetLocalVarInt("up_"+asEntity, 3);
+			else if(asEntity == "machine_lever_3") SetLocalVarInt("up_"+asEntity, 5);
+			else if(asEntity == "machine_lever_4") SetLocalVarInt("up_"+asEntity, 1);
+			else if(asEntity == "machine_lever_5") SetLocalVarInt("up_"+asEntity, 2);
+			else if(asEntity == "machine_lever_6") SetLocalVarInt("up_"+asEntity, 4);
+
+			CheckValue(asEntity);
+		}
+		else if(alState == 1){
+			if(asEntity == "machine_lever_1")SetLocalVarInt("down_"+asEntity, 1);
+			else if(asEntity == "machine_lever_2") SetLocalVarInt("down_"+asEntity, 5);
+			else if(asEntity == "machine_lever_3") SetLocalVarInt("down_"+asEntity, 6);
+			else if(asEntity == "machine_lever_4") SetLocalVarInt("down_"+asEntity, 5);
+			else if(asEntity == "machine_lever_5") SetLocalVarInt("down_"+asEntity, 2);
+			else if(asEntity == "machine_lever_6") SetLocalVarInt("down_"+asEntity, 2);
+
+			CheckValue(asEntity);
+		}
+		else if(alState == 0){
+			SetLocalVarInt("up_"+asEntity, 0);
+			SetLocalVarInt("down_"+asEntity, 0);
+		}
+		if(GetLocalVarInt("up_value") == 10 && GetLocalVarInt("down_value") == 8){
+			SetLocalVarInt("SticksOK", 1);
+
+			for(int i=1;i<7;i++)
+				SetLeverStuckState("machine_lever_"+i, GetLeverState("machine_lever_"+i), true);
+			
+			for(int i=1;i<=6;i++){
+				SetMessage("Messages", "SixLeversCorrect", 0);
+				CompleteQuest("correct_receiver_levers_quest", "correctlevers");
+		}
+		}
+	}
+
+void CheckValue(string sEntity)
+	{
+		SetLocalVarInt("up_value", 0);
+		SetLocalVarInt("down_value", 0);
+
+		for(int i=1;i<=6;i++){
+			AddLocalVarInt("up_value", GetLocalVarInt("up_machine_lever_"+i));
+			AddLocalVarInt("down_value", GetLocalVarInt("down_machine_lever_"+i));
+		}
+	}
+
+/////End Lever Machine/////
+
+/////Three Fuel Rods/////
+
+void UseRod(string &in asItem, string &in asEntity)
+	{
+		if(GetLocalVarInt(asEntity) == 1){
+			PlaySoundAtEntity("", "impact_generic_hard_low", asEntity, 0.05f, false);
+			return;
+		}
+
+		if(asItem == "guiding_rod01" && asEntity == "ra01"){
+			SetLocalVarString(asItem, asEntity+"_correct");
+		}
+		else if(asItem == "guiding_rod02" && asEntity == "ra02"){
+			SetLocalVarString(asItem, asEntity+"_correct");
+		}
+		else if(asItem == "guiding_rod03" && asEntity == "ra03"){
+			SetLocalVarString(asItem, asEntity+"_correct");
+		} else {
+			SetLocalVarString(asItem, asEntity+"_error");
+		}
+
+		RemoveItem(asItem);
+		CreateEntityAtArea(asItem, asItem, "magic_"+asEntity, true);
+		PlaySoundAtEntity("s"+asItem, "13_rod_in", "magic_"+asEntity, 0, false);
+		SetEntityCallbackFunc(asItem, "PickRod");
+		SetLocalVarInt(asEntity, 1);
+		AddLocalVarInt("RodsInPosition", 1);
+
+		if(GetLocalVarString("guiding_rod01") == "ra01_correct" && GetLocalVarString("guiding_rod02") == "ra02_correct" &&
+			GetLocalVarString("guiding_rod03") == "ra03_correct"){
+
+			SetMessage("Messages", "FuelRodsCorrect", 0);
+			SetLocalVarInt("RodsOK", 1);
+			PlaySoundAtEntity("done"+asItem, "13_press_done", "magic_"+asEntity, 0, false);
+
+			SetEntityInteractionDisabled("guiding_rod01", true);
+			SetEntityInteractionDisabled("guiding_rod02", true);
+			SetEntityInteractionDisabled("guiding_rod03", true);
+		}
+	}
+
+void PickRod(string &in asEntity, string &in asType)
+	{
+		if(StringContains(GetLocalVarString(asEntity), "ra01")){
+			SetLocalVarInt("ra01", 0);
+			PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra01", 0, false);
+			CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra01", false);
+		}
+		else if(StringContains(GetLocalVarString(asEntity), "ra02")){
+			SetLocalVarInt("ra02", 0);
+			PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra02", 0, false);
+			CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra02", false);
+		}
+		else if(StringContains(GetLocalVarString(asEntity), "ra03")){
+			SetLocalVarInt("ra03", 0);
+			PlaySoundAtEntity("s"+asEntity, "13_rod_out", "ra03", 0, false);
+			CreateParticleSystemAtEntity("p"+asEntity, "ps_steam_puff.ps", "ra03", false);
+		}
+
+		AddLocalVarInt("RodsInPosition", -1);
+		SetLocalVarString(asEntity, "_error");
+	}
+
+/////End Three Fuel Rods/////
+
+/////Rift Opening Sequence/////
+
+void place_orb(string &in asEntity)
+	{
+		if(GetGlobalVarInt("Water_Flow_OK") == 1 && GetLocalVarInt("RodsOK") == 1 && GetLocalVarInt("WheelOK") == 3 &&
+			GetLocalVarInt("CoalOK") == 4 && GetLocalVarInt("SticksOK") == 1){
+
+			AddTimer("trig1", 0.5f, "start_orb_rift_open");
+		}
+		else
+		{
+			SetMessage("Messages", "SystemsNotCorrect", 0);
+		}
+	}
+
+void start_orb_rift_open(string &in asTimer)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("orb_complete", 5, 5, "");
+		FadeOut(1);
+		AddTimer("trig1", 1.5f, "continue_orb_rift_open");
+		StopMusic(1, 1);
+		RemoveItem("orbpiece_emerald_1");
+		RemoveItem("orbpiece_crimson_1");
+		RemoveItem("orbpiece_turquoise_1");
+		RemoveItem("orbpiece_indigo_1");
+		RemoveItem("orbpiece_scarlet_1");
+		RemoveItem("orbpiece_obsidian_1");
+		CompleteQuest("receiver_items_quest", "receiverrepairitems");
+		CompleteQuest("fix_quest1", "repairreceiver");
+	}
+
+void continue_orb_rift_open(string &in asTimer)
+	{
+		FadeIn(1);
+		SetEntityActive("orb_complete", true);
+		StartScreenShake(0.1, 12, 1, 2);
+		StartPlayerLookAt("look_here", 1, 1, "");
+		PlayMusic("29_event_end.ogg", false, 1, 1, 1, false);
+		AddTimer("trig1", 4, "rift_open1");
+	}
+
+void rift_open1(string &in asTimer)
+	{
+		FadeOut(1);
+		AddTimer("trig1", 1.5f, "rift_open2");
+		CreateParticleSystemAtEntity("", "ps_area_fog_sewer.ps", "OpeningEffect_1", false);
+		CreateParticleSystemAtEntity("", "ps_area_fog_sewer.ps", "OpeningEffect_2", false);
+		CreateParticleSystemAtEntity("", "ps_area_fog_sewer.ps", "OpeningEffect_3", false);
+		CreateParticleSystemAtEntity("", "ps_area_fog_sewer.ps", "OpeningEffect_4", false);
+	}
+
+void rift_open2(string &in asTimer)
+	{
+		FadeIn(1);
+		SetEntityActive("rift_block", false);
+
+		AddEntityCollideCallback("Player", "Homebound", "Homebound", false, 1);
+		SetSwingDoorClosed("castle_1", true, false);
+		SetSwingDoorLocked("castle_1", true, false);
+		AddTimer("trig1", 2.0f, "regain_control");
+		SetEntityActive("OrbArea", false);
+		SetEntityPlayerInteractCallback("orb_complete", "pickup_orb", true);
+	}
+
+void regain_control(string &in asTimer)
+	{
+		SetPlayerActive(true);
+	}
+
+void pickup_orb(string &in asEntity)
+	{
+		SetEntityActive("orb_complete", false);
+		PlaySoundAtEntity("", "pick_orb_piece.snt", "Player", 0, false);
+		GiveItem("emerald_piece", "orbpiece_emerald", "emeraldpiece", "orbpiece_emerald.tga", 1);
+		GiveItem("crimson_piece", "orbpiece_crimson", "crimsonpiece", "orbpiece_crimson.tga", 1);
+		GiveItem("turquoise_piece", "orbpiece_turquoise", "turquoisepiece", "orbpiece_turquoise.tga", 1);
+		GiveItem("indigo_piece", "orbpiece_indigo", "indigopiece", "orbpiece_indigo.tga", 1);
+		GiveItem("scarlet_piece", "orbpiece_scarlet", "scarletpiece", "orbpiece_scarlet.tga", 1);
+		GiveItem("obsidian_piece", "orbpiece_obsidian", "obsidianpiece", "orbpiece_obsidian.tga", 1);
+		SetMessage("Messages", "OrbBreak", 0);
+	}
+
+void Homebound(string &in asParent, string &in asChild, int alState)
+	{
+		FadeOut(2);
+		AddTimer("trig1", 3.0f, "homeward_bound");
+	}
+
+void homeward_bound(string &in asTimer)
+	{
+		ChangeMap("08_Transition_redux", "PlayerStartArea_1", "", "");
+	}
+
+/////End Rift Opening Sequence/////
+
+void UsedKeyOnDoor1(string &in asItem, string &in asEntity)
+	{
+		SetSwingDoorLocked("locked_door1", false, true);
+		PlaySoundAtEntity("", "unlock_door", "locked_door1", 0, false);
+		RemoveItem("key_receiverstorage");
+		CompleteQuest("locked_quest1", "receiverfindkey");
+	}
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

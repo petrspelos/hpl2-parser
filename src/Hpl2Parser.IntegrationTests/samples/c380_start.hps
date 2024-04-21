@@ -1,0 +1,217 @@
+void OnStart()
+{
+	// Events
+	AddUseItemCallback("", "Key", "Door", "UseKeyOnDoorSpecial", true);
+	AddUseItemCallback("", "Key", "SmallDoor", "UseKeyOnDoorSpecial", true);
+	AddUseItemCallback("", "Key_store", "Door_store", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "Key_library", "Door_library", "UseKeyOnDoor", true);
+		
+	AddEntityCollideCallback("HandleStore", "LeverConnect", "AttachLever", true, 1);		
+	
+	// Start stats
+	SetPlayerLampOil(0);
+	
+	// Other
+	SetLightVisible("BoxLight", false);
+	SetMessage("Hints", "Chapter_1", 5.0f);
+	GiveSanityDamage(110.0f, false);
+	SetPlayerActive(false);
+	CheckPoint("Music", "StartArea", "OnDeathMusic", "", "");
+	SetMapDisplayNameEntry("GreatHall");
+	
+	// FADE EFFECT
+	FadeOut(0.0f);
+	FadeIn(3.0f);
+	
+	AddTimer("Speak", 7.0f, "TimerSpeak");
+	
+	AddTimer("Dark", 5.0f, "TimerDark");
+	AddTimer("Light", 7.0f, "TimerLight");
+	
+	AddTimer("DreamStart", 7.0f, "TimerDream");
+	
+	AddTimer("Dark", 10.0f, "TimerDark");
+	AddTimer("Teleport", 12.0f, "TimerLight");
+	
+	AddTimer("Dark", 14.0f, "TimerDark");
+	AddTimer("Light", 16.0f, "TimerLight");
+	
+	AddTimer("DreamEnd", 16.0f, "TimerDream");
+	
+	AddTimer("WakeUp", 18.0f, "TimerWakeUp");
+}
+
+void OnLeave()
+{
+	StopMusic(0.0f, 5);
+	RemoveItem("Key");
+	CompleteQuest("Exit", "Exit");
+	CompleteQuest("SmallDoor", "SmallDoor");
+	SetupLoadScreen("Loading", "Library", 0, "library.jpg");
+}
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	SetLevelDoorLocked(asEntity, false);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+	RemoveItem(asItem);
+	CompleteQuest(asEntity, asEntity);
+}
+
+void UseKeyOnDoorSpecial(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);		
+	if(!GetSwingDoorLocked("Door") && !GetSwingDoorLocked("SmallDoor")) RemoveItem(asItem);
+	if(asEntity == "SmallDoor") SetEntityActive("Oil", true);
+	CompleteQuest(asEntity, asEntity);
+}
+
+void AttachLever(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asParent, false);
+	SetEntityActive("Sign_LeverConnect", false);
+	SetEntityActive("MountStore", false);
+	SetEntityActive("AttachLever", true);
+	PlaySoundAtEntity("", "pickaxe_charge.snt", "AttachLever", 0, false);
+	GiveSanityBoostSmall();
+}
+
+void OnInteractDoor(string &in door)
+{
+	if(!QuestIsCompleted(door))
+	{
+		SetMessage("Hints", door, 5.0f);
+		AddQuest(door, door);
+	}
+}
+
+void OnDestroyVase(string &in asEntity, string &in type)
+{
+	GiveSanityDamage(20.0f, true);
+	StartPlayerLookAt(asEntity, 5.0f, 5.0f, "");
+	AddTimer("hurt_pant.snt", 0.5f, "TimerScare");
+	AddTimer("LookComplete", 1.0f, "TimerLookComplete");
+}
+
+void PickKey(string &in asEntity, string &in type)
+{
+	GiveSanityBoostSmall();
+	AddQuest("Exit", "Exit");
+	AddTimer("Exit", 3.0f, "TimerExpire");
+}
+
+void PickKeyStore(string &in asEntity, string &in type)
+{
+	SetPropStaticPhysics("BrokenVase", false);
+}
+
+void TimerLookComplete(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+
+void TimerExpire(string &in asTimer)
+{
+	SetMessage("Hints", asTimer, 5.0f);	
+}
+
+void TimerScare(string &in soundFile)
+{
+	PlayGuiSound(soundFile, 1.0f);
+	ChangePlayerStateToNormal();
+}
+
+void TimerWakeUp(string &in asTimer)
+{
+	SetPlayerSanity(100.0f);
+	SetPlayerActive(true);
+	PlayMusic("amb_extra01.ogg", true, 0.8f, 5.0f, 0, true);
+	SetMessage("Hints", "DreamEnd", 5.0f);
+	SetLightVisible("BoxLight", true);
+}
+
+void TimerDream(string &in asTimer)
+{
+	if(asTimer == "DreamStart")
+	{
+		SetFogActive(true);
+		SetEntityActive("GruntDream", true);
+		AddEnemyPatrolNode("GruntDream", "PathDream_1", 0.001f, "");
+		AddEnemyPatrolNode("GruntDream", "PathDream_3", 5.0f, "");
+	}
+	else
+	{
+		SetFogActive(false);
+		SetEntityActive("GruntDream", false);
+		StopMusic(3.0f, 5);
+	}
+}
+
+void TimerDark(string &in asTimer)
+{
+	FadeOut(2.0f);
+}
+
+void TimerLight(string &in asTimer)
+{
+	FadeIn(2.0f);
+	if(asTimer == "Teleport") TeleportEnemyToNode("GruntDream", "PathDream_2", true);;
+}
+
+void TimerSpeak(string &in asTimer)
+{
+	SetMessage("Hints", "Dream", 3.0f);
+}
+	
+void OnLeverChangeState(string &in asEntity, int LeverState)
+{
+	if(LeverState == 1) 
+	{
+		StartScreenShake(0.001f, 0.5f, 0.5f, 0.5f);
+		SetLeverStuckState(asEntity, LeverState, true);
+
+		// Destroy objetcs
+		SetPropHealth("Barricade", 0);
+		SetPropHealth("Barricade_2", 0);
+		SetPropHealth("BoxDestroy", 0);
+		
+		// Sanity decrease
+		GiveSanityDamage(40.0f, true);
+		
+		// Other
+		SetEntityActive("CorpseStore", true);
+		CompleteQuest("Barricade", "Barricade");
+		
+		AddTimer("Lunch", 2.0f, "TimerExpire");
+		AddTimer("react_pant.snt", 2.0f, "TimerScare");
+		
+		// Grunt
+		SetEntityActive("Grunt", true);
+		
+		for(int i=1;i<=7;i++) AddEnemyPatrolNode("Grunt", "Path"+i, 0.001f, "");
+		
+		AddEnemyPatrolNode("Grunt", "Path8", 2.5f, "");
+
+		AddEnemyPatrolNode("Grunt", "Path9", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path10", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path9", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path7", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path6", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path5", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path11", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path12", 0.001f, "");
+		
+		AddEnemyPatrolNode("Grunt", "Path13", 2.5f, "");
+		
+		AddEnemyPatrolNode("Grunt", "Path12", 0.001f, "");
+		AddEnemyPatrolNode("Grunt", "Path2", 0.001f, "");
+    }
+}
+
+void OnDeathMusic(string &in asName, int alCount)
+{
+	PlayMusic("amb_extra01.ogg", true, 0.8f, 5.0f, 0, true);
+}

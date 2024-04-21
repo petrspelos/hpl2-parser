@@ -1,0 +1,132 @@
+void OnStart()
+{  
+    // Collide Callbacks
+
+    AddEntityCollideCallback("Player", "SpeedIncrease_1", "increaseSpeed1", true, 1);
+    AddEntityCollideCallback("Player", "SpeedIncrease_2", "increaseSpeed2", true, 1);
+
+    // Vars
+
+    SetLocalVarInt("CutscenePart", 0);
+    SetLocalVarInt("CollectedStuff", 0);
+
+    // Intro Setup
+
+    SetPlayerActive(false);
+    FadeOut(0.0f);
+    MovePlayerHeadPos(0, -1, 0, 10, -1);
+	FadePlayerRollTo(50, 220, 220);
+    FadeImageTrailTo(1.5, 1);
+}
+
+void OnEnter()
+{ 
+    AddTimer("introTimer", 1, "IntroCutscene");
+}
+
+void OnLeave()
+{ 
+
+}
+
+void IntroCutscene(string &in asTimer)
+{
+    AddLocalVarInt("CutscenePart", 1);
+    float partLength = 1.5f;
+    switch (GetLocalVarInt("CutscenePart"))
+    {
+    case 1:
+        partLength = 5.0f; 
+        PlayMusic("06_amb.ogg", false, 1, 0.5f, 0, false);
+		FadeIn(5.0f);
+        break;
+    case 2:
+        partLength = 4.5f; 
+        FadePlayerRollTo(25.0f, 33.0f, 33.0f);
+        MovePlayerHeadPos(0, -0.95, 0, 1, -1);
+        StartPlayerLookAt("LookAtScene_1", 1, 1, "");
+        break;
+    case 3:
+        partLength = 4.5f;
+        StopPlayerLookAt();
+        FadePlayerRollTo(-15.0f, 33.0f, 33.0f);
+        MovePlayerHeadPos(0, -0.75, 0, 1, -1);
+        StartPlayerLookAt("LookAtScene_2", 1, 1, "");
+        break;
+    case 4:
+        partLength = 4.0f;
+        StopPlayerLookAt();
+        FadePlayerRollTo(0.0f, 33.0f, 33.0f);
+        MovePlayerHeadPos(0, 0, 0, 1, 0);
+        SetPlayerJumpDisabled(true);
+        SetPlayerMoveSpeedMul(0.5);
+        SetPlayerRunSpeedMul(0.5);
+        SetPlayerActive(true);
+        break;
+    }
+
+    if (GetLocalVarInt("CutscenePart") < 4)
+    {
+        AddTimer("introTimer", partLength, "IntroCutscene");
+    }
+}
+
+void increaseSpeed1(string &in asParent, string &in asChild, int alState)
+{
+    SetPlayerJumpDisabled(false);
+    SetPlayerJumpForceMul(0.45);
+    SetPlayerMoveSpeedMul(0.65);
+    SetPlayerRunSpeedMul(0.75);
+    FadeImageTrailTo(1, 1);
+}
+
+void increaseSpeed2(string &in asParent, string &in asChild, int alState)
+{
+    SetPlayerJumpForceMul(1);
+    SetPlayerMoveSpeedMul(1);
+    SetPlayerRunSpeedMul(1);
+    FadeImageTrailTo(0, 1);
+}
+
+void confusion(string &in entity, int &in alState)
+{
+    if (alState == 1)
+    {
+        SetMessage("Dialogue", "confused", 2);
+        StartScreenShake(0.01, 0.35, 0, 0);
+        FadePlayerAspectMulTo(2.0, 1.5f);
+        PlaySoundAtEntity("SoundTingle1", "scare_tingeling_rev2.snt", "Player", 0.0f, false);
+        PlaySoundAtEntity("SoundTingle2", "scare_thump_flash.snt", "Player", 0.0f, false);
+        AddTimer("stopZoom", 0.35, "stopEffect");
+
+    }
+}
+
+void itemsGrabbed(string &in entity)
+{
+    if (GetLocalVarInt("CollectedStuff") < 4)
+    {
+        AddLocalVarInt("CollectedStuff", 1);
+    }
+}
+
+void LevelChangeToMine(string &in entity)
+{
+    if (GetLocalVarInt("CollectedStuff") >= 4)
+    {
+        ChangeMap("2_TheStartMines", "PlayerStartArea_1", "door_level_wood_open.ogg", "door_level_wood_close.ogg");
+    } else
+    {
+        SetMessage("Dialogue", "getStuff", 1);
+    }
+}
+
+void stopEffect(string &in timer)
+{
+    if (timer == "stopZoom")
+    {
+        FadePlayerAspectMulTo(1.0, 2.0f);
+        PlayMusic("27_paper_daniel01.ogg", false, 1, 0.5f, 0, false);
+    }
+        
+}

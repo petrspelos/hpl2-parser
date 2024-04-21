@@ -1,0 +1,206 @@
+void OnStart()
+{
+	SetLocalVarInt("BottlesBroken", 0);
+	AddEntityCollideCallback("Player", "collide_SnowballJS", "collide_SnowballJS", true, 0);
+	
+
+	AddEntityCollideCallback("Player", "area_Slide_1", "area_Slide", false, 0);
+	AddEntityCollideCallback("Player", "area_Slide_2", "area_Slide", false, 0);
+
+
+	AddEntityCollideCallback("Player", "areaSlideSAFE_1", "area_CancelSlide", false, 0);
+	AddEntityCollideCallback("Player", "areaSlideSAFE_2", "area_CancelSlide", false, 0);
+
+	SetLocalVarFloat("InSlideArea", 0);
+	SetLocalVarInt("InSafeSlideArea", 0);
+	SetLocalVarInt("TickDelay", 2);
+
+	
+}
+
+void OnEnter()
+{
+	PlayMusic("12_amb", true, 1.0f, 4.0f, 0, true);
+}
+
+void OnLeave()
+{
+
+}
+
+
+void OnUpdate(float afStep){
+
+SlideAreaLogic();
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// BOTTLE BREAK MINIGAME /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void bottleBreak(string &in asEntity, string &in type)
+{
+
+if(type == "Break"){
+
+AddLocalVarInt("BottlesBroken", 1);
+
+	if(GetLocalVarInt("BottlesBroken") == 3){
+	SetMoveObjectState("safety_normal_vert_1", 1.0f);
+	}
+
+}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// SNOWBALL JUMPSCARE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void collide_SnowballJS(string &in asParent, string &in asChild, int alState){
+
+SetEntityPos("OS_SnowballChristmas_10", GetPlayerPosX(), GetEntityPosY("OS_SnowballChristmas_10"), GetEntityPosZ("OS_SnowballChristmas_10"));
+
+SetPropStaticPhysics("OS_SnowballChristmas_10", false);
+AddPropImpulse("OS_SnowballChristmas_10", 0.0f, 0.0f, -20.0f, "world");
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ICY SLIDE FLOOR FUN ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/// experimental: 
+
+void area_CancelSlide(string &in asParent, string &in asChild, int alState){
+
+
+if(alState == 1){
+	SetLocalVarInt("InSafeSlideArea", 1);
+	
+	
+		SetLocalVarInt("InSlideArea", 0);
+		
+
+SetLocalVarFloat("X_lastTick", 0.0f);
+SetLocalVarFloat("Y_lastTick", 0.0f);
+SetLocalVarFloat("Z_lastTick", 0.0f);
+
+SetLocalVarFloat("Dx", 0.0f);
+SetLocalVarFloat("Dy", 0.0f);
+SetLocalVarFloat("Dz", 0.0f);
+
+
+SetLocalVarInt("TickDelay", 2);
+
+SetPlayerMoveSpeedMul(1.0f);
+SetPlayerJumpDisabled(false);
+SetPlayerCrouchDisabled(false);
+}
+if(alState == -1){
+	SetLocalVarInt("InSafeSlideArea", 0);
+	
+	
+	SetLocalVarInt("InSlideArea", 1);
+	
+	
+	
+SetLocalVarFloat("X_lastTick", GetPlayerPosX());
+SetLocalVarFloat("Y_lastTick", GetPlayerPosY());
+SetLocalVarFloat("Z_lastTick", GetPlayerPosZ());
+	SetLocalVarInt("TickDelay", 0);
+	
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	
+	
+}
+
+}
+
+
+void ShouldBeSliding(int alState){
+
+}
+
+
+
+
+
+void area_Slide(string &in asParent, string &in asChild, int alState)
+{
+if( GetLocalVarInt("InSafeSlideArea") == 0){
+
+if(alState == 1){
+	SetLocalVarInt("InSlideArea", 1);
+	
+	
+	
+SetLocalVarFloat("X_lastTick", GetPlayerPosX());
+SetLocalVarFloat("Y_lastTick", GetPlayerPosY());
+SetLocalVarFloat("Z_lastTick", GetPlayerPosZ());
+	SetLocalVarInt("TickDelay", 0);
+	
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+
+	
+}
+
+if(alState == -1){
+	SetLocalVarInt("InSlideArea", 0);
+	
+
+SetLocalVarFloat("X_lastTick", 0.0f);
+SetLocalVarFloat("Y_lastTick", 0.0f);
+SetLocalVarFloat("Z_lastTick", 0.0f);
+
+SetLocalVarFloat("Dx", 0.0f);
+SetLocalVarFloat("Dy", 0.0f);
+SetLocalVarFloat("Dz", 0.0f);
+
+
+SetLocalVarInt("TickDelay", 2);
+
+SetPlayerMoveSpeedMul(1.0f);
+SetPlayerJumpDisabled(false);
+SetPlayerCrouchDisabled(false);
+}
+
+}
+}
+
+void SlideAreaLogic(){
+
+if(GetLocalVarInt("InSlideArea") == 1){
+
+
+
+	if(GetLocalVarInt("TickDelay") == 1){
+	
+	SetLocalVarFloat("Dx", GetPlayerPosX()-GetLocalVarFloat("X_lastTick"));
+	SetLocalVarFloat("Dy", GetPlayerPosY()-GetLocalVarFloat("Y_lastTick"));
+	SetLocalVarFloat("Dz", GetPlayerPosZ()-GetLocalVarFloat("Z_lastTick"));
+	
+	SetLocalVarInt("TickDelay", 2);
+	}
+
+
+	SetPlayerPos(GetPlayerPosX()+GetLocalVarFloat("Dx"), GetPlayerPosY(), GetPlayerPosZ()+GetLocalVarFloat("Dz"));
+	
+	if(GetLocalVarInt("TickDelay") == 0){
+	SetLocalVarInt("TickDelay", 1);
+	}
+
+}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+

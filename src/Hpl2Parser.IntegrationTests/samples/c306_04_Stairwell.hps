@@ -1,0 +1,56 @@
+void OnStart()
+	{
+		SetEntityPlayerInteractCallback("no_oil", "no_oil", true);
+		SetEntityPlayerInteractCallback("main_hall", "main_hall_quest", true);
+		SetEntityPlayerInteractCallback("rift1", "receiverrepairitems_quest", true);
+		AddEntityCollideCallback("Player", "check_lantern_script", "check_lantern", false, 1);
+		AddUseItemCallback("", "mainhall_key", "level_mainhall", "UsedKeyOnDoor1", true);
+	}
+
+void OnEnter()
+	{
+		PlayMusic("06_amb.ogg", true, 1, 1, 1, true);
+		AutoSave();
+	}
+
+void check_lantern(string &in asParent, string &in asChild, int alState)
+	{
+		if(HasItem("lantern_1") == false)
+			{
+				SetMessage("Messages", "find_lantern", 5);
+			}
+		if(HasItem("lantern_1") == true)
+			{
+				SetLevelDoorLocked("level_dungeons", false);
+				SetEntityActive("block_box_1", false);
+				RemoveEntityCollideCallback("Player", "check_lantern_script");
+			}
+	}
+
+void no_oil(string &in asEntity)
+	{
+		SetMessage("Messages", "no_oil_txt", 5);
+	}
+
+void main_hall_quest(string &in asEntity)
+	{
+		AddQuest("main_hall_locked_quest", "mainhalllocked");
+	}
+
+void receiverrepairitems_quest(string &in asEntity)
+	{
+		AddQuest("receiver_items_quest", "receiverrepairitems");
+	}
+
+void UsedKeyOnDoor1(string &in asItem, string &in asEntity)
+	{
+		SetLevelDoorLocked("level_mainhall", false);
+		PlaySoundAtEntity("", "unlock_door", "level_mainhall", 0, false);
+		RemoveItem("mainhall_key");
+		CompleteQuest("main_hall_locked_quest", "mainhalllocked");
+	}
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

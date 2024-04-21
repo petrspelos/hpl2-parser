@@ -1,0 +1,79 @@
+void OnStart()
+{
+    PlayMusic("amb_idle04.ogg", false, 1.0f, 0.0f, 1, false);
+    AddUseItemCallback("", "prisonkey", "prisondoor", "unlockprisondoor", true);
+    AddUseItemCallback("", "cowkey", "cowdoor", "unlockcowdoor", true);
+    AddEntityCollideCallback("Player", "jumpscarearea", "jumpscare", true, 0);
+    AddEntityCollideCallback("Player", "chasearea", "chase", false, 0);
+    AddEntityCollideCallback("jumpdoor", "jumpdoorarea", "jump", true, 0);
+}
+
+void keypickup(string entity, string type)
+{
+    SetEntityActive("grunt", true);
+    for(int i = 0; i < 500; i++)
+    {
+        AddEnemyPatrolNode("grunt", "PathNodeArea_4", 0.001f, "");
+        AddEnemyPatrolNode("grunt", "PathNodeArea_9", 0.001f, "");
+        AddEnemyPatrolNode("grunt", "PathNodeArea_16", 0.001f, "");
+        AddEnemyPatrolNode("grunt", "PathNodeArea_21", 0.001f, "");
+        AddEnemyPatrolNode("grunt", "PathNodeArea_2", 0.001f, "");
+    }
+}
+
+void unlockprisondoor(string item, string entity)
+{
+    SetSwingDoorLocked("prisondoor", false, true);
+    RemoveItem("prisonkey");
+    PlayGuiSound("unlock_door.ogg", 1.0f);
+}
+
+void unlockcowdoor(string item, string entity)
+{
+    SetSwingDoorLocked("cowdoor", false, true);
+    RemoveItem("cowkey");
+    PlayGuiSound("unlock_door.ogg", 1.0f);    
+}
+
+void jumpscare(string parent, string child, int state)
+{
+    SetEntityActive("dude", true);
+    AddPropForce("dude", -5000.0f, 0.0f, 0.0f, "world");
+    PlayGuiSound("24_iron_maiden.ogg", 1.0f);
+}
+
+void chase(string parent, string child, int state)
+{
+    if(HasItem("cowkey"))
+    {
+        ShowEnemyPlayerPosition("grunt");
+    }
+}
+
+void jump(string parent, string child, int state)
+{
+    SetEntityActive("jumpdude", true);
+    AddPropForce("jumpdude", 0.0f, 0.0f, 5000.0f, "world");
+    PlayGuiSound("24_iron_maiden.ogg", 1.0f);
+}
+
+void die(string entity, string type)
+{
+    SetSwingDoorClosed("trapdoor", true, true);
+    SetSwingDoorLocked("trapdoor", true, true);
+    SetPropHealth("enemydoor", 0.0f);
+    SetEntityActive("brute", true);
+    ShowEnemyPlayerPosition("brute");
+    CheckPoint ("", "", "endgame", "", "");
+    AddTimer("", 60.0f, "kill");
+}
+
+void kill(string timer)
+{
+    SetPlayerHealth(0.0f);
+}
+
+void endgame(string name, int count)
+{
+    StartCredits("amb_extra01.ogg", false, "Credits", "Names", 2);
+}

@@ -1,0 +1,214 @@
+
+void OnStart()
+{
+	SetEntityCallbackFunc("note_test1", "startTest");
+	CheckPoint("chk", "Respawn", "resetOnDeath", "Deaths", "test1");
+	SetEntityCallbackFunc("test_2_key", "endTest");
+	SetLocalVarInt("state", -1);//-1=start, 0=nothing, 1=left, 2=right, 3=finished
+	SetLocalVarInt("bruteState", 0);
+	for(int i=1; i<7; i++)
+	{
+		SetLocalVarInt("lever_left_"+i+"_down", 0);
+		SetLocalVarInt("lever_left_"+i+"_up", 0);
+		SetLocalVarInt("lever_right_"+i+"_down", 0);
+		SetLocalVarInt("lever_right_"+i+"_up", 0);
+		SetEntityInteractionDisabled("lever_left_"+i, true);
+		SetEntityInteractionDisabled("lever_right_"+i, true);
+	}
+	SetEntityCustomFocusCrossHair("easter_egg_4", "Pick");
+	SetEntityPlayerInteractCallback("easter_egg_4", "CollectEasterEgg", true);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("test-1");
+	PlayMusic("18_amb.ogg", true, 1, 1, 1, false);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(1, 1);
+	StopMusic(1, 2);
+	RemoveTimer("shakeTimer");
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+void AutosaveDelay(string &in asTimer)
+{
+	AutoSave();
+}
+
+void resetOnDeath(string &in asName, int alCount)
+{
+	int state = GetLocalVarInt("state");
+	if(state==-1) return;
+	if(state==0 || state==1)//reset right
+	{
+		for(int i=1; i<7; i++)
+		{
+			ResetProp("lever_right_"+i);
+			SetLocalVarInt("lever_right_"+i, 0);
+		}
+	}
+	if(state==0 || state==2)//reset left
+	{
+		for(int i=1; i<7; i++)
+		{
+			ResetProp("lever_left_"+i);
+			SetLocalVarInt("lever_left_"+i, 0);
+		}
+	}
+	if(state==-1 || state==3) PlayMusic("18_amb.ogg", true, 1, 1, 1, false);
+	else
+	{
+		ResetProp("door_brute");
+		SetMessage("Messages", "test1_respawn", 8);
+		PlayMusic("29_amb.ogg", true, 0.7, 0.5, 2, false);
+		AddTimer("countdown", 120, "activateBrute");
+	}
+	SetLocalVarInt("bruteState", 0);
+	RemoveTimer("bruteloop");
+}
+
+void startTest(string &in asEntity, string &in type)
+{
+	for(int i=1; i<7; i++)
+	{
+		SetPropStaticPhysics("lever_left_"+i, false);
+		SetPropStaticPhysics("lever_right_"+i, false);
+		SetEntityInteractionDisabled("lever_left_"+i, false);
+		SetEntityInteractionDisabled("lever_right_"+i, false);
+	}
+	//SetPropActiveAndFade("display_broken", false, 2);
+	SetPropActiveAndFade("sanity_potion", true, 1.2);
+	SetLocalVarInt("state", 0);
+	PlayMusic("29_amb.ogg", true, 0.7, 0.5, 2, false);
+	AddTimer("countdown", 240, "activateBrute");
+	//AutoSave();
+}
+
+void endTest(string &in asEntity, string &in type)
+{
+	SetLevelDoorLocked("door_exit", false);
+	SetGlobalVarInt("test", 1);
+}
+
+void activateBrute(string &in asTimer)
+{
+	SetEntityActive("test1_brute", true);
+	SetMessage("Messages", "test1_late", 5);
+	SetPropHealth("door_brute", 0);
+	PlayGuiSound("react_scare.snt", 1);
+	GiveSanityDamage(20, true);
+	SetLocalVarInt("bruteState", 1);
+	AddTimer("bruteloop", 0.1, "BruteLoop");
+}
+
+void BruteLoop(string &in asTimer)
+{
+	AddTimer("bruteloop", 0.8, "BruteLoop");
+	ShowEnemyPlayerPosition("test1_brute");
+}
+
+/////////////////////levers//////////////////////////////
+
+void LeverMove(string &in asEntity, int alState)
+{
+	if(alState!=0) PlayGuiSound("17_pipe_detach.snt", 1);
+	
+	int[] up = {3, 3, 5, 1, 2, 4};
+	int[] down = {1, 5, 6, 5, 2, 2};
+	int index;
+	string side;
+	
+	//Get side
+	if(StringSub(asEntity, 6, 4)=="left")
+	{
+		side = "left";
+		index = StringToInt(StringSub(asEntity, 11, 1))-1;
+	}
+	else
+	{
+		side = "right";
+		index = StringToInt(StringSub(asEntity, 12, 1))-1;
+	}
+	
+	//Set value of lever
+	if(alState==1) SetLocalVarInt(asEntity+"_down", down[index]);
+	else if(alState==-1) SetLocalVarInt(asEntity+"_up", up[index]);
+	else
+	{
+		SetLocalVarInt(asEntity+"_down", 0);
+		SetLocalVarInt(asEntity+"_up", 0);
+	}
+	
+	//count total row values
+	bool success = false;
+	int totalUp = 0;
+	int totalDown = 0;
+	for(int i=1; i<7; i++)
+	{
+		totalUp+=GetLocalVarInt("lever_"+side+"_"+i+"_up");
+		totalDown+=GetLocalVarInt("lever_"+side+"_"+i+"_down");
+	}
+	
+	//check if all levers on given side are correct
+	if(side=="left" && totalDown==11 && totalUp==11)
+	{
+		success = true;
+		if(GetLocalVarInt("state")==2) SetLocalVarInt("state", 3);
+		else SetLocalVarInt("state", 1);
+	}
+	else if(side=="right" && totalDown==8 && totalUp==8)
+	{
+		success = true;
+		if(GetLocalVarInt("state")==1) SetLocalVarInt("state", 3);
+		else SetLocalVarInt("state", 2);
+	}
+	
+	//success effects
+	if(success)
+	{
+		for(int i=1; i<7; i++)
+		{
+			SetPropStaticPhysics("lever_"+side+"_"+i, true);
+			SetEntityInteractionDisabled("lever_"+side+"_"+i, true);
+		}
+		PlaySoundAtEntity("", "puzzle_gas.snt", "AreaSound_"+side, 2, true);
+		PlaySoundAtEntity("", "puzzle_place_jar.snt", "AreaSound_"+side, 0.01, false);
+		ChangePlayerStateToNormal();
+	}
+	if(GetLocalVarInt("state")==3)
+	{
+		SetMoveObjectState("end_gate", 1);
+		shakeLoop("shakeTimer");
+		PlaySoundAtEntity("mechanism", "17_piston_correct.snt", "Area_sound", 1, true);
+		StopMusic(0.5, 2);
+		PlayMusic("02_puzzle.ogg", false, 1, 0.2, 3, false);
+		SetPlayerSanity(GetPlayerSanity() - 0.1);
+		GiveSanityBoost();
+		SetSwingDoorLocked("door_brute", false, false);
+		RemoveTimer("countdown");
+		RemoveTimer("bruteloop");
+		if(GetLocalVarInt("bruteState")==1) FadeEnemyToSmoke("test1_brute", true);
+		SetLocalVarInt("bruteState", 0);
+		SetEntityActive("potion_oil_1", true);
+		SetEntityActive("note_paper01_1", true);
+		SetEntityActive("test_2_key", true);
+		AddTimer("", 1.5, "AutosaveDelay");
+	}
+}
+
+void shakeLoop(string &in asTimer)
+{
+	StartScreenShake(0.005, 2.5, 0.5, 1);
+	AddTimer("shakeTimer", 2, "shakeLoop");
+}

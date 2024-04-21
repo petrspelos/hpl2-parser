@@ -1,0 +1,70 @@
+void OnStart(){
+	enemy();
+	AddTimer("", 0.5f, "playScareSoundEasyTimer");
+	PlayerFunctions();
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.5f, 0, 0, true);
+	SetDeathHint("Messages", "death_2");
+	if (HasItem("lab_key") == true){
+		SetLevelDoorLocked("level_celler_1", false);
+	}
+}
+
+void OnLeave(){
+	SetupLoadScreen("LoadingTexts", "10Chemicals", 1, "11Supplies.jpg");
+}
+
+void enemy(){
+	nodes();
+	AddEntityCollideCallback("Player", "AreaSpawnEnemy", "spawnEnemy", true, 1);
+	AddEntityCollideCallback("11_Enemy", "AreaEnableTriggers", "enableTriggers", true, 1);
+	AddEntityCollideCallback("11_Enemy", "AreaDisableSelf", "disableSelf", true, 1);
+}
+
+void nodes(){
+	for(int i = 1; i <40; i++){
+		AddEnemyPatrolNode("11_Enemy", "PathNodeArea_"+i, 0.001f, "");
+	}
+}
+
+void playScareSoundEasyTimer(string &in asTimer){
+	PlayGuiSound("scare_brute_easy.ogg", 100);
+}
+
+void PlayerFunctions(){
+	AddUseItemCallback("", "chemical_cellar_key", "chemical_cellar", "unlockCellar", true);
+	SetEntityPlayerInteractCallback("note_manual_1", "pickupNoteQuestTimer", true);
+}
+
+void spawnEnemy(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("11_Enemy", true);
+	SetMessage("Messages", "hide", 0);
+	GiveSanityDamage(26, true);
+}
+
+void enableTriggers(string &in asParent, string &in asChild, int alState){
+	SetEnemyDisableTriggers("11_Enemy", false);
+}
+
+void disableSelf(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("11_Enemy", false);
+	PlayGuiSound("scare_brute_scary.ogg", 100);
+}
+
+void unlockCellar(string &in item, string &in door){
+	SetLevelDoorLocked("chemical_cellar", false);
+	PlayGuiSound("unlock_door.snt", 100);
+	RemoveItem(item);
+}
+
+void pickupNoteQuestTimer(string &in entity){
+	AddTimer("", 0.1f, "pickupNoteQuest");
+}
+
+void pickupNoteQuest(string &in asTimer){
+	AddQuest("pickupNote", "pickupNote");
+	SetGlobalVarInt("ifGetQuest", 0);
+	CompleteQuest("bridgedown", "bridgedown");
+}

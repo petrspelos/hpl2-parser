@@ -1,0 +1,704 @@
+void OnStart()
+{
+	SetLocalVarInt("ChipperHad", 0);
+	CompleteQuest("CavedChamber", "CavedChamber");
+	
+	SetMapDisplayNameEntry("LevelTunnels");
+	AutoSave();
+	
+	PlayMusic("int_amb_tunnels.ogg", true, 20, 1, 0, true);
+	
+	SetEntityInteractionDisabled("lantern_2", true);
+	
+	////----COLLIDE CALLBACKS----////
+	AddEntityCollideCallback("Player", "AreaQuest", "AddLadderQuest", true, 1);
+	AddEntityCollideCallback("Player", "AreaLeaving_1", "Leaving1", true, 1);
+	AddEntityCollideCallback("Player", "AreaLeaving_2", "Leaving2", true, 1);
+	AddEntityCollideCallback("Player", "AreaShowQuest", "QuestEffects", true, 1);
+	AddEntityCollideCallback("Player", "AreaShake", "EventShake", true, 1);
+	AddEntityCollideCallback("Player", "AreaN", "EventDemon", true, 1);
+	AddEntityCollideCallback("Player", "AreaMusicLight", "EventSafe", true, 1);
+	
+	SetEntityPlayerInteractCallback("LadderArea_1", "InterractLadder", true);
+	AddEntityCollideCallback("Player", "AreaInjurePlayer", "PlayerDie", true, 1);
+	
+	////----USE ITEM CALLBACKS----////
+	AddUseItemCallback("ladderuse", "Ladder_1", "AreaUseLadderTar", "LTUse", false);
+	AddUseItemCallback("ladderuse", "Ladder_2", "AreaUseLadderTar", "LTUse", false);
+	AddUseItemCallback("", "Hammer", "DoorWeak", "HammerDoor", false);
+	AddUseItemCallback("", "HammerChipper", "AreaWallBreak", "BreakWall", false);
+	AddUseItemCallback("", "Hammer", "AreaWallBreak", "WallError1", false);
+	AddUseItemCallback("", "Chipper", "AreaWallBreak", "WallError2", false);
+	////////////
+	//Tar not ok
+	SetLocalVarInt("TarOK", 2);
+	///////////
+	if(ScriptDebugOn())
+	{
+		
+		SetPlayerLampOil(100.0f);
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+		
+		GiveItem("Ladder_1", "Puzzle", "", "ladder.tga", 1.0f);
+		GiveItem("Ladder_2", "Puzzle", "", "ladder.tga", 1.0f);
+		GiveItem("Tar_1", "Puzzle", "", "bucket_of_tar.tga", 1.0f);
+		GiveItem("Hammer", "Puzzle", "", "stone_hammer.tga", 1.0f);
+		
+		SetEntityActive("B_1", false);
+		SetEntityActive("LadderArea_1", true);
+	}
+	
+	AddTimer("rock", 1.5f, "RockTimer");
+}
+
+//////////////////////
+//Monster Encounters
+void Ladder1Get(string &in asEntity)
+{
+	AddEntityCollideCallback("Player", "AreaCollideMonster", "MonSpawn1", true, 1);
+	
+	AddDebugMessage("got ladder 1", true);
+}
+
+void Ladder2Get(string &in asEntity)
+{
+	AddEntityCollideCallback("Player", "AreaCollideMonster2", "MonSpawn2", true, 1);
+	
+	AddDebugMessage("got ladder 2", true);
+	
+	//checkpoint
+	CheckPoint("Tunnels", "Ladder2", "", "DeathHint", "DHint1");
+}
+
+void MonSpawn1(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Brute_1", true);
+	
+	//I HATE DOING PATROL NODES!!!
+	AddEnemyPatrolNode("Brute_1", "Node_1", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_2", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_3", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_4", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_5", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_6", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_7", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_8", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_9", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_10", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_11", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_12", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_13", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_14", 0.001f, "");
+	AddEnemyPatrolNode("Brute_1", "Node_15", 0.001f, "");
+	
+	AddDebugMessage("collide works", true);
+}
+
+void MonSpawn2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Brute_2", true);
+	
+	AddEnemyPatrolNode("Brute_2", "2Node_1", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_3", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_6", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_10", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_14", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_15", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_17", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_18", 0.001f, "");
+	AddEnemyPatrolNode("Brute_2", "2Node_19", 0.001f, "");
+
+
+	
+	AddDebugMessage("collide works", true);
+	
+	AddEntityCollideCallback("Player", "AreaGalnuch", "GalnuchBegin", true, 1);
+}
+
+/////////////////////////////////////////
+////////////////////////////////////////
+//Angel of Galnuch
+void GalnuchBegin(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("galnuch", 5, "TimerGalnuch");
+	AddTimer("galnuchleave", 7, "TimerGalnuch");
+	AddTimer("galnuchlaugh", 12, "TimerGalnuch");
+
+}
+
+void TimerGalnuch(string &in asTimer)
+{
+	if(asTimer == "galnuch")
+	{
+		SetPropActiveAndFade("angel_of_galnuch", true, 1);
+		PlaySoundAtEntity("roll", "scrape_rock", "angel_of_galnuch", 0, false);
+		AddTimer("galnuchfade", 1, "TimerGalnuch");
+	}
+	
+	if(asTimer == "galnuchleave")
+	{
+		SetPropActiveAndFade("angel_of_galnuch", false, 1);
+		AddTimer("galnuchfade", 1, "TimerGalnuch");
+	}
+	
+	if(asTimer == "galnuchlaugh")
+	{
+		PlaySoundAtEntity("laugh", "00_laugh", "ScriptArea_1", 0, false);
+	}
+	
+	if(asTimer == "galnuchfade")
+	{
+		StopSound("roll", 0.3f);
+	}
+}
+
+//-------------------!
+
+///////////////////////
+//MISC
+//////////////////////
+
+//------------------!
+
+void AddLadderQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Ladder", "Ladder");
+	SetMessage("TextOne", "14LadderText", 2); 
+}
+
+//-------------------!
+
+///////////////////////
+//USING THE LADDER
+//////////////////////
+
+//------------------!
+
+void LTUse(string &in asItem, string &in asEntity)
+{
+	AddLocalVarInt("LadderCount", 1);
+	
+	if(asItem == "Ladder_*") //If either ladder is used...
+	{
+		AddLocalVarInt("LadderCount", 1); //...then "LadderCount" goes up by 1
+		
+		AddDebugMessage("LadderCount is now"+GetLocalVarInt("LadderCount"), false);
+	}
+
+	if(GetLocalVarInt("LadderCount") == 1) //If the player used the ladder for the first time...
+	{
+		SetEntityActive("LadderFin1", true); //...then the first ladder gets placed!
+		PlaySoundAtEntity("", "04_place_wood", "AreaUseLadderTar", 0, false);
+		SetMessage("TextOne", "Ladder1", 2); 
+		AddUseItemCallback("ladderuse", "Tar_1", "AreaUseLadderTar", "LTUse", false);
+		
+		AddDebugMessage("LadderCount is now"+GetLocalVarInt("LadderCount"), false);
+		
+		RemoveItem(asItem);
+	}
+	
+	if(GetLocalVarInt("LadderCount") == 2 && GetLocalVarInt("TarOK") == 1) //If the tar has been used as an adhesive and the second ladder has been used...
+	{
+		SetEntityActive("LadderFin2", true); ///...then the second ladder gets placed!
+		PlaySoundAtEntity("", "04_place_wood", "AreaUseLadderTar", 0, false);
+		SetMessage("TextOne", "Ladder3", 2); 
+		
+		AddDebugMessage("LadderCount is now"+GetLocalVarInt("LadderCount"), false);
+		
+		SetEntityActive("B_1", false);
+		SetEntityActive("LadderArea_1", true);
+		
+		RemoveItem(asItem);
+		
+		CompleteQuest("Ladder", "Ladder");
+	}
+	
+	if(GetLocalVarInt("LadderCount") == 2 && GetLocalVarInt("TarOK") == 2) //If you place the second ladder without the tar, but you haven't used the tar...
+	{
+		SetMessage("TextOne", "LadderNO", 2); //...Then the ladder won't place.
+		AddLocalVarInt("LadderCount", -1);
+		
+		AddDebugMessage("LadderCount is now"+GetLocalVarInt("LadderCount"), false);
+	}
+	
+	if(asItem == "Tar_1") //If the tar is used on the ladder...
+	{
+		SetLocalVarInt("TarOK", 1); //...then the player can now place ladder 2!
+		PlaySoundAtEntity("", "22_use_tar", "AreaUseLadderTar", 0, false);
+		SetMessage("TextOne", "Ladder2", 2); 
+		
+		AddDebugMessage("LadderCount is now"+GetLocalVarInt("LadderCount"), false);
+		
+		RemoveItem(asItem);
+	}
+	
+	if(asItem == "Tar_1" && GetLocalVarInt("LadderCount") < 1)
+	{
+		SetMessage("TextOne", "14Nothing", 2); 
+	}
+}
+
+//-------------------!
+
+///////////////////////
+//HAMMER
+//////////////////////
+
+
+//-------------------!
+void HammerDoor(string &in asItem, string &in asEntity)
+{
+	SetPropHealth(asEntity, 20);
+	SetEntityActive("IntBoardsArea", true);
+}
+
+void IntBoards(string &in asEntity)
+{
+	AddLocalVarInt("BoardsCount", 1);
+	
+	if(GetLocalVarInt("BoardsCount") < 3)
+	{
+		PlaySoundAtEntity("wood", "06_pull_wood", asEntity, 1, false);
+		CreateParticleSystemAtEntity("", "ps_dust_falling_small_thin.ps", asEntity, false);
+		SetMessage("TextOne", "14Boards", 1);
+	}
+	
+	if(GetLocalVarInt("BoardsCount") > 2)
+	{
+		GiveSanityBoost();
+		SetPropHealth("Block", 0);
+		SetSwingDoorLocked("DoorWeak", false, true);
+		SetEntityActive("IntBoardsArea", false);
+		StopSound("wood", 0);
+	}
+}
+
+//////////////////////
+//Hammer break on wall
+void BreakWall(string &in asItem, string &in asEntity)
+{
+	int iWall = RandInt(1, 3);
+	
+	CreateParticleSystemAtEntity("", "ps_hit_rock.ps", "WallP_"+iWall, false);
+	PlaySoundAtEntity("", "15_rock_break", "WallP_"+iWall, 0, false);
+	
+	StartPlayerLookAt("AreaWallBreak", 1, 2, "");
+	
+	SetPlayerActive(false);
+	
+	AddTimer("wall1", 0.7f, "TimerWall");
+	AddTimer("wall2", 1.4f, "TimerWall");
+	AddTimer("wall3", 2.1f, "TimerWall");
+}
+
+void TimerWall(string &in asTimer)
+{
+	int iWall = RandInt(1, 3);
+	
+	if(asTimer == "wall1")
+	{
+		CreateParticleSystemAtEntity("", "ps_hit_rock.ps", "WallP_"+iWall, false);
+		PlaySoundAtEntity("", "15_rock_break", "WallP_"+iWall, 0, false);
+		PlaySoundAtEntity("", "15_hammer", "WallP_"+iWall, 0, false);
+	}
+	
+	if(asTimer == "wall2")
+	{
+		CreateParticleSystemAtEntity("", "ps_hit_rock.ps", "WallP_"+iWall, false);
+		PlaySoundAtEntity("", "15_rock_break", "WallP_"+iWall, 0, false);
+		PlaySoundAtEntity("", "15_hammer", "WallP_"+iWall, 0, false);
+	}
+	
+	if(asTimer == "wall3")
+	{
+		SetEntityActive("Breakable", false);
+		
+		SetEntityActive("Broken", true);
+		SetEntityActive("Piece_*", true);
+		SetEntityActive("Chipper", true);
+		
+		PlaySoundAtEntity("", "03_break_wall", "AreaWallBreak", 0, false);
+		CreateParticleSystemAtEntity("", "ps_break_prison_tunnel.ps", "AreaWallBreak", false);
+		
+		PlayMusic("15_puzzle_hole.ogg", false, 1, 1, 0, true);
+		
+		SetPlayerActive(true);
+		
+		GiveSanityBoost();
+		
+		StopPlayerLookAt();
+		
+		//Chipper Drops
+		RemoveItem("HammerChipper");
+		GiveItem("Hammer", "Puzzle", "", "stone_hammer.tga", 1.0f);
+		
+		///////////////////////////////////////////////////////////////////////////////
+		//If the player doesn't pick the chipper back up, he gets a message to do so.
+		if(HasItem("Chipper") == false)
+		{
+			AddEntityCollideCallback("Player", "AreaChipperMemo", "GiveChipperMemo", true, 1);		
+			AddDebugMessage("left chipper behind after wall", false);
+		}
+		
+	}
+}
+
+//------------------!
+
+///////////////////////
+//EFFECTS
+//////////////////////
+
+//------------------!
+
+void Leaving1(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityBoost();
+	PlayMusic("02_puzzle.ogg", false, 1, 1, 10, true);
+	CompleteQuest("Ladder", "Ladder");
+}
+
+void Leaving2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "21_alex_low_freq_rumble", "Player", 0, false);
+	SetPlayerMoveSpeedMul(0.5f);
+	StartScreenShake(0.07f, 4, 3, 3);
+}
+
+////////////
+//Effects to show important area
+void QuestEffects(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "03_rock_move", "SoundArea_1", 0, false);
+	PlaySoundAtEntity("", "general_wind_whirl", "ParticleArea_1", 0, false);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ParticleArea_1", false);
+}
+
+///////////////
+//Shake to kind of slow player down and provide atmosphere
+void EventShake(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("creak", "00_creak", "EParticleArea_2", 0, false);
+	CreateParticleSystemAtEntity("", "ps_dust_falling_rumble.ps", "EParticleArea_*", false);
+	SetPlayerMoveSpeedMul(0.4f);
+	StartScreenShake(0.02f, 1, 2, 2);
+	AddTimer("", 7, "EndShakeEvents");
+	
+	CreateParticleSystemAtEntity("", "ps_dust_falling_rumble.ps", "ParticlesGalnuch", false);
+}
+
+void EndShakeEvents(string &in asEntity)
+{
+	SetPlayerMoveSpeedMul(1);
+	StopSound("creak", 1);
+}
+
+//////////////////
+//Galnuch demon
+void EventDemon(string &in asParent, string &in asChild, int alState)
+{
+	SetPropActiveAndFade("galnuch_demon", true, 1);
+	SetEntityPlayerLookAtCallback("LookRemoveDemon", "RemoveDemon", true);
+	
+	CreateParticleSystemAtEntity("", "ps_cave_monster_breath.ps", "ParticlesGalnuch", false);
+	PlaySoundAtEntity("", "04_breath", "ParticlesGalnuch", 0, false);
+	
+	AddDebugMessage("galnuch", true);
+}
+
+void RemoveDemon(string &in asEntity, int alState)
+{
+	SetPropActiveAndFade("galnuch_demon", false, 1);
+}
+
+////////
+//safe music
+void EventSafe(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("14_event_safe_int.ogg", false, 20, 1, 10, true);
+	SetPlayerMoveSpeedMul(0.3f);
+	StartPlayerLookAt("ScriptArea_2", 1, 2, "");
+	
+	PlaySoundAtEntity("", "03_rock_move", "ScriptArea_3", 0, false);
+	
+	PlaySoundAtEntity("", "general_wind_whirl", "ScriptArea_2", 0, false);
+	CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "ScriptArea_2", false);
+	AddTimer("", 7, "StopSafe");
+	
+}
+
+void StopSafe(string &in asTimer)
+{
+	StopPlayerLookAt();
+	SetPlayerMoveSpeedMul(1);
+}
+
+////Scary Door
+void IntDoorAkers(string &in asEntity)
+{
+	AddTimer("A1", 2, "TimerAkers");
+	AddTimer("A2", 8, "TimerAkers");
+	PlaySoundAtEntity("whine", "05_whine", "Player", 0, false);
+	SetPlayerMoveSpeedMul(0.5f);
+	PlaySoundAtEntity("", "close_gate", "gate", 0, false);
+}
+
+void TimerAkers(string &in asTimer)
+{
+	if(asTimer == "A1")
+	{
+		PlaySoundAtEntity("akers", "custom/14_akers", "ScriptArea_4", 0, false);
+		PlaySoundAtEntity("", "react_scare", "Player", 0, false);
+		
+		FadeSepiaColorTo(1, 1);
+		SetPlayerMoveSpeedMul(0.5f);
+		StartScreenShake(0.1f, 1, 2, 1);
+		FadeImageTrailTo(1, 1);
+		FadePlayerRollTo(20, 3, 6);
+		GiveSanityDamage(10, true);
+	}
+	
+	if(asTimer == "A2")
+	{
+		FadeImageTrailTo(0, 1);
+		FadePlayerRollTo(0, 3, 6);
+		FadeSepiaColorTo(0, 1);
+		SetPlayerMoveSpeedMul(1);
+		StopSound("whine", 1);
+		StopSound("akers", 1);
+		PlaySoundAtEntity("", "react_breath", "Player", 0, false);
+	}
+}
+
+////////////////////////
+//Galnuch scary look at
+void RemoveGC(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("galnuch removed", false);
+	
+	if(GetLocalVarInt("ChipperHad") > 0)
+	{
+		SetPropActiveAndFade("galnuch_chipper", false, 3);
+	}
+	
+	if(GetLocalVarInt("ChipperHad") < 1)
+	{
+		FadeLightTo("GalnuchLight", 1, 0, 0, 0, 3, 1);
+		StartPlayerLookAt("galnuch_chipper", 3, 4, "");
+		
+		PlaySoundAtEntity("", "react_scare", "Player", 0, false);
+		
+		PlayMusic("05_event_steps.ogg", false, 1, 0.1, 1, true);
+		//GiveSanityDamage(1, true);
+		
+		AddTimer("timer_gc", 2, "TimerEndGC");
+		
+		StartScreenShake(0.04, 0.2, 0.1, 0.1);
+	}
+}
+
+void TimerEndGC(string &in asTimer)
+{
+	StopPlayerLookAt();
+	FadeLightTo("GalnuchLight", 0, 0, 0, 0, 3, 1);
+	
+	SetPropActiveAndFade("galnuch_chipper", false, 3);
+}
+
+//------------------!
+
+///////////////////////
+//MISC
+//////////////////////
+
+//------------------!
+
+void DoorMes(string &in asEntity)
+{
+	SetMessage("TextOne", "14Door", 2);
+}
+
+//note music
+void PickUpG2(string &in asEntity)
+{
+	PlayMusic("14_paper_galnuch_int01.ogg", false, 20, 1, 10, true);
+}
+
+/////////////
+//Wall messages
+void IntWallMes(string &in asTimer)
+{
+	PlaySoundAtEntity("", "15_rock_break", "AreaWallBreak", 0, false);
+	CreateParticleSystemAtEntity("", "ps_dust_falling_small_thin.ps", "AreaWallBreak", false);
+	SetMessage("TextOne", "14WallMes", 2);
+}
+
+//Wall errors
+void WallError1(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "14ErrorWall1", 2);
+}
+
+void WallError2(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "14ErrorWall2", 2);
+}
+
+///////////////////
+//Chipper Memo
+void GiveChipperMemo(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("chipper", "Chipper");
+	SetEntityActive("galnuch_chipper", true);
+	AddDebugMessage("memo given, galnuch has arrived", false);
+	AddEntityCollideCallback("Player", "CollideRemoveGC", "RemoveGC", true, 1);
+}
+
+////Chipper Complete
+void GetChipper(string &in asEntity)
+{
+	CompleteQuest("chipper", "Chipper");
+	SetPropActiveAndFade("galnuch_chipper", false, 1);
+	
+	AddLocalVarInt("ChipperHad", 1);
+}
+
+////////////////////////////
+////////////////////////////
+//Random rocks moving
+void RockTimer(string &in asTimer)
+{
+	int iRock = RandFloat(1, 13);	
+	float fRock = RandFloat(7.5f, 18.5f);
+	
+	PlaySoundAtEntity("creakSound"+iRock, "03_rock_move", "Rock_"+iRock, 0.0f, false);
+		
+	AddTimer("rock", 1.5f+fRock, "RockTimer");
+		
+	/*DEBUG
+	 */
+	AddDebugMessage("Rocks moving in: "+iRock, false);
+}
+
+//---------------------------------------------	
+
+/////////////////////////////
+// BEGIN MEMORY STONE
+/////////////////////////////
+
+//---------------------------------------------	
+
+void BeginMemory1(string &in asEntity)
+{
+	StopMusic(3, 0);
+	SetPlayerActive(false);
+	RemoveItem(asEntity);
+	AddTimer("", 3.0f, "TimerMemory");
+	FadeOut(3.0f);
+	//PlayMusic("01_paper_self.ogg", false, 1.0f, 0.5f, 10.0f, true);
+	FadePlayerFOVMulTo(0.8f, 1.0f);
+	FadeImageTrailTo(2, 1);
+	
+	FadeLightTo("PointLight_Piece", 0, 0, 0, 0, 1, 3);
+	CreateParticleSystemAtEntity("portal", "ps_orb_light.ps", "AreaParticle", false);
+	}
+	
+void TimerMemory(string &in asTimer)
+{	
+	AddLocalVarInt("TCon", 1);
+	float fTVar = 4.0f;
+	
+	switch(GetLocalVarInt("TCon")) 
+	{
+		case 1:
+			SetPlayerCrouching(true);
+			SetLanternDisabled(true);
+			FadeOut(0.5f);
+			TeleportPlayer("MemPlace");
+			//FadePlayerFOVMulTo(1.4f, 0.4f);
+			FadePlayerRollTo(-20, 0.3f, 0.8f);
+		break;
+		case 2:
+			FadeIn(1.5f);
+			FadePlayerFOVMulTo(1.4f, 0.4f);
+			SetMessage("TextOne", "14Memory1", 5.0f);
+			fTVar = 5.0f;
+			PlaySoundAtEntity("int", "amb_eerie_dunk", "Player", 0.0f, false);
+		break;
+		case 3:
+			PlaySoundAtEntity("", "03_rock_move", "Player", 0.0f, false);
+			StartScreenShake(0.02, 0.3, 1, 1);
+			FadePlayerRollTo(20, 0.3f, 0.8f);
+			FadeOut(5.0f);
+			FadePlayerFOVMulTo(0.8f, 0.4f);
+			fTVar = 5.0f;
+		break;
+		case 4:
+			TeleportPlayer("MemPlace_1");
+			FadeIn(2.5f);
+			SetMessage("TextOne", "14Memory2", 5.0f);
+			PlaySoundAtEntity("", "03_in_a_bottle", "Player", 0.0f, false);
+			PlayMusic("15_event_girl_mother.ogg", false, 0.7f, 5.0f, 10.0f, true);
+			StartScreenShake(0.02, 2, 0.5, 0.5);
+			
+			
+			DestroyParticleSystem("portal");
+			FadeLightTo("PointLight_52", 0, 0, 0, 0, 1, 3);
+			SetLampLit("C1", false, true);
+			SetLampLit("C2", false, true);
+		break;
+		case 5:
+			FadeOut(3.0f);
+			PlaySoundAtEntity("", "player_react_guardian", "Player", 0.0f, false);
+		break;
+		case 6:
+			TeleportPlayer("DebugSpawn");
+			FadePlayerRollTo(0, 0.3f, 0.8f);
+			FadePlayerFOVMulTo(1.0f, 0.4f);
+			FadeImageTrailTo(0, 1);
+			SetPlayerActive(true);
+		break;		
+		case 7:
+			TeleportPlayer("DebugSpawn");
+			FadeIn(5.0f);
+			SetLanternDisabled(false);
+			StopSound("int", 5.0f);
+			PlayMusic("int_amb_tunnels.ogg", true, 0.7f, 5.0f, 0.0f, true);
+			PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1, false);
+		break;
+	}
+	
+	if(GetLocalVarInt("TCon") < 10) AddTimer("", fTVar, "TimerMemory");
+	
+	}
+	
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load15", 0, "int_loading_demon.jpg");
+}
+
+///////PLAYER DEATH FROM LADDER FALL////////
+void PlayerDie(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("LadderCheck", "LadderCheckPoint", "Laddeath", "DeathHint", "DHint6");
+	
+	SetPlayerActive(false);
+	GivePlayerDamage(100, "Slash", true, true);
+	
+	StopMusic(1, 0);
+	
+	PlaySoundAtEntity("hit", "slime_attack_normal_hit.snt", "Player", 0.0f, false);
+}
+
+void InterractLadder(string &in asEntity)
+{
+	SetEntityActive("AreaInjurePlayer", false);
+	SetEntityActive("AreaLeaving_1", true);
+	SetEntityActive("AreaLeaving_2", true);
+}
+
+void Laddeath(string &in asName, int alCount)
+{
+	PlayMusic("int_amb_tunnels.ogg", true, 20, 1, 0, true);
+	SetPlayerActive(true);
+}

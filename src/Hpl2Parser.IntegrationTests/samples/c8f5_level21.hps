@@ -1,0 +1,82 @@
+void OnStart()
+{
+AutoSave();
+PlayMusic("23_amb.ogg", true, 1, 4.0f, 0, true);
+AddEntityCollideCallback("Player", "StartDialogue", "Dialogues", true, 1);
+}
+
+void NielmanFirstDialogue(string &in asEntity)
+{
+AddEffectVoice("1", "", "Voice", "Nielman1", false, "", 0.0f, 0.0f);
+}
+
+void Dialogues(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("23_amb02.ogg", true, 1, 4.0f, 0, true);
+SetSwingDoorClosed("Door", true, true);
+SetSwingDoorLocked("Door", true, true);
+PlaySoundAtEntity("","lock_door","Door", 0,false);
+AddEffectVoice("2", "", "Voice", "Nielman2", false, "", 0.0f, 0.0f);
+AddEffectVoice("3", "", "Voice", "Nielman3", false, "", 0.0f, 0.0f);
+AddEffectVoice("4", "", "Voice", "Nielman4", false, "", 0.0f, 0.0f);
+AddEffectVoice("5", "", "Voice", "Nielman5", false, "", 0.0f, 0.0f);
+AddEffectVoice("6", "", "Voice", "Nielman6", false, "", 0.0f, 0.0f);
+AddEffectVoice("7", "", "Voice", "Nielman7", false, "", 0.0f, 0.0f);
+AddTimer("", 68.0, "SetBladeDEMOActive");
+}
+
+void SetBladeDEMOActive(string& in asTimer)
+{
+PlayMusic("29_amb.ogg", true, 1, 4.0f, 0, true);
+SetEntityActive("BladeDEMO", true);
+StartPlayerLookAt("BladeDEMO", 2, 1, "");
+}
+
+void SpawnUseArea(string &in asEntity)
+{
+StopPlayerLookAt();
+SetEntityActive("UseArea", true);
+AddEffectVoice("8", "", "Voice", "Nielman8", false, "", 0.0f, 0.0f);
+}
+
+void CutTime(string &in asEntity)
+{
+PlayMusic("29_amb02.ogg", true, 1, 4.0f, 0, true);
+RemoveItem("BladeDEMO");
+FadeOut(1);
+AddTimer("", 2.0, "Cutting");
+}
+
+void Cutting(string& in asTimer)
+{
+SetPlayerActive(false);
+AddEffectVoice("9", "", "Voice", "", false, "", 0.0f, 0.0f);
+PlaySoundAtEntity("","19_drill","Nielman", 0,false);
+PlaySoundAtEntity("","19_inject","Nielman", 0,false);
+AddTimer("", 5.0, "Finished");
+}
+
+void Finished(string& in asTimer)
+{
+PlayMusic("amb_extra01.ogg", true, 1, 4.0f, 0, true);
+SetEntityActive("Blade", true);
+SetEntityActive("ChaseKey", true);
+PlaySoundAtEntity("","react_pant","Player", 0,false);
+SetPlayerSanity(50);
+FadeIn(1);
+SetPlayerActive(true);
+SetMessage("Messages", "Revenge", 5);
+AddUseItemCallback("", "ChaseKey", "ChaseDoor", "UnlockChaseMap", true);
+}
+
+void UnlockChaseMap(string &in asItem, string &in asEntity)
+{
+SetLevelDoorLocked("ChaseDoor", false);
+PlaySoundAtEntity("","unlock_door","ChaseDoor", 0,false);
+RemoveItem("ChaseKey");
+}
+
+void OnLeave()
+{
+StopMusic(5, 0);
+}

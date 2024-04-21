@@ -1,0 +1,242 @@
+int coal = 0;
+void OnStart()
+{  
+	AutoSave();
+	AddEntityCollideCallback("Coal_1", "AreaCoalCollide", "CoalInserted", false, 1);
+	AddEntityCollideCallback("Coal_2", "AreaCoalCollide", "CoalInserted", false, 1);
+	AddEntityCollideCallback("Coal_3", "AreaCoalCollide", "CoalInserted", false, 1);
+	AddEntityCollideCallback("Coal_1", "AreaCoalCollide_2", "Coal1Dissapear", false, 1);
+	AddEntityCollideCallback("Coal_2", "AreaCoalCollide_2", "Coal2Dissapear", false, 1);
+	AddEntityCollideCallback("Coal_3", "AreaCoalCollide_2", "Coal3Dissapear", false, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_1", "Suitor", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_2", "Ciala", true, 1);
+}
+
+
+
+
+
+void OnEnter()
+{ 
+	PlayMusic("Wine", true, 0.1, 0.1, 10, true);
+	AddTimer("PlayerCough", 30, "TimerCough");
+	SetLevelDoorLocked("level_dungeon_1", true);
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen9", 0, "game_loading_rose.jpg");
+}
+
+
+/////////////////////////////////CoalInteract///////////////////////////
+
+void CoalInserted(string &in asParent, string &in asChild, int alState)
+{
+	if(coal < 2) {
+	coal = coal + 1;
+	SetEntityActive("AreaCollide_1", true);
+	SetMessage("Message", "Coal3", 3);
+	SetEntityActive("ciala1", false);
+	SetEntityActive("AreaCollide_2", false);
+	}
+	
+	else if(coal == 2) { 
+	SetMessage("Message", "Coal", 3);
+	SetEntityActive("Lever_1", false);
+	SetEntityActive("Lever_2", true);
+	}
+	
+	else if(coal > 2) {
+	SetMessage("Message", "Coal2", 3);
+	}
+}
+
+void Coal1Dissapear(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("elevator_machine_hatch_1", true, true);
+	SetSwingDoorLocked("elevator_machine_hatch_1", true, true);
+	SetEntityActive("Coal_1", false);
+	AddTimer("HatchetOpen", 2, "TimerCoal");
+	SetEntityActive("AreaCollide_1", true);
+}
+
+void Coal2Dissapear(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("elevator_machine_hatch_1", true, true);
+	SetSwingDoorLocked("elevator_machine_hatch_1", true, true);
+	SetEntityActive("Coal_2", false);
+	AddTimer("HatchetOpen", 2, "TimerCoal");
+	SetEntityActive("AreaCollide_1", true);
+}
+
+void Coal3Dissapear(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("elevator_machine_hatch_1", true, true);
+	SetSwingDoorLocked("elevator_machine_hatch_1", true, true);
+	SetEntityActive("Coal_3", false);
+	AddTimer("HatchetOpen", 2, "TimerCoal");
+	SetEntityActive("AreaCollide_1", true);
+}
+
+void TimerCoal(string &in asTimer)
+{
+	
+	if(asTimer == "HatchetOpen") SetSwingDoorLocked("elevator_machine_hatch_1", false, true);
+	
+}
+
+void LeverEmpty(string &in asEntity, int LeverState)
+{
+	if(LeverState == 1) {
+	
+		SetMessage("Message", "machine", 3);
+		PlaySoundAtEntity("", "13_machine_fail", "Player", 1, false);
+		AddQuest("MachineWine", "Machine");
+		}
+}
+
+void LeverFull(string &in asEntity, int LeverState)
+{
+	if(GetGlobalVarInt("Machinery") == 1) return;
+	
+	if(LeverState == 1) {
+	
+		PlaySoundAtEntity("", "13_ignite", "Player", 2, false);
+		PlaySoundAtEntity("", "general_fire_burning", "AreaCoalCollide", 0.8f, true);
+		SetSwingDoorClosed("elevator_machine_hatch_1", true, true);
+		SetSwingDoorLocked("elevator_machine_hatch_1", true, true);
+		AddTimer("machine", 0.5, "TimerMachine");
+		
+		}
+}
+
+void TimerMachine(string &in asTimer)
+{	
+	if(asTimer == "machine")
+	{ 
+		PlaySoundAtEntity("", "13_machine_run", "AreaSound_1", 4, false);
+		SetGlobalVarInt("Machinery", 1);
+		GiveSanityBoostSmall();
+		SetLevelDoorLocked("level_dungeon_1", false);
+		CompleteQuest("MachineWine", "Machine");
+		
+	if(GetLocalVarInt("Suitor") == 1) return;
+	StopMusic(6.0f, 10);
+	SetEntityActive("character_dog_1", true);
+	AddEffectVoice("character_dog_howl1", "", "", "", false, "Player", 0, 15);
+	GiveSanityDamage(10.0f, true);
+	SetLocalVarInt("Suitor", 1);
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_1", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_2", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_3", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_4", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_5", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_6", 0.001, "");
+	
+	CheckPoint("Suitor Appears", "PlayerStartArea_2", "SuitorRespawn", "", "");
+	}
+}
+
+///////////////////////////////Grunt Appears///////////////////////////
+
+void Suitor(string &in asParent, string &in asChild, int alState)
+{
+	if(GetLocalVarInt("Suitor") == 1) return;
+	StopMusic(6.0f, 10);
+	SetEntityActive("character_dog_1", true);
+	AddEffectVoice("character_dog_howl1", "", "", "", false, "Player", 0, 15);
+	GiveSanityDamage(10.0f, true);
+	SetLocalVarInt("Suitor", 1);
+	
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_1", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_2", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_3", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_4", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_5", 0.001, "");
+	AddEnemyPatrolNode("character_dog_1", "SuitorPath_6", 0.001, "");
+	
+	CheckPoint("Suitor Appears", "PlayerStartArea_2", "SuitorRespawn", "", "");
+}
+
+void SuitorRespawn(string &in asName, int alCount)
+{
+	SetEntityActive("character_dog_1", true);
+	AddEffectVoice("character_dog_howl1", "", "", "", false, "Player", 0, 15);
+}
+
+//////////////////////////////Bodies////////////////////////////////////
+
+void Ciala(string &in asParent, string &in asChild, int alState)
+
+{
+	StartPlayerLookAt("ciala1", 2, 2, "");
+	StopMusic(6.0f, 3);
+	
+	AddTimer("scare", 0.5f, "TimerPlayerreact");
+	AddTimer("breath", 1.0f, "TimerPlayerreact");
+	AddTimer("breathl", 3.0f, "TimerPlayerreact");
+	
+}
+
+void TimerPlayerreact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+		StopPlayerLookAt();
+		
+}
+
+///////////////////////////////Cough////////////////////////////////////
+
+void TimerCough(string &in asTimer)
+{
+		if(asTimer == "PlayerCough") {
+	
+		SetLocalVarInt("RandomInt", RandInt(1,4));
+		
+		GetLocalVarInt("RandomInt");
+		
+		}
+		
+		
+		if(GetLocalVarInt("RandomInt") == 1) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 16, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 2) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 35, "TimerCough");
+		}
+		
+		
+		else if(GetLocalVarInt("RandomInt") == 3) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 23, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 4) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 25, "TimerCough");
+		}
+		
+
+		
+}
+
+///////////////////////////////////End23////////////////////////////////
+
+void End23(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	
+}

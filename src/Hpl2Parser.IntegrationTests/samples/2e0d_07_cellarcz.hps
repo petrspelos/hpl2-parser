@@ -1,0 +1,627 @@
+void OnStart()
+{
+  SetLocalVarInt("hrbitov_zamceny", 1);
+  SetLocalVarInt("tak_jak_to_mas_rad", 0);
+  SetEntityInteractionDisabled("dvere_hala", true);
+  SetLocalVarInt("no_ale_almu_tam_pustime_sefe_zejo", 0);
+  SetEntityInteractionDisabled("dvere_vezeni", true);
+  AddEntityCollideCallback("Player", "area_sochy_1", "blikajici_sochy_1", true, 1);
+  AddEntityCollideCallback("Player", "area_sochy_2", "blikajici_sochy_2", true, 1);
+  AddEntityCollideCallback("Player", "area_scare_1", "scare_1", true, 1);
+  AddEntityCollideCallback("Player", "area_scare_2", "scare_2", true, 1);
+  AddEntityCollideCallback("Player", "area_scare_3", "scare_30", true, 1);
+  AddEntityCollideCallback("Player", "area_andel", "scare_3", true, 1);
+  AddUseItemCallback("", "vrtacka_cela", "area_olej_1", "olej_1", false);
+  AddUseItemCallback("", "sklenenapicovina", "area_olej_3", "naplnit_picovinu", false);
+  AddEntityCollideCallback("Player", "area_ee", "velikonocni_vajicko", false, 1);
+  AddUseItemCallback("", "klichrbitov", "nahrbitov", "odemkni_hrbitov", true);
+  AddEntityCollideCallback("Player", "matonula", "zmenitpromennou", false, 1);
+  AddEntityCollideCallback("Player", "matojedna", "zmenitpromennou", false, 1);
+  AddUseItemCallback("", "kliczatop", "ScriptArea_4", "odemkni_zatop", true);
+  SetLocalVarInt("zatop_zamceny", 1);
+
+}
+
+void zmenitpromennou(string &in asParent, string &in asChild, int alState)
+{
+  if(asChild == "matonula")
+  {
+    SetLocalVarInt("tak_jak_to_mas_rad", 0);
+    AddDebugMessage("ma to" + GetLocalVarInt("tak_jak_to_mas_rad"), false);
+  }
+  else if(asChild == "matojedna")
+  {
+    SetLocalVarInt("tak_jak_to_mas_rad", 1);
+    AddDebugMessage("ma to" + GetLocalVarInt("tak_jak_to_mas_rad"), false);
+  }
+}
+
+void cp_cb(string &in asName, int alCount)
+{
+  SetEntityActive("alma", true);
+  for(int i=1;i<=131;i++){
+    AddEnemyPatrolNode("alma", "PathNodeArea_"+i, 0.001, "");
+  }
+  PlayMusic("penumbra_music_E1_D1.ogg", true, 0.7, 0.1, 10, false);
+  //PlayMusic("cellar.ogg", true, 0.7, 0.1, 10, false);
+}
+
+void OnEnter()
+{
+  AddTimer("", 5.0, "nahodny_scare_eventy");
+  if(GetGlobalVarInt("byl_ve_skladu") == 1)
+  {
+    SetMessage("TheVoice", "kapitola3cz", 5.0);
+    SetGlobalVarInt("byl_ve_skladu", 0);
+    SetLocalVarInt("no_ale_almu_tam_pustime_sefe_zejo", 1);
+  }
+  if(GetLocalVarInt("no_ale_almu_tam_pustime_sefe_zejo") == 1 && GetGlobalVarInt("ma_plnou_sklenenou_picovinu") == 1)
+  {
+    SetEntityActive("alma", true);
+    for(int i=1;i<=131;i++){
+      AddEnemyPatrolNode("alma", "PathNodeArea_"+i, 0.001, "");
+      PlayMusic("penumbra_music_E1_D1.ogg", true, 0.7, 0.1, 10, false);
+    }
+    CheckPoint ("cp1", "cp_pos", "cp_cb", "smrt", "opatrne");
+  }
+  else
+  {
+    PlayMusic("cellar.ogg", true, 0.7, 0.1, 10, false);
+  }
+
+  if(GetGlobalVarInt("potkal_helene") == 1)
+  {
+    DestroyParticleSystem("pspohelene");
+  }
+  else if(GetGlobalVarInt("potkal_helene") == 0)
+  {
+    PlaySoundAtEntity("magie", "27_energy_loop.snt", "doprdele", 0.5, false);
+  }
+  if(QuestIsAdded("q16") == true)
+  {
+    CompleteQuest("q16", "q16cz");
+  }
+
+  SetMapDisplayNameEntry("cellar");
+  AutoSave();
+}
+
+void area_hala(string &in asEntity)
+{
+  ChangeMap("04_entrance_hallcz.map", "playerstart_zesklepeni", "", "");
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+}
+
+void almacallback(string &in asEntity)
+{
+  SetEntityActive("almanaddopisem", true);
+  StartPlayerLookAt("almanaddopisem", 10.0, 10.5, "");
+  AddTimer("", 1.0, "almacallback_1");
+  AddTimer("", 0.5, "almacallback_2");
+  AddTimer("", 0.35, "almacallback_3");
+}
+
+void almacallback_1(string &in asTimer)
+{
+  SetPropStaticPhysics("almanaddopisem", false);
+  AddPropImpulse("almanaddopisem", 0.0, -1.0, 0.0, "world");
+}
+
+void almacallback_2(string &in asTimer)
+{
+  GiveSanityDamage(5.0, true);
+}
+
+void almacallback_3(string &in asTimer)
+{
+  PlayGuiSound("react_pant.snt", 1.0);
+  PlayGuiSound("music_spawn1.snt", 1.0);
+  AddTimer("", 0.0, "almacallback_4");
+}
+
+void almacallback_4(string &in asTimer)
+{
+  FadeOut(0);
+  AddTimer("", 0.1, "almacallback_5");
+}
+
+void almacallback_5(string &in asTimer)
+{
+  FadeIn(0);
+  AddTimer("", 0.1, "almacallback_6");
+}
+
+void almacallback_6(string &in asTimer)
+{
+  FadeOut(0);
+  SetEntityActive("almanaddopisem", false);
+  SetEntityActive("andel", true);
+  SetEntityActive("area_andel", true);
+  AddTimer("", 0.1, "almacallback_7");
+}
+
+void almacallback_7(string &in asTimer)
+{
+  FadeIn(0);
+  StopPlayerLookAt();
+}
+
+void dvereasylumcb(string &in asEntity)
+{
+  if(GetLocalVarInt("tak_jak_to_mas_rad") == 0)
+  {
+    SetEntityActive("asylumlady_1", true);
+    SetEntityActive("dvereasylum", false);
+    SetEntityActive("dvereasylum2", true);
+    PlayGuiSound("blesk.snt", 1.0);
+    PlayGuiSound("05_event_steps.ogg", 1.0);
+    GiveSanityDamage(25.0, true);
+    AddTimer("", 1.0, "asylumlady");
+    //AddPropImpulse("asylumlady_1", 0.0, 0.0, -100.0, "world");
+    AddPlayerBodyForce(0.0, 0.0, -50000.0, true);
+  }
+  else if(GetLocalVarInt("tak_jak_to_mas_rad") == 1)
+  {
+    SetEntityActive("asylumlady_2", true);
+    SetEntityActive("dvereasylum", false);
+    SetEntityActive("dvereasylum2", true);
+    PlayGuiSound("blesk.snt", 1.0);
+    PlayGuiSound("05_event_steps.ogg", 1.0);
+    GiveSanityDamage(25.0, true);
+    AddTimer("", 1.0, "asylumlady");
+    //AddPropImpulse("asylumlady_1", 0.0, 0.0, -100.0, "world");
+    AddPlayerBodyForce(0.0, 0.0, -50000.0, true);
+  }
+}
+
+void asylumlady(string &in asTimer)
+{
+  FadeOut(0);
+  SetEntityActive("asylumlady_1", false);
+  SetEntityActive("asylumlady_2", false);
+  FadeIn(1);
+}
+
+void nahodny_scare_eventy(string &in asTimer)
+{
+  SetLocalVarInt("tak_cim_te_vystrasime", RandInt(1,9));
+
+  if(GetLocalVarInt("tak_cim_te_vystrasime") == 1)
+  {
+    PlaySoundAtEntity("", "general_chain_rattle", "randomscare_"+RandInt(1,9), 0, false);
+  }
+  else if(GetLocalVarInt("tak_cim_te_vystrasime") == 2)
+  {
+    PlaySoundAtEntity("", "dychani1", "randomscare_"+RandInt(1,9), 0, false);
+  }
+  else if(GetLocalVarInt("tak_cim_te_vystrasime") == 3)
+  {
+    PlaySoundAtEntity("", "lastbreath", "randomscare_"+RandInt(1,9), 0, false);
+  }
+  else if(GetLocalVarInt("tak_cim_te_vystrasime") == 4)
+  {
+    PlaySoundAtEntity("", "sepot1", "randomscare_"+RandInt(1,9), 0, false);
+  }
+  else if(GetLocalVarInt("tak_cim_te_vystrasime") == 5)
+  {
+    PlaySoundAtEntity("", "scare_animal_squeal", "randomscare_"+RandInt(1,9), 0, false);
+  }
+  else if(GetLocalVarInt("tak_cim_te_vystrasime") == 6)
+  {
+    PlaySoundAtEntity("", "scare_baby_cry", "randomscare_"+RandInt(1,9), 0, false);
+  }
+  AddTimer("", 7.0, "nahodny_scare_eventy");
+}
+
+void tajnycallback(string &in asEntity)
+{
+  //GiveSanityBoostSmall();
+  SetGlobalVarInt("nalezenych_tajnych_poznamek", GetGlobalVarInt("nalezenych_tajnych_poznamek")+1);
+  SetMessage("TheVoice", "tajemstvinalezenocz", 3.0);
+  PlayGuiSound("puzzle.ogg", 1.0);
+}
+
+void blikajici_sochy_1(string &in asParent, string &in asChild, int alState)
+{
+
+}
+
+void scare_1(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("area_scare_2", true);
+  SetEntityActive("area_scare_3", true);
+}
+
+void scare_30(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("temnapani2", true);
+  AddEnemyPatrolNode("temnapani2", "n1", 0.0, "");
+  SetPlayerMoveSpeedMul(0.3);
+  SetPlayerRunSpeedMul(0.3);
+  PlayGuiSound("music_spawn2.snt", 1.0);
+  AddTimer("", 6.0, "scare_3_1");
+  SetEntityActive("area_scare_2", false);
+}
+
+void scare_3_1(string &in asTimer)
+{
+  SetEntityActive("temnapani2", false);
+  SetPlayerMoveSpeedMul(1.0);
+  SetPlayerRunSpeedMul(1.0);
+}
+
+void scare_2(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("temnapani", true);
+  AddEnemyPatrolNode("temnapani", "n1", 0.0, "");
+  SetPlayerMoveSpeedMul(0.3);
+  SetPlayerRunSpeedMul(0.3);
+  PlayGuiSound("music_spawn2.snt", 1.0);
+  AddTimer("", 6.0, "scare_2_1");
+  SetEntityActive("area_scare_3", false);
+}
+
+void scare_2_1(string &in asTimer)
+{
+  SetEntityActive("temnapani", false);
+  SetPlayerMoveSpeedMul(1.0);
+  SetPlayerRunSpeedMul(1.0);
+}
+
+void scare_3(string &in asParent, string &in asChild, int alState)
+{
+  RotatePropToSpeed("andel", 0.5, 1.0, 0.0, 25.0, 0.0, false, "");
+  AddTimer("", 4.5, "stop_andilku");
+  PlayGuiSound("andel.snt", 1.0);
+}
+
+void heleaktivujareu(string &in asStickyArea, string &in asBodyName)
+{
+  if(asStickyArea == "StickyArea_1")
+  {
+    SetEntityActive("zebrik1", true);
+  }
+  else if(asStickyArea == "StickyArea_2")
+  {
+    SetEntityActive("zebrik2", true);
+  }
+  else if(asStickyArea == "StickyArea_3")
+  {
+    SetEntityActive("zebrik3", true);
+  }
+  else if(asStickyArea == "StickyArea_4")
+  {
+    SetEntityActive("zebrik4", true);
+  }
+}
+
+void heledeaktivujareu(string &in asStickyArea, string &in asBodyName)
+{
+  if(asStickyArea == "StickyArea_1")
+  {
+    SetEntityActive("zebrik1", false);
+  }
+  else if(asStickyArea == "StickyArea_2")
+  {
+    SetEntityActive("zebrik2", false);
+  }
+  else if(asStickyArea == "StickyArea_3")
+  {
+    SetEntityActive("zebrik3", false);
+  }
+  else if(asStickyArea == "StickyArea_4")
+  {
+    SetEntityActive("zebrik4", false);
+  }
+}
+
+void stop_andilku(string &in asTimer)
+{
+  StopPropMovement("andel");
+}
+
+void kohoutolej(string &in asEntity)
+{
+  SetMessage("TheVoice", "jetozaseknutycz", 3.0);
+  PlayGuiSound("umyvadlo.snt", 1.0);
+}
+
+void vrtacka_sebrat(string &in asEntity)
+{
+  SetGlobalVarInt("casti_vrtacky", GetGlobalVarInt("casti_vrtacky")+1);
+}
+
+void olej_1(string &in asItem, string &in asEntity)
+{
+  SetPropActiveAndFade("vrtacka_staticka", true, 0.7);
+  AddTimer("", 1.0, "olej_2");
+}
+
+void olej_2(string &in asTimer)
+{
+  SetEntityActive("area_olej_1", false);
+  SetEntityActive("stred",true);
+  RotatePropToSpeed("vrtacka_staticka", 7.0, 7.0, 100.0, 0.0, 0.0, false, "stred");
+  AddTimer("", 2.0, "olej_3");
+  PlaySoundAtEntity("zvuk_vrtacky", "12_drill", "area_olej_1", 1, false);
+}
+
+void olej_3(string &in asTimer)
+{
+  StopPropMovement("vrtacka_staticka");
+  SetPropActiveAndFade("vrtacka_staticka", false, 1.0);
+  //CreateParticleSystemAtEntity("ps_olej", "ps_oil_grease.ps", "area_olej_2", false);
+  CreateParticleSystemAtEntity("ps_olej", "ps_oil_stream_from_pipe.ps", "area_olej_2", true);
+  AddTimer("", 1.0, "olej_4");
+  StopSound("zvuk_vrtacky", 0.43);
+  SetEntityActive("area_olej_3", true);
+}
+
+void olej_4(string &in asTimer)
+{
+  CreateParticleSystemAtEntity("ps_olej_zem", "ps_oil_splash.ps", "area_olej_3", true);
+  PlaySoundAtEntity("zvuk_sudu", "12_epoxy_drip", "area_olej_3", 1, true);
+}
+
+void naplnit_picovinu(string &in asItem, string &in asEntity)
+{
+  RemoveItem("sklenenapicovina");
+  SetPropActiveAndFade("picovina_1", true, 0.65);
+  StartPlayerLookAt("area_olej_4", 2.5, 5.0, "null");
+  SetPlayerActive(false);
+  StartInsanityEvent("wide_normalni");
+  PlayGuiSound("12_epoxy_fill.snt", 1.0);
+  AddTimer("", 2.5, "naplnit_picovinu_2");
+  AddTimer("", 4.0, "naplnit_picovinu_3");
+}
+
+void naplnit_picovinu_2(string &in asTimer)
+{
+  SetEntityActive("picovina_1", false);
+  SetEntityActive("sklenenapicovina", true);
+}
+
+void naplnit_picovinu_3(string &in asTimer)
+{
+  AddPlayerSanity(10);
+  StopCurrentInsanityEvent();
+  SetPlayerActive(true);
+  StopPlayerLookAt();
+  SetGlobalVarInt("ma_plnou_sklenenou_picovinu", 1);
+  RemoveItem("vrtacka_cela");
+}
+
+void dovezeni(string &in asEntity)
+{
+  ChangeMap("08_prisoncz.map", "playerstart_zesklepeni", "", "");
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+}
+
+void interactkeybedroom(string &in asEntity)
+{
+		AddEffectVoice("player2", "", "Voice", "player2", false, "Player", 10, 10);
+    SetMessage("TheVoice", "eastereggcz", 8.0);
+    SetGlobalVarInt("ee_nalezen", 1);
+}
+
+void velikonocni_vajicko(string &in asParent, string &in asChild, int alState)
+{
+  if(HasItem("key_ee") == true)
+  {
+    RemoveItem("key_ee");
+  }
+}
+
+void doskladu(string &in asEntity)
+{
+  if(GetGlobalVarInt("sliz_existuje") == 1)
+  {
+    PlayGuiSound("door_level_wood_locked.ogg", 1.0);
+    SetMessage("TheVoice", "doskladunenecz", 3.0);
+  }
+  else
+  {
+    PlayGuiSound("door_large_castle_open.snt", 1.0);
+    ChangeMap("12_skladcz.map", "playerstart_zesklepeni", "", "");
+  }
+}
+
+void doprdele(string &in asEntity)
+{
+  if(GetGlobalVarInt("potkal_helene") == 0)
+  {
+    PlayGuiSound("door_level_wood_locked.ogg", 1.0);
+    SetMessage("TheVoice", "zamcenocz", 3.0);
+    if(QuestIsAdded("q25") == false)
+    {
+      AddQuest("q25", "q25cz");
+    }
+  }
+  else if(GetGlobalVarInt("potkal_helene") == 1)
+  {
+    PlayGuiSound("door_large_castle_open.snt", 1.0);
+    ChangeMap("20_hrabetovske_zalezitosticz.map", "playerstart_0", "", "");
+  }
+}
+
+void nahrbitov(string &in asEntity)
+{
+  if(GetLocalVarInt("hrbitov_zamceny") == 1)
+  {
+    PlayGuiSound("door_level_wood_locked.ogg", 1.0);
+    SetMessage("TheVoice", "zamcenocz", 3.0);
+    if(QuestIsAdded("q13") == false)
+    {
+      AddQuest("q13", "q13cz");
+    }
+  }
+  else
+  {
+    PlayGuiSound("door_large_castle_open.snt", 1.0);
+    ChangeMap("13_hrbitovcz.map", "playerstart_0", "", "");
+  }
+}
+
+void zebrik_ee_cb(string &in asStickyArea, string &in asBodyName)
+{
+  SetEntityActive("zebrik_ee", true);
+}
+
+void zebrik_ee_cb_2(string &in asStickyArea, string &in asBodyName)
+{
+  SetEntityActive("zebrik_ee", false);
+}
+
+void odemkni_hrbitov(string &in asItem, string &in asEntity)
+{
+    SetPlayerActive(false);
+    StartInsanityEvent("wide_normalni");
+    SetEntityActive(asItem+"_1", true);
+    SetEntityInteractionDisabled(asItem+"_1", true);
+    StartPlayerLookAt(asItem, 2.5, 5.0, "null");
+    AddTimer(asItem, 0.5, asItem+"_odemkni_1");
+}
+
+void klichrbitov_odemkni_1(string &in asTimer)
+{
+  RotatePropToSpeed(asTimer+"_1", 7.0, 7.0, 0.0, 0.0, 100.0, false, "");
+  AddTimer(asTimer, 1.0, asTimer+"_odemkni_2");
+  AddDebugMessage("rotate spusteno", false);
+}
+
+void klichrbitov_odemkni_2(string &in asTimer)
+{
+  AddDebugMessage("druhy timer", false);
+  StopPropMovement(asTimer+"_1");
+  SetPropActiveAndFade(asTimer+"_1", false, 0.5);
+  PlayGuiSound("unlock_door.snt", 1.0);
+  SetLocalVarInt("hrbitov_zamceny", 0);
+  StopPlayerLookAt();
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+  RemoveItem(asTimer);
+  if(QuestIsAdded("q13") == true)
+  {
+    CompleteQuest("q13", "q13cz");
+    GiveSanityBoostSmall();
+  }
+}
+
+// ZASE DALSI POSRANE ODEMYKANI, KURVA DO HAJZLU
+// PÉRO MI SPLASKNE POKAŽDÝ, KDYŽ DÁVAM DO HRY DALŠÍ POSRANEJ Klíč
+// EFEKTIVNÍ ZASRANÁ DEREKCE Z POSRANÝCH POJEBANÝCH klíčů
+void odemkni_zatop(string &in asItem, string &in asEntity)
+{
+    SetPlayerActive(false);
+    StartInsanityEvent("wide_normalni");
+    SetEntityActive(asItem+"_1", true);
+    SetEntityInteractionDisabled(asItem+"_1", true);
+    StartPlayerLookAt(asItem, 2.5, 5.0, "null");
+    AddTimer(asItem, 0.5, asItem+"_odemkni_1");
+}
+
+void kliczatop_odemkni_1(string &in asTimer)
+{
+  RotatePropToSpeed(asTimer+"_1", 7.0, -7.0, 0.0, 0.0, 100.0, false, "");
+  AddTimer(asTimer, 1.0, asTimer+"_odemkni_2");
+  AddDebugMessage("rotate spusteno", false);
+}
+
+void kliczatop_odemkni_2(string &in asTimer)
+{
+  AddDebugMessage("druhy timer", false);
+  StopPropMovement(asTimer+"_1");
+  SetPropActiveAndFade(asTimer+"_1", false, 0.5);
+  PlayGuiSound("unlock_door.snt", 1.0);
+  SetLocalVarInt("zatop_zamceny", 0);
+  StopPlayerLookAt();
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+  RemoveItem(asTimer);
+  if(QuestIsAdded("q20") == true)
+  {
+    CompleteQuest("q20", "q20cz");
+    GiveSanityBoostSmall();
+  }
+}
+
+//---------------
+
+/*void area_zatop_debug(string &in asEntity)
+{
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+  ChangeMap("17_zatopene_sklepenicz.map", "playerstart_0", "", "");
+}*/
+
+void area_zatop(string &in asEntity)
+{
+  if(GetLocalVarInt("zatop_zamceny") == 0)
+  {
+    PlayGuiSound("door_large_castle_open.snt", 1.0);
+    ChangeMap("17_zatopene_sklepenicz.map", "playerstart_0", "", "");
+  }
+  else
+  {
+    PlayGuiSound("locked_door.snt", 1.0);
+    SetMessage("TheVoice", "zamcenocz", 3.0);
+    if(QuestIsAdded("q20") == false)
+    {
+      AddQuest("q20", "q20cz");
+    }
+  }
+}
+
+void OnLeave()
+{
+  StopMusic(1.0, 1000);
+// LOADING ////////////////////
+SetGlobalVarInt("dalsi_nacitaci_obrazovka", RandInt(1,5));
+if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 1)
+{
+  if(GetGlobalVarInt("potkal_helene") == 0)
+  {
+    if(GetPlayerSanity() < 100 && GetPlayerSanity() > 80)
+    {
+      SetupLoadScreen("loading", "helenecz", 0, "nacitani_helene.jpg");
+    }
+    else if(GetPlayerSanity() < 80 && GetPlayerSanity() > 60)
+    {
+      SetupLoadScreen("loading", "helene2cz", 0, "nacitani_helene_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 60 && GetPlayerSanity() > 40)
+    {
+      SetupLoadScreen("loading", "helene3cz", 0, "nacitani_helene_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 40 && GetPlayerSanity() > 20)
+    {
+      SetupLoadScreen("loading", "helene4cz", 0, "nacitani_helene_horsi_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 20)
+    {
+      SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+    }
+  }
+  else
+  {
+    SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+  }
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 2)
+  {
+    SetupLoadScreen("loading", "niklascz", 0, "nacitani_niklas.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 3)
+  {
+    SetupLoadScreen("loading", "adolfcz", 0, "nacitani_adolf.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 4)
+  {
+    SetupLoadScreen("loading", "gotfriedcz", 0, "nacitani_gotfried.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 5)
+  {
+    SetupLoadScreen("loading", "hedwigcz", 0, "nacitani_hedwig.jpg");
+  }
+  /////////////
+  AutoSave();
+}

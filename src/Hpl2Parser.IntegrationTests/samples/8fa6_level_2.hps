@@ -1,0 +1,323 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{		
+		StopMusic(0,1);
+        AddEntityCollideCallback("Player", "scare", "Jumpscare", true, 1);
+        AddEntityCollideCallback("Player", "AddCollideHeadless", "AddCollideFunction", true, 1);
+        AddEntityCollideCallback("Player", "EndMusic", "Transition", true, 1);
+        AddEntityCollideCallback("Player", "Scene_2", "Talk", true, 1);
+        AddEntityCollideCallback("Player", "BarrierMessage", "GetCrowbar", true, 1);
+        AddEntityCollideCallback("Player", "Memento_3", "Memento3", true, 1);
+		SetEntityPlayerInteractCallback("InsaneManNote","SetUpMemento", true);
+	    AddUseItemCallback("", "cellar_key", "cellar_door", "UseKeyOnDoor", true);
+		SetEntityPlayerInteractCallback("cellar_key","MonsterMontage", true);
+		SetEntityPlayerInteractCallback("Crowbar","DestroyBarrier", true);
+		TimerShakeLamp("");
+}
+
+void OnEnter()
+{
+	if(HasItem("water_key") == true)
+			{
+				AddPlayerSanity(20);
+				SetLevelDoorLocked("cellar_door", true);
+				SetLevelDoorLocked("Door", false);
+				PlayMusic("Track4.ogg", true, 2, 1, 1, true);
+			}
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Opening Lines
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Talk(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpForceMul(0);
+	AddEffectVoice("" ,"johnathan 1.ogg", "Dialogue", "John1", false, "", 0, 0);
+	AddEffectVoice("" ,"guide1.ogg", "Dialogue", "Guide1", false, "", 0, 0);
+	AddEffectVoice("" ,"johnathan 2.ogg", "Dialogue", "John2", false, "", 0, 0);
+	AddEffectVoice("" ,"guide2.ogg", "Dialogue", "Guide2", false, "", 0, 0);
+	AddEffectVoice("" ,"johnathan 3.ogg", "Dialogue", "John3", false, "", 0, 0);
+	AddEffectVoice("" ,"guide3.ogg", "Dialogue", "Guide3", false, "", 0, 0);
+	AddEffectVoice("" ,"johnathan 4.ogg", "Dialogue", "John4", false, "", 0, 0);
+	SetEffectVoiceOverCallback("Memento");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Music
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Transition(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(2,1);
+	SetEntityActive("real_grunt", false);
+	AddTimer("", 2, "ResumeTrack4");
+}
+
+void ResumeTrack4(string &in asTimer)
+{
+	PlayMusic("Track4.ogg", true, 2, 1, 1, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Door Messages
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Held(string &in asEntity)
+{
+	if(GetSwingDoorLocked("before_monster") == true)
+	{
+		SetMessage("Messages", "Held", 3);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Key
+//////////////////////////////////////////////////////////////////////////////////////
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+    SetLevelDoorLocked(asEntity, false);
+	SetLevelDoorLocked("Door", false);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);	
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Scare
+//////////////////////////////////////////////////////////////////////////////////////	
+	
+void Jumpscare(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Messages", "Fool", 5);
+SetSwingDoorClosed("before_monster", true, true);
+SetSwingDoorLocked("before_monster", true, true);
+SetEntityActive("scary_entity", true);
+SetEntityActive("BarrierMessage", true);
+SetEntityActive("CrowbarBarrier", true);
+SetEntityActive("Memento_2", true);
+AddTimer("", 1, "Move");
+SetPlayerActive(false);
+AddPropForce("FO_1", 0, 0, -1500, "world");
+AddPropForce("FO_2", 0, 0, -1500, "world");
+AddPropForce("FO_3", 0, 0, -1500, "world");
+AddPropForce("FO_4", 0, 0, -1500, "world");
+AddPropForce("FO_5", 0, 0, -1500, "world");
+AddPropForce("FO_6", 0, 0, -1500, "world");
+AddPropForce("FO_7", 0, 0, 1500, "world");
+AddPropForce("FO_8", 0, 0, 1500, "world");
+AddPropForce("FO_9", 0, 0, 1500, "world");
+AddPropForce("FO_10", 0, 0, 1500, "world");
+AddPropForce("FO_11", 0, 0, 1500, "world");
+AddPropForce("FO_12", 0, 0, 1500, "world");
+}
+
+void DestroyBarrier(string &in item)
+{
+	SetEntityActive("BarrierMessage", false);
+	SetEntityActive("CrowbarBarrier", false);
+}
+
+void GetCrowbar(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Messages", "Crowbar", 3);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Chase
+//////////////////////////////////////////////////////////////////////////////////////
+
+void MonsterMontage(string &in item)
+{
+	CheckPoint ("", "Checkpoint", "Reset", "DeathHint", "Run");
+	SetEntityActive("EndMusic", true);
+	SetLightVisible("KeyLight", false);
+	PlayMusic("Track_Chase.ogg", true, 2, 1, 1, false);
+	SetSwingDoorLocked("before_monster", false, true);
+	AddTimer("", 1, "MonsterOne");
+	AddTimer("", 5, "RealMonster");
+	GiveHint ("MonsterSpawn", "Hints", "Monsters", 10);
+	AddEntityCollideCallback("Player", "Memento_2", "Memento2", true, 1);
+}
+
+void MonsterOne(string &in asTimer)
+{
+	SetEntityActive("servant_grunt_1", true);
+	AddEnemyPatrolNode("servant_grunt_1", "Servant1Node_1", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_1", "Servant1Node_2", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_1", "Servant1Node_3", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_1", "Servant1Node_4", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_1", "Servant1Node_5", 0.001f, "");
+	AddTimer("", 2, "MonsterTwo");
+}
+
+void MonsterTwo(string &in asTimer)
+{
+	SetEntityActive("servant_grunt_2", true);
+	AddEnemyPatrolNode("servant_grunt_2", "Servant2Node_1", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_2", "Servant2Node_2", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_2", "Servant2Node_3", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_2", "Servant2Node_4", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_2", "Servant2Node_5", 0.001f, "");
+	AddTimer("", 2, "MonsterThree");
+}
+
+void MonsterThree(string &in asTimer)
+{
+	SetEntityActive("servant_grunt_3", true);
+	AddEnemyPatrolNode("servant_grunt_3", "Servant3Node_1", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_3", "Servant3Node_2", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_3", "Servant3Node_3", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_3", "Servant3Node_4", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_3", "Servant3Node_5", 0.001f, "");
+	AddTimer("", 2, "MonsterFour");
+}
+
+void MonsterFour(string &in asTimer)
+{
+	SetEntityActive("servant_grunt_4", true);
+	AddEnemyPatrolNode("servant_grunt_4", "Servant4Node_1", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_4", "Servant4Node_2", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_4", "Servant4Node_3", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_4", "Servant4Node_4", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_4", "Servant4Node_5", 0.001f, "");
+	AddTimer("", 2, "MonsterFive");
+}
+
+void MonsterFive(string &in asTimer)
+{
+	SetEntityActive("servant_grunt_5", true);
+	AddEnemyPatrolNode("servant_grunt_5", "Servant5Node_1", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_5", "Servant5Node_2", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_5", "Servant5Node_3", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_5", "Servant5Node_4", 0.001f, "");
+	AddEnemyPatrolNode("servant_grunt_5", "Servant5Node_5", 0.001f, "");
+}
+
+void RealMonster(string &in asTimer)
+{
+	SetEntityActive("real_grunt", true);
+	SetPropHealth("before_monster", -200);
+	AddEnemyPatrolNode("real_grunt", "PathNodeArea_1", 0.001f, "");
+	AddEnemyPatrolNode("real_grunt", "PathNodeArea_2", 0.001f, "");
+	AddEnemyPatrolNode("real_grunt", "PathNodeArea_3", 0.001f, "");
+	AddEnemyPatrolNode("real_grunt", "PathNodeArea_4", 0.001f, "");
+	AddEnemyPatrolNode("real_grunt", "PathNodeArea_5", 0.001f, "");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Death
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Reset(string &in asName, int alCount)
+	{
+		 SetEnemyDisabled("servant_grunt_1", false);
+		 SetEnemyDisabled("servant_grunt_2", false);
+		 SetEnemyDisabled("servant_grunt_3", false);
+		 SetEnemyDisabled("servant_grunt_4", false);
+		 SetEnemyDisabled("servant_grunt_5", false);
+		 SetEnemyDisabled("real_grunt", false);
+		 AddTimer("", 2, "Restart");
+	}
+
+void Restart(string &in asTimer)
+{
+	SetEntityActive("EndMusic", true);
+	PlayMusic("Track_Chase.ogg", true, 2, 1, 1, false);
+	SetSwingDoorLocked("before_monster", false, true);
+	AddTimer("", 1, "MonsterOne");
+	AddTimer("", 5, "RealMonster");
+	GiveHint ("MonsterSpawn", "Hints", "Monsters", 10);
+}	
+	
+void Move(string &in asTimer)
+{
+	SetPlayerActive(true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Change Statue
+//////////////////////////////////////////////////////////////////////////////////////
+
+void TimerShakeLamp(string &in asTimer)
+{
+		AddPropImpulse("SwingLamp", RandFloat(0.7, 1.3), 0, 0, "world");
+		AddTimer("shakelamp", RandFloat(1, 3), "TimerShakeLamp");
+}
+
+void AddCollideFunction(string &in asParent, string &in asChild, int alState)
+{
+	 AddEntityCollideCallback("Player", "TakeHeadOff", "OffWithHead", true, 1);
+}
+
+void OffWithHead(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("StatueBefore", false);
+	SetEntityActive("StatueAfter", true);
+	PlaySoundAtEntity("move", "statue_move.snt", "SoundEffectRemoveHead", 2, true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Mementos
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Memento()
+{
+	AddQuest("Guide_Hint", "Familiar");
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerJumpForceMul(1);
+	PlayMusic("Track4.ogg", true, 2, 1, 1, true);
+}
+
+void SetUpMemento(string &in asItem)
+{
+	SetEntityActive("Memento_2", true);
+}
+
+void Memento2(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Brady", "Bunch");
+}
+
+void Memento3(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("Dead", "InsaneMan");
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("Guide_Hint", "Familiar");
+CompleteQuest("Brady", "Bunch");
+CompleteQuest("Dead", "InsaneMan");
+}

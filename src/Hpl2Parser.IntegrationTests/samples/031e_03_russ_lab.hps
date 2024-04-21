@@ -1,0 +1,135 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("3");
+	FadeRadialBlurTo(0.01, 2.0);
+	FadeSepiaColorTo(0.35, 2.0);
+	SetPlayerMoveSpeedMul(1.0);
+	SetEntityInteractionDisabled("glass_container_1", true);
+	AddQuest("FindChems", "findchemicals");
+	SetEntityCallbackFunc("CH-9", "CH9Added");
+	SetEntityCallbackFunc("CH-X9", "CHX9Added");
+	SetEntityCallbackFunc("CH-B", "CHBAdded");
+	SetEntityCallbackFunc("CH-4D", "CH4DAdded");
+	SetEntityCallbackFunc("CH-5", "CH5Added");
+	AddEntityCollideCallback("Player", "activatedoor", "ActivateDoor", false, 1);
+	AddTimer("Talk1", 2.0, "RussWont");
+}
+
+void OnLeave()
+{
+}
+
+void RussWont(string &in asTimer)
+{
+	PlaySoundAtEntity("04_russel.ogg", "04_russel.snt", "Player", 0.0f, false);
+}
+/*
+void CH9Added(string &in asEntity, string &in type)
+{
+
+	AddGlobalVarInt("CH-9", 1);
+
+}
+
+void CH5Added(string &in asEntity, string &in type)
+{
+
+	AddGlobalVarInt("CH-5", 1);
+
+}
+
+void CHX9Added(string &in asEntity, string &in type)
+{
+	AddGlobalVarInt("CH-X9", 1);
+}
+
+void CHBAdded(string &in asEntity, string &in type)
+{
+	AddGlobalVarInt("CH-B", 1);
+}
+
+void CH4DAdded(string &in asEntity, string &in type)
+{
+	AddGlobalVarInt("CH-4D", 1);
+}*/
+
+void AddSulphuric(string &in asItem, string &in asEntity)
+{
+	if(GetGlobalVarInt("NitricAdded") == 1 && GetGlobalVarInt("TolueneAdded") == 1)
+	{
+		SetEntityActive("glass_container_1", false);
+		SetEntityActive("glass_container_2", true);
+		AddUseItemCallback("", "glass_container_2", "castle_arched01_2", "Explosion", true);
+	}
+	PlaySoundAtEntity("", "puzzle_add_chemical.snt", "glass_container_1", 0.0, false);
+	AddGlobalVarInt("SulphuricAdded", 1);
+	RemoveItem("sulphuric_acid");
+}
+
+void AddToluene(string &in asItem, string &in asEntity)
+{
+	if(GetGlobalVarInt("SulphuricAdded") == 1 && GetGlobalVarInt("NitricAdded") == 1)
+	{
+		SetEntityActive("glass_container_1", false);
+		SetEntityActive("glass_container_2", true);
+		AddUseItemCallback("", "glass_container_2", "castle_arched01_2", "Explosion", true);
+	}
+	PlaySoundAtEntity("", "puzzle_add_chemical.snt", "glass_container_1", 0.0, false);
+	AddGlobalVarInt("TolueneAdded", 1);
+	RemoveItem("toluene");
+}
+
+void AddNitric(string &in asItem, string &in asEntity)
+{
+	if(GetGlobalVarInt("TolueneAdded") == 1 && GetGlobalVarInt("SulphuricAdded") == 1)
+	{
+		SetEntityActive("glass_container_1", false);
+		SetEntityActive("glass_container_2", true);
+		AddUseItemCallback("", "glass_container_2", "castle_arched01_2", "Explosion", true);
+	}
+	PlaySoundAtEntity("", "puzzle_add_chemical.snt", "glass_container_1", 0.0, false);
+	AddGlobalVarInt("NitricAdded", 1);
+	RemoveItem("nitric_acid");
+}
+
+void Explosion(string &in asItem, string &in asEntity)
+{
+	RemoveItem("glass_container_2");
+	SetEntityActive("glass_container_3", true);
+	SetEntityInteractionDisabled("glass_container_3", true); 
+	PlaySoundAtEntity("", "explosion.snt", "glass_container_3", 0.0, false);
+	FadeOut(2.0);
+	AddTimer("ExplodeTimer", 2.8, "Explode");
+}
+
+
+
+void ActivateDoor(string &in asParent, string &in asChild, int alState)
+{
+		AddEntityCollideCallback("Player", "doorclose", "CloseDoor", true, 1);
+		AddUseItemCallback("", "toluene", "glass_container_1", "AddToluene", true);
+		AddUseItemCallback("", "nitric_acid", "glass_container_1", "AddNitric", true);
+		AddUseItemCallback("", "sulphuric_acid", "glass_container_1", "AddSulphuric", true);
+		RemoveEntityCollideCallback("Player", "activatedoor");
+}
+
+void CloseDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("castle_arched01_2", true, true);
+	SetEntityPlayerInteractCallback("castle_arched01_2", "LockedMsg", true);
+	PlaySoundAtEntity("close_door.ogg", "close_door.snt", "castle_arched01_2", 0.0, false);
+}
+
+void LockedMsg(string &in asEntity)
+{
+	SetMessage("Messages", "Locked", 4.0);
+}
+
+void Explode(string &in asTimer)
+{
+	SetGlobalVarInt("russlab", 2);
+	SetGlobalVarInt("SwitchBack", 2);
+	ChangeMap("01_main.map", "Wake", "", "");
+	CompleteQuest("FindChems", "findchemicals");
+}
+		

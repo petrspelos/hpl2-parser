@@ -1,0 +1,108 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("Altstadt Village");
+	AddUseItemCallback("", "KeyBarn", "BarnLevelDoor", "UnlockBarnDoor", true);
+	SetPlayerActive(false);
+	FadeOut(0);
+	AddTimer("", 1, "Intro2");
+	CompleteQuest("Memento2", "M2");
+	AddUseItemCallback("", "KeyStudy", "ForestDoor", "KeyUse", true);
+	AddEntityCollideCallback("Player", "Exit", "ExitArea", true, 1);
+	AddEntityCollideCallback("Player", "SlimeAppear", "SlimeSpawn", true, 1);
+}
+
+void CantClimb(string &in asEntity)
+{
+	SetMessage("ScreenText", "cantclimbup", 4);
+	PlaySoundAtEntity("", "player_jump.snt", "AreaClimb", 0, false);
+}
+
+void UnlockBarnDoor(string &in asItem, string &in asEntity)
+{
+	CompleteQuest("Memento31", "M31");
+	GiveSanityBoostSmall();
+	SetLevelDoorLocked("BarnLevelDoor", false);
+	PlaySoundAtEntity("", "unlock_door.snt", "BarnLevelDoor", 0, false);
+	RemoveItem("KeyBarn");
+}
+
+void BarnDoorInteract(string &in asEntity)
+{
+	AddQuest("Memento31", "M31");
+}
+
+void SlimeSpawn(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("slimeeffect1", "ps_guardian_appear_explosion.ps", "S1", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "S4", false);
+	CreateParticleSystemAtEntity("", "ps_slime_fog.ps", "S6", false);
+	CreateParticleSystemAtEntity("", "ps_slime_fog.ps", "S5", false);
+	SetEntityActive("ClimbArea", false);
+	SetEntityActive("S6", true);
+	SetEntityActive("BlockDoor2", true);
+	SetEntityActive("S5", true);
+	SetEntityActive("BlockDoor1", true);
+	AddTimer("", 3, "SlimeLook");	
+	StartPlayerLookAt("S3", 1, 1, "");
+	PlaySoundAtEntity("", "guardian_ontop.snt", "Player", 0, false);
+	PlaySoundAtEntity("", "slime_create.snt", "BarnDoor", 0, false);
+	StartScreenShake(1, 2, 1, 4);
+	GiveSanityDamage(5, true);
+	SetEntityActive("S1", true);
+	SetEntityActive("BlockBarnBox", true);
+	SetEntityActive("S2", true);
+	SetEntityActive("S4", true);
+	SetEntityActive("S3", true);
+}
+
+void SlimeLook(string &in asTimer)
+{
+	DestroyParticleSystem("slimeeffect1");
+	StopPlayerLookAt();
+}
+
+void Intro2(string &in asTimer)
+{
+	FadeIn(3);
+	SetPlayerActive(true);
+}
+
+void OnEnter()
+{
+	SetEntityActive("S6", false);
+	SetEntityActive("BlockDoor2", false);
+	SetEntityActive("BlockDoor1", false);
+	SetEntityActive("BlockBarnBox", false);
+	SetEntityActive("S1", false);
+	SetEntityActive("S2", false);
+	SetEntityActive("S4", false);
+	SetEntityActive("S5", false);
+	SetEntityActive("S3", false);
+	PlayMusic("02_amb_safe.ogg", true, 0.4, 5, 10, true);
+}
+
+void OnLeave()
+{
+	StopMusic(3, 10);
+	SetupLoadScreen("LoadingScreen", "Load2", 0,"");
+}
+
+void KeyUse(string &in asItem, string &in asEntity)
+{
+	CompleteQuest("Memento3", "M3");
+	SetEntityActive("BlockBox", false);
+	SetSwingDoorLocked("ForestDoor", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", "ForestDoor", 0, false);
+	RemoveItem("KeyStudy");
+}
+
+void QuestDoor(string &in asEntity)
+{
+	AddQuest("Memento3", "M3");
+}
+
+void ExitArea(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(2);
+	ChangeMap("Forest.map", "PlayerStartArea_1", "", "");
+}

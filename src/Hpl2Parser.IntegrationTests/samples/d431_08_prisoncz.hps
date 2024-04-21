@@ -1,0 +1,460 @@
+void OnStart()
+{
+  SetEntityInteractionDisabled("dveresklepeni", true);
+  AddEntityCollideCallback("Entity_ElevatorLever_01", "Area_ElevatorLever_01", "Script_ElevatorLever_01",  false, 1);
+  AddEntityCollideCallback("Entity_ElevatorLever_02", "Area_ElevatorLever_02", "Script_ElevatorLever_02",  false, 1);
+  AddEntityCollideCallback("Entity_Elevator", "Area_ElevatorStop", "Script_ElevatorStop", false,  1);
+  AddEntityCollideCallback("Entity_Elevator", "Area_ElevatorStop2", "Script_ElevatorStop2", false,  1);
+  SetEntityInteractionDisabled("Entity_Elevator", true);
+  SetEntityInteractionDisabled("Entity_ElevatorLever_02", true);
+  SetPropStaticPhysics("Entity_Elevator",   true);
+  SetGlobalVarInt("vytah_vezeni_dole", 1);
+  SetGlobalVarInt("vytah_vezeni_opraven", 0);
+  SetEnemySanityDecreaseActive("monstrum", false);
+  SetEnemySanityDecreaseActive("monstrum2", false);
+
+  // this was fun... until it became frustrating
+  AddEntityCollideCallback("Player", "alert1_1", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_2", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_3", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_4", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_5", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_6", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_7", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_8", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_9", "me_neuteces1", false,  1);
+  AddEntityCollideCallback("Player", "alert1_10", "me_neuteces1", false,  1);
+  AddUseItemCallback("", "klicvezeni_1", "area_klice", "vlozit_klice", false);
+  AddUseItemCallback("", "klicvezeni_2", "area_klice", "vlozit_klice", false);
+  AddUseItemCallback("", "klicvezeni_3", "area_klice", "vlozit_klice", false);
+  AddUseItemCallback("", "pacidlo", "area_pacidlo", "pacpacpac", false);
+  AddEntityCollideCallback("pacidlo_static", "area_pacidlo_kontakt", "pacpacpac2", false,  1);
+  AddEntityCollideCallback("paka", "area_paka_kontakt", "paka_kontakt", false, 1);
+
+
+  //AddEntityCollideCallback("monstrum", "ns_1", "nodeswitch_1", false,  1);
+  //AddEntityCollideCallback("monstrum", "ns_2", "nodeswitch_1", false,  1);
+
+  SetLocalVarInt("hodminci1", 0);
+  SetLocalVarInt("vlozenych_klicu", 0);
+
+  //DEBUG
+  //SetEnemySanityDecreaseActive("monstrum", false);
+  //SetEnemySanityDecreaseActive("monstrum2", false);
+}
+
+// sice to funguje pěkně, ale ti neschopní čuráci pak nedokáží najít cestu zpět
+// jejich inteligence je mizerná a v případě řešení problému neustále opakují stejné debilní kroky dokola
+// z pozorování mohu říci, že jejich inteligence až příliš nápadně připomíná české politiky a vládu České Republiky
+// z výše uvedeného, já, headlesscyborg, ve znamení špatně oholeného péra, při šestém pivu, pořizuji tento záznam:
+// Babiš je ve skutečnosti monstrum z Amnesie
+
+void paka_kontakt(string &in asParent, string &in asChild, int alState)
+{
+  if(GetLocalVarInt("vlozenych_klicu") == 3)
+  {
+    SetLeverStuckState("paka", -1, true);
+    GiveSanityBoostSmall();
+    PlayGuiSound("17_start_machine.snt", 1.0f);
+    SetGlobalVarInt("vytah_vezeni_opraven", 1);
+  }
+  else
+  {
+    PlayGuiSound("13_machine_fail.snt", 1.0f);
+  }
+}
+
+/*void nodeswitch_1(string &in asParent, string &in asChild, int alState)
+{
+  if(asChild == "ns_1")
+  {
+    AddEnemyPatrolNode("monstrum", "PathNodeArea_60", 0.0, "");
+  }
+  else if(asChild == "ns_2")
+  {
+    AddEnemyPatrolNode("monstrum", "PathNodeArea_118", 0.0, "");
+  }
+  else if(asChild == "ns_3")
+  {
+    AddEnemyPatrolNode("monstrum", "PathNodeArea_155", 0.0, "");
+  }
+  else if(asChild == "ns_4")
+  {
+    AddEnemyPatrolNode("monstrum", "PathNodeArea_25", 0.0, "");
+  }
+}*/
+
+void me_neuteces1(string &in asParent, string &in asChild, int alState)
+{
+  SetLocalVarInt("hodminci1", RandInt(1,2));
+  if(GetLocalVarInt("hodminci1") == 1)
+  {
+    AddDebugMessage("mas_z_prdele_kliku", true);
+  }
+  else if(GetLocalVarInt("hodminci1") == 2)
+  {
+    AlertEnemyOfPlayerPresence("monstrum");
+    AddDebugMessage("tak to si hezky vyzeres, kamarade", true);
+  }
+  SetEntityActive(asChild, false);
+  AddTimer("", 10, "alert1_reaktivace");
+}
+
+void vytah_upozorni_nepritele()
+{
+  AlertEnemyOfPlayerPresence("monstrum2");
+}
+
+void alert1_reaktivace(string &in asTimer)
+{
+  SetEntityActive("alert1_*", true);
+}
+
+void o_pathnodech_a_monstrech()
+{
+  SetEntityActive("monstrum", true);
+  SetEntityActive("monstrum2", true);
+  AddDebugMessage("bylo_nebylo", false);
+  //AddEnemyPatrolNode("monstrum", "PathNodeArea_25", 0.0, "");
+  //AddEnemyPatrolNode("monstrum", "PathNodeArea_60", 0.0, "");
+  //AddEnemyPatrolNode("monstrum", "PathNodeArea_118", 0.0, "");
+  //AddEnemyPatrolNode("monstrum", "PathNodeArea_155", 0.0, "");
+  for(int i=1;i<=1984;i++){
+    AddEnemyPatrolNode("monstrum", "PathNodeArea_"+i, 0.001, "");
+  }
+
+  AddEnemyPatrolNode("monstrum2", "PathNodeArea_698", 0.0, "");
+  AddEnemyPatrolNode("monstrum2", "PathNodeArea_775", 0.0, "");
+  AddEnemyPatrolNode("monstrum2", "PathNodeArea_818", 0.0, "");
+  AddEnemyPatrolNode("monstrum2", "PathNodeArea_844", 0.0, "");
+}
+
+
+void jakobynic()
+{
+  StopMusic(1.0, 1000);
+  PlayMusic("prison.ogg", true, 0.7, 0.1, 1000, false);
+  SetEntityActive("monstrum", true);
+  SetEntityActive("monstrum2", true);
+  o_pathnodech_a_monstrech();
+}
+
+void tlacitko_dole_mack(string &in asEntity)
+{
+  if(GetGlobalVarInt("vytah_vezeni_opraven") == 1)
+  {
+    if(GetGlobalVarInt("vytah_vezeni_dole") == 0)
+    {
+        SetEntityActive("Area_TopElevator_PlayerStart", true);
+        SetEntityActive("Area_ElevatorStop2",           true);
+        SetEntityInteractionDisabled("Entity_ElevatorLever_02", true);
+        AddDebugMessage("Entity_ElevatorLever_02 has been pulled.", false);
+        SetEntityActive("block", true);
+        SetEntityActive("block1", true);
+        SetEntityActive("Area_TopElevator_PlayerStart", false);
+        SetPropStaticPhysics("Entity_Elevator", false);
+        SetMoveObjectState("piston_1", 0.0);
+        SetMoveObjectState("piston_2", 0.0);
+        SetMoveObjectState("Entity_Elevator", 0.0);
+        AddDebugMessage("Elevator is about to start downwards!", false);
+        PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk", 1, false);
+        PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk", 1, false);
+        PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk_1", 1, false);
+        PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk_1", 1, false);
+        SetEntityActive("tlacitko_dole", false);
+        SetEntityActive("tlacitko_nahore", false);
+        SetGlobalVarInt("vytah_vezeni_dole", 1);
+        vytah_upozorni_nepritele();
+      }
+      else
+      {
+        SetMessage("TheVoice", "vytahmessage1cz", 3.0);
+      }
+    }
+    else
+    {
+      PlayGuiSound("13_machine_fail.snt", 1.0f);
+    }
+}
+
+void tlacitko_nahore_mack(string &in asEntity)
+{
+  if(GetGlobalVarInt("vytah_vezeni_opraven") == 1)
+  {
+    if(GetGlobalVarInt("vytah_vezeni_dole") == 1)
+    {
+      SetEntityActive("block", true);
+      SetEntityActive("block3", true);
+      SetEntityActive("Area_BottomElevator_PlayerStart", true);
+      SetEntityActive("Area_ElevatorStop",               true);
+      SetEntityInteractionDisabled("Entity_ElevatorLever_01", true);
+      AddDebugMessage("Entity_ElevatorLever_01 has been pulled.", false);
+      SetEntityActive("Area_BottomElevator_PlayerStart", false);
+      SetPropStaticPhysics("Entity_Elevator", false);
+      //SetMoveObjectStateExt("Entity_Piston", 0.4, 0.2, 1.0, 1.0, false);
+      SetMoveObjectState("Entity_Elevator", 18.5);
+      SetMoveObjectState("piston_1", 18.5);
+      SetMoveObjectState("piston_2", 18.5);
+      AddDebugMessage("Elevator is about to start upwards!", false);
+      PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk", 1, false);
+      PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk", 1, false);
+      PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk_1", 1, false);
+      PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk_1", 1, false);
+      SetGlobalVarInt("vytah_vezeni_dole", 0);
+      vytah_upozorni_nepritele();
+    }
+    else
+    {
+      SetMessage("TheVoice", "vytahmessage2cz", 3.0);
+    }
+  }
+}
+
+void Script_ElevatorLever_01(string &in asParent, string &in asChild, int alState)
+{
+  if(GetGlobalVarInt("vytah_vezeni_opraven") == 1)
+  {
+    //SetLeverStuckState("Entity_ElevatorLever_01", -1, true);
+    SetEntityActive("block", true);
+    SetEntityActive("block1", true);
+    SetEntityActive("Area_BottomElevator_PlayerStart", true);
+    SetEntityActive("Area_ElevatorStop",               true);
+    SetEntityInteractionDisabled("Entity_ElevatorLever_01", true);
+    AddDebugMessage("Entity_ElevatorLever_01 has been pulled.", false);
+    SetMoveObjectState("Entity_Elevator", 18.5);
+    SetMoveObjectState("piston_1", 18.5);
+    SetMoveObjectState("piston_2", 18.5);
+    SetEntityActive("Area_BottomElevator_PlayerStart", false);
+    SetPropStaticPhysics("Entity_Elevator", false);
+    //SetMoveObjectStateExt("Entity_Piston", 0.4, 0.2, 1.0, 1.0, false);
+    AddDebugMessage("Elevator is about to start upwards!", false);
+    PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk", 1, false);
+    PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk", 1, false);
+    PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk_1", 1, false);
+    PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk_1", 1, false);
+    StartScreenShake(0.02, 18.4, 1.0, 5.0);
+    vytah_upozorni_nepritele();
+    }
+    else
+    {
+      PlayGuiSound("13_machine_fail.snt", 1.0f);
+    }
+}
+
+void Script_ElevatorStop(string &in asParent, string &in asChild, int alState)
+{
+  SetGlobalVarInt("vytah_vezeni_dole", 0);
+  SetPropStaticPhysics("Entity_Elevator", true);
+  SetEntityActive("Area_ElevatorStop", false);
+  SetEntityInteractionDisabled("Entity_ElevatorLever_02", false);
+  AddDebugMessage("Elevator has stopped.", false);
+  StopSound("vytah", 1);
+  StopSound("vytah1", 1);
+  //SetEntityActive("block", false);
+  SetEntityActive("block1", false);
+  SetEntityActive("tlacitko_dole", true);
+  SetEntityActive("tlacitko_nahore", true);
+  SetEntityActive("block3", false);
+}
+
+void Script_ElevatorLever_02(string &in asParent, string &in asChild, int alState)
+{
+  if(GetGlobalVarInt("vytah_vezeni_opraven") == 1)
+    {
+      SetEntityActive("Area_TopElevator_PlayerStart", true);
+      SetEntityActive("Area_ElevatorStop2",           true);
+      SetEntityInteractionDisabled("Entity_ElevatorLever_02", true);
+      AddDebugMessage("Entity_ElevatorLever_02 has been pulled.", false);
+      SetEntityActive("block", true);
+      SetEntityActive("block1", true);
+      SetEntityActive("Area_TopElevator_PlayerStart", false);
+      SetPropStaticPhysics("Entity_Elevator", false);
+      SetEntityVisible("piston_1", false);
+      SetMoveObjectState("piston_1", 0.0);
+      SetMoveObjectState("piston_2", 0.0);
+      SetMoveObjectState("Entity_Elevator", 0.0);
+      AddDebugMessage("Elevator is about to start downwards!", false);
+      PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk", 1, false);
+      PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk", 1, false);
+      PlaySoundAtEntity("vytah", "elevator_darkcastle", "area_zvuk_1", 1, false);
+      PlaySoundAtEntity("vytah1", "vytah_darkcastle", "area_zvuk_1", 1, false);
+      StartScreenShake(0.02, 18.4, 1.0, 5.0);
+      vytah_upozorni_nepritele();
+    }
+    else
+    {
+      PlayGuiSound("13_machine_fail.snt", 1.0f);
+    }
+}
+
+void Script_ElevatorStop2(string &in asParent, string &in asChild, int alState)
+{
+  SetEntityActive("tlacitko_dole", true);
+  SetEntityActive("tlacitko_nahore", true);
+  SetGlobalVarInt("vytah_vezeni_dole", 1);
+  SetPropStaticPhysics("Entity_Elevator", true);
+  //SetPropStaticPhysics("podlaha",   true);
+  SetEntityActive("Area_ElevatorStop2", false);
+  SetEntityInteractionDisabled("Entity_ElevatorLever_01", false);
+  AddDebugMessage("Elevator has stopped.", false);
+  SetEntityVisible("piston_1", true);
+  StopSound("vytah", 1);
+  StopSound("vytah1", 1);
+  SetEntityActive("block", false);
+  SetEntityActive("block1", false);
+  SetEntityActive("block3", false);
+}
+
+void bubak(string &in asEntity)
+{
+  SetEntityActive("dvere1", false);
+  SetEntityActive("dvere2", true);
+  AddTimer("", 1.0, "asylumlady");
+  GiveSanityDamage(10.0, true);
+  PlayGuiSound("music_effect_chock3.ogg", 1.0);
+}
+
+void asylumlady(string &in asTimer)
+{
+  FadeOut(0);
+  SetEntityActive("asylumlady_1", false);
+  FadeIn(1);
+}
+
+void cp1(string &in asName, int alCount)
+{
+jakobynic();
+o_pathnodech_a_monstrech();
+}
+
+void dosklepeni(string &in asEntity)
+{
+  ChangeMap("07_cellarcz.map", "playerstart_zvezeni", "", "");
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+}
+
+void vlozit_klice(string &in asItem, string &in asEntity)
+{
+  RemoveItem(asItem);
+  SetEntityActive(asItem+"_static", true);
+  SetEntityInteractionDisabled(asItem+"_static", true);
+  PlayGuiSound("pick_key.snt", 1.0);
+  SetPlayerActive(false);
+  StartInsanityEvent("wide_normalni");
+  AddTimer(asItem+"_static", 1.0, "vlozit_klice_timer");
+}
+
+void vlozit_klice_timer(string &in asTimer)
+{
+  RotatePropToSpeed(asTimer, 7.0, 7.0, 0.0, 0.0, -100.0, false, "");
+  AddTimer(asTimer, 0.5, "vlozit_klice_timer_2");
+  PlayGuiSound("lock_door.snt", 1.0);
+  SetLocalVarInt("vlozenych_klicu", GetLocalVarInt("vlozenych_klicu")+1);
+}
+
+void vlozit_klice_timer_2(string &in asTimer)
+{
+  StopPropMovement(asTimer);
+  SetPlayerActive(true);
+  StopCurrentInsanityEvent();
+}
+
+void pacpacpac(string &in asItem, string &in asEntity)
+{
+  RemoveItem("pacidlo");
+  SetEntityActive(asItem+"_static", true);
+  PlayGuiSound("puzzle_place_jar.snt", 1.0);
+}
+
+void pacpacpac2(string &in asParent, string &in asChild, int alState)
+{
+  AddPlayerSanity(25);
+  PlayGuiSound("break_wood_metal.snt", 1.0);
+  CreateParticleSystemAtEntity("", "ps_hit_wood", asChild, false);
+  SetEntityActive(asParent, false);
+  //GiveItem("pacidlo", "item", "crowbar1", "crowbar.tga", 1);
+  SetPropActiveAndFade("picovinka_prekazeci", false, 0.43);
+  SetPropActiveAndFade(asParent, false, 0.20);
+  SetLeverStuckState("paka", 0, true);
+  vytah_upozorni_nepritele();
+  SetEntityActive("picovina_rozbita", true);
+}
+
+void domarniceajestedal(string &in asEntity)
+{
+  ChangeMap("09_marnicecz.map", "playerstart_zvezeni", "", "");
+  PlayGuiSound("door_large_castle_open.snt", 1.0);
+}
+
+void OnEnter()
+{
+  CheckPoint("cp1", "cp1", "cp1", "smrt", "avoid");
+  PlayMusic("prison.ogg", true, 0.7, 0.1, 1000, false);
+  SetMapDisplayNameEntry("prison");
+
+  o_pathnodech_a_monstrech();
+  AutoSave();
+}
+
+void tajnycallback(string &in asEntity)
+{
+  //GiveSanityBoostSmall();
+  SetGlobalVarInt("nalezenych_tajnych_poznamek", GetGlobalVarInt("nalezenych_tajnych_poznamek")+1);
+  SetMessage("TheVoice", "tajemstvinalezenocz", 3.0);
+  PlayGuiSound("puzzle.ogg", 1.0);
+}
+
+void OnLeave()
+{
+  StopMusic(1.0, 1000);
+// LOADING ////////////////////
+SetGlobalVarInt("dalsi_nacitaci_obrazovka", RandInt(1,5));
+if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 1)
+{
+  if(GetGlobalVarInt("potkal_helene") == 0)
+  {
+    if(GetPlayerSanity() < 100 && GetPlayerSanity() > 80)
+    {
+      SetupLoadScreen("loading", "helenecz", 0, "nacitani_helene.jpg");
+    }
+    else if(GetPlayerSanity() < 80 && GetPlayerSanity() > 60)
+    {
+      SetupLoadScreen("loading", "helene2cz", 0, "nacitani_helene_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 60 && GetPlayerSanity() > 40)
+    {
+      SetupLoadScreen("loading", "helene3cz", 0, "nacitani_helene_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 40 && GetPlayerSanity() > 20)
+    {
+      SetupLoadScreen("loading", "helene4cz", 0, "nacitani_helene_horsi_horsi_horsi.jpg");
+    }
+    else if(GetPlayerSanity() < 20)
+    {
+      SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+    }
+  }
+  else
+  {
+    SetupLoadScreen("loading", "helene5cz", 0, "nacitani_helene_horsi_horsi_horsi_horsi.jpg");
+  }
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 2)
+  {
+    SetupLoadScreen("loading", "niklascz", 0, "nacitani_niklas.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 3)
+  {
+    SetupLoadScreen("loading", "adolfcz", 0, "nacitani_adolf.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 4)
+  {
+    SetupLoadScreen("loading", "gotfriedcz", 0, "nacitani_gotfried.jpg");
+  }
+  else if(GetGlobalVarInt("dalsi_nacitaci_obrazovka") == 5)
+  {
+    SetupLoadScreen("loading", "hedwigcz", 0, "nacitani_hedwig.jpg");
+  }
+  /////////////
+  AutoSave();
+}

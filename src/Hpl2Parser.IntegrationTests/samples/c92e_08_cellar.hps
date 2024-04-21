@@ -1,0 +1,62 @@
+void OnStart(){
+	AddEntityCollideCallback("topgun", "servant_brute_1", "HitBrute", false, 1);
+	SetEntityConnectionStateChangeCallback("secret", "useSecret");
+	SetEntityPlayerInteractCallback("s_guest_rooms_key", "spawnDude", true);
+	AddEntityCollideCallback("servant_brute_1", "ScriptArea_1", "tearDoor", true, 1);
+	SetEntityPlayerInteractCallback("lockedDoor", "setMessage", false);
+	SetDeathHint("Messages", "fightback");
+	SetLocalVarInt("pulledsecret", 0);
+	SetLocalVarInt("BruteHealth", 1);
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.25f, 0, 0, true);
+}
+
+void OnLeave(){
+
+}
+
+void setMessage(string &in entity){
+	if (GetLocalVarInt("pulledsecret") == 0){
+		SetMessage("Messages", "doorlocked3", 0);
+	}
+}
+
+void useSecret(string &in asEntity, int alState){
+	if (GetLocalVarInt("pulledsecret") == 0){
+		PlayGuiSound("move_gate.snt", 100);
+		AddTimer("T1", 2.5f, "unlockDoor");
+		SetLocalVarInt("pulledsecret", 1);
+	}
+}
+
+void unlockDoor(string &in asTimer){
+	PlayGuiSound("unlock_door.snt", 100);
+	SetSwingDoorLocked("lockedDoor", false, true);
+	AddPlayerSanity(25);
+}
+
+void spawnDude(string &in entity){
+	SetEntityActive("servant_brute_1", true);
+	GiveSanityDamage(25, true);
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+	SetMessage("Messages", "defense_repeated", 0);
+}
+
+void HitBrute(string &in asParent, string &in asChild, int alState){
+	if (GetLocalVarInt("BruteHealth") == 1){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetLocalVarInt("BruteHealth", 0);
+	}else if (GetLocalVarInt("BruteHealth") == 0){
+		PlayGuiSound("brute_attack.snt", 100);
+		SetEnemyIsHallucination("servant_brute_1", true);
+	}
+}
+
+void tearDoor(string &in asParent, string &in asChild, int alState){
+	PlayGuiSound("break_wood.snt", 1000000);
+	SetEntityActive("lockedDoor", false);
+	SetEntityActive("brokenDoor", true);
+}

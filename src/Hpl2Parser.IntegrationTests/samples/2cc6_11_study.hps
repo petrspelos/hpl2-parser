@@ -1,0 +1,444 @@
+//////////////////////
+//BEGIN BREAK WINDOW//
+void BreakWindow(string &in asEntity, string &in asType)
+{	
+	PlayMusic("10_puzzle02.ogg", false, 0.3, 0.1, 10, false);
+	
+	FadeLightTo("SpotLight_8", 0, 0, 0, 0, -1, 0.5f);
+	FadeLightTo("SpotLight_4", 0.4f, 0.5f, 0.9f, -1, -1, 0.5f);
+	
+	PlaySoundAtEntity("birdsfly", "general_birds_flee", "AreaBirds", 0, false);
+	
+	CompleteQuest("11Path", "11Path");
+	
+	AddTimer("save", 1, "TimerBreakWindow");
+}
+void TimerBreakWindow(string &in asTimer)
+{
+	GiveSanityBoostSmall();
+}
+
+void InteractWindow(string &in asEntity)
+{
+	PlayGuiSound("impact_glass_low.snt", 0.7f);
+
+	if(GetTimerTimeLeft("WindowMessagePaused")==0)
+	{
+		SetMessage("Ch01Level11", "WornWindow", 0);
+		PlayGuiSound("11_glass_crack.snt", 0.3f);
+		
+		AddTimer("WindowMessagePaused", 1, "");
+	}
+	
+	AddLocalVarInt("WindowHitCount", 1);
+	AddTimer("WindowHitCount", 0.5f, "TimerDecreaseVar");
+	
+	if(GetLocalVarInt("WindowHitCount")==3)
+	{
+		SetPropHealth("mansionbase_large_window_breakable_1", 0);
+	}
+	
+	//AddTimer("glass", 0.1f, "TimerWindow");
+	//AddTimer("backon", 1.0f, "TimerWindow");
+}
+void TimerDecreaseVar(string &in asTimer)
+{
+	AddLocalVarInt(asTimer, -1);
+}
+//void TimerWindow(string &in asTimer)
+//{
+//	SetEntityPlayerInteractCallback("mansionbase_large_window_breakable_1", "InteractWindow", true);
+	
+//	if(asTimer == "glass") 
+//}
+//END BREAK WINDOW//
+////////////////////
+
+
+///////////////////////
+//BEGIN FALL TO DEATH//
+void CollideFallDeath(string &in asParent, string &in asChild, int alState)
+{	
+	PlaySoundAtEntity("fallaaaaaah", "11_fall", "Player", 0, false);
+	PlaySoundAtEntity("fallaaaaaah2", "scare_male_terrified5", "Player", 0, false);
+	
+	FadeOut(1);
+	
+	AddTimer("death1", 0.5f, "TimerFallDeath");	
+	AddTimer("death2", 1, "TimerFallDeath");	
+}
+void TimerFallDeath(string &in asTimer)
+{	
+	if(asTimer == "death1"){
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+	
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+}	
+//END FALL TO DEATH//
+/////////////////////
+
+
+
+///////////////////////
+//BEGIN BONES IN DESK//
+void CollideAreaDesk(string &in asParent, string &in asChild, int alState)
+{	
+	float fMin = -300.0f;
+	float fMax = -500.0f;
+	
+	GiveSanityDamage(15, true);
+	
+	for(int i=1;i<7;i++)
+		AddPropForce("skull_"+i, RandFloat(fMin, fMax), 0, RandFloat(0, -fMax), "World");
+	
+	AddPropForce("bone_1", RandFloat(fMin, fMax), 0, RandFloat(0, -fMax), "World");
+	AddPropForce("bone_2", RandFloat(fMin, fMax), 0, RandFloat(0, -fMax), "World");
+	
+	PlayMusic("011_event_skull", false, 1, 0.25f, 0, false);
+	
+	AddTimer("react", 0.5f, "TimerPlayerReact");	
+}
+void TimerPlayerReact(string &in asTimer)
+{
+	PlaySoundAtEntity("react", "react_breath", "Player", 0.1f, false);
+}
+//END BONES IN DESK//
+/////////////////////
+
+
+//////////////////////
+//BEGIN FOREST THING//
+void CollideForestThings(string &in asParent, string &in asChild, int alState)
+{	
+	
+	if(GetLocalVarInt("ForestThing") == 0){
+		PlaySoundAtEntity("uhoh1", "11_forest_minor.snt", "AreaFallDeath", 0, false);
+		StartScreenShake(0.01, 1.5f, 2,3);
+		
+		AddPropForce("falling_tree_1", 0, 0, 1000, "world");
+		
+		AddTimer("freeze", 3.0f, "TimerFreezeTree");
+		AddTimer("sanity1", 2, "TimerPlayerSanity");
+		AddTimer("scare", 2, "TimerPlayerReact02");
+		
+		AddLocalVarInt("ForestThing", 1);
+		
+		AddTimer("breath", 3.5f, "TimerPlayerReact02");
+		AddTimer("breath", 5.5f, "TimerPlayerReact02");
+	}
+	else if(GetLocalVarInt("ForestThing") == 1 && GetLocalVarInt("HasManual") == 1){
+		PlaySoundAtEntity("uhoh2", "11_forest_major.snt", "AreaFallDeath", 0, false);
+		
+		StartScreenShake(0.03, 2, 2,3);
+		
+		SetPropStaticPhysics("falling_tree_1", false);
+		AddPropForce("falling_tree_1", 0, 0, 1000, "world");
+		
+		AddTimer("removet", 10.0f, "TimerFreezeTree");
+		AddTimer("sanity2", 1.5f, "TimerPlayerSanity");
+		AddTimer("scare", 1.5f, "TimerPlayerReact02");
+		
+		AddLocalVarInt("ForestThing", 1);
+		
+		AddTimer("breath", 3.5f, "TimerPlayerReact02");
+		AddTimer("breath", 5.5f, "TimerPlayerReact02");
+	}
+}
+void TimerPlayerSanity(string &in asTimer)
+{
+	if(asTimer == "sanity1") GiveSanityDamage(5, true);
+	else GiveSanityDamage(15, true);
+}
+void TimerPlayerReact02(string &in asTimer)
+{
+	if(asTimer == "scare"){	
+		PlayGuiSound("react_scare", 0.7f);
+		
+		if(GetLocalVarInt("ForestThing") == 1 && GetLocalVarInt("HasManual") == 1)
+		 	PlayMusic("11_event_tree.ogg", false, 1.0f, 0.0f, 10, true);
+	}
+	else if(asTimer == "breath") 
+		PlayGuiSound("react_breath", 0.7f);
+}
+void TimerFreezeTree(string &in asTimer)
+{
+	SetPropStaticPhysics("falling_tree_1", true);
+	
+	if(asTimer == "removet")
+		SetEntityActive("falling_tree_1", false);
+}
+
+void CheckHaveAllItems()
+{
+	AddLocalVarInt("ItemCount", 1);
+	if(GetLocalVarInt("ItemCount")==2)
+	{
+		PlayMusic("10_puzzle01.ogg", false, 0.3, 0.1, 10, false);
+		GiveSanityBoostSmall();
+		
+		AddDebugMessage("Setting level completion", false);
+		AddDebugMessage("CompletedLevel_12: " + GetGlobalVarInt("CompletedLevel_12"), false);
+		AddDebugMessage("(Before) CompletedLevel_10_11: " + GetGlobalVarInt("CompletedLevel_10_11"), false);
+		
+		if(GetGlobalVarInt("CompletedLevel_10_11")==0)
+			SetGlobalVarInt("CompletedLevel_10_11", GetGlobalVarInt("CompletedLevel_12")+1);
+		
+		AddDebugMessage("(After) CompletedLevel_10_11: " + GetGlobalVarInt("CompletedLevel_10_11"), false);
+	}	
+}
+
+void GotManual(string &in asEntity, string &in asType)
+{	
+	SetGlobalVarInt("PickedMachineInstructions", 1);
+	AddLocalVarInt("HasManual", 1);
+	CheckHaveAllItems();
+}
+
+void GotRod(string &in asEntity, string &in asType)
+{	
+	AddGlobalVarInt("GuidingRod", 1);
+	CheckHaveAllItems();
+}
+
+//END FOREST THING//
+////////////////////
+
+//////////////////////
+//BEGIN AGRIPPA NOTE//
+
+void PickAgrippaNote(string &in asEntityName, string &in asType)
+{
+	PlayMusic("11_paper_howl.ogg", false, 1.0f, 0, 10, false);
+}
+
+//END AGRIPPA NOTE//
+//////////////////////
+
+
+//////////////////////
+//BEGIN CHECKPOINTS//
+
+void CollideCheckSouth(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("check01","PlayerStartCheckSouth", "CheckPointSouth","Hints", "DeathFall");
+}
+
+void CollideCheckNorth(string &in asParent, string &in asChild, int alState)
+{
+	CheckPoint("check02","PlayerStartCheckNorth", "CheckPointNorth","Hints", "DeathFall");
+}
+
+//Southern part
+void CheckPointSouth(string &in asName, int alCount)
+{
+	FadeIn(0.2);
+	if(alCount >=2)
+	{
+		TeleportPlayer("PlayerStartCheckSouthEasy");	
+	}
+}
+
+//North
+void CheckPointNorth(string &in asName, int alCount)
+{
+	FadeIn(0.2);
+	if(alCount >=2)
+	{
+		TeleportPlayer("PlayerStartCheckNorthEasy");	
+	}
+}
+
+
+//END CHECKPOINTS//
+//////////////////////
+
+
+//BEGIN BREAK WINDOW
+void TimerBreakWindowWithNoFullSearch(string &in asTimer)
+{	
+	AddDebugMessage("Timer did it!", false);
+	
+	SetLocalVarInt("SeenAllRooms", 3);
+	CheckIfAllRoomSearched();
+	
+	SetEntityActive("AreaBreakWindowOnClose", false);
+}
+
+void CollideAreaBreakWindow(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("brum", "11_forest_minor.snt", "AreaGlassEffects", 0.0f, false);
+	PlaySoundAtEntity("guard", "04_warn.snt", "AreaGlassEffects", 0.0f, false);
+	
+	CreateParticleSystemAtEntity("puff", "ps_cave_monster_warn.ps", "AreaGlassEffects_3", false);
+	
+	StartPlayerLookAt("AreaGlassEffects", 4.0f, 4.0f, "");
+	
+	AddTimer("glass1", 1.5f, "TimerGlassEffects");
+	AddTimer("glass2", 0.5f, "TimerGlassEffects");
+	AddTimer("glass3", 1.2f, "TimerGlassEffects");
+	AddTimer("glass4", 1.5f, "TimerGlassEffects");
+	
+	AddTimer("scare", 1.75f, "TimerPlayerReact02");
+	AddTimer("breath", 3.5f, "TimerPlayerReact02");
+	AddTimer("breath", 5.5f, "TimerPlayerReact02");
+
+	SetEntityActive("AreaBreakWindow_1", false);
+	SetEntityActive("AreaBreakWindow", false);
+}
+void TimerGlassEffects(string &in asTimer)
+{
+	if(asTimer == "glass1"){
+		SetEntityActive("windowb_1", false);
+		SetEntityActive("windowb_2", true);
+		SetEntityActive("mansionbase_large_window_breakable_1", true);
+		
+		PlaySoundAtEntity("bglass", "11_glass_crack", "AreaGlassEffects", 0.0f, false);
+		
+		CreateParticleSystemAtEntity("bglassp", "ps_hit_glass.ps", "AreaGlassEffects", false);
+	} 
+	else if(asTimer == "glass3"){
+		PlaySoundAtEntity("bglass2", "11_glass_crack", "AreaGlassEffects_1", 0.0f, false);
+		CreateParticleSystemAtEntity("bglassp2", "ps_hit_glass.ps", "AreaGlassEffects_1", false);
+		StopPlayerLookAt();
+	} 
+	else if(asTimer == "glass4"){
+		PlaySoundAtEntity("bglass3", "11_glass_crack", "AreaGlassEffects_2", 0.0f, false);
+		CreateParticleSystemAtEntity("bglassp3", "ps_hit_glass.ps", "AreaGlassEffects_2", false);
+	} 
+	else{
+		StartScreenShake(0.02f, 0.25f, 1.0f, 1.75f);
+		StopSound("brum", 4.0f);
+		StopSound("guard", 5.0f);
+	}
+}
+//END BREAK WINDOW
+
+
+void CollideFlashBack(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("startmusic", 2.0f, "TimerStartMusicDog");
+}
+void TimerStartMusicDog(string &in asTimer)
+{
+	PlayMusic("11_event_dog.ogg", false, 0.7f, 0, 10, false);
+	
+	AddTimer("stopmusic", 12.0f, "TimerStopMusicDog");
+}
+void TimerStopMusicDog(string &in asTimer)
+{
+	StopMusic(6.0f, 10);
+}
+
+void CollideAreaCorridorQuest(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("11Path", "11Path");
+	
+	CheckIfAllRoomSearched();
+}
+
+
+void CollideAreaFadeOut(string &in asParent, string &in asChild, int alState)
+{
+	FadeLightTo("PointLight_34", 0, 0, 0, 0, 0, 2);
+}
+
+
+//Collide count room visits
+void CollideAreaRoom(string &in asParent, string &in asChild, int alState)
+{
+	CheckIfAllRoomSearched();
+}
+
+void CheckIfAllRoomSearched()
+{
+	AddLocalVarInt("SeenAllRooms", 1);
+	
+	if(GetLocalVarInt("SeenAllRooms") == 4){
+		SetEntityActive("AreaBreakWindow", true);
+		SetEntityActive("AreaBreakWindow_1", true);
+		RemoveTimer("BreakWindowNoFS");
+		SetEntityActive("AreaBreakWindowOnClose", false);
+	}
+}
+
+//Collide window directly when close
+void CollideAreaBreakWindowOnClose(string &in asParent, string &in asChild, int alState)
+{
+	CollideAreaBreakWindow("", "", 1);	//Break window
+	
+	//Remove areas that count for break window
+	SetEntityActive("AreaRoom1", false);
+	SetEntityActive("AreaRoom2", false);
+	SetEntityActive("AreaRoom3", false);
+	SetEntityActive("AreaCorridorQuest", false);
+	
+	RemoveTimer("BreakWindowNoFS");	//Remove the timer that breaks window
+}
+
+////////////////////////////
+// Run first time starting map
+void OnStart()
+{
+	SetMapDisplayNameEntry("Study");
+	
+	//---- COLLIDE INIT ----//
+	AddEntityCollideCallback("Player", "AreaFallDeath", "CollideFallDeath", false, 1);	//Kill player instantly if he falls down when outside
+	AddEntityCollideCallback("work_desk_door_1", "AreaDesk", "CollideAreaDesk", true, 1);	
+	AddEntityCollideCallback("Player", "AreaForestThings", "CollideForestThings", false, 1);	//Kill player instantly if he falls down when outside
+	
+	AddEntityCollideCallback("Player", "AreaCheckSouth", "CollideCheckSouth", false, 1);
+	AddEntityCollideCallback("Player", "AreaCheckNorth", "CollideCheckNorth", false, 1);
+	
+	AddEntityCollideCallback("Player", "FlashbackArea_1", "CollideFlashBack", false, 1);
+	
+	AddEntityCollideCallback("Player", "AreaCorridorQuest", "CollideAreaCorridorQuest", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaFadeOut", "CollideAreaFadeOut", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaBreakWindow", "CollideAreaBreakWindow", true, 1);
+	AddEntityCollideCallback("Player", "AreaBreakWindow_1", "CollideAreaBreakWindow", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaRoom1", "CollideAreaRoom", true, 1);
+	AddEntityCollideCallback("Player", "AreaRoom2", "CollideAreaRoom", true, 1);
+	AddEntityCollideCallback("Player", "AreaRoom3", "CollideAreaRoom", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaBreakWindowOnClose", "CollideAreaBreakWindowOnClose", true, 1);
+	
+	AddTimer("BreakWindowNoFS", 300, "TimerBreakWindowWithNoFullSearch");	//Break window if player been in level long but not visited all rooms.
+	
+	//---- DEBUG ----//
+	if(ScriptDebugOn())
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+	}
+}
+
+     
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+	PlayMusic("amb_extra04", true, 0.7, 5, 0, true);
+	   
+	//---- PRELOAD SOUNDS ----//
+	PreloadSound("11_fall"); PreloadSound("scare_male_terrified5"); PreloadSound("player_bodyfall");
+	PreloadSound("player_falldamage_max"); PreloadSound("react_breath"); PreloadSound("general_birds_flee");
+	PreloadSound("11_forest_minor"); PreloadSound("11_forest_major"); PreloadSound("04_warn"); PreloadSound("11_glass_crack");
+	PreloadSound("impact_glass_low");  PreloadSound("react_scare");  PreloadSound("11_event_tree");
+
+	AutoSave();
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+
+}

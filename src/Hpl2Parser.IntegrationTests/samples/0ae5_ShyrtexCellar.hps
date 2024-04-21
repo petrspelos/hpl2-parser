@@ -1,0 +1,104 @@
+void OnStart()
+{
+SetEntityInteractionDisabled("StuckKey", true);
+AddUseItemCallback("", "Chipper", "Crack", "ActivateKey", true);
+SetEntityPlayerInteractCallback("Crack", "CrackMessage", true);
+PlayMusic("amb_extra02.ogg", true, 1, 5, 1, false);
+AddUseItemCallback("", "CellarKey", "CellarDoorLocked", "UnlockCellarDoor", true);  
+AddEntityCollideCallback("Player", "ScriptArea2", "SpawnBrute1", true, 1);  
+SetEntityPlayerInteractCallback("Lantern", "RemovalLight", true); 
+SetPlayerLampOil(10.0f);
+SetLocalVarInt("Var1", 0);
+SetEntityPlayerInteractCallback("oil", "AddVar", true);
+SetEntityPlayerInteractCallback("oil2", "AddVar2", true);
+}
+
+
+
+void ActivateKey(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","joint_break_metal","Crack", 0,false);
+SetEntityActive("StuckKey", false);
+SetEntityActive("CellarKey", true);
+CompleteQuest("KeyOffCrack", "KeyOffCrack");
+GiveSanityBoostSmall();
+SetLightVisible("KeyLight", false);
+}
+
+void CrackMessage(string &in entity)
+{
+SetMessage("Messages", "crackmessage", 0);
+AddQuest("KeyOffCrack", "KeyOffCrack");
+}
+
+void UnlockCellarDoor(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("CellarDoorLocked",false, true);
+PlaySoundAtEntity("","unlock_door","CellarDoorLocked", 0,false);
+RemoveItem("CellarKey");
+CompleteQuest("CellarKeyQuest", "CellarKeyQuest");
+}
+
+void DoorMessage1(string &in entity)
+{
+if(GetSwingDoorLocked("CellarDoorLocked")==true)
+        SetMessage("Messages", "DoorMessage", 6); 
+		AddQuest("CellarKeyQuest", "CellarKeyQuest");
+    }
+	
+void SpawnBrute1(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Brute1", true);
+AddEnemyPatrolNode("Brute1", "Node1", 0.001f, "");
+AddEnemyPatrolNode("Brute1", "Node2", 0.001f, "");
+AddEnemyPatrolNode("Brute1", "Node3", 0.001f, "");
+AddEnemyPatrolNode("Brute1", "Node4", 0.001f, "");
+AddEnemyPatrolNode("Brute1", "Node5", 0.001f, "");
+AddEnemyPatrolNode("Brute1", "Node6", 0.001f, "");
+AddEnemyPatrolNode("Brute1", "Node7", 0.001f, "");
+GiveSanityDamage(25, true);
+}
+
+
+
+void RemovalLight(string &asItem)
+{
+SetLightVisible("LanternTip", false);
+SetMessage("Messages", "LanternMessage", 6);
+AddQuest("MoreOil", "MoreOil");
+}
+
+void AddVar(string &in asEntity)
+{
+AddLocalVarInt("Var1", 1);
+SanityBoost();
+}
+
+void AddVar2(string &in asEntity)
+{
+AddLocalVarInt("Var1", 1);
+SanityBoost();
+}
+
+void SanityBoost()
+
+{
+if(GetLocalVarInt("Var1") == 2)
+    {
+	  GiveSanityBoostSmall();
+	  CompleteQuest("MoreOil", "MoreOil");
+	}
+	
+}
+
+
+
+
+
+void OnEnter()
+{
+}
+
+void OnLeave()
+{
+}

@@ -1,0 +1,711 @@
+void OnStart()
+{
+FadeLightTo("RedLight", 0, 0, 0, 0, -1, 3);
+SetMapDisplayNameEntry("LVL3Name");
+StopSound("Elev7Noise", 0);
+SetLocalVarInt("LightsRemaining", 15);
+SetLocalVarInt("ShockCount", 30);
+SetLocalVarInt("RepairStatus", 0);
+SetLocalVarInt("FakeRoomCount", 0);
+AddTimer("", 17.0f, "UndergroundRumbAmb");
+AddTimer("", 7.0f, "UGAmbStart");
+AddEntityCollideCallback("Player", "ReactFlesh", "ReactedToFlesh", true, 1);
+AddEntityCollideCallback("Player", "ElectroShockArea", "ElectroShocked", true, 1);
+AddEntityCollideCallback("Player", "MindAttention", "PayMindAttention", false, 1);
+AddEntityCollideCallback("Player", "MindAttention2", "PayMindAttentionNoMore", false, -1);
+AddEntityCollideCallback("Player", "CloseSpookyDoor_1", "SpookyDoorClose1", true, 1);
+AddEntityCollideCallback("Player", "CloseSpookyDoor_2", "SpookyDoorClose2", true, 1);
+AddEntityCollideCallback("Player", "SpookyDogTP_1", "AssistAISpooky_1", true, 1);
+AddEntityCollideCallback("Player", "SpookyDogTP_2", "AssistAISpooky_2", true, 1);
+AddUseItemCallback("LockPick_1", "Lockpick", "TindChest", "TindChestUnlock", false);
+AddUseItemCallback("MPP_1", "MindPiece_1", "MindPieceArea", "MindPiecePosition", false);
+AddUseItemCallback("MPP_2", "MindPiece_2", "MindPieceArea", "MindPiecePosition", false);
+AddUseItemCallback("MPP_3", "MindPiece_3", "MindPieceArea", "MindPiecePosition", false);
+AddUseItemCallback("", "SquareRodItem", "RodMach", "InsertSquareRod", true);
+AddUseItemCallback("", "FlowRodItem", "RodMach", "InsertFlowRod", true);
+AddUseItemCallback("", "TrinityRodItem", "RodMach", "InsertTrinityRod", true);
+SetEntityInteractionDisabled("torch_static_green_6", true);
+SetEntityInteractionDisabled("FlowRodPlaced", true);
+SetEntityInteractionDisabled("SquareRodPlaced", true);
+SetEntityInteractionDisabled("TrinityRodPlaced", true);
+SetEntityInteractionDisabled("ElevButton", true);
+AddTimer("", 0.0f, "DebugTimersss");
+AddTimer("", 1.75f, "Elev7MoveDown");
+StopSound("Sound_2_1", 0);
+StopSound("Creaking", 0);
+StopSound("MindRepairedNoise_1", 0);
+StopSound("MindRepairedNoise_2", 0);
+CompleteQuest("Chapter1BOnly1", "CHP1B_1");
+}
+
+void OnEnter()
+{
+StopSound("Elev7Noise", 0);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+SetInDarknessEffectsActive(false);
+SetSanityDrainDisabled(true);
+SetPlayerFallDamageDisabled(true);
+StopMusic(1.0f, 1);
+PreloadSound("DPChord.snt");
+PreloadSound("PitchNoise.snt");
+PreloadSound("guardian_distant2.snt");
+PreloadSound("guardian_activated.snt");
+PreloadSound("guardian_ontop.snt");
+PreloadSound("guardian_idle_rand.snt");
+PreloadSound("13_rod_in.snt");
+PreloadSound("22_orb_forge.snt");
+PreloadSound("DeadEnter.snt");
+}
+
+void OnLeave()
+{
+StopMusic(1.0f, 1);
+}
+
+void DebugTimer(string &in asTimer)
+{
+for(int i = 0;i < 25;i++)
+{
+	GiveItemFromFile("", "tinderbox.ent");
+}
+GiveItemFromFile("MindPiece_1", "orbpiece_obsidian.ent");
+GiveItemFromFile("MindPiece_2", "orbpiece_emerald.ent");
+GiveItemFromFile("MindPiece_3", "orbpiece_crimson.ent");
+GiveItemFromFile("Lockpick", "hollow_needle.ent");
+GiveItemFromFile("SquareRodItem", "guiding_rod03.ent");
+FadeLightTo("RedLight", 0.2f, 0, 0, 0, -1, 3);
+PlayMusic("TD_Lair.ogg", true, 1.0f, 3.0f, 1, false);
+SetLocalVarInt("RepairStatus", 0);
+SetLocalVarInt("LightsRemaining", 15);
+}
+
+void Elev7MoveDown(string &in asTimer)
+{
+SetMoveObjectStateExt("Elev7", 900.0, 1.5, 2.5, 0, false);
+AddEntityCollideCallback("Player", "RedLightTriggerBox", "FadeInRedLight", true, 1);
+AddEntityCollideCallback("Elev7", "Elev7StopBottom", "Elev7StopDown", false, 1);
+FadeInSound("Elev7Noise", 0.5f, false);
+PlayGuiSound("14_elevator_clank.snt", 1);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+}
+
+void Elev7StopDown(string &in asParent, string &in asChild, int alState)
+{
+StopPropMovement("Elev7");
+StopSound("Elev7Noise", 0);
+PlayGuiSound("14_elevator_activate.snt", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+SetGlobalVarInt("BeenThereBefore", 1);
+PlayMusic("TD_Lair.ogg", true, 1.0f, 3.0f, 1, false);
+SetEntityInteractionDisabled("ElevButton", false);
+if(QuestIsAdded("Chapter1BOnly") == true)
+{
+CompleteQuest("Chapter1BOnly", "CHP1B");
+AddQuest("Chapter2Only", "CHP2");
+}
+}
+
+void UndergroundRumbAmb(string &in asTimer)
+{
+if(GetLocalVarInt("RepairStatus") < 4)
+{
+PlayGuiSound("guardian_ontop.snt", 0.8f);
+PlayGuiSound("guardian_activated.snt", 0.8f);
+StartScreenShake(0.04f, 3.75f, 1.55f, 0.55f);
+AddTimer("", RandFloat(40.0f, 60.0f), "UndergroundRumbAmb");
+AddTimer("", 6.5f, "UndergroundRumbAmb2");
+}
+}
+
+void UndergroundRumbAmb2(string &in asTimer)
+{
+PlayGuiSound("guardian_idle_rand.snt", 1.0f);
+}
+
+void UGAmbStart(string &in asTimer)
+{
+PlayGuiSound("guardian_distant2.snt", 1.0f);
+StartScreenShake(0.02f, 3.75f, 1.55f, 0.55f);
+}
+
+void FadeInRedLight(string &in asParent, string &in asChild, int alState)
+{
+FadeLightTo("RedLight", 0.2f, 0, 0, 0, -1, 3);
+}
+
+void FadeOutRedLight(string &in asParent, string &in asChild, int alState)
+{
+FadeLightTo("RedLight", 0, 0, 0, 0, -1, 3);
+}
+
+void LightGreenTorch(string &in asEntityName, string &in Type)
+{
+AddLocalVarInt("LightsRemaining", -1);
+if(GetLocalVarInt("LightsRemaining") == 14)
+{
+SetPropActiveAndFade("Blockade_1", false, 3.0f);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "Blockade_1", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+PlayGuiSound("25_guardian_slime_appear.snt", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+}
+if(GetLocalVarInt("LightsRemaining") == 10)
+{
+PlayGuiSound("DPChord.snt", 1);
+SetEntityInteractionDisabled("torch_static_green_6", false);
+SetPropActiveAndFade("BlockadeMind", false, 3.0f);
+SetPropActiveAndFade("DoorwayBlock_1", false, 3.0f);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "BlockadeMind", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "DoorwayBlock_1", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+StartScreenShake(0.02f, 3.75f, 1.55f, 0.55f);
+PlayGuiSound("25_guardian_slime_appear.snt", 1);
+SetEntityActive("MindAttention", true);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+AddTimer("", 0.5f, "MindFixNote");
+}
+if(GetLocalVarInt("LightsRemaining") == 9)
+{
+SetPropActiveAndFade("DoorwayBlock_2", false, 3.0f);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "DoorwayBlock_2", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+PlayGuiSound("25_guardian_slime_appear.snt", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+}
+if(GetLocalVarInt("LightsRemaining") == 8)
+{
+FadeInSound("Creaking", 4.0f, true);
+AddTimer("", 4.0f, "DoorEvent");
+}
+if(GetLocalVarInt("LightsRemaining") == 2)
+{
+SetPropActiveAndFade("DoorwayBlock_5", false, 3.0f);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "DoorwayBlock_5", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+PlayGuiSound("25_guardian_slime_appear.snt", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeLightTo("ElectroRodLight", 0, 1, 1, 1, -1, 1);
+FadeLightTo("ElectroRodLight2", 0, 1, 1, 1, -1, 1);
+}
+}
+
+void DoorEvent(string &in asTimer)
+{
+SetEntityActive("DoorwayBlock_3", false);
+SetEntityActive("DoorwayBlock_4", false);
+PlayGuiSound("slime_attack_normal_hit.snt", 1);
+GivePlayerDamage(0.0f, "Splat", true, false);
+GiveSanityDamage(5, true);
+StopSound("Creaking", 0);
+PlayGuiSound("lurker_hit_wood.snt", 1);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "DoorwayBlock_3", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+CreateParticleSystemAtEntityExt("", "ps_guardian_appear_explosion.ps", "DoorwayBlock_4", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+}
+
+void PayMindAttention(string &in asParent, string &in asChild, int alState)
+{
+StartPlayerLookAt("MindBroken_1", 0.1, 0.1, "");
+StopSound("Sound_2", 0);
+FadeInSound("Sound_2_1", 0.0f, false);
+}
+
+void PayMindAttentionNoMore(string &in asParent, string &in asChild, int alState)
+{
+StopPlayerLookAt();
+StopSound("Sound_2_1", 0);
+FadeInSound("Sound_2", 0.0f, false);
+}
+
+void MindFixNote(string &in asTimer)
+{
+SetMessage("TD_Custom", "MindBroken", 3.0f);
+}
+
+void ReactedToFlesh(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("TD_Custom", "Flesh", 3.0f);
+}
+
+void ElectroShocked(string &in asParent, string &in asChild, int alState)
+{
+if(GetLocalVarInt("ShockCount") > 1)
+{
+GivePlayerDamage(0.0f, "Splat", false, false);
+GiveSanityDamage(5, true);
+AddTimer("", 1.0f, "ElectroShockRestore");
+AddLocalVarInt("ShockCount", -1);
+AddPlayerBodyForce(30000, 0.0f, 0.0f, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "Player", false);
+PlayGuiSound("29_elec_burst.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+FadeOut(0.0f);
+FadeIn(0.3f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+return;
+}
+if(GetLocalVarInt("ShockCount") == 1)
+{
+GivePlayerDamage(0.0f, "Splat", false, false);
+GiveSanityDamage(5, true);
+AddPlayerBodyForce(15000, 0.0f, 0.0f, false);
+CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "Player", false);
+SetEntityActive("FlowRodPlaced", false);
+SetEntityActive("FlowRodItem", true);
+DestroyParticleSystem("ElectroRodActivity");
+DestroyParticleSystem("ElectroRodFX");
+FadeLightTo("ElectroRodLight2", 0, 0, 0, 0, -1, 3);
+FadeLightTo("ElectroRodLight", 0, 0, 0, 0, -1, 3);
+PlayGuiSound("29_elec_burst.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+PlayGuiSound("29_elec_burst.snt", 1);
+FadeOut(0.0f);
+FadeIn(0.3f);
+StopSound("ElectroRodSound", 0.5f);
+SetMessage("TD_Custom", "ElectroDead", 3.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+return;
+}
+}
+
+void ElectroShockRestore(string &in asTimer)
+{
+AddEntityCollideCallback("Player", "ElectroShockArea", "ElectroShocked", true, 1);
+}
+
+void TindChestUnlock(string &in asItem, string &in asEntity)
+{
+PlayGuiSound("lock_door.snt", 1);
+SetLeverStuckState("TindChest", 0, true);
+RemoveUseItemCallback("LockPick_1");
+}
+
+void TinderboxMSG(string &in asEntity)
+{
+SetMessage("TD_Custom", "TinderboxLVL3", 5.0f);
+}
+
+void MindPiecePosition(string &in asItem, string &in asEntity)
+{
+SetMessage("TD_Custom", "MindRepairEarly", 4.0f);
+PlayGuiSound("26_place_glass.snt", 1);
+}
+
+void InsertSquareRod(string &in asItem, string &in asEntity)
+{
+PlayGuiSound("13_rod_in.snt", 1);
+SetEntityActive("SquareRodPlaced", true);
+RemoveItem("SquareRodItem");
+if(GetLocalVarInt("ShockCount") > 1)
+{
+SetLocalVarInt("ShockCount", 1);
+}
+AddLocalVarInt("RepairStatus", 1);
+if(GetLocalVarInt("RepairStatus") == 3)
+{
+PlayGuiSound("DeadEnter.snt", 1);
+PlayGuiSound("DeadEnter.snt", 1);
+PlayGuiSound("DeadEnter.snt", 1);
+SetLampLit("MindPedestal", true, true);
+RemoveUseItemCallback("MPP_1");
+RemoveUseItemCallback("MPP_2");
+RemoveUseItemCallback("MPP_3");
+AddUseItemCallback("", "MindPiece_1", "MindPieceArea", "MindPieceHeal", false);
+AddUseItemCallback("", "MindPiece_2", "MindPieceArea", "MindPieceHeal", false);
+AddUseItemCallback("", "MindPiece_3", "MindPieceArea", "MindPieceHeal", false);
+}
+}
+
+void InsertFlowRod(string &in asItem, string &in asEntity)
+{
+PlayGuiSound("13_rod_in.snt", 1);
+SetEntityActive("FlowRodPlaced", true);
+RemoveItem("FlowRodItem");
+AddLocalVarInt("RepairStatus", 1);
+if(GetLocalVarInt("RepairStatus") == 3)
+{
+PlayGuiSound("DeadEnter.snt", 1);
+PlayGuiSound("DeadEnter.snt", 1);
+PlayGuiSound("DeadEnter.snt", 1);
+SetLampLit("MindPedestal", true, true);
+RemoveUseItemCallback("MPP_1");
+RemoveUseItemCallback("MPP_2");
+RemoveUseItemCallback("MPP_3");
+AddUseItemCallback("", "MindPiece_1", "MindPieceArea", "MindPieceHeal", false);
+AddUseItemCallback("", "MindPiece_2", "MindPieceArea", "MindPieceHeal", false);
+AddUseItemCallback("", "MindPiece_3", "MindPieceArea", "MindPieceHeal", false);
+}
+}
+
+void InsertTrinityRod(string &in asItem, string &in asEntity)
+{
+PlayGuiSound("13_rod_in.snt", 1);
+SetEntityActive("TrinityRodPlaced", true);
+RemoveItem("TrinityRodItem");
+AddLocalVarInt("RepairStatus", 1);
+if(GetLocalVarInt("RepairStatus") == 3)
+{
+PlayGuiSound("DeadEnter.snt", 1);
+PlayGuiSound("DeadEnter.snt", 1);
+PlayGuiSound("DeadEnter.snt", 1);
+SetLampLit("MindPedestal", true, true);
+RemoveUseItemCallback("MPP_1");
+RemoveUseItemCallback("MPP_2");
+RemoveUseItemCallback("MPP_3");
+AddUseItemCallback("", "MindPiece_1", "MindPieceArea", "MindPieceHeal", false);
+AddUseItemCallback("", "MindPiece_2", "MindPieceArea", "MindPieceHeal", false);
+AddUseItemCallback("", "MindPiece_3", "MindPieceArea", "MindPieceHeal", false);
+}
+}
+
+void HallucinationEvent(string &in asEntity)
+{
+TeleportPlayer("ElevBottomSpawn");
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+SetEntityActive("TrinityRodItem", true);
+SetEntityActive("PhonoGraph5", true);
+SetPropActiveAndFade("slime_pile_large_1", false, 0.25f);
+PlayGuiSound("impact_water_high.snt", 1);
+CreateParticleSystemAtEntity("", "ps_water_dump_splash.ps", "WaterFX_6", false);
+SetPropActiveAndFade("DoorwayBlock_5", true, 3.0f);
+}
+
+void InitPhonoLast(string &in asEntity, int alState)
+{
+PlayMusic("PhonoAmb3.ogg", false, 0.5f, 0.0f, 2, false);
+AddGlobalVarInt("Achiev2", 1);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeGlobalSoundVolume(0.2f, 0.5f);
+AddEffectVoice("TD_Phono51.ogg", "", "TD_Voice", "Phono5_1", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono52.ogg", "", "TD_Voice", "Phono5_2", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono53.ogg", "", "TD_Voice", "Phono5_3", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono54.ogg", "", "TD_Voice", "Phono5_4", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono55.ogg", "", "TD_Voice", "Phono5_5", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono56.ogg", "", "TD_Voice", "Phono5_6", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono57.ogg", "", "TD_Voice", "Phono5_7", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono58.ogg", "", "TD_Voice", "Phono5_8", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono59.ogg", "", "TD_Voice", "Phono5_9", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono510.ogg", "", "TD_Voice", "Phono5_10", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono511.ogg", "", "TD_Voice", "Phono5_11", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono512.ogg", "", "TD_Voice", "Phono5_12", false, asEntity, 0, 20);
+AddEffectVoice("TD_Phono513.ogg", "", "TD_Voice", "Phono5_13", false, asEntity, 0, 20);
+SetWheelStuckState("PhonoGraph5", alState, true);
+SetEffectVoiceOverCallback("GivePointPhono");
+SetInventoryDisabled(true);
+}
+
+void GivePointPhono()
+{
+StopMusic(0.25f, 2);
+FadeGlobalSoundVolume(1.0f, 6.0f);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("lock_door.snt", 1);
+SetInventoryDisabled(false);
+SetEntityActive("Blockade_1", false);
+AddTimer("", 0.25f, "GivePointTimer");
+}
+
+void GivePointTimer(string &in asTimer)
+{
+AddGlobalVarInt("DreamPoint", 1);
+FadeOut(0.1f);
+AddTimer("", 0.1f, "GivePointFX");
+}
+
+void GivePointFX(string &in asTimer)
+{
+PlayGuiSound("DPChord.snt", 1.0f);
+FadeIn(6.0f);
+}
+
+void MindPieceHeal(string &in asItem, string &in asEntity)
+{
+if(GetLocalVarInt("RepairStatus") == 3)
+{
+RemoveItem(asItem);
+SetPropActiveAndFade("Blockade_1", true, 0.5f);
+SetPropActiveAndFade("DoorwayBlock_1", true, 0.5f);
+SetPropActiveAndFade("DoorwayBlock_2", true, 0.5f);
+SetPropActiveAndFade("MindBroken_1", false, 1.0f);
+SetPropActiveAndFade("MindBroken_2", true, 0.5f);
+AddLocalVarInt("RepairStatus", 1);
+PlayGuiSound("22_orb_forge.snt", 1);
+SetInventoryDisabled(true);
+AddTimer("", 1.25f, "MindPieceTimer");
+return;
+}
+if(GetLocalVarInt("RepairStatus") == 4)
+{
+RemoveItem(asItem);
+SetPropActiveAndFade("MindBroken_2", false, 1.0f);
+SetPropActiveAndFade("MindBroken_3", true, 0.5f);
+AddLocalVarInt("RepairStatus", 1);
+PlayGuiSound("22_orb_forge.snt", 1);
+AddTimer("", 1.25f, "MindPieceTimer");
+SetInventoryDisabled(true);
+return;
+}
+if(GetLocalVarInt("RepairStatus") == 5)
+{
+RemoveItem(asItem);
+SetPropActiveAndFade("MindBroken_3", false, 1.0f);
+SetPropActiveAndFade("MindFixed", true, 0.5f);
+AddLocalVarInt("RepairStatus", 1);
+PlayGuiSound("22_orb_forge.snt", 1);
+AddTimer("", 1.25f, "MindPieceTimer");
+SetInventoryDisabled(true);
+return;
+}
+}
+
+void MindPieceTimer(string &in asTimer)
+{
+if(GetLocalVarInt("RepairStatus") == 4)
+{
+SetMessage("TD_Custom", "TooEasy", 4.0f);
+AddTimer("", RandFloat(0.1f, 1.1f), "MindPiece1stFX");
+}
+if(GetLocalVarInt("RepairStatus") == 5)
+{
+FadeOut(0.25f);
+PlayGuiSound("scare_thump_flash.snt", 1.0f);
+PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+SetLanternActive(false, true);
+SetLanternDisabled(true);
+FadeGlobalSoundVolume(0.0f, 0.0f);
+StopMusic(1.0f, 1);
+SetPlayerActive(false);
+AddTimer("", 2.5f, "SpookysTeleport");
+}
+if(GetLocalVarInt("RepairStatus") == 6)
+{
+CreateParticleSystemAtEntityExt("", "ps_dust_whirl_large.ps", "MindFixed", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+CreateParticleSystemAtEntityExt("", "ps_dust_whirl_large.ps", "MindFixed", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+CreateParticleSystemAtEntityExt("", "ps_dust_whirl_large.ps", "MindFixed", false, 0, 1, 1, 1, false, 0, 0, 10, 10);
+FadeInSound("MindRepairedNoise_1", 0.5f, true);
+FadeInSound("MindRepairedNoise_2", 1.5f, true);
+FadeInSound("Creaking", 1.5f, true);
+PlayGuiSound("scare_male_terrified5.snt", 1);
+PlayGuiSound("scare_male_terrified5.snt", 1);
+PlayGuiSound("scare_male_terrified5.snt", 1);
+StartScreenShake(0.04f, 3.75f, 1.55f, 0.55f);
+FadeRadialBlurTo(0.045f, 0.005f);
+AddTimer("", 3.5f, "MindPieceFinished");
+StopMusic(0, 1);
+}
+}
+
+void MindPieceFinished(string &in asTimer)
+{
+SetPlayerSanity(100);
+GiveSanityDamage(1, true);
+PlaySoundAtEntity("", "27_orb_implode.snt", "Player", 0, false);
+FadeOut(0);
+FadeIn(0.2);
+PlayGuiSound("scare_thump_flash.snt", 1.0f);
+PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+PlayGuiSound("scare_male_terrified.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+PlayGuiSound("scare_breath.snt", 1);
+CreateParticleSystemAtEntity("", "ps_orb_shockwave.ps", "MindFixed", false);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+FadeLightTo("RedLight", 0, 1, 1, 1, -1, 0.35);
+StartScreenShake(0.04f, 3.75f, 1.55f, 0.55f);
+SetupLoadScreen("TD_Custom", "LVLEndScreen", 1, "");
+AddTimer("", 3.0f, "FTB");
+AddTimer("", 7.0f, "ToEndLevel");
+}
+
+void MindPiece1stFX(string &in asTimer)
+{
+SetEntityInteractionDisabled("bridge_torch_1", true);
+SetEntityInteractionDisabled("bridge_torch_2", true);
+SetEntityInteractionDisabled("bridge_torch_3", true);
+SetEntityInteractionDisabled("bridge_torch_4", true);
+SetLampLit("bridge_torch_1", false, true);
+SetLampLit("bridge_torch_2", false, true);
+SetLampLit("bridge_torch_3", false, true);
+SetLampLit("bridge_torch_4", false, true);
+FadeLightTo("RedLight", 0, 1, 1, 1, -1, 0.35);
+PlayGuiSound("scare_thump_flash.snt", 1.0f);
+PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+PlayGuiSound("scare_male_terrified.snt", 1);
+AddTimer("", 1.45f, "MindPiece1stFX2");
+}
+
+void MindPiece1stFX2(string &in asTimer)
+{
+FadeLightTo("RedLight", 0.2f, 0, 0, 0, -1, 3);
+SetInventoryDisabled(false);
+}
+
+void FTB(string &in asTimer)
+{
+SetPlayerActive(false);
+FadeGlobalSoundVolume(0.0f, 0.0f);
+FadeOut(0.25f);
+PlayGuiSound("scare_thump_flash.snt", 1.0f);
+PlayGuiSound("scare_wall_stomp.snt", 1.0f);
+StopSound("Creaking", 0.3f);
+StopSound("MindRepairedNoise_1", 0.3f);
+StopSound("MindRepairedNoise_2", 0.3f);
+}
+
+void ToEndLevel(string &in asTimer)
+{
+ChangeMap("TD_Final", "End", "DPChord.snt", "DeadEnter.snt");
+}
+
+void SpookysTeleport(string &in asTimer)
+{
+SetPlayerRunSpeedMul(1.5f);
+StopSound("Sound_1", 0);
+TeleportPlayer("SRoom_" + RandInt(1, 8));
+FadeGlobalSoundVolume(1.0f, 0.0f);
+SetLocalVarInt("FakeRoomCount", RandInt(-10, 10));
+FadeIn(1);
+SetPlayerActive(true);
+PlayMusic("TD_Weirdscape3.ogg", true, 1.0f, 3.0f, 2, false);
+SetMessage("TD_Custom", "TooEasy2", 4.0f);
+}
+
+void SRoomChange(string &in asEntity)
+{
+FadeOut(0.3f);
+SetPlayerActive(false);
+PlayGuiSound("door_prison_open.snt", 1);
+AddTimer("", 1.0f, "SRoomChangeDone");
+if(GetLocalVarInt("FakeRoomCount") == 30)
+{
+SetEntityActive("SpookyDog", false);
+}
+}
+
+void SRoomChangeDone(string &in asTimer)
+{
+TeleportPlayer("SRoom_" + RandInt(1, 8));
+SetEntityActive("Scary", false);
+AddLocalVarInt("FakeRoomCount", 1);
+if(GetLocalVarInt("FakeRoomCount") == 15)
+{
+TeleportPlayer("SRoom_4");
+AddEntityCollideCallback("Player", "StatueJumpscareArea", "SpookyScarySkeeleetoons", true, 1);
+}
+if(GetLocalVarInt("FakeRoomCount") == 18)
+{
+StopMusic(20.0f, 2);
+}
+if(GetLocalVarInt("FakeRoomCount") == 25)
+{
+SetPlayerRunSpeedMul(2.0f);
+FadeSepiaColorTo(1.0f, 1.0f);
+FadeRadialBlurTo(0.039f, 1.0f);
+PlayMusic("TD_SpookyChase.ogg", true, 1.0f, 0.0f, 3, false);
+FadeLightTo("SpookysLight", 1, 0, 0, 1, -1, 0);
+PlayGuiSound("outside_howl.snt", 1);
+}
+if(GetLocalVarInt("FakeRoomCount") == 30)
+{
+SetEnemySanityDecreaseActive("SpookyDog", false);
+SetPlayerRunSpeedMul(1.0f);
+PlayGuiSound("outside_howl.snt", 1);
+TeleportPlayer("SRoom_End");
+SetEntityActive("SpookyDog", true);
+AddTimer("", 3.0f, "SpookyDogAlerter");
+ShowEnemyPlayerPosition("SpookyDog");
+CheckPoint("", "Start", "DeathByDog", "TD_Custom", "GO");
+}
+if(GetLocalVarInt("FakeRoomCount") == 31)
+{
+TeleportPlayer("SRoom_End2");
+SetEntityActive("SpookyDog", true);
+ShowEnemyPlayerPosition("SpookyDog");
+SetPropHealth("mansion_2", 150);
+TeleportEnemyToEntity("SpookyDog", "SpookyDogSpot_1", "", true);
+AddTimer("", 1.75f, "FreeDog");
+}
+FadeIn(0.3f);
+SetPlayerActive(true);
+AddDebugMessage("Current room is: " + GetLocalVarInt("FakeRoomCount"), false);
+}
+
+void SpookyScarySkeeleetoons(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("Bang.snt", 1);
+SetEntityActive("Scary", true);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+}
+
+void SpookyDogAlerter(string &in asTimer)
+{
+if(GetLocalVarInt("FakeRoomCount") >= 30 && GetLocalVarInt("FakeRoomCount") < 32)
+{
+ShowEnemyPlayerPosition("SpookyDog");
+AddTimer("", 1.5f, "SpookyDogAlerter");
+}
+}
+
+void DeathByDog(string &in asName, int alCount)
+{
+SetupLoadScreen("TD_Custom", "LVLDeadScreen", 1, "");
+SetGlobalVarInt("DeathType", 2);
+ChangeMap("Dead.map", "Death", "", "DeadEnter.snt");
+}
+
+void SpookyDoorClose1(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorLocked("SpookyDoor_1", true, true);
+}
+
+void SpookyDoorClose2(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorLocked("SpookyDoor_2", true, true);
+}
+
+void AssistAISpooky_1(string &in asParent, string &in asChild, int alState)
+{
+TeleportEnemyToEntity("SpookyDog", "PathNodeArea_66", "", true);
+SetPropHealth("SpookyDoor_1", 0);
+SetPropHealth("SpookyDoor_2", 0);
+}
+
+void AssistAISpooky_2(string &in asParent, string &in asChild, int alState)
+{
+TeleportEnemyToEntity("SpookyDog", "PathNodeArea_98", "", true);
+SetPropHealth("mansion_1", 0);
+}
+
+void FreeDog(string &in asTimer)
+{
+SetPropHealth("mansion_2", 0);
+}
+
+void ReturnToReal(string &in asEntity)
+{
+SetEntityActive("SpookyDog", false);
+SetInventoryDisabled(false);
+FadeSepiaColorTo(0.01f, 0.05f);
+FadeRadialBlurTo(0.013f, 0.005f);
+TeleportPlayer("ElevBottomSpawn");
+SetLocalVarInt("FakeRoomCount", 0);
+StopMusic(7.0f, 3);
+StartScreenShake(0.1f, 0.2f, 0, 0);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("PitchNoise.snt", 1);
+PlayGuiSound("impact_water_high.snt", 1);
+}
+
+void GoBackLVL6(string &in asEntity)
+{
+ChangeMap("TD_LVL2", "FromLVL7", "door_large_castle_open.snt", "close_gate.snt");
+}

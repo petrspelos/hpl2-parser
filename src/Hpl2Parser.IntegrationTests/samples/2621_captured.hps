@@ -1,0 +1,209 @@
+void OnStart()
+{
+	SetInventoryDisabled(true);
+	FadeGlobalSoundVolume(0.0f, 0.0f);
+	PlayGuiSound("22_end.ogg", 1.0f);
+	AddTimer("", 2.8f, "startmorso");
+	AddTimer("", 3.2f, "tankilaan");
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerRunSpeedMul(0.0f);
+	SetPlayerLookSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	FadeOut(0.0f);
+	SetSanityDrainDisabled(true);
+	AddEntityCollideCallback("Player", "area", "ilmestys", true, 1);
+	AddEntityCollideCallback("Player", "area2", "tapahtuu4", true, 1);
+	AddEntityCollideCallback("Player", "area3", "tapahtuu5", true, 1);
+	AddEntityCollideCallback("Player", "area4", "tapahtuu6", true, 1);
+	AddEntityCollideCallback("grunt", "katoa", "tapahtuu", true, 1);
+	AddEntityCollideCallback("grunt2", "katoa2", "tapahtuu2", true, 1);
+	AddEntityCollideCallback("grunt2", "laita", "tapahtuu3", true, 1);
+	SetPropHealth("door", 40.0f);
+	AddUseItemCallback("", "key1", "ovi", "FUNCTION", true);
+	SetEntityInteractionDisabled("d1", true);
+	SetEntityInteractionDisabled("d2", true);
+	SetEntityInteractionDisabled("d3", true);
+	SetEntityInteractionDisabled("d4", true);
+	SetEntityInteractionDisabled("d5", true);
+	SetEntityInteractionDisabled("d6", true);
+	SetEntityPlayerInteractCallback("note", "TavaraSpawni", true);
+	SetEntityPlayerInteractCallback("key1", "TavaraSpawni2", true);
+	CheckPoint ("", "PlayerStartArea_1", "", "", "");
+	SetLightVisible("valo", false);
+	AutoSave();
+}
+
+void TavaraSpawni(string &in asEntity)
+{
+	PlayMusic("01_event_dust.ogg", false, 0.8f, 1.0f, 50, false);
+	AddTimer("", 30.0f, "help");
+}
+
+void TavaraSpawni2(string &in asEntity)
+{
+	SetLightVisible("valo", false);
+}
+
+void OnLeave()
+{
+	PlayMusic("music_1.ogg", true, 1.0f, 1.0f, 2, true);
+}
+
+void FUNCTION (string &in item, string &in door)
+{
+	SetSwingDoorLocked("ovi", false, true);
+	PlaySoundAtEntity("", "unlock_door", "ovi", 0, false);
+	RemoveItem("key1");
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	SetPlayerLookSpeedMul(1.0f);
+	GiveSanityBoost();
+	PlayMusic("escape.ogg", false, 1.0f, 0.0f, 90, false);
+}
+
+void startmorso(string &in asTimer)
+{
+	SetEntityActive("grunt", true);
+	AddEnemyPatrolNode("grunt", "PathNodeArea_1", 2.0f, ""); 
+	AddEnemyPatrolNode("grunt", "look", 3.0f, ""); 
+	AddEnemyPatrolNode("grunt", "PathNodeArea_2", 0, ""); 
+	AddEnemyPatrolNode("grunt", "PathNodeArea_3", 0, ""); 
+}
+
+void ilmestys(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("", 2.0f, "monster");
+}
+
+void monster(string &in asTimer)
+{
+	SetSwingDoorLocked("pri", false, true);
+	SetSwingDoorDisableAutoClose("pri", true);
+	SetSwingDoorClosed("pri", false, false);
+	AddTimer("", 0.5, "pushdoor");
+	SetEntityActive("grunt2", true);
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_4", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_5", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_6", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_7", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_8", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_9", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_10", 4.0f, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_11", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_12", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_13", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_14", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_15", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_16", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_17", 0, ""); 
+	AddEnemyPatrolNode("grunt2", "PathNodeArea_18", 0, ""); 
+}
+
+void pushdoor(string &in asTimer)
+{
+	AddPropImpulse("pri", 7.0f, 0.0f, 0.0f, "world");
+}
+
+void tapahtuu(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("grunt", false);
+}
+
+void tapahtuu2(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("grunt2", false);
+	PlaySoundAtEntity("", "door_level_cellar_open.snt", "level", 0, false);
+}
+
+void tapahtuu3(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("c1", true);
+	SetEntityActive("c2", true);
+	SetEntityActive("c3", true);
+	SetEntityActive("c4", true);
+}
+
+void tapahtuu4(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "05_event_door_bang.snt", "ovi2", 0, false);
+	StartPlayerLookAt("katso", 2.0f, 2.0f, "");
+	GiveSanityDamage(10, true);	
+	AddTimer("", 0.7f, "hit");
+}
+
+void tapahtuu5(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("safe", 1.0f);
+}
+
+void tapahtuu6(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("safe", 0.0f);
+}
+
+void hit(string &in asTimer)
+{
+	AddTimer("", 0.7f, "hit2");
+	AddPropImpulse("ovi2", 0.0f, 0.0f, 5.0f, "world");
+}
+
+void hit2(string &in asTimer)
+{
+	AddTimer("", 0.7f, "hit3");
+	AddPropImpulse("ovi2", 0.0f, 0.0f, 5.0f, "world");
+}
+
+void hit3(string &in asTimer)
+{
+	AddPropImpulse("ovi2", 0.0f, 0.0f, 5.0f, "world");
+	StopPlayerLookAt();
+}
+
+
+void tankilaan(string &in asTimer)
+{
+	SetPlayerSanity(40);
+	SetPlayerHealth(80);
+	FadeIn(0.5f);
+	AddPlayerBodyForce(0.0f, 4000.0f, 31000.0f, false);
+	AddTimer("", 1.7f, "ovikiinni");
+	SetPlayerCrouching(true);
+	SetSanityDrainDisabled(false);
+}
+
+void ovikiinni(string &in asTimer)
+{
+	AddTimer("", 1.7f, "move");
+	SetSwingDoorClosed("ovi", true, true);
+	SetSwingDoorLocked("ovi", true, true);
+}
+
+void move(string &in asTimer)
+{
+	FadeGlobalSoundVolume(1.0f, 0.0f);
+	PlaySoundAtEntity("", "lock_door", "ovi", 0, false);
+	SetPlayerMoveSpeedMul(0.7f);
+	SetPlayerRunSpeedMul(0.7f);
+	SetPlayerLookSpeedMul(1.0f);
+	SetPlayerJumpDisabled(false);
+	SetInventoryDisabled(false);
+}
+
+void help(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_orb_room_rod_sparks.ps", "ps", false);
+	PlayGuiSound("dis.ogg", 0.6f);
+	GiveSanityDamage(10, true);	
+	PlayMusic("27_event_bang.ogg", false, 0.8f, 3.0f, 5, false);
+	SetEntityActive("key1", true);
+	StartPlayerLookAt("ps", 2.0f, 2.0f, "");
+	AddTimer("", 1.5f, "lookoff");
+	SetLightVisible("valo", true);
+}
+
+void lookoff(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+

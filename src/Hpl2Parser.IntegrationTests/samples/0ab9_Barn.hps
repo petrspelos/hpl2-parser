@@ -1,0 +1,145 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("Barn");
+	SetEntityPlayerInteractCallback("UpperDoor", "UpperDoorQuest", false);
+	SetEntityPlayerInteractCallback("Slime1", "BlockQuest", false);
+	AddEntityCollideCallback("Joint", "AreaBreak", "BreakDoor", true, 1);
+	AddUseItemCallback("", "Crowbar", "UpperDoor", "UseCrowbar", true);
+	AddEntityCollideCallback("Player", "AreaWay", "WayExit", true, 1);
+	AddEntityCollideCallback("Player", "AreaBlock", "WayBlock", false, 1);
+	AddEntityCollideCallback("Player", "AreaSlime", "SlimeEvent", true, 1);
+}
+
+void KeySpawn(string &in asEntity, string &in Break)
+{
+	SetEntityActive("FlashBackArea2", true);
+	SetEntityActive("KeyStudy", true);
+	PlaceEntityAtEntity("KeyStudy", "BottleKey", "BottleKey", true);
+}
+
+void SetAreaSlimeActive(string &in asEntity, string &in OnPickup)
+{
+	SetEntityActive("AreaBlock", false);
+	SetEntityActive("Block", false);
+	GiveSanityBoostSmall();
+	SetEntityActive("FlashBackArea2", false);
+	PlayMusic("02_puzzle.ogg", false, 1, 0.5, 1, true);
+	SetEntityActive("AreaSlime", true);
+}
+
+void MonsterSpawn(string &in asEntity, string &in OnPickup)
+{
+	CheckPoint("cpoint2", "Spawn2", "", "DeathHint", "DMonster");
+	PlayGuiSound("react_breath", 1);
+	GiveSanityDamage(10, true);
+	SetEntityActive("Grunt", true);
+	AddEnemyPatrolNode("Grunt", "Node_1", 3, "");
+	AddEnemyPatrolNode("Grunt", "Node_2", 1, "");
+	AddEnemyPatrolNode("Grunt", "Node_3", 1, "");
+	AddEnemyPatrolNode("Grunt", "Node_4", 1, "");
+	AddEnemyPatrolNode("Grunt", "Node_5", 0.001, "");
+	AddEnemyPatrolNode("Grunt", "Node_6", 0.001, "");
+}
+
+void OnEnter()
+{
+	PlayMusic("04_amb.ogg", true, 0.8, 5, 1, true);
+	SetEntityActive("BlockBox", false);
+	SetEntityActive("Slime1", false);
+	SetEntityActive("Slime2", false);
+	SetEntityActive("Slime3", false);
+}
+
+void FB1()
+{
+	SetEntityActive("FB1", false);
+}
+
+void UpperDoorQuest(string &in asEntity)
+{
+	AddQuest("Memento5", "M5");
+}
+
+void UseCrowbar(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+	AddTimer(asEntity, 0.2, "TimerPlaceCrowbar");
+	RemoveItem(asItem);
+}
+
+void BreakDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("UpperDoor", false, false);
+	SetSwingDoorClosed("UpperDoor", false, false);
+	SetSwingDoorDisableAutoClose("UpperDoor", true);
+	AddPropImpulse("UpperDoor", 9, 0, 0, "world");
+	CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaEffect", false);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "AreaEffect", 0, false);
+	PlayMusic("02_puzzle.ogg", false, 1, 0.5, 3, true);
+	CompleteQuest("Memento5", "M5");
+	AddTimer("", 0.1, "TimerPushDoor");
+	SetEntityActive("Joint", false);
+	SetEntityActive("BrokenBar", true);
+}
+
+void TimerPushDoor(string &in asTimer)
+{
+	AddTimer("", 1.1, "TimerDoorCanClose");
+	AddPropImpulse("UpperDoor", -4, 2, 1, "world");
+}
+
+void TimerDoorCanClose(string &in asTimer)
+{
+	SetSwingDoorDisableAutoClose("UpperDoor", false);	
+}
+
+void TimerPlaceCrowbar(string &in asTimer)
+{
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", asTimer, 0.05, false);
+	SetEntityActive("Joint", true);
+}
+
+void BlockQuest(string &in asEntity)
+{
+	AddQuest("Memento4", "M4");
+	PlaySoundAtEntity("", "slime_create.snt", "Slime1", 0, false);
+}
+
+void WayBlock(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("ScreenText", "blockmessage", 4.5f);
+}
+
+void SlimeEvent(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("slimeeffect", "ps_guardian_appear_explosion.ps", "Slime1", false);
+	CreateParticleSystemAtEntity("", "ps_guardian_danger_fog_loop.ps", "Slime2", false);
+	CreateParticleSystemAtEntity("", "ps_slime_fog.ps", "Slime3", false);
+	PlayMusic("04_amb.ogg", true, 0.8, 5, 1, true);
+	PlaySoundAtEntity("", "guardian_activated.snt", "Slime1", 0, false);
+	StartScreenShake(0.2, 2, 1, 2);
+	GiveSanityDamage(20, true);
+	SetEntityActive("Slime1", true);
+	SetEntityActive("Slime2", true);
+	SetEntityActive("Slime3", true);
+	SetEntityActive("BlockBox", true);
+	AddTimer("slimeeffectend", 3, "EffectEnd");
+}
+
+void EffectEnd(string &in asTimer)
+{
+	DestroyParticleSystem("slimeeffect");
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "Load4", 0, "");
+}
+
+void WayExit(string &in asParent, string &in asChild, int alState)
+{
+	GiveSanityBoostSmall();
+	CompleteQuest("Memento4", "M4");
+	FadeOut(2);
+	ChangeMap("Level2.map", "PlayerStartArea_1", "", "");
+}

@@ -1,0 +1,209 @@
+//// move to include hps
+
+
+void TimerMoveForward(string &in asTimer)
+{
+	MovePlayerForward(2);
+	AddTimer("automove", 0, "TimerMoveForward");
+	AddDebugMessage("Move forward!", false);
+}
+
+void DisableCandles(bool abDisabled) {
+	SetEntityInteractionDisabled("candle_floor_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick01_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick02_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_floor_*", abDisabled);
+	SetEntityInteractionDisabled("torch_*", abDisabled);
+	SetEntityInteractionDisabled("hanging_lantern_ceiling_*", abDisabled);
+	SetEntityInteractionDisabled("elevator_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_tri_*", abDisabled);
+	
+	SetEntityInteractionDisabled("lamp_wall_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("ki_lampion_*", abDisabled);
+	SetEntityInteractionDisabled("lamp_gas_*", abDisabled);
+	SetEntityInteractionDisabled("LampBarrelsTake_*", abDisabled);
+}
+
+void RemoveQuest_Diary(string &in asTimer) {
+	CompleteQuest(asTimer, "commongospel");
+}
+
+////
+
+void OnStart() {
+	DisableCandles(true);
+
+	PlayMusic("sonorant_overgrowth", true, 0.8f, 10.0f, 0, true);
+	SetInDarknessEffectsActive(false);
+	SetPlayerSanity(100);
+	SetPlayerHealth(100);
+	
+	AddEntityCollideCallback("Player", "ScriptArea_TriggerFinale", "TriggerFinale_Shifting", true, 0);
+	
+	if (ScriptDebugOn()) {
+		if (!HasItem("lantern_1")) {
+			GiveItemFromFile("lantern_1", "lantern.ent");
+		}
+		TeleportPlayer("PlayerStartArea_2");
+		AddTimer("warningOutro_Timer1", 6.0f, "WarningOutro_Timer1");
+	} else {
+		FinaleOutro();
+	}
+	AutoSave();
+}
+
+/// Finale outro cutscenes
+
+void FinaleOutro() {
+	FadeOut(0);
+	SetPlayerActive(false);
+	SetPlayerCrouching(true);
+	ShowPlayerCrossHairIcons(false);
+	SetEntityActive("ScriptArea_TriggerFinale", false);
+	AddTimer("finaleOutro_Timer1", 5.0f, "FinaleOutro_Timer1");
+}
+
+void FinaleOutro_Timer1(string &in asTimer) {
+	SetEffectVoiceOverCallback("FinaleOutro_Timer2");
+	AddEffectVoice("07_hellfire_subsides1.ogg", "", "Voice", "07_hellfire_subsides1", false, "", 0, 0);
+}
+
+void FinaleOutro_Timer2() {
+	FadeIn(4);
+	AddEffectVoice("07_hellfire_subsides2.ogg", "", "Voice", "07_hellfire_subsides2", false, "", 0, 0);
+	AddTimer("finaleOutro_Timer3", 2.0f, "FinaleOutro_Timer3");
+	AddTimer("finaleOutro_Timer4", 6.0f, "FinaleOutro_Timer4");
+	AddTimer("finaleOutro_Timer5", 10.0f, "FinaleOutro_Timer5");
+	AddTimer("finaleOutro_Timer6", 14.0f, "FinaleOutro_Timer6");
+}
+
+void FinaleOutro_Timer3(string &in asTimer) {
+	StartPlayerLookAt("lamp_wall_crown_brighter_3", 0.5f, 1.0f, "");
+}
+
+void FinaleOutro_Timer4(string &in asTimer) {
+	StopPlayerLookAt();
+	StartPlayerLookAt("pot_plant_small01_17", 1.0f, 1.5f, "");
+}
+
+void FinaleOutro_Timer5(string &in asTimer) {
+	StopPlayerLookAt();
+	FadeOut(3);
+}
+
+void FinaleOutro_Timer6(string &in asTimer) {
+	TeleportPlayer("PlayerStartArea_2");
+	FadeIn(15);
+	StartPlayerLookAt("pot_plant_small01_17", 0.1f, 0.2f, "");
+	SetEffectVoiceOverCallback("FinaleOutro_Timer8");
+	AddEffectVoice("07_hellfire_subsides3.ogg", "", "Voice", "07_hellfire_subsides3", false, "", 0, 0);
+	AddEffectVoice("07_hellfire_subsides4.ogg", "", "Voice", "07_hellfire_subsides4", false, "", 0, 0);
+	AddTimer("finaleOutro_Timer7", 8.0f, "FinaleOutro_Timer7");
+}
+
+void FinaleOutro_Timer7(string &in asTimer) {
+	StopPlayerLookAt();
+	StartPlayerLookAt("chair_nice08_13", 0.2f, 0.4f, "");
+}
+
+void FinaleOutro_Timer8() {
+	StopPlayerLookAt();
+	AddTimer("finaleOutro_Timer9", 2.0f, "FinaleOutro_Timer9");
+}
+
+void FinaleOutro_Timer9(string &in asTimer) {
+	SetPlayerCrouching(false);
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(0.7f);
+	SetPlayerRunSpeedMul(0.5f);
+	SetPlayerLookSpeedMul(0.5f);
+	
+	AddQuest("07_commongospel", "commongospel");
+	AddDiary("Gospel_Level7", "diary_page");
+	AddTimer("07_commongospel", 10.0f, "RemoveQuest_Diary");
+	
+	AddTimer("warningOutro_Timer1", 75.0f, "WarningOutro_Timer1");
+}
+
+/// you get to walk aroudn a little, protagonist will notice something's up 
+
+void WarningOutro_Timer1(string &in asTimer) {
+	SetEffectVoiceOverCallback("WarningOutro_Timer2");
+	AddEffectVoice("07_shifting1.ogg", "", "Voice", "07_shifting1", false, "", 0, 0);
+	FadeRadialBlurTo(0.2f, 0.05f);
+}
+
+void WarningOutro_Timer2() {
+	SetEntityActive("ScriptArea_TriggerFinale", true);
+}
+
+
+void TriggerFinale_Shifting(string &in asParent, string &in asChild, int alState) {
+	PlayMusic("bunger_gas_voices", false, 0.8f, 7.5f, 0, false);
+	StartPlayerLookAt("bonfire_2", 0.5f, 1.0f, "");
+	AddTimer("warningOutro_Timer3", 1.0f, "WarningOutro_Timer3");
+}
+
+void WarningOutro_Timer3(string &in asTimer) {
+	SetPlayerActive(false);
+	StopMusic(0, 5);
+	AddTimer("automove", 1.0f, "TimerMoveForward");
+	AddTimer("warningOutro_Timer4", 4.0f, "WarningOutro_Timer4");
+	AddTimer("warningOutro_Timer5", 5.0f, "WarningOutro_Timer5");
+	AddTimer("warningOutro_Timer6", 6.0f, "WarningOutro_Timer6");
+}
+
+void WarningOutro_Timer4(string &in asTimer) {
+	AddEffectVoice("07_shifting2.ogg", "", "Voice", "07_shifting2", false, "", 0, 0);
+	FadePlayerFOVMulTo(10, 0.2);
+	StopPlayerLookAt();
+}
+
+void WarningOutro_Timer5(string &in asTimer) {
+	RemoveTimer("automove");
+	FadeRadialBlurTo(0, 2);
+}
+
+// falling down into an abyss
+
+void WarningOutro_Timer6(string &in asTimer) {
+	TeleportPlayer("PlayerStartArea_3");
+	FadePlayerFOVMulTo(1, 1);
+	SetPlayerActive(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerLookSpeedMul(0.5f);
+	
+	SetEntityActive("terrorarea", true);
+	AddEffectVoice("07_shifting3.ogg", "", "Voice", "07_shifting3", false, "", 0, 0);
+	AddTimer("slipping_Timer", 2.0f, "Slipping_Timer");
+	AddTimer("slipping_Timer2", 7.5f, "Slipping_Timer2");
+	AddTimer("slipping_Timer3", 13.0f, "Slipping_Timer3");
+	AddTimer("slipping_Timer4", 18.0f, "Slipping_Timer4");
+}
+
+void Slipping_Timer(string &in asTimer) {	
+	SetEntityActive("block_box_1", false);
+	SetEntityActive("terrorarea_1", true);
+	StartPlayerLookAt("terrorarea_1", 0.5f, 1.0f, "");
+	AddTimer("automove", 1.0f, "TimerMoveForward");
+	AddBodyForce("Player", -2000, 0, 0, "world");
+}
+
+void Slipping_Timer2(string &in asTimer) {	
+	RemoveTimer("automove");
+	FadeOut(0);
+	StopPlayerLookAt();
+	PlayGuiSound("water_lurker_eat_rev.snt", 1.5f);
+}
+
+void Slipping_Timer3(string &in asTimer) {	
+	AddEffectVoice("07_shifting4.ogg", "", "Voice", "07_shifting4", false, "", 0, 0);
+}
+
+void Slipping_Timer4(string &in asTimer) {	
+	StartCredits("falling_into_madness_whitebadaudio.ogg", false, "Credits", "EsoCredits", 3);
+}

@@ -1,0 +1,98 @@
+void OnStart()
+{
+	ScriptDebugOn();
+	if (ScriptDebugOn() == true) 
+		GiveItem("lantern", "lantern", "", "", 100.f);
+	PreloadSound("ui_torture.snt"); PreloadSound("24_iron_maiden.snt");
+	AddEntityCollideCallback("Player", "insane", "insanity", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "scare", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_2", "scare1", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_3", "scare2", true, 0);
+	AddEntityCollideCallback("Player", "changemap", "changetmap", true, 0);
+	SetLocalVarInt("Scares", 0);
+}
+void scare(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("First scare triggered", false);
+	for(int i=1; i<=14; ++i)	
+		SetEntityActive("corpse_male_"+i, true);
+	for(int i=1; i<=10; ++i)
+		PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	for(int i=1; i<=7; ++i) 
+		AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, 100.0f, "world");
+	for(int i=8; i<=14; ++i) 
+		AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, -100.0f, "world");
+	AddTimer("dissapear", 2.0f, "TimerEvents");
+}
+
+void scare1(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Second scare triggered", false);
+	for(int i=1; i<=10; ++i)
+		PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	for(int i=9; i<=13; ++i)	
+		AddPropImpulse("wood_box_small01_"+i, 0.0f, 0.0f, 100.0f, "world");
+}
+
+void scare2(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Final scare triggered", false);
+	for(int i=1; i<=10; ++i)
+		PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	for(int i=15; i<=28; ++i)	
+		SetEntityActive("corpse_male_"+i, true);
+	for(int i=15; i<=21; ++i)	
+		AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, 100.0f, "world");
+	for(int i=23; i<=28; ++i)	
+		AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, -100.0f, "world");
+	AddTimer("dissapear2", 2.0f, "TimerEvents");
+}
+
+void insanity(string &in asParent, string &in asChild, int alState)
+{
+	if (alState == 1)
+	{
+		PlaySoundAtEntity("terror at "+asChild, "ui_torture.ent", asChild, 10, true);
+		FadeImageTrailTo(0.5f, 0.1f);
+		AddTimer("insanity", 1.0f, "timerinsanity");
+	}
+	else
+	{
+		FadeImageTrailTo(0.0f, 0.001f);
+		StopSound("terror at "+asChild, 0.1f);
+		RemoveTimer("insanity");
+	}
+}
+
+void timerinsanity(string &in asTimer)
+{
+		if (GetPlayerSanity() <= 50)
+			GiveSanityDamage(0.05f * 0.2f, false);
+		else
+			GiveSanityDamage(0.15f * 0.2, false);
+		AddTimer ("insanity", 0.5f, "timerinsanity");
+}
+
+void TimerEvents(string &in asTimer)
+{
+	if(asTimer == "dissapear")	
+	{
+		for(int i=1; i<=14; ++i) SetEntityActive("corpse_male_"+i, false);
+		AddLocalVarInt("Scares", 1);
+	}
+	else if(asTimer == "dissapear2")
+	{
+		for(int i=15; i<=28; ++i) SetEntityActive("corpse_male_"+i, false);
+		AddDebugMessage("block_box_1 is removed", false);
+		AddLocalVarInt("Scares", 1);
+	}
+	if (GetLocalVarInt("Scares") == 2)
+	{
+		SetEntityActive("block_box_1", false);
+	}
+}
+
+void changetmap(string &in asParent, string &in asChild, int alState) 
+{
+	ChangeMap("0004.map", "PlayerStartArea_1", "", "OdeToJoy.snt");
+}

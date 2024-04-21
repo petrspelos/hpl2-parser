@@ -1,0 +1,265 @@
+void OnStart()
+{
+AddUseItemCallback("RemoveRocks1", "Orb1", "OrbRod1", "RemoveRocks1", true);
+AddUseItemCallback("RemoveRocks2", "Orb2", "OrbRod2", "RemoveRocks2", true);
+AddUseItemCallback("RemoveRocks3", "Orb3", "OrbRod3", "RemoveRocks3", true);
+AddUseItemCallback("RemoveRocks4", "Orb4", "OrbRod4", "RemoveRocks4", true);
+SetEntityPlayerInteractCallback("Hammer", "UseHammer", false);
+SetEntityPlayerInteractCallback("Chipper", "UseChipper", false);
+AddEntityCollideCallback("Player", "Spawn_Area_Grunt", "SpawnAreaGrunt", true, 1);
+AddEntityCollideCallback("Area_Grunt", "Despawn_Orb_Grunt", "DespawnOrbGrunt", true, 1);
+SetEntityPlayerInteractCallback("Orb2", "OrbGruntSpawn", false);
+AddEntityCollideCallback("Orb_Grunt", "Despawn_Orb_Grunt", "DespawnOrbGrunt", true, 1);
+AddUseItemCallback("BreakPadLock", "stone_hammer_chipper", "padlock_rusty_1", "BreakPadLock", true);
+SetEntityPlayerInteractCallback("padlock_rusty_1", "LockIsWeak", false);
+///AddEntityCollideCallback("Player", "Rock_Quest_Area", "GetRockQuest", true, 1);
+///AddEntityCollideCallback("Player", "Rock_Quest_Complete_Area", "FinishRockQuest", true, 1);
+AddEntityCollideCallback("Player", "Spawn_Fake_Brute", "SpawnFakeBrute", true, 1);
+AddEntityCollideCallback("Fake_Brute", "Despawn_Fake_Brute", "DespawnFakeBrute", true, 1);
+AddEntityCollideCallback("Player", "Spawn_Chase_Grunt", "SpawnChaseGrunt", true, 1);
+}
+
+void RemoveRocks1(string &in asItem, string &in asEntity)
+{
+      SetEntityActive("Orb1_Static", true);
+      SetEntityInteractionDisabled(asEntity, true);
+      SetEntityInteractionDisabled("Orb1_Static", true);
+      SetEntityActive("Orb1_Activate", true);
+      AddLocalVarInt("ShardCount", 1);
+      SetLocalVarInt("O1", 1);
+      RemoveItem(asItem);
+
+      if(GetLocalVarInt("ShardCount")==4)
+      {
+              AddTimer("RocksRemoved", 1, "RocksRemoved"); 
+      }
+}
+
+void RemoveRocks2(string &in asItem, string &in asEntity)
+{
+      SetEntityActive("Orb2_Static", true);
+      SetEntityInteractionDisabled(asEntity, true);
+      SetEntityInteractionDisabled("Orb2_Static", true);
+      SetEntityActive("Orb2_Activate", true);
+      AddLocalVarInt("ShardCount", 1);
+      SetLocalVarInt("O2", 1);
+      RemoveItem(asItem);
+
+      if(GetLocalVarInt("ShardCount")==4)
+      {
+               AddTimer("RocksRemoved", 1, "RocksRemoved");
+      }
+}     
+
+void RemoveRocks3(string &in asItem, string &in asEntity)
+{
+      SetEntityActive("Orb3_Static", true);
+      SetEntityInteractionDisabled(asEntity, true);
+      SetEntityInteractionDisabled("Orb3_Static", true);
+      SetEntityActive("Orb3_Activate", true);
+      AddLocalVarInt("ShardCount", 1);
+      SetLocalVarInt("O3", 1);
+      RemoveItem(asItem);
+
+      if(GetLocalVarInt("ShardCount")==4)
+      {
+              AddTimer("RocksRemoved", 1, "RocksRemoved"); 
+      }
+}  
+
+void RemoveRocks4(string &in asItem, string &in asEntity)
+{
+      SetEntityActive("Orb4_Static", true);
+      SetEntityInteractionDisabled(asEntity, true);
+      SetEntityInteractionDisabled("Orb4_Static", true);
+      SetEntityActive("Orb4_Activate", true);
+      AddLocalVarInt("ShardCount", 1);
+      SetLocalVarInt("O4", 1);
+      RemoveItem(asItem);
+
+      if(GetLocalVarInt("ShardCount")==4)
+      {
+               AddTimer("RocksRemoved", 1, "RocksRemoved");
+      }
+}  
+
+void BeginSounds(string &in asTimer)
+{
+      AddTimer("Sounds", RandFloat(15.0f, 30.0f), "Sounds");
+      SetLocalVarInt("SoundID", RandInt(1,9));
+} 
+
+void Sounds(string &in asTimer)
+{
+      RemoveTimer("Sounds");
+
+      if(GetLocalVarInt("SoundID")==1)
+      {
+               PlaySoundAtEntity("s1", "scare_male_terrified.snt", "Player", 0.0f, false);
+      } 
+
+      else if(GetLocalVarInt("SoundID")==2)
+      {
+               PlaySoundAtEntity("s2", "scare_baby_cry.snt", "Player", 0.0f, false);
+      }
+
+      else if(GetLocalVarInt("SoundID")==3)
+      {
+               PlaySoundAtEntity("s3", "insanity_baby_cry.snt", "Player", 0.0f, false);
+      }
+      
+      else if(GetLocalVarInt("SoundID")==4)
+      {
+               PlaySoundAtEntity("s4", "genreal_chain_rattle.snt", "Player", 0.0f, false); 
+      }
+
+      else if(GetLocalVarInt("SoundID")==5)
+      {
+                PlaySoundAtEntity("s5", "15_the_big_scream.snt", "Player", 0.0f, false);
+      }
+
+      else if(GetLocalVarInt("SoundID")==6)
+      {
+                PlaySoundAtEntity("s6", "scare_male_terrified.snt", "Player", 0.0f, false);
+      }
+
+      else if(GetLocalVarInt("SoundID")==7)
+      {
+                PlaySoundAtEntity("s7", "impact_heavy_wood_med.snt", "Player", 0.0f, false);
+      }
+      AddTimer("LoopSound", 0.1f, "BeginSounds");
+}
+
+void RocksRemoved(string &in asEntity)
+{
+       SetPropHealth("RockWall", 0);
+       PlaySoundAtEntity("", "03_break_wall", "RockWall", 0, false);
+} 
+
+void UseHammer(string &in asEntity)
+{
+       if(HasItem("Chipper"))
+       {
+             RemoveItem("Chipper");
+             RemoveItem("Hammer");
+             GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);	
+       }
+}
+
+void UseChipper(string &in asEntity)
+{
+        if(HasItem("Hammer"))
+        {       
+              RemoveItem("Chipper");
+              RemoveItem("Hammer");
+              GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+        }
+}
+
+void SpawnAreaGrunt(string &in asParent, string &in asChild, int alState)
+{
+      ClearEnemyPatrolNodes("Area_Grunt");
+      SetEntityActive("Area_Grunt", true);
+      AddEnemyPatrolNode("Area_Grunt", "PathNodeArea_1", 0, "");
+      AddEnemyPatrolNode("Area_Grunt", "PathNodeArea_2", 4, "");
+      AddEnemyPatrolNode("Area_Grunt", "PathNodeArea_3", 4, "");
+      AddEnemyPatrolNode("Area_Grunt", "PathNodeArea_4", 0, "");
+}
+
+void DespawnAreaGrunt(string &in asParent, string &in asChild, int alState)
+{
+      SetEntityActive("Area_Grunt", false);
+}
+
+void OrbGruntSpawn(string &in asEntity)
+{
+      ClearEnemyPatrolNodes("Orb_Grunt");
+      SetEntityActive("Orb_Grunt", true);
+      AddEnemyPatrolNode("Orb_Grunt", "PathNodeArea_5", 4, "");
+      AddEnemyPatrolNode("Orb_Grunt", "PathNodeArea_6", 0, "");
+      AddEnemyPatrolNode("Orb_Grunt", "PathNodeArea_7", 0, "");
+      AddEnemyPatrolNode("Orb_Grunt", "PathNodeArea_8", 0, "");
+      AddEnemyPatrolNode("Orb_Grunt", "PathNodeArea_9", 0, "");
+}
+
+void DespawnOrbGrunt(string &in asParent, string &in asChild, int alState)
+{
+     SetEntityActive("Orb_Grunt", false);
+}
+
+void CombineHammerAndChipper(string &in asItemA, string &in asItemB)
+{
+      if(asItemA == "Hammer" && asItemB =="Chipper"){
+              
+            RemoveItem("Chipper");
+            RemoveItem("Hammer");
+
+            GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+      }
+      else if(asItemA == "Chipper" && asItemB == "Hammer"){
+
+             RemoveItem("Chipper");
+             RemoveItem("Hammer");
+
+             GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+       }
+}
+
+void LockIsWeak(string &in asEntity)
+{
+      SetMessage("PrisonEBlockMap", "PadLock", 0);
+}
+
+void BreakPadLock(string &in asItem, string &in asEntity)
+{
+       SetEntityActive("padlock_rusty_1", false);
+       GiveSanityBoostSmall();
+       RemoveItem(asItem);
+}
+
+void GetRockQuest(string &in asParent, string &in asChild, int alState)
+{
+       AddQuest("blowuprocks", "BlowUpRocks");
+}
+
+void FinishRockQuest(string &in asParent, string &in asChild, int alState)
+{
+      CompleteQuest("blowuprocks", "BlowUpRocks");
+}
+
+void SpawnFakeBrute(string &in asParent, string &in asChild, int alState)
+{
+       SetEntityActive("Fake_Brute", true);
+       AddEnemyPatrolNode("Fake_Brute", "PathNodeArea_1", 0, "");
+       GiveSanityDamage(15, true);
+}
+
+void DespawnFakeBrute(string &in asParent, string &in asChild, int alState)
+{
+      SetEntityActive("Fake_Brute", false);
+}
+
+void SpawnChaseGrunt(string &in asParent, string &in asChild, int alState)
+{
+       SetEntityActive("ChaseGrunt", true);
+       ShowEnemyPlayerPosition("ChaseGrunt");
+}
+
+void OnEnter()
+{
+     PlayMusic("12_amb.ogg", true, 1, 4, 2, true);
+     PreloadSound("scare_male_terrified4");
+     PreloadSound("scare_baby_cry4");
+     PreloadSound("insanity_baby_cry2");
+     PreloadSound("15_drag_body");
+     PreloadSound("15_the_big_scream01");
+     PreloadSound("scare_male_terrified1");
+     PreloadSound("impact_heavy_wood_med1");
+     AddTimer("BeginSounds", 1.0f, "BeginSounds");
+}
+ 
+
+void OnLeave()
+{
+
+}

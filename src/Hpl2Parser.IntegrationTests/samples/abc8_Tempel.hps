@@ -1,0 +1,522 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaWater", "Water", true, 1);
+AddEntityCollideCallback("Player", "AreaWater2", "WaterDeath", false, 1);
+AddEntityCollideCallback("Player", "AreaWaldon", "Waldon", true, 1);
+AddEntityCollideCallback("Player", "AreaEmperor", "Emperor", true, 1);
+AddEntityCollideCallback("Player", "AreaDog", "Dog", true, 1);
+AddEntityCollideCallback("Player", "AreaEaster", "EasterEgg", true, 1);
+AddEntityCollideCallback("Player", "AreaWall", "Wall", true, 1);
+AddEntityCollideCallback("Player", "AreaWall2", "Wall2", true, 1);
+AddEntityCollideCallback("Player", "AreaWall3", "Wall4", true, 1);
+AddEntityCollideCallback("Player", "AreaWall4", "Wall5", true, 1);
+AddEntityCollideCallback("waldon", "AreaWaldonStop", "WaldonStop", true, 1);
+AddEntityCollideCallback("dog", "AreaDogStop", "DogStop", true, 1);
+AddUseItemCallback("", "rod1", "AreaRods", "Rod1", false);
+AddUseItemCallback("", "rod2", "AreaRods", "Rod2", false);
+AddUseItemCallback("", "rod3", "AreaRods", "Rod3", false);
+AddUseItemCallback("","money12","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money13","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money15","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money16","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money14","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money8","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money10","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money11","AreaChest","Unlockchest",false);
+AutoSave();
+}
+
+void Water(string &in asParent, string &in asChild, int alState)
+{	
+FadeOut(0);
+SetPlayerActive(false);
+SetPlayerCrouchDisabled(true);
+MovePlayerHeadPos(0.0f, -1.25f, 0.0f, 1.0f, 0.5f);
+FadePlayerRollTo(-60, 10, 25);
+AddTimer("water2", 4, "water2");
+CheckPoint ("Checkpoint", "PlayerStartArea_2", "DeathSettings", "DeathHints", "Ch3water");	
+}
+
+void water2(string &in asTimer)
+{	
+PlayGuiSound("react_pant", 0.7f);
+TeleportPlayer("PlayerStartArea_2");
+FadeIn(3);
+AddTimer("water3", 4, "water3");
+SetPlayerHealth(75);
+}
+
+void water3(string &in asTimer)
+{	
+StartPlayerLookAt("AreaWater", 5, 50, "");
+PlaySoundAtEntity("","water_lurker_idle_rev.snt","AreaWater", 0,false);
+AddTimer("water4", 3, "water4");
+}
+
+void water4(string &in asTimer)
+{	
+StartPlayerLookAt("AreaWater", 5, 50, "");
+FadePlayerRollTo(0.0f, 1.0f, 33.0f);
+MovePlayerHeadPos(0.0, 0, 0, 1.0f, 0.5f);
+AddTimer("water5", 1, "water5");
+}
+
+void water5(string &in asTimer)
+{	
+StopPlayerLookAt();
+PlayMusic("Temple3", true, 1.0f, 4.0f, 0, true);
+FadeImageTrailTo(0, 1.0f);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+AddQuest("Ch6up", "Ch6up");
+CompleteQuest("Ch6moving", "Ch6moving");
+RemoveItem("money11");
+RemoveItem("money12");
+RemoveItem("money13");
+RemoveItem("money14");
+RemoveItem("money15");
+SetEntityActive("AreaWater2", true);
+SetEntityActive("lurker", true);
+SetEntityActive("lurker2", true);
+SetPlayerActive(true);
+SetPlayerCrouchDisabled(false);
+}
+
+void WaterDeath(string &in asParent, string &in asChild, int alState)
+{	
+FadeOut(0);
+SetPlayerActive(false);
+AddTimer("waterdeath2", 2, "waterdeath2");
+SetEntityActive("lurker", false);
+SetEntityActive("lurker2", false);	
+}
+
+void waterdeath2(string &in asTimer)
+{	
+PlaySoundAtEntity("","water_lurker_idle_rev.snt","Player", 0,false);
+AddTimer("waterdeath3", 1, "waterdeath3");
+}
+
+void waterdeath3(string &in asTimer)
+{	
+AddTimer("waterdeath4", 1, "waterdeath4");
+GivePlayerDamage(1, "BloodSplat", true, false);
+}
+
+void waterdeath4(string &in asTimer)
+{	
+AddTimer("waterdeath5", 1, "waterdeath5");
+GivePlayerDamage(1, "BloodSplat", true, false);
+PlaySoundAtEntity("","water_lurker_eat_rev.snt","Player", 0,false);
+}
+
+void waterdeath5(string &in asTimer)
+{	
+GivePlayerDamage(200, "BloodSplat", true, true);
+}
+
+//---- Waldon at the gate ----//
+
+void Waldon(string &in asParent, string &in asChild, int alState)
+{	
+AddEnemyPatrolNode("waldon","node_1",0,"");
+SetEntityActive("waldon", true);
+CompleteQuest("Ch6up", "Ch6up");
+AddTimer("waldon2", 2, "waldon2");	
+}
+
+void waldon2(string &in asTimer)
+{	
+AddEffectVoice("waldongate.ogg", "", "Voice", "00_Waldongate", false, "", 0, 0 );
+AddTimer("waldon3", 2, "waldon3");	
+}
+
+void waldon3(string &in asTimer)
+{	
+AddEnemyPatrolNode("waldon","node_2",0,"");
+AddEnemyPatrolNode("waldon","node_3",0,"");		
+}
+
+void WaldonStop(string &in asParent, string &in asChild, int alState)
+{	
+PlaySoundAtEntity("","10_open_door.snt", "AreaWaldonStop", 0.5, false);
+SetEntityActive("waldon", false);	
+}
+
+//---- Dog looking down on player ----//
+
+void key(string &in asEntity)
+{
+SetEntityActive("AreaDog", true);
+SetEntityActive("skull", false);
+SetEntityActive("skull2", true);
+}
+
+void Dog(string &in asParent, string &in asChild, int alState)
+{	
+AddTimer("dog2", 3, "dog2");
+AddEnemyPatrolNode("dog","node_8",0,"");	
+SetEntityActive("dog", true);	
+}
+
+void dog2(string &in asTimer)
+{	
+AddEnemyPatrolNode("dog","node_4",0,"");		
+}
+
+void DogStop(string &in asParent, string &in asChild, int alState)
+{	
+PlaySoundAtEntity("doorgruntleave","10_open_door.snt", "AreaWaldonStop", 0.5, false);
+SetEntityActive("dog", false);	
+}
+
+//---- Events and quests after the cave ----//
+
+void scare(string &in asEntity)
+{
+SetEntityActive("scare1", true);
+SetEntityActive("scare2", true);
+SetEntityActive("scare3", true);
+SetEntityActive("scare4", true);
+SetEntityActive("scare5", true);
+SetEntityActive("scare6", true);
+SetEntityActive("scare7", true);
+SetEntityActive("scare8", true);
+SetEntityActive("scare9", true);
+SetEntityActive("scare10", true);
+SetEntityActive("scare11", true);
+SetEntityActive("skull", false);
+SetEntityActive("skull2", false);
+SetEntityActive("armor", false);
+SetEntityActive("armor2", false);
+SetEntityActive("armor3", false);
+SetEntityActive("armor4", false);
+SetEntityActive("armor5", false);
+SetEntityActive("armor6", false);
+SetEntityActive("armor7", false);
+SetEntityActive("armor8", false);
+PlaySoundAtEntity("","enemy_dog_attention.snt","scare5", 0,true);
+AddTimer("scare2", 3, "scare2");
+}
+
+void scare2(string &in asTimer)
+{
+SetEntityActive("scare1", false);
+SetEntityActive("scare2", false);
+SetEntityActive("scare3", false);
+SetEntityActive("scare4", false);
+SetEntityActive("scare5", false);
+SetEntityActive("scare6", false);
+SetEntityActive("scare7", false);
+SetEntityActive("scare8", false);
+SetEntityActive("scare9", false);
+SetEntityActive("scare10", false);
+SetEntityActive("scare11", false);
+CreateParticleSystemAtEntity("", "ps_cloud_thing01", "scare2", false);
+CreateParticleSystemAtEntity("", "ps_cloud_thing01", "scare3", false);
+CreateParticleSystemAtEntity("", "ps_cloud_thing01", "scare5", false);
+SetEntityActive("arm", true);
+ShowEnemyPlayerPosition("arm");
+AddTimer("scare3", 2, "scare3");
+FadeEnemyToSmoke("ghost3", false);
+}
+
+void scare3(string &in asTimer)
+{
+FadeEnemyToSmoke("arm", false);
+GiveSanityDamage(10, true);
+PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.8f, false);
+SetMessage("Messages", "ch6head", 5);
+FadeOut(0.0f);
+SetPlayerActive(false);
+TeleportPlayer("PlayerStartArea_3");
+AddTimer("scare4", 2, "scare4");
+}
+
+void scare4(string &in asTimer)
+{
+PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.8f, false);
+FadeIn(2.0f);
+SetPlayerActive(true);
+PlayMusic("Hallucination", true, 1.5f, 4.0f, 0, true);
+SetPlayerRunSpeedMul(0.0f);
+SetLocalVarInt("Heartbeat", 1);
+AddTimer("HeartBeat_1", 2, "HeartBeat");
+}
+
+void gate(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+SetMoveObjectState("gate", 1.0f);
+PlaySoundAtEntity("LeverSound","16_winch_bridge.snt","lever", 0,true);
+PlaySoundAtEntity("LeverSound","16_winch_bridge.snt","gate", 0,true);
+SetEntityConnectionStateChangeCallback("lever", "");
+AddTimer("gate2", 15, "gate2");
+          return;
+     }
+}
+
+void gate2(string &in asTimer)
+{
+SetMoveObjectState("gate", 0.0f);
+SetEntityConnectionStateChangeCallback("lever", "gate");
+StopSound("LeverSound", 0.5f);
+}
+
+void Emperor(string &in asParent, string &in asChild, int alState)
+{	
+PlayMusic("Emperor", false, 1.5f, 4.0f, 0, false);
+SetMessage("Messages", "emperor", 5);
+SetSanityDrainDisabled(false);	
+}
+
+void chest(string &in asEntity)
+{
+SetMessage("Messages", "ch6chest", 5);
+AddQuest("Ch6chest", "Ch6chest");
+}
+
+void Unlockchest(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","unlock_door","Player", 0,false);
+SetEntityInteractionDisabled("key", false);
+SetEntityActive("AreaChest", false);
+CompleteQuest("Ch6chest", "Ch6chest");
+}
+
+void Rod1(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("", "13_rod_in.snt", "Player", 0.8, false);
+SetEntityInteractionDisabled("rod11", true);
+SetEntityActive("rod11", true);
+AddLocalVarInt("VarIntRodsPlaced", 1);
+	Machine();
+}
+
+void Rod2(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("", "13_rod_in.snt", "Player", 0, false);
+SetEntityInteractionDisabled("rod22", true);
+SetEntityActive("rod22", true);
+AddLocalVarInt("VarIntRodsPlaced", 1);
+	Machine();
+}
+
+void Rod3(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("", "13_rod_in.snt", "Player", 0, false);
+SetEntityInteractionDisabled("rod33", true);
+SetEntityActive("rod33", true);
+AddLocalVarInt("VarIntRodsPlaced", 1);
+	Machine();
+}
+
+void Machine(){
+
+	if(GetLocalVarInt("VarIntRodsPlaced") == 3){
+		
+		PlayMusic("04_puzzle_acid.ogg", false, 1.0f, 0.5, 15, false);
+                CompleteQuest("Ch6machine", "Ch6machine");
+                SetMoveObjectState("gate2", 1.0f);
+	}
+}
+
+void gate2(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+SetMoveObjectState("gate3", 1.0f);
+ChangeMap("Tempel2.map", "PlayerStartArea_1", "","");
+          return;
+     }
+}
+
+//---- Hallucination ----//
+
+void HeartBeat(string &in asTimer)
+{
+	if(GetLocalVarInt("Heartbeat") == 1)
+	{
+		if(asTimer == "HeartBeat_1")
+		{
+			PlaySoundAtEntity("heartbeat", "sanity_heartbeat.snt", "Player", 0.0f, false);
+			AddTimer("Beat", 0.05f, "HeartBeat");
+			AddTimer("Beat", 0.35f, "HeartBeat");
+			AddDebugMessage("EXECUTE TIMER", false);
+			AddTimer("HeartBeat_1", 2, "HeartBeat");
+		}
+		
+		if(asTimer == "Beat")
+		{
+			FadePlayerAspectMulTo(1.25f, 20);
+			FadeRadialBlurTo(0.05f, 20);
+			FadePlayerFOVMulTo(0.8f, 30);
+			AddTimer("Beat_end", 0.05f, "HeartBeat");
+		}
+		
+		if(asTimer == "Beat_end")
+		{
+			FadePlayerAspectMulTo(1.0f, 1);
+			FadePlayerFOVMulTo(1.0f, 0.75f);
+			FadeRadialBlurTo(0.0f, 1);
+		}
+	}
+}
+
+void Wall(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("wall", true);	
+SetEntityActive("wall2", true);	
+}
+
+void Wall2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("wall3", true);	
+SetEntityActive("wall4", true);	
+SetLocalVarInt("Heartbeat", 0);
+}
+
+void wall3(string &in asEntity)
+{
+SetEntityActive("wall5", false);	
+SetEntityActive("wall6", false);	
+}
+
+void Wall4(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("wall5", true);	
+SetEntityActive("wall6", true);	
+}
+
+void Wall5(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("wall7", true);	
+SetEntityActive("wall8", true);	
+}
+
+void orb(string &in asEntity)
+{
+PlaySoundAtEntity("","12_warn.snt","Player", 0, false);
+StartScreenShake(0.1, 2.0, 0.05, 0.5);
+FadeOut(1.0f);
+SetPlayerActive(false);
+SetMessage("Messages", "ch6hallu", 5);
+AddTimer("orb2", 3, "orb2");
+AutoSave();	
+}
+
+void orb2(string &in asTimer)
+{
+FadeIn(1.0f);
+SetPlayerActive(true);
+TeleportPlayer("PlayerStartArea_4");
+SetLocalVarInt("Heartbeat", 1);
+}
+
+void orb3(string &in asEntity)
+{
+SetEntityActive("harry", true);	
+SetEntityActive("jonathan", true);
+SetEntityActive("waldon2", true);
+SetLocalVarInt("Heartbeat", 0);
+AddEnemyPatrolNode("waldon2","node_5",0,"");
+AddEnemyPatrolNode("jonathan","node_6",0,"");	
+AddEnemyPatrolNode("harry","node_7",0,"");		
+SetPlayerActive(false);
+StartPlayerLookAt("jonathan", 5, 50, "");
+AddTimer("orb4", 1, "orb4");	
+}
+
+void orb4(string &in asTimer)
+{
+AddTimer("orb5", 1, "orb5");
+StartPlayerLookAt("waldon2", 5, 50, "");
+}
+
+void orb5(string &in asTimer)
+{
+AddTimer("orb6", 3, "orb6");
+StartPlayerLookAt("jonathan", 5, 50, "");
+}
+
+void orb6(string &in asTimer)
+{
+AddTimer("orb7", 2, "orb7");
+PlaySoundAtEntity("","12_warn.snt","Player", 0, false);
+StartScreenShake(0.1, 2.0, 0.05, 0.5);
+FadeOut(0.0f);
+StopPlayerLookAt();
+TeleportPlayer("PlayerStartArea_5");
+MovePlayerHeadPos(0.0f, -1.1f, 0.0f, 1.0f, 0.5f);
+}
+
+void orb7(string &in asTimer)
+{
+AddTimer("orb8", 5, "orb8");
+FadeIn(2.0f);
+}
+
+void orb8(string &in asTimer)
+{
+SetPlayerActive(true);
+MovePlayerHeadPos(0.0, 0, 0, 1.0f, 0.5f);
+SetPlayerRunSpeedMul(1.0f);
+}
+
+//---- Easter egg ----//
+
+void easter(string &in asEntity)
+{
+SetEntityActive("AreaEaster", true);
+}
+
+void EasterEgg(string &in asParent, string &in asChild, int alState)
+{	
+AddTimer("easteregg2", 5, "easteregg2");	
+SetEntityActive("grunt", true);
+PlaySoundAtEntity("", "Notpass.snt", "Player", 0, false);	
+}
+
+void easteregg2(string &in asTimer)
+{	
+SetEntityActive("grunt", false);
+CreateParticleSystemAtEntity("", "blood", "grunt", false);
+CreateParticleSystemAtEntity("", "ps_slime_attack_normal", "grunt", false);			
+}
+
+//---- Etc ----//
+
+void notemusic(string &in asEntity)
+{
+PlayMusic("10_paper_daniel02", false, 1.0f, 2.0f, 0, true);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+FadeIn(0);
+SetPlayerActive(true);
+SetEntityActive("lurker", true);
+SetEntityActive("lurker2", true);
+PlayMusic("Temple3", true, 1.0f, 4.0f, 0, true);
+}
+
+void OnEnter()
+{	
+StopMusic(10, 0);
+SetSanityDrainDisabled(true);
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_tempel.png");
+}

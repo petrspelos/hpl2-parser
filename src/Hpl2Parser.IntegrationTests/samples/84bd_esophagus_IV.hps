@@ -1,0 +1,379 @@
+///////// move to Include hps
+
+void ResumeNormalSpeed() {
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+
+void DisableCandles(bool abDisabled) {
+	SetEntityInteractionDisabled("candle_floor_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick01_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick02_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_floor_*", abDisabled);
+	SetEntityInteractionDisabled("torch_*", abDisabled);
+	SetEntityInteractionDisabled("hanging_lantern_ceiling_*", abDisabled);
+	SetEntityInteractionDisabled("elevator_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_tri_*", abDisabled);
+	
+	SetEntityInteractionDisabled("lamp_wall_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("ki_lampion_*", abDisabled);
+	SetEntityInteractionDisabled("lamp_gas_*", abDisabled);
+	SetEntityInteractionDisabled("LampBarrelsTake_*", abDisabled);
+}
+
+void RemoveQuest_Diary(string &in asTimer) {
+	CompleteQuest(asTimer, "commongospel");
+}
+
+void DeathChecker() {
+	SetGlobalVarInt("NumOfDeaths", GetGlobalVarInt("NumOfDeaths") + 1);
+	if (GetGlobalVarInt("NumOfDeaths") <= 3) {
+		RemoveHint("deathshint");
+		GiveHint("deathshint", "Hints", "DeathCounter", -1);
+	}
+	else 
+	if (GetGlobalVarInt("NumOfDeaths") == 10) {
+		AddQuest("Deathwarning1", "deathwarning1");
+	} else if (GetGlobalVarInt("NumOfDeaths") == 15) {
+		CompleteQuest("Deathwarning1", "deathwarning1");
+		AddQuest("Deathwarning2", "deathwarning2");
+	}
+	else if (GetGlobalVarInt("NumOfDeaths") == 20) {
+		CompleteQuest("Deathwarning2", "deathwarning2");
+		AddQuest("Deathwarning3", "deathwarning3");
+		GiveSanityDamage(200, true);
+		FadeOut(8);
+		AddTimer("deathCheckOut_Timer", 15.0f, "DeathCheckOut_Timer");
+	}
+}
+void DeathCheckOut_Timer(string &in asTimer) {
+	ChangeMap("esophagus_VI.map", "PlayerStartArea_2", "", "");
+}
+
+////////////
+
+
+void OnStart() {
+	DisableCandles(true);
+
+	PlayMusic("cherno_corvin_kingfisher", true, 0.5f, 15.0f, 0, true);
+	SetLightVisible("BoxLight_Flesh", false);
+	
+	if (ScriptDebugOn()) {
+		SetSwingDoorLocked("lockeddoor_*", false, false);
+		if (!HasItem("lantern_1")) {
+			GiveItemFromFile("lantern_1", "lantern.ent");
+		}
+		SetGlobalVarInt("NumOfDeaths", 0);
+	} else {
+		MansionArrive_Dialog();
+	}
+	
+	SetEntityPlayerInteractCallback("candle_oil_*", "PickUpCandleOil", true);
+	AddUseItemCallback("", "key_relic_1", "lockeddoor_1", "UseKeyOnDoor1", false);
+	AddUseItemCallback("", "key_relic_1", "lockeddoor_2", "UseKeyOnDoor2", false);
+	AddUseItemCallback("", "key_relic_1", "lockeddoor_3", "UseKeyOnDoor3", false);
+	
+	AddEntityCollideCallback("Player", "ScriptArea_WindowEvent", "WindowsDisappearEvent", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_FlesherAlert_1", "FleshersAlerted", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_FlesherAlert_2", "FleshersAlerted", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_RoomDialogs", "RoomDialogs", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_CrowsEvent", "CrowsAppear", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_CrowAggroZone", "CrowsAggro", true, 0);
+	
+	SetInDarknessEffectsActive(true);
+	
+	PlayPropAnimation("flesher_trance_*", "Praying", 0, true, "");
+	PlayFlesherAmbience();
+	
+	CheckPoint("eso4_check", "PlayerStartArea_1", "Eso4Checkpoint", "", "");
+	AutoSave();
+}
+
+/// dialogs when you enter the mansion
+
+void MansionArrive_Dialog() {
+	FadeOut(0);
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerRunSpeedMul(0.3f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	PlayGuiSound("react_breath", 1.5f);
+	AddTimer("mansionDialog_Timer1", 5.5f, "MansionDialog_Timer1");
+}
+
+void MansionDialog_Timer1(string &in asTimer) {
+	PlayGuiSound("react_breath", 1.0f);
+	FadeIn(3);
+	PlayGuiSound("react_breath", 1.5f);
+	SetEffectVoiceOverCallback("MansionDialog_Timer2");
+	AddEffectVoice("04_doorstep1.ogg", "", "Voice", "04_doorstep1", false, "", 0, 0);
+}
+
+void MansionDialog_Timer2() {
+	PlayGuiSound("react_breath_slow", 1.0f);
+	SetEffectVoiceOverCallback("MansionDialog_Timer3");
+	AddEffectVoice("04_doorstep2.ogg", "", "Voice", "04_doorstep2", false, "", 0, 0);
+	AddEffectVoice("04_doorstep3.ogg", "", "Voice", "04_doorstep3", false, "", 0, 0);
+}
+
+void MansionDialog_Timer3() {
+	ResumeNormalSpeed();
+	AddQuest("04_commongospel", "commongospel");
+	AddDiary("Gospel_Level4", "diary_page");
+	AddTimer("04_commongospel", 10.0f, "RemoveQuest_Diary");
+}
+
+/// general events
+
+void WindowsDisappearEvent(string &in asParent, string &in asChild, int alState) {
+	PlayGuiSound("pain_stinger_rebirth", 1.0f);
+	SetEntityActive("windows_entity_*", false);
+	SetLightVisible("BoxLight_Flesh", true);
+	AddTimer("windowsDisappearEvent_Timer", 0.3f, "WindowsDisappearEvent_Timer");
+}
+
+void WindowsDisappearEvent_Timer(string &in asTimer) {
+	SetEntityActive("windows_entity_*", true);
+	SetLightVisible("BoxLight_Flesh", false);
+}
+
+void PickUpCandleOil(string &in asEntity) {
+	SetEntityActive(asEntity, false);
+	SetPropActiveAndFade("item_" + asEntity, false, 0.5f);
+	GiveItemFromFile("new_canlde_" + 1, "new_canlde.ent");
+	PlayGuiSound("pick_generic", 1.0f);
+	SetMessage("Inventory", "ItemName_CandleOilItem", -1.0f);
+}
+
+void PickUpRelicKey(string &in asEntity) {
+	SetEntityActive(asEntity, false);
+	SetPropActiveAndFade("item_" + asEntity, false, 0.5f);
+	GiveItemFromFile("key_relic_" + 1, "key_relic_room.ent");
+	PlayGuiSound("pick_key", 1.0f);
+	SetMessage("Inventory", "ItemName_KeyRelic", -1.0f);
+	AddEntityCollideCallback("Player", "ScriptArea_WindowEvent_2", "WindowsDisappearEvent", true, 0);
+}
+
+void UseKeyOnDoors(string &in asEntity) {
+	SetSwingDoorLocked(asEntity, false, true);
+	PlayGuiSound("relic_door_unlock_01.snt", 0.7f);
+}
+
+void UseKeyOnDoor1(string &in asItem, string &in asEntity) {
+	UseKeyOnDoors(asEntity);
+	SetEntityActive(asEntity, false);
+	SetEntityActive("door1break", true);
+}
+
+void UseKeyOnDoor2(string &in asItem, string &in asEntity) {
+	UseKeyOnDoors(asEntity);
+}
+
+void UseKeyOnDoor3(string &in asItem, string &in asEntity) {
+	UseKeyOnDoors(asEntity);
+	SetEntityPlayerInteractCallback(asEntity, "SpecialDoorStopMusic", true);
+}
+
+void SpecialDoorStopMusic(string &in asEntity) {
+	PlayGuiSound("struggle_mircoflash_rebirth", 1.0f);
+	StopSound("chill_room_ambience", 2.0f);
+}
+
+void RoomDialogs(string &in asParent, string &in asChild, int alState) {
+	ResetFlesherPlacements();
+	SetEffectVoiceOverCallback("ReactivateWindowsScare");
+	AddEffectVoice("04_burnforthis1.ogg", "", "Voice", "04_burnforthis1", false, "", 0, 0);
+	AddEffectVoice("04_burnforthis2.ogg", "", "Voice", "04_burnforthis2", false, "", 0, 0);
+	AddEffectVoice("04_burnforthis3.ogg", "", "Voice", "04_burnforthis3", false, "", 0, 0);
+	AddEffectVoice("04_burnforthis4.ogg", "", "Voice", "04_burnforthis4", false, "", 0, 0);
+}
+
+void ReactivateWindowsScare() {
+	AddEntityCollideCallback("Player", "ScriptArea_WindowEvent", "WindowsDisappearEvent", true, 0);
+}
+
+/// monster encounters
+
+// FLESHERS
+
+void PlayFlesherAmbience() {
+	for (int i = 0; i <= 3; i++) {
+		PlaySoundAtEntity("flesher_trance_sound_" + i, "flesher_idle_loop.snt", "flesher_trance_" + i, 0, false);
+	}
+}
+
+void ResetFlesherPlacements() {
+	TeleportEnemyToNode("flesher_alert_1", "PathNodeArea_50", true);
+	TeleportEnemyToNode("flesher_alert_2", "PathNodeArea_51", true);
+	TeleportEnemyToNode("flesher_alert_3", "PathNodeArea_52", true);
+	AddTimer("resetFleshers_Timer", 0.5f, "ResetFleshers_Timer");
+}
+
+void ResetFleshers_Timer(string &in asTimer) {
+	SetEntityActive("flesher_alert_*", false);
+}
+
+void FleshersAlerted(string &in asParent, string &in asChild, int alState) {
+	SetEntityActive("ScriptArea_WindowEven*", false);
+	SetEntityActive("ScriptArea_FlesherAlert_*", false);
+	SetPlayerMoveSpeedMul(0.5f);
+	SetPlayerRunSpeedMul(0.5f);
+	PlayGuiSound("wakeup_stinger_rebirth", 1.0f);
+	StopSound("flesher_trance_sound_*", 3.0f);
+	PlayPropAnimation("flesher_trance_*", "Praying_Standup", 0, true, "");
+	AddTimer("fleshersAlerted_Timer1", 2.0f, "FleshersAlerted_Timer1");
+	AddTimer("fleshersAlerted_Timer2", 3.5f, "FleshersAlerted_Timer2");
+	AddTimer("fleshersAlerted_Timer3", 5.0f, "FleshersAlerted_Timer3");
+}
+
+void FleshersAlerted_Timer1(string &in asTimer) {
+	FadeOut(0);
+	SetEntityActive("windows_entity_*", false);
+	SetLightVisible("BoxLight_Flesh", true);
+	
+	SetEntityActive("flesher_trance_*", false);
+	SetEntityActive("flesher_alert_*", true);
+	SetEnemyDisableTriggers("flesher_alert_*", true);
+	AddEnemyPatrolNode("flesher_alert_1", "PathNodeArea_7", 7.0f, "");
+	AddEnemyPatrolNode("flesher_alert_2", "PathNodeArea_14", 7.0f, "");
+	AddEnemyPatrolNode("flesher_alert_2", "PathNodeArea_42", 7.0f, "");
+}
+
+void FleshersAlerted_Timer2(string &in asTimer) {
+	FadeIn(1);
+	SetPlayerMoveSpeedMul(1.0f);
+	SetPlayerRunSpeedMul(1.0f);
+	TeleportEnemyToNode("flesher_alert_1", "PathNodeArea_7", true);
+	TeleportEnemyToNode("flesher_alert_2", "PathNodeArea_14", true);
+	TeleportEnemyToNode("flesher_alert_3", "PathNodeArea_42", true);
+}
+
+void FleshersAlerted_Timer3(string &in asTimer) {
+	SetEnemyDisableTriggers("flesher_alert_*", false);
+}
+
+void Eso4Checkpoint(string &in asName, int alCount) {
+	DeathChecker();
+	
+    // could probably rely on alCount but this for sure saves state on game reload
+	StopSound("flesher_trance_sound_*", 0.0f);
+	if (GetGlobalVarInt("checkpointTriggered") == 1) {
+		SetEntityActive("ScriptArea_WindowEven*", false);
+		SetEntityActive("windows_entity_*", false);
+		SetLightVisible("BoxLight_Flesh", true);
+		PlayMusic("cherno_corvin_kingfisher", true, 0.9f, 0.0f, 0, true);
+		SetEntityActive("flesher_trance_*", false);
+		SetEntityActive("flesher_alert_*", true);
+		ResetFlesherPlacements();
+		AddTimer("fleshersRespawn_Timer", 3.0f, "FleshersRespawn_Timer");
+	}
+	else {
+		SetEntityActive("ScriptArea_WindowEven*", true);
+		SetEntityActive("windows_entity_*", true);
+		SetLightVisible("BoxLight_Flesh", false);
+		PlayMusic("cherno_corvin_kingfisher", true, 0.7f, 5.0f, 0, true);
+		SetEntityActive("ScriptArea_WindowEven*", true);
+		SetEntityActive("ScriptArea_FlesherAlert_*", true);
+		SetEntityActive("flesher_trance_*", true);
+		SetEntityActive("flesher_alert_*", true);
+		PlayFlesherAmbience();
+		ResetFlesherPlacements();
+		PlayPropAnimation("flesher_trance_*", "Praying", 0, true, "");
+		SetLocalVarInt("checkpointTriggered", 1);
+	}
+}
+
+void FleshersRespawn_Timer(string &in asTimer) {
+	SetEntityActive("flesher_alert_*", true);
+	TeleportEnemyToNode("flesher_alert_1", "PathNodeArea_7", true);
+	TeleportEnemyToNode("flesher_alert_2", "PathNodeArea_14", true);
+	TeleportEnemyToNode("flesher_alert_3", "PathNodeArea_42", true);
+}
+
+void FlesherDespawn_Timer(string &in asTimer) {
+	SetEntityActive(asTimer, false);
+}
+
+// CROWS
+
+void CrowsEventHandler(string &in asParent, string &in asChild, int alState) {
+	if (GetEnemyStateName("flesher_trance_1") == "Hunt"
+	    || GetEnemyStateName("flesher_trance_2") == "Hunt"
+	    || GetEnemyStateName("flesher_trance_2") == "Hunt") {
+		// nothing happens? or just something minor
+		SetEntityActive("ScriptArea_CrowsEvent", false);
+	} 
+	else if (MathAbs(GetEntityPosX("flesher_trance_1") - GetPlayerPosX()) < 20) {
+		//CrowsAppear();
+	}
+	else {
+		CrowWindowEvent();
+		//CrowsAppear();
+		//CrowAggression();
+	}
+}
+
+void CrowWindowEvent() {
+	// close and lock the door, 2 blips of reality into full
+	PlayGuiSound("struggle_mircoflash_rebirth", 1.5f);
+}
+
+void CrowsAppear(string &in asParent, string &in asChild, int alState) {
+
+    if (MathAbs(GetEntityPosZ("flesher_trance_1") - GetPlayerPosZ()) < 10) {
+		TeleportEnemyToNode("flesher_alert_1", "PathNodeArea_50", true);
+		AddTimer("flesher_trance_1", 1.0f, "FlesherDespawn_Timer");
+	}
+	    if (MathAbs(GetEntityPosZ("flesher_trance_2") - GetPlayerPosZ()) < 10) {
+				TeleportEnemyToNode("flesher_alert_2", "PathNodeArea_51", true);
+				AddTimer("flesher_trance_2", 1.5f, "FlesherDespawn_Timer");
+		}
+		    if (MathAbs(GetEntityPosZ("flesher_trance_3") - GetPlayerPosZ()) < 10) {
+				TeleportEnemyToNode("flesher_alert_3", "PathNodeArea_52", true);
+				AddTimer("flesher_trance_3", 2.0f, "FlesherDespawn_Timer");
+			}
+
+	// crows appear on table
+	SetEntityActive("crow_umbakarna_*", true);
+	StopSound("flesher_trance_sound_*", 3.0f);
+	AddEnemyPatrolNode("crow_umbakarna_1", "PathNodeArea_53", 999, "");
+	AddEnemyPatrolNode("crow_umbakarna_2", "PathNodeArea_54", 999, "");
+	SetEnemyDisableTriggers("crow_umbakarna_*", true);
+	SetEnemySanityDecreaseActive("crow_*", false);
+	
+	// move this to handler later
+	CheckPoint("eso4_check2", "PlayerStartArea_2", "Eso4Checkpoint2", "", "");
+}
+
+void CrowsAggro(string &in asParent, string &in asChild, int alState) {
+	SetEnemyDisableTriggers("crow_umbakarna_*", false);
+	SetEnemySanityDecreaseActive("crow_*", true);
+}
+
+void Eso4Checkpoint2(string &in asName, int alCount) {
+	DeathChecker();
+	PlayMusic("cherno_corvin_kingfisher", true, 0.7f, 5.0f, 0, true);
+	SetEntityActive("crow_umbakarna_*", true);
+}
+
+///////////
+
+void TouchLevelDoor(string &in asEntity) {
+	SetEntityActive("flesher_alert_*", false);
+	SetEntityActive("crow_umbakarna_*", false);
+	PlayGuiSound("00_transition_02.ogg", 1.0f);
+}
+
+void OnLeave() {
+	RemoveItem("key_relic_1");
+	SetupLoadScreen("Voice", "00_transition_02", 0, "eso_loading_V.jpg");
+	
+	DestroyDataCache();
+	ClearSavedMaps();
+}

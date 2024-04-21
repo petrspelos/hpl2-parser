@@ -1,0 +1,166 @@
+void OnEnter()
+{
+	PreloadParticleSystem("ps_acid_web_dissolve");
+	PreloadParticleSystem("ps_area_fog_sewer_long_warmup");
+	PreloadParticleSystem("ps_light_dust");
+	PreloadParticleSystem("ps_rose_petals");
+	PreloadSound("guardian_ontop");
+	PreloadSound("insanity_whisper");
+	PreloadSound("quest_added");
+	PreloadSound("quest_completed");
+	PreloadSound("react_breath");
+	PreloadSound("slime_loop");
+	PreloadSound("02_maze_redux_record_music01");
+	PreloadSound("02_maze_redux_record_music02");
+	PreloadSound("02_maze_redux_record_music03");
+	SetInDarknessEffectsActive(false);
+	SetMapDisplayNameEntry("MazeRedux");
+	SetupLoadScreen("LoadingHints", "02To03", 0, "game_loading_mansion.jpg");
+}
+
+void OnLeave()
+{
+	SetInDarknessEffectsActive(false);
+}
+
+void OnStart()
+{
+	AddTimer("partone", 1.0f, "TimerWelcome");
+	FadeOut(0.0f);
+	PlaySoundAtEntity("slimeloop", "slime_loop", "web_1", 4.0f, true);
+	SetDeathHint("DeathHints", "DoNotFall");
+	SetEntityPlayerInteractCallback("AreaTouchPhonograph_1", "InteractAreaTouchPhonograph", true);
+	SetEntityPlayerInteractCallback("AreaTouchPhonograph_2", "InteractAreaTouchPhonograph", true);
+	SetEntityPlayerInteractCallback("AreaTouchPhonograph_3", "InteractAreaTouchPhonograph", true);
+	SetEntityInteractionDisabled("phonograph_1", true);
+	SetEntityInteractionDisabled("phonograph_2", true);
+	SetEntityInteractionDisabled("phonograph_3", true);
+	SetInDarknessEffectsActive(false);
+	SetInventoryDisabled(true);
+	SetMapDisplayNameEntry("MazeRedux");
+	SetPlayerActive(false);
+	SetPlayerLampOil(100.0f);
+	SetupLoadScreen("LoadingHints", "02To03", 0, "game_loading_mansion.jpg");
+	StopPlayerLookAt();
+	StopMusic(1.0f, 10);
+	StopMusic(0.9f, 1);
+	StopMusic(0.8f, 0);
+}
+
+void TimerWelcome(string &in asTimer)
+{
+	if(asTimer == "partone")
+	{
+		AddTimer("parttwo", 4.0f, "TimerWelcome");
+		CreateParticleSystemAtEntity("petals1", "ps_rose_petals.ps", "AreaPedals_1", false);
+		CreateParticleSystemAtEntity("petals2", "ps_rose_petals.ps", "AreaPedals_2", false);
+		CreateParticleSystemAtEntity("petals3", "ps_rose_petals.ps", "AreaPedals_3", false);
+		CreateParticleSystemAtEntity("petals4", "ps_rose_petals.ps", "AreaPedals_4", false);
+		FadeIn(3.0f);
+		PlayGuiSound("insanity_whisper.snt", 0.7f);
+		PlayMusic("ending_agrippa", true, 0.6f, 1.3f, 0, false);
+		SetPlayerActive(true);
+		SetPlayerLampOil(0.0f);
+		SetInventoryDisabled(true);
+		SetLanternActive(false, false);
+		SetLanternDisabled(true);
+		SetPlayerHealth(100.0f);
+		SetPlayerSanity(100.0f);
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+	}
+	else if(asTimer == "parttwo")
+	{
+		AddTimer("partthree", 8.0f, "TimerWelcome");
+		PlayGuiSound("quest_added.snt", 1.0f);
+		SetMessage("Monologue", "NearOutsideDoor", 6.0f);
+	}
+	else if(asTimer == "partthree")
+	{
+		PlayGuiSound("react_breath.snt", 0.5f);
+		PlaySoundAtEntity("disabledweb", "guardian_ontop.snt", "web_1", 0.1f, false);
+		SetPropHealth("web_1", 0.0f);
+		StopSound("slimeloop", 4.0f);
+	}
+}
+
+void InteractAreaTouchPhonograph(string &in asEntity)
+{
+	if(asEntity == "AreaTouchPhonograph_1")
+	{
+		if(GetGlobalVarInt("GrandpaFreeVar") == 0)
+		{
+			PlayGuiSound("quest_added.snt", 1.0f);
+			PlaySoundAtEntity("stillweb1", "guardian_idle.snt", "phonograph_1", 0.1f, false);
+			SetMessage("Hints", "GrandpaQuestNotCompleted", 10.0f);
+		}
+		else
+		{
+			CreateParticleSystemAtEntity("acidweb1", "ps_acid_web_dissolve.ps", asEntity, false);
+			GiveSanityBoostSmall();
+			PlayGuiSound("quest_completed.snt", 1.0f);
+			PlaySoundAtEntity("goawayweb1", "guardian_ontop.snt", "phonograph_1", 0.1f, false);
+			SetMessage("Hints", "GrandpaQuestCompleted", 10.0f);
+			SetEntityInteractionDisabled("phonograph_1", false);
+			for(int i=1;i<=4;i++) SetPropActiveAndFade("slime_1_"+i, false, 1.0f);
+		}
+	}
+	else if(asEntity == "AreaTouchPhonograph_2")
+	{
+		if(GetGlobalVarInt("CheckPointFoundVar") <= 15)
+		{
+			PlayGuiSound("quest_added.snt", 1.0f);
+			PlaySoundAtEntity("stillweb2", "guardian_idle.snt", "phonograph_2", 0.1f, false);
+			SetMessage("Hints", "CheckPointQuestNotCompleted", 6.0f);
+		}
+		else
+		{
+			CreateParticleSystemAtEntity("acidweb2", "ps_acid_web_dissolve.ps", asEntity, false);
+			GiveSanityBoostSmall();
+			PlayGuiSound("quest_completed.snt", 1.0f);
+			PlaySoundAtEntity("goawayweb2", "guardian_ontop.snt", "phonograph_2", 0.1f, false);
+			SetMessage("Hints", "CheckPointQuestCompleted", 6.0f);
+			SetEntityInteractionDisabled("phonograph_2", false);
+			for(int i=1;i<=4;i++) SetPropActiveAndFade("slime_2_"+i, false, 1.0f);
+		}
+	}
+	else if(asEntity == "AreaTouchPhonograph_3")
+	{
+		if(GetGlobalVarInt("PieceOfOrbVar") <= 3)
+		{
+			PlayGuiSound("quest_added.snt", 1.0f);
+			PlaySoundAtEntity("stillweb3", "guardian_idle.snt", "phonograph_3", 0.1f, false);
+			SetMessage("Hints", "PiecesQuestNotCompleted", 6.0f);
+		}
+		else
+		{
+			CreateParticleSystemAtEntity("acidweb3", "ps_acid_web_dissolve.ps", asEntity, false);
+			GiveSanityBoostSmall();
+			PlayGuiSound("quest_completed.snt", 1.0f);
+			PlaySoundAtEntity("goawayweb3", "guardian_ontop.snt", "phonograph_3", 0.1f, false);
+			SetMessage("Hints", "PiecesQuestCompleted", 6.0f);
+			SetEntityInteractionDisabled("phonograph_3", false);
+			for(int i=1;i<=4;i++) SetPropActiveAndFade("slime_3_"+i, false, 1.0f);
+		}
+	}
+}
+
+void PlayRecord(string &in asEntity, int alState)
+{
+	if(alState==1)
+	{
+        if(asEntity == "phonograph_1") PlayMusic("02_maze_redux_record_music01", false, 0.7f, 0.3f, 1, false);
+	    else if(asEntity == "phonograph_2") PlayMusic("02_maze_redux_record_music02", false, 0.7f, 0.3f, 1, false);
+		else if(asEntity == "phonograph_3") PlayMusic("02_maze_redux_record_music03", false, 0.7f, 0.3f, 1, false);             	
+	}
+}
+
+void TouchedPiano(string &in asEntity)
+{
+	PlayGuiSound("01_maze_touch_piano.snt", 0.8f);
+	SetEntityActive("PianoArea_1", false);
+	SetEntityActive("PianoArea_2", false);
+	SetMessage("Hints", "GameSaved", 5.0f);
+	AutoSave();
+}

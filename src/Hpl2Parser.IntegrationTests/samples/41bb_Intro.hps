@@ -1,0 +1,139 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "StopMoving", "stopmovement", true, 1);
+	SetPlayerRunSpeedMul(0.5);
+	BlockHint("PickLantern");
+	GiveItem("lantern", "lantern", "", "lantern.tga", 1);
+	SetPlayerLampOil(20);
+	SetPlayerActive(false);
+	SetPlayerMoveSpeedMul(0.5);
+	SetPlayerJumpDisabled(true);
+	SetInventoryDisabled(true);
+	ShowPlayerCrossHairIcons(false);
+	SetInDarknessEffectsActive(false);
+	AddTimer("beginning", 1, "beginning");
+	FadeOut(0);
+	PlayMusic("MusicTime1.ogg", false, 6.5, 2.5, 1, false);
+}
+
+void TimerMove(string &in asTimer)
+{
+	MovePlayerForward(25);
+	AddTimer("move", 0, "TimerMove");
+}
+
+void lookatintro(string &in asTimer)
+{
+	AddTimer("move", 0.5f, "TimerMove");
+	SetLanternActive(true, true);
+	SetPlayerLookSpeedMul(0.5f);
+	AddTimer("lookarmor", 3.5f, "lookarmor");
+	StartPlayerLookAt("armor", 1, 1, "");
+}
+
+void lookarmor(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void Teleport1()
+{
+	RemoveTimer("move");
+	SetPlayerActive(false);
+	AddTimer("text1", 3.5, "text1");
+	SetMessage("ScreenText", "textintro1", 3.5f);
+	FadeOut(3);
+}
+
+void text1(string &in asTimer)
+{
+	StartPlayerLookAt("sacrifice", 0.8, 0.8, "");
+	AddTimer("move", 3, "TimerMove");
+	AddTimer("lookblood", 8, "lookblood");
+	TeleportPlayer("CultSpawn");
+	FadeIn(4);
+}
+
+void lookblood(string &in asTimer)
+{
+	StartPlayerLookAt("shrine", 1.5, 1.5, "");
+	AddTimer("lookdoor", 3.5, "lookdoor");
+	RemoveTimer("move");
+}
+
+void lookdoor(string &in asTimer)
+{
+	StartPlayerLookAt("shrine", 3.5, 3.5, "");
+	AddTimer("lookarmor", 6, "lookarmor");
+	AddTimer("move", 0.5f, "TimerMove");
+}
+
+void Teleport2()
+{
+	RemoveTimer("move");
+	SetLanternActive(false, true);
+	AddTimer("text2", 2.5f, "text2");
+	FadeOut(5);
+	AddTimer("Teleport3", 1, "Teleport3");
+}
+
+void Teleport3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "ui_insanity_touch.snt", "Player", 0, false);
+	FadeIn(5);
+	AddTimer("titleend", 8, "titleend");
+	TeleportPlayer("TitleSpawn");
+}
+
+void beginning(string &in asTimer)
+{
+	FadeImageTrailTo(0.5f, 3);
+	AddTimer("lookatintro", 5, "lookatintro");
+	StartPlayerLookAt("feet", 0.5, 0.5, "");
+	FadeIn(4.5f);
+}
+
+void titleend(string &in asTimer)
+{
+	FadeOut(2.5f);
+	AddTimer("orbroom", 3.5, "orbroom");
+}
+
+void stopmovement(string &in asParent, string &in asChild, int alState)
+{
+	SetPlayerActive(true);
+	PlaySoundAtEntity("", "scare_male_terrified.snt", "Player", 0, false);
+	RemoveTimer("move");
+}
+
+void ripintro(string &in asEntity)
+{
+	GiveSanityDamage(80, true);
+	StartScreenShake(0.3, 5, 2, 3);
+	PlaySoundAtEntity("", "guardian_ontop.snt", "Player", 0, false);
+	ChangeMap("Level1.map", "PlayerStartArea_1", "","");
+}
+
+void orbroom(string &in asTimer)
+{
+	AddTimer("move", 2.5f, "TimerMove");
+	SetLanternActive(true, true);
+	SetMessage("ScreenText", "textintro2", 4);
+	TeleportPlayer("OrbSpawn");
+	FadeIn(4);
+	ShowPlayerCrossHairIcons(true);
+	StartPlayerLookAt("orb", 0.5, 1, "");
+}
+
+void OnLeave()
+{
+	StopMusic(3, 1);
+	FadeImageTrailTo(0, 1);
+	SetLanternActive(false, true);
+	RemoveItem("lantern");
+	SetupLoadScreen("LoadingScreen", "Load0", 0,"");
+	SetPlayerJumpDisabled(false);
+	StopPlayerLookAt();
+	SetInventoryDisabled(false);
+	SetInDarknessEffectsActive(true);
+}

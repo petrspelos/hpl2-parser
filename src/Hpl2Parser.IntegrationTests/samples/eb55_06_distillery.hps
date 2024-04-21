@@ -1,0 +1,572 @@
+////////////////////////
+//BEGIN MOANING HORROR//
+/*Start the creak sounds + ps when entering basement, stop them when leaving the basement/area
+ */
+void FuncMoanHorrors(string &in asParent, string &in asChild, int alState)
+{
+	if(asChild == "AreaBeginAnimal") {
+		AddTimer("animalTimer", 2.5f, "FuncMoanTimer");	
+		
+		AddTimer("scareSoundx1", 1.0f, "TimerStopScareSound");	
+		AddTimer("scareSoundx", 4.0f, "TimerStopScareSound");	
+		
+		PlaySoundAtEntity("scareSoundx", "scare_whine_loop.snt", "HorrorMoan_8", 2.0f, false);
+		StartScreenShake(0.008f, 0.0f, 2.0f, 4.0f);
+		PlaySoundAtEntity("scareSoundx2", "guardian_idle.snt", "HorrorMoan_8", 2.0f, false);
+		FadeImageTrailTo(1.0f, 0.01f);
+		
+		/*DEBUG
+		 */
+		AddDebugMessage("Begin animal sounds", true);
+		
+		//return;
+	}
+
+	/*DEBUG
+	 */
+	AddDebugMessage("Begin moaning sounds", true);
+}
+void TimerStopScareSound(string &in asTimer)
+{
+	if(asTimer == "scareSoundx1") 
+		GiveSanityDamage(10.0f, true);
+	else{
+		FadeImageTrailTo(0.0f, 0.1f);
+		StopSound(asTimer, 4.0f);
+		StopSound(asTimer+"2", 4.0f);
+	}
+}
+/*Random placment of creak at random time
+ */
+void FuncMoanTimer(string &in asTimer)
+{
+	
+	
+	int iMoan = RandFloat(7, 14);	
+	float fMoan = RandFloat(5.5f,15.5f);
+	
+	if(asTimer == "moanTimer") {
+		PlaySoundAtEntity("moanSound"+iMoan, "scare_male_terrified.snt", "HorrorMoan_"+iMoan, 0.0f, false);
+		
+		AddTimer("moanTimer", 6.5f+fMoan, "FuncMoanTimer");
+	} else if(asTimer == "childTimer") {
+		iMoan = RandFloat(7, 14);	
+		
+		PlaySoundAtEntity("childSound"+iMoan, "scare_baby_cry.snt", "HorrorMoan_"+iMoan, 0.0f, false);
+		
+		AddTimer("childTimer", 8.5f+fMoan, "FuncMoanTimer");
+	} else if(asTimer == "animalTimer") {
+		iMoan = RandFloat(7, 14);	
+		
+		PlaySoundAtEntity("animalSound"+iMoan, "scare_animal_squeal.snt", "HorrorMoan_"+iMoan, 0.0f, false);
+		
+		AddTimer("animalTimer", 5.5f+fMoan, "FuncMoanTimer");
+	} 
+
+	/*DEBUG
+	 */
+	AddDebugMessage("Now moaning in area: "+iMoan, false);
+}	
+//END MOANING HORROR//
+//////////////////////
+
+
+///////////////////////////////
+//BEGIN CREAKING WOOD CEILING//
+/*Random placment of creak at random time
+ */
+void FuncCreakTimer(string &in asTimer)
+{
+	int iCreak = RandFloat(8, 13);	
+	float fCreak = RandFloat(4.5f,14.5f);
+	
+	CreateParticleSystemAtEntity("creakPS"+iCreak, "ps_dust_falling_small_thin.ps", "HorrorCreak_"+iCreak, false);
+	
+	PlaySoundAtEntity("creakSound"+iCreak, "scare_wood_creak_mix.snt", "HorrorCreak_"+iCreak, 0.0f, false);
+	
+	AddTimer("creak", 5.5f+fCreak, "FuncCreakTimer");
+	
+	/*DEBUG
+	 */
+	AddDebugMessage("Now creaking in area: "+iCreak+" Next creak in: "+(5.5f+fCreak), true);
+}	
+//END CREAKING WOOD CEILING//
+/////////////////////////////
+
+
+///////////////////////////////
+//BEGIN BARELL BLCOKING DOOR
+
+void InteractBarrelBlock(string &in asEntity)
+{
+	SetSwingDoorLocked("cellar_wood01_1", false, false);
+	
+	SetEntityPlayerInteractCallback("barrel01_12", "", true);
+	SetEntityPlayerInteractCallback("barrel01_13", "", true);
+}
+
+void CollideBlockingBarellsArea(string &in asParent, string &in asChild, int alState)
+{
+	return; //disabled, doing on interact instead.
+	SetSwingDoorLocked("cellar_wood01_1", false, false);
+}
+
+
+//END BARELL BLCOKING DOOR
+///////////////////////////////
+
+///////////////////////////////
+//BEGIN BREAK PULLEY BLOCKER
+void InteractCrank(string &in asEntity)
+{
+	SetMessage("Ch01Level06", "CrankStuck", 0);
+	AddQuest("06BlockedPulley", "06BlockedPulley");
+	
+	CreateParticleSystemAtEntity("smoke", "ps_dust_falling_small.ps", "AreaPulleysmoke", false);
+	
+	AddTimer(asEntity, 1.5f, "TimerInteractCrank");
+}
+void TimerInteractCrank(string &in asTimer)
+{
+	SetEntityPlayerInteractCallback(asTimer, "InteractCrank", true);
+}
+
+void BreakPulleyBlocker(string &in asEntity, string &in asType)
+{
+	if(asType == "Break")
+	{
+		GiveSanityBoostSmall();
+		
+		SetEntityActive("AreaInPulley", false);
+		
+		SetWheelStuckState("crank_iron_1", 0, true);
+		
+		RemoveTimer("crank_iron_1");
+		SetEntityPlayerInteractCallback("crank_iron_1", "", false);	
+		
+		CompleteQuest("06BlockedPulley", "06BlockedPulley");
+		
+		FadeLightTo("PointLight_38", 0,0,0,0, -1, 2);
+		FadeLightTo("PointLight_39", 0,0,0,0, -1, 2);
+	}	
+}
+
+/*Message and effect to hint about hatch wheight.
+ */
+void InteractHatch(string &in asEntity)
+{
+	SetMessage("Ch01Level06", "HatchHeavy", 0);
+	PlaySoundAtEntity("hatchs", "door_level_wood_close", "hatch_large_1", 0.0f, false);
+	AddPropImpulse("hatch_large_1", 0.0f, 10.0f, 0.0f, "World");
+	
+	AddTimer("hatchs", 0.15f, "TimerHatchOn");
+	AddTimer("hatchon", 1.0f, "TimerHatchOn");
+}
+void TimerHatchOn(string &in asTimer)
+{
+	if(asTimer == "hatchs"){
+		StopSound("hatchs", 0.5f);
+		AddPropImpulse("hatch_large_1", 0.0f, 10.0f, 0.0f, "World");
+	}
+	else
+		SetEntityPlayerInteractCallback("hatch_large_1", "InteractHatch", true);
+}
+
+/*If player goes out of area pulley bloc break count back to 0 + hint message
+ */
+void CollideInPulley(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1){
+		AddDebugMessage("Player in area!", false);
+	}
+	else{
+		SetLocalVarInt("PulleyBreak", 0);
+		
+		if(GetLocalVarInt("HoldPulley") == 1)
+			SetMessage("Ch01Level06", "PulleyBlockSlip", 0);
+		
+		SetLocalVarInt("HoldPulley", 0);
+		
+		AddDebugMessage("Player out of area!", false);
+	}
+}
+
+/*Break pully block when moved in/out of area 3 times
+ */
+void CollidePulleyBlock(string &in asParent, string &in asChild, int alState)
+{
+	AddLocalVarInt("PulleyBreak", 1);
+	
+	if(GetLocalVarInt("PulleyBreak") == 3)
+	{
+		SetPropHealth(asParent, 0);
+		
+		//Stop player input for half a second, otherwise it is easy for view to fly off! (player sweeps with mouse)
+		SetPlayerActive(false);
+		AddTimer("playeractive", 0.3, "TimerMakePlayerActive"); 
+	}
+		
+	AddDebugMessage("Pulley in/out area!", false);
+}
+
+void TimerMakePlayerActive(string &in asTimer)
+{
+	SetPlayerActive(true);
+}
+
+/*If player holds pulleyblock and leaves area, set var to display hint message
+*/
+void InteractPulley(string &in asEntity)
+{
+	SetLocalVarInt("HoldPulley", 1);
+}
+//END BREAK PULLEY BLOCKER
+///////////////////////////////
+
+///////////////////////////////
+//BEGIN EMPRY STORAGE DOOR OPENS
+
+void EnterEmptyStorageDoorOpen(string &in asParent, string &in asChild, int alState)
+{
+	if(GetSwingDoorClosed("cellar_wood01_5")==false) return;
+	
+	SetSwingDoorDisableAutoClose("cellar_wood01_5", true);
+	SetSwingDoorClosed("cellar_wood01_5", false, false);
+	
+	RemoveEntityCollideCallback(asParent, asChild);
+	
+	PlaySoundAtEntity("enemy", "guardian_idle", "cellar_wood01_5", 0, false);
+	PlaySoundAtEntity("doorsqueak", "01_door", "cellar_wood01_5", 0.3f, false);
+	GiveSanityDamage(15, true);
+	
+	AddBodyImpulse("cellar_wood01_5_Body_1", 0,0,1.0f, "Local");
+	for(int i=0; i<30; ++i)
+	{
+		AddTimer("cellar_wood01_5_Body_1", i * 0.1f, "TimerOpenDoor");
+	}
+	
+	AddTimer("react_scare", 0.7f, "TimerStopLookAt");
+	AddTimer("react_breath", 2.5f, "TimerStopLookAt");
+	AddTimer("react_breath", 4.5f, "TimerStopLookAt");
+	
+	AddDebugMessage("Empty storage event", false);
+}
+
+void TimerOpenDoor(string &in asTimer)
+{
+	AddBodyForce(asTimer, 0,0,40, "Local");
+}
+
+
+//BEGIN END STORAGE DOOR OPENS
+///////////////////////////////
+
+
+
+///////////////////////////////
+//BEGIN BOTTLE ROOM SCRATCHES
+
+void EnterBottleRoomWallScratch(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("cellar_wood01_3", true, true);
+		
+	PlaySoundAtEntity("enemy", "enemy/grunt/amb_idle",  "cellar_wood01_3", 0, false);
+	
+	GiveSanityDamage(10, true);
+	
+	AddTimer("impact_wood_heavy_high.snt", 1.5f, "TimerWallScratchSound");
+	AddTimer("impact_wood_heavy_high.snt", 2.5f, "TimerWallScratchSound");
+	AddTimer("impact_wood_heavy_high.snt", 3.2f, "TimerWallScratchSound");
+	AddTimer("enemy", 3.0f, "TimerWallScratchSound");
+	
+	AddTimer("react_scare", 0.5f, "TimerStopLookAt");
+	AddTimer("react_breath", 2.5f, "TimerStopLookAt");
+	
+	AddTimer("NextDoor", 6.5f, "TimerWallScratchNextDoor");
+}
+
+
+
+void TimerWallScratchNextDoor(string &in asTimer)
+{
+	PlaySoundAtEntity("break","break_wood.snt", "cellar_wood01_6", 0, false);
+	SetSwingDoorClosed("cellar_wood01_6", true, true);
+	
+	AddTimer("react_scare", 0.5f, "TimerStopLookAt");
+	AddTimer("react_breath", 2.5f, "TimerStopLookAt");
+}
+
+void TimerWallScratchSound(string &in asTimer)
+{
+	PlaySoundAtEntity("enemy", asTimer,  "cellar_wood01_3", 0, false);		
+	
+	if(asTimer == "enemy")
+		StopSound("enemy", 1.0f);
+}
+
+//BEGIN BOTTLE ROOM SCRATCHES
+///////////////////////////////
+
+
+///////////////////////////////
+//BEGIN HOWLING
+
+void EnterHowlArea(string &in asParent, string &in asChild, int alState)
+{
+	int lIdx = GetLocalVarInt("HowlCount") + 1;
+	PlaySoundAtEntity("howl","guardian_distant"+lIdx, "Player", 0, false);
+	
+	AddDebugMessage("Howl "+lIdx, false);
+	
+	AddLocalVarInt("HowlCount", 1);	
+	
+	AddTimer("StopRadialBlur", 4.5f, "TimerStopRadialBlur");
+	AddTimer("react_scare", 1.0f, "TimerStopLookAt");
+	AddTimer("react_breath", 3.0f, "TimerStopLookAt");
+	
+	StartScreenShake(lIdx*0.01f, 0.0f, 2.0f, 4.0f);
+	FadeLightTo("BoxLight_1", lIdx*0.05f, 0.0f, lIdx*0.01f, -1, -1, 4.0f);
+	
+	SetRadialBlurStartDist(0.2f);
+	FadeRadialBlurTo(0.09, 0.015f);
+	
+	//If this is the area into last room, then remove some stuff related to blocked door.
+	if(asChild == "HowlArea_2") 
+	{
+		SetEntityPlayerInteractCallback("cellar_wood01_1", "", true);
+		CompleteQuest("06BlockedDoor", "06BlockedDoor");
+		SetEntityActive("block_box_1", false);
+	}
+}
+
+void TimerStopRadialBlur(string &in asTimer)
+{
+	AddDebugMessage("Stopping howl blur.", false);
+	FadeRadialBlurTo(0, 0.02f);
+}
+
+//END HOWLING
+///////////////////////////////
+
+
+///////////////////////////////
+//BEGIN ENEMY GLIMPSE
+
+void EnterEnemyGlimpse(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("grunt_normal_1", true);
+	PlaySoundAtEntity("grunta","grunt/amb_idle", "GrunNoise", 0, false);
+	StartPlayerLookAt("grunt_normal_1", 3, 3, "");
+	PlayMusic("06_event_gallery.ogg", false, 1, 0.2f, 8, false);
+	AddTimer("StopLook", 1.0f, "TimerStopLookAt");
+	AddTimer("react_scare.snt", 0.5f, "TimerStopLookAt");
+	AddTimer("react_breath.snt", 2.5f, "TimerStopLookAt");
+	
+	CheckPoint("check01", "PlayerStartArea_6", "CheckPoint01", "Hints", "DeathGrunt_06_Distillery_01");
+}
+void TimerStopLookAt(string &in asTimer)
+{
+	if(StringContains(asTimer,"react_")){
+		PlayGuiSound(asTimer, 0.7f);
+		
+		if(asTimer == "react_scare") 
+			GiveSanityDamage(10.0f, true);
+			
+		return;
+	}
+	
+	StopPlayerLookAt();
+}
+
+void CollideEnemyHint(string &in asParent, string &in asChild, int alState)
+{
+	GiveHint("EnemyTip02", "Hints", "EnemyTip02", 0);
+}
+
+void EnemyDisabled(string &in asEnemy, string &in asType)
+{
+	AddDebugMessage("Disabling enemy", false);
+	if(GetEntitiesCollide(asEnemy, "AreaGruntGone"))
+	{
+		AddDebugMessage("Leaving track behind", false);
+		SetPropActiveAndFade("grunt_gone_*", true, 0.5f);
+		PlaySoundAtEntity("grunt_closes_door", "close_door.snt", "GruntGoneDoorSound", 0, false);
+	}
+}
+
+void CheckPoint01(string &in asName, int alCount)
+{
+	
+}
+
+//END ENEMY GLIMPSE
+///////////////////////////////
+
+void CollideAreaRoses(string &in asParent, string &in asChild, int alState)
+{
+	CreateParticleSystemAtEntity("bedvoidroses", "ps_rose_petals_wind.ps", "AreaRoses", false);
+	PlayGuiSound("general_wind_whirl6.ogg", 0.3f);
+	
+	AddDebugMessage("Flow roses", false);
+}
+
+void EntityCallDiary(string &in asEntity, string &in type)
+{
+	//GiveSanityBoostSmall();
+}
+
+void CollideAreaRope(string &in asParent, string &in asChild, int alState)
+{
+	int iSound = RandInt(0, 1);
+	float fFade= RandFloat(0.0f, 0.3f);
+	
+	if(iSound == 1)	PlaySoundAtEntity("ropes", "06_rope_loose", "AreaRope_3", fFade, false);
+	else PlaySoundAtEntity("ropes", "06_rope_strain", "AreaRope_3", fFade, false);
+	
+	
+	//Remove interact on hatch when having opened the hatch.
+	//Done here and not on break if player would try to open hatch by hand
+	AddLocalVarInt("CountTurn", 1);
+	
+	if(GetLocalVarInt("CountTurn") == 4){
+		SetEntityPlayerInteractCallback("hatch_large_1", "", true);
+		RemoveTimer("hatchs");
+		RemoveTimer("hatchon");
+	}
+}
+////////////////////////////
+// Run first time starting map
+void OnStart()
+{
+	SetMapDisplayNameEntry("Distillery");
+	
+	////////////////////
+	// Hub start sanity boost
+	GiveSanityBoostSmall();
+	
+	
+	//----COLLIDE CALLBACKS----//
+	AddEntityCollideCallback("Player", "AreaBeginAnimal", "FuncMoanHorrors", true, 1);
+	
+	AddEntityCollideCallback("BlockingBarellsArea", "barrel01_12", "CollideBlockingBarellsArea", false, -1);
+	
+	AddEntityCollideCallback("Player","EmptyStorageDoorOpen", "EnterEmptyStorageDoorOpen", false, 1);
+	AddEntityCollideCallback("Player","BottleRoomWallScratch", "EnterBottleRoomWallScratch", true, 1);
+	
+	AddEntityCollideCallback("Player","EnemyGlimpse", "EnterEnemyGlimpse", true, 1);
+	AddEntityCollideCallback("Player", "AreaEnemyHint", "CollideEnemyHint", false, 1);	//Display hint about enemies
+	
+	for(int i=1; i<=3; ++i)
+		AddEntityCollideCallback("Player","HowlArea_"+i, "EnterHowlArea", true, 1);
+	
+	AddEntityCollideCallback("Player", "AreaInPulley", "CollideInPulley", false, 0);
+	AddEntityCollideCallback("wood_blocking_pulley_1", "AreaPullPulley", "CollidePulleyBlock", false, 0);
+	
+	AddEntityCollideCallback("Player", "AreaRoses_1", "CollideAreaRoses", true, 1);
+	
+	AddEntityCollideCallback("crank_iron_1", "AreaRope_1", "CollideAreaRope", false, 1);
+	AddEntityCollideCallback("crank_iron_1", "AreaRope_2", "CollideAreaRope", false, 1);
+	
+	//----ENEMY INIT----//
+	//AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_55", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_60", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_63", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_81", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_91", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_98", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_95", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_97", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_61", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_68", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_100", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_70", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_75", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_77", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_45", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_43", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_41", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_38", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_39", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_50", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_48", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_53", 0, "");
+	AddEnemyPatrolNode("grunt_normal_1", "PathNodeArea_54", 0, "");
+	
+	//----ENTITY INIT----//
+	AddTimer("childTimer", 1.5f, "FuncMoanTimer");	
+	float fMoan = RandFloat(5.5f,15.5f);
+	float fCreak = RandFloat(4.5f,14.5f);
+	AddTimer("moanTimer", 4.5f+fMoan, "FuncMoanTimer");	
+	AddTimer("creak", 2.5f+fCreak, "FuncCreakTimer");
+	
+		
+	InteractConnectPropWithRope("CrankRope", "crank_iron_1", "Rope01", false, 1,1,1, false, 0);
+	for(int i=1;i<4;i++) InteractConnectPropWithRope("CrankRope"+i, "crank_iron_1", "RopeArea_"+i, false, 1,1,1, false, 0);
+
+	
+	//----FIX CONTAINER----//
+	if(HasItem("chemical_container_1"))
+		RemoveItem("chemical_container_1");
+		
+	if(HasItem("chemical_container_2"))
+		RemoveItem("chemical_container_2");
+		
+	if(!HasItem("empty_container"))
+	{
+		GiveItemFromFile("empty_container", "chemical_container.ent");
+	}
+	
+	//----QUEST INIT----//
+	//SetNumberOfQuestsInMap(1);
+	
+	
+	///////////////////////////////
+	// Debug
+	if(ScriptDebugOn())
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+	}
+	
+	
+	///////////////////////////////
+	// Fog init
+	SetFogProperties(4, 16, 1, true);
+	SetFogColor(0.12f, 0.14f, 0.18f, 0.7f);
+	SetFogActive(true);
+}
+
+void InteractLastDoor(string &in asEntity)
+{
+	SetMessage("Ch01Level06", "DoorBlocked", 0);
+	AddQuest("06BlockedDoor", "06BlockedDoor");
+}
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{	
+	//----PRELOADING----//
+	PreloadSound("scare_whine_loop"); PreloadSound("scare_male_terrified"); PreloadSound("scare_baby_cry"); PreloadSound("scare_animal_squeal"); 
+	PreloadSound("scare_wood_creak_mix"); PreloadSound("guardian_idle"); PreloadSound("01_door"); PreloadSound("enemy/grunt/amb_idle"); 
+	PreloadSound("break_wood"); PreloadSound("impact_wood_heavy_high"); PreloadSound("guardian_distant1"); PreloadSound("guardian_distant2");
+	PreloadSound("guardian_distant3"); 	
+
+	PreloadParticleSystem("ps_dust_falling_small_thin"); 
+	
+	
+	//----AUDIO----//
+	PlayMusic("06_amb.ogg", true, 1, 5.0f, 0, true);
+	
+	
+	AutoSave();
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	//////////////////////
+	//Load Screen Setup
+	SetupLoadScreen("LoadingText", "Ch01_WaterLurker01", 1, "game_loading_water.jpg");
+}

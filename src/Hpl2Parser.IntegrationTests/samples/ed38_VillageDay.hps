@@ -1,0 +1,294 @@
+void OnStart()
+{
+AddUseItemCallback("","money","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money2","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money3","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money4","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money5","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money6","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money7","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money8","AreaBeggar","GiveMoney",false);
+AddUseItemCallback("","money9","AreaBeggar","GiveMoney",false);
+SetSanityDrainDisabled(true);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.3f);
+AddTimer("screams", 45, "screams");
+AddEntityCollideCallback("Player", "HasLantern", "LanternCheck", false, 1);
+AddEntityCollideCallback("Player", "AreaEnd", "ChapterEnd", false, 1);
+CheckPoint ("Checkpoint", "PlayerStartArea_1", "DeathSettings1", "DeathHints", "Fall");
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+AutoSave();
+}
+
+void Explore1(string &in asEntity)
+{
+AddLocalVarInt("VarIntExplore", 1);
+CompleteQuest("Explore4", "Explore4");
+	ExploreDone();
+}
+
+void Explore2(string &in asEntity)
+{
+AddLocalVarInt("VarIntExplore", 1);
+	ExploreDone();
+}
+
+void Explore3(string &in asParent, string &in asChild, int alState)
+{
+SetPlayerActive(false);
+AddTimer("stoplooking", 4, "stoplooking");
+StartPlayerLookAt("LookBarn", 5, 50, "");
+SetMessage("Messages", "lookbarn", 7);
+CompleteQuest("Explore3", "Explore3");
+AddQuest("Barnnight", "Barnnight");
+AddLocalVarInt("VarIntExplore", 1);
+	ExploreDone();
+}
+
+void Explore4(string &in asParent, string &in asChild, int alState)
+{
+PlayMusic("11_paper_howl.ogg", false, 1.0, 0, 0, true);
+}
+
+void ExploreDone(){
+
+	if(GetLocalVarInt("VarIntExplore") == 4){
+                SetEntityActive("NotLantern", true);
+                AddGlobalVarInt("HotelDay", 1);
+	}
+}
+
+void LanternCheck(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("Lantern"))
+	{
+SetEntityActive("NotLantern", false);
+SetLevelDoorLocked("hotel", false);
+SetEntityPlayerInteractCallback("hotel", "", false);
+	}
+	
+}
+
+void stoplooking(string &in asTimer)
+{
+SetPlayerActive(true);
+StopPlayerLookAt();
+}
+
+void Chapel(string &in asParent, string &in asChild, int alState) 
+{
+StopSound("outsidesound", 0.9f);
+PlaySoundAtEntity("chapelsound","ambience_swoop_myst.snt","Player", 0,false);
+CheckPoint ("Checkpoint2", "PlayerStartArea_5", "DeathSettings", "DeathHints", "Fall");
+}
+
+void Outside(string &in asParent, string &in asChild, int alState) 
+{
+StopSound("chapelsound", 0.9f);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+}
+
+void Quest(string &in asEntity)
+{
+AddQuest("Secret", "Secret");
+CompleteQuest("Explore", "Explore");
+SetMessage("Messages", "secret", 6);
+SetEntityPlayerInteractCallback("Secret", "", false);
+AddLocalVarInt("VarIntExplore", 1);
+	ExploreDone();
+}
+
+void ChapterEnd(string &in asParent, string &in asChild, int alState)
+{
+	
+	if(HasItem("hammer"))
+	{
+SetMessage("Messages", "chapterend", 6);
+AddTimer("chapterend2", 10, "chapterend2");
+PlayMusic("08_amb_success.ogg", false, 1.0, 0, 0, true);
+SetPlayerActive(false);
+CompleteQuest("Ch2endchapter", "Ch2endchapter");
+	}
+	
+}
+
+void chapterend2(string &in asTimer)
+{	
+ChangeMap("JeffersonMansion.map", "PlayerStartArea_1", "","");
+}
+
+//---- Etc ----//
+
+void morality(string &in asEntity)
+{
+SetEntityActive("Rose", false);
+CompleteQuest("Lantern", "Lantern");
+}
+
+void rose(string &in asEntity)
+{
+SetEntityActive("Lantern", false);
+}
+
+void GiveMoney(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("AreaBeggar", false);
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+AddEffectVoice("beggar.ogg", "", "Voice", "00_Beggar", false, "", 0, 0 );
+}
+
+//---- Collide ground ----//
+//If player hits the ground too hard
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint2", "PlayerStartArea_5", "DeathSettings", "DeathHints", "Fall");
+}
+
+void CollideAreaGround2(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CheckPoint ("Checkpoint3", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Fall");
+}
+
+//---- Random sounds ----//
+// Random sounds playing once in a while
+
+void screams(string &in asTimer)
+{
+AddTimer("screams", 176, "screams");
+AddTimer("screams2", 25, "screams2");
+AddTimer("screams3", 46, "screams3");
+AddTimer("screams4", 78, "screams4");
+AddTimer("screams5", 99, "screams5");
+AddTimer("screams6", 116, "screams6");
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea6", 0, false);
+}
+
+void screams2(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_loon_single.snt", "SoundArea", 0, false);
+}
+
+void screams3(string &in asTimer)
+{
+PlaySoundAtEntity("","general_birds_flee.snt", "SoundArea2", 0, false);
+}
+
+void screams4(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_loon_single.snt", "SoundArea3", 0, false);
+}
+
+void screams5(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea4", 0, false);
+}
+
+void screams6(string &in asTimer)
+{
+PlaySoundAtEntity("","general_wind_whirl.snt", "SoundArea5", 0, false);
+}
+
+//---- Messages ----//
+
+void explorefirst(string &in asEntity)
+{
+SetMessage("Messages", "explorefirst", 4);
+}
+
+void barnlocked(string &in asEntity)
+{
+SetMessage("Messages", "barn", 4);
+}
+
+void nolantern(string &in asEntity)
+{
+SetMessage("Messages", "nolantern", 6);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+}
+
+void OnEnter()
+{	
+StopMusic(10, 0);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.3f);
+PlaySoundAtEntity("outsidesound","ambience_wind_eerie_no3d.snt","Player", 0,false);
+SetSanityDrainDisabled(true);
+AddEntityCollideCallback("Player", "Chapel", "Chapel", false, 1);
+AddEntityCollideCallback("Player", "Outside", "Outside", false, 1);
+AddEntityCollideCallback("Player", "Explore4", "Explore4", true, 1);
+AddEntityCollideCallback("Player", "Explore3", "Explore3", true, 1);
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaGround2", "CollideAreaGround2", false, 1);
+PlayMusic("Safe.ogg", true, 1.0, 0, 0, false);
+
+if(GetGlobalVarInt("Village")==1)
+	{
+		SetEntityActive("guy", true);
+		SetEntityActive("pillow", true);
+		SetEntityActive("blanket", true);
+		SetEntityActive("block_box_68", true);
+	}
+
+if(GetGlobalVarInt("Village")==2)
+	{
+		SetEntityActive("guy", false);
+		SetEntityActive("pillow", false);
+		SetEntityActive("blanket", false);
+		SetEntityActive("block_box_68", false);
+		SetEntityActive("armor1", false);
+		SetEntityActive("armor2", false);
+		SetEntityActive("armor3", false);
+		SetEntityActive("armor4", false);
+		SetEntityActive("armor5", false);
+		SetEntityActive("armor6", false);
+		SetEntityActive("armor7", true);
+		SetEntityActive("armor8", true);
+		SetEntityActive("armor9", true);
+		SetEntityActive("armor10", true);
+		SetEntityActive("armor11", true);
+		SetEntityActive("armor12", true);
+	}
+
+if(GetGlobalVarInt("Village")==3)
+	{
+		SetEntityActive("drunk", true);
+		SetEntityActive("SignArea_7", true);
+		SetEntityActive("block_box_70", true);
+	}
+}
+
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_day.png");
+}

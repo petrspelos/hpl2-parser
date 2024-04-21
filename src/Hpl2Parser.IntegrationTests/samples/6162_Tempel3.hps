@@ -1,0 +1,616 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaGround", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaGround2", "CollideAreaGround2", false, 1);
+AddEntityCollideCallback("Player", "AreaGround3", "CollideAreaGround3", false, 1);
+AddEntityCollideCallback("Player", "AreaGround4", "CollideAreaGround", false, 1);
+AddEntityCollideCallback("Player", "AreaEl1", "ElDeath", false, 1);
+AddEntityCollideCallback("Player", "AreaEl2", "ElDeath", false, 1);
+AddEntityCollideCallback("Player", "AreaBlocked", "WayAround", true, 1);
+AddEntityCollideCallback("Player", "AreaVentTalk", "VentTalk", true, 1);
+AddEntityCollideCallback("Player", "AreaBalcony", "Balcony", true, 1);
+AddEntityCollideCallback("Player", "AreaLand", "HurtLand", true, 1);
+AddEntityCollideCallback("Player", "AreaDoor", "CloseDoor", true, 1);
+AddEntityCollideCallback("Player", "AreaStalker", "Stalker", false, 1);
+AddEntityCollideCallback("Player", "AreaLock", "BreakLock", true, 1);
+AddEntityCollideCallback("Player", "AreaMorality", "Morality", true, 1);
+AddEntityCollideCallback("brute2", "BruteStop", "BruteStop", true, 1);
+AddUseItemCallback("","brokenpipe","AreaPipe","destroycogs",true);
+AddUseItemCallback("","orb1","AreaOrb1","Orb1",true);
+AddUseItemCallback("","orb1","AreaOrb2","Orb2",true);
+AddUseItemCallback("","orb1","AreaOrb3","Orb3",true);
+AddUseItemCallback("","orb2","AreaOrb1","Orb1",true);
+AddUseItemCallback("","orb2","AreaOrb2","Orb2",true);
+AddUseItemCallback("","orb2","AreaOrb3","Orb3",true);
+AddUseItemCallback("","orb3","AreaOrb1","Orb1",true);
+AddUseItemCallback("","orb3","AreaOrb2","Orb2",true);
+AddUseItemCallback("","orb3","AreaOrb3","Orb3",true);
+AddUseItemCallback("","money12","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money13","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money15","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money16","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money17","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money18","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money19","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money14","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money8","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money10","AreaChest","Unlockchest",false);
+AddUseItemCallback("","money11","AreaChest","Unlockchest",false);
+SetEntityInteractionDisabled("orb4", true);
+SetEntityInteractionDisabled("orb5", true);
+SetEntityInteractionDisabled("orb6", true);
+RotatePropToSpeed("cog1", 1, 1, 0, 0, -1, false, "");
+RotatePropToSpeed("cog2", 1, 1, 0, 0, -1, false, "");
+RotatePropToSpeed("cog3", 1, 1, 0, 0, -1, false, "");
+AddTimer("cavesounds", 50, "cavesounds");
+PlayMusic("Temple2.ogg", true, 0.8, 4, 0, true);
+PlaySoundAtEntity("MachineSound","13_machine_extra.snt", "AreaPipe", 0, true);
+CheckPoint ("Checkpoint", "PlayerStartArea_1", "DeathSettings", "DeathHints", "Killed");
+SetMapDisplayNameEntry("Tempel3");
+AutoSave();
+}
+
+void CollideAreaGround(string &in asParent, string &in asChild, int alState)
+{
+        GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+        CreateParticleSystemAtEntity("", "blood", "Player", false);
+        CreateParticleSystemAtEntity("", "ps_slime_attack_normal", "Player", false);
+}
+
+void CollideAreaGround2(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -15) return; 
+	
+	GivePlayerDamage(200, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+}
+
+void CollideAreaGround3(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Speed is: "+GetPlayerYSpeed(), false);
+	
+	if(GetPlayerYSpeed() > -8) return; 
+	
+	GivePlayerDamage(20, "BloodSplat", true, true);
+	PlayGuiSound("player_falldamage_max.snt", 1.0f);
+        PlayGuiSound("L03_meat_snapsnt", 1.0f);
+	StartScreenShake(0.3f, 0.5f, 0.1f, 0.4f);
+}
+
+void ElDeath(string &in asParent, string &in asChild, int alState)
+{
+GivePlayerDamage(200, "BloodSplat", true, true);	
+PlaySoundAtEntity("","29_elec_burst.snt","Player", 0,false);
+}
+
+void Balcony(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("harry", true);
+AddEnemyPatrolNode("harry","node_5",8,"");
+AddEnemyPatrolNode("harry","node_4",0,"");
+AddQuest("Ch6el", "Ch6el");
+AddTimer("whispers", 35, "whispers");
+}
+
+void WayAround(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Messages", "ch6wayblocked", 5);
+SetEntityActive("AreaVent", true);
+}
+
+void VentTalk(string &in asParent, string &in asChild, int alState)
+{
+AddEffectVoice("elizabethvent.ogg", "", "Voice", "00_Elizabethvent", false, "", 0, 0 );
+AddEnemyPatrolNode("waldon","node_1",0,"");
+SetEntityActive("waldon", true);
+SetEntityActive("elizabeth", true);
+AddTimer("venttalk2", 15, "venttalk2");
+}
+
+void venttalk2(string &in asTimer)
+{	
+AddEnemyPatrolNode("waldon","node_2",0,"");
+AddEnemyPatrolNode("elizabeth","node_2",0,"");
+AddEnemyPatrolNode("waldon","node_3",0,"");
+AddEnemyPatrolNode("elizabeth","node_3",0,"");
+SetEntityActive("AreaMorality", true);
+AddTimer("venttalk3", 3, "venttalk3");			
+}
+
+void venttalk3(string &in asTimer)
+{	
+SetEntityActive("AreaMorality", false);		
+}
+
+void destroycogs(string &in asItem, string &in asEntity)
+{
+SetEntityActive("cog1", false);
+SetEntityActive("cog2", false);
+SetEntityActive("cog3", false);
+SetEntityActive("cog11", true);
+SetEntityActive("cog22", true);
+SetEntityActive("cog33", true);
+SetEntityActive("pipe", true);
+SetEntityActive("AreaEl1", false);
+SetEntityActive("AreaEl2", false);
+SetEntityActive("AreaPipe", false);
+SetEntityActive("ring1", false);
+SetEntityActive("ring2", false);
+RemoveItem("brokenpipe");
+StartScreenShake(0.18f, 0.1f, 1.3f, 2.1f);
+StopSound("MachineSound", 0.9f);
+CompleteQuest("Ch6el", "Ch6el");
+PlaySoundAtEntity("MachineSound","16_ladder_imp3.snt", "", 0, true);
+CreateParticleSystemAtEntity("", "ps_cog_stone.ps", "AreaPipe", false);
+CreateParticleSystemAtEntity("", "ps_cog_rubble.ps", "AreaPipe", false);
+CreateParticleSystemAtEntity("", "ps_break_mansionbase_wall.ps", "AreaPipe", false);
+}
+
+void HurtLand(string &in asParent, string &in asChild, int alState)
+{	
+PlayGuiSound("react_sigh.snt", 1.0f);
+SetLocalVarInt("Heartbeat", 1);
+AddTimer("HeartBeat_1", 2, "HeartBeat");
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+SetPlayerJumpDisabled(true);
+StartScreenShake(0.03f,0.35f, 0.03f,4.5f);
+GivePlayerDamage(1, "BloodSplat", false, true);
+AddTimer("hurtland2", 6, "hurtland2");
+}
+
+void hurtland2(string &in asTimer)
+{
+PlayGuiSound("react_sigh.snt", 1.0f);
+SetLocalVarInt("Heartbeat", 0);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+SetPlayerJumpDisabled(false);
+}
+
+void brutescare(string &in asEntity)
+{
+SetEntityActive("brute2", true);
+AddEnemyPatrolNode("brute2","node_21",0,"");
+}
+
+void BruteStop(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("brute2", false);
+}
+
+void CloseDoor(string &in asParent, string &in asChild, int alState)
+{
+SetSwingDoorClosed("door",true,true);
+SetSwingDoorLocked("door",true, true);
+AddTimer("closedoor2", 1, "closedoor2");
+PlaySoundAtEntity("", "scare_slam_door.snt", "Player", 4.0f, false);
+PlaySoundAtEntity("","guardian_activated.snt","Player", 0, false);
+}
+
+void closedoor2(string &in asTimer)
+{
+GiveSanityDamage(5, true);
+PlaySoundAtEntity("breath", "react_breath.snt", "Player", 1.0 / 0.8f, false);
+AddTimer("panic", 10, "panic");
+}
+
+void panic(string &in asTimer)
+{
+CheckPoint("Checkpoint3", "PlayerStartArea_4", "DeathSettings2", "DeathHints", "Killed");
+PlayMusic("19_event_brute.ogg", false, 1.0, 3, 0, true);
+PlaySoundAtEntity("","break_wood.snt", "door", 0, true);
+CreateParticleSystemAtEntity("", "ps_break_wood_small", "door", false);
+AddTimer("panic2", 3, "panic2");
+}
+
+void panic2(string &in asTimer)
+{
+PlaySoundAtEntity("","break_wood.snt", "door", 0, true);
+CreateParticleSystemAtEntity("", "ps_break_wood_small", "door", false);
+AddTimer("panic3", 3, "panic3");
+}
+
+void panic3(string &in asTimer)
+{
+SetEntityActive("brute", true);
+SetEntityActive("door", false);
+SetEntityActive("AreaStalker", true);
+SetEntityActive("AreaLock", true);
+PlaySoundAtEntity("","break_wood.snt", "door", 0, true);
+CreateParticleSystemAtEntity("", "ps_break_wood_small", "door", false);
+AddEnemyPatrolNode("brute","node_6",0,"");
+AddEnemyPatrolNode("brute","node_7",0,"");
+AddEnemyPatrolNode("brute","node_8",3,"");
+AddEnemyPatrolNode("brute","node_7",0,"");
+AddEnemyPatrolNode("brute","node_6",0,"");
+AddEnemyPatrolNode("brute","node_9",0,"");
+AddEnemyPatrolNode("brute","node_10",0,"");
+AddEnemyPatrolNode("brute","node_12",0,"");
+AddEnemyPatrolNode("brute","node_13",0,"");
+AddEnemyPatrolNode("brute","node_15",0,"");
+AddEnemyPatrolNode("brute","node_9",0,"");
+AddEnemyPatrolNode("brute","node_10",0,"");
+AddEnemyPatrolNode("brute","node_12",0,"");
+AddEnemyPatrolNode("brute","node_13",0,"");
+AddEnemyPatrolNode("brute","node_15",0,"");
+PlayMusic("Countdown.ogg", true, 0.8, 4, 0, true);
+}
+
+void Stalker(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("stalker", true);
+AddEnemyPatrolNode("stalker","node_16",3,"");
+AddEnemyPatrolNode("stalker","node_13",3,"");
+AddEnemyPatrolNode("stalker","node_16",3,"");
+AddEnemyPatrolNode("stalker","node_17",3,"");
+}
+
+void BreakLock(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","guardian_activated.snt","Player", 0, false);
+StartScreenShake(0.1, 2.0, 0.05, 0.5);
+AddTimer("breaklock2", 2, "breaklock2");
+AddTimer("scream", 28, "scream");
+}
+
+void breaklock2(string &in asTimer)
+{
+SetEntityPlayerInteractCallback("door2", "", false);
+SetSwingDoorLocked("door2",false, true);
+SetEntityActive("door3", false);
+SetEntityActive("door4", false);
+SetEntityActive("padlock", false);
+SetEntityActive("padlock2", true);
+SetEntityActive("slime1", true);
+SetEntityActive("slime2", true);
+SetEntityActive("slime3", true);
+SetEntityActive("slime4", true);
+SetEntityActive("slime5", true);
+SetEntityActive("slime6", true);
+SetEntityActive("slime7", true);
+SetEntityActive("slime8", true);
+}
+
+void scream(string &in asTimer)
+{
+PlaySoundAtEntity("","guardian_activated.snt","Player", 0, false);
+StartScreenShake(0.1, 2.0, 0.05, 0.5);
+}
+
+void Orb1(string &in asItem, string &in asEntity)
+{
+SetEntityActive("AreaOrb1", false);
+SetEntityActive("orb4", true);
+RemoveItem(asItem);
+AddLocalVarInt("VarIntOrb", 1);
+	Dooropen();
+}
+
+void Orb2(string &in asItem, string &in asEntity)
+{
+SetEntityActive("AreaOrb2", false);
+SetEntityActive("orb5", true);
+RemoveItem(asItem);
+AddLocalVarInt("VarIntOrb", 1);
+	Dooropen();
+}
+
+void Orb3(string &in asItem, string &in asEntity)
+{
+SetEntityActive("AreaOrb3", false);
+SetEntityActive("orb6", true);
+RemoveItem(asItem);
+AddLocalVarInt("VarIntOrb", 1);
+	Dooropen();
+}
+void Dooropen(){
+
+	if(GetLocalVarInt("VarIntOrb") == 3){
+                SetMoveObjectState("gate", 1.0f);
+		CompleteQuest("Rods", "Rods");              
+	}
+}
+
+void Endmap(string &in asEntity, int alState)
+{
+     if (alState == -1)
+     {
+          PlaySoundAtEntity("","14_elevator_activate.snt","Player", 0,false);
+          ChangeMap("Tempel4.map", "PlayerStartArea_1", "","");
+          return;
+     }
+}
+
+//---- Etc ----//
+
+void whispers(string &in asTimer)
+{
+PlaySoundAtEntity("","HalluVoices.snt", "Player", 0, false);
+AddTimer("whisper", 250, "whispers");
+}
+
+void Morality(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","ui_sanity_gain.snt", "Player", 0, false);
+AddGlobalVarInt("Morality", 1);
+}
+
+void cavesounds(string &in asTimer)
+{
+AddTimer("cavesounds", 50, "cavesounds");
+PlaySoundAtEntity("","04_rock.snt", "Player", 0, false);
+StartScreenShake(0.03f,0.35f, 0.03f,4.5f);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust2", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust3", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust4", false);
+CreateParticleSystemAtEntity("", "ps_dust_falling", "AreaDust5", false);
+}
+
+void vent(string &in asEntity)
+{
+FadeOut(2.0f);
+SetPlayerActive(false);
+AddTimer("vent2", 2, "vent2");
+}
+
+void vent2(string &in asTimer)
+{
+FadeIn(3.0f);
+TeleportPlayer("PlayerStartArea_2");
+SetPlayerActive(true);
+PlayGuiSound("player_climb.snt", 1.0f);
+}
+
+void vent3(string &in asEntity)
+{
+FadeOut(2.0f);
+SetPlayerActive(false);
+AddTimer("vent4", 2, "vent4");
+}
+
+void vent4(string &in asTimer)
+{
+FadeIn(3.0f);
+TeleportPlayer("PlayerStartArea_3");
+SetPlayerActive(true);
+PlayGuiSound("player_climb.snt", 1.0f);
+CheckPoint("Checkpoint2", "PlayerStartArea_3", "DeathSettings", "DeathHints", "Killed");
+}
+
+void dust(string &in asEntity)
+{
+CreateParticleSystemAtEntity("", "ps_impact_dust_high", "chest", false);
+}
+
+void TimerDoBlurPounding(string &in asTimer)
+{
+	if(asTimer == "more")
+	{
+		SetRadialBlurStartDist(0.7f);
+		FadeRadialBlurTo(0.2f, 0.1f);
+		AddTimer("less", 2, "TimerDoBlurPounding");
+	}
+	else
+	{
+		FadeRadialBlurTo(0.01f, 0.04f);
+		AddTimer("more", 5, "TimerDoBlurPounding");
+	}
+}
+
+void roach1(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_1", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_1", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_1", false);	
+}
+
+void roach2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_2", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_2", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_2", false);	
+}
+
+void roach3(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_3", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_3", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_3", false);	
+}
+
+void roach4(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_4", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_4", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_4", false);	
+}
+
+void roach5(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("roach_5", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "roach_5", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "roach_5", false);	
+}
+
+void rat1(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_1", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_1", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_1", false);	
+}
+
+void rat2(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_2", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_2", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_2", false);	
+}
+
+void rat3(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_3", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_3", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_3", false);	
+}
+
+void rat4(string &in asParent, string &in asChild, int alState)
+{	
+SetEntityActive("rat_4", false);
+PlaySoundAtEntity("","impact_organic_low.snt", "rat_4", 0, true);
+CreateParticleSystemAtEntity("", "ps_blood_tiny_splash", "rat_4", false);	
+}
+
+void HeartBeat(string &in asTimer)
+{
+	if(GetLocalVarInt("Heartbeat") == 1)
+	{
+		if(asTimer == "HeartBeat_1")
+		{
+			PlaySoundAtEntity("heartbeat", "sanity_heartbeat.snt", "Player", 0.0f, false);
+			AddTimer("Beat", 0.05f, "HeartBeat");
+			AddTimer("Beat", 0.35f, "HeartBeat");
+			AddDebugMessage("EXECUTE TIMER", false);
+			AddTimer("HeartBeat_1", 2, "HeartBeat");
+		}
+		
+		if(asTimer == "Beat")
+		{
+			FadePlayerAspectMulTo(1.25f, 20);
+			FadeRadialBlurTo(0.05f, 20);
+			FadePlayerFOVMulTo(0.8f, 30);
+			AddTimer("Beat_end", 0.05f, "HeartBeat");
+		}
+		
+		if(asTimer == "Beat_end")
+		{
+			FadePlayerAspectMulTo(1.0f, 1);
+			FadePlayerFOVMulTo(1.0f, 0.75f);
+			FadeRadialBlurTo(0.0f, 1);
+		}
+	}
+}
+
+void notemusic(string &in asEntity)
+{
+AddTimer("notemusic2", 20, "notemusic2");
+AddTimer("breakwall", 7, "breakwall");
+PlayMusic("10_paper_daniel02", false, 1.0f, 2.0f, 0, true);
+}
+
+void notemusic2(string &in asTimer)
+{
+PlayMusic("Landlordsmansion", true, 1.0f, 4.0f, 0, true);
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+PlaySoundAtEntity("","12_make_drill.snt","Player", 0,false);
+RemoveItem(asItem);
+SetEntityActive("nowax", false);
+SetEntityConnectionStateChangeCallback("phono", "phono");
+}
+
+void phono(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+AddEffectVoice("harryphono2.ogg", "", "Voice", "00_Harryphono2", false, "", 0, 0 );
+SetPlayerActive(false);
+AddTimer("phono2", 15, "phono2");
+          return;
+     }
+}
+
+void phono2(string &in asTimer)
+{
+AddDiary("DiaryHarry2", "");
+SetMessage("Messages", "diaryharry2", 8);
+SetPlayerActive(true);
+}
+
+void Unlockchest(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+PlaySoundAtEntity("","unlock_door","Player", 0,false);
+SetEntityActive("AreaChest", false);
+}
+
+//---- Messages ----//
+
+void nowax(string &in asEntity)
+{
+SetMessage("Messages", "nowax", 4);
+}
+
+void locked(string &in asEntity)
+{
+SetMessage("Messages", "locked", 4);
+}
+
+void blocked(string &in asEntity)
+{
+SetMessage("Messages", "blocked", 4);
+}
+
+void chest(string &in asEntity)
+{
+SetMessage("Messages", "ch6chest", 5);
+}
+
+void breakmachine(string &in asEntity)
+{
+SetMessage("Messages", "ch6breakit", 5);
+}
+
+void brokenorb(string &in asEntity)
+{
+SetMessage("Messages", "ch6brokenorb", 5);
+}
+
+void takeorb(string &in asEntity)
+{
+SetMessage("Messages", "ch6takeorb", 5);
+SetEntityPlayerInteractCallback("OrbArea", "orbdeath", false);
+}
+
+//---- Death settings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+FadeIn(0);
+PlayMusic("Temple2", true, 1.0f, 4.0f, 0, true);
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+FadeIn(0);
+PlayMusic("Countdown", true, 1.0f, 4.0f, 0, true);
+}
+
+void OnEnter()
+{
+if(GetGlobalVarInt("Morality")==1)
+	{
+		SetEntityActive("Lal", true);
+
+	}	
+}
+
+void OnLeave()
+{
+StopMusic(10, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_final.png");
+}

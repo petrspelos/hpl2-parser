@@ -1,0 +1,152 @@
+// Intro
+void StartIntro(string &in asTimer)
+{
+	PlayMusic("09_amb_safe.ogg", true, 0.5, 3, 1, true);
+	GiveSanityBoost();
+	AddTimer("", 1, "intro_move");
+	AddTimer("", 4, "intro_move2");
+	AddTimer("", 8, "intro_move3");
+	AddTimer("", 10, "intro_end");
+}
+void intro_move(string &in asTimer)
+{
+	StartPlayerLookAt("player_look_at", 1, 2, "");
+	PlayGuiSound("react_breath", 0.7f);
+}
+void intro_move2(string &in asTimer)
+{
+	StartPlayerLookAt("player_look_at2", 1, 2, "");
+}
+void intro_move3(string &in asTimer)
+{
+	StartPlayerLookAt("note_objectives ", 2, 3, "");
+}
+void intro_end(string &in asTimer)
+{
+	SetPlayerActive(true);
+}
+void OnStart()
+{ 
+	//Intro sequence
+	GiveSanityDamage(0.5, false);
+	SetPlayerActive(false);
+	StopMusic(0, 1);
+	AddTimer("", 1, "StartIntro");
+	
+	SetEntityPlayerInteractCallback("note_objectives ", "objectives_set", true);
+	SetEntityVisible("button_chest", false);
+	SetLocalVarInt("Var_checkequipment", 0);
+	SetEntityPlayerInteractCallback("button_chest", "put_items", true);
+	SetEntityPlayerInteractCallback("button_02", "start_sleeping", false);
+	SetEntityVisible("button_02", false);
+}
+void OnEnter()
+{
+
+}
+void OnLeave()
+{
+}
+
+void objectives_set(string &in asEntity)
+{
+	StopMusic(0.5, 1);
+	StopPlayerLookAt();
+	SetEntityActive("block_way_1", false);
+	SetEntityActive("block_way_2", false);
+	AddTimer("", 1, "PlayMusicAmb");
+	AutoSave();
+	if(QuestIsAdded("box_quest") == false)
+	{
+	AddQuest("box_quest", "BoxQuest");
+	}
+}
+
+void PlayMusicAmb(string &in asTimer)
+{
+	PlayMusic("02_mansion_amb.ogg", true, 0.5, 3, 1, true);
+}
+
+void put_items(string &in asEntity)
+{
+	SetLanternActive(false, true);
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", "button_chest", 0, false);
+	SetEntityActive("button_chest", false);
+	SetEntityActive("lantern_disabled", true);
+	SetEntityActive("crowbar_disabled", true);
+	RemoveItem("crowbar_4");
+	RemoveItem("lantern");
+	SetEntityInteractionDisabled("lantern_disabled", true);
+	SetEntityInteractionDisabled("crowbar_disabled", true);
+	AddTimer("", 1, "PlayMusicPuzzle");
+	AddLocalVarInt("Var_checkequipment", 1);
+	SetEntityActive("button_02", true);
+	SetEntityVisible("button_02", false);
+}
+
+void PlayMusicPuzzle(string &in asTimer)
+{
+	PlayMusic("03_puzzle_secret.ogg", false, 0.7, 0.1, 10, false);
+	SetMessage("Message", "Message_bed", 4);
+	AutoSave();
+	CompleteQuest("box_quest", "BoxQuest");
+	if(QuestIsAdded("bed_quest") == false)
+	{
+	AddQuest("bed_quest", "BedQuest");
+	}
+	AutoSave();
+}
+
+void start_sleeping(string &in asEntity)
+{
+	if(GetLocalVarInt("Var_checkequipment") == 0)
+	{
+	SetMessage("Message", "Message_bed_items", 4);
+	SetEntityActive("button_02", false);
+	}
+	else
+	{
+	StopMusic(0.5, 1);
+	FadeOut(3);
+	SetPlayerActive(false);
+	AddTimer("", 4, "sleep_script");
+	CompleteQuest("bed_quest", "BedQuest");
+	}
+}
+
+void sleep_script(string &in asTimer)
+{
+	TeleportPlayer("sleep_pos");
+	FadeIn(1);
+	AddTimer("", 2, "sleep_script_2");
+	SetLightVisible("PointLight_2", false);
+	SetLampLit("bonfire_2", false, false);
+	SetLampLit("chandelier_nice_1", false, false);
+	SetEntityActive("PointLight_2", false);
+}
+
+void sleep_script_2(string &in asTimer)
+{
+	MovePlayerHeadPos(0, 0, -1.5, 1, 0.5);
+	AddTimer("", 1.4, "move_head_1");
+	PlaySoundAtEntity("", "player_crouch.snt", "Player", 0, false);
+}
+
+void move_head_1(string &in asTimer)
+{
+	FadePlayerRollTo(-80, 50, 100);
+	MovePlayerHeadPos(0.5, -0.5, -1.5, 2, 0.5);
+	PlaySoundAtEntity("", "player_climb.snt", "Player", 0, false);
+	AddTimer("", 2, "end_sleeping");
+}
+
+void end_sleeping(string &in asTimer)
+{
+	FadeOut(3);
+	AddTimer("", 3.5, "changelevel");
+}
+
+void changelevel(string &in asTimer)
+{
+	ChangeMap("03_ng_dreamvision.map", "PlayerStartArea_1", "", "");
+}

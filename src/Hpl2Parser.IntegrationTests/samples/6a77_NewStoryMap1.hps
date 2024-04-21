@@ -1,0 +1,67 @@
+void OnStart()
+{
+AddUseItemCallback("", "Hammer", "cellardoor", "ActivateHammer", true);
+PlayMusic("06_amb.ogg", true, 1, 5, 1, false);
+
+SetEntityInteractionDisabled("DecoyHammer", true);
+SetEntityInteractionDisabled("DecoyHammer2", true);
+SetEntityPlayerInteractCallback("Note1", "RemoveBlock", true);
+AddEntityCollideCallback("Player", "NoPassEither", "NoPassMessage", false, 1);
+AutoSave();
+}
+
+void RemoveBlock(string &in asEntity)
+{
+SetEntityActive("NoPass", false);
+SetEntityActive("NoPassEither", false);
+}
+
+void NoPassMessage(string &in asParent, string &in asChild, int alState)
+{
+SetMessage("Messages", "nopass", 5);
+}
+
+
+
+void cellardoor(string &in entity)
+{
+if(GetSwingDoorLocked("cellardoor")==true)
+        SetMessage("Messages", "cellardoormessage", 6); 
+		AddQuest("HammerQuest", "HammerQuest");
+    }
+
+void ActivateHammer(string &in asItem, string &in asEntity)
+{
+SetEntityActive("DecoyHammer", true);
+AddTimer("Smash", 1.0f, "Smash");
+SetPlayerActive(false);
+
+
+}
+
+void Smash(string &in asTimer)
+{
+SetSwingDoorLocked("cellardoor", false, true);
+PlaySoundAtEntity("", "break_wood_metal.snt", "Player", 0.0f, false);
+SetEntityActive("DecoyHammer2", true);
+SetEntityActive("DecoyHammer", false);
+AddTimer("FinishHammer", 1.0f, "FinishHammer");
+CompleteQuest("HammerQuest", "HammerQuest");
+}
+
+void FinishHammer(string &in asTimer)
+{
+SetEntityActive("DecoyHammer2", false);
+SetPlayerActive(true);
+}
+
+
+void OnEnter()
+{
+AddUseItemCallback("", "Hammer", "cellardoor", "ActivateHammer", true);
+PlayMusic("amb_06.ogg", true, 1, 5, 1, false);
+}
+
+void OnLeave()
+{
+}

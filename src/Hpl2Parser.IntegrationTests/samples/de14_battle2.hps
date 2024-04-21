@@ -1,0 +1,113 @@
+void OnStart()
+{  
+
+}
+void monster1(string &in asParent, string &in asChild, int alState)
+{
+PlayGuiSound("ap2dancercalled.ogg", 2.0f);
+
+SetMessage("Messages", "danceem", 0);
+SetEntityActive("servant_brute_1",true);
+AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0, "");
+AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_3", 0, "");
+AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_5", 0, "");
+AddTimer("", 2.0f, "setupdance");
+}
+
+void setupdance(string &in asTimer)
+{
+
+SetEntityActive("ScriptArea_3",true);
+}
+
+
+void dance1(string &in asParent, string &in asChild, int alState)
+{
+SetLightVisible("PointLight_1", true);
+SetEntityActive("ScriptArea_4",true);
+}
+
+void dance2(string &in asParent, string &in asChild, int alState)
+{
+SetLightVisible("PointLight_2", true);
+SetEntityActive("ScriptArea_5",true);
+}
+
+void dance3(string &in asParent, string &in asChild, int alState)
+{
+SetLightVisible("PointLight_3", true);
+AddTimer("", 1.0f, "brick1");
+}
+
+void brick1(string &in asTimer)
+{
+StartScreenShake(0.1f, 0.3f, 0.5f, 1.0f);
+PlaySoundAtEntity("", "ap2brickdance", "Player", 0, false);
+AddTimer("", 2.0f, "brick2");
+}
+
+void brick2(string &in asTimer)
+{
+SetEntityActive("brick_1",true);
+}
+
+
+void monsterdeath(string &in asParent, string &in asChild, int alState)
+{
+StartScreenShake(0.4f, 0.7f, 0.8f, 3.0f);
+FadeEnemyToSmoke("servant_brute_1",true);
+SetPropActiveAndFade("brick_1",false, 2);
+SetPropActiveAndFade("p1",true, 4);
+SetPropActiveAndFade("p2",true, 4);
+SetPropActiveAndFade("p3",true, 4);
+}
+
+void nofriend(string &in asParent, string &in asChild, int alState)
+{
+SetEnemyDisableTriggers("servant_brute_1", false);
+}
+
+void backtoschool(string &in asParent, string &in asChild, int alState)
+{
+ChangeMap("nightschool.map", "PlayerStartArea_7", "", "");
+}
+
+void fullreset(string &in asParent, string &in asChild, int alState)
+{
+RemoveTimer("");
+SetEntityActive("p1",false);
+SetEntityActive("p2",false);
+SetEntityActive("p3",false);
+ResetProp("brick_1");
+SetLightVisible("PointLight_1", false);
+SetLightVisible("PointLight_2", false);
+SetLightVisible("PointLight_3", false);
+PlayMusic("persona01.ogg", true, 1.4, 0.85, 1, true); 
+SetSanityDrainDisabled(true);
+SetEnemySanityDecreaseActive("servant_brute_1", false);
+AddEntityCollideCallback("Player" , "ScriptArea_1" , "monster1" , true , 1);
+AddEntityCollideCallback("Player" , "ScriptArea_6" , "backtoschool" , true , 1);
+AddEntityCollideCallback("Player" , "ScriptArea_3" , "dance1" , true , 1);
+AddEntityCollideCallback("Player" , "ScriptArea_4" , "dance2" , true , 1);
+AddEntityCollideCallback("Player" , "ScriptArea_5" , "dance3" , true , 1);
+AddEntityCollideCallback("brick_1" , "ScriptArea_2" , "monsterdeath" , true , 1);
+AddEntityCollideCallback("servant_brute_1", "ScriptArea_7", "nofriend", true, 1);
+AddTimer("", 1.0f, "teleport");
+}
+
+void teleport(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_2");
+}
+
+void OnEnter()
+{
+AddEntityCollideCallback("Player" , "ScriptArea_8" , "fullreset" , false , 1);
+
+}
+
+void OnLeave()
+{ 
+StopMusic(2, 1);
+}
+

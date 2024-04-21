@@ -1,0 +1,373 @@
+////////////////////////////
+// Run when starting map
+void OnStart()
+{
+SetEntityInteractionDisabled("lamp_wall_light01_1", true);
+SetEntityInteractionDisabled("metal_2", true);
+SetLightVisible("PointLight_36", false);
+SetLightVisible("PointLight_37", false);
+AddEntityCollideCallback("cellar_wood01_slow_1", "doorarea", "rocksxd", true, 1);
+SetPlayerActive(false);
+FadeOut(0);
+AddTimer("activate_player", 2, "FadeIn");
+SetWheelStuckState("valve_iron_1", -1, true);
+PlayMusic("Transept.ogg", true, 1, 0.6f, 10, true);
+AddUseItemCallback("", "elevatorlaunchkey", "keyholexd", "lastpuzzle", true);
+SetLightVisible("PointLight_18", false);
+SetLightVisible("PointLight_17", false);
+SetLightVisible("PointLight_19", false);
+SetLightVisible("PointLight_21", false);
+SetLightVisible("PointLight_20", false);
+SetLightVisible("PointLight_22", false);
+SetLightVisible("PointLight_35", false);
+SetLightVisible("PointLight_33", false);
+SetLightVisible("PointLight_34", false);
+SetLightVisible("PointLight_56", false);
+AddEntityCollideCallback("Player", "remindarea", "iwasherelol", true, 1);
+AddEntityCollideCallback("Player", "ScriptArea_11", "diaryixde", true, 1);
+}
+
+void FadeIn(string &in asTimer)
+{
+    SetPlayerActive(true);
+	FadeIn(4);
+}
+
+void iwasherelol(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("ScreenText", "reminder", 0);
+}
+
+void rocksxd(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("stone_small01_brown_1", true);
+	SetEntityActive("stone_small01_brown_2", true);
+	GiveSanityDamage(25, true);
+	SetEntityActive("grunt_body_part1_1", true);
+	SetEntityActive("corpse_male_arm_1", true);
+	SetEntityActive("human_bone_1", true);
+	SetEntityActive("human_skull_1", true);
+}
+
+void lamp1(string &in asEntity)
+{
+	SetLightVisible("PointLight_18", true);
+}
+
+void lamp2(string &in asEntity)
+{
+	SetLightVisible("PointLight_17", true);
+}
+
+void lamp3(string &in asEntity)
+{
+	SetLightVisible("PointLight_21", true);
+	SetLightVisible("PointLight_20", true);
+	SetLightVisible("PointLight_19", true);
+}
+
+void lamp4(string &in asEntity)
+{
+	SetLightVisible("PointLight_22", true);
+}
+
+
+/////////////////////////////////////////////
+///////////ElevatorQuest
+
+void elevatorquest(string &in asEntity)
+{
+	SetMessage("ScreenText", "elevatorkey", 0);
+	AddQuest("elevatorkey", "elevatorkey");
+	SetEntityActive("keyholexd", true);
+	SetEntityActive("keyhole", false);
+	SetEntityActive("block_box_4", false);
+	SetEntityActive("block_box_5", true);
+}
+
+void notworking(string &in asEntity)
+{
+	SetMessage("ScreenText", "elevatorkey2", 0);
+}
+
+void lastpuzzle(string &in asItem, string &in asEntity)
+{
+	AddTimer("turn", 1.2f, "turn");
+	SetPlayerActive(false);
+	SetEntityInteractionDisabled("firstkey", true);
+	SetEntityActive("firstkey", true);
+	SetEntityActive("valve_iron_1", false);
+	RemoveItem(asItem);
+    CreateParticleSystemAtEntity("", "ps_break_pot_plant", "keyhole", false);
+	PlaySoundAtEntity("","unlock_door", "Player", 0, false);
+	CompleteQuest("elevatorkey", "elevatorkey");
+}
+
+void turn(string &in asTimer)
+{	
+	SetEntityActive("lamp_wall_light01_1", false);
+	SetEntityActive("lamp_wall_light01_2", true);
+	PlaySoundAtEntity("","lock_door.snt", "Player", 0, false);
+	SetEntityInteractionDisabled("secondkey", true);
+	SetEntityActive("firstkey", false);
+	SetEntityActive("secondkey", true);
+	AddTimer("fixed", 1.47f, "fixed");
+	SetMoveObjectState("control_room_piston_piston_2", -0.36f);
+	SetMoveObjectState("control_room_piston_piston_1", -0.36f);
+	StartPlayerLookAt("control_room_piston_piston_2", 2, 2, "");
+	CreateParticleSystemAtEntity("", "ps_hit_metal", "lamp_wall_light01_2", false);
+	CreateParticleSystemAtEntity("", "ps_hit_metal", "lamp_wall_light01_2", false);
+	SetLightVisible("PointLight_56", true);
+}
+
+void fixed(string &in asTimer)
+{	
+	SetEntityConnectionStateChangeCallback("valve_iron_2", "EZFIX");
+	SetEntityActive("valve_iron_1", false);
+	SetEntityActive("valve_iron_2", true);
+	SetPlayerActive(true);
+	StartScreenShake(0.4f, 0.4f, 0.4f, 2.0f);
+	PlaySoundAtEntity("","scare_wall_stomp","Player", 0, false);
+	AddTimer("activenow", 1, "activenow'");
+	AddTimer("steam", 0.69f, "steam");
+}
+
+void steam(string &in asTimer)
+{	
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_1", false);
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_2", false);  
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_3", false);  
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_4", false);  
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_5", false);  
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_6", false);  
+	PlaySoundAtEntity("steam","17_steam.snt", "ScriptArea_1", 0, false);
+	PlaySoundAtEntity("steam2","17_steam.snt", "ScriptArea_2", 0, false);
+	StopPlayerLookAt();
+}
+
+void EZFIX(string &in asEntity, int alState)
+{
+     if (alState == 1)
+     {
+	 PlaySoundAtEntity("","scare_wall_stomp","Player", 0, false);
+	 SetWheelStuckState("valve_iron_2", 1, true);
+	 StartScreenShake(0.4f, 0.4f, 0.4f, 2.0f);
+	 AddTimer("gateXD", 2, "gateXD");
+	 AddTimer("lastugh", 1.6f, "lastugh");
+     return;
+     }
+}	  
+
+void lastugh(string &in asTimer)
+{	
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_7", false);  
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_8", false);  
+	CreateParticleSystemAtEntity("", "ps_steam.ps", "ScriptArea_9", false);  
+	GiveSanityBoostSmall();
+	PlayMusic("17_puzzle.ogg", false, 3, 0, 10, false);
+	PlaySoundAtEntity("machine","13_machine_extra.snt", "ScriptArea_10", 0, false);
+	SetLightVisible("PointLight_36", true);
+	SetLightVisible("PointLight_37", true);
+}
+
+void gateXD(string &in asTimer)
+{	
+	SetMoveObjectState("lastgatereal", 1);
+	SetLampLit("lamp_wall_lamp_1", true, true);
+	AddTimer("loop", 1.6f, "loop");
+	SetEntityActive("lastgate", false);
+	SetEntityActive("lastgatereal", true);
+}
+
+void loop(string &in asTimer)
+{	
+	SetLightVisible("PointLight_35", false);
+	SetLightVisible("PointLight_33", false);
+	SetLightVisible("PointLight_34", false);
+	SetLampLit("lamp_wall_lamp_1", false, false);
+	AddTimer("loop2", 0.16f, "loop2");
+	CreateParticleSystemAtEntity("", "ps_hit_metal", "lamp_wall_lamp_1", false);
+}
+
+void loop2(string &in asTimer)
+{	
+	SetLightVisible("PointLight_34", true);
+	SetLightVisible("PointLight_35", true);
+	SetLightVisible("PointLight_33", true);
+	SetLampLit("lamp_wall_lamp_1", true, false);
+	AddTimer("loop3", 3.0f, "loop3");
+}
+
+void loop3(string &in asTimer)
+{	
+	SetLightVisible("PointLight_35", false);
+	SetLightVisible("PointLight_33", false);
+	SetLightVisible("PointLight_34", false);
+	SetLampLit("lamp_wall_lamp_1", false, false);
+	AddTimer("loop4", 0.16f, "loop4");
+	CreateParticleSystemAtEntity("", "ps_hit_metal", "lamp_wall_lamp_1", false);
+}
+
+void loop4(string &in asTimer)
+{	
+	SetLightVisible("PointLight_34", true);
+	SetLightVisible("PointLight_35", true);
+	SetLightVisible("PointLight_33", true);
+	SetLampLit("lamp_wall_lamp_1", true, false);
+	AddTimer("loop", 0.05f, "loop");
+}
+
+void activenow(string &in asTimer)
+{	
+	StopPlayerLookAt();
+	GiveSanityBoostSmall();
+}
+
+void buttonpress(string &in asEntity)
+{
+	StartScreenShake(0.03f, 0.01f, 0.0f, 2.0f);
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("","14_elevator_activate.snt", "ScriptArea_10", 0, false);
+	AddTimer("levelchange", 3.6f, "levelchange");
+	StopSound("machine", 3);
+	StopSound("steam", 3);
+	StopSound("steam2", 3);
+}
+
+void levelchange(string &in asTimer)
+{	
+	SetPlayerActive(true);
+	ChangeMap("UndergroundFacility.map", "PlayerStartArea_1", "","");
+}
+
+void buttonpressfirst(string &in asEntity)
+{
+	SetMoveObjectState("firstgate_1", -0.89f);
+	StartScreenShake(0.03f, 0.01f, 0.0f, 2.0f);
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("","14_elevator_activate.snt", "Player", 0, false);
+	AddTimer("levelchangexd", 6.9f, "levelchangexd");
+}
+void levelchangexd(string &in asTimer)
+{	
+	SetPlayerActive(true);
+	TeleportPlayer("TranseptStart");
+	SetMoveObjectState("firstgate", 1);
+	FadeIn(3);
+}
+
+void buttonpresssecond(string &in asEntity)
+{
+	StartScreenShake(0.03f, 0.01f, 0.0f, 2.0f);
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("","14_elevator_activate.snt", "Player", 0, false);
+	AddTimer("levelchangexdlol", 6.9f, "levelchangexdlol");
+	SetMoveObjectState("firstgate", 0);
+}
+
+void levelchangexdlol(string &in asTimer)
+{	
+	SetPlayerActive(true);
+	TeleportPlayer("TranseptStart_2");
+	FadeIn(2.8f);
+	SetMoveObjectState("firstgate_1", 0);
+}
+
+void buttonpressthird(string &in asEntity)
+{
+	StartScreenShake(0.03f, 0.01f, 0.0f, 2.0f);
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("","14_elevator_activate.snt", "Player", 0, false);
+	AddTimer("levelchangexdlolxd", 6.9f, "levelchangexdlolxd");
+	SetMoveObjectState("firstgate_1", -0.89f);
+}
+
+void levelchangexdlolxd(string &in asTimer)
+{	
+	SetPlayerActive(true);
+	TeleportPlayer("TranseptStart_3");
+	FadeIn(2.8f);
+	SetMoveObjectState("lastgatereal_1", 1);
+}
+
+void buttonpresssecondxd(string &in asEntity)
+{
+	StartScreenShake(0.03f, 0.01f, 0.0f, 2.0f);
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("","14_elevator_activate.snt", "Player", 0, false);
+	AddTimer("levelchangexdlolwat", 6.9f, "levelchangexdlolwat");
+	SetMoveObjectState("lastgatereal_1", 0);
+}
+
+void levelchangexdlolwat(string &in asTimer)
+{	
+	SetPlayerActive(true);
+	TeleportPlayer("TranseptStart_2");
+	FadeIn(2.9f);
+	SetMoveObjectState("firstgate_1", 0);
+}
+
+void buttonpressfirstnah(string &in asEntity)
+{
+	StartScreenShake(0.03f, 0.01f, 0.0f, 2.0f);
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("","14_elevator_activate.snt", "Player", 0, false);
+	AddTimer("levelchangexdnah", 6.9f, "levelchangexdnah");
+	SetMoveObjectState("lastgatereal_1", 0);
+}
+void levelchangexdnah(string &in asTimer)
+{	
+	SetPlayerActive(true);
+	TeleportPlayer("TranseptStart");
+	SetMoveObjectState("firstgate", 1);
+	FadeIn(3);
+}
+
+void buttonpressthirdhuh(string &in asEntity)
+{
+	StartScreenShake(0.03f, 0.01f, 0.0f, 2.0f);
+	SetPlayerActive(false);
+	FadeOut(3);
+	PlaySoundAtEntity("","14_elevator_activate.snt", "Player", 0, false);
+	AddTimer("levelchangexdlolxdhuh", 6.9f, "levelchangexdlolxdhuh");
+	SetMoveObjectState("firstgate", 0);
+}
+
+void levelchangexdlolxdhuh(string &in asTimer)
+{	
+	SetPlayerActive(true);
+	TeleportPlayer("TranseptStart_3");
+	FadeIn(2.8f);
+	SetMoveObjectState("lastgatereal_1", 1);
+}
+
+
+void diaryixde(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("ScreenText", "AddDiary", 0);
+	AddDiary("lightwat", "lightwat");
+    PlaySoundAtEntity("","ui_add_quest.snt","Player", 0, false);
+}
+
+
+////////////////////////////
+// Run when entering map
+void OnEnter()
+{
+	PlayMusic("Transept.ogg", true, 1, 0.6f, 10, false);
+}
+
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+	SetMoveObjectState("firstgate", 0);
+	StopMusic(2, 10);
+}
+

@@ -1,0 +1,714 @@
+void OnStart() //NOTE: THIS IS NOW THE FIFTH MAP
+{
+	/*if(ScriptDebugOn()) //Debug stuff
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_health_"+i, "potion_health.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_sanity_"+i, "potion_sanity.ent");
+		GiveItemFromFile("pipe_piece", "pipe_piece.ent");
+		
+		SetLocalVarInt("MachineOn", 1);
+		for(int i=0;i<5;i++) SetLeverInteractionDisablesStuck("L"+i, true);
+		
+		PlayMusic("trial_4.ogg", true, 2.5f, 10.0f, 0.0f, true);
+	}*/
+	SetupLoadScreen("Loading", "Load_4", 0, "load_exit.png");
+	PreloadSound("sub_door_scare_pounding.snt");
+	
+	BeginTrial();
+	
+	SetSanityDrainDisabled(true);
+	SetLocalVarInt("Wheel", 0);
+	SetLocalVarInt("NotesPickedUp", 0);
+	WaterLevel(true, false, false, 0);
+	PreloadParticleSystem("PS_Water_Drop.ps"); PreloadParticleSystem("PS_Area_Fog_Sewer.ps"); PreloadParticleSystem("ps_blood_drop.ps"); PreloadParticleSystem("ps_area_fog.ps");
+	
+	AddEntityCollideCallback("pipe_piece_static", "PipeBreakArea", "CollidePipePieceWithBreakArea", false, 1);
+	AddUseItemCallback("", "pipe_piece", "StuckDoor", "UnstickDoor", true);
+	
+	for(int i=0;i<3;i++) AddUseItemCallback("", "GlassJar", "OilDripArea_"+i, "JarAndOil", true);
+	AddUseItemCallback("", "OilJar", "OilArea", "OilInMachine", true);
+	
+	AddEntityCollideCallback("cogwheel01_dyn", "cogwheel02", "CollideWrongWheel", false, 1);
+	AddEntityCollideCallback("cogwheel01_dyn", "cogwheel03", "CollideWrongWheel", false, 1);
+	AddEntityCollideCallback("cogwheel02_dyn", "cogwheel01", "CollideWrongWheel", false, 1);
+	AddEntityCollideCallback("cogwheel02_dyn", "cogwheel03", "CollideWrongWheel", false, 1);
+	AddEntityCollideCallback("cogwheel03_dyn", "cogwheel01", "CollideWrongWheel", false, 1);
+	AddEntityCollideCallback("cogwheel03_dyn", "cogwheel02", "CollideWrongWheel", false, 1);
+	
+	for(int i=0;i<4;i++) SetEntityPlayerInteractCallback("W"+i, "WheelInteraction", false);
+	
+	AddEntityCollideCallback("Player", "CrazyArea", "CrazyDoorScene", false, 0);
+	for(int i=0;i<9;i++) AddEntityCollideCallback("Player", "TripArea_"+i, "CheckForTrip", false, 1);
+	AddEntityCollideCallback("Player", "TripArea_Wall", "WallInHall", false, 1);
+	AddEntityCollideCallback("Player", "TripArea_Engie", "EngieSpooks", false, 1);
+	AddEntityCollideCallback("Player", "SpookManChance", "SpookManSpook", false, 1);
+	AddEntityCollideCallback("Player", "EngieWall", "WallsSon", false, 1);
+	AddEntityCollideCallback("Player", "BoxFallArea", "BoxSon", false, 1);
+	
+	AddEntityCollideCallback("Player", "CoughCoughCough", "MushroomsRU", false, 0);
+	AddEntityCollideCallback("Player", "lvl_1_2", "DeathByShrooms", false, 1);
+	AddEntityCollideCallback("Player", "lvl_2_2", "DeathByWater", false, 1);
+	AddEntityCollideCallback("Player", "lvl_3_2", "DeathByWater", false, 1);
+	
+	for(int i=0;i<4;i++) SetEntityPlayerInteractCallback("note_generic_"+i, "NotesPicked", false);
+	
+	SetEntityPlayerLookAtCallback("LeverPipeLookArea", "LeverPipeLookAt", true);
+	
+	AddTimer("", 5, "Heal");
+}
+
+void NotesPicked(string &in asEntity)
+{
+	if (GetLocalVarInt("NotesPickedUp") < 2)
+		{
+			AddLocalVarInt("NotesPickedUp",1);
+		}
+		else
+		{
+			SetSwingDoorLocked("CrazyDoor", false, false);
+			SetSwingDoorClosed("CrazyDoor", false, false);
+			SetLocalVarInt("CrazyOpen", 1);
+		}
+}
+
+void Heal(string &in asTimer){
+	AddDebugMessage("Health: "+GetPlayerHealth(), false);
+	AddPlayerHealth(5);
+	AddTimer("", 5, "Heal");
+}
+
+//DA BASICS
+void Doors(string &in asEntity)
+{
+	if(asEntity == "StuckDoor" && GetLocalVarInt("Stuck") != 1){
+		SetMessage("Examine", "Trial4_StuckDoor", 0);
+		PlaySoundAtEntity("", "locked_door.snt", asEntity, 0.0f, true);
+	}
+	else if(asEntity == "CrazyDoor")
+	{
+		if(GetLocalVarInt("CrazyOpen") == 2) return;
+		else if(GetLocalVarInt("CrazyOpen") != 1){
+			SetMessage("Examine", "Trial6_UnlockableDoor", 0);
+			PlaySoundAtEntity("", "locked_door.snt", asEntity, 0.0f, true);
+		}
+		else if(GetLocalVarInt("CrazyOpen") == 1){
+			//PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0.0f, false);	
+			//SetSwingDoorLocked(asEntity, false, true);
+			//SetMessage("Interact", "Trial4_UnlockedDoor", 0);
+			//SetLocalVarInt("CrazyOpen", 2);
+		}
+	}
+}
+
+void GrabNote(string &in asEntity){
+	FadeLightTo("HelpLight_1", 0,0,0,0,-1,3);
+}
+
+//////////////////////////////
+//PIPE AND DOOR AT BEGINNING
+void CollidePipePieceWithBreakArea(string &in asParent, string &in asChild, int alState)
+{
+	///////////////////////////////////////////
+	// Check how many times the pipe has collided with area, and break if enough
+	int lBreakAmount = GetLocalVarInt("PipeBreakAmount");
+	if(lBreakAmount==2)
+	{
+		PlaySoundAtEntity("PipeBreak", "17_break_wheel.snt", asParent, 0.3f, false);
+		PlaySoundAtEntity("PipeBreak2", "25_bar_drop.snt", asParent, 0, false);
+		PlaySoundAtEntity("PipeBreak3", "impact_rock_med.snt", asParent, 0, false);
+		SetEntityActive(asParent, false);
+		SetEntityActive("pipe_piece", true);
+		RemoveEntityCollideCallback(asParent, asChild);
+	}
+	else{
+		lBreakAmount++;
+		SetLocalVarInt("PipeBreakAmount", lBreakAmount);
+	}
+}
+
+void UnstickDoor(string &in asItem, string &in asEntity){
+	AddTimer(asEntity, 0.2, "TimerSwitchShovel");
+	PlaySoundAtEntity("pickupcrow","player_crouch.snt", "Player", 0.05, false);
+	AddEntityCollideCallback("movepipe", "BreakDoor", "BreakDaDoor", true, 0);
+}
+void TimerSwitchShovel(string &in asTimer){
+	RemoveItem("pipe_piece");
+	PlaySoundAtEntity("attachshovel","puzzle_place_jar.snt", asTimer, 0, false);	
+	SetEntityActive("movepipe", true);
+}
+void BreakDaDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorLocked("StuckDoor", false, false);
+	SetSwingDoorDisableAutoClose("StuckDoor", true);
+	SetSwingDoorClosed("StuckDoor", false,false);
+	AddPropImpulse("StuckDoor", 0, 0, -3, "world");
+	PlaySoundAtEntity("break","break_wood_metal", "BreakDoor_FX", 0, false);
+	CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "BreakDoor_FX", false);
+	PlayMusic("trial_4_event_door", false, 0.8, 0.1, 10, false);
+	PlaySoundAtEntity("Scratching", "sub_door_scare_pounding.snt", "sound_9", 0, true);
+	AddDebugMessage("Broken!!!!", false);
+	SetEntityActive("movepipe", false);
+	SetEntityInteractionDisabled("deadpipe", true);
+	SetEntityActive("deadpipe", true);
+	SetLocalVarInt("Stuck", 1);
+	AddTimer("pushdoor", 0.1, "TimerPushDoor");	
+}
+void TimerPushDoor(string &in asTimer){
+	AddPropImpulse("StuckDoor", -4, 2, -1, "world");
+	AddTimer("doorclose", 1.1, "TimerDoorCanClose");
+}
+void TimerDoorCanClose(string &in asTimer)
+	{SetSwingDoorDisableAutoClose("StuckDoor", false);}
+//END DOOR AT BEGINNING
+///////////////////////////
+
+//////////////////////////////
+//WATER PUZZLE
+//COGS
+void AttachWheel(string &in asArea, string &in asBody)
+{
+	AddTimer(asArea, 0.5f, "TimerWheel");
+	AddLocalVarInt("WheelOK", 1);
+	AddLocalVarInt(asArea, 1);	//asChild in CollideWrongWheel, to not display message as spoke is taken
+	SetLocalVarString("WheelSound", asBody);
+	PlaySoundAtEntity(GetLocalVarString("WheelSound"), "scrape_metal.snt", asArea, 0.1f, false);
+	PlaySoundAtEntity(GetLocalVarString("WheelSound"), "13_attach_wheel.snt", asArea, 0.2f, false);
+	AddDebugMessage("Attach "+asArea+"_dyn", false);
+	SetEntityActive("AreaSpokes", false); //Turns off the missing spokes message.
+}
+void TimerWheel(string &in asTimer){
+	StopSound(GetLocalVarString("WheelSound"), 0.5f);
+	SetEntityActive(asTimer+"_dyn", false);
+	SetEntityActive(asTimer+"_mounted", true);
+}
+
+void CollideWrongWheel(string &in asParent, string &in asChild, int alState) //Message that it is not the correct spoke for the wheel
+{
+	if(GetLocalVarInt(asChild) != 1){
+		SetMessage("Interact", "Trial4_WheelNoFit", 0);	
+		PlaySoundAtEntity("clank", "impact_metal_low", asChild, 0.05f, false);
+	}
+}
+
+//OIL
+void OilPuddle(string &in asEntity)
+	{SetMessage("Examine", "Trial4_OilPuddle", 0);}
+void JarAndOil(string &in asItem, string &in asEntity){
+	RemoveItem(asItem);
+	PlaySoundAtEntity("OILFILL", "16_fill_oil", "OilDripArea_2", 0.05f, false);
+	SetMessage("Interact", "Trial4_GotOil", 0);
+	GiveItem("OilJar", "glass_container_oil", "Trial4_OilJar", "glass_container_oil.tga", 1);
+}
+void OilInMachine(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetMessage("Interact", "Trial4_OilInMachine", 0);
+	SetLocalVarInt("Oil", 1);
+	GiveItem("GlassJar", "glass_container", "Trial4_GlassJar", "glass_container.tga", 1);
+}
+void ExamineOilArea(string &in asEntity)
+{
+	if(GetLocalVarInt("Oil")!=1)
+		{SetMessage("Examine", "Trial4_NoOil", 0);}
+	else
+		{SetMessage("Examine", "Trial4_OilFilledTank", 0);}
+}
+void OilLever(string &in asEntity, int alState)
+{
+	if(alState==1)
+	{
+		if(GetLocalVarInt("Oil") == 1)
+			{SetLocalVarInt("OilOK", 1);}
+		else
+			{SetMessage("Interact", "Trial4_OilLeverNoOil", 0);}
+	}
+}
+
+//START THE MACHINE
+void PullStartLever(string &in asEntity, int alState)
+{
+	if(alState == -1) AddDebugMessage("Lever Min", false);
+	else if (alState == 1) StartMachine(asEntity);
+}
+void StartMachine(string sEntity)//If all settings correct start the machine, if not do a hiccup start
+{
+	PlaySoundAtEntity("s1"+sEntity, "13_ignite", sEntity, 0.2f, false);
+	PlaySoundAtEntity("s2"+sEntity, "13_machine_fail", sEntity, 0.2f, false);
+
+	if(GetLocalVarInt("WheelOK") == 3 && GetLocalVarInt("OilOK") == 1)
+	{
+		StartScreenShake(0.03f, 2.0f, 0.5f,1.5f);
+		RunWheels(1.0f,-1.0f);	
+		SetLeverStuckState(sEntity, 1, false);
+		for(int i=0;i<5;i++) SetLeverInteractionDisablesStuck("L"+i, true);
+		SetLocalVarInt("MachineOn", 1);
+		
+		PlayMusic("trial_4_event_machine_fixed", false, 1, 0.5f, 10, false);
+	}
+	else{
+		StartScreenShake(0.01f, 1.0f, 0.25,0.5f);
+		AddTimer("stopwheels", 1, "TimerMachineError");
+		RunWheels(1.0f,-1.0f);
+	}
+}
+
+void TimerMachineError(string &in asTimer){
+	SetMessage("Ch01Level13", "MachineNotFixed", 0);
+	RunWheels(0.0f,0.0f);
+}
+
+void RunWheels(float fSpeed1, float fSpeed2)
+{
+	RotatePropToSpeed("elevator_machine_cog_small_2", 1, fSpeed2*3, 0, 0, 1, false, "");
+	RotatePropToSpeed("elevator_machine_cog_small_1", 1, fSpeed1*3, 0, 0, 1, false, "");
+	RotatePropToSpeed("elevator_machine_cog_small_3", 1, fSpeed2*3, 1, 0, 0, false, "");
+	RotatePropToSpeed("elevator_machine_cog_main_1", 1, fSpeed1, 1, 0, 0, false, "");
+	
+	if(GetLocalVarInt("WheelOK") != 3) return;	
+	
+	RotatePropToSpeed("cogwheel01_mounted", 1, fSpeed2, 0, 0, 1, false, "");
+	RotatePropToSpeed("cogwheel02_mounted", 1, fSpeed1, 0, 0, 1, false, "");
+	RotatePropToSpeed("cogwheel03_mounted", 1, fSpeed2, 0, 0, 1, false, "");
+}
+
+//LEVERS
+
+void LeverPipeLookAt(string &in asEntity, int alState) 
+{
+	AddQuest("Quest_05_Pipes", "05_Pipes");
+}
+
+void InteractLevers(string &in asEntity)
+{
+	if(GetLocalVarInt("MachineOn")!=1){
+		SetMessage("Examine", "Trial4_ExamineLevers", 0);
+		PlaySoundAtEntity("", "lever_wood_max.ogg", asEntity, 0, false);
+	}
+}
+void LeverPuzzle(string &in asEntity, int alState) //Pulls levers to unlock wheels
+{
+	AddDebugMessage(asEntity+" has been pulled!", true);
+
+	if(GetLeverState("L1")==1&&GetLeverState("L2")==1&&GetLeverState("L3")==-1&&GetLeverState("L4")==-1) //Wheel 3 Lever Config: Up, Up, Down, Down
+	{
+		SetWheelStuckState("W1", 1, false);
+		SetWheelStuckState("W2", 1, false);
+		SetWheelStuckState("W3", 0, true);
+		SetLocalVarInt("Wheel", 3);
+		PlaySoundAtEntity("", "13_steam_noloop.snt", "L1", 0.3f, false);
+		PlaySoundAtEntity("", "07_pick_lock.snt", "L1", 0, false);
+	}
+	
+	else if(GetLeverState("L1")==-1&&GetLeverState("L2")==1&&GetLeverState("L3")==-1&&GetLeverState("L4")==1) //Wheel 2 Lever Config: Down, Up, Down, Up
+	{
+		SetWheelStuckState("W1", 1, false);
+		SetWheelStuckState("W2", 0, true);
+		SetWheelStuckState("W3", 1, false);
+		SetLocalVarInt("Wheel", 2);
+		PlaySoundAtEntity("", "13_steam_noloop.snt", "L1", 0.3f, false);
+		PlaySoundAtEntity("", "07_pick_lock.snt", "L1", 0, false);
+	}
+	
+	else if(GetLeverState("L1")==1&&GetLeverState("L2")==-1&&GetLeverState("L3")==1&&GetLeverState("L4")==-1) //Wheel 1 Lever Config: Up, Down, Up, Down
+	{
+		SetWheelStuckState("W1", 0, true);
+		SetWheelStuckState("W2", 1, false);
+		SetWheelStuckState("W3", 1, false);
+		SetLocalVarInt("Wheel", 1);
+		PlaySoundAtEntity("", "13_steam_noloop.snt", "L1", 0.3f, false);
+		PlaySoundAtEntity("", "07_pick_lock.snt", "L1", 0, false);
+	}
+	
+	else //Set all wheels stuck if no good config
+	{
+		SetWheelStuckState("W1", 1, true);
+		SetWheelStuckState("W2", 1, true);
+		SetWheelStuckState("W3", 1, true);
+		SetLocalVarInt("Wheel", 0);
+	}
+}
+
+//WHEELS
+void WheelInteraction(string &in asEntity)
+{
+	if(asEntity == "W1" && GetLocalVarInt("Wheel") != 1){
+		SetMessage("Interact", "Trial4_WheelLock", 0);
+		PlaySoundAtEntity("", "wheel_metal_min_max.ogg", asEntity, 0, false);
+	}
+	if(asEntity == "W2" && GetLocalVarInt("Wheel") != 2){
+		SetMessage("Interact", "Trial4_WheelLock", 0);
+		PlaySoundAtEntity("", "wheel_metal_min_max.ogg", asEntity, 0, false);
+	}
+	if(asEntity == "W3" && GetLocalVarInt("Wheel") != 3){
+		SetMessage("Interact", "Trial4_WheelLock", 0);
+		PlaySoundAtEntity("", "wheel_metal_min_max.ogg", asEntity, 0, false);
+	}
+}
+void InteractLockedWheel(string &in asEntity, int alState) //Turn wheels to raise/lower water level
+{
+	if(asEntity == "W1")
+	{
+		if(GetLocalVarInt("Wheel")!=1)
+			{SetMessage("Interact", "Trial4_WheelLock", 0);}
+		else if(alState==-1)
+		{
+			AddDebugMessage("Water lever is at 2", false);
+			WaterLevel(false, true, false, 1);
+		}
+	}
+	else if(asEntity == "W2")
+	{
+		if(GetLocalVarInt("Wheel")!=2)
+			{SetMessage("Interact", "Trial4_WheelLock", 0);}
+		else if(alState==-1)
+		{
+			AddDebugMessage("Water lever is at 1", false);
+			WaterLevel(true, false, false, 2);
+		}
+	}
+	else if(asEntity == "W3")
+	{
+		if(GetLocalVarInt("Wheel")!=3)
+			{SetMessage("Interact", "Trial4_WheelLock", 0);}
+		else if(alState==-1)
+		{
+			AddDebugMessage("Water lever is at 3", false);
+			WaterLevel(false, false, true, 3);
+		}
+	}
+}
+void WaterLevel(bool Level1, bool Level2, bool Level3, int Number)
+{
+	PlaySoundAtEntity("PumpRumble", "18_pump_rumble", "WaterSounds_"+Number, 4, false);
+	PlaySoundAtEntity("PumpFlow", "18_fill_water", "WaterSounds_"+Number, 0.5, false);
+	AddTimer("PumpRumble", 4, "TimerPumpRumbleStop");
+	
+	for(int i=0;i<8;i++) SetEntityActive("lvl_1_"+i, Level1);
+	for(int i=0;i<8;i++) SetEntityActive("lvl_2_"+i, Level2);
+	for(int i=0;i<8;i++) SetEntityActive("lvl_3_"+i, Level3);
+	for(int i=1;i<11;i++) SetLightVisible("water_"+i, Level1);
+	for(int i=11;i<21;i++) SetLightVisible("water_"+i, Level2);
+	for(int i=21;i<31;i++) SetLightVisible("water_"+i, Level3);
+	SetLightVisible("lvl_1_1", Level1);
+	SetLightVisible("lvl_2_1", Level2);
+	SetLightVisible("lvl_3_1", Level3);
+	
+}
+void TimerPumpRumbleStop(string &in asTimer)
+	{StopSound("PumpRumble", 1);}
+//END WATER PUZZLE
+//////////////////////////////
+
+////////////////////////////////
+//DEAD IN THE WATER
+void MushroomsRU(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1)//slight damage
+	{
+		RemoveTimer("Heal");
+		AddTimer("Hurt", 2, "MushROOM");
+	}
+	else if(alState==-1)//slight heal
+	{
+		RemoveTimer("Hurt");
+		AddTimer("Heal", 2, "MushROOM");
+	}
+}
+void MushROOM(string &in asTimer)
+{
+	if(asTimer=="Hurt")
+	{
+		if(GetPlayerHealth()>35){
+			AddPlayerHealth(-12.5);
+			PlaySoundAtEntity("u_dead", "player_cough", "Player", 0, false);
+			AddTimer("Hurt", 5, "MushROOM");
+		}
+	}
+	else if(asTimer=="Heal")
+	{
+		if(GetPlayerHealth()<100){
+			AddPlayerHealth(15);
+			AddTimer("Heal", 5, "MushROOM");
+		}
+		else if(GetPlayerHealth()>100)
+			{SetPlayerHealth(100);}
+	}
+	AddDebugMessage("Health: "+GetPlayerHealth(), false);
+}
+
+void DeathByShrooms(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("Shroom", 1, "DeadTimer");
+	CheckPoint("WaterCP", "DeadInTheWater_CP", "", "Death", "Trial4_ShroomDeath");
+}
+void DeathByWater(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=0;i<5000;++i)
+		{AddPlayerBodyForce(0,6,0, false);}
+	AddTimer("Water", 0.5, "DeadTimer");
+	CheckPoint("WaterCP", "DeadInTheWater_CP", "", "Death", "Trial4_WaterDeath");
+	PlayGuiSound("water_lurker_idle2.ogg", 1);
+}
+void DeadTimer(string &in asTimer)
+{
+	if(asTimer=="Water")
+		{SetPlayerHealth(0);}
+	else if(asTimer=="Shroom")
+	{
+		if(GetPlayerHealth()>0)
+		{
+			AddPlayerHealth(-20);
+			PlaySoundAtEntity("u_dead", "player_cough", "Player", 0, false);
+			AddTimer("Shroom", 3, "DeadTimer");
+		}
+	}
+}
+//END DEAD IN THE WATER
+//////////////////////////////////
+
+///////////////////////////////
+//HALLUCINATIONS
+//WALLS ROOM HALLUCINATION
+void WallsRoom(string &in asEntity) //Hallucination after pick up glass jar
+{
+	if(RandInt(1,3)==3){
+	SetLightVisible("PointLight_16", false);
+	SetLightVisible("PointLight_21", false);
+	SetLampLit("hanging_lantern_ceiling_6", false, false);
+	SetLampLit("candle_floor_no_light_1", false, false);
+	SetEntityActive("wat_4", true);
+	SetEntityActive("wat_5", true);
+	SetEntityActive("door_frame_1", false);
+	SetEntityActive("door_way_1", false);
+	AddEntityCollideCallback("Player", "FakeWalls_Area", "FakeWalls", true, 0);
+	}
+}
+void FakeWalls(string &in asParent, string &in asChild, int alState)
+	{SetEntityPlayerLookAtCallback("FakeWalls_1", "LookWalls", true);}
+void LookWalls(string &in asEntity, int &in asState)
+{
+	if(asEntity == "FakeWalls_1"){
+		SetEntityActive("wat_3", true);
+		SetEntityPlayerLookAtCallback("FakeWalls_2", "LookWalls", true);
+	}
+	else if(asEntity == "FakeWalls_2"){
+		SetLightVisible("PointLight_16", true);
+		SetLampLit("hanging_lantern_ceiling_6", true, false);
+		SetEntityActive("wat_5", false);
+		SetEntityActive("door_frame_1", true);
+		SetEntityActive("door_way_1", true);
+		AddEntityCollideCallback("Player", "FixWalls", "FixWalls", true, 0);
+	}
+}
+void FixWalls(string &in asParent, string &in asChild, int alState)
+{
+	SetLightVisible("PointLight_21", true);
+	SetLampLit("candle_floor_no_light_1", true, false);
+	SetEntityActive("wat_3", false);
+	SetEntityActive("wat_4", false);
+}
+//CRAZY DOOR AND STUFF
+void CrazyDoorScene(string &in asParent, string &in asChild, int alState)
+{
+	if(alState == 1){
+		AddDebugMessage("Entering crazy area", false);
+		AddTimer("TimerDoor", 3.8f, "BreakCrazyDoor");
+	}
+	else if(alState == -1){
+		AddDebugMessage("Leaving crazy area", false);
+		RemoveTimer("TimerDoor");
+	}
+}
+void BreakCrazyDoor(string &in asTimer)
+{
+	StopSound("Scratching",1.0);
+	SetEntityActive("Sound_9",false);
+	SetPropHealth("CrazyDoor", 60);
+	RemoveEntityCollideCallback("Player", "CrazyArea");
+	SetLocalVarInt("CrazyOpen", 1);
+}
+//TRIPPIN' BALLS
+void CheckForTrip(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("Trip", RandInt(1,8));
+	AddDebugMessage(""+GetLocalVarInt("Trip"), false);
+	if(GetLocalVarInt("Trip")==5){
+		TrippinBalls(true);
+		SetEntityActive("SpookManChance", false);
+	}
+	else if(GetLocalVarInt("Trip")!=5){
+		TrippinBalls(false);
+		SetEntityActive("SpookManChance", true);
+		if(GetLocalVarInt("Tripped") == 1){
+			for(int i=0;i<9;i++) RemoveEntityCollideCallback("Player", "TripArea_"+i);
+			DestroyParticleSystem("TripPS_Drop");
+			DestroyParticleSystem("TripPS_Fog");
+		}
+	}
+}
+void TrippinBalls(bool asBool){
+	for(int i=0;i<20;i++) SetEntityActive("trippin_balls_"+i, asBool);
+	if(asBool == true){
+		SetLocalVarInt("Tripped", 1);
+		for(int i=0;i<6;i++) CreateParticleSystemAtEntityExt("TripPS_Drop", "PS_Water_Drop.ps", "TripPS_"+i, false, 0.294,0.362,0.224,1, true, 1,2,100,110);
+		for(int i=6;i<11;i++) CreateParticleSystemAtEntityExt("TripPS_Fog", "PS_Area_Fog_Sewer.ps", "TripPS_"+i, false, 0.034,0.189,0.086,1, true, 1,2,100,110);
+	}
+}
+//SPOOKMAN
+void SpookManSpook(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("SpookMan", RandInt(1,8));
+	AddDebugMessage(""+GetLocalVarInt("SpookMan"), false);
+	if(GetLocalVarInt("SpookMan")==7)
+	{
+		SetEntityActive("oh_shit_1", true);
+		AddEntityCollideCallback("Player", "OhBoy", "DoItSpook", true, 0);
+	}
+	else if(GetLocalVarInt("SpookMan")!=7)
+	{
+		SetEntityActive("oh_shit_1", false);
+		RemoveEntityCollideCallback("Player", "OhBoy");
+	}
+}
+void DoItSpook(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("oh_shit_1", false);
+	SetEntityActive("OH_SHIT_2", true);
+	AddTimer("", 0.5, "ResetHall");
+}
+void ResetHall(string &in asTimer)
+{
+	PlayGuiSound("04_bodyscare.ogg", 3);
+	TeleportPlayer("OhBaby");
+	SetEntityActive("OH_SHIT_2", false);
+	RemoveEntityCollideCallback("Player", "SpookManChance");
+}
+//WALL IN HALL
+void WallInHall(string &in asParent, string &in asChild, int alState)
+{
+	AddDebugMessage("Blerglle", false);
+	if(RandInt(1,8)==1){
+		SetEntityActive("wat_1", true);
+		SetLocalVarInt("WallSeen", 1);
+	}
+	else{
+		SetEntityActive("wat_1", false);
+		if(GetLocalVarInt("WallSeen")==1){
+			RemoveEntityCollideCallback("Player", "TripArea_Wall");
+		}
+	}
+}
+//MORE WALLS
+void WallsSon(string &in asParent, string &in asChild, int alState)
+{
+	if(RandInt(1,8)==1){
+		SetEntityActive("wat_2", true);
+		SetEntityActive("wat_6", true);
+		SetLocalVarInt("WallSeen_2", 1);
+	}
+	else{
+		SetEntityActive("wat_2", false);
+		SetEntityActive("wat_6", false);
+		if(GetLocalVarInt("WallSeen_2")==1){
+			RemoveEntityCollideCallback("Player", "EngieWall");
+		}
+	}
+}
+//BOXES
+void BoxSon(string &in asParent, string &in asChild, int alState)
+{
+	if(RandInt(1,6)==1){
+		SetEntityActive("really_stupid", false);
+		SetEntityActive("cliche_scare", true);
+	}
+}
+//ENGINE ROOM SPOOKS
+void EngieSpooks(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("SpookEngie", RandInt(1,8));
+	AddDebugMessage(""+GetLocalVarInt("SpookEngie"), false);
+	if(GetLocalVarInt("SpookEngie")==1)
+		{EngieSpooksEntities(true);}
+	else if(GetLocalVarInt("SpookEngie")!=1){
+		EngieSpooksEntities(false);
+		if(GetLocalVarInt("EngieDone")==1)
+			{RemoveEntityCollideCallback(asParent, asChild);}
+	}
+}
+void EngieSpooksEntities(bool Active)
+{
+	for(int i=0;i<15;i++) SetEntityActive("moar_spooks_"+i, Active);
+	if(Active==true)
+	{
+		SetLocalVarInt("EngieDone", 1);
+		for(int i=0;i<15;i++) CreateParticleSystemAtEntityExt("EngieSpooksParticles", "ps_blood_drop.ps", "EngieSpooksArea_"+i, false, 1,1,1,1, true, 1,2,100,110);
+		CreateParticleSystemAtEntityExt("EngieSpooksParticles", "ps_area_fog.ps", "EngieSpooksArea_7", false, 0.586,0.089,0,1, true, 1,2,10,20);
+	}
+	else
+		{DestroyParticleSystem("EngieSpooksParticles");}
+}
+//END HALLUCINATIONS
+////////////////////////////////
+
+//////////////////////////////
+//ENDING DA MAP
+void DaEnd(string &in asEntity, int &in asState)
+{
+	if(asState == -1)
+	{
+		SetSwingDoorLocked("elevator_door_1", true, true);
+		PlaySoundAtEntity("activate","14_elevator_activate","Player", 0, false);
+		AddTimer("StartElevator", 2.0f, "TimerStartElevator");
+	}
+}
+
+void TimerStartElevator(string &in asTimer)
+{
+	AddDebugMessage("Done did it!", false);
+	StartScreenShake(0.01f, 3, 1,0);
+	ChangeMap("Sub_Trial_6", "TestRoom", "elevator_move_normal", "");
+}
+
+//////////////////////////
+//INTRO
+void BeginTrial(){
+	FadeOut(0);
+	FadeIn(2.0);
+	StartPlayerLookAt("LookAtMe", 10,10,"");
+	AddTimer("", 1.0f, "StopLookAtPls");
+	AddTimer("", 4.0f, "Voices");
+}
+void StopLookAtPls(string &in asTimer)
+	{StopPlayerLookAt();}
+void Voices(string &in asTimer){
+	AddEffectVoice("M5_S1_P1_01", "", "Voices", "05010101", false, "", 0, 0);
+	AddEffectVoice("M5_S1_P1_02", "", "Voices", "05010102", false, "", 0, 0);
+	AddEffectVoice("M5_S1_P1_03", "", "Voices", "05010103", false, "", 0, 0);
+	AddEffectVoice("M5_S1_P1_04", "", "Voices", "05010104", false, "", 0, 0);
+	AddEffectVoice("M5_S1_P1_05", "", "Voices", "05010105", false, "", 0, 0);
+	AddEffectVoice("M5_S1_P1_06", "", "Voices", "05010106", false, "", 0, 0);
+	AddEffectVoice("M5_S1_P1_07", "", "Voices", "05010107", false, "", 0, 0);
+	AddEffectVoice("M5_S1_P1_08", "", "Voices", "05010108", false, "", 0, 0);
+	SetEffectVoiceOverCallback("TeleportInTo");
+}
+void TeleportInTo(){
+	StartEffectFlash(1.5, 1, 1.5);
+	AddTimer("", 1.5, "Teleporting");
+}
+void Teleporting(string &in asTimer){
+	PlayGuiSound("sub_warp.ogg", 1);
+	TeleportPlayer("PlayerStartArea_1");
+	PlayMusic("trial_4.ogg", true, 2.0f, 1.5f, 0, true);
+}
+
+
+
+void OnEnter(){
+	AutoSave();
+}
+void OnLeave(){
+	CompleteQuest("Quest_05_Pipes", "05_Pipes");
+	StopMusic(0,0);
+}

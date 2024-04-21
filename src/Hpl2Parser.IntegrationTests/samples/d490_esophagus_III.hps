@@ -1,0 +1,384 @@
+//// include hps
+
+void DisableCandles(bool abDisabled) {
+	SetEntityInteractionDisabled("candle_floor_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick01_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick02_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_floor_*", abDisabled);
+	SetEntityInteractionDisabled("torch_*", abDisabled);
+	SetEntityInteractionDisabled("hanging_lantern_ceiling_*", abDisabled);
+	SetEntityInteractionDisabled("elevator_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_tri_*", abDisabled);
+	
+	SetEntityInteractionDisabled("lamp_wall_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("ki_lampion_*", abDisabled);
+	SetEntityInteractionDisabled("lamp_gas_*", abDisabled);
+	SetEntityInteractionDisabled("LampBarrelsTake_*", abDisabled);
+}
+
+void DeathChecker() {
+	SetGlobalVarInt("NumOfDeaths", GetGlobalVarInt("NumOfDeaths") + 1);
+	if (GetGlobalVarInt("NumOfDeaths") <= 3) {
+		RemoveHint("deathshint");
+		GiveHint("deathshint", "Hints", "DeathCounter", -1);
+	}
+	else 
+	if (GetGlobalVarInt("NumOfDeaths") == 10) {
+		AddQuest("Deathwarning1", "deathwarning1");
+	} else if (GetGlobalVarInt("NumOfDeaths") == 15) {
+		CompleteQuest("Deathwarning1", "deathwarning1");
+		AddQuest("Deathwarning2", "deathwarning2");
+	}
+	else if (GetGlobalVarInt("NumOfDeaths") == 20) {
+		CompleteQuest("Deathwarning2", "deathwarning2");
+		AddQuest("Deathwarning3", "deathwarning3");
+		GiveSanityDamage(200, true);
+		FadeOut(8);
+		AddTimer("deathCheckOut_Timer", 15.0f, "DeathCheckOut_Timer");
+	}
+}
+void DeathCheckOut_Timer(string &in asTimer) {
+	ChangeMap("esophagus_VI.map", "PlayerStartArea_2", "", "");
+}
+
+////
+
+
+void OnStart() {
+	DisableCandles(true);
+	
+	PlayMusic("bells_of_awakening_umba", true, 1.0f, 6.0f, 0, true);
+	SetInventoryDisabled(true);
+	SetLocalVarInt("monsterLaunchVar", 0);
+	SetLocalVarInt("breakQuestAdded", 0);
+	SetEntityInteractionDisabled("lantern_1", true);
+	AddEntityCollideCallback("enemy_flesher_1", "ScriptArea_MonsterDoor", "Touch_MonsterDoor", false, 0);
+	AddEntityCollideCallback("enemy_flesher_2", "ScriptArea_MonsterDoor", "Touch_MonsterDoor", false, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_EoL", "LeaveArea", false, 0);
+	
+	SetLightVisible("HelperLight_1", false);
+	SetLightVisible("HelperLight_2", false);
+	SetLightVisible("HelperLight_3", false);
+	
+	SetLocalVarInt("StonesFoundOnDeathNum", 0);
+	
+	if (!ScriptDebugOn()) {
+		ClinicIntro();
+	} else {
+		SetGlobalVarInt("NumOfDeaths", 0);
+	}
+	
+	AutoSave();
+}
+
+void ClinicIntro() {
+	FadeOut(0);
+	SetEntityActive("table_nice02_11", false);
+	SetEntityActive("table_nice02_10", true);
+	SetEntityActive("incense_holder_1", false);
+	TeleportPlayer("PlayerStartArea_2");
+	FadeGlobalSoundVolume(0, 0.3f);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	
+	AddTimer("clinicintro_Timer1", 4.0f, "Clinicintro_Timer1");
+	AddTimer("clinicintro_Timer2", 7.0f, "Clinicintro_Timer2");
+}
+
+///////// Awakening intro sequence
+
+void Clinicintro_Timer1(string &in asTimer) {
+	PlayGuiSound("react_sigh.snt", 0.5f);
+	SetEntityActive("ritual_prisoner_5", true);
+}
+
+void Clinicintro_Timer2(string &in asTimer) {
+	FadePlayerRollTo(12, 0.3f, 0.8f); 
+	SetEffectVoiceOverCallback("Clinicintro_Timer3");
+	AddEffectVoice("03_doctorexamine1.ogg", "", "Voice", "03_doctorexamine1", false, "", 0, 0);
+	AddEffectVoice("03_doctorexamine2.ogg", "", "Voice", "03_doctorexamine2", false, "", 0, 0);
+	FadeGlobalSoundVolume(0.3f, 3);
+}
+
+void Clinicintro_Timer3() {
+	FadeIn(3);
+	PlayGuiSound("react_sigh.snt", 1.5f);
+	FadePlayerFOVMulTo(1.2, 0.03);	
+	FadeImageTrailTo(2,1);
+	FadeSepiaColorTo(1,1);	
+	SetEffectVoiceOverCallback("Clinicintro_Timer4");
+	AddEffectVoice("03_doctorexamine3.ogg", "", "Voice", "03_doctorexamine3", false, "", 0, 0);
+}
+
+void Clinicintro_Timer4() {
+	FadeOut(0.5f);
+	PlayGuiSound("react_sigh.snt", 1.0f);
+	AddTimer("clinicintro_Timer5", 4.0f, "Clinicintro_Timer5");
+	AddTimer("clinicintro_Timer6", 5.5f, "Clinicintro_Timer6");
+	AddTimer("clinicintro_Timer7", 12.0f, "Clinicintro_Timer7");
+}
+
+void Clinicintro_Timer5(string &in asTimer) {
+	PlayGuiSound("insanity_monster_roar01.snt", 1.0f);
+	AddEffectVoice("03_doctorexamine4.ogg", "", "Voice", "03_doctorexamine4", false, "", 0, 0);
+	AddEffectVoice("03_doctorexamine5.ogg", "", "Voice", "03_doctorexamine5", false, "", 0, 0);
+	SetEntityActive("ritual_prisoner_5", false);
+	SetPlayerActive(true);
+}
+
+void Clinicintro_Timer6(string &in asTimer) {
+	PlayGuiSound("crow_notice_long", 0.7f);
+	TeleportPlayer("PlayerStartArea_1");
+	SetEntityActive("table_nice02_10", false);
+	SetEntityActive("table_nice02_11", true);
+	SetEntityActive("incense_holder_1", true);
+}
+
+void Clinicintro_Timer7(string &in asTimer) {
+	FadeIn(2);
+	FadeGlobalSoundSpeed(1, 3);
+	FadeGlobalSoundVolume(1, 3);
+	FadePlayerRollTo(0, 1, 3); 
+	FadePlayerFOVMulTo(1, 1);
+	FadeImageTrailTo(0,1);
+	FadeSepiaColorTo(0,1);
+}
+
+//////////////////
+
+void PickUpBible(string &in asEntity) {
+	SetInventoryDisabled(false);
+	RemoveItem("bible_item");
+	SetEntityInteractionDisabled("lantern_1", false);
+	SetEntityActive("ScriptArea_Candle", true);
+	SetPlayerActive(false);
+	SetEffectVoiceOverCallback("BibleResume");
+	AddEffectVoice("03_scriptures1.ogg", "", "Voice", "03_scriptures1", false, "", 0, 0);
+	AddEffectVoice("03_scriptures2.ogg", "", "Voice", "03_scriptures2", false, "", 0, 0);
+}
+
+void BibleResume() {
+	SetPlayerActive(true);
+	AddDiary("Gospel_Level3", "diary_page");
+}
+
+void PickUpCandle(string &in asEntity) {
+	SetEntityActive("lantern_1", false);
+	GiveItemFromFile("lantern_1", "candle_lantern_item.ent");
+	PlayGuiSound("pick_generic", 1.0f);
+	SetMessage("Inventory", "ItemName_CandleItem", -1.0f);
+	if (GetLocalVarInt("monsterLaunchVar") == 1) {
+		SetLocalVarInt("monsterLaunchVar", 2);
+		SetEntityPlayerInteractCallback("prison_section_1", "TouchDoorFirst", true);
+		MoveCorpses();
+		ActivateWanderingMonsters(1);
+	} else {
+		SetLocalVarInt("monsterLaunchVar", 1);
+		SetEntityActive("prison_section_1", false);
+		SetEntityActive("prison_section_2", true);
+	}
+}
+
+void TouchDoorFirst(string &in asEntity) {
+	if (GetLocalVarInt("monsterLaunchVar") == 2) {
+		QuestBible();
+	}
+	else {
+		SetLocalVarInt("monsterLaunchVar", 1);
+	}
+}
+
+void TouchDoorSecond(string &in asEntity) { 
+	SetLocalVarInt("monsterLaunchVar", 2);
+	QuestBible();
+	MoveCorpses();
+	ActivateWanderingMonsters(2);
+}
+
+void QuestBible() {
+	if (GetEffectVoiceActive()) {
+		StopAllEffectVoices(2.0f);
+	}
+	AddEffectVoice("03_sevenplagues.ogg", "", "Voice", "03_sevenplagues", false, "", 0, 0);
+	AddQuest("03_bible", "03bible");
+	SetEntityPlayerInteractCallback("throwstone_*", "QuestBreakDoor", true);
+	AddTimer("hintStone1", 180.0f, "HintStone1");
+	// this only gets completed in level 5/6
+}
+
+void HintStone1(string &in asTimer) {
+	SetLightVisible("HelperLight_1", true);
+	SetLightVisible("HelperLight_2", true);
+}
+
+void HintStone2(string &in asTimer) {
+	SetLightVisible("HelperLight_3", true);
+}
+
+//////////////////
+// EVENT: Corpses move to places, fleshers start roaming
+//////////////////
+
+void MoveCorpses() {
+	SetEntityActive("rat_*", false);
+	SetEntityActive("corpse_bloody_2", false);
+	SetEntityActive("corpse_bloody_3", false);
+	SetEntityActive("corpse_scientist_blooded_1", false);
+	SetEntityActive("plague_mask_2", false);
+	SetEntityActive("ritual_prisoner_*", false);
+	SetEntityActive("corpse_pile2_1", true);
+	SetEntityActive("corpse_male_1", true);
+	SetEntityActive("corpse_pile1_1", true);
+	AddTimer("dialogueMonsters", 3.0f, "DialogueMonsters");
+	
+	CheckPoint("eso3_check", "PlayerStartArea_3", "Eso3Checkpoint", "", "");
+}
+
+void DialogueMonsters(string &in asTimer) {
+	AddEffectVoice("03_escape1.ogg", "", "Voice", "03_escape1", false, "", 0, 0);
+	// might move this to door OnBreak?
+	AddEffectVoice("03_escape2.ogg", "", "Voice", "03_escape2", false, "", 0, 0);
+}
+
+void ActivateWanderingMonsters(int position) {
+	PlayMusic("clinic_stalkers", true, 1.0f, 3.0f, 0, true);
+	if (ScriptDebugOn()) {
+		SetEnemySanityDecreaseActive("enemy_flesher_*", false);
+		SetInDarknessEffectsActive(false);
+	}
+	SetEntityActive("enemy_flesher_*", true);
+	SetEntityActive("ScriptArea_MonsterDoor", true);
+	ClearEnemyPatrolNodes("enemy_flesher_1");
+	ClearEnemyPatrolNodes("enemy_flesher_2");
+	
+	TeleportEnemyToNode("enemy_flesher_1", "PathNodeArea_10", true);
+	AddEnemyPatrolNode("enemy_flesher_1", "PathNodeArea_40", 7.0f, "");
+	TeleportEnemyToNode("enemy_flesher_2", "PathNodeArea_" + position, true);
+	SetEnemyDisableTriggers("enemy_flesher_*", true);
+	AddTimer("monsterPaths", 6.0f, "MonsterPaths");
+}
+
+void MonsterPaths(string &in asTimer) {
+	SetEntityActive("ScriptArea_MonsterDoor", true);
+	SetEnemyDisableTriggers("enemy_flesher_*", false);
+	if (ScriptDebugOn()) {
+		SetEnemyDisableTriggers("enemy_flesher_2", true);
+	}
+	for (int i = 0; i < 99; i++) {
+		AddEnemyPatrolNode("enemy_flesher_1", "PathNodeArea_7", 0, "");
+		AddEnemyPatrolNode("enemy_flesher_1", "PathNodeArea_5", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_1", "PathNodeArea_7", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_1", "PathNodeArea_10", 0.001f, "");
+		
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_44", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_26", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_22", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_12", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_43", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_4", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_45", 0.001f, "");
+		AddEnemyPatrolNode("enemy_flesher_2", "PathNodeArea_1", 0.001f, "");
+	}
+}
+
+void QuestBreakDoor(string &in asEntity) {
+	if (GetLocalVarInt("breakQuestAdded") == 0) {
+		AddQuest("03_breakdoor", "03breakdoor");
+		SetLocalVarInt("StonesFoundOnDeathNum", 1);
+		AddTimer("hintStone2", 180.0f, "HintStone2");
+		if (GetEffectVoiceActive()) {
+			StopAllEffectVoices(1.0f);
+		}
+		AddEffectVoice("03_throwrocks.ogg", "", "Voice", "03_throwrocks", false, "", 0, 0);
+		SetLocalVarInt("breakQuestAdded", 1);
+	}
+}
+
+void Touch_MonsterDoor(string &in asParent, string &in asChild, int alState) {
+	if (alState == 1) {
+		if (GetEnemyStateName(asParent) == "Investigate") {
+			SetEntityActive("ScriptArea_MonsterDoor", false);
+			ClearEnemyPatrolNodes(asParent);
+			for (int i = 0; i < 99; i++) {
+				AddEnemyPatrolNode(asParent, "PathNodeArea_33", 20, "");
+				AddEnemyPatrolNode(asParent, "PathNodeArea_32", 20, "");
+			}
+		}
+	}
+    if (alState == -1) {
+		SetLocalVarInt("isEnemyGuardingStairs", 0);
+	}	
+}
+
+void Eso3Checkpoint(string &in asName, int alCount) {
+	DeathChecker();
+	ResetProp("throwstone_*");
+	PlayMusic("clinic_stalkers", true, 1.0f, 3.0f, 0, true);
+    if (GetPlayerLampOil() <= 15) {
+		SetPlayerLampOil(RandInt(10, 20));
+	}
+    SetPlayerActive(true);
+	SetEntityActive("ScriptArea_MonsterDoor", false);
+	ActivateWanderingMonsters(2);
+	
+	// helper functions for clues
+	RemoveTimer("hintStone1");
+	RemoveTimer("hintStone2");
+	SetLightVisible("HelperLight_1", false);
+	SetLightVisible("HelperLight_2", false);
+	SetLightVisible("HelperLight_3", false);
+	
+	if (GetLocalVarInt("StonesFoundOnDeathNum") == 1) {
+		SetLocalVarInt("StonesFoundOnDeathNum", alCount + 1);
+	}
+	
+	if (alCount >= 3) {
+		AddTimer("hintStone1", 30.0f, "HintStone1");
+		RemoveHint("doorbreakhint");
+		GiveHint("doorbreakhint", "Hints", "EnemyDoor", -1);
+		if (alCount - GetLocalVarInt("StonesFoundOnDeathNum") >= 3) {
+			AddTimer("hintStone2", 60.0f, "HintStone2");
+		}
+	} else {
+		AddTimer("hintStone1", 120.0f / (alCount + 1), "HintStone1");
+		if (GetLocalVarInt("StonesFoundOnDeathNum") != 0) {
+			AddTimer("hintStone2", 240.0f / GetLocalVarInt("StonesFoundOnDeathNum"), "HintStone2");
+		}
+	}
+}
+
+////////////////// Player escapes the monsters and leaves
+
+void LeaveArea(string &in asParent, string &in asChild, int alState) {
+	FadeEnemyToSmoke("enemy_flesher_*", true);
+	SetPlayerActive(false);
+	StopMusic(5.0f, 0);
+	FadeOut(3);
+	AddTimer("leaveArea_Timer1", 4.0f, "LeaveArea_Timer1");
+}
+
+void LeaveArea_Timer1(string &in asTimer) {
+	if (GetLanternActive()) {
+		SetLanternActive(false, true);
+	}
+	SetInDarknessEffectsActive(false);
+	SetEffectVoiceOverCallback("LeaveArea_Timer2");
+	PlayMusic("event_stalkers_leave_campsite", false, 1.0f, 0, 0, false);
+	AddEffectVoice("03_mindflayers1.ogg", "", "Voice", "03_mindflayers1", false, "", 0, 0);
+	AddEffectVoice("03_mindflayers2.ogg", "", "Voice", "03_mindflayers2", false, "", 0, 0);
+}
+
+void LeaveArea_Timer2() {
+	ChangeMap("esophagus_IV.map", "PlayerStartArea_1", "", "");
+}
+
+void OnLeave() {
+	SetPlayerActive(true);
+	CompleteQuest("03_breakdoor", "03breakdoor");
+	SetupLoadScreen("", "", 0, "eso_loading_IV.jpg");
+	
+	DestroyDataCache();
+	ClearSavedMaps();
+}

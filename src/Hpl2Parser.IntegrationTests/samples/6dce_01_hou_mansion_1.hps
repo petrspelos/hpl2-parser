@@ -1,0 +1,355 @@
+void OnStart()
+{
+	SetMoveObjectState("safety_normal_vert_1", 1);
+	SetPlayerActive(false);
+	FadeOut(0.0f);
+	
+	AddTimer("fadeingamestart", 4.0f, "fadeingamestart");
+	
+	AddEntityCollideCallback("Player", "closestartdoor_1", "closestartmazedoor", true, 0);
+	AddEntityCollideCallback("Player", "closestartdoor_2", "closestartmazedoor", true, 0);	
+	
+	AddEntityCollideCallback("Player", "getmemento_ladder", "getmemento_ladder", true, 0);	
+	
+	
+	AddUseItemCallback("static_blue", "guiding_rod01_1", "area_placerods", "bluerod_in", false);	
+	AddUseItemCallback("static_red", "guiding_rod02_1", "area_placerods", "redrod_in", false);	
+	AddUseItemCallback("static_yellow", "guiding_rod03_1", "area_placerods", "yellowrod_in", false);	
+
+	AddEntityCollideCallback("Player", "switchmap", "switchmap", true, 0);	
+	
+	SetLocalVarInt("rodnumber", 0);
+	
+	
+	
+	
+	AddEnemyPatrolNode("servant_brute_super_silent_1", "Correctdirection_brute1", 0.001f, "");
+	
+	AddEnemyPatrolNode("servant_brute_super_silent_2", "Correctdirection_brute2", 0.001f, "");
+	
+	AddEnemyPatrolNode("servant_brute_super_silent_3", "Correctdirection_brute3", 0.001f, "");
+	
+	AddTimer("brutestartpos_end", 1.5f, "brutestartpos_end");
+	
+	
+	AddEntityCollideCallback("Player", "sb_2_stand_trigger", "sb2_trigger", false, 0);	
+	AddEntityCollideCallback("Player", "sb_2_close_trigger", "sb2_trigger", false, 0);	
+	
+	AddEntityCollideCallback("Player", "sb_1_stand_trigger", "sb1_trigger", false, 0);	
+	AddEntityCollideCallback("Player", "sb_1_close_trigger", "sb1_trigger", false, 0);	
+	
+	AddEntityCollideCallback("Player", "sb_3_stand_trigger", "sb3_trigger", false, 0);	
+	AddEntityCollideCallback("Player", "sb_3_close_trigger", "sb3_trigger", false, 0);	
+	
+	AddEntityCollideCallback("Player", "trigger_friend_comeover", "trigger_friend_comeover", true, 0);	
+	AddEntityCollideCallback("servant_brute_super_silent_3", "sb3_deactivate", "sb3_deactivate", true, 0);	
+
+	AddEntityCollideCallback("servant_brute_super_silent_3", "sb3_collide_turnon_stop", "sb3_collide_turnon_stop", false, 0);	
+
+	AddEntityCollideCallback("Player", "startfinalchase", "startfinalchase", false, 0);	
+}
+
+
+void OnEnter()
+{
+
+}
+
+void OnLeave()
+{
+
+}
+
+void fadeingamestart(string &in AsTimer)
+{
+	SetPlayerActive(true);
+	FadeIn(5.0f);
+}
+
+void closestartmazedoor(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectState("safety_normal_vert_1", 0);
+	SetEntityActive("block_box_1", true);
+	
+	SetEntityActive("closestartdoor_1", false);
+	SetEntityActive("closestartdoor_2", false);
+	
+	CheckPoint("FirstMazeArea1", "PlayerStartArea_2", "respawn_event", "", "");
+
+	PlayMusic("penumbra_music_E1_D1.ogg", true, 1.0f, 5.0f, 1, false);
+}
+
+void getmemento_ladder(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("ladderquest", "laddermemento_machinery");
+}
+
+////////////////////////////////////////////
+////////////////PUZZLES/////////////////////
+////////////////////////////////////////////
+
+void bluerod_in(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("staticrod_blue", true);
+	SetEntityInteractionDisabled("staticrod_blue", true);
+	RemoveItem(asItem);
+	AddLocalVarInt("rodnumber", 1);
+	checkifallrods();
+	
+	PlaySoundAtEntity("13_rod_in", "13_rod_in.snt", "Player", 0.0f, false);
+}
+
+void redrod_in(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("staticrod_pink", true);
+	SetEntityInteractionDisabled("staticrod_pink", true);
+	RemoveItem(asItem);
+	AddLocalVarInt("rodnumber", 1);
+	checkifallrods();
+	
+	PlaySoundAtEntity("13_rod_in", "13_rod_in.snt", "Player", 0.0f, false);
+}
+
+void yellowrod_in(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("staticrod_yellow", true);
+	SetEntityInteractionDisabled("staticrod_yellow", true);
+	RemoveItem(asItem);
+	AddLocalVarInt("rodnumber", 1);
+	checkifallrods();
+	
+	PlaySoundAtEntity("13_rod_in", "13_rod_in.snt", "Player", 0.0f, false);
+}
+
+void checkifallrods()
+{
+	if(GetLocalVarInt("rodnumber")==3)
+	{
+		SetMessage("Messages", "allrods_arein", 0.0f);
+		
+		PlaySoundAtEntity("13_press_done", "13_press_done.snt", "Player", 0.0f, false);
+		
+		PlaySoundAtEntity("13_ignite", "13_ignite.snt", "Player", 0.0f, false);
+		
+		SetEntityActive("ladder_moveable_2", true);
+		SetEntityActive("block_box_5", false);
+		SetEntityActive("LadderArea_1", true);
+		
+		GiveSanityBoost();
+		
+		CheckPoint("finalcheckpoint", "PlayerStartArea_3", "finalcheckpoint_chase", "", "");
+		
+		SetEntityActive("startfinalchase", true);
+	}
+}
+
+void switchmap(string &in asParent, string &in asChild, int alState)
+{
+	ChangeMap("01_hou_mansion_2", "PlayerStartArea_1", "", "");
+	SetPlayerActive(false);
+}
+
+////////////////////////////////////////////
+////////////////ENEMIES/////////////////////
+////////////////////////////////////////////
+
+void respawn_event(string &in asName, int alCount)
+{
+	SetEntityActive("servant_brute_super_silent_1", true);
+	SetEntityActive("servant_brute_super_silent_2", true);
+	SetEntityActive("servant_brute_super_silent_3", true);
+
+	AddEnemyPatrolNode("servant_brute_super_silent_1", "Correctdirection_brute1", 0.001f, "");
+	AddEnemyPatrolNode("servant_brute_super_silent_2", "Correctdirection_brute2", 0.001f, "");
+	AddEnemyPatrolNode("servant_brute_super_silent_3", "Correctdirection_brute3", 0.001f, "");
+	AddTimer("brutestartpos_end", 1.5f, "brutestartpos_end");
+	
+	PlayMusic("penumbra_music_E1_D1.ogg", true, 1.0f, 5.0f, 1, false);
+	
+	SetEnemyDisableTriggers("servant_brute_super_silent_1", true);
+	SetEnemyDisableTriggers("servant_brute_super_silent_2", true);
+	SetEnemyDisableTriggers("servant_brute_super_silent_3", true);
+	
+	AddEntityCollideCallback("Player", "trigger_friend_comeover", "trigger_friend_comeover", true, 0);
+	AddEntityCollideCallback("servant_brute_super_silent_3", "sb3_deactivate", "sb3_deactivate", true, 0);
+	
+	SetEntityActive("sb3_deactivate", false);
+	
+	SetPlayerCrouching(false);
+	
+	AutoSave();
+}
+
+void brutestartpos_end(string &in AsTimer)
+{
+	ClearEnemyPatrolNodes("servant_brute_super_silent_1");
+	ClearEnemyPatrolNodes("servant_brute_super_silent_2");
+	ClearEnemyPatrolNodes("servant_brute_super_silent_3");
+}
+
+void sb2_trigger(string &in asParent, string &in asChild, int alState)
+{
+		SetEnemyDisableTriggers("servant_brute_super_silent_2", false);
+		ShowEnemyPlayerPosition("servant_brute_super_silent_2");
+}
+
+void sb1_trigger(string &in asParent, string &in asChild, int alState)
+{
+		SetEnemyDisableTriggers("servant_brute_super_silent_1", false);
+		ShowEnemyPlayerPosition("servant_brute_super_silent_2");
+}
+
+void sb3_trigger(string &in asParent, string &in asChild, int alState)
+{
+		SetEnemyDisableTriggers("servant_brute_super_silent_3", false);
+		ShowEnemyPlayerPosition("servant_brute_super_silent_2");
+}
+
+
+//////////////////////////////////////////////////
+////////////////SB/3/WALKOVER/////////////////////
+//////////////////////////////////////////////////
+
+void trigger_friend_comeover(string &in asParent, string &in asChild, int alState)
+{
+		ClearEnemyPatrolNodes("servant_brute_super_silent_3");
+		SetEnemyDisableTriggers("servant_brute_super_silent_3", false);
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_1", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_2", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_3", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_4", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_5", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_6", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_7", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_8", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_9", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_10", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_11", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_12", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_13", 0.0f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_14", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_15", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_16", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_17", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_18", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_19", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_20", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_21", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_22", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_23", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_24", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_25", 0.0f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_3", "SB3PathNodeArea_26", 0.0f, "");
+}
+
+void sb3_deactivate(string &in asParent, string &in asChild, int alState)
+{
+		SetEnemyDisableTriggers("servant_brute_super_silent_3", true);
+		ClearEnemyPatrolNodes("servant_brute_super_silent_3");
+}
+
+void sb3_collide_turnon_stop(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("sb3_deactivate", true);
+}
+
+
+//////////////////////////////////////////////////
+////////////////SCARY/MOMENTS/////////////////////
+//////////////////////////////////////////////////
+
+
+void splashoutside_start(string &in asEntity)
+{
+	AddTimer("actualsplash_1", 1.25f, "actualsplash_1");
+}
+
+void actualsplash_1(string &in AsTimer)
+{
+	PlaySoundAtEntity("step_run_water", "step_run_water.snt", "splashsfx_loc1", 0.0f, false);
+	AddTimer("actualsplash_2", 0.5f, "actualsplash_2");
+}
+
+void actualsplash_2(string &in AsTimer)
+{
+	PlaySoundAtEntity("step_run_water", "step_run_water.snt", "splashsfx_loc2", 0.0f, false);
+}
+
+//////////////////////////////////////////////////
+////////////////FINAL/CHASE///////////////////////
+//////////////////////////////////////////////////
+
+void finalcheckpoint_chase(string &in asName, int alCount)
+{
+	RemoveTimer("FinalChaseBrute_Show");
+	
+	ClearEnemyPatrolNodes("servant_brute_super_silent_1");	
+	ClearEnemyPatrolNodes("servant_brute_super_silent_2");
+	ClearEnemyPatrolNodes("servant_brute_super_silent_3");	
+	SetEntityActive("servant_brute_super_silent_1", true);
+	SetEntityActive("servant_brute_super_silent_2", false);
+	SetEntityActive("servant_brute_super_silent_3", true);
+	SetEntityActive("servant_brute_super_silent_2", true);
+
+	AddEnemyPatrolNode("servant_brute_super_silent_1", "Correctdirection_brute1", 0.001f, "");
+	AddEnemyPatrolNode("servant_brute_super_silent_2", "Correctdirection_brute2", 0.001f, "");
+	AddEnemyPatrolNode("servant_brute_super_silent_3", "Correctdirection_brute3", 0.001f, "");
+	AddTimer("brutestartpos_end", 1.5f, "brutestartpos_end");
+	
+	PlayMusic("penumbra_music_E1_D1.ogg", true, 1.0f, 5.0f, 1, false);
+	
+	SetEnemyDisableTriggers("servant_brute_super_silent_1", true);
+	SetEnemyDisableTriggers("servant_brute_super_silent_2", true);
+	SetEnemyDisableTriggers("servant_brute_super_silent_3", true);
+	
+	AddEntityCollideCallback("Player", "trigger_friend_comeover", "trigger_friend_comeover", true, 0);
+	AddEntityCollideCallback("servant_brute_super_silent_3", "sb3_deactivate", "sb3_deactivate", true, 0);
+	
+	SetEntityActive("sb3_deactivate", false);
+	
+	SetPlayerCrouching(false);
+	
+	AutoSave();
+	PlayMusic("penumbra_music_E1_D1.ogg", true, 1.0f, 5.0f, 1, false);
+	SetEntityActive("startfinalchase", true);
+}
+
+void startfinalchase(string &in asParent, string &in asChild, int alState)
+{
+		SetEnemyDisableTriggers("servant_brute_super_silent_2", false);
+		ShowEnemyPlayerPosition("servant_brute_super_silent_2");
+		
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_1", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_2", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_3", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_4", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_5", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_6", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_7", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_8", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_9", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_10", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_11", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_12", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_13", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_14", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_15", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_16", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_17", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_18", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_19", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_20", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_21", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_22", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_23", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_24", 0.001f, "");
+		AddEnemyPatrolNode("servant_brute_super_silent_2", "SB2_C_PathNodeArea_25", 0.0f, "");
+		
+		AddTimer("FinalChaseBrute_Show", 5, "FinalChaseBrute_Show");
+}
+
+void FinalChaseBrute_Show(string &in asTimer)
+{
+	ShowEnemyPlayerPosition("servant_brute_super_silent_2");
+	AddTimer("FinalChaseBrute_Show", 5, "FinalChaseBrute_Show");
+}

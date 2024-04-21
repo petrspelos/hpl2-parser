@@ -1,0 +1,146 @@
+void OnStart()
+{
+	SetMessage("Messages", "doorslambehind", 0);
+	AddQuest("mem2", "memento2");
+	CompleteQuest("mem1", "memento1");
+	SetEntityPlayerInteractCallback("interactleverbox", "interactleverbox", true);
+	AddEntityCollideCallback("Player", "", "", true, 1);
+	AddUseItemCallback("", "stone_hammer_1", "wooden_boards_block_1", "brokenboards", true);
+	SetEntityPlayerInteractCallback("note_letter_3", "getmemtrapped", true);
+	AddUseItemCallback("", "wooden_bucket_1", "usebucket", "usebucket", true);
+	AddUseItemCallback("", "key_laboratory_1", "level_dungeon_2", "doortobifron", true);
+	AddEntityCollideCallback("Player", "playcreepysound", "playcreepysound", true, 1);
+	SetEntityPlayerInteractCallback("key_laboratory_1", "triggersound", true);
+	AddUseItemCallback("", "key_tomb_rusty_1", "work_desk_door_worn_1", "doortodesk", true);
+	AddUseItemCallback("", "fresh_meat_1", "usemeatongate", "exchangemeatforkey", true);
+}
+
+void OnEnter()
+{
+	PlayMusic("06_amb", true, 0.6f, 4.0f, 0, true);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("LoadingScreen", "load02", 1, "");
+}
+
+////////////////////////////////////////////
+///////////////INTERACT/AREAS///////////////
+////////////////////////////////////////////
+
+void interactleverbox(string &in asEntity)
+{
+	AddQuest("mem3", "memento3");
+	SetMessage("Messages", "lookslikerod", 0);
+}
+
+void getmemtrapped(string &in asEntity)
+{
+	AddQuest("mem4", "memento4");
+}
+
+////////////////////////////////////////////
+///////////////BREAK/BOARDS/////////////////
+////////////////////////////////////////////
+
+void brokenboards(string &in asItem, string &in asEntity)
+{
+	SetPropHealth("wooden_boards_block_1", 0);
+	SetSwingDoorLocked("prison_1", false, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+////////////////////////////////////////////
+/////////////////GET/WATER//////////////////
+////////////////////////////////////////////
+
+void usebucket(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("bucketwater_1", true);
+	RemoveItem("wooden_bucket_1");
+	AddTimer("fillwater", 25, "fillwater");
+	SetMessage("Messages", "bucketfillup", 0);
+	AutoSave();
+}
+
+void fillwater(string &in asTimer)
+{
+	SetEntityActive("bucketwater", true);
+	SetEntityActive("bucketwater_1", false);
+	SetEntityActive("usebucket", false);
+	AutoSave();
+}
+
+////////////////////////////////////////////
+///////////////////SCARES///////////////////
+////////////////////////////////////////////
+
+void triggersound(string &in asEntity)
+{
+	SetEntityActive("playcreepysound", true);
+	AddEnemyPatrolNode("monster", "PathNodeArea_1", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_2", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_3", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_4", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_5", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_6", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_7", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_8", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_9", 0.001, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_10", 0, "");
+	AddEnemyPatrolNode("monster", "PathNodeArea_11", 0.001, "");
+	SetEntityActive("monster", true);
+	AutoSave();
+}
+
+void playcreepysound(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("crawlwalkbehind", "insanity_step_crawl.snt", "sourceofcrawl", 0.0f, false);
+}
+
+////////////////////////////////////////////
+///////////////////KEYS/////////////////////
+////////////////////////////////////////////
+
+void doortobifron(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked(asEntity, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+}
+
+void doortodesk(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, false);
+	PlaySoundAtEntity("", "unlock_door", asEntity, 0, false);
+	RemoveItem(asItem);
+	AutoSave();
+	SetEntityActive("stone_hammer_1", true);
+}
+
+void exchangemeatforkey(string &in asItem, string &in asEntity)
+{
+	FadeOut(0.5); 
+	SetPlayerActive(false);	
+	AddTimer("getkeyaftermeat", 2, "getkeyaftermeat");
+	PlaySoundAtEntity("meatexchange", "pick_meat", "Player", 0, false);
+}
+
+void getkeyaftermeat(string &in asTimer)
+{
+	FadeIn(0.5); 
+	SetEntityActive("key_to_cell_at_maw", true);
+	StartPlayerLookAt("key_to_cell_at_maw", 1.0f, 1.5f, "lookatvoidkey");
+	RemoveItem("fresh_meat_1");
+}
+
+void lookatvoidkey()
+{
+	SetPlayerActive(true);	
+	StopPlayerLookAt();
+	AutoSave();
+	CompleteQuest("mem4", "memento4");
+}

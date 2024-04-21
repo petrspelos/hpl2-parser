@@ -1,0 +1,353 @@
+void OnStart()
+{
+	ClearSavedMaps();
+	
+	/////PLAYER COLLIDE CALLBACKS
+	AddEntityCollideCallback("Player", "area_trigger_grunt", "SpawnGrunt", true, 1);
+	AddEntityCollideCallback("Player", "AreaGruntRespawn", "RespawnGrunt", false, 1);
+	AddEntityCollideCallback("Player", "Area_RetriggerGrunt", "RetriggerGrunt", false, 1);
+	
+	AddEntityCollideCallback("Player", "AreaBruteScare", "SpawnFakeBrute", true, 1);
+	AddEntityCollideCallback("Player", "AreaBlockedMsg2", "BlockedMsgArea2", false, 0);
+	AddEntityCollideCallback("Player", "AreaBreakableDoor", "AllowBreakableDoor", true, 1);
+	AddEntityCollideCallback("Player", "AreaCrankRange", "CrankInRange", false, -1);
+	AddEntityCollideCallback("Player", "Area_LoadDungeon", "LoadDungeon", false, 1);
+	
+	//PLAYER INTERACT CALLBACKS
+	SetEntityCallbackFunc("note_test4start", "DisableStartBlock");
+	AddUseItemCallback("key_equip_use", "key_equipment", "castle_2", "EquipUnlock", true);
+	AddUseItemCallback("needle_use", "needle", "castle_9", "NeedleUnlock", true);
+	AddUseItemCallback("crank_use", "crank_item", "AreaCrank", "CrankAttach", true);
+	AddUseItemCallback("key_up_use", "key_upstairs", "door_upstairs", "DoorUnlock", true);
+	SetEntityPlayerInteractCallback("door_upstairs", "DoorLockedUp", false);
+	SetEntityPlayerInteractCallback("castle_11", "DoorBlocked2", false);
+	SetEntityPlayerInteractCallback("castle_11_new", "DoorBlocked2", false);
+	AddEntityCollideCallback("castle_5", "Collide_blocked_door2", "DoorBaricade", false, 1);
+	SetEntityCallbackFunc("key_upstairs", "EnableBruteScare");
+	SetEntityPlayerInteractCallback("castle_2", "EquipDoorLocked", false);
+	SetEntityPlayerInteractCallback("castle_9", "DoorLockedNeedle", false);
+	SetEntityPlayerInteractCallback("AreaCrank", "MissingCrank", false);
+	
+	//OTHER CALLBACKS
+	AddEntityCollideCallback("hatch_well", "area_hatch_open", "HatchOpen", true, 1);
+	AddEntityCollideCallback("crate_block", "AreaUnblockDoor2", "CrateUnblock", true, -1);
+	
+	//ONSTART SETUP
+	SetPropHealth("valve_holder", 0);
+	SetPropStaticPhysics("valve_holder", true);
+	SetEntityPos("valve_holder", 11, 2, 52);
+	SetEntityInteractionDisabled("hatch_well", true);
+	SetSwingDoorDisableAutoClose("hatch_well", true);
+	SetSwingDoorClosed("hatch_well", false, false);
+	InteractConnectPropWithRope("crank-hatch", "crank_full", "RopeArea", false, 3, 1, 5, true, 0);
+	SetEntityInteractionDisabled("scewer_place_1", true);
+	SetEntityActive("block_start", true);
+	
+	SetLocalVarInt("gruntSpawned", 0);
+	SetLocalVarInt("blocked2Msg", 1);
+	SetLocalVarInt("unlockedUp", 0);
+	
+	SetEntityPlayerInteractCallback("easter_egg_9", "CollectEasterEgg", true);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("test-4");
+	SetEntityCustomFocusCrossHair("easter_egg_9", "Pick");
+	if(GetLocalVarInt("gruntSpawned")==1) SetEntityActive("Area_RetriggerGrunt", true);
+	PlayMusic("02_amb_safe.ogg", true, 1, 1, 1, false);
+	AutoSave();
+}
+
+void OnLeave()
+{
+	StopMusic(1, 1);
+}
+
+void CollectEasterEgg(string &in asEntity)
+{
+	PlayGuiSound("pick_orb_piece.snt", 1);
+	SetPropActiveAndFade(asEntity, false, 0.35);
+	AddGlobalVarInt("easter_eggs", 1);
+	SetMessage("EasterEggs", "collected"+GetGlobalVarInt("easter_eggs"), 5);
+}
+
+//////////////////////
+/////Change map///////
+
+void LoadDungeon(string &in asParent, string &in asChild, int alState)
+{
+	FadeOut(0.35);
+	AddTimer("", 0.35, "ChangeMap_Dungeon");
+}
+
+void ChangeMap_Dungeon(string &in asTimer)
+{
+	ChangeMap("test_4_dungeon.map", "To_Test4_Dungeon", "", "player_jump.snt");
+}
+
+void LoadUpstairs()
+{
+	SetPlayerActive(false);
+	FadeOut(0.25);
+	AddTimer("", 0.25, "ChangeMap_Upstairs");
+}
+
+void ChangeMap_Upstairs(string &in asTimer)
+{
+	ChangeMap("test_4_upstairs.map", "To_Test4_Upstairs", "", "door_mansion_close.snt");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////Quests & Messages/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MissingCrank(string &in asEntity)
+{
+	SetMessage("Actions", "test4crank", 0);
+	if(not QuestIsAdded("test4_findCrank"))
+	{
+		AddQuest("test4_findCrank", "test4_findCrank");
+		//AutoSave();
+	}
+}
+
+void DoorLockedNeedle(string &in asEntity)
+{
+	SetMessage("Actions", "lockedNeedle", 0);
+}
+
+void DoorLockedUp(string &in asEntity)
+{
+	if(GetLocalVarInt("unlockedUp")==0)
+	{
+		if(not QuestIsAdded("test4_lockedUp")) AddQuest("test4_lockedUp", "test4_lockedUp");
+		SetMessage("Actions", "locked", 0);
+	}
+	else LoadUpstairs();
+}
+
+void BlockedMsgArea2(string &in asParent, string &in asChild, int alState)
+{
+	if(alState==1) SetLocalVarInt("blocked2Msg", 0);
+	else SetLocalVarInt("blocked2Msg", 1);
+}
+
+void DoorBlocked2(string &in asEntity)
+{
+	if(GetLocalVarInt("blocked2Msg")==1) SetMessage("Actions", "test4blocked", 0);
+}
+
+void DoorBaricade(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("Actions", "test4baricade", 0);
+}
+
+void EquipDoorLocked(string &in asEntity)
+{
+	SetMessage("Actions", "test4equipLocked", 0);
+	if(not QuestIsAdded("test4_equipLocked")) AddQuest("test4_equipLocked", "test4_equipLocked");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////Doors & MISC/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void AllowBreakableDoor(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("castle_11", false);
+	SetEntityActive("castle_11_new", true);
+}
+
+void DisableStartBlock(string &in asEntity, string &in type)
+{
+	SetEntityActive("block_start", false);
+	AddQuest("test4_findExit", "test4_findExit");
+}
+
+void EquipUnlock(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("Collide_blocked_door2", false);
+	SetEntityActive("castle_2", false);
+	SetEntityActive("castle_2_new", true);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoostSmall();
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(asItem);
+	CompleteQuest("test4_equipLocked", "test4_equipLocked");
+}
+
+void NeedleUnlock(string &in asItem, string &in asEntity)
+{
+	SetEntityActive("castle_9", false);
+	SetEntityActive("castle_9_new", true);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoostSmall();
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(asItem);
+}
+
+void CrateUnblock(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaUnblockDoor2", false);
+	SetEntityActive("AreaBlockedMsg2", false);
+	SetLocalVarInt("blocked2Msg", 0);
+	SetSwingDoorLocked("castle_11_new", false, false);
+}
+
+void DoorUnlock(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked(asEntity, false, true);
+	SetLocalVarInt("unlockedUp", 1);
+	PlayGuiSound("unlock_door.snt", 1);
+	RemoveItem(asItem);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoostSmall();
+	CompleteQuest("test4_lockedUp", "test4_lockedUp");
+	//AutoSave();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////SCARES & EFFECTS//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void EnableBruteScare(string &in asEntity, string &in type)
+{
+	SetEntityActive("AreaBruteScare", true);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoostSmall();
+	AutoSave();
+}
+
+void SpawnFakeBrute(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("fake_brute", true);
+	ShowEnemyPlayerPosition("fake_brute");
+	GiveSanityDamage(40, true);
+	AddTimer("", 4.95, "FakeBruteTestPos");
+	AddTimer("bruteScareDespawn", 5, "FakeBruteDespawn");
+}
+
+float brutePos;
+void FakeBruteTestPos(string &in asTimer)
+{
+	brutePos = GetEntityPosX("fake_brute")*GetEntityPosZ("fake_brute");
+}
+
+void FakeBruteDespawn(string &in asTimer)
+{
+	if(brutePos != GetEntityPosX("fake_brute")*GetEntityPosZ("fake_brute")) FadeEnemyToSmoke("fake_brute", true);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////GRUNT///////////////////////////////////////////////////////////////////////////////////////////////
+
+void Respawn(string &in asName, int alCount)
+{
+	SetEntityActive("AreaGruntRespawn", true);
+}
+
+void SpawnGrunt(string &in asParent, string &in asChild, int alState)
+{
+	SetLocalVarInt("gruntSpawned", 1);
+	SetEntityActive("grunt", true);
+	PlayGuiSound("react_scare.snt", 1);
+	GiveSanityDamage(10, true);
+	StartPlayerLookAt("AreaGruntLook", 4, 8, "");
+	AddTimer("", 1, "StopGruntLook");
+	StartGruntPath();
+	CheckPoint("CheckPoint_Start", "AreaCheckpoint_Start", "Respawn", "Deaths", "test4up");
+}
+
+void StopGruntLook(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void RetriggerGrunt(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("grunt", true);
+	StartGruntPath();
+	SetEntityActive("Area_RetriggerGrunt", false);
+}
+
+void RespawnGrunt(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("grunt", true);
+	StartGruntPath();
+}
+
+void ReactivateGrunt(string &in asEntity, string &in type)
+{
+	SetEntityActive("grunt", true);
+	StartGruntPath();
+}
+
+void StartGruntPath()
+{
+	ClearEnemyPatrolNodes("grunt");
+	//int[] gruntpath = {415, 408, 407, 405, 403, 401, 398, 394, 391, 225, 268, 419, 415}; //counter-clock-wise
+	int[] gruntpath = {417, 268, 390, 392, 395, 398, 401, 403, 405, 407, 409, 415, 417}; //clock-wise
+	for(int i=0; i<13; i++) AddEnemyPatrolNode("grunt", "PathNodeArea_"+gruntpath[i], 0.001, "");
+}
+
+void GruntDoor(string &in asEntity, string &in type)
+{
+	if(type=="Break")
+	{
+		SetEntityActive("grunt", false);
+		SetEntityActive("grunt", true);
+		AlertEnemyOfPlayerPresence("grunt");
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////MECHANISMS////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CrankAttach(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetPlayerSanity(GetPlayerSanity()-0.1);
+	GiveSanityBoost();
+	PlayGuiSound("puzzle_place_jar.snt", 1);
+	SetEntityActive("crank_full", true);
+	SetEntityActive("AreaCrank", false);
+	SetEntityPlayerInteractCallback("crank_full", "HatchAddHint", true);
+	CompleteQuest("test4_findCrank", "test4_findCrank");
+}
+
+void HatchAddHint(string &in asEntity)
+{
+	SetEntityActive("AreaHatchInfo", true);
+	SetPropStaticPhysics("hatch_well", false);
+	SetEntityActive("AreaCrankRange", true);
+	SetEntityPlayerInteractCallback("crank_full", "HatchUnfreeze", false);
+}
+
+void HatchUnfreeze(string &in asEntity)
+{
+	SetPropStaticPhysics("hatch_well", false);
+}
+
+void CrankInRange(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics("hatch_well", true);
+}
+
+void HatchOpen(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("AreaHatchInfo", false);
+	SetEntityActive("AreaCrankRange", false);
+	SetPropStaticPhysics("hatch_well", false);
+	AddBodyImpulse("hatch_well_Body_2", 0, 0 , -1, "world");
+	ChangePlayerStateToNormal();
+	SetEntityInteractionDisabled("crank_full", true);
+	SetWheelStuckState("crank_full", 1, true);
+	SetEntityActive("ladder_well", true);
+	SetEntityActive("block_hatch", false);
+	SetEntityActive("Area_LoadDungeon", true);
+	AddTimer("hatchWait", 1, "HatchWait");
+}
+
+void HatchWait(string &in asTimer)
+{
+	SetPropStaticPhysics("hatch_well", true);
+	//AutoSave();
+}

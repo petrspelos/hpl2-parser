@@ -1,0 +1,176 @@
+
+
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "ScriptArea_1", "PlayRadio", true, -1);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("Train");
+	AutoSave();
+	//SetInDarknessEffectsActive(false);
+	//SetPlayerSanity(60.0f);
+	
+		
+	AddTimer("shake", 3.0f, "ShakeItUp");
+	PreloadSounds();
+	SetUpInsanity();
+		
+	//StartEvent();
+}
+
+void OnLeave()
+{
+	FadeGlobalSoundVolume(1.0f, 0.0f);
+}
+
+void PreloadSounds()
+{
+	PreloadSound("pt_broadcast1_clean.snt");
+	PreloadSound("insanity_imageflash01.snt");
+	PreloadSound("EC_train_arrival_fx.snt");
+	PreloadSound("EC_train_arrival_voice.snt");
+	PreloadSound("19_inject.snt");
+	PreloadSound("insanity_imageflash01.snt");
+	PreloadSound("glitch_dkf.snt");
+	PreloadSound("train_door_close_dkf.snt");
+	
+}
+	
+void PlayRadio(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "pt_broadcast1_clean.snt", "Radio", 0.0f , false);
+	AddTimer("", 17.0f, "StartEvent");
+}	
+
+void ShakeItUp(string &in asTimer)
+{
+	StartScreenShake(0.008f, 0.4f, 0.15f, 0.15f);
+	float rand = RandFloat(1.0f, 2.5f);
+	AddTimer("shake", rand, "ShakeItUp");
+}
+
+void StartEvent(string &in asTimer)
+{
+	RemoveTimer("shake");
+	AddTimer("", 3.0f, "Event_A");
+}
+void Event_A(string &in asTimer)
+{	
+	AddTimer("", 0.7f, "Event_B");
+	if(asTimer != "glitch2")
+	{
+		PlaySoundAtEntity("", "glitch_dkf.snt", "Player", 0.0f , false);
+		FadeRadialBlurTo(1.0f, 0.2f);
+		FadeGlobalSoundVolume(0, 0.2f);
+		AddTimer("glitch2", 5.0f, "Event_A");
+	}
+	else if(asTimer == "glitch2")
+	{
+		AddTimer("", 2.5f, "Event_C");
+		//SetMessage("Messages", "Criptic", 0.9f);
+		StartInsanityEvent("Error");
+	}
+	
+}
+void Event_B(string &in asTimer)
+{
+	FadeRadialBlurTo(0.0f, 0.2f);
+	FadeGlobalSoundVolume(1.0f, 0.2f);
+}
+void Event_C(string &in asTimer)
+{
+	StartEffectFlash(0.2f, 1.0f, 0.2f);
+	FadeSepiaColorTo(1.0f, 1.0f);
+	FadeGlobalSoundSpeed(0.5f, 1.0f);
+	PlayMusic("27_energy_loop.ogg", true, 1.0f, 1.0f, 1 , true);
+	
+	SetEntityActive("FBacon", true);
+	for(int i = 1; i<=10; i++) 	SetEntityActive("Slime_" + i, true);
+	SetEntityActive("ExamineArea_7", false);
+	SetEntityActive("ExamineArea_8", false);
+	SetEntityActive("ExamineArea_9", false);
+	SetEntityActive("ExamineArea_10", false);
+	
+	PlaySoundAtEntity("", "insanity_imageflash01.snt", "Player", 0.0f , false);
+}
+
+
+void Poke(string &in asEntity)
+{
+	PlaySoundAtEntity("", "19_inject.snt", "Player", 0.0f , false);
+	StartInsanityEvent("Stream_Monster_Roar02");
+	 
+	SetPropActiveAndFade("Blood", true, 1.0f);
+	SetEntityActive("bone", true);
+	SetEntityActive("AreaEnd", true);
+	SetEntityActive("Chain", true);
+}
+
+
+
+void Event_D(string &in asTimer)
+{
+	PlaySoundAtEntity("", "EC_train_arrival_voice.snt", "Player", 0.0f , false);
+	PlaySoundAtEntity("", "EC_train_arrival_fx.snt", "Player", 0.0f , false);
+	StopSound("Sound_1", 2.0f);
+	RemoveTimer("shake");
+	AddTimer("", 3.0f, "Event_E");
+}
+void Event_E(string &in asTimer)
+{
+	//changemap
+	ChangeMap("Train_Station_dkf", "PlayerStartArea_1", "train_door_close_dkf.snt", "step_walk_rock.snt");
+	FadeGlobalSoundVolume(0.0f, 2.0f);
+}
+
+
+void EndEvent(string &in asEntity)
+{
+	StartEffectFlash(0.2f, 1.0f, 0.2f);
+	FadeSepiaColorTo(0.0f, 1.0f);
+	FadeGlobalSoundSpeed(1.0f, 1.0f);
+	PlaySoundAtEntity("", "insanity_imageflash01.snt", "Player", 0.0f , false);
+	
+	SetEntityActive("FBacon", false);
+	SetEntityActive("bone", false);
+	SetEntityActive("Chain", false);
+	SetEntityActive("Blood", false);
+	
+	for(int i = 1; i<=10; i++) 	SetEntityActive("Slime_" + i, false);
+	SetEntityActive("ExamineArea_7", true);
+	SetEntityActive("ExamineArea_8", true);
+	SetEntityActive("ExamineArea_9", true);
+	SetEntityActive("ExamineArea_10", true);
+
+	
+	StopMusic(1.0f, 1);
+	
+	AddTimer("shake", 1.0f, "ShakeItUp");
+	AddTimer("", 8.0f, "Event_D");
+}
+	
+//////////////////////SANITY///////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+void SetUpInsanity()  //Disables insanity events which use Daniel's voice, starts looping timer
+{	
+	SetInsanitySetEnabled("Ch03", false);
+	SetInsanitySetEnabled("Ch02", false);
+	SetInsanitySetEnabled("Ch01", false);
+	
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+
+}
+
+void SanityScript(string &in asTimer) //looping timer, fixes being unable to use potions when fully sane
+{
+	if(GetPlayerSanity() == 100.0f) SetPlayerSanity(99.0f);
+
+	AddTimer("SanityTimer", 1.0f, "SanityScript");
+}
+
+////////////////////END SANITY/////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+	

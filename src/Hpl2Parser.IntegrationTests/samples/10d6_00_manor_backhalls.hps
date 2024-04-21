@@ -1,0 +1,271 @@
+void OnStart()
+{
+	SetSanityDrainDisabled(true);
+	SetInventoryDisabled(true);
+	FadeOut(0.0f);
+	SetPlayerCrouching(true);
+	SetPlayerActive(false);
+	AddTimer("TimerEIntro", 5.0f, "TimerEIntro");
+	AddTimer("TimerEIntro1", 15.0f, "TimerEIntro1");
+	AddTimer("TimerEIntro2", 12.0f, "TimerEIntro2");
+	AddTimer("TimerEIntro3", 16.0f, "TimerEIntro3");
+	AddTimer("TimerEIntro4", 21.0f, "TimerEIntro4");
+	AddTimer("TimerEIntro4A", 21.5f, "TimerEIntro4A");
+	AddTimer("TimerEIntro4B", 23.5f, "TimerEIntro4B");
+	AddTimer("TimerEIntro5", 30.0f, "TimerEIntro5");
+	PlayMusic("Wake Up (Intro).ogg", false, 0.7f, 1, 0, false);
+	FadeImageTrailTo(2,1);
+	StartPlayerLookAt("Intro_2",0.5f, 0.5f, "");
+	FadeRadialBlurTo(0.05,1);
+	AddEntityCollideCallback("Player", "AreaCreak_1", "EvenCreak_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaBehindYou", "EvenBehind", true, 1);
+	AddEntityCollideCallback("Player", "AreaCreak_2", "EvenCreak_2", true, 1);
+	AddEntityCollideCallback("Player", "AreaWhisp_1", "EvenWhisp_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaLaugh", "Evenlaugh_1", true, 1);
+	AddEntityCollideCallback("Player", "AreaMem_1", "EvenMemento_1", true, 1);
+	SetPlayerLampOil(25);
+	AddUseItemCallback("", "key_1", "door_locked_1", "UnlockDoor", true);
+	AddUseItemCallback("", "key_2", "level_celler_1", "UnlockDoor1", true);
+	AddUseItemCallback("", "crowbar_1", "wooden_boards_block_1", "CrowbarPlanks", true);
+	AddUseItemCallback("", "waxroll_record_1", "phonograph_1", "UseWaxroll", true);
+	AddEntityCollideCallback("crowbar_joint_1", "AreaBreak", "BreakPlank", true, 1);
+	FadePlayerRollTo(85, 1, 1); 
+	MovePlayerHeadPos(0, 0, 0, 1, 0.5f);
+	SetDeathHint("Death_Hints", "DHint1");
+	SetupLoadScreen("LoadingText", "Load1", 1, "");	
+	GiveSanityBoost();
+}
+
+void OnEnter()
+{
+	PlaySoundAtEntity("", "amb_mansion_small_hallway.snt", "Player", 1, true);
+}
+
+void OnLeave()
+{
+
+}
+
+///////////////////////////////////////////
+//Player wakes up in bedroom with no memory
+
+void TimerEIntro(string &in asTimer)
+{
+	StartPlayerLookAt("Intro_1",0.5f, 0.5f, "");
+	FadeIn(4.0f);
+	PlaySoundAtEntity("sigh", "react_sigh.snt", "Player", 1.0 / 2, false);
+	FadePlayerRollTo(65, 1, 1); 
+}
+
+void TimerEIntro1(string &in asTimer)
+{
+	StartPlayerLookAt("Intro_1", 0.4f, 0.4f, "");
+	FadePlayerRollTo(12, 0.4f, 0.5f); 
+}
+
+void TimerEIntro2(string &in asTimer)
+{
+	FadeOut(0.5f);
+	PlayGuiSound("react_sigh", 1.0f); 
+	MovePlayerHeadPos(0, -0.5f, 0, 1, 0.5f);
+}
+
+void TimerEIntro3(string &in asTimer)
+{
+	FadeIn(4.0f);
+	StartPlayerLookAt("Intro_3", 0.4f, 0.4f, "");
+	FadeRadialBlurTo(0,1);
+	AddTimer("TimerEIntroDoor", 2.0f, "TimerEIntroDoor");
+	FadePlayerRollTo(45, 1, 2); 
+}
+
+void TimerEIntroDoor(string &in asTimer)
+{
+	SetSwingDoorClosed("door_intro", true, true);
+}
+
+void TimerEIntro4(string &in asTimer)
+{
+	SetPlayerActive(true);
+	SetPlayerMoveSpeedMul(0.6f);
+	SetPlayerCrouching(false);
+	SetInventoryDisabled(false);
+	SetSanityDrainDisabled(false);
+	SetSwingDoorLocked("door_intro", true, true);
+	FadePlayerRollTo(10, 10, 20); 		
+	StartPlayerLookAt("Intro_4", 2, 2, "");
+}
+
+void TimerEIntro4A(string &in asTimer)
+{
+	FadePlayerRollTo(0, 10, 60); 
+	MovePlayerHeadPos(0, 0, 0, 1, 0.5f);	
+	StartPlayerLookAt("Intro_3", 2, 2, "");
+}
+
+void TimerEIntro4B(string &in asTimer)
+{
+	StopPlayerLookAt();
+	AddEffectVoice("jim_intro", "", "Voice", "JimVo1", false, "Player", 1, 1);
+}
+
+///////////////////////////////////////////
+//Player gains better speed.
+
+void TimerEIntro5(string &in asTimer)
+{
+	FadeImageTrailTo(0,1);
+	SetPlayerMoveSpeedMul(1.0f);
+}
+
+///////////////////////////////////////////
+//Creaks are heard from the ceiling.
+
+void EvenCreak_1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "footsteps_1.snt", "CreakSound_1", 2, false);
+	AddTimer("TimerDust", 2.0f, "TimerDust");
+	AddTimer("TimerDust1", 4.0f, "TimerDust1");
+}
+
+void TimerDust(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_falling_small.ps", "AreaDust1", false);
+}
+
+void TimerDust1(string &in asTimer)
+{
+	CreateParticleSystemAtEntity("", "ps_dust_falling_small.ps", "AreaDust2", false);
+}
+
+void EvenCreak_2(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("door4", false, false);
+    SetSwingDoorDisableAutoClose("door4", true);
+	
+    AddTimer("door4", 0, "TimerMoveDoor");
+}
+
+void TimerMoveDoor(string &in asTimer)
+{
+    if(GetLocalVarInt("VarDoor") == 15) return;
+    AddLocalVarInt("VarDoor", 1);
+
+    AddTimer(asTimer, 0.03, "TimerMoveDoor");
+	
+    AddPropForce(asTimer, 75, 0, 0, "world");
+}
+
+void UnlockDoor(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("door_locked_1", false);
+	PlaySoundAtEntity("", "unlock_door.snt", "door_locked_1", 0.0f, false);
+	RemoveItem(asItem);
+}
+
+void UnlockDoor1(string &in asItem, string &in asEntity)
+{
+	SetLevelDoorLocked("level_celler_1", false);
+	PlaySoundAtEntity("", "unlock_door.snt", "level_celler_1", 0.0f, false);
+	RemoveItem(asItem);
+	GiveSanityBoostSmall();
+	PlayMusic("Unlocked.ogg", false, 0.7f, 1, 0, false);
+	CompleteQuest("questbasement2", "questbasement2");
+}
+
+void Evenlaugh_1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "ghost_whispers.snt", "Player", 1, false);
+}
+
+void EvenWhisp_1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "afx_spooky_stereo_whisper.snt", "Player", 1, false);
+}
+
+///////////////////////////////////////////
+//Crowbar used on planks.
+
+void CrowbarPlanks(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.05, false);
+	AddTimer(asEntity, 0.2, "TimerECrowbar");
+}
+
+void TimerECrowbar(string &in asTimer)
+{
+	SetEntityActive("crowbar_joint_1", true);
+	PlaySoundAtEntity("", "puzzle_place_jar.snt", "asTimer", 0, false);
+	SetLightVisible("PointLight_18", true);
+}
+
+void BreakPlank(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "break_wood_metal.snt", "Player", 0, false);
+	SetEntityActive("crowbar_joint_1", false);
+	SetEntityActive("wooden_boards_block_1", false);
+	SetEntityActive("block_box_nonchar_2", false);
+	SetEntityActive("crowbar_broken_1", true);
+	SetEntityActive("wooden_boards_block_broken_1", true);
+	CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "AreaEffectBreak", false);
+	SetEntityActive("mansion_3", false);
+	SetEntityActive("mansion_13", true);
+	AddQuest("questbasement2", "questbasement2");
+	CompleteQuest("questbasement1", "questbasement1");
+	SetupLoadScreen("LoadingText", "Load3", 1, "");
+	SetLightVisible("PointLight_18", false);
+}
+
+///////////////////////////////////////////
+//Waxroll used on phonograph.
+
+void PhonoLocked_1(string &in asEntity)
+{
+	SetMessage("Messages", "PhonoMessage_1", 0);
+}
+
+void UseWaxroll(string &in asItem, string &in asEntity)
+{
+	SetWheelStuckState("phonograph_1", 0, false);
+	PlaySoundAtEntity("", "lever_metal_min_max.snt", "Player", 0, false);
+	RemoveItem(asItem);
+	SetEntityPlayerInteractCallback("phonograph_1", "", false);
+}
+
+///////////////////////////////////////////
+//Memento 1.
+
+void EvenMemento_1(string &in asParent, string &in asChild, int alState)
+{
+	AddQuest("questbasement1", "questbasement1");
+}
+
+///////////////////////////////////////////
+//Player hears something behind them.
+
+void EvenBehind(string &in asParent, string &in asChild, int alState)
+{
+	SetSwingDoorClosed("FancyDoor_4", true, true);
+}
+
+///////////////////////////////////////////
+//Phono Jim.
+
+void Phono_1(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		AddEffectVoice("phono_jim_01", "", "Voice", "JimPhon1", true, "phonograph_1", 1, 10);
+	}
+}
+
+void SecretDoor_1(string &in asEntity, int alState)
+{
+	if(alState == 1) {
+		SetEntityActive("secret_door02_2", false);
+		SetEntityActive("secret_door02_1", true);
+		SetLeverStuckState("lever_small01_1", 1, false);
+		SetMessage("Messages", "LeverMessage_1", 0);
+	}
+}

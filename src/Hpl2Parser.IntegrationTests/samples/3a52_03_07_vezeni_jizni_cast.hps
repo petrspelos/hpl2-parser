@@ -1,0 +1,342 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "area_sud_0", "area_sud_0_script",true, 1);
+//AddEntityCollideCallback("Player", "area_monster_0", "area_monster_0_script",true, 1);
+AddEntityCollideCallback("Player", "area_dvere_0", "area_dvere_0_script",true, 1);
+AddEntityCollideCallback("Player", "area_dvere_1", "area_dvere_1_script",true, 1);
+AddEntityCollideCallback("Player", "area_1", "area_1_script",true, 1);
+AddEntityCollideCallback("Player", "area_2", "area_2_script",true, 1);
+AddEntityCollideCallback("Player", "area_3", "area_3_script",true, 1);
+AddEntityCollideCallback("Player", "area_4", "area_4_script",false, 1);
+AddEntityCollideCallback("Player", "z_2", "area_z_2_script",false, 1);
+AddEntityCollideCallback("Player", "z_6", "area_z_6_script",true, 1);
+//SetEntityPlayerLookAtCallback("efekt_0_area", "efekt_0",false);
+AddEntityCollideCallback("Player", "efekt_0_area", "efekt_0_script",false, 1);
+SetupLoadScreen("LoadingText", "load_13", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_1", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_2", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_3", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_4", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_5", 0, "");
+AddEntityCollideCallback("infected_1", "ScriptArea_1", "area_1_1_script",false, 1);
+AddEntityCollideCallback("infected_1", "ScriptArea_2", "area_1_2_script",false, 1);
+AddUseItemCallback("", "klic_0", "prison_1", "odemk_0", true);
+AddEntityCollideCallback("Player","area_checkp1","hudba_1",false,  1);
+CheckPoint ("", "check1", "hudba_0", "", "");
+}
+
+void hudba_0(string &in asName, int alCount){
+SetEntityActive("area_checkp1", true);}
+
+void hudba_1(string &in asParent, string &in asChild, int alState){
+StopMusic(0,1000);
+PlayMusic("Penumbra_BP_A7.ogg", true, 3, 1, 1000, true);
+SetEntityActive("area_checkp1", false);
+CheckPoint ("", "checkp1", "hudba_0", "","");}
+
+void odemk_0(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("prison_1", false, true);
+PlaySoundAtEntity("", "unlock_door", "prison_1", 0, false);
+RemoveItem("klic_0");
+GiveSanityBoostSmall();
+}
+
+void interact_0(string &in asEntity)
+{
+SetMessage("TheVoice", "i_3", 2.0);
+PlaySoundAtEntity("","scare_tingeling.snt","z_1",0,false);
+}
+
+void area_sud_0_script(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("sud_0", true);
+}
+
+void area_monster_0_script(string &in asParent, string &in asChild, int alState)
+{
+//PlaySoundAtEntity("", "eerie.snt", "Player", 0, true);
+SetEntityActive("infected_0", true);
+//AddEnemyPatrolNode("infected_0", "node_1", 0, "");
+//ShowEnemyPlayerPosition("infected_0");
+StartPlayerLookAt("infected_0", 50, 50, "");
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+GiveSanityDamage(9.0f, true);
+AddTimer("", 1, "stop_look");
+//AddTimer("", 1, "odejdi_0");
+StopMusic(0, 1000);
+PlayMusic("Penumbra_BP_A13.ogg", true, 0.7, 0.1, 1000, true);
+//SetPlayerRunSpeedMul(0);
+if(GetLanternActive() == false)
+{
+SetLanternDisabled(false);
+SetLanternActive(true, true);
+}
+}
+
+void area_dvere_0_script(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("area_dvere_1", false);
+SetSwingDoorClosed("dvere_0", true, true);
+SetSwingDoorLocked("dvere_0", true, true);
+AddTimer("", 1 ,"alexander_script_0");
+}
+
+void area_dvere_1_script(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("area_dvere_0", false);
+SetSwingDoorClosed("dvere_0", true, true);
+SetSwingDoorLocked("dvere_0", true, true);
+AddTimer("", 1 ,"alexander_script_0");
+}
+
+void alexander_script_0(string &in asTimer)
+{
+SetEntityActive("alexander_0", true);
+SetNPCFollowPlayer("alexander_0", true);
+StartEffectFlash(1.0f, 1, 2);
+AddTimer("", 1 ,"alexander_script_1");
+PlaySoundAtEntity("", "guardian_activated.snt", "Player", 0, false);
+StopMusic(0, 1000);
+PlayMusic("lux.ogg", true, 3, 1, 1000, true);
+}
+
+void alexander_script_1(string &in asTimer)
+{
+FadeOut(0);
+SetEntityActive("slime_pile_large_1", true);
+SetEntityActive("slime_6way_1", true);
+SetEntityActive("slime_3way_1", true);
+SetEntityActive("floor_ivy_2", true);
+SetEntityActive("corpse_pile2_1", true);
+SetEntityActive("corpse_pile1_1", true);
+SetEntityActive("slime_anim_ceiling_1", true);
+AddTimer("", 11 ,"alexander_script_2");
+}
+
+void alexander_script_2(string &in asTimer)
+{
+FadeIn(0);
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+SetEntityActive("flashback_0", true);
+AddTimer("", 3 ,"mluv_0");
+AddTimer("", 1 ,"sanity_0");
+if(GetPlayerLampOil() < 60){
+SetPlayerLampOil(80);}
+}
+
+void sanity_0(string &in asTimer)
+{
+SetPlayerSanity(5);
+AddTimer("", 1 ,"sanity_0");
+}
+
+void mluv_0(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_0", 6);
+AddTimer("",7,"mluv_1");
+}
+
+void mluv_1(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_1", 6);
+AddTimer("",7,"mluv_2");
+}
+
+void mluv_2(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_2", 5);
+AddTimer("",6,"mluv_3");
+}
+
+void mluv_3(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_3", 7);
+AddTimer("",8,"mluv_4");
+}
+
+void mluv_4(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_4", 7);
+AddTimer("",8,"mluv_5");
+}
+
+void mluv_5(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_5", 6);
+AddTimer("",7,"mluv_6");
+}
+
+void mluv_6(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_6", 6);
+AddTimer("",7,"mluv_7");
+}
+
+void mluv_7(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_7", 6);
+AddTimer("",7,"mluv_8");
+}
+
+void mluv_8(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_8", 7);
+AddTimer("",8,"mluv_9");
+}
+
+void mluv_9(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_9", 7);
+AddTimer("",8,"mluv_10");
+}
+
+void mluv_10(string &in asTimer)
+{
+SetMessage("TheVoice", "alexander_10", 12);
+AddTimer("",6,"efekt_0");
+}
+
+void efekt_0(string &in asTimer)
+{
+FadePlayerFOVMulTo(1.5, 1);
+AddTimer("",6,"zmen_mapu_0");
+}
+
+void zmen_mapu_0(string &in asTimer)
+{
+SetPlayerActive(true);
+StopMusic(1, 1);
+ChangeMap("03_08_lecebna3.map", "playerstart", "","");
+}
+
+void stop_look(string &in asEntity)
+{
+StopPlayerLookAt();
+}
+
+void area_1_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","scare_male_terrified.snt","z_0",0,false);
+}
+
+void area_2_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","scare_male_terrified.snt","z_1",0,false);
+AddTimer("", 5, "krik_0");
+}
+
+void area_3_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","scare_male_terrified.snt","z_2",0,false);
+}
+
+void area_4_script(string &in asParent, string &in asChild, int alState)
+{
+RemoveTimer("krik_2");
+RemoveTimer("krik_3");
+AddTimer("krik_0", 5, "krik_0");
+}
+
+void krik_0(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_male_terrified.snt","z_2",0,false);
+AddTimer("krik_1", 5, "krik_1");
+}
+
+void krik_1(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_male_terrified.snt","z_3",0,false);
+AddTimer("krik_0", 5, "krik_0");
+}
+
+void area_z_2_script(string &in asParent, string &in asChild, int alState)
+{
+RemoveTimer("krik_0");
+RemoveTimer("krik_1");
+AddTimer("krik_2", 5, "krik_2");
+}
+
+void area_z_6_script(string &in asParent, string &in asChild, int alState)
+{
+//PlaySoundAtEntity("","scream_zena.snt","z_7",0,false);
+GiveSanityDamage(9.0f, true);
+SetPlayerHealth(10);
+SetPlayerSanity(15);
+AddTimer("", 15,"obnov_zdravi_0");
+AddTimer("", 15,"obnov_zdravi_1");
+//trololol s tim obnov zdravi :) RED VISION ACTIVATED
+//RAGE MODE ACTIVATED
+//EEEEHHEEEE BUBAK -> TOTALYSCAREDTOHELL MODE ACTIVATED
+}
+
+void krik_2(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_male_terrified.snt","z_4",0,false);
+AddTimer("krik_3", 5, "krik_3");
+}
+
+void krik_3(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_male_terrified.snt","z_5",0,false);
+AddTimer("krik_2", 5, "krik_2");
+}
+
+void obnov_zdravi_0(string &in asTimer)
+{
+//SetPlayerHealth(100);
+//ok tak zdravi ne, necekane to vypada dobre
+//za to ta zmena zpatky byla jako pest na oko, hm
+SetPlayerSanity(80);
+}
+
+void obnov_zdravi_1(string &in asTimer)
+{
+SetPlayerHealth(10);
+AddTimer("", 15,"obnov_zdravi_1");
+}
+
+void efekt_0_script(string &in asParent, string &in asChild, int alState)
+{
+if(alState==1)
+{
+SetRadialBlurStartDist(0.1);
+FadeRadialBlurTo(0.05, 0.025);
+PlaySoundAtEntity(asChild+"terror", "ui_torture.ent", asChild, 10, true);
+// snad hodiny jsem stravil hledanim tohole zvuku
+// je to dokonaly, nic vic nevystihuje pohled na zakrvacene zdi a kosti
+}
+else if(alState==-1)
+{
+RemoveTimer(asChild);
+FadeRadialBlurTo(0.0f, 0.1f);
+StopSound(asChild+"terror", 2);
+}
+}
+
+void area_1_1_script(string &in asParent, string &in asChild, int alState)
+{
+AddEnemyPatrolNode("infected_1", "PathNodeArea_4", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_3", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_2", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_1", 0, "");
+}
+
+void area_1_2_script(string &in asParent, string &in asChild, int alState)
+{
+AddEnemyPatrolNode("infected_1", "PathNodeArea_2", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_3", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_4", 0, "");
+AddEnemyPatrolNode("infected_1", "PathNodeArea_5", 0, "");
+}
+
+void OnEnter()
+{
+AutoSave();
+PlayMusic("Penumbra_BP_A7.ogg", true, 3, 1, 1000, true);
+}
+
+void OnLeave()
+{
+StopMusic(1, 1000);
+}

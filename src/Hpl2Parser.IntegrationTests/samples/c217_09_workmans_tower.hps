@@ -1,0 +1,176 @@
+void OnStart()
+{
+	SetMapDisplayNameEntry("LevelTower");
+	AutoSave();
+	
+	AddGlobalVarInt("beentotower", 1);
+
+	AddEntityCollideCallback("Player", "AreaVoice", "YouHaveTo", true, 1);
+	
+	AddTimer("lookloop", 1, "TimerRandomLook");
+	AddTimer("wind", 1, "WindTimer");	
+	AddTimer("moaneffect", 1, "MoanTimer");
+	
+	StopMusic(0.5f, 0.0f);
+	StopMusic(0.5f, 10.0f);
+	FadeOut(0.0f);
+	AddTimer("", 1, "TimeIn");
+	
+	if(ScriptDebugOn())
+	{
+		SetPlayerLampOil(100.0f);
+		GiveItem("lantern_1", "Lantern", "Lantern", "lantern.tga", 1.0f);
+	}
+}
+
+void TimeIn(string &in asTimer)
+{
+	FadeIn(1.0f);
+	//PlaySoundAtEntity("", "15_prisoner_scream", "ch", 0.0f, false);
+}
+//////////////////////////////////
+
+//MEMORY STONE
+void BeginMemory2(string &in asEntity)
+{
+	SetPlayerActive(false);
+	RemoveItem(asEntity);
+	AddTimer("", 4.0f, "TimerMemory2");
+	FadeOut(3.0f);
+	FadePlayerFOVMulTo(0.8f, 1.0f);
+	FadeImageTrailTo(2, 1);
+	PlaySoundAtEntity("", "lever_wood_max", "Player", 0.0f, false);
+	PlayMusic("12_event_blood.ogg", false, 1, 5, 10, true);
+	}
+	
+void TimerMemory2(string &in asTimer)
+{
+	AddLocalVarInt("TCon", 1);
+	float fTVar = 0.0f;
+	
+	switch(GetLocalVarInt("TCon"))
+	{
+		case 1:
+			RemoveTimer("lookloop");
+			RemoveTimer("moaneffect");	
+			SetLanternDisabled(true);
+			FadeOut(0.5f);
+			TeleportPlayer("MemPlace");
+			FadePlayerFOVMulTo(1.4f, 0.4f);
+			FadePlayerRollTo(-20, 0.3f, 0.8f);
+		break;
+		case 2:
+			StartPlayerLookAt("ScriptArea_1", 1, 2, "");
+			FadeIn(1.5f);
+			SetMessage("TextOne", "MemoryText2_1", 5.0f);
+			fTVar = 5.0f;
+			PlaySoundAtEntity("int", "amb_eerie_dunk", "Player", 0.0f, false);
+		break;
+		case 3:
+			PlaySoundAtEntity("", "general_thunder", "Player", 0.0f, false);
+			FadePlayerRollTo(20, 0.3f, 0.8f);
+			FadeOut(5.0f);
+			FadePlayerFOVMulTo(0.8f, 0.4f);
+			fTVar = 5.0f;
+		break;
+		case 4:
+			FadeIn(0.0f);
+			SetMessage("TextOne", "MemoryText2_2", 5.0f);
+			PlaySoundAtEntity("rock", "21_hole_loop", "Player", 0.0f, false);
+		break;
+		case 5:
+			FadeIn(0.0f);
+		break;
+		case 6:
+			FadePlayerRollTo(0, 0.3f, 0.8f);
+			FadePlayerFOVMulTo(1.0f, 0.4f);
+			FadeImageTrailTo(0, 1);
+		break;		
+		case 7:
+			FadeIn(5.0f);
+			SetLanternDisabled(false);
+			StopSound("int", 5.0f);
+			AddTimer("", 5.0f, "Comeback");
+		break;
+		case 8:
+			FadeOut(3.0f);
+			AddTimer("lookloop", RandFloat(3.0f,6.0f), "TimerRandomLook");
+			AddTimer("moaneffect", 4, "MoanTimer");
+		break;
+		}
+		
+	if(GetLocalVarInt("TCon") < 10) AddTimer("", fTVar, "TimerMemory2");
+	}
+	
+void Comeback(string &in asTimer)
+{
+	SetPlayerActive(true);
+	FadeIn(5.0f);
+	TeleportPlayer("debugspawn");
+	StopPlayerLookAt();
+	SetLanternDisabled(false);
+	}
+	
+//Noises
+void WindTimer(string &in asTimer)
+{	
+	float fWind = RandFloat(5.5f,15.5f);
+
+		PlaySoundAtEntity("", "27_wind", "AreaWind", 0.0f, false);
+		CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "AreaWind", false);
+		
+		AddTimer("wind", 6.5f+fWind, "WindTimer");	
+}
+
+void MoanTimer(string &in asTimer)
+{	
+	float fMoan = RandFloat(6.5f,18.5f);
+
+		PlaySoundAtEntity("", "15_man02_whimp", "Player", 0.0f, false);
+		
+		AddTimer("moaneffect", 1.5f+fMoan, "MoanTimer");	
+}
+
+//Tilty Head
+bool bRoll = true;
+void TimerRandomLook(string &in asTimer)
+{
+int iLook = RandFloat(1,5);
+	
+	if(iLook > 4){
+		FadePlayerRollTo(0, 0.5f, 1); 
+		FadePlayerFOVMulTo(1, 1);
+		
+		AddTimer("lookloop", RandFloat(6.0f,8.0f), "TimerRandomLook");
+		return;
+	}
+	
+	if(iLook == 1 or iLook == 3)
+		PlaySoundAtEntity("sigh", "react_sigh.snt", "Player", 1.0 / 0.75f, false);
+	
+	FadePlayerFOVMulTo(RandFloat(0.7f,1.3f), RandFloat(0.05f,0.1f));
+	
+	bRoll = bRoll == false ? true : false;
+	
+	if(bRoll)
+		FadePlayerRollTo(RandFloat(4,12), RandFloat(0.075f,0.35f), RandFloat(0.55f,1.15f)); 
+	else
+		FadePlayerRollTo(RandFloat(-4,-12), RandFloat(0.05f,0.25f), RandFloat(0.5f,1)); 
+		
+	AddTimer("lookloop", RandFloat(3.0f,6.0f), "TimerRandomLook");
+}
+
+//you have to get out of here
+void YouHaveTo(string &in asParent, string &in asChild, int alState)
+{
+	AddEffectVoice("CH01_DanielRamble_01.ogg", "", "", "", false, "", 2, 4);
+	AddTimer("", 2, "TimerYHEffects");
+	FadePlayerFOVMulTo(1.5f, 1.0f);
+	SetPlayerMoveSpeedMul(0.5);
+	}
+	
+void TimerYHEffects(string &in asTimer)
+{
+	FadePlayerFOVMulTo(1, 1);
+	SetPlayerMoveSpeedMul(1);
+}

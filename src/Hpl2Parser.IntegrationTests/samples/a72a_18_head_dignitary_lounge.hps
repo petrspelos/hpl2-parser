@@ -1,0 +1,434 @@
+//////////////////////////////////////
+/////////////////////////////////////
+
+
+// 		........LEVEL 19..........
+
+//					 ~`~					 //
+//				   ~ ..... ~ 					//
+//--.    ~	.--"WEST PASSAGEWAY"--.	  ~ .--//
+//				   ~ ..... ~ 				  //
+//				   	 ~`~					 //
+
+/*
+
+	Flooded map. Mostly for story purposes
+
+*/
+
+void OnStart()
+{
+	
+	SetMapDisplayNameEntry("LevelFlooded");
+	
+	SetDeathHint("DeathHint", "DHint1");
+	
+	AddEnemyPatrolNode("Boss", "Node_1", 0.001f, "");
+	AddEnemyPatrolNode("Boss", "Node_2", 0.001f, "");
+	AddEnemyPatrolNode("Boss", "Node_3", 0.001f, "");
+	
+	//AddTimer("lookloop", 0.001f, "TimerRandomLook");
+	
+	//----COLLIDE CALLBACKS----//
+	AddEntityCollideCallback("Player", "AreaKaernkScare", "KaernkScare", true, 1);
+	AddEntityCollideCallback("Player", "AreaWind", "Wind", true, 1);
+	AddEntityCollideCallback("Player", "AreaWind_2", "Wind2", true, 1);
+	
+	//---- VARIABLES ----//
+	
+	SetLocalVarInt("DoorOK", 0);
+	
+	//----DEBUG----//
+	if(ScriptDebugOn())
+	{
+		AddQuest("sick", "18Sick");
+		
+		PlaySoundAtEntity("", "ambience_cave.snt", "AreaSoundAmb", 1.0f, false);
+		PlaySoundAtEntity("loop", "ambience_hollow_tinker.snt", "AreaSoundAmb_2", 1.0f, false);
+		
+		GiveItem("HammerChipper", "Puzzle", "", "stone_hammer_chipper.tga", 1.0f);
+		GiveItem("Hammer", "Puzzle", "", "stone_hammer.tga", 1.0f);
+		GiveItem("Chipper", "Puzzle", "", "stone_chipper.tga", 1.0f);
+	}
+	
+	//----FADE...----//
+	
+	if(ScriptDebugOn() == false)
+	{
+		
+	FadeOut(0);
+	SetPlayerActive(false);
+	
+	AddTimer("firstopen", 4, "TimerOpen");
+	
+	PlayGuiSound("sanity_flick5", 0.8f);
+	
+	
+	
+	MovePlayerHeadPos(0, -0.9f, 0, 1, 0.5f);
+	FadePlayerFOVMulTo(1.4, 1);
+	FadePlayerRollTo(30, 1, 3);
+	
+	StartPlayerLookAt("ScriptArea_3", 1, 3, "");
+	
+	AddTimer("rock", 1., "RockTimer");
+	}
+	
+	//--Display--//
+	SetMapDisplayNameEntry("LevelFlooded");
+	
+	//--Use--//
+	
+	AddUseItemCallback("", "HammerChipper", "DoorToLever", "UseHCOnDoor", false);
+	AddUseItemCallback("", "Hammer", "DoorToLever", "UseHCOnDoor", false);
+	AddUseItemCallback("", "Chipper", "DoorToLever", "UseHCOnDoor", false);
+	
+	AddUseItemCallback("", "HammerChipper", "LeverFixed", "UseHCOnLever", false);
+	AddUseItemCallback("", "Hammer", "LeverFixed", "UseHCOnLever", false);
+	AddUseItemCallback("", "Chipper", "LeverFixed", "UseHCOnLever", false);
+	
+	}
+	
+	
+//---------------------------------------------	
+
+/////////////////////////////
+// LEVER AND DOOR
+/////////////////////////////
+
+//---------------------------------------------	
+
+void FixLever(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		SetEntityActive("Safety", false);
+		
+		PlaySoundAtEntity("machinedoor", "21_lever_success", "LeverFixed", 0, false);
+		PlaySoundAtEntity("machinestart", "14_elevator_clank", "ScriptArea_2", 0, false);
+		
+		CreateParticleSystemAtEntity("rumbledust", "ps_dust_falling_rumble.ps", "AreaPart", false);
+		PlaySoundAtEntity("rumbledustsound", "03_rock_move", "AreaPart", 0, false);
+		
+		StartScreenShake(0.06f, 0.5f, 0.5f, 0.5f);
+		
+		PlayMusic("16_puzzle_bridge", false, 1, 0, 10, false);
+		
+		SetLeverStuckState("LeverFixed", 1, true);
+		
+		GiveSanityBoost();
+		
+		AddTimer("endsound", 3, "EndSound");
+		AddTimer("gnoise", 6, "Gnoise");
+		
+		AddDebugMessage("Lever Done", false);
+		SetLocalVarInt("DoorOK", 1);
+		
+		/* Door
+		*/
+		
+		SetSwingDoorLocked("DoorToLever", false, true);
+		SetSwingDoorClosed("DoorToLever", false, true);
+		SetSwingDoorDisableAutoClose("DoorToLever", true);
+		
+		AddPropForce("DoorToLever", 300, 0, 0, "world");
+
+	}
+	
+	}	
+	
+	
+//---------------------------------------------	
+
+/////////////////////////////
+// MISC
+/////////////////////////////
+
+//---------------------------------------------	
+
+/* Random look just copied from 00_rainy_hall lol
+*/
+
+bool bRoll = true;
+void TimerRandomLook(string &in asTimer)
+{
+	int iLook = RandFloat(1,5);
+	
+	if(iLook > 4){
+		SetPlayerRunSpeedMul(0.5);
+		SetPlayerMoveSpeedMul(1);
+		FadePlayerRollTo(0, 0.5f, 1); 
+		FadePlayerFOVMulTo(1, 1);
+		FadeImageTrailTo(0,1.5f);
+		
+		AddTimer("lookloop", RandFloat(6.0f,8.0f), "TimerRandomLook");
+		return;
+	}
+	
+	if(iLook == 1 or iLook == 3)
+		PlaySoundAtEntity("sigh", "react_sigh.snt", "Player", 1.0 / 0.75f, false);
+	
+	FadePlayerFOVMulTo(RandFloat(0.7f,1.3f), RandFloat(0.05f,0.1f));
+	
+	SetPlayerMoveSpeedMul(RandFloat(0.6f,0.9f));
+	SetPlayerRunSpeedMul(RandFloat(0.2f,0.4f));
+	
+	FadeImageTrailTo(RandFloat(0.75f,1.0f),RandFloat(0.75f,1.25f));
+	
+	bRoll = bRoll == false ? true : false;
+	
+	if(bRoll)
+		FadePlayerRollTo(RandFloat(4,12), RandFloat(0.075f,0.35f), RandFloat(0.55f,1.15f)); 
+	else
+		FadePlayerRollTo(RandFloat(-4,-12), RandFloat(0.05f,0.25f), RandFloat(0.5f,1)); 
+		
+	AddTimer("lookloop", RandFloat(3.0f,6.0f), "TimerRandomLook");
+}
+
+/* Door lock text
+*/
+void LockText(string &in asEntity)
+{
+	SetMessage("TextOne", "LockDoor", 2);
+}
+
+/* End sounds
+*/
+
+void EndSound(string &in asTimer)
+{
+	StopSound("machinedoor", 1);
+}
+
+/* Whateva
+*/
+void Gnoise(string &in asTimer)
+{
+	PlaySoundAtEntity("...", "guardian_idle_rand", "AreaGnoise", 0, false);
+}
+
+//---------------------------------------------	
+
+/////////////////////////////
+// BEGIN KAERNK SCARE
+/////////////////////////////
+
+//---------------------------------------------	
+
+void KaernkScare(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "water_lurker_idle_rev", "AreaKaernkEffects", 0, false);
+	
+	AddTimer("kae1", 1, "TimerKaernk");
+	AddTimer("kae2", 2.5, "TimerKaernk");
+	AddTimer("kae3", 4, "TimerKaernk");
+}
+
+void TimerKaernk(string &in asTimer)
+{
+	if(asTimer == "kae1")
+	{
+		PlaySoundAtEntity("", "water_lurker_attack", "AreaKaernkEffects", 0, false);
+		PlaySoundAtEntity("", "step_run_water", "AreaKaernkEffects", 0, false);
+		PlaySoundAtEntity("scare", "react_scare.snt", "Player", 1, false);
+		
+		PlayMusic("04_event_hole", false, 1, 0, 10, false);
+		
+		GiveSanityDamage(10, true);
+		
+		AutoSave();
+	}
+	
+	if(asTimer == "kae2")
+	{
+		PlaySoundAtEntity("", "water_lurker_idle_rev", "AreaKaernkEffects_1", 0, false);
+	}
+	
+	if(asTimer == "kae2")
+	{
+		PlaySoundAtEntity("", "water_lurker_idle_rev", "AreaKaernkEffects", 0, false);
+		PlayMusic("18_amb.ogg", true, 1, 0, 0, false);
+		
+		CompleteQuest("sick", "18Sick");
+	}
+}
+
+/* Door too heavy to open
+*/
+void IntTooHeavy(string &in asEntity)
+{
+	PlaySoundAtEntity("", "close_gate", "Safety", 0, false);
+	
+	SetMessage("TextOne", "18TooHeavy", 3);
+}
+
+//---------------------------------------------	
+
+/////////////////////////////
+// VISION
+/////////////////////////////
+
+//---------------------------------------------	
+
+//Player has vision of conversation between L & P 
+
+void TimerOpen(string &in asTimer)
+{
+	AddLocalVarInt("OpenStep", 1);	//What step to play in the event
+	float fEventSpeed = 0.5f;	//The default time between steps in an event
+
+	switch(GetLocalVarInt("OpenStep")) {
+		case 1:
+			fEventSpeed = 5.0f;	
+			PlaySoundAtEntity("breath", "28_amb_loop", "Player", 0, false);
+			SetMessage("TextOne", "18Open1", 3);
+		break;
+		case 2:
+			SetMessage("TextOne", "18Open2", 3);
+			fEventSpeed = 5.0f;	
+		break;
+		case 3:
+			SetMessage("TextOne", "18Open3", 3);
+			fEventSpeed = 6.0f;	
+		break;
+		case 4:
+			SetMessage("TextOne", "18Open4", 3);
+			fEventSpeed = 5.0f;	
+		break;
+		case 5:
+			SetMessage("TextOne", "18Open5", 3);
+			fEventSpeed = 5.0f;	
+		break;
+		case 6:
+			SetMessage("TextOne", "18Open6", 3);
+			fEventSpeed = 5.0f;	
+		break;
+		case 7:
+			SetMessage("TextOne", "18Open7", 3);
+			fEventSpeed = 8.0f;	
+			AddTimer("stop", 5, "TimerStop");
+		break;
+		case 8:
+			//MovePlayerHeadPos(0, 0, 0, 1, 0.5f);
+			//FadeImageTrailTo(1.5,2);
+			FadeIn(4);
+			fEventSpeed = 5.0f;	
+			StartScreenShake(0.01f, 0.0f, 2.0f, 4.0f);
+			PlaySoundAtEntity("rock", "03_rock_move.snt", "Player", 1.0f, false);
+			PlaySoundAtEntity("sighup", "player_cough.snt", "Player", 1.0f, false);
+			PlaySoundAtEntity("", "ambience_cave.snt", "AreaSoundAmb", 1.0f, false);
+			PlaySoundAtEntity("loop", "ambience_hollow_tinker.snt", "AreaSoundAmb_2", 1.0f, false);
+			//CheckPoint("flooded1", "PlayerStartArea_1", "", "DeathHint", "Dhint1");
+			//StopSound("breath", 1);
+			
+			AutoSave();
+		break;
+		case 9:
+			MovePlayerHeadPos(0, -0.4f, 0, 1, 0.5f);
+			FadeImageTrailTo(1.5,2);
+			PlaySoundAtEntity("movement", "player_climb.snt", "Player", 0, false);
+			StartPlayerLookAt("ScriptArea_4", 1, 1, "");
+			FadePlayerRollTo(0, 3, 5);
+			fEventSpeed = 4.0f;	
+		break;
+		case 10:
+			MovePlayerHeadPos(0, 0, 0, 1, 0.5f);
+			PlaySoundAtEntity("sighup", "react_sigh.snt", "Player", 1.0f, false);
+		break;
+		case 11:
+			StopPlayerLookAt();
+			AddTimer("lookloop", 0.01f, "TimerRandomLook");
+			SetPlayerActive(true);
+			fEventSpeed = 2.0f;	
+		break;
+		case 12:
+			AddQuest("sick", "18Sick");
+			AddTimer("rock", 1.5f, "RockTimer");
+			
+			AutoSave();
+		break;
+	}
+	
+	if(GetLocalVarInt("OpenStep") < 12)  AddTimer("open", fEventSpeed, "TimerOpen");
+}
+
+//Stop breath
+void TimerStop(string &in asTimer)
+{
+	StopSound("breath", 1);
+}
+
+//---------------------------------------------	
+
+/////////////////////////////
+// MISC
+/////////////////////////////
+
+//---------------------------------------------	
+
+//DOOR MESSAGE
+void NoWayMes(string &in asEntity)
+{
+
+	SetMessage("TextOne", "18DoorOff", 3);
+}
+
+//WIND
+void Wind(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("windy", "scare_wind_reverse", "Player", 1.0f, false);
+}
+
+//ROCKS MOVING
+void RockTimer(string &in asTimer)
+{
+	int iRock = RandFloat(1, 7);	
+	float fRock = RandFloat(7.5f, 18.5f);
+	
+	PlaySoundAtEntity("rockSound"+iRock, "03_rock_move", "Rock_"+iRock, 0.0f, false);
+		
+	AddTimer("rock", 1.5f+fRock, "RockTimer");
+		
+	/*DEBUG
+	 */
+	AddDebugMessage("Rocks moving in: "+iRock, false);
+}
+
+//ENTRY WIND
+void Wind2(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("windy2", "general_wind_Whirl", "ScriptArea_7", 1.0f, false);
+	CreateParticleSystemAtEntity("windy2sound", "ps_dust_whirl.ps", "ScriptArea_7", false);
+}
+
+//NOTE MUSIC 1
+void NoteMusic1(string &in asTimer)
+{
+	PlayMusic("26_paper_daniel01", false, 1, 0, 10, false);
+}
+
+//NOTE MUSIC 2
+void NoteMusic2(string &in asTimer)
+{
+	PlayMusic("27_paper_daniel01", false, 1, 0, 10, false);
+	FadeLightTo("PointLight_69", 0, 0, 0, 0, 0, 1);
+}
+
+void UseHCOnDoor(string &in asItem, string &in asEntity)
+{
+	SetMessage("TextOne", "NoGood", 2);
+}
+
+//If player uses hammers on the lever (which I dont really think they will)
+void UseHCOnLever(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("windy2", "impact_wood_heavy_med", "ScriptArea_2", 1.0f, false);
+	CreateParticleSystemAtEntity("hit", "ps_hit_soft.ps", "ScriptArea_2", false);
+	
+	SetLeverStuckState("LeverFixed", 1, true);
+}
+
+void OnLeave()
+{
+	SetupLoadScreen("TextOne", "Load14", 0, "int_loading_knights.jpg");
+}

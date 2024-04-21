@@ -1,0 +1,53 @@
+void OnStart(){
+	SetEntityPlayerInteractCallback("pickUp", "spookyFunction", true);
+	AddEntityCollideCallback("Player", "ScriptArea_1", "startChase", false, 1);
+	SetDeathHint("Messages", "deathTransfer");
+	SetGlobalVarInt("caveDoor", 0);
+}
+
+void OnEnter(){
+	PlayMusic("suitor_amb.ogg", true, 0.25f, 0, 0, true);
+	checkDoor();
+}
+
+void OnLeave(){
+
+}
+
+void checkDoor(){
+	if (GetGlobalVarInt("caveDoor") == 1){
+		SetLevelDoorLocked("sacirfice_cave", false);
+		SetLevelDoorLocked("south_catacombs", false);
+	}
+}
+
+void spookyFunction(string &in entity){
+	AddTimer("T1", 0.1f, "spookierFunction");
+}
+
+void spookierFunction(string &in asTimer){
+	SetMessage("Messages", "deadRobert", 2);
+	SetPlayerActive(false);
+	AddTimer("T2", 2.0f, "spookiestFunction");
+}
+
+void spookiestFunction(string &in asTimer){
+	GivePlayerDamage(101, "Slash", false, true);
+	PlayGuiSound("slash.snt", 1000000000);
+	AddTimer("T3", 1.0f, "caveTransfer");
+}
+
+void caveTransfer(string &in asTimer){
+	SetPlayerActive(true);
+	ChangeMap("11_sacirfice_cave.map", "PlayerStartArea_1", "", "");
+}
+
+void startChase(string &in asParent, string &in asChild, int alState){
+	if (GetGlobalVarInt("caveDoor") == 1){
+		SetEntityActive("servant_brute_1", true);
+		AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_1", 0, "");
+		AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_2", 0.001, "");
+		SetEntityActive("ScriptArea_1", false);
+		SetMessage("Messages", "danger1", 0);
+	}
+}

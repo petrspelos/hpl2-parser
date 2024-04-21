@@ -1,0 +1,382 @@
+void OnEnter()
+{
+	if(ScriptDebugOn())
+	{
+		SetGlobalVarInt("FastSeekerAchievement", 1);
+		SetGlobalVarInt("HealthAchievement", 1);
+		SetGlobalVarInt("ItemsAchievement", 1);
+		SetGlobalVarInt("NoDeathAchievement", 1);
+		//SetGlobalVarInt("StatuesAchievement", 1);
+		SetGlobalVarInt("WardrobeAchievement", 1);
+		SetGlobalVarInt("EnemiesAchievement", 1);
+		SetGlobalVarInt("PuzzleAchievement", 1);
+		//SetGlobalVarInt("NoPuzzleAchievement", 1);
+		SetGlobalVarInt("NoStatuesAchievement", 1);
+		SetGlobalVarInt("SanityAchievement", 1);
+		SetGlobalVarInt("SlimesAchievement", 1);
+		SetGlobalVarInt("LightsAchievement", 1);
+	}
+	
+	PreloadParticleSystem("ps_acid_web_dissolve.ps");
+	PreloadParticleSystem("ps_dust_falling.ps");
+	PreloadParticleSystem("ps_light_dust.ps");
+	PreloadParticleSystem("ps_light_dust_large.ps");
+	PreloadParticleSystem("ps_area_fog.ps");
+	PreloadParticleSystem("ps_area_fog_large.ps");
+	PreloadParticleSystem("ps_area_fog_small.ps");
+	PreloadParticleSystem("ps_area_fog_sewer_long_warmup.ps");
+	PreloadParticleSystem("ps_door_damage_wood.ps");
+	PreloadParticleSystem("ps_break_wood.ps");
+	
+	PreloadSound("02_woosh.snt");
+	PreloadSound("04_ambience_wind_eerie.snt");
+	PreloadSound("06_general_flies.snt");
+	PreloadSound("critter_rat.snt");
+	PreloadSound("general_thunder.snt");
+	
+	PreloadSound("gameplay_acid_web.snt");
+	PreloadSound("lock_door.snt");
+	PreloadSound("locked_door.snt");
+	PreloadSound("open_door.snt");
+	PreloadSound("open_door_long.snt");
+	PreloadSound("door_gate_bar_locked.snt");
+	PreloadSound("door_mansion_close.snt");
+	PreloadSound("door_mansion_open.snt");
+	PreloadSound("close_door.snt");
+	PreloadSound("close_door_long.snt");
+	PreloadSound("unlock_door.snt");
+	PreloadSound("react_breath.snt");
+	PreloadSound("react_breath_slow.snt");
+	PreloadSound("react_pant.snt");
+	PreloadSound("react_scare.snt");
+	PreloadSound("react_sigh.snt");
+	PreloadSound("general_fire_burning.snt");
+	PreloadSound("general_fire_burning_low.snt");
+	PreloadSound("break_pottery.snt");
+	PreloadSound("break_glass_bottle.snt");
+	PreloadSound("break_glass_large.snt");
+	PreloadSound("break_wood.snt");
+	PreloadSound("break_wood_metal.snt");
+	PreloadSound("guardian_activated.snt");
+	PreloadSound("guardian_ontop.snt");
+	PreloadSound("hit_wood.snt");
+	PreloadSound("player_climb.snt");
+	PreloadSound("player_crouch.snt");
+	PreloadSound("player_jump.snt");
+	PreloadSound("player_stand.snt");
+	PreloadSound("roll_wood.snt");
+	PreloadSound("slime_attack_normal_hit.snt");
+	PreloadSound("slime_create.snt");
+	PreloadSound("slime_loop.snt");
+	PreloadSound("step_run_dirt.snt");
+	PreloadSound("step_walk_dirt.snt");
+	PreloadSound("step_sneak_dirt.snt");
+	PreloadSound("step_run_fabric.snt");
+	PreloadSound("step_walk_fabric.snt");
+	PreloadSound("step_sneak_fabric.snt");
+	PreloadSound("step_run_metal.snt");
+	PreloadSound("step_walk_metal.snt");
+	PreloadSound("step_sneak_metal.snt");
+	PreloadSound("step_run_organic.snt");
+	PreloadSound("step_walk_organic.snt");
+	PreloadSound("step_sneak_organic.snt");
+	PreloadSound("step_run_rock.snt");
+	PreloadSound("step_walk_rock.snt");
+	PreloadSound("step_sneak_rock.snt");
+	PreloadSound("step_run_wood.snt");
+	PreloadSound("step_run_wood_squeaky.snt");
+	PreloadSound("step_walk_wood.snt");
+	PreloadSound("step_walk_wood_squeaky.snt");
+	PreloadSound("step_sneak_wood.snt");
+	PreloadSound("step_sneak_wood_squeaky.snt");
+	PreloadSound("flashback_flash.snt");
+	PreloadSound("hurt_pant.snt");
+	PreloadSound("sanity_damage.snt");
+	PreloadSound("sanity_drain_high.snt");
+	PreloadSound("sanity_drain_med.snt");
+	PreloadSound("sanity_drain_low.snt");
+	PreloadSound("sanity_heartbeat.snt");
+	PreloadSound("sanity_pant.snt");
+	PreloadSound("ui_add_quest.snt");
+	PreloadSound("ui_lantern_off.snt");
+	PreloadSound("ui_lantern_on.snt");
+	PreloadSound("ui_sanity_gain.snt");
+	PreloadSound("ui_terror_meter.snt");
+	PreloadSound("enemy_hallucination_disappear.snt");
+
+	SetMapDisplayNameEntry("House");
+	
+	CheckPoint ("OutOfMap", "PlayerStartArea_1", "CPOutOfMap", "DeathHints", "DoNotFall");
+	
+	SetupLoadScreen("LoadingHints", "23To24", 0, "game_loading_rose.jpg");
+	
+	if(GetGlobalVarInt("HealthAchievement") == 1)
+		AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	if(GetGlobalVarInt("LightsAchievement") == 1)
+		SetLanternLitCallback("LanternOilForEver");
+}
+
+void OnLeave()
+{
+	CompleteQuest("UseFrontDoorMission", "UseFrontDoorMission");
+	RemoveTimer("addhealth");
+	RemoveTimer("checkhealth");
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+}
+
+void OnStart()
+{	
+	AddUseItemCallback("KeyFrontDoor", "key_tower_1", "level_wood_double_1", "UsedKeyOnDoor", true);
+
+	SetMapDisplayNameEntry("House");
+	
+	SetPlayerActive(false);
+	StartPlayerLookAt("note_paper01_1", 1.0f, 1.0f, "");
+	AddTimer("activeplayer", 3.0f, "TimerStopLook");
+	
+	if(GetPlayerSanity() <= 50) SetPlayerSanity(75.0f);
+	
+	StopMusic(3.0f, 10);
+	StopMusic(3.0f, 1);
+	StopMusic(3.0f, 0);
+	
+	if(GetLanternActive() == true) SetLanternActive(false, false);
+	
+	if(ScriptDebugOn())
+	{
+		if(HasItem("lantern_1") == false) GiveItemFromFile("lantern_1", "lantern.ent");
+		if(HasItem("ceremony_knife_1") == false) GiveItemFromFile("ceremony_knife_1", "ceremony_knife.ent");
+	}
+}
+
+void CPOutOfMap(string &in asName, int alCount)
+{
+	if(GetGlobalVarInt("ItemsAchievement") == 1)
+		if(GetPlayerLampOil() <= 20.0f)
+			AddPlayerLampOil(20.0f);
+	if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+		SetPlayerRunSpeedMul(1.175f);
+	if(GetGlobalVarInt("WardrobeAchievement") == 1)
+		SetPlayerJumpForceMul(1.175f);
+	if(GetGlobalVarInt("NoDeathAchievement") == 1)
+		SetPlayerHealth(100.1f);
+	if(GetGlobalVarInt("SanityAchievement") == 1)
+		SetPlayerSanity(100.1f);
+}
+
+void LanternOilForEver(bool abLit)
+{
+	if(abLit == true)
+	{
+		SetPlayerLampOil(100.0f);
+		AddTimer("fulloil", 20.0f, "TimerFullOil");
+	}
+	else
+	{
+		RemoveTimer("fulloil");
+		SetPlayerLampOil(100.0f);
+	}
+}
+
+void TimerFullOil(string &in asTimer)
+{
+	SetPlayerLampOil(100.0f);
+	AddTimer(asTimer, 20.0f, "TimerFullOil");
+}
+
+void TimerHealthAchievement(string &in asTimer)
+{
+	if(asTimer == "addhealth")
+	{
+		if(GetPlayerHealth() <= 98.0f)
+		{
+			AddPlayerHealth(2.0f);
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "checkhealth")
+	{
+		if(GetPlayerHealth() > 98.0f)
+		{
+			AddTimer("checkhealth", 10.0f, "TimerHealthAchievement");
+		}
+		else
+		{
+			AddTimer("addhealth", 7.0f, "TimerHealthAchievement");
+		}
+	}
+	else if(asTimer == "pausehealth")
+	{
+		RemoveTimer("addhealth");
+		RemoveTimer("checkhealth");
+	}
+}
+
+void PickedUpNote(string &in asEntity)
+{
+	if(asEntity == "note_paper01_1")
+	{
+		AddGlobalVarInt("MemoryNoteCount", 1);
+		PlayMusic("06_house_theme.ogg", false, 0.8f, 1.0f, 10, false);
+		SetSwingDoorLocked("mansion_2", false, false);
+		
+		StartPlayerLookAt("AreaLookAt_1", 2, 2, "");
+		SetPlayerActive(false);
+		if(GetLanternActive() == true ) SetLanternActive(false, true);
+		SetLanternDisabled(true);
+		SetLanternLitCallback("");
+		RemoveItem("lantern_1");
+		AddTimer("crouch", 0.5f, "TimerStopLookCaveIn");
+		AddTimer("place", 1.0f, "TimerStopLookCaveIn");
+		AddTimer("stoplook", 1.2f, "TimerStopLookCaveIn");
+		
+		AddQuest("UseFrontDoorMission", "UseFrontDoorMission");
+	}
+	if(GetGlobalVarInt("MemoryNoteCount") == 9) 
+	{
+		CompleteQuest("MemoriesMission", "MemoriesMission");
+		GiveSanityBoost();
+		if(GetGlobalVarInt("ShooterAchievement") == 1)
+		{
+			AddPlayerHealth(50.0f);
+			AddPlayerSanity(50.0f);
+		}
+	}
+}
+
+void TimerStopLookCaveIn(string &in asTimer)
+{
+	if(asTimer == "crouch"){
+		MovePlayerHeadPos(0.0f, -0.5f, 0.0f, 1.0f, 0.1f);
+		PlaySoundAtEntity("crouchs", "player_climb", "Player", 0.5f, false);
+	}
+	else if(asTimer == "place"){
+		SetEntityActive("lantern_1", true);
+		PlaySoundAtEntity("placejar", "puzzle_place_jar", "lantern_1", 0, false);
+		SetEntityInteractionDisabled("lantern_1", true);
+	}
+	else if(asTimer == "stoplook"){
+		PlaySoundAtEntity("crouchs", "player_crouch", "Player", 0.0f, false);
+		MovePlayerHeadPos(0.0f, 0.0f, 0.0f, 1.5f, 0.05f);
+		StopPlayerLookAt();
+		SetPlayerActive(true);
+		SetMessage("Jack", "LeaveLantern", 6.0f);
+	}
+}
+
+void UsedKeyOnDoor(string &in asItem, string &in asEntity)
+{
+	PlaySoundAtEntity("unlock_door", "unlock_door", asEntity, 0, false);
+	SetSwingDoorLocked(asEntity, false, false);
+	SetLevelDoorLocked(asEntity, false);
+	GiveSanityBoostSmall();
+	if(GetGlobalVarInt("ShooterAchievement") == 1)
+	{
+		AddPlayerHealth(25.0f);
+		AddPlayerSanity(25.0f);
+	}
+	SetGlobalVarInt("LastQuest", 1);
+}
+
+void TimerFadeScreen(string &in asTimer)
+{
+	if(asTimer == "fadein")
+	{
+		FadeIn(2.0f);
+	}
+	if(asTimer == "fadeout")
+	{
+		FadeOut(2.0f);
+	}
+	if(asTimer == "fadeinactiveplayer")
+	{
+		FadeIn(2.0f);
+		SetPlayerActive(true);
+	}
+	if(asTimer == "fadeoutactiveplayer")
+	{
+		FadeOut(2.0f);
+		SetPlayerActive(true);	
+	}	
+}
+
+void TimerStopLook(string &in asTimer)
+{
+	if(asTimer == "resetspeedmul")
+	{
+		SetPlayerMoveSpeedMul(1.0f);
+		SetPlayerRunSpeedMul(1.0f);
+		SetPlayerLookSpeedMul(1.0f);
+		if(GetGlobalVarInt("FastSeekerAchievement") == 1)
+			SetPlayerRunSpeedMul(1.175f);
+		if(GetGlobalVarInt("WardrobeAchievement") == 1)
+			SetPlayerJumpForceMul(1.175f);
+	}
+	if(asTimer == "activeplayer")
+	{
+		SetPlayerActive(true);
+	}
+	StopPlayerLookAt();
+}
+
+void TimerPlayerReactions(string &in asTimer)
+{
+	if(asTimer == "scareeffect")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "breatheffect")
+	{
+		PlayGuiSound("react_breath", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "sigheffect")
+	{
+		PlayGuiSound("react_sigh", 0.4f);
+		FadeSepiaColorTo(0, 0.1f);
+		FadeRadialBlurTo(0, 0.1f);
+	}
+	else if(asTimer == "panteffect")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, false);
+		FadeSepiaColorTo(0.5f, 0.025f);
+		FadeRadialBlurTo(0.1f, 0.025f);
+		SetRadialBlurStartDist(0.2f);
+	}
+	else if(asTimer == "scare")
+	{
+		PlayGuiSound("react_scare", 0.7f);
+		GiveSanityDamage(8.0f, true);
+	}
+	else if(asTimer == "breath")
+	{
+		PlayGuiSound("react_breath", 0.5f);
+		GiveSanityDamage(4.0f, false);
+	}
+	else if(asTimer == "sigh")
+	{
+		PlayGuiSound("react_sigh", 0.5f);
+		GiveSanityDamage(2.0f, false);
+	}
+	else if(asTimer == "pant")
+	{
+		PlayGuiSound("react_pant", 0.7f);
+		GiveSanityDamage(10.0f, true);
+	}
+}

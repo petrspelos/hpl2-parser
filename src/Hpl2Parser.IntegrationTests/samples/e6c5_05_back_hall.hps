@@ -1,0 +1,346 @@
+void RandMuseumSoundCues (string &in asTimer)
+{
+	string[] sCueSources8 = {"Sound_MuseumRand_1", "Sound_MuseumRand_2", "Sound_MuseumRand_3", "Sound_MuseumRand_4", "Sound_MuseumRand_5"};
+	asTimer = sCueSources8[RandInt (0, 4)];
+	PlaySoundAtEntity(asTimer, "afx_spooky_hallway_hits.snt", asTimer, 0, false);
+	AddDebugMessage("Random Sound Cue Function Selected Museum Sound Source: "+asTimer, false);
+	AddTimer(asTimer, RandFloat(8.0f, 20.0f), "RandMuseumSoundCues");
+}
+
+void RandMuseumSoundCues2 (string &in asTimer)
+{
+	string[] sCueSources8 = {"Sound_MuseumRand_6", "Sound_MuseumRand_7", "Sound_MuseumRand_8", "Sound_MuseumRand_9", "Sound_MuseumRand_10"};
+	asTimer = sCueSources8[RandInt (0, 4)];
+	PlaySoundAtEntity(asTimer, "afx_spooky_footsteps_above_wooden_nocreak.snt", asTimer, 0, false);
+	//AddDebugMessage("Random Sound Cue Function Selected Museum Sound Source: "+asTimer, false);
+	AddTimer(asTimer, RandFloat(10.0f, 20.0f), "RandMuseumSoundCues2");
+}
+
+void StaticGent (string &in asTimer)
+
+{
+		SetPropStaticPhysics("gent_ragdoll_1", true);
+}
+
+//===========================================
+     // This runs when the map first starts
+     void OnStart()
+{
+      PlaySoundAtEntity("", "door_level_wood_close", "Player", 0.0f, false);
+	  CompleteQuest("BackHallQuest", "BackHallQuest");
+	  CompleteQuest("GoToBackHall", "GoToBackHall");
+StopMusic(2,0);
+SetMapDisplayNameEntry("BackHall");  
+StopMusic(2,2);
+StopMusic(2,3);
+StopMusic(2,4);
+StopMusic(2,5);
+StopMusic(2,6);
+StopMusic(2,7);
+StopMusic(2,8);
+StopMusic(2,9);
+StopMusic(5,10);
+StopMusic(2,11);
+StopMusic(2,12);
+StopMusic(2,13);
+StopMusic(2,14);
+	  
+	  
+    for(int i = 1; i <= 3; i++) //this will loop the following line 3 times.
+        AddEntityCollideCallback("Book_"+i, "Area_"+i, "PullBook", false, 1); 
+        //Adds callbacks for Book_1 and Area_1, and for 2 and 3.
+		
+	  
+	  
+	  SetLocalVarInt("NoDamnArea", 0);
+	  SetLocalVarInt("Books", 0);	  
+	  CheckPoint("checkBHA","PlayerStartArea_4", "","", "");
+	  AddEntityCollideCallback("Player", "ScriptArea_1", "Furn", true, 1);
+	  AddEntityCollideCallback("Player", "ScriptArea_12", "Scare1", true, 1);
+	  AddEntityCollideCallback("Player", "ScriptArea_11", "Worried", true, 1);
+	  AddEntityCollideCallback("Player", "ScriptArea_9", "CheckOK", false, 1);
+	  AddEntityCollideCallback("Book_1", "Collide_1", "Static1", true, 1);
+	  AddEntityCollideCallback("Book_2", "Collide_2", "Static2", true, 1);
+	  AddEntityCollideCallback("Book_3", "Collide_3", "Static3", false, 1);
+	  AddEntityCollideCallback("Player", "ScriptArea_8", "ghostvoice", true, 1);
+	  
+	  SetEntityPlayerInteractCallback("ExamineArea_1", "Damage", true);
+	  SetEntityPlayerInteractCallback("ExamineArea_2", "GetOrb", false);
+	  SetEntityPlayerInteractCallback("ExamineArea_3", "SecretDoor", false);
+	  SetEntityPlayerInteractCallback("note_paper01_1", "EnableBooks", false);
+	  SetEntityPlayerInteractCallback("OrbPiece_1", "OkToLeave", false);
+	  
+	  	
+}
+
+void LevelTransitionMusic (string &in asEntity)
+
+{
+	PlayMusic("music_church_leveltransition", true, 1.0f, 4.0f, 8, true);
+	PlaySoundAtEntity("", "joint_mansion_wood_panneling_door_open", "Player", 0.0f, false);
+	FadeOut(3.0f);
+}
+
+void PullBook(string &in asParent, string &in asChild, int alState)
+{
+    AddTimer("expire", 30.0f, "TimerExpired"); //Change time to how long it should last
+    PlaySoundAtEntity("Ticking", "gameplay_tick_long_dist", "ScriptArea_7", 0.0f, false);
+	
+
+    AddLocalVarInt("Books", 1); //This adds +1 to this variable for every book that collides with the area.
+    //SetPropStaticPhysics("Book_"+i, true);
+
+    if(GetLocalVarInt("Books") == 3) {
+        //This will complete the event, put your code here
+        RemoveTimer("expire");
+        StopSound("Ticking", 0.2);
+		SetEntityActive("ExamineArea_2", true);
+		SetEntityActive("ExamineArea_3", false);
+		AddLocalVarInt("NoDamnArea", 1);
+		StartPlayerLookAt("ScriptArea_3", 2, 3, "");
+		PlaySoundAtEntity("UnlockSecret", "lock_door", "ScriptArea_4", 0.0f, false);
+		PlaySoundAtEntity("UnlockSecret", "lock_door", "ScriptArea_5", 0.0f, false);
+		PlaySoundAtEntity("UnlockSecret", "lock_door", "ScriptArea_6", 0.0f, false);
+		AddTimer("StopLook2", 1.6, "StopLook2");
+		SetLevelDoorLocked("default02_secret_door_level_1", false);
+		
+    }
+}
+
+void StopLook2(string &in asTimer)
+			
+			{
+					StopPlayerLookAt();
+			}
+
+void TimerExpired(string &in asTimer)
+{
+    //This will reset the event because you ran out of time.
+	SetPropStaticPhysics("Book_1", false);
+	SetPropStaticPhysics("Book_2", false);
+	SetPropStaticPhysics("Book_3", false);
+    for(int i = 1; i <= 3; i++) ResetProp("Book_"+i);
+    SetLocalVarInt("Books", 0);//Resets the counter
+    StopSound("Ticking", 0.2);
+    
+} 
+	  
+	 void Static1(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropStaticPhysics("Book_1", true);
+	}
+	
+	void Static2(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropStaticPhysics("Book_2", true);
+	}
+	 
+	 void Static3(string &in asParent, string &in asChild, int alState)
+	
+	{
+			SetPropStaticPhysics("Book_3", true);
+	}
+	
+	void ghostvoice(string &in asParent, string &in asChild, int alState)
+	
+	{
+			PlaySoundAtEntity("", "ghost_a", "ScriptArea_10", 0.0f, false);
+	}
+	
+	
+	
+	
+	
+	void Damage(string &in asEntity)
+	
+			{
+			
+					AddTimer("", 2.0f, "ghostattack");
+					PlaySoundAtEntity("", "ghost_b", "ScriptArea_10", 0.0f, false);
+					SetEntityActive("ExamineArea_1", false);
+			
+			}
+	
+	void ghostattack (string &in asTimer)
+	
+	{
+					GivePlayerDamage(5, "Slash", true, false);
+					PlaySoundAtEntity("", "attack_claw_hit", "Player", 0.0f, false);
+					AddTimer("", 0.6f, "Sanity");
+					AddTimer("", 0.8f, "UnStatic");
+	}
+	
+	void Sanity (string &in asTimer)
+	
+	{
+			GiveSanityDamage(10, true);
+	}
+	
+	void UnStatic (string &in asTimer)
+	
+	{
+					
+					SetPropStaticPhysics("armchair_alt_2", false);
+					SetPropStaticPhysics("bookcase_stool_2", false);
+					SetPropStaticPhysics("chair_nice01_alt_2", false);
+					SetPropStaticPhysics("chair_nice02_2", false);
+	}
+	
+	void GetOrb(string &in asEntity)
+	
+			{
+			
+					
+					SetMessage("Messages", "CheckOrb", 5);
+			
+			
+			}
+	
+	void SecretDoor(string &in asEntity)
+	
+			{
+			
+					
+					SetMessage("Messages", "SecretBHDoor", 5);
+			
+			
+			}
+	
+	void EnableBooks(string &in asEntity)
+	
+			{
+					SetEntityActive("Book_6", false);
+					SetEntityActive("Book_3", true);
+					SetEntityActive("Book_5", false);
+					SetEntityActive("Book_2", true);
+					SetEntityActive("Book_4", false);
+					SetEntityActive("Book_1", true);
+					
+					
+					
+			}
+			
+	void OkToLeave(string &in asEntity)		
+			
+			{
+					
+					AddGlobalVarInt("OrbCollect", 1);
+					AddLocalVarInt("NoDamnArea", 1);
+					
+					CheckPoint("check01","PlayerStartArea_5", "","", "");
+					SetEntityPlayerInteractCallback("default02_secret_door_level_1", "LevelTransitionMusic", false);
+			}
+		
+void Worried(string &in asParent, string &in asChild, int alState)
+	
+			{
+					PlaySoundAtEntity("", "react_breath_slow", "Player", 0.0f, false);
+			}
+			
+void Scare1(string &in asParent, string &in asChild, int alState)	
+
+{
+			PlaySoundAtEntity("", "sound_weird_6", "ScriptArea_13", 0.0f, false);
+}
+	
+	void Furn(string &in asParent, string &in asChild, int alState)
+	
+			{
+					
+					SetEntityActive("armchair_alt_2", true);
+					SetEntityActive("bookcase_stool_2", true);
+					SetEntityActive("chair_nice01_alt_2", true);
+					SetEntityActive("chair_nice02_2", true);
+					SetEntityActive("armchair_alt_1", false);
+					SetEntityActive("bookcase_stool_1", false);
+					SetEntityActive("chair_nice01_alt_1", false);
+					SetEntityActive("chair_nice02_1", false);
+					SetEntityActive("ExamineArea_1", true);
+					PlaySoundAtEntity("", "react_scare", "Player", 0.0f, false);
+			}
+			
+void CheckOK(string &in asParent, string &in asChild, int alState)
+	
+	{
+			
+			if(GetLocalVarInt("NoDamnArea") == 2) 
+			
+				{
+						SetEntityActive("ExamineArea_2", false);
+				}
+	}
+	
+						 
+     //===========================================
+     // This runs when the player enters the map
+     void OnEnter()
+   {
+   SetupLoadScreen("LoadingText", "cellar_a", 0, "cellar_a_title.jpg");
+   //----AUDIO----//
+
+SetupLoadScreen("LoadingText", "BackHall", 0, "05_loading.png");
+	  PreloadSound("unlock_door.snt");
+	  PreloadSound("attack_claw_hit.snt");
+	  PreloadSound("gameplay_tick_long_dist.snt");
+	  PreloadSound("ghost_a.snt");
+	  PreloadSound("ghost_b.snt");
+	  PreloadSound("afx_spooky_hallway_hits.snt");
+	  PreloadSound("afx_spooky_footsteps_above_wooden_nocreak.snt");
+	  PreloadSound("react_scare.snt");
+	  PreloadSound("react_breath_slow.snt");
+	  AddTimer("", 3.0f, "StaticGent");
+	  AddTimer("InitRandomMuseumSoundCuePlayer", 9.0f, "RandMuseumSoundCues");
+	  AddTimer("InitRandomMuseumSoundCuePlayer2", 9.0f, "RandMuseumSoundCues2");
+
+	StopMusic(2,1);
+    PlayMusic("amb_mansion_mansion_drone_gallery", true, 20, 1, 1, true);
+	SetInDarknessEffectsActive(false);
+	AutoSave();
+}
+
+void StoreRoom2(string &in entity)
+
+{
+    if(GetSwingDoorLocked("cellar_wood01_15") == true)
+    {
+ 
+        SetMessage("Messages", "StoreRoom2", 0);
+ 
+    }
+}
+
+void HammerDoor(string &in entity)
+ 
+ 
+{
+    if(GetSwingDoorLocked("RustyLock") == true)
+    {
+ 
+        SetMessage("Messages", "HammerDoor", 0);
+ 
+    }
+}
+
+void WalkwayMessage(string &in entity)
+ 
+ 
+{
+    if(GetSwingDoorLocked("cellar_wood01_5") == true)
+    {
+ 
+        SetMessage("Messages", "WalkwayMessage", 0);
+ 
+    }
+}
+
+
+
+	
+     //===========================================
+     // This runs when the player leaves the map
+     void OnLeave()
+     {
+	 
+     }

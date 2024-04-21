@@ -1,0 +1,373 @@
+void OnStart()
+{  
+	AutoSave();
+	AddEntityCollideCallback("Player", "AreaCollide_1", "DoorScare", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_2", "PropActivate", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_3", "DoorOpens", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_4", "LookNote", true, 1);
+	AddEntityCollideCallback("Player", "AreaCollide_5", "PassOut", true, 1);
+	AddUseItemCallback("", "SmallKey", "work_desk_door_1", "OpendWoodDesk", true);
+	AddUseItemCallback("", "MasterKey", "DoorKey", "Keydoor", true);
+	AddEntityCollideCallback("Player", "shadow_1", "Shadow1", true, 1);
+	AddEntityCollideCallback("Player", "shadow_2", "Shadow2", true, 1);
+	AddEntityCollideCallback("Player", "shadow_3", "Shadow3", true, 1);
+	AddEntityCollideCallback("Player", "shadow_4", "Shadow4", true, 1);
+	AddEntityCollideCallback("Player", "shadow_5", "Shadow5", true, 1);
+	AddEntityCollideCallback("Player", "shadow_6", "Shadow6", true, 1);
+	AddEntityCollideCallback("Player", "WakeUp", "Timer", true, 1);
+	
+}
+
+
+
+
+
+void OnEnter()
+{ 
+	StopMusic(6.0f, 10);
+	AddTimer("PlayerCough", 30, "TimerCough");
+	
+	
+}
+
+
+
+
+void OnLeave()
+{ 
+	SetupLoadScreen("LoadingText", "LoadScreen8", 0, "game_loading_rose.jpg");
+}
+
+
+
+/////////////////////////////////////Door Scare/////////////////////////
+
+void DoorScare(string &in asParent, string &in asChild, int alState)
+
+{
+	PlaySoundAtEntity("", "hit_wood", "mansion_7", 0, false);
+	AddPropImpulse("mansion_7", -2,0,0,"World");
+	PlaySoundAtEntity("", "enemy_dog_attack.snt", "mansion_7", RandFloat(0.0f, 0.5f), false);
+	CreateParticleSystemAtEntity("","ps_hit_wood","AreaPoundDoorEffect", false);
+	
+	GiveSanityDamage(10.0f, true);
+	
+}
+
+//////////////////////////////////////Debris falling in/////////////////
+
+void PropActivate(string &in asParent, string &in asChild, int alState)
+{
+	StartScreenShake(0.1, 0.5, 0.5, 2);
+	PlaySoundAtEntity("earthshake", "03_rock_move", "AreaSound3", 0, false);
+	AddTimer("Rocks", 1.0, "TimerProps");
+}
+
+void TimerProps(string &in asTimer)
+{	
+	if(asTimer == "Rocks")
+	{ 
+		PlaySoundAtEntity("", "15_rock_break", "AreaSound2", 0, false);
+		SetEntityActive("prop2", true);
+		SetEntityActive("prop3", true);
+		SetEntityActive("prop4", true);
+		SetEntityActive("prop5", true);
+		SetEntityActive("prop6", true);
+		StopSound("earthshake", 0.4);
+	}
+}
+
+////////////////////////////////////Door Opens//////////////////////////
+
+void DoorOpens(string &in asParent, string &in asChild, int alState)
+{
+	
+	
+	SetSwingDoorClosed("dooropen", false, false);
+	SetSwingDoorDisableAutoClose("dooropen", true);
+	
+	PlaySoundAtEntity("creak", "joint_door_move_special.snt", "dooropen", 1, false);
+	
+	AddTimer("opendoor", 2, "TimerStopsound");
+	AddTimer("dooropen", 0, "TimerMoveDoor");
+	
+}
+
+void TimerMoveDoor(string &in asTimer)
+{
+	if(GetLocalVarInt("VarDoor") == 5) return;
+	AddLocalVarInt("VarDoor", 1);
+	
+	AddTimer(asTimer, 0.03, "TimerMoveDoor");
+	
+	AddPropForce(asTimer,0, 0, 70, "world");
+}
+
+
+void TimerStopsound(string &in asTimer)
+{
+	StopSound("creak", 0.4);
+}
+
+///////////////////////////////LookNote/////////////////////////////////
+void LookNote(string &in asParent, string &in asChild, int alState)
+{
+	StartPlayerLookAt("note_paper01_1", 1,1, "notelook");
+	PlayMusic("17_puzzle", false, 0.5, 0.1, 10, false);
+	SetEntityActive("FlashbackArea_1", true);
+	SetEntityActive("AreaCollide_5", true);
+	
+}
+
+void notelook()
+{
+	StopPlayerLookAt();
+}
+
+////////////////////////////////Use key/////////////////////////////////
+
+void Keydoor(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("DoorKey", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+}
+
+///////////////////////////////Cough////////////////////////////////////
+
+void TimerCough(string &in asTimer)
+{
+		if(asTimer == "PlayerCough") {
+	
+		SetLocalVarInt("RandomInt", RandInt(1,4));
+		
+		GetLocalVarInt("RandomInt");
+		
+		}
+		
+		
+		if(GetLocalVarInt("RandomInt") == 1) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 16, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 2) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 35, "TimerCough");
+		}
+		
+		
+		else if(GetLocalVarInt("RandomInt") == 3) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 23, "TimerCough");
+		}
+		
+		else if(GetLocalVarInt("RandomInt") == 4) {
+			PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+			AddTimer("PlayerCough", 25, "TimerCough");
+		}
+		
+
+		
+}
+
+/////////////////////////////PassOut////////////////////////////////////////
+void PassOut(string &in asParent, string &in asChild, int alState)
+{
+	
+	AddTimer("PlayerCoughPass", 0.5f, "TimerPass");
+	AddTimer("PlayerCoughPass2", 1.3f, "TimerPass");
+	AddTimer("PlayerCoughPass3", 1.8f, "TimerPass");
+	AddTimer("PlayerCrouchPass", 3, "TimerPass");
+	AddTimer("PlayerCoughPass4", 3.5f, "TimerPass");
+	AddTimer("PlayerLookPass", 4.5f, "TimerPass");
+	AddTimer("PlayerCoughPass5", 4.6f, "TimerPass");
+	AddTimer("PlayerFadeOutPass", 6, "TimerPass");
+	AddTimer("PlayerStopRingPass", 11, "TimerPass");
+	AddTimer("PlayerFadeInPass", 12, "TimerPass");
+}
+
+void TimerPass(string &in asTimer)
+{
+		if(asTimer == "PlayerCoughPass") {
+		
+		PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+		SetPlayerActive(false);
+		}
+		
+		else if(asTimer == "PlayerCoughPass2") PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+		
+		else if(asTimer == "PlayerCoughPass3") PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+		
+		else if(asTimer == "PlayerCrouchPass") {
+		
+		PlaySoundAtEntity("", "player_bodyfall.snt", "Player", 1, true);
+		GiveSanityDamage(100, true);
+		PlaySoundAtEntity("ring", "insanity_ear_ring.snt", "Player", 1, true);
+		SetPlayerCrouching(true);
+		}
+		
+		else if(asTimer == "PlayerCoughPass4") PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+		
+		else if(asTimer == "PlayerLookPass") StartPlayerLookAt("AreaPassLook", 0.5, 0.5, "");
+		
+		else if(asTimer == "PlayerCoughPass5") PlaySoundAtEntity("", "player_cough", "Player", 0, false);
+		
+		else if(asTimer == "PlayerFadeOutPass") FadeOut(2);
+		
+		else if(asTimer == "PlayerStopRingPass") {
+		
+		StopSound("ring", 0.4);
+		StopPlayerLookAt();
+		TeleportPlayer("PlayerStartArea_3");
+		SetPlayerCrouching(false);
+		SetPlayerActive(true);
+		PlayMusic("Nightmare", true, 0.2, 0.1, 10, false);
+		SetPlayerRunSpeedMul(0.3);
+		SetPlayerMoveSpeedMul(0.3);
+		SetPlayerLookSpeedMul(0.3);
+		
+		
+		}
+		
+		else if(asTimer == "PlayerFadeInPass") FadeIn(3);
+
+}	
+
+void TimerPlayerreact(string &in asTimer)
+{
+	if(asTimer == "breathl")
+		PlayGuiSound("react_"+asTimer, 0.4f);
+	else
+		PlayGuiSound("react_"+asTimer, 0.7f);
+		
+	if(asTimer == "scare")
+		GiveSanityDamage(10.0f, true);
+		
+		CheckPoint("Study", "PlayerStartArea_2", "DogRespawn", "", "");
+}
+
+void DogRespawn(string &in asName, int alCount)
+{
+	SetEntityActive("character_dog_1", true);
+}
+
+///////////////////////////////////Shadow///////////////////////////////
+
+void Shadow1(string &in asParent, string &in asChild, int alState)
+
+{
+	AddEffectVoice("Shadow_1", "", "Dialogue", "Shadow_1", false, "Player", 0, 15);
+	
+}
+
+void Shadow2(string &in asParent, string &in asChild, int alState)
+
+{
+	AddEffectVoice("Shadow_2", "", "Dialogue", "Shadow_2", false, "Player", 0, 15);
+	
+}
+
+void Shadow3(string &in asParent, string &in asChild, int alState)
+
+{
+	AddEffectVoice("Shadow_3", "", "Dialogue", "Shadow_3", false, "Player", 0, 15);
+	
+}
+
+void Shadow4(string &in asParent, string &in asChild, int alState)
+
+{
+	AddEffectVoice("Shadow_4", "", "Dialogue", "Shadow_4", false, "Player", 0, 15);
+	
+}
+
+void Shadow5(string &in asParent, string &in asChild, int alState)
+
+{
+	AddEffectVoice("Shadow_5", "", "Dialogue", "Shadow_5", false, "Player", 0, 15);
+	
+}
+
+void Shadow6(string &in asParent, string &in asChild, int alState)
+
+{
+	AddEffectVoice("Shadow_6", "", "Dialogue", "Shadow_6", false, "Player", 0, 15);
+	
+	
+}
+
+void Timer(string &in asParent, string &in asChild, int alState)
+
+{
+	AddTimer("PlayerFadeOutWake", 5, "TimerWake");
+	AddTimer("PlayerLookWake", 9, "TimerWake");
+	AddTimer("PlayerFadeInWake", 11, "TimerWake");
+	AddTimer("PlayerGetUpWake", 12, "TimerWake");
+	SetEntityActive("blood_spatter01_1", true);	
+	
+}
+
+void TimerWake(string &in asTimer)
+{
+	if(asTimer == "PlayerFadeOutWake") FadeOut(2);
+	
+	else if(asTimer == "PlayerLookWake") {
+		StopMusic(4, 10);
+		SetPlayerActive(false);
+		StartPlayerLookAt("PlayerLookWake", 0.5, 0.5, "");
+		TeleportPlayer("PlayerStartArea_4");
+		
+	}
+	
+	else if(asTimer == "PlayerFadeInWake") {	
+	FadeIn(2);
+	PlaySoundAtEntity("", "react_pant.snt", "Player", 1, false);
+	}
+	
+	else if(asTimer == "PlayerGetUpWake") {
+		SetPlayerActive(true);
+		SetPlayerRunSpeedMul(1);
+		SetPlayerMoveSpeedMul(1);
+		SetPlayerLookSpeedMul(1);
+		AddTimer("scare", 0.5f, "TimerPlayerreact");
+		AddTimer("breath", 1.0f, "TimerPlayerreact");
+		AddTimer("breathl", 3.0f, "TimerPlayerreact");
+		SetPlayerCrouching(false);
+		StopPlayerLookAt();
+		
+	}
+	
+		
+		
+}
+
+
+//////////////////////////////////Open Desktop//////////////////////////
+
+void OpendWoodDesk(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("work_desk_door_1", false, true);
+	PlaySoundAtEntity("", "unlock_door.snt", asEntity, 0, false);
+}
+
+/////////////////////////////////Messgaes///////////////////////////////
+
+void messagelocked(string &in asEntity) {
+	SetMessage("Message", "CellarLocked", 3);
+}
+
+/////////////////////////////////End23/////////////////////////////////
+
+void End23Special(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	PlayMusic("TheOrb", false, 0.1, 0.1, 10, false);
+}
+
+///////////////////////////////////End23////////////////////////////////
+
+void End23(string &in asEntity)
+{
+	AddGlobalVarInt("Ending2/3", +1);
+	
+}

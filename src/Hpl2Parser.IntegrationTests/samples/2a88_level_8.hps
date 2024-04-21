@@ -1,0 +1,239 @@
+//////////////////////////////////////////////////////////////////////////////////////	
+//OnStart
+//////////////////////////////////////////////////////////////////////////////////////
+void OnStart()
+{
+	SetSkyBoxTexture("level4sky.dds");
+	SetLightVisible("After", false);
+	AddEntityCollideCallback("Player", "Level8Open", "Opening", true, 1);
+	AddEntityCollideCallback("Player", "BreakWindowSlightly", "CrackWindow", true, 1);
+	AddEntityCollideCallback("Player", "KillandSendToTrap", "ToTrap", true, 1);
+	AddEntityCollideCallback("Player", "AreaFallDeath", "CollideFallDeath", false, 1);
+	AddEntityCollideCallback("Player", "ChangeDM", "ChangeMessage", true, 1);
+	AddEntityCollideCallback("Player", "SetDeathMessage_2", "ChangeMessage2", true, 1);
+	AddEntityCollideCallback("Player", "TransitionMusic_1", "MusicNormal", true, 1);
+	AddEntityCollideCallback("Player", "TransitionMusic_2", "MusicWind", true, 1);
+	AddUseItemCallback("", "Key", "ToHub", "UseKeyOnDoor", true);
+	AddUseItemCallback("", "BasementKey", "FakeExit", "UseKeyOnDoorSpecial", true);
+}
+
+void OnEnter()
+{
+	if(HasItem("BasementKey") == true)
+	{
+		SetLevelDoorLocked("ToCellar", true);
+		PlayMusic("Track16.ogg", true, 2, 1, 1.1, true);
+	}
+	AutoSave();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Music
+//////////////////////////////////////////////////////////////////////////////////////
+
+void MusicNormal(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(0,1.1);
+	PlayMusic("Track16.ogg", true, 2, 1, 1.2, true);
+}
+
+void MusicWind(string &in asParent, string &in asChild, int alState)
+{
+	StopMusic(0,1.2);
+	PlayMusic("Track15.ogg", true, 2, 1, 1.1, true);
+	SetEntityActive("TransitionMusic_1", true);
+	CheckPoint ("", "PlayerStartArea_2", "Reset", "DeathHint", "Entry1");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Dialogue
+//////////////////////////////////////////////////////////////////////////////////////
+
+void Opening(string &in aParent, string &in asChild, int alState)
+{
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpForceMul(0);
+	AddEffectVoice("home_1.ogg" ,"", "Dialogue", "Home1", false, "", 0, 0);
+	SetEffectVoiceOverCallback("Move");
+}
+
+void Move()
+{
+	AddQuest("", "Mansion");
+	PlayMusic("Track16.ogg", true, 2, 1, 1.1, true);
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerJumpForceMul(1);	
+}
+
+void SawExit(string &in asEntity, int alState)
+{
+	AddEffectVoice("home_2.ogg" ,"", "Dialogue", "Home2", false, "", 0, 0);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Key Unlock
+//////////////////////////////////////////////////////////////////////////////////////
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+    SetSwingDoorLocked("ToHub", false, true);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+    RemoveItem(asItem);
+}
+
+void UseKeyOnDoorSpecial(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("FakeExit", false, true);
+    PlaySoundAtEntity("unlock_door", "unlock_door.snt", asEntity, 0, false);
+}
+
+/////////////////////////////////////////////////////////////
+//Can't Open Messages
+/////////////////////////////////////////////////////////////
+
+void LockedMessage(string &in asEntity)
+{
+	SetMessage("Messages", "Locked", 1);
+	if(GetSwingDoorLocked("ToHub") == false)
+	{
+		SetMessage("Messages", "Blank", 1);
+	}
+}
+	
+void LockedMessage2(string &in asEntity)
+{
+	SetMessage("Messages", "Locked", 1);
+	if(GetSwingDoorLocked("FakeExit") == false)
+	{
+		SetMessage("Messages", "Blank", 1);
+	}	
+	
+}
+
+void BudgeMessage(string &in asEntity)
+{
+	SetMessage("Messages", "Never", 1);
+}
+
+/////////////////////////////////////////////////////////////
+//Break Window
+/////////////////////////////////////////////////////////////
+
+void CrackWindow(string &in aParent, string &in asChild, int alState)
+{
+	SetEntityActive("CanBeBroken", true);
+	SetEntityActive("Breakable", true);
+	SetEntityActive("BeforeBreak", false);
+	PlaySoundAtEntity("bglass", "11_glass_crack", "AreaGlassEffects", 0.0f, false);
+	CreateParticleSystemAtEntity("", "ps_area_fog_small.ps", "AreaDust_1", false);
+	CreateParticleSystemAtEntity("", "ps_area_fog_small.ps", "AreaDust_2", false);
+}
+
+void BreakWindow(string &in asEntity)
+{
+	AddLocalVarInt("WindowHitCount", 1);
+	if(GetLocalVarInt("WindowHitCount")==3)
+	{
+		SetPropHealth("Breakable", 0);
+		SetLightVisible("After", true);
+		SetLightVisible("Before", false);
+		PlaySoundAtEntity("", "11_glass_crack", "AreaGlassEffects_1", 0.0f, false);
+		PlaySoundAtEntity("", "11_glass_crack", "AreaGlassEffects_2", 0.0f, false);
+		PlaySoundAtEntity("", "11_glass_crack", "AreaGlassEffects_3", 0.0f, false);
+		CreateParticleSystemAtEntity("", "ps_hit_glass.ps", "AreaGlassEffects_1", false);
+		CreateParticleSystemAtEntity("", "ps_hit_glass.ps", "AreaGlassEffects_2", false);
+		CreateParticleSystemAtEntity("", "ps_hit_glass.ps", "AreaGlassEffects_3", false);
+		SetDeathHint("DeathHint", "Entry1");
+		GiveSanityBoostSmall();
+		}
+}
+
+////////////////////////////////////////////////////////////
+//Kill Player
+////////////////////////////////////////////////////////////
+
+void CollideFallDeath(string &in asParent, string &in asChild, int alState)
+{
+	AddTimer("death1", 0.5f, "TimerFallDeath");	
+	FadeOut(2);
+	DisableDeathStartSound();
+	AddPlayerHealth(-200);
+	PlayMusic("neck_snap.ogg", false, 10, 1, 1, false);
+	PlaySoundAtEntity("pain", "player_falldamage_max", "Player", 0, false);
+	PlaySoundAtEntity("bump2", "player_bodyfall", "Player", 0, false);
+}
+
+void TimerFallDeath(string &in asTimer)
+{	
+	if(asTimer == "death1")
+	{
+		PlaySoundAtEntity("bump1", "player_bodyfall", "Player", 0, false);
+		return;
+	}	
+}	
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Death Hints
+//////////////////////////////////////////////////////////////////////////////////////
+
+void ChangeMessage(string &in asParent, string &in asChild, int alState)
+{
+	SetDeathHint("DeathHint", "DefaultEntry");
+}
+
+void ChangeMessage2(string &in asParent, string &in asChild, int alState)
+{
+	SetDeathHint("DeathHint", "Trap");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Trapped
+//////////////////////////////////////////////////////////////////////////////////////
+
+void ToTrap(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(110, "Claws", true, true);
+	PlayGuiSound("attack_claw.snt", 0.7f);
+	AddTimer("", 7.5, "ChangeMap");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//Send To Trap
+//////////////////////////////////////////////////////////////////////////////////////
+
+void ChangeMap(string &in asTimer)
+{
+	SetupLoadScreen("Loading", "LoadScreenCaptured", 1, "loading_screen_captured.jpg");
+	ChangeMap("level_8_trap.map","PlayerStartArea_1", "22_end.snt", "");	
+}
+
+//////////////////////////////////////////////////////////////////////////
+//OnLeave
+//////////////////////////////////////////////////////////////////////////
+void OnLeave()
+{
+int load = RandInt(0, 19);
+if(load == 12) SetupLoadScreen("Loading", "LoadScreen1", 0,"loading_screen1.jpg");
+if(load == 1) SetupLoadScreen("Loading", "LoadScreen2", 0, "loading_screen2.jpg");
+if(load == 2) SetupLoadScreen("Loading", "LoadScreen3", 0, "loading_screen3.jpg");
+if(load == 3) SetupLoadScreen("Loading", "LoadScreen4", 0,"loading_screen4.jpg");
+if(load == 4) SetupLoadScreen("Loading", "LoadScreen5", 0,"loading_screen5.jpg");
+if(load == 5) SetupLoadScreen("Loading", "LoadScreen6", 0,"loading_screen6.jpg");
+if(load == 6) SetupLoadScreen("Loading", "LoadScreen7", 0,"loading_screen7.jpg");
+if(load == 7) SetupLoadScreen("Loading", "LoadScreen8", 0,"loading_screen8.jpg");
+if(load == 8) SetupLoadScreen("Loading", "LoadScreen9", 0,"loading_screen9.jpg");
+if(load == 9) SetupLoadScreen("Loading", "LoadScreen10", 0,"loading_screen10.jpg");
+if(load == 10) SetupLoadScreen("Loading", "LoadScreen11", 0,"loading_screen11.jpg");
+if(load == 11) SetupLoadScreen("Loading", "LoadScreen12", 0,"loading_screen12.jpg");
+if(load == 0) SetupLoadScreen("Loading", "LoadScreen13", 0,"loading_screen13.jpg");
+if(load == 13) SetupLoadScreen("Loading", "LoadScreen14", 0,"loading_screen14.jpg");
+if(load == 14) SetupLoadScreen("Loading", "LoadScreen15", 0,"loading_screen15.jpg");
+if(load == 15) SetupLoadScreen("Loading", "LoadScreen16", 0,"loading_screen16.jpg");
+if(load == 16) SetupLoadScreen("Loading", "LoadScreen17", 0,"loading_screen17.jpg");
+if(load == 17) SetupLoadScreen("Loading", "LoadScreen18", 0,"loading_screen18.jpg");
+if(load == 18) SetupLoadScreen("Loading", "LoadScreen19", 0,"loading_screen19.jpg");
+if(load == 19) SetupLoadScreen("Loading", "LoadScreen20", 0,"loading_screen20.jpg");
+CompleteQuest("", "Eavesdrop");
+}

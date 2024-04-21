@@ -1,0 +1,157 @@
+void OnStart()
+	{
+		AddEntityCollideCallback("Player", "light_snuff_script1", "light_snuff1", true, 1);
+		AddEntityCollideCallback("Player", "light_snuff_script2", "light_snuff2", true, 1);
+		AddEntityCollideCallback("Player", "light_snuff_script3", "light_snuff3", true, 1);
+		AddEntityCollideCallback("Player", "statue_scare_script", "statue_scare", true, -1);
+		AddEntityCollideCallback("Player", "box_scare1", "box_break_scare", true, -1);
+		AddEntityCollideCallback("Player", "bottle_scare_script", "bottle_scare", true, -1);
+		AddEntityCollideCallback("Player", "prison_door_break", "break_prison_door1", true, 1);
+		AddUseItemCallback("", "key_sewers", "level_sewers", "UsedKeyOnDoor1", true);
+	}
+
+void OnEnter()
+	{
+		PlayMusic("01_amb_darkness.ogg", true, 1, 1, 1, true);
+		SetLevelDoorLocked("level_sewers", true);
+		AutoSave();
+	}
+
+/////1st Light Snuff - Small Room goes dark/////
+
+void light_snuff1(string &in asParent, string &in asChild, int alState)
+	{
+		SetLampLit("snuff_light1", false, true);
+	}
+
+/////End 1st Light Snuff/////
+
+/////2nd Light Snuff - Hallway goes dark/////
+
+void light_snuff2(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("snuff_light3", 5, 5, "");
+		SetLampLit("snuff_light2", false, true);
+		SetLampLit("snuff_light2_2", false, true);
+		SetLampLit("snuff_light3", false, true);
+		AddTimer("trig1", 2.0f, "look_snuff_light2");
+	}
+
+void look_snuff_light2(string &in asTimer)
+	{
+		StartPlayerLookAt("snuff_light2", 5, 5, "");
+		AddTimer("trig1", 3.0f, "next_light1");
+	}
+
+void next_light1(string &in asTimer)
+	{
+		StartPlayerLookAt("snuff_light4", 5, 5, "");
+		SetLampLit("snuff_light4", false, true);
+		AddTimer("trig1", 2.0f, "next_light2");
+	}
+
+void next_light2(string &in asTimer)
+	{
+		StartPlayerLookAt("snuff_light5", 2, 2, "");
+		SetLampLit("snuff_light5", false, true);
+		AddTimer("trig1", 2.0f, "next_light3");
+	}
+
+void next_light3(string &in asTimer)
+	{
+		StartPlayerLookAt("snuff_light6", 3, 3, "");
+		SetLampLit("snuff_light6", false, true);
+		AddTimer("trig1", 1.0f, "react_light_snuff2");
+	}
+
+void react_light_snuff2(string &in asTimer)
+	{
+		PlaySoundAtEntity("light_snuff2_sound", "enabled.snt", "snuff_light_sound2", 0, false);
+		GiveSanityDamage(5, true);
+		PlaySoundAtEntity("light_snuff2_react", "react_scare.snt", "Player", 0, false);
+		StopPlayerLookAt();
+		SetPlayerActive(true);
+	}
+
+/////End 2nd Light Snuff/////
+
+/////3rd Light Snuff - Room goes dark/////
+
+void light_snuff3(string &in asParent, string &in asChild, int alState)
+	{
+		SetLampLit("snuff_light7", false, true);
+		SetLampLit("snuff_light8", false, true);
+		SetLampLit("snuff_light9", false, true);
+		SetLampLit("snuff_light10", false, true);
+		SetLampLit("snuff_light11", false, true);
+		SetLampLit("snuff_light12", false, true);
+		SetLampLit("snuff_light13", false, true);
+		SetLampLit("snuff_light14", false, true);
+		SetLampLit("snuff_light15", false, true);
+		AddTimer("trig1", 0.5f, "light_snuff_sanity");
+	}
+
+void light_snuff_sanity(string &in asTimer)
+	{
+		GiveSanityDamage(5, true);
+		PlaySoundAtEntity("light_snuff3_react", "react_scare.snt", "Player", 0, false);
+	}
+
+/////End 3rd Light Snuff/////
+
+void jammed_door1(string &in asEntity)
+	{
+		SetMessage("Messages", "door_jammed1", 4);
+	}
+
+void UsedKeyOnDoor1(string &in asItem, string &in asEntity)
+	{
+		SetLevelDoorLocked("level_sewers", false);
+		PlaySoundAtEntity("", "unlock_door", "level_sewers", 0, false);
+		RemoveItem("key_sewers");
+	}
+
+/////Bottle Break Scare/////
+
+void bottle_scare(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("fly_bottle1", true);
+		SetEntityActive("fly_bottle2", true);
+		SetEntityActive("fly_bottle3", true);
+		SetEntityActive("fly_bottle4", true);
+		SetEntityActive("fly_bottle5", true);
+		SetEntityActive("fly_bottle6", true);
+		SetEntityActive("fly_bottle7", true);
+		SetEntityActive("fly_bottle8", true);
+		SetEntityActive("fly_bottle9", true);
+		SetEntityActive("fly_bottle10", true);
+		SetEntityActive("fly_bottle11", true);
+		SetEntityActive("fly_bottle12", true);
+		SetEntityActive("fly_bottle13", true);
+		SetEntityActive("fly_bottle14", true);
+		SetEntityActive("fly_bottle15", true);
+		AddTimer("trig1", 0.8f, "sanity_damage");
+	}
+
+void sanity_damage(string &in asTimer)
+	{
+		GiveSanityDamage(5, true);
+	}
+
+/////End Bottle Break Scare/////
+
+/////Prison Door Break Scare/////
+
+void break_prison_door1(string &in asParent, string &in asChild, int alState)
+	{
+		SetPropHealth("prison_door_break1", 0.0f);
+		GiveSanityDamage(5, true);
+	}
+
+/////Prison Door Break Scare/////
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

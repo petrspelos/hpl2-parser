@@ -1,0 +1,242 @@
+void OnStart()
+{ 
+PlayMusic("12_amb.ogg", true, 1, 5, 1, false);
+AddUseItemCallback("", "EmptyJar", "UseJar", "SetUpJar", true);
+AddUseItemCallback("", "ChunkOfIce", "UseJar2", "MeltIce", true);
+AddEntityCollideCallback("FireTorch", "Fire", "FireActive", true, 1);
+AddUseItemCallback("", "Waterelement", "Water", "WaterElementPuzzle", true);
+AddUseItemCallback("", "ChunkOfIce", "UseJar", "NeedContainer", true);
+AddUseItemCallback("", "ChunkOfIce", "Water", "MeltIceMessage", true);
+AddUseItemCallback("", "Cuprite", "UseChemical", "CreateExplosive", true);
+SetEntityInteractionDisabled("WaterBucket", true);
+SetEntityInteractionDisabled("FilledWater", true);
+SetEntityInteractionDisabled("ExplosiveNotDone", true);
+AddEntityCollideCallback("InteractStone", "StoneArea", "SetStoneActive", true, 1);
+AddEntityCollideCallback("Player", "SpawnBrute", "TorchInteract", true, 1);
+AddEntityCollideCallback("brute2", "DeactivateBrute", "DeactivateBrute", true, 1);
+SetLocalVarInt("Var2", 0);
+AddEntityCollideCallback("Player", "LookArea", "BeginAllEvents", true, 1);
+SetEntityPlayerInteractCallback("Tome", "StopLook", true);
+AddUseItemCallback("", "Explosive", "AreaExplosive", "SetUpBoom", true);
+}
+
+void End(string &in entity)
+{
+StartCredits("06_amb.ogg", false, "Ending", "GoodEnding", 69);
+}
+void PathMessage(string &in entity)
+{
+SetMessage("Messages", "PathMessage", 0);
+}
+void SetUpBoom(string &in asItem, string &in asEntity)
+{
+StartPlayerLookAt("ExplosivePoint", 2.0f, 14.0f, "");
+AddTimer("", 3.0f, "Prepare"); 
+
+}
+
+void Prepare(string& in asTimer)
+{
+StartPlayerLookAt("pedestal_3", 2.0f, 14.0f, "");
+FadeOut(2);
+AddTimer("", 3.0f, "EXPLOSIONNNNN"); 
+SetEntityActive("Boom", true);
+StopPlayerLookAt();
+}
+
+void EXPLOSIONNNNN(string& in asTimer)
+{
+PlaySoundAtEntity("", "explosion_rock_large.snt", "Player", 0.0f, false);
+RemoveTimer("TheEnd");
+FadeIn(0);
+SetEntityActive("cave_in_destroyed_1", true);
+SetEntityActive("debris_1", false);
+AddTimer("", 3.0f, "UpAgain"); 
+SetEntityActive("Boom", false);
+}
+
+void UpAgain(string& in asTimer)
+{
+FadeIn(3);	
+}
+void StopLook(string &in entity)
+{
+StopPlayerLookAt();
+AddTimer("", 3.0f, "StuffHappens");
+}
+
+void StuffHappens(string &in asTimer)
+{
+FadeOut(0);
+PlaySoundAtEntity("", "explosion_rock_large.snt", "Player", 0.0f, false);
+SetPlayerCrouching(true);
+SetPlayerActive(false);
+GivePlayerDamage(70, "BloodSplat", false, false);
+StartPlayerLookAt("Spot", 3.0f, 14.0f, "");
+AddTimer("", 7.0f, "Wake");
+SetEntityActive("debris_1", true);
+SetEntityActive("AreaExplosive", true);
+SetEntityActive("cave_in_1", true);
+SetEntityActive("block_box_2", true);
+SetEntityActive("block_box_3", false);
+SetEntityActive("Shelf", false);
+SetEntityActive("Debris", true);
+SetEntityActive("Debris1", true);
+SetEntityActive("Debris2", true);
+SetEntityActive("Debris4", true);
+SetEntityActive("Debris5", true);
+SetEntityActive("Debris6", true);
+SetEntityActive("Debris7", true);
+SetEntityActive("Debris8", true);
+SetEntityActive("Debris9", true);
+SetEntityActive("Debris10", true);
+
+}
+
+void Wake(string& in asTimer)
+{
+SetPlayerActive(true);
+FadeIn(9);
+AddTimer("", 4.0f, "GetUp");
+}
+
+void GetUp(string& in asTimer)
+{
+SetPlayerCrouching(false);
+AddTimer("", 2.0f, "WhatHappened");
+}
+
+void WhatHappened(string& in asTimer)
+{
+StopPlayerLookAt();
+AddQuest("AnythingToDo", "AnythingToDo");
+AddTimer("", 40.0f, "TheEnd");
+}
+
+void TheEnd(string& in asTimer)
+{
+FadeOut(40);
+AddTimer("", 40.0f, "Credits1");
+}
+
+void Credits1(string& in asTimer)
+{
+PlaySoundAtEntity("", "player_bodyfall.snt", "Player", 0.0f, false);
+AddTimer("", 4.0f, "Credits2");
+}
+
+void Credits2 (string& in asTimer)
+{
+StartCredits("06_amb.ogg", false, "Ending", "BadEnding", 69);
+}
+
+
+
+	
+
+
+
+void BeginAllEvents(string &in asParent, string &in asChild, int alState)
+{
+StartPlayerLookAt("Tome", 3.0f, 14.0f, "");
+AddPlayerHealth(100);
+}
+
+void CreateExplosive(string &in asItem, string &in asEntity)
+{
+RemoveItem(asItem);
+SetEntityActive("ExplosiveNotReady", false);
+SetEntityActive("Explosive", true);
+SetEntityActive("UseChemical", false);
+PlaySoundAtEntity("", "impact_glass_low.snt", "Player", 0.0f, false);
+}
+
+
+void SetUpJar(string &in asItem, string &in asEntity)
+{
+SetEntityActive("FillJar", true);
+SetEntityActive("UseJar", false);
+RemoveItem("EmptyJar");
+PlaySoundAtEntity("", "impact_glass_low.snt", "Player", 0.0f, false);
+}
+
+void MeltIce(string &in asItem, string &in asEntity)
+{
+SetEntityActive("Waterelement", true);
+SetEntityActive("FillJar", false);
+SetEntityActive("UseJar2", false);
+RemoveItem("ChunkOfIce");
+
+}
+
+void FireActive(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("Fireelement", true);
+AddLocalVarInt("Var2", 1);
+UnlockDoor();
+}
+
+void WaterElementPuzzle(string &in asItem, string &in asEntity)
+{
+SetEntityActive("FilledWater", true);
+AddLocalVarInt("Var2", 1);
+UnlockDoor();
+
+}
+
+void MeltIceMessage(string &in asItem, string &in asEntity)
+{
+SetMessage("Messages", "melticemessage", 0);
+AddQuest("MeltTheIce", "MeltTheIce");
+
+
+}
+
+void SetStoneActive(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("InteractStone", false);
+SetEntityActive("PedestalStone", true);
+SetSwingDoorLocked("MagicDoor",false, true);
+AddLocalVarInt("Var2", 1);
+UnlockDoor();
+}
+
+void TorchInteract(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("brute2", true);
+AddEnemyPatrolNode("brute2", "Track", 0, "Idle");
+AddEnemyPatrolNode("brute2", "Track2", 0, "Idle");
+AddEnemyPatrolNode("brute2", "Track3", 0, "Idle");
+AddEnemyPatrolNode("brute2", "Track4", 0, "Idle");
+}
+
+void DeleteLight(string &in entity)
+{
+SetLightVisible("PointLight_1", false);
+}
+
+void DeactivateBrute(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("brute2", false);
+}
+
+void UnlockDoor()
+{
+if(GetLocalVarInt("Var2") == 3)
+
+    {
+	 SetSwingDoorLocked("MagicDoor",false, true);
+	 PlaySoundAtEntity("","unlock_door","MagicDoor", 0,false);
+	 GiveSanityBoostSmall();
+	}
+	
+}
+
+
+void OnEnter()
+{
+}
+
+void OnLeave()
+{
+}

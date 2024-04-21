@@ -1,0 +1,421 @@
+///////// move to Include hps
+
+void ResumeNormalSpeed() {
+	SetPlayerMoveSpeedMul(1);
+	SetPlayerRunSpeedMul(1);
+	SetPlayerLookSpeedMul(1);
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+
+void DisableCandles(bool abDisabled) {
+	SetEntityInteractionDisabled("candle_floor_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick01_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick02_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_floor_*", abDisabled);
+	SetEntityInteractionDisabled("torch_*", abDisabled);
+	SetEntityInteractionDisabled("hanging_lantern_ceiling_*", abDisabled);
+	SetEntityInteractionDisabled("elevator_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("candlestick_tri_*", abDisabled);
+	
+	SetEntityInteractionDisabled("lamp_wall_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_candle_*", abDisabled);
+	SetEntityInteractionDisabled("arab_lamp_*", abDisabled);
+	SetEntityInteractionDisabled("ki_lampion_*", abDisabled);
+	SetEntityInteractionDisabled("lamp_gas_*", abDisabled);
+	SetEntityInteractionDisabled("LampBarrelsTake_*", abDisabled);
+}
+
+void PrayingEffect(float crouchInterval) {
+	SetPlayerCrouching(true);
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerLookSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+	AddTimer("praying_end", crouchInterval, "Praying_end");
+}
+
+void Praying_end(string &in asTimer) {
+	StopPlayerLookAt();
+	SetPlayerActive(true);
+	SetPlayerCrouching(false);
+	ResumeNormalSpeed();
+	SetPlayerJumpDisabled(false);
+	SetPlayerCrouchDisabled(false);
+}
+
+void DeathChecker() {
+	SetGlobalVarInt("NumOfDeaths", GetGlobalVarInt("NumOfDeaths") + 1);
+	if (GetGlobalVarInt("NumOfDeaths") == 10) {
+		AddQuest("Deathwarning1", "deathwarning1");
+	} else if (GetGlobalVarInt("NumOfDeaths") == 15) {
+		CompleteQuest("Deathwarning1", "deathwarning1");
+		AddQuest("Deathwarning2", "deathwarning2");
+	}
+	else if (GetGlobalVarInt("NumOfDeaths") == 20) {
+		CompleteQuest("Deathwarning2", "deathwarning2");
+		AddQuest("Deathwarning3", "deathwarning3");
+		GiveSanityDamage(200, true);
+		FadeOut(8);
+		AddTimer("deathCheckOut_Timer", 15.0f, "DeathCheckOut_Timer");
+	}
+}
+void DeathCheckOut_Timer(string &in asTimer) {
+	ChangeMap("esophagus_VI.map", "PlayerStartArea_2", "", "");
+}
+
+////////////
+
+void OnStart() {
+	DisableCandles(true);
+
+	AddEntityCollideCallback("Player", "ScriptArea_Explore", "StartExploration", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_RestOfDialogue", "MoreDialogue", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_ActivateCrows", "ActivateCrows", true, 0);
+	AddEntityCollideCallback("Player", "ScriptArea_CrowForced", "ActivateCrowsForced", true, 0);
+	AddEntityCollideCallback("Player", "WraithArea_1", "WraithEvent_Collide", true, 0);
+	
+	PlayPropAnimation("priest_*", "praying", 0, true, "");
+	
+	PlayMusic("forsaken_depths", true, 0.8f, 3, 0, true);
+	SetEntityCustomFocusCrossHair("PrayArea_Statue", "Ignite");
+	
+	SetInDarknessEffectsActive(false);
+	SetLightVisible("SpotLight_28", false);
+	SetEntityInteractionDisabled("candle_floor_1", false);
+	
+	if (ScriptDebugOn()) {
+		if (!HasItem("lantern_1")) {
+			GiveItemFromFile("lantern_1", "lantern.ent");
+		}
+		SetGlobalVarInt("NumOfDeaths", 0);
+	} else {
+		IntroCatacombs();
+	}
+	AutoSave();
+}
+
+
+
+//////////////////////////
+//// Intro sequence, lighting a candle, praying at the statue
+//////////////////////////
+
+void IntroCatacombs() {
+	SetEntityActive("cavein_brown", false);
+	SetEntityActive("ScriptArea_Explore", false);
+	FadeOut(0);
+	SetPlayerMoveSpeedMul(0.4f);
+	SetPlayerActive(false);
+	AddTimer("automove", 3, "TimerMoveForward");
+	AddTimer("catacombs_intro1", 5, "Catacombs_intro1");
+}
+
+void TimerMoveForward(string &in asTimer)
+{
+	MovePlayerForward(2);
+	AddTimer("automove", 0, "TimerMoveForward");
+	AddDebugMessage("Move forward!", false);
+}
+
+void Catacombs_intro1(string &in asTimer)
+{
+	StartPlayerLookAt("PrayArea_Statue", 0.5f, 1.0f, "");
+	FadeIn(2);
+	SetEffectVoiceOverCallback("Catacombs_intro2");
+	AddEffectVoice("02_twilight1.ogg", "", "Voice", "02_twilight1", false, "", 0, 0);
+	AddEffectVoice("02_twilight2.ogg", "", "Voice", "02_twilight2", false, "", 0, 0);
+}
+
+void Catacombs_intro2()
+{
+	FadeOut(2);
+	StopPlayerLookAt();
+	AddTimer("catacombs_intro3", 3, "Catacombs_intro3");
+}
+
+void Catacombs_intro3(string &in asTimer)
+{
+	SetEntityActive("priest_*", false);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerJumpDisabled(true);
+	RemoveTimer("automove");
+	FadeIn(2);
+	SetEntityActive("candle_floor_1", true);
+	TeleportPlayer("PlayerStartArea_4");
+	StartPlayerLookAt("candle_floor_1", 0.5f, 1.0f, "");
+	SetPlayerCrouching(true);
+	SetPlayerActive(true);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerLookSpeedMul(0);
+}
+
+void IgniteCandle(string &in asEntity) {
+	StopPlayerLookAt();
+	PlayGuiSound("ui_use_tinderbox.ogg", 1.0f);
+	SetLampLit("candle_floor_1", true, true);
+	SetEntityInteractionDisabled("candle_floor_1", true);
+	AddTimer("catacombs_intro4", 3, "Catacombs_intro4");
+}
+
+void Catacombs_intro4(string &in asTimer)
+{
+	SetEntityPlayerInteractCallback("PrayArea_Statue", "PrayAtStatue", true);
+	SetEntityCustomFocusCrossHair("PrayArea_Statue", "Ladder");
+}
+
+void PrayAtStatue(string &in asEntity) {
+	StartPlayerLookAt("LookAt_Pray", 0.5f, 1.0f, "");
+	SetPlayerActive(false);
+	AddTimer("catacombs_intro5", 3, "Catacombs_intro5");
+	if (GetEffectVoiceActive()) {
+		StopAllEffectVoices(0.5f);
+	}
+	SetEffectVoiceOverCallback("Catacombs_intro6");
+	AddEffectVoice("02_twilight3.ogg", "", "Voice", "02_twilight3", false, "", 0, 0);
+	AddEffectVoice("02_twilight4.ogg", "", "Voice", "02_twilight4", false, "", 0, 0);
+}
+
+void Catacombs_intro5(string &in asTimer)
+{
+	FadeOut(6);
+	PrayingEffect(99.0f);
+}
+
+void Catacombs_intro6()
+{
+	AddTimer("catacombs_intro7", 4.0f, "Catacombs_intro7");
+}
+
+void Catacombs_intro7(string &in asTimer) {
+	FadeIn(2);
+	RemoveTimer("praying_end");
+	StartPlayerLookAt("PrayArea_Statue", 1.2f, 2.2f, "");
+	AddTimer("rumbleStart", 3.0f, "RumbleStart");
+	AddTimer("rumbleEnd", 10.0f, "RumbleEnd");
+	AddTimer("praying_end", 13.0f, "Praying_end");
+	AddTimer("resumeDialogAlone", 16.0f, "ResumeDialogAlone");
+}
+
+void RumbleStart(string &in asTimer) {
+	StopPlayerLookAt();
+	SetLampLit("candle_floor_1", false, true);
+	StartScreenShake(0.1, 4.7, 0.05, 0.5);
+	PlayGuiSound("react_pant.snt", 1.5f); 
+	StartPlayerLookAt("LookAt_Cavein", 0.5f, 1.0f, "");
+	PlaySoundAtEntity("cavein_rumble", "general_rock_rumble", "LookAt_Cavein", 2.0f, false);
+	FadeOut(2);
+}
+
+void RumbleEnd(string &in asTimer) {
+	SetEntityActive("cavein_brown", true);
+	StopPlayerLookAt();
+	StartPlayerLookAt("PrayArea_Statue", 1.2f, 2.2f, "");
+	FadeIn(3);
+	PlayGuiSound("react_sigh.snt", 1.0f); 
+	StopSound("cavein_rumble", 5.5f);
+	PlaySoundAtEntity("", "break_wood_metal.snt", "cavein_brown", 0.0f, false);
+}
+
+void ResumeDialogAlone(string &in asTimer) {
+	SetEffectVoiceOverCallback("Quest_CaveIn");
+	AddEffectVoice("02_leftalone1.ogg", "", "Voice", "02_leftalone1", false, "", 0, 0);
+	AddEffectVoice("02_leftalone2.ogg", "", "Voice", "02_leftalone2", false, "", 0, 0);
+}
+
+void Quest_CaveIn() {
+	AddDiary("Gospel_Level2", "diary_page");
+	AddQuest("02_caveinquest", "02cavein");
+	SetEntityActive("ScriptArea_Explore", true);
+}
+
+
+//////////////////////////// Events
+
+// Cutscene over, player can explore now
+
+void StartExploration(string &in asParent, string &in asChild, int alState) {
+	AddTimer("activateDialogEvent", 15.0f, "ActivateDialogEvent");
+	AddTimer("activateCrowEvent", 25.0f, "ActivateCrowEvent");
+}
+
+// There's more dialogue to be said of course, just needs a bit of a break
+
+void ActivateDialogEvent(string &in asTimer) {
+	SetEntityActive("ScriptArea_RestOfDialogue", true);
+}
+
+void MoreDialogue(string &in asParent, string &in asChild, int alState) {
+	AddEffectVoice("02_immovablesilence1.ogg", "", "Voice", "02_immovablesilence1", false, "", 0, 0);
+	AddEffectVoice("02_immovablesilence2.ogg", "", "Voice", "02_immovablesilence2", false, "", 0, 0);
+}
+
+// Finally something is happening!
+
+void ActivateCrowEvent(string &in asTimer) {
+	SetEntityActive("ScriptArea_ActivateCrows", true);
+	SetLampLit("candlestick_floor_3", true, true);
+	SetLightVisible("SpotLight_28", true);
+}
+
+void ActivateCrows(string &in asParent, string &in asChild, int alState) {
+	CheckPoint("eso2_check", "PlayerStartArea_1", "Eso2Checkpoint", "", "");
+	SetEntityActive("ScriptArea_RestOfDialogue", false);
+	SetEntityActive("ScriptArea_CrowForced", true);
+	SetEntityActive("crow_umbakarna_*", true);
+	SetEnemySanityDecreaseActive("crow_*", false);
+	SetEnemyDisableTriggers("crow_umbakarna_*", true);
+	
+	PlaySoundAtEntity("", "scare_wind.snt", "candlestick_floor_3", 0.0f, false); 
+	SetLampLit("candlestick_floor_3", false, true);
+	SetLampLit("torch_static01_3", false, true);
+	SetLampLit("torch_static01_4", false, true);
+	SetLightVisible("SpotLight_28", false);
+	SetLightVisible("SpotLight_18", false);
+	SetLightVisible("PointLight_24", false);
+	SetLightVisible("PointLight_26", false);
+	SetLightVisible("PointLight_47", false);
+	SetLightVisible("SpotLight_20", false);	
+	DestroyParticleSystem("ParticleSystem_31");
+	DestroyParticleSystem("ParticleSystem_23");
+	
+	AddTimer("timerCrows1", 10.0f, "TimerCrows1");
+	AddTimer("timerCrows2", 20.0f, "TimerCrows2");
+}
+
+void TimerCrows1(string &in asTimer) {
+	SetEnemyDisableTriggers("crow_umbakarna_*", false);
+}
+
+void TimerCrows2(string &in asTimer) {
+	ShowEnemyPlayerPosition("crow_umbakarna_*");
+	SetEntityActive("ScriptArea_CrowForced", false);
+	SetEntityActive("cavein_brown", false);
+	SetEntityCustomFocusCrossHair("WraithArea_1", "Push");
+}
+
+void ActivateCrowsForced(string &in asParent, string &in asChild, int alState) {
+	RemoveTimer("timerCrows1");
+	RemoveTimer("timerCrows2");
+	TimerCrows1("nomatter");
+	TimerCrows2("nomatter");
+}
+
+void Eso2Checkpoint(string &in asName, int alCount) {
+	DeathChecker();
+    SetPlayerActive(true);
+	SetEntityActive("WraithArea_1", true);
+	AddEntityCollideCallback("Player", "WraithArea_1", "WraithEvent_Collide", true, 0);
+	SetPlayerHealth(100);
+	SetEntityActive("crow_umbakarna_*", true);
+	SetEntityActive("cavein_brown", false);
+	SetEntityCustomFocusCrossHair("WraithArea_1", "Push");
+	PlayMusic("forsaken_depths", true, 0.8f, 3, 0, true);
+}
+
+/// Crows disappear, cinematic final enemy encounter, failsafe Autosave for chrashes
+
+void WraithEvent_Collide(string &in asParent, string &in asChild, int alState) {
+	LaunchWraithEvent();
+	AutoSave();
+}
+
+void WraithEvent_Touch(string &in asEntity) {
+	LaunchWraithEvent();
+	AutoSave();
+}
+
+void LaunchWraithEvent() {
+	CompleteQuest("02_caveinquest", "02cavein");
+	DestroyParticleSystem("ps_divinelight");
+	SetEntityActive("WraithArea_1", false);
+	FadeEnemyToSmoke("crow_*", false);
+	SetPlayerActive(false);
+	FadeOut(2);
+	StopMusic(3.0f, 0);
+	
+	AddTimer("wraith_Timer1", 2.0f, "Wraith_Timer1");
+	AddTimer("wraith_Timer2", 5.0f, "Wraith_Timer2");
+	AddTimer("wraith_Timer3", 6.0f, "Wraith_Timer3");
+	AddTimer("wraith_Timer4", 8.5f, "Wraith_Timer4");
+	AddTimer("wraith_Timer4_2", 12.5f, "Wraith_Timer4_2");
+}
+
+void Wraith_Timer1(string &in asTimer) {
+	PlayGuiSound("door_gate_bar_locked", 1.0f);
+}
+
+void Wraith_Timer2(string &in asTimer) {
+	PlayGuiSound("door_gate_bar_locked", 1.5f);
+	TeleportPlayer("PlayerStartArea_3");
+	SetPlayerHealth(100);
+	SetEntityActive("enemy_wraith", true);
+	SetEnemyDisableTriggers("enemy_wraith", true);
+	AddEnemyPatrolNode("enemy_wraith", "PathNodeArea_6", 1.0f, "IdleExtra1");
+}
+
+void Wraith_Timer3(string &in asTimer) {
+	FadeIn(4);
+	SetPlayerActive(true);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerMoveSpeedMul(0.1f);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerLookSpeedMul(0.2f);
+	PlayGuiSound("door_gate_bar_locked", 2.0f);
+	PlayGuiSound("react_scare.snt", 1.5f);
+}
+
+void Wraith_Timer4(string &in asTimer) {
+	StartPlayerLookAt("enemy_wraith", 3, 5, "");
+	SetEffectVoiceOverCallback("Wraith_Timer5");
+	AddEnemyPatrolNode("enemy_wraith", "PathNodeArea_1", 4.0f, "Notice1");
+	AddEnemyPatrolNode("enemy_wraith", "PathNodeArea_2", 0.0f, "0");
+	AddEffectVoice("02_terrorlooms1.ogg", "", "Voice", "02_terrorlooms1", false, "", 0, 0);
+	AddEffectVoice("02_terrorlooms2.ogg", "", "Voice", "02_terrorlooms2", false, "", 0, 0);
+}
+
+void Wraith_Timer4_2(string &in asTimer) {
+	PlayMusic("event_pit_esophagus", false, 1.0f, 0, 0, false);
+}
+
+void Wraith_Timer5() {
+	AddEntityCollideCallback("enemy_wraith", "WraithArea_2", "WraithHits", true, 0);
+	AddTimer("wraith_Timer5_2", 2.5f, "Wraith_Timer5_2");
+}
+
+void Wraith_Timer5_2(string &in asTimer) {
+	AddEffectVoice("02_terrorlooms3.ogg", "", "Voice", "02_terrorlooms3", false, "", 0, 0);
+	SetEnemyDisableTriggers("enemy_wraith", false);
+	ShowEnemyPlayerPosition("enemy_wraith");
+	SetEntityActive("block_box_1", false);
+}
+
+void WraithHits(string &in asParent, string &in asChild, int alState) {
+	PlayGuiSound("blackbox_start", 2.0f);
+	FadeOut(0.5f);
+	StopPlayerLookAt();
+	AddTimer("wraith_Timer6", 1.0f, "Wraith_Timer6");
+	AddTimer("wraith_Timer7", 2.5f, "Wraith_Timer7");
+}
+
+void Wraith_Timer6(string &in asTimer) {
+	SetEntityActive("enemy_wraith", false);
+	//AddEffectVoice("02_terrorlooms4.ogg", "", "Voice", "02_terrorlooms4asd", false, "", 0, 0);
+}
+
+void Wraith_Timer7(string &in asTimer) {
+	ResumeNormalSpeed();
+	ChangeMap("esophagus_III.map", "PlayerStartArea_1", "02_terrorlooms4.ogg", "");
+}
+
+void OnLeave() {
+	SetupLoadScreen("Voice", "02_terrorlooms4", 0, "eso_loading_III.jpg");
+	
+	DestroyDataCache();
+	ClearSavedMaps();
+}

@@ -1,0 +1,734 @@
+void OnStart()
+{
+AddEntityCollideCallback("Player", "AreaZombieActivate", "ActivateZombie", true, 1);
+AddEntityCollideCallback("Player", "AreaZombie", "Zombie", true, 1);
+AddEntityCollideCallback("Player", "AreaZombie2", "ZombieFinal", true, 1);
+AddEntityCollideCallback("Player", "AreaZombieScream", "ZombieHallway", true, 1);
+AddEntityCollideCallback("Player", "AreaPrisoner", "Prisoner", true, 1);
+AddEntityCollideCallback("Player", "AreaPrisoner2", "Prisoner2", true, 1);
+AddEntityCollideCallback("Player", "AreaPanic", "PanicEvent", true, 1);
+AddEntityCollideCallback("Player", "AreaGhost", "Ghost", true, 1);
+AddEntityCollideCallback("Player", "AreaGhost2", "Ghost2", true, 1);
+AddEntityCollideCallback("Player", "AreaHallucination", "Hallucination", true, 1);
+AddEntityCollideCallback("Player", "AreaCrowbar", "FindCrowbar", true, 1);
+AddEntityCollideCallback("h2", "AreaBlood", "Blood", true, 1);
+AddEntityCollideCallback("Player", "AreaFire", "Death", false, 1);
+AddEntityCollideCallback("Player", "AreaHiding", "Hiding", true, 1);
+AddUseItemCallback("","ladderitem1","AreaLadder","Ladder1",true);
+AddUseItemCallback("","ladderitem2","AreaLadder","Ladder1",true);
+AddUseItemCallback("","ladderitem1","AreaLadder2","Ladder2",true);
+AddUseItemCallback("","ladderitem2","AreaLadder2","Ladder2",true);
+AddUseItemCallback("","crowbar","UseCrowbar","Escape",true);
+PlayMusic("AsylumAmb", true, 1, 5, 0, true);
+SetMapDisplayNameEntry("Asylum");
+SetPlayerRunSpeedMul(0.4f);
+AddQuest("Asylum", "Asylum");
+CompleteQuest("HeadBack", "HeadBack");
+CreateParticleSystemAtEntity("Hallucination", "ps_orb_light", "AreaHallucination", false);
+AutoSave();
+}
+
+void ActivateZombie(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("AreaZombie", true);
+PlaySoundAtEntity("","scare_wood_creak_walk.snt","Player", 0,false);
+}
+
+void Zombie(string &in asParent, string &in asChild, int alState) 
+{
+CheckPoint("Checkpoint", "PlayerStartArea_2", "DeathSettings", "DeathHints", "Hush");
+SetEntityActive("zombie", true);
+AddEnemyPatrolNode("zombie","node_1",5,"");
+AddEnemyPatrolNode("zombie","node_2",5,"");
+AddEnemyPatrolNode("zombie","node_3",20,"");
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+SetPlayerJumpDisabled(true);
+SetInventoryDisabled(true);
+AddEffectVoice("shay5.ogg", "", "Voice", "00_Shay5", false, "", 0, 0 );
+AddTimer("zombie2", 3, "zombie2");
+AddTimer("zombie7", 16, "zombie7");
+}
+
+void zombie2(string &in asTimer)
+{
+AddEffectVoice("shay6.ogg", "", "Voice", "00_Shay6", false, "", 0, 0 );
+AddTimer("zombie3", 3, "zombie3");
+}
+
+void zombie3(string &in asTimer)
+{
+AddEffectVoice("ayaasylum1.ogg", "", "Voice", "00_Ayaasylum1", false, "", 0, 0 );
+AddTimer("zombie4", 1, "zombie4");
+}
+
+void zombie4(string &in asTimer)
+{
+AddEffectVoice("shay7.ogg", "", "Voice", "00_Shay7", false, "", 0, 0 );
+AddTimer("zombie5", 1, "zombie5");
+}
+
+void zombie5(string &in asTimer)
+{
+AddEffectVoice("ayaasylum2.ogg", "", "Voice", "00_Ayaasylum2", false, "", 0, 0 );
+AddTimer("zombie6", 1, "zombie6");
+}
+
+void zombie6(string &in asTimer)
+{
+AddEffectVoice("shay8.ogg", "", "Voice", "00_Shay8", false, "", 0, 0 );
+}
+
+void zombie7(string &in asTimer)
+{
+ShowEnemyPlayerPosition("zombie");
+SetPlayerMoveSpeedMul(0.2f);
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+}
+
+void wakeup(string &in asTimer)
+{
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+RemoveItem("mixture2");
+RemoveItem("lantern");
+RemoveItem("crowbar");
+RemoveItem("phone");
+RemoveItem("potion_oil_1");
+RemoveItem("potion_oil_2");
+RemoveItem("potion_oil_3");
+RemoveItem("aidkit");
+RemoveItem("aidkit2");
+RemoveItem("sanity");
+SetPlayerLampOil(0);
+FadeIn(5.0f);
+FadeImageTrailTo(1, 2);
+FadeRadialBlurTo(0.10, 2);
+FadeRadialBlurTo(0.10, 2);
+AddTimer("wakeup2", 7, "wakeup2");
+}
+
+void wakeup2(string &in asTimer)
+{
+PlaySoundAtEntity("","15_man02_whimp.snt","Player", 0,false);
+FadeOut(3.0f);
+AddTimer("wakeup3", 4, "wakeup3");
+}
+
+void wakeup3(string &in asTimer)
+{
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+FadeIn(5.0f);
+AddTimer("wakeup4", 7, "wakeup4");
+}
+
+void wakeup4(string &in asTimer)
+{
+PlaySoundAtEntity("","15_man02_whimp.snt","Player", 0,false);
+FadeOut(3.0f);
+AddTimer("wakeup5", 6, "wakeup5");
+}
+
+void wakeup5(string &in asTimer)
+{
+FadeIn(5.0f);
+SetEntityActive("door2", false);
+SetEntityActive("door3", true);
+SetEntityActive("man", true);
+AddEnemyPatrolNode("man","node_4",30,"");
+AddEffectVoice("survivor2.ogg", "", "Voice", "00_Survivor2", false, "", 0, 0 );
+AddTimer("wakeup6", 3, "wakeup6");
+}
+
+void wakeup6(string &in asTimer)
+{
+PlaySoundAtEntity("","15_man01_whimp.snt","Player", 0,false);
+FadeOut(3.0f);
+AddTimer("wakeup7", 10, "wakeup7");
+}
+
+void wakeup7(string &in asTimer)
+{
+PlaySoundAtEntity("","RopeMove.snt","Player", 0,false);
+SetEntityActive("man", false);
+SetEntityActive("door2", true);
+SetEntityActive("door3", false);
+AddTimer("wakeup8", 5, "wakeup8");
+}
+
+void wakeup8(string &in asTimer)
+{
+AddTimer("wakeup9", 2, "wakeup9");
+}
+
+void wakeup9(string &in asTimer)
+{
+SetEntityActive("zombie2", true);
+AddTimer("wakeup10", 2, "wakeup10");
+}
+
+void wakeup10(string &in asTimer)
+{
+AddEffectVoice("survivor3.ogg", "", "Voice", "00_Survivor3", false, "", 0, 0 );
+AddTimer("wakeup11", 5, "wakeup11");
+SetEntityActive("zombie2", false);
+FadePlayerRollTo(85, 1, 1);
+SetPlayerCrouching(true);
+}
+
+void wakeup11(string &in asTimer)
+{
+AddTimer("wakeup12", 5, "wakeup12");
+FadeIn(5.0f);
+SetPlayerHealth(30);
+}
+
+void wakeup12(string &in asTimer)
+{
+SetEntityActive("ScriptArea_3", true);
+StopPlayerLookAt();
+FadePlayerRollTo(0, 33, 33);        
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+SetPlayerActive(true);
+SetPlayerRunSpeedMul(0.2f);
+SetPlayerMoveSpeedMul(0.8f);
+SetPlayerCrouching(false);
+SetPlayerJumpDisabled(false);
+SetInventoryDisabled(false);
+AddQuest("Asylum2", "Asylum2");
+AddTimer("wakeup13", 60, "wakeup13");
+}
+
+void wakeup13(string &in asTimer)
+{
+SetPlayerRunSpeedMul(0.3f);
+SetPlayerMoveSpeedMul(0.9f);
+AddTimer("wakeup14", 60, "wakeup14");
+}
+
+void wakeup14(string &in asTimer)
+{
+SetPlayerRunSpeedMul(0.5f);
+SetPlayerMoveSpeedMul(1.0f);
+AddTimer("wakeup15", 60, "wakeup15");
+}
+
+void wakeup15(string &in asTimer)
+{
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+FadeImageTrailTo(0, 1.0f);
+FadeRadialBlurTo(0.0, 1);
+}
+
+void wakeupagain(string &in asTimer)
+{
+AddTimer("wakeupagain2", 5, "wakeupagain2");
+FadePlayerRollTo(85, 1, 1);
+FadeImageTrailTo(1, 2);
+FadeRadialBlurTo(0.10, 2);
+FadeRadialBlurTo(0.10, 2);
+FadeIn(3.0f);
+}
+
+void wakeupagain2(string &in asTimer)
+{
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+FadeImageTrailTo(0, 1.0f);
+FadeRadialBlurTo(0.0, 1);
+FadePlayerRollTo(0, 33, 33);
+SetPlayerActive(true);
+}
+
+void Ladder1(string &in asItem, string &in asEntity)
+{
+SetEntityActive("ladder1", true);
+SetEntityActive("AreaLadder", false);
+SetEntityActive("AreaLadder2", true);
+PlaySoundAtEntity("","puzzle_place_jar.snt","Player", 0,false);
+RemoveItem(asItem);
+}
+
+void Ladder2(string &in asItem, string &in asEntity)
+{
+SetEntityActive("ladder2", true);
+SetEntityActive("AreaLadder2", false);
+SetEntityActive("LadderArea_1", true);
+PlaySoundAtEntity("","puzzle_place_jar.snt","Player", 0,false);
+RemoveItem(asItem);
+}
+
+void PanicEvent(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("ScriptArea_1", false);
+SetEntityActive("zombie3", true);
+ShowEnemyPlayerPosition("zombie3");
+AddEnemyPatrolNode("zombie3","node_30",3,"");
+AddEnemyPatrolNode("zombie3","node_32",3,"");
+AddEnemyPatrolNode("zombie3","node_30",3,"");
+AddEnemyPatrolNode("zombie3","node_31",3,"");
+AddEnemyPatrolNode("zombie3","node_30",0,"");
+AddEnemyPatrolNode("zombie3","node_8",0,"");
+AddEnemyPatrolNode("zombie3","node_21",0,"");
+AddEnemyPatrolNode("zombie3","node_23",3,"");
+AddEnemyPatrolNode("zombie3","node_21",0,"");
+AddEnemyPatrolNode("zombie3","node_8",0,"");
+}
+
+void ZombieFinal(string &in asParent, string &in asChild, int alState) 
+{
+CheckPoint("Checkpoint3", "PlayerStartArea_14", "DeathSettings3", "DeathHints", "Giveup");
+SetEntityActive("zombie4", true);
+AddEnemyPatrolNode("zombie4","node_46",2,"");
+AddEnemyPatrolNode("zombie4","node_47",0,"");
+AddEnemyPatrolNode("zombie4","node_48",0,"");
+AddEnemyPatrolNode("zombie4","node_49",2,"");
+AddEnemyPatrolNode("zombie4","node_48",0,"");
+AddEnemyPatrolNode("zombie4","node_47",0,"");
+AddEnemyPatrolNode("zombie4","node_46",0,"");
+AddEnemyPatrolNode("zombie4","node_43",0,"");
+AddEnemyPatrolNode("zombie4","node_40",0,"");
+}
+
+void FindCrowbar(string &in asParent, string &in asChild, int alState) 
+{
+AddQuest("FindCrowbar", "FindCrowbar");
+}
+
+void Escape(string &in asItem, string &in asEntity)
+{
+CompleteQuest("FindCrowbar", "FindCrowbar");
+PlaySoundAtEntity("","WoodCrack.snt","Player", 0,false);
+RemoveItem(asItem);
+SetPlayerActive(false);
+AddTimer("escape2", 2, "escape2");
+}
+
+void escape2(string &in asTimer)
+{
+SetEntityActive("plank", false);
+SetEntityActive("plank2", true);
+SetPlayerCrouching(true);
+PlaySoundAtEntity("","break_wood.snt","BreakPlank", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "BreakPlank", false);
+ChangeMap("RoadToGothfairEP.map", "PlayerStartArea_1", "","");
+}
+
+//---- Scare events ----//
+
+void Ghost(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("ghost", true);
+}
+
+void Ghost2(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("ghost", false);
+SetLightVisible("SpotLight_1", false);
+PlaySoundAtEntity("","break_glass_bottle.snt","furniture_tv_3", 0,false);
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+}
+
+void Hallucination(string &in asParent, string &in asChild, int alState) 
+{
+AddTimer("hallucination2", 1.5f, "hallucination2");
+SetPlayerRunSpeedMul(0.1f);
+SetPlayerMoveSpeedMul(0.1f);
+}
+
+void hallucination2(string &in asTimer)
+{
+TeleportPlayer("PlayerStartArea_12");
+DestroyParticleSystem("Hallucination");
+SetEntityActive("h1", true);
+AddEnemyPatrolNode("h1","node_26",50,"");
+AddTimer("hallucination3", 3, "hallucination3");
+}
+
+void hallucination3(string &in asTimer)
+{
+SetEntityActive("h2", true);
+AddEnemyPatrolNode("h2","node_27",50,"");
+}
+
+void HallucinationEnd()
+{
+TeleportPlayer("PlayerStartArea_13");
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+}
+
+void Blood(string &in asParent, string &in asChild, int alState) 
+{
+SetEntityActive("h1", false);
+SetEntityActive("1", true);
+SetEntityActive("2", true);
+SetEntityActive("3", true);
+SetEntityActive("4", true);
+AddPropForce("1", 500, 1550, 300,"world");
+AddPropForce("2", -100, 1550, -300,"world");
+AddPropForce("3", -100, 1550, 300,"world");
+AddPropForce("4", -100, 1550, -300,"world");
+GivePlayerDamage(1, "BloodSplat", false, false);
+CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke", "AreaBlood2", false);
+PlaySoundAtEntity("","19_inject.snt", "Player", 0, false);
+}
+
+void ZombieHallway(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("","Zombiescream.snt","Player", 0,false);
+CheckPoint("Checkpoint2", "PlayerStartArea_9", "DeathSettings2", "DeathHints", "Giveup");
+AddTimer("zombiehallway2", 1, "zombiehallway2");
+}
+
+void zombiehallway2(string &in asTimer)
+{
+PlaySoundAtEntity("","AyaScared.snt","Player", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DoorArea", false);
+GiveSanityDamage(10, true);
+PlayMusic("AsylumAmb2", true, 1, 5, 0, true);
+AddTimer("zombiehallway3", 1, "zombiehallway3");
+}
+
+void zombiehallway3(string &in asTimer)
+{
+PlaySoundAtEntity("","ManScream.snt","DoorArea", 0,false);
+PlaySoundAtEntity("","break_wood.snt","DoorArea", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DoorArea", false);
+AddTimer("zombiehallway4", 2, "zombiehallway4");
+}
+
+void zombiehallway4(string &in asTimer)
+{
+PlaySoundAtEntity("","break_wood.snt","DoorArea", 0,false);
+CreateParticleSystemAtEntity("", "ps_break_pot_plant", "DoorArea", false);
+CreateParticleSystemAtEntity("", "ps_iron_maiden_event_smoke", "DoorArea", false);
+SetEntityActive("blood", true);
+}
+
+//---- Etc events ----//
+
+void Prisoner(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("","scare_ghost.snt","Player", 0,false);
+}
+
+void Prisoner2(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("","SurvivorCell.snt","AreaPrisoner3", 0,false);
+}
+
+void Hiding(string &in asParent, string &in asChild, int alState) 
+{
+AddEffectVoice("survivor6.ogg", "", "Voice", "00_Survivor6", false, "", 0, 0 );
+AddTimer("crying", 9, "crying");
+}
+
+void crying(string &in asTimer)
+{
+PlaySoundAtEntity("","SurvivorCrying.snt","AreaCrying", 0,false);
+AddTimer("crying", 25, "crying");
+}
+
+void computer(string &in asEntity)
+{
+SetPlayerActive(false);
+TeleportPlayer("PlayerStartArea_3");
+SetEntityActive("cutzombie", true);
+AddEnemyPatrolNode("cutzombie","node_6",50,"");
+SetEntityActive("cutzombie2", true);
+AddEnemyPatrolNode("cutzombie2","node_5",6,"");
+AddEffectVoice("survivor4.ogg", "", "Voice", "00_Survivor4", false, "", 0, 0 );
+AddTimer("computer2", 3, "computer2");
+}
+
+void computer2(string &in asTimer)
+{
+AddEffectVoice("shay9.ogg", "", "Voice", "00_Shay9", false, "", 0, 0 );
+AddTimer("computer3", 4, "computer3");
+}
+
+void computer3(string &in asTimer)
+{
+AddEnemyPatrolNode("cutzombie2","node_7",50,"");
+AddTimer("computer4", 2, "computer4");
+}
+
+void computer4(string &in asTimer)
+{
+AddEffectVoice("shay10.ogg", "", "Voice", "00_Shay10", false, "", 0, 0 );
+AddTimer("computer5", 3, "computer5");
+}
+
+void computer5(string &in asTimer)
+{
+AddEffectVoice("shay11.ogg", "", "Voice", "00_Shay11", false, "", 0, 0 );
+AddEffectVoice("survivor5.ogg", "", "Voice", "00_Survivor5", false, "", 0, 0 );
+AddTimer("computer6", 3, "computer6");
+}
+
+void computer6(string &in asTimer)
+{
+SetPlayerActive(true);
+TeleportPlayer("PlayerStartArea_4");
+PlaySoundAtEntity("","AyaTired.snt","Player", 0,false);
+SetEntityActive("cutzombie", false);
+SetEntityActive("cutzombie2", false);
+}
+
+void secondcomputer(string &in asEntity)
+{
+PlaySoundAtEntity("laptop","laptop.snt", "ScriptArea_4", 0, false);
+AddTimer("secondcomputer2", 4, "secondcomputer2");
+}
+
+void secondcomputer2(string &in asTimer)
+{
+SetMessage("Messages", "bastard", 5);
+}
+
+void gate(string &in asEntity)
+{
+SetEntityActive("AreaPanic", true);
+SetEntityActive("padlock3", false);
+SetEntityActive("door7", false);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+}
+
+void entercan(string &in asEntity)
+{
+FadeOut(1);
+SetPlayerJumpDisabled(true);
+SetEntityActive("LeaveCan", true);
+SetEntityActive("EnterCan", false);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+AddTimer("entercan2", 1, "entercan2");	
+}
+
+void entercan2(string &in asTimer)
+{
+FadeIn(1);
+SetPlayerCrouching(true);
+TeleportPlayer("PlayerStartArea_7");
+}
+
+void leavecan(string &in asEntity)
+{
+FadeOut(1);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+SetEntityActive("LeaveCan", false);
+SetEntityActive("EnterCan", true);
+AddTimer("leavecan2", 1, "leavecan2");	
+}
+
+void leavecan2(string &in asTimer)
+{
+FadeIn(1);
+SetPlayerCrouching(true);
+TeleportPlayer("PlayerStartArea_8");
+}
+
+void entercurtain(string &in asEntity)
+{
+FadeOut(1);
+SetPlayerJumpDisabled(true);
+SetEntityActive("LeaveCurtain", true);
+SetEntityActive("EnterCurtain", false);
+SetPlayerRunSpeedMul(0.0f);
+SetPlayerMoveSpeedMul(0.0f);
+AddTimer("entercurtain2", 1, "entercurtain2");	
+}
+
+void entercurtain2(string &in asTimer)
+{
+FadeIn(1);
+SetPlayerCrouching(true);
+TeleportPlayer("PlayerStartArea_11");
+}
+
+void leavecurtain(string &in asEntity)
+{
+FadeOut(1);
+SetPlayerJumpDisabled(false);
+SetPlayerRunSpeedMul(1.0f);
+SetPlayerMoveSpeedMul(1.0f);
+SetEntityActive("LeaveCurtain", false);
+SetEntityActive("EnterCurtain", true);
+AddTimer("leavecurtain2", 1, "leavecurtain2");	
+}
+
+void leavecurtain2(string &in asTimer)
+{
+FadeIn(1);
+SetPlayerCrouching(true);
+TeleportPlayer("PlayerStartArea_10");
+}
+
+void Death(string &in asParent, string &in asChild, int alState) 
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death2", 0.4, "death2");
+}
+
+void death2(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death3", 0.5, "death3");
+}
+
+void death3(string &in asTimer)
+{
+PlaySoundAtEntity("","AyaScream","Player", 0,false);
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death4", 0.5, "death4");
+SetPlayerCrouching(true);
+}
+
+void death4(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death5", 0.5, "death5");
+}
+
+void death5(string &in asTimer)
+{
+GivePlayerDamage(0, "BloodSplat", false, true);
+AddTimer("death6", 0.5, "death6");
+}
+
+void death6(string &in asTimer)
+{
+PlaySoundAtEntity("","15_player_burn","Player", 0,false);
+GivePlayerDamage(200, "BloodSplat", false, true);
+GivePlayerDamage(0, "BloodSplat", false, true);
+GivePlayerDamage(0, "BloodSplat", false, true);
+}
+
+void powerup(string &in asEntity)
+{
+SetMessage("Messages", "powerup1", 7);
+AddGlobalVarInt("Powerup1", 1);
+RemoveItem("syringe_1");
+}
+
+//---- Messages ----//
+
+void ladder(string &in asEntity)
+{
+SetMessage("Messages", "needmoreladder", 7);
+}
+
+void grate(string &in asEntity)
+{
+SetMessage("Messages", "grate", 7);
+}
+
+void dark(string &in asEntity)
+{
+SetMessage("Messages", "dark", 7);
+}
+
+void tooweak(string &in asEntity)
+{
+SetMessage("Messages", "tooweak", 4);
+}
+
+void asylum(string &in asEntity)
+{
+SetMessage("Messages", "asylum", 6);
+}
+
+void asylum2(string &in asEntity)
+{
+SetMessage("Messages", "asylum2", 4);
+}
+
+void exit(string &in asEntity)
+{
+SetMessage("Messages", "exit", 6);
+}
+
+//---- DeathSettings ----//
+
+void DeathSettings(string &in asName, int alCount)
+{
+SetPlayerHealth(30);
+SetPlayerSanity(100);
+PlayMusic("AsylumAmb", true, 1, 5, 0, true);
+SetPlayerActive(false);
+FadeOut(0.0f);
+SetPlayerCrouching(false);
+StartPlayerLookAt("Look1", 10, 100, "");
+PlaySoundAtEntity("","15_drag_body.snt","Player", 0,false);
+AddTimer("wakeup", 7, "wakeup");
+}
+
+void DeathSettings2(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("AsylumAmb2", true, 1, 5, 0, true);
+SetPlayerActive(false);
+FadeOut(0.0f);
+SetPlayerCrouching(false);
+AddTimer("wakeupagain", 2, "wakeupagain");
+}
+
+void DeathSettings3(string &in asName, int alCount)
+{
+SetPlayerHealth(50);
+SetPlayerSanity(50);
+PlayMusic("AsylumAmb2", true, 1, 5, 0, true);
+SetPlayerActive(false);
+FadeOut(0.0f);
+SetPlayerCrouching(false);
+AddTimer("wakeupagain", 2, "wakeupagain");
+SetEntityActive("zombie4", true);
+AddEnemyPatrolNode("zombie4","node_46",2,"");
+AddEnemyPatrolNode("zombie4","node_47",0,"");
+AddEnemyPatrolNode("zombie4","node_48",0,"");
+AddEnemyPatrolNode("zombie4","node_49",2,"");
+AddEnemyPatrolNode("zombie4","node_48",0,"");
+AddEnemyPatrolNode("zombie4","node_47",0,"");
+AddEnemyPatrolNode("zombie4","node_46",0,"");
+AddEnemyPatrolNode("zombie4","node_43",0,"");
+AddEnemyPatrolNode("zombie4","node_40",0,"");
+}	
+
+void OnEnter()
+{	
+PlayMusic("AsylumAmb", true, 1, 5, 0, true);
+CreateParticleSystemAtEntity("Hallucination", "ps_orb_light", "AreaHallucination", false);
+
+if(GetGlobalVarInt("Powerup2")==1)
+	{
+SetPlayerSanity(100);
+	}
+
+if(GetGlobalVarInt("Powerup7")==1)
+	{
+AddPlayerSanity(30);
+	}
+
+if(GetGlobalVarInt("Powerup8")==1)
+	{
+SetSanityDrainDisabled(true);
+	}
+
+if(GetGlobalVarInt("Powerup9")==1)
+	{
+AddPlayerHealth(30);
+	}
+}
+
+void OnLeave()
+{
+StopMusic(0, 0);
+SetupLoadScreen("loadscreentext", "...", 1, "load_night.png");
+}

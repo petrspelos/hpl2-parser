@@ -1,0 +1,73 @@
+void OnStart()
+{
+	AddEntityCollideCallback("Player", "ScriptArea_1", "TimerScare_1", true, 0); //Ads a collision callback, the second argument is the child and is the one to be coliided with
+	AddEntityCollideCallback("Player", "ScriptArea_2", "Hurt_2", true, 0);
+	AddEntityCollideCallback("cabinet_nice_2", "ScriptArea_3", "entice", true, 0);
+	
+	SetLocalVarInt("s cares", 0);
+}
+
+void TimerScare_1(string &in asParent, string &in asChild, int alState){
+	AddTimer("Scare_1", 2.0f, "TimerEvents");
+}	
+
+void entice(string &in asParent, string &in asChild, int alState)
+{
+	SetMessage("ms","Narnia", -1.0f);
+	AddQuest("entice_msg", "Closet");
+}
+
+void Hurt_2(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<= 10; ++i) PlayGuiSound("lurker_hit_wood.snt", 1.0f);
+	SetSwingDoorClosed("cabinet_nice_2", true, false);
+	GivePlayerDamage(99.0f, "BloodSplat", true, false);
+	StartPlayerLookAt("ScriptArea_3", 30.0f, 40.0f, "stop_look");
+	AddLocalVarInt("s cares", 1);
+	AddTimer("", 2.0f, "TimerEvents");  //This is to check that s cares is 3 
+	CompleteQuest("entice_msg", "Closet");
+	AddEntityCollideCallback("Player", "ScriptArea_4", "Scare_2", true, 0);
+}
+
+void stop_look()
+{
+	StopPlayerLookAt();
+}
+
+void TimerEvents(string &in asTimer)
+{	
+	if(asTimer == "Scare_1") //if something is true it runs it else it runs the other thing
+	{
+		for(int i=1; i<=3; ++i) SetEntityActive("corpse_male_"+i,true); //it repeats 3 times
+		
+		AddPropImpulse("corpse_male_1", 100.0f, 0.0f, 0.0f, "world"); //Adds a constant force to the body regardless of mass
+		AddPropImpulse("corpse_male_2", -100.0f, 0.0f, 0.0f, "world");
+		AddPropImpulse("corpse_male_3", 0.0f, 0.0f, -100.0f, "world");
+		
+		for(int i=1; i<= 3; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);	//repeats 3 times
+		AddLocalVarInt("s cares", 1); //Adds to the local var
+		AddTimer("disspear_1", 1.0f, "TimerEvents");//Adds a times
+	}
+	else if (asTimer == "dissapear_1") //Runs if the code above isn't true
+		for(int i=1; i<=3; ++i) SetEntityActive("corpse_male_"+i, false); //Activates jumpscares
+	else if(asTimer == "dissapear_2")
+		for(int i=4; i<=9; ++i) SetEntityActive("corpse_male_"+i, false);
+	if (GetLocalVarInt("s cares") >= 3)
+	{
+		SetLevelDoorLocked("level_wood_1", false);
+		//This makes a momento 
+		AddQuest("escape_quest", "esc");
+	}
+}
+
+void Scare_2(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1; i<=10; ++i) PlayGuiSound("24_iron_maiden.snt", 1.0f);
+	for(int i=4; i<=9; ++i)	SetEntityActive("corpse_male_"+i, true); 
+	for(int i=4; i<=5; ++i) AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, 100.0f, "world");
+	for(int i=6; i<=7; ++i) AddPropImpulse("corpse_male_"+i, 0.0f, 0.0f, -100.0f, "world");
+	for(int i=8; i<=9; ++i) AddPropImpulse("corpse_male_"+i, 100.0f, 0.0f, 0.0f, "world");
+	AddLocalVarInt("s cares", 1);
+	AddTimer("dissapear_2", 2.0f, "TimerEvents");
+}
+	

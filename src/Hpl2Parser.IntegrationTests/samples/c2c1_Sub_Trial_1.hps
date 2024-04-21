@@ -1,0 +1,1080 @@
+int Floor = 0;
+int Wall = 0;
+int Object = 0;
+int WelDoorVar = 0;
+void OnStart()
+{
+	SetPlayerLampOil(0);
+
+	if(ScriptDebugOn()) //Debug stuff
+	{
+		GiveItemFromFile("lantern", "lantern.ent");
+		SetPlayerLampOil(100);
+		for(int i=0;i<10;i++) GiveItemFromFile("tinderbox_"+i, "tinderbox.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_health_"+i, "potion_health.ent");
+		for(int i=0;i<10;i++) GiveItemFromFile("potion_sanity_"+i, "potion_sanity.ent");
+		
+		//SetPlayerMoveSpeedMul(0.6f);
+		//SetPlayerRunSpeedMul(1.0f);
+		
+		//PlayMusic("menu_theme.ogg", true, 1.5f, 0, 0, true);
+	}
+	SetSanityDrainDisabled(true);
+	SetLanternLitCallback("TestScript");
+	
+	//BeginTrials();
+	WakeUp();
+	
+	SetLightVisible("Credits_1", false);
+	SetLightVisible("Credits_2", false);
+	
+	//SetEntityInteractionDisabled("castle_gate_arched01_1", true);
+	
+	SetLightVisible("CompLight001", false);
+	SetLightVisible("Point_g", false); SetLightVisible("Point_r", false); SetLightVisible("Point_b", false);
+	SetLightVisible("Spot_r", false); SetLightVisible("Spot_g", false); SetLightVisible("Spot_b", false);
+	
+	SetEntityInteractionDisabled("lightbulb_light_1", true);
+	SetEntityInteractionDisabled("lightbulb_1", true);
+	SetEntityInteractionDisabled("StartLabCutscene", true);
+	
+	for(int i=0;i<20;i++) SetEntityActive("MW_"+i, false);
+	
+	//for(int i=0;i<20;i++) SetEntityActive("Sound_"+i, false);
+	
+	for(int i=0;i<20;i++) SetLampLit("Jimmy_"+i, false, true);
+	for(int i=0;i<13;i++) SetLightVisible("FLN_"+i, false);
+	
+	for(int i=0;i<3;i++) AddEntityCollideCallback("Player", "NOLEAVE_"+i, "Warn", false, 1);
+	
+	AddEntityCollideCallback("Player", "TurnLights", "Welcome", true, 1);
+	
+	AddEntityCollideCallback("Player", "EnterInst", "InDaInst", true, 1);
+	
+	AddEntityCollideCallback("Player", "ZoopZoop", "Hero", true, 1);
+
+	AddEntityCollideCallback("Player", "WoopWoop", "Herro", true, 1);
+	
+	AddEntityCollideCallback("Player", "LabCutScene", "LabScene", true, 1);
+	
+	AddEntityCollideCallback("Player", "scene6", "scene6dialogue", true, 1);
+	
+	for(int i=0;i<5;i++) SetEntityInteractionDisabled("FDoor_"+i, true);
+	for(int i=0;i<5;i++) AddEntityCollideCallback("Player", ""+i, "CloseAllDoors", true, 0);
+	
+	for(int i=0;i<5;i++) SetEntityInteractionDisabled("SoundLever_"+i, true);
+	
+	//AddEntityCollideCallback("Player", "Button_PressurePlate", "Button_PressurePlate", false, 0);
+	AddEntityCollideCallback("CompanionCube", "Button_PressurePlate", "Button_PressurePlate", false, 0);
+	
+	for(int i=0;i<9;i++) FadeLightTo("FFL_"+i, 0,0,0,0,-1, 0.1f);
+	//SetEntityPlayerInteractCallback("FlipperButton", "FlipFlop", true);
+
+	AddUseItemCallback("", "Crowbar", "WoodBoards_1", "BreakBoards", true);
+	
+	AddEntityCollideCallback("Player", "YouAreWinner", "BestMusic", true, 1);
+	
+	SetEntityCustomFocusCrossHair("castle_gate_arched01_1", "LevelDoor");
+	SetupLoadScreen("Loading", "Load_1", 1, "load_machine.png"); //change to newer??
+	
+	SetLocalVarInt("DoneTalking",0);
+}
+
+void GotDaNote(string &in asEntity){
+	SetGlobalVarInt("HasNote", 1);
+}
+
+void Heal(string &in asTimer){
+	AddDebugMessage("Health: "+GetPlayerHealth(), false);
+	AddPlayerHealth(5);
+	AddTimer("", 5, "Heal");
+}
+
+void TestScript(bool abLit){ //Turn on the lantern to test a certain script
+	if(abLit==true){
+		AddDebugMessage("Running script", false);
+		SetLanternActive(false, false);
+		BeginTrials(); //Put the test script in here
+	}
+}
+
+void moveforward(string &in asTimer){ //Makes player walk, stop with RemoveTimer("walk");
+	MovePlayerForward(3);
+	AddTimer("walk", 0.0f, "moveforward");
+}
+void EndLook(string &in asTimer) //Call to end a LookAt
+	{StopPlayerLookAt();}
+
+void Reset(){ //Make player settings normal again
+	SetPlayerActive(true);
+	SetPlayerCrouching(false);
+	SetPlayerCrouchDisabled(false);
+	SetPlayerJumpDisabled(false);
+	SetPlayerMoveSpeedMul(1.0);
+	SetPlayerLookSpeedMul(1.0);
+	SetPlayerRunSpeedMul(1.0); //WHOOPS!!
+	MovePlayerHeadPos(0, 0, 0, 1, 0.1);
+	StopPlayerLookAt();
+}
+
+void WakeUp(){ //Player wakes up
+	FadeOut(0);
+	//PlayMusic("trial_1.ogg", true, 2.5f, 5.0f, 0, true); //NEED MUSIC?????
+	TeleportPlayer("Trial1_Wake");
+	SetPlayerActive(false);
+	MovePlayerHeadPos(0, -1.3, 0, 1, 0.1f);
+	StartPlayerLookAt("Wake_LookAt_1", 10, 100, "");
+	AddTimer("", 2.0f, "WakeUpTimer");
+	
+	PlaySoundAtEntity("ringadingding", "sub_phone_ringing.snt", "phone_3", 0.0f, false);
+}
+void WakeUpTimer(string &in asTimer){ //Player wakes up
+	AddLocalVarInt("WakeUpVar", 1);	//What step to play in the event
+	float fEventSpeed = 3.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("WakeUpVar")){
+		case 1:
+			PlayGuiSound("react_pant2.ogg", 0.2f);
+			FadeIn(0);
+			FadeOut(10);
+		break;
+		case 2:
+			FadeIn(10);
+		break;
+		case 3:
+			FadeOut(10);
+			FadePlayerRollTo(-70, 1.5f, 100);
+			StartPlayerLookAt("Wake_LookAt_2", 2, 100, "");
+		break;
+		case 4:
+			FadeIn(10);
+			SetPlayerMoveSpeedMul(0.1f);
+			AddTimer("walk", 0.0f, "moveforward");
+			PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.0f, false);
+			fEventSpeed = 1.0f;
+		break;
+		case 5:
+			RemoveTimer("walk");
+			fEventSpeed = 0.3f;
+			
+			StopSound("ringadingding", 0.3f);
+			StopSound("sub_phone_ringing.snt", 0.3f);
+		break;
+		case 6:
+			StartPlayerLookAt("Wake_LookAt_1", 0.5, 100, "");
+			FadePlayerRollTo(0, 1, 100);
+			fEventSpeed = 1.5f;
+			AddEffectVoice("M1_S1_P1_01r", "", "Voices", "01010101", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_02", "", "Voices", "01010102", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_03", "", "Voices", "01010103", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_04r", "", "Voices", "01010104", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_05", "", "Voices", "01010105", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_06", "", "Voices", "01010106", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_07", "", "Voices", "01010107", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_08r", "", "Voices", "01010108", false, "", 0, 0);
+		break;
+		case 7:
+			PlaySoundAtEntity("", "player_stand.snt", "Player", 0.0f, false);
+			StartPlayerLookAt("Wake_LookAt_3", 1, 100, "");
+			MovePlayerHeadPos(0, -0.9, 0, 0.6, 0);
+			AddTimer("backup", 0.0f, "movebackward");
+			fEventSpeed = 0.75f;
+		break;
+		case 8:
+			RemoveTimer("backup");
+			fEventSpeed = 38.0f;
+		break;
+		case 9:
+			StartPlayerLookAt("Wake_LookAt_2", 0.75, 0.75, "");
+			fEventSpeed = 5.0f;
+		break;
+		case 10:
+			StartPlayerLookAt("Wake_LookAt_4", 0.75, 100, "");
+		
+			AddEffectVoice("M1_S1_P1_09", "", "Voices", "01010109", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_10", "", "Voices", "01010110", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_11", "", "Voices", "01010111", false, "", 0, 0);
+			AddEffectVoice("M1_S1_P1_12", "", "Voices", "01010112", false, "", 0, 0);
+			fEventSpeed = 16.0f;
+		break;
+		case 11:
+			FadeOut(5);
+			fEventSpeed = 5.0f;
+		break;
+		case 12:
+			PlayMusic("menu_theme.ogg", true, 1.5f, 0, 0, true);
+			Computer(); //Calls the next cutscene
+		break;
+	}
+	
+	if(GetLocalVarInt("WakeUpVar") < 13)  AddTimer("", fEventSpeed, "WakeUpTimer");	
+}
+void movebackward(string &in asTimer){ //Makes player walk, stop with RemoveTimer("walk");
+	MovePlayerForward(-1);
+	AddTimer("backup", 0.0f, "movebackward");
+}
+
+void Computer(){
+	Reset();
+	FadeOut(0);
+	TeleportPlayer("Trial1_Computer");
+	SetPlayerActive(false);
+	StartPlayerLookAt("Computer_LookAt_1", 10, 100, "");
+	AddTimer("", 2.0f, "ComputerTimer");
+	
+	SetLightVisible("Credits_1", true);
+	SetLightVisible("Credits_2", false);
+}
+void ComputerTimer(string &in asTimer){
+	AddLocalVarInt("ComputerVar", 1);	//What step to play in the event
+	float fEventSpeed = 1.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("ComputerVar")){
+		case 1:
+			FadeIn(3);
+			SetPlayerMoveSpeedMul(0.3f);
+			AddTimer("walk", 0.0f, "moveforward");
+			fEventSpeed = 2.5f;
+			
+			PlaySoundAtEntity("computer1_buzz", "sub_computer_buzz.snt", "level00_computer_terminal_4", 1.5f, false);
+		break;
+		case 2:
+			RemoveTimer("walk");
+		break;
+		case 3:
+			MovePlayerHeadPos(0.4, -0.25, 0, 0.6, 0.1);
+			fEventSpeed = 2.0f;
+		break;
+		case 4:
+			StartPlayerLookAt("Computer_LookAt_2", 0.4, 0.4, "");
+			fEventSpeed = 5.0f;
+		break;
+		case 5:
+			StartPlayerLookAt("Computer_LookAt_3", 0.4, 100, "");
+			fEventSpeed = 2.0f;
+		break;
+		case 6:
+			StopSound("computer1_buzz", 2.0f);
+			FadeOut(2);
+			fEventSpeed = 2.0f;
+		break;
+		case 7:
+			LeaveRoom(); //Calls next cutscene
+		break;
+	}
+	
+	if(GetLocalVarInt("ComputerVar") < 8)  AddTimer("", fEventSpeed, "ComputerTimer");	
+}
+
+void LeaveRoom(){
+	Reset();
+	FadeOut(0);
+	TeleportPlayer("Trial1_LeaveRoom");
+	SetPlayerActive(false);
+	StartPlayerLookAt("LeaveRoom_LookAt_1", 10, 100, "");
+	AddTimer("", 2.0f, "LeaveRoomTimer");
+	
+	SetLightVisible("Credits_1", false);
+	SetLightVisible("Credits_2", true);
+}
+void LeaveRoomTimer(string &in asTimer){
+	AddLocalVarInt("LeaveRoomVar", 1);	//What step to play in the event
+	float fEventSpeed = 1.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("LeaveRoomVar")){
+		case 1:
+			FadeIn(2);
+		break;
+		case 2:
+			SetPlayerMoveSpeedMul(0.2);
+			AddTimer("walk", 0.0f, "moveforward");
+			fEventSpeed = 1.5f;
+		break;
+		case 3:
+			RemoveTimer("walk");
+			StartPlayerLookAt("Computer_LookAt_1", 0.8, 100, "");
+			fEventSpeed = 6.0f;
+		break;
+		case 4:
+			StartPlayerLookAt("LeaveRoom_LookAt_1", 0.7, 100, "");
+			fEventSpeed = 4.0f;
+		break;
+		case 5:
+			FadeOut(1);
+			AddTimer("walk", 0.0f, "moveforward");
+			fEventSpeed = 1.5f;
+		break;
+		case 6:
+			RemoveTimer("walk");
+			Car(); //Calls next cutscene
+		break;
+	}
+	
+	if(GetLocalVarInt("LeaveRoomVar") < 7)  AddTimer("", fEventSpeed, "LeaveRoomTimer");	
+}
+
+void Car(){
+	Reset();
+	FadeOut(0);
+	TeleportPlayer("Trial1_Garage");
+	SetPlayerActive(false);
+	StartPlayerLookAt("Garage_LookAt_1", 10, 100, "");
+	AddTimer("", 2.0f, "GarageTimer");
+}
+void GarageTimer(string &in asTimer){
+	AddLocalVarInt("GarageVar", 1);	//What step to play in the event
+	float fEventSpeed = 1.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("GarageVar")){
+		case 1:
+			FadeIn(1);
+			SetPlayerMoveSpeedMul(0.2);
+			AddTimer("walk", 0.0f, "moveforward");
+			fEventSpeed = 4.5f;
+		break;
+		case 2:
+			FadeOut(1);
+			fEventSpeed = 1.5f;
+		break;
+		case 3:
+			SetLightVisible("Credits_1", true);
+			SetLightVisible("Credits_2", false);
+			
+			RemoveTimer("walk");
+			TeleportPlayer("Trial1_Car_Parked");
+			StartPlayerLookAt("Garage_LookAt_2", 10, 100, "");
+			MovePlayerHeadPos(0, -0.2, 0, 0.6, 0.1);
+			FadeIn(1);
+			fEventSpeed = 2.0f;
+		break;
+		case 4:
+			StartPlayerLookAt("Garage_LookAt_3", 0.4, 0.4, "");
+			fEventSpeed = 3.0f;
+			
+			PlaySoundAtEntity("ignition", "sub_car_ignition.ogg", "Garage_LookAt_3", 0.0f, false);
+		break;
+		case 5:
+			//PlaySoundAtEntity("ignition", "sub_car_ignition.ogg", "Garage_LookAt_3", 0.0f, false);
+		
+			StartScreenShake(0.001f, 38.0f, 0.1f, 0.1f);
+			fEventSpeed = 2.0f;
+		break;
+		case 6:
+			StartPlayerLookAt("Garage_LookAt_2", 0.5, 100, "");
+			fEventSpeed = 6.0f;
+		break;
+		case 7:
+			StopSound("ignition", 2.0f);
+			FadeOut(2);
+			fEventSpeed = 2.5f;
+		break;
+		case 8:
+			PlaySoundAtEntity("driving", "sub_car_driving.ogg", "Player", 0.0f, false);
+		
+			TeleportPlayer("Trial1_Car_Road");
+			MovePlayerHeadPos(0, -0.05, 0, 0.6, 0.1);
+			StartPlayerLookAt("Road_LookAt_1", 10, 100, "");
+			FadeIn(1);
+			fEventSpeed = 6.5f;
+		break;
+		case 9:
+			StartPlayerLookAt("Road_LookAt_2", 0.4, 100, "");
+			fEventSpeed = 9.0f;
+		break;
+		case 10:
+			SetLightVisible("Credits_1", false);
+			SetLightVisible("Credits_2", true);
+	
+			StartPlayerLookAt("Road_LookAt_1", 0.6, 0.6, "");
+			fEventSpeed = 7.0f;
+		break;
+		case 11:
+			StopSound("driving", 3.0f);
+		
+			FadeOut(3);
+			fEventSpeed = 3.5f;
+		break;
+		case 12:
+			FadeGlobalSoundVolume(0.0f, 0.0f);
+			EndCar(); //next cutscene
+		break;
+	}
+	
+	if(GetLocalVarInt("GarageVar") < 13)  AddTimer("", fEventSpeed, "GarageTimer");	
+}
+
+void EndCar(){
+	SetLightVisible("Credits_1", true);
+	SetLightVisible("Credits_2", true);
+
+	Reset();
+	FadeOut(0);
+	TeleportPlayer("Trial1_InstCar");
+	SetPlayerActive(false);
+	StartPlayerLookAt("EndCar_LookAt_1", 10, 100, "");
+	AddTimer("", 2.0f, "CarTimer");
+}
+void CarTimer(string &in asTimer){
+	AddLocalVarInt("CarVar", 1);	//What step to play in the event
+	float fEventSpeed = 1.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("CarVar")){
+		case 1:
+			SetSanityDrainDisabled(true);
+			MovePlayerHeadPos(0, -0.2, 0, 0.6, 0.1);
+			StartScreenShake(0.001f, 15.0f, 0.1f, 0.1f);
+			FadeIn(2);
+			fEventSpeed = 3.5f;
+		break;
+		case 2:
+			StartPlayerLookAt("EndCar_LookAt_2", 0.5, 0.5, "");
+			fEventSpeed = 8.0f;
+		break;
+		case 3:
+			//SetLightVisible("Credits_1", false);
+			SetLightVisible("Credits_2", false);
+			
+			StartPlayerLookAt("EndCar_LookAt_1", 0.7, 0.7, "");
+			fEventSpeed = 3.0f;
+		break;
+		case 4:
+			StartPlayerLookAt("EndCar_LookAt_3", 0.4, 0.4, "");
+			fEventSpeed = 2.0f;
+		break;
+		case 5:
+			SetLightVisible("Credits_1", false);
+			
+			FadeLightTo("CarLight", 0,0,0,0,-1, 2.0f);
+			StartPlayerLookAt("EndCar_LookAt_1", 0.7, 0.7, "");
+			fEventSpeed = 4.0f;
+		break;
+		case 6:
+			StopMusic(2.5f, 0);
+			FadeOut(3);
+			fEventSpeed = 2.5f;
+		break;
+		case 7:
+			StopPlayerLookAt();
+			Reset();
+			TeleportPlayer("Trial1_Inst");
+			FadeIn(1);
+			
+			FadeGlobalSoundVolume(1.0f, 1.0f);
+			
+			//PlayMusic("intro_lab", true, 1.0f, 2.0f, 0, true);
+			
+			//for(int i=0;i<20;i++) SetEntityActive("Sound_"+i, true);
+			
+			SetPlayerMoveSpeedMul(0.6f);
+			SetPlayerRunSpeedMul(0);
+			//SetPlayerRunSpeedMul(1.0f);
+		break;
+	}
+	
+	if(GetLocalVarInt("CarVar") < 8)  AddTimer("", fEventSpeed, "CarTimer");	
+}
+
+//GENERAL SCRIPT
+void Warn(string &in asParent, string &in asChild, int alState){
+	SetMessage("Examine", "Trial1_AttemptLeave", 0);
+}
+
+//ENTERING INSTITUTE
+void Welcome(string &in asParent, string &in asChild, int alState){
+	//LightsCameraAction(true);
+	//StartPlayerLookAt("FacilityLight_12", 0.5, 0.5, "");
+	AddTimer("", 0.5f, "Hello");
+	AddTimer("", 1.5f, "EndLook");
+}
+void Hello(string &in asTimer){
+	StartPlayerLookAt("door_double_rusty_1", 0.6, 0.6, "");
+	SetSwingDoorDisableAutoClose("door_double_rusty_1", true);
+	AddTimer("", 0.001f, "DoorTimerr");
+}
+void DoorTimerr(string &in asTimer){
+	if(WelDoorVar<4){
+		AddBodyForce("door_double_rusty_1_Body_1", 0, 0, -500, "world");
+		AddBodyForce("door_double_rusty_1_Body_2", 0, 0, -500, "world");
+	}
+	else if(WelDoorVar<8){
+		AddBodyForce("door_double_rusty_1_Body_1", 250, 0, -500, "world");
+		AddBodyForce("door_double_rusty_1_Body_2", -250, 0, -500, "world");
+	}
+	if(WelDoorVar<5) AddTimer("", 0.001f, "DoorTimerr"); WelDoorVar++;
+}
+
+void InDaInst(string &in asParent, string &in asChild, int alState){
+	AddEffectVoice("M1_S2_P1", "", "Voices", "01020101", false, "", 0, 0);
+	AddTimer("", 8.0f, "LightsCameraAction");
+}
+void LightsCameraAction(string &in asTimer){
+	PlaySoundAtEntity("", "sub_lights_on.snt", "Jimmy_2", 0.0f, false);
+	PlaySoundAtEntity("", "sub_lights_buzz.snt", "Jimmy_2", 0.0f, false);
+	
+	for(int i=0;i<20;i++) SetLampLit("Jimmy_"+i, true, true);
+	for(int i=0;i<13;i++) SetLightVisible("FLN_"+i, true);
+	AddEffectVoice("ann1", "", "Voices", "010102announcer", false, "", 0, 0);
+	AddEffectVoice("M1_S2_P2_01", "", "Voices", "01020201", false, "", 0, 0);
+	//AddEffectVoice("M1_S2_P2_02", "", "Voices", "01020202", false, "", 0, 0);
+	SetEffectVoiceOverCallback("introMusic");
+}
+
+void introMusic(){ //maybe is better here?
+	PlayMusic("intro_lab", true, 1.0f, 2.0f, 0, true);
+}
+
+void Hero(string &in asParent, string &in asChild, int alState){
+	AddEffectVoice("M1_S2_P2_02", "", "Voices", "01020202", false, "", 0, 0);
+}
+
+void Herro(string &in asParent, string &in asChild, int alState){
+	AddEffectVoice("ann2", "", "Voices", "010103announcer", false, "", 0, 0);
+	AddEffectVoice("M1_S2_P3", "", "Voices", "01020301", false, "", 0, 0);
+	SetEffectVoiceOverCallback("OkayNow");
+}
+void OkayNow(){
+	SetEntityInteractionDisabled("StartLabCutscene", false);
+	SetEntityPlayerInteractCallback("StartLabCutscene", "StartLabScene", true);
+}
+
+//GENERAL SCRIPT
+void InteractLockedDoor(string &in asEntity){
+	SetMessage("Examine", "General_LockedDoor", 0);
+}
+
+//CUTSCENE IN LAB ROOM
+void LabScene(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("noperino", true);
+	AddPropForce("door_modern_mine_2", 0,0,-900, "world");
+	AddTimer("LockDoorTimer", 1.0f, "LockDoorTimer");
+	/*SetPlayerActive(false);
+	SetPlayerMoveSpeedMul(0.3f);
+	AddTimer("", 0.1f, "CutsceneTimer");*/
+}
+void LockDoorTimer(string &in asTimer)
+	{SetSwingDoorLocked("door_modern_mine_2", true, true);}
+	
+void StartLabScene(string &in asEntity){
+	//SetPlayerActive(false);
+	SetPlayerMoveSpeedMul(0);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerJumpDisabled(true);
+	FadeOut(3.0f);
+	AddTimer("", 3.25f, "CutsceneTimer");
+}
+	
+void CutsceneTimer(string &in asTimer){
+	AddLocalVarInt("CutVar01", 1);	//What step to play in the event
+	float fEventSpeed = 2.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("CutVar01")){
+		case 1:			
+			SetPlayerActive(false);
+			SetEntityInteractionDisabled("infirmary_hospital_bed_1", true);
+			SetEntityInteractionDisabled("infirmary_hospital_bed_2", true);
+			TeleportPlayer("LabStartScene");
+			SetEntityActive("Happerford", true);
+			SetLightVisible("CompLight001", true);
+			MovePlayerHeadPos(0, 0.025, 0, 0.6f, 0.1f);
+			StartPlayerLookAt("CutVar01_LA_5", 1.0f, 1.0f, "");
+			fEventSpeed = 2.0f;
+			/*StartPlayerLookAt("CutVar01_LA_1", 0.8f, 0.8f, "");
+			AddTimer("walk", 0.0f, "moveforward");
+			fEventSpeed = 4.0f;*/
+		break;
+		case 2:
+			PlayMusic("intro_lab_2", true, 1.0f, 7.0f, 0, true);
+		
+			FadeIn(3.0f);
+			AddTimer("Ajax", 0.0f, "StepTimer");
+			fEventSpeed = 4.5f;
+			/*AddPropForce("door_modern_mine_2", 0,0,-900, "world");
+			AddTimer("LockDoorTimer", 3.0f, "LockDoorTimer");
+			StartPlayerLookAt("CutVar01_LA_2", 1.0f, 1.0f, "");*/
+		break;
+		case 3:
+			StartPlayerLookAt("CutVar01_LA_3", 0.8f, 0.8f, "");
+			fEventSpeed = 1.5f;
+			/*RemoveTimer("walk");
+			StartPlayerLookAt("CutVar01_LA_4", 1.0f, 1.0f, "");
+			fEventSpeed = 1.5f;*/
+		break;
+		case 4:
+			PlaySoundAtEntity("typing", "sub_typing.snt", "HapperfordLA", 0.0f, false);
+		
+			StartPlayerLookAt("HapperfordLA", 1.0f, 1.0f, "");
+			/*AddTimer("walk", 0.0f, "moveforward");
+			fEventSpeed = 1.0f;*/
+		break;
+		case 5:
+			AddEffectVoice("M1_S2_P4_01", "", "Voices", "01020401", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_02", "", "Voices", "01020402", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_03", "", "Voices", "01020403", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_04", "", "Voices", "01020404", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_05", "", "Voices", "01020405", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_06", "", "Voices", "01020406", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_07", "", "Voices", "01020407", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_08", "", "Voices", "01020408", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_09", "", "Voices", "01020409", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_10", "", "Voices", "01020410", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_11", "", "Voices", "01020411", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_12", "", "Voices", "01020412", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_13", "", "Voices", "01020413", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_14", "", "Voices", "01020414", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_15", "", "Voices", "01020415", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_16", "", "Voices", "01020416", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_17", "", "Voices", "01020417", false, "", 0, 0);
+			AddEffectVoice("M1_S2_P4_18", "", "Voices", "01020418", false, "", 0, 0);
+			fEventSpeed = 105.0f;
+			/*RemoveTimer("walk");
+			StartPlayerLookAt("CutVar01_LA_3", 1.0f, 1.0f, "");*/
+		break;
+		case 6:
+			StopSound("typing", 2.0f);
+			
+			FadeOut(2.0f);
+			/*MovePlayerHeadPos(0, 0.025, 0, 0.6f, 0.1f);
+			PlayGuiSound("player_jump8.ogg", 0.75f);
+			fEventSpeed = 0.25f;*/
+		break;
+		case 7:
+			TeleportPlayer("OnDaBed");
+			SetEntityActive("Sapperford", true);
+			SetPlayerActive(true);
+			SetEntityActive("Happerford", false);
+			StartPlayerLookAt("OnDaBed_LA", 2, 2, "");
+			MovePlayerHeadPos(0, -1.3f, 0, 1, 0.1f);
+			fEventSpeed = 1.0f;
+			//MovePlayerHeadPos(0, -0.2, 0, 0.6f, 0.1f);
+		break;
+		case 8:
+			FadeIn(2.0f);
+			fEventSpeed = 12.0f;
+			/*StartPlayerLookAt("CutVar01_LA_5", 1.0f, 1.0f, "");
+			fEventSpeed = 1.0f;*/
+		break;
+		case 9:
+			GivePlayerDamage(10, "BloodSplat", true, false);
+			fEventSpeed = 5.0f;
+		break;
+		case 10:
+			FadeOut(10);
+			fEventSpeed = 5.0f;
+		break;
+		case 11:
+			FadeIn(8);
+			fEventSpeed = 3.0f;
+		break;
+		case 12:
+			FadeOut(8);
+			fEventSpeed = 9.0f;
+		break;
+		case 13:
+			BeginTrials(); //WEEEE
+		break;
+	}
+	if(GetLocalVarInt("CutVar01") < 99)  AddTimer("", fEventSpeed, "CutsceneTimer");	
+}
+void StepTimer(string &in asTimer){
+	PlaySoundAtEntity("", "scare_walk_hallway.snt", "Sounds_Walking", 0.0f, false);
+	if(asTimer=="Ajax"){
+		AddTimer("", 1.0f, "StepTimer");
+		AddTimer("", 2.0f, "StepTimer");
+		AddTimer("", 3.0f, "StepTimer");
+	}
+}
+
+//DOORS IN THE SIMULATION
+void StarTrekDoors(string &in asDoor, int isOpen){ //HOLY FUCK SHIT I DID IT
+	AddDebugMessage(""+asDoor, false);
+	SetLocalVarInt("OpenVar", isOpen);
+	AddTimer(asDoor, 0, "DoorOpen");
+	SetLocalVarInt("DOORVAR", 0);
+	
+	PlaySoundAtEntity("", "sub_sliding_doors.snt", asDoor, 0.0f, false);
+}
+void DoorOpen(string &in asTimer){ //THIS IS TOP 3 MOST BEAUTIFUL SCRIPTS IN THIS MOD
+	AddLocalVarInt("DOORVAR", 1);	//What step to play in the event
+
+	if(GetLocalVarInt("OpenVar")==1){ //Opens door
+		AddBodyForce(asTimer+"_Body_1", 0, 0, 5000, "world");
+		AddBodyForce(asTimer+"_Body_2", 0, 0, -5000, "world");
+	}
+	else if(GetLocalVarInt("OpenVar")==-1){ //Closes door
+		AddBodyForce(asTimer+"_Body_1", 0, 0, -5000, "world");
+		AddBodyForce(asTimer+"_Body_2", 0, 0, 5000, "world");
+	}
+	
+	if(GetLocalVarInt("DOORVAR") < 100)  AddTimer(asTimer, 0, "DoorOpen");	
+}
+void CloseAllDoors(string &in asParent, string &in asChild, int alState){
+	SetEntityActive("BlockDoor_"+asChild, true);
+	if(asChild=="1") StarTrekDoors("FDoor_"+asChild, -1);
+	else StarTrekDoors("FDoor_"+asChild, 1);
+	if(asChild=="1"){
+		AddEffectVoice("M1_S3_P2_01", "", "Voices", "01030201", false, "", 0, 0);
+		AddEffectVoice("M1_S3_P2_02", "", "Voices", "01030202", false, "", 0, 0);
+		AddEffectVoice("M1_S3_P2_03", "", "Voices", "01030203", false, "", 0, 0);
+		SetEffectVoiceOverCallback("LightTrial");
+	}
+	else if(asChild=="2"){
+		AddEffectVoice("M1_S3_P3_02", "", "Voices", "01030302", false, "", 0, 0);
+		AddEffectVoice("M1_S3_P3_03", "", "Voices", "01030303", false, "", 0, 0);
+		SetEffectVoiceOverCallback("SoundTest");
+	}
+	else if(asChild=="3"){ 
+		AddEffectVoice("M1_S3_P4_02", "", "Voices", "01030402", false, "", 0, 0);
+		AddEffectVoice("M1_S3_P4_03", "", "Voices", "01030403", false, "", 0, 0);
+		SetEffectVoiceOverCallback("FiretruckBoxes");
+	}
+	else if(asChild=="4"){ 
+		AddEffectVoice("M1_S3_P5_01", "", "Voices", "01030501", false, "", 0, 0);
+		AddEffectVoice("M1_S3_P5_02", "", "Voices", "01030502", false, "", 0, 0);
+		AddEffectVoice("M1_S3_P5_03", "", "Voices", "01030503", false, "", 0, 0);
+		AddEffectVoice("M1_S3_P5_04", "", "Voices", "01030504", false, "", 0, 0);
+		SetEffectVoiceOverCallback("HapperfordDone");
+	}
+}
+
+//TRIALS CUTSCENE
+void BeginTrials(){
+	AddTimer("", 5, "Heal");
+	Reset();
+	SetLocalVarInt("TheTrialsVar", 0);
+	FadeOut(0);
+	//PlayMusic("trial_1.ogg", true, 2.5f, 5.0f, 0, true);
+	TeleportPlayer("TestArea_1");
+	SetPlayerActive(false);
+	//FadePlayerRollTo(-90, 1, 1);
+	MovePlayerHeadPos(1, -0.6, -0.5, 1, 0.1f);
+	StartPlayerLookAt("TestArea_LA_1", 10, 100, "");
+	AddTimer("", 4.0f, "BeginTrialTimer");
+}
+void BeginTrialTimer(string &in asTimer){ //Player wakes up
+	AddLocalVarInt("TheTrialsVar", 1);	//What step to play in the event
+	float fEventSpeed = 4.0f;	//The default time between steps in an event
+	
+	switch(GetLocalVarInt("TheTrialsVar")){
+		case 1:
+			FadeIn(3.0f);
+			
+			PlayMusic("intro_lab_test", true, 0.75f, 3.0f, 0, true);
+		break;
+		case 2:
+			AddEffectVoice("M1_S3_P1_01", "", "Voices", "01030101", false, "", 0, 0);
+			fEventSpeed = 2.0f;
+		break;
+		case 3:
+			MovePlayerHeadPos(1, -0.1, -0.1, 0.4, 0.1f);
+			PlaySoundAtEntity("", "player_stand.snt", "Player", 0.0f, false);
+			StartPlayerLookAt("TestArea_LA_3", 1.0, 1.0, "");
+		break;
+		case 4:
+			MovePlayerHeadPos(0, -0.1, 0, 0.4, 0.1f);
+			PlaySoundAtEntity("", "player_crouch.snt", "Player", 0.0f, false);
+			StartPlayerLookAt("TestArea_LA_2", 0.8, 0.8, "");
+		break;
+		case 5:
+			StartPlayerLookAt("TestArea_LA_4", 1.0, 1.0, "");
+			AddEffectVoice("M1_S3_P1_02", "", "Voices", "01030102", false, "", 0, 0);
+			AddEffectVoice("M1_S3_P1_03", "", "Voices", "01030103", false, "", 0, 0);
+			AddEffectVoice("M1_S3_P1_04", "", "Voices", "01030104", false, "", 0, 0);
+			AddEffectVoice("M1_S3_P1_05", "", "Voices", "01030105", false, "", 0, 0);
+			SetPlayerActive(true);
+			SetPlayerMoveSpeedMul(0);
+			SetPlayerCrouchDisabled(true);
+			SetPlayerJumpDisabled(true);
+			fEventSpeed = 18.0f;
+		break;
+		case 6:
+			StartPlayerLookAt("TestArea_LA_2", 1.0, 1.0, "");
+			fEventSpeed = 10.0f;
+		break;
+		case 7:
+			SetLightVisible("Point_r", true);
+			SetLightVisible("Spot_r", true);
+			PlaySoundAtEntity("TestArea_LA_2", "lm_light_flicker.snt", asTimer, 0.0f, false);
+			fEventSpeed = 2.0f;
+		break;
+		case 8:
+			SetLightVisible("Point_r", false);
+			SetLightVisible("Spot_r", false);
+			SetLightVisible("Point_g", true);
+			SetLightVisible("Spot_g", true);
+			PlaySoundAtEntity("TestArea_LA_2", "lm_light_flicker.snt", asTimer, 0.0f, false);
+			fEventSpeed = 2.0f;
+		break;
+		case 9:
+			SetLightVisible("Point_g", false);
+			SetLightVisible("Spot_g", false);
+			SetLightVisible("Point_b", true);
+			SetLightVisible("Spot_b", true);
+			PlaySoundAtEntity("TestArea_LA_2", "lm_light_flicker.snt", asTimer, 0.0f, false);
+			fEventSpeed = 2.0f;
+		break;
+		case 10:
+			SetLightVisible("Point_b", false);
+			SetLightVisible("Spot_b", false);
+			AddEffectVoice("M1_S3_P1_06", "", "Voices", "01030106", false, "", 0, 0);
+			StarTrekDoors("FDoor_1", 1);
+			Reset();
+		break;
+	}
+	if(GetLocalVarInt("TheTrialsVar") < 11)  AddTimer("", fEventSpeed, "BeginTrialTimer");	
+}
+
+//TRIAL 1
+void LightTrial(){
+	AddTimer("TestLight_"+RandInt(1,3), 3.0f, "LightTrialTimer");
+	AddEntityCollideCallback("Player", "Button_TestLight", "Button_TestLight", false, 0);
+}
+void LightTrialTimer(string &in asTimer){
+	for(int i=0;i<10;i++) SetLampLit("TestLight_"+i, false, true);
+	SetLampLit(asTimer, true, true);
+	PlaySoundAtEntity("TestLightSound", "lm_light_flicker.snt", asTimer, 0.0f, false);
+	SetLocalVarString("WhichLightIsOn", asTimer);
+	AddTimer("TestLight_"+RandInt(1,3), 3.0f, "LightTrialTimer");
+}
+void Button_TestLight(string &in asParent, string &in asChild, int alState){
+	if(alState==1){
+		AddDebugMessage("Button hit!", false);
+		AddDebugMessage(GetLocalVarString("WhichLightIsOn")+" is on!", false);
+		for(int i=0;i<10;i++) RemoveTimer("TestLight_"+i);
+		if(GetLocalVarString("WhichLightIsOn")=="TestLight_2"){
+			AddTimer("", 1.0f, "Winner");
+			RemoveEntityCollideCallback("Player", "Button_TestLight");
+			AddDebugMessage("You did it!!!", false);
+		}
+	}
+	else if(alState==-1){
+		for(int i=0;i<10;i++) RemoveTimer("TestLight_"+i);
+		AddTimer("TestLight_"+RandInt(1,3), 3.0f, "LightTrialTimer");
+	}
+}
+void Winner(string &in asEntity){
+	for(int i=0;i<10;i++) SetLampLit("TestLight_"+i, true, true);
+	for(int i=0;i<10;i++) PlaySoundAtEntity("TestLightSound", "lm_light_flicker.snt", "TestLight_"+i, 0.0f, false);
+	StarTrekDoors("FDoor_2", -1);
+	AddTimer("", 1.0f, "WinnerOff");
+	AddEffectVoice("M1_S3_P3_01", "", "Voices", "01030301", false, "", 0, 0);
+}
+void WinnerOff(string &in asTimer)
+	{for(int i=0;i<10;i++) SetLampLit("TestLight_"+i, false, true);}
+	
+//TRIAL 2
+void SoundTest(){
+	AddTimer("", 3.0f, "PlaySoundTest");
+}
+void PlaySoundTest(string &in asTimer){
+	SetLocalVarInt("SoundTestVar", RandInt(1,2));
+	AddDebugMessage("Playing sound at "+GetLocalVarInt("SoundTestVar"), false);
+	PlaySoundAtEntity("SoundTestSound", "sub_auditory_perception_test.snt", "SoundTest_"+GetLocalVarInt("SoundTestVar"), 0.0f, false);
+	for(int i=0;i<5;i++) SetEntityInteractionDisabled("SoundLever_"+i, false);
+}
+void SoundTestLever(string &in EntityName, int alState){
+	if(alState==-1){
+		if(EntityName=="SoundLever_1" && GetLocalVarInt("SoundTestVar")==1){
+			AddLocalVarInt("SoundsCorrect", 1);
+			PlaySoundAtEntity("SoundTestSound", "sub_correct_sound.snt", "SoundTest_"+GetLocalVarInt("SoundTestVar"), 0.0f, false);
+			AddDebugMessage("CORRECT! "+GetLocalVarInt("SoundsCorrect")+"/3", false);
+		}
+		else if(EntityName=="SoundLever_2" && GetLocalVarInt("SoundTestVar")==2){
+			AddLocalVarInt("SoundsCorrect", 1);
+			PlaySoundAtEntity("SoundTestSound", "sub_correct_sound.snt", "SoundTest_"+GetLocalVarInt("SoundTestVar"), 0.0f, false);
+			AddDebugMessage("CORRECT! "+GetLocalVarInt("SoundsCorrect")+"/3", false);
+		}
+		else{
+			PlaySoundAtEntity("SoundTestSound", "sub_incorrect_sound.snt", "SoundTest_"+GetLocalVarInt("SoundTestVar"), 0.0f, false);
+			AddDebugMessage("Failed this sound test!", false);
+		}
+		
+		if(GetLocalVarInt("SoundsCorrect")==3){
+			AddDebugMessage("GOT'EM ALL!!", false);
+			for(int i=0;i<5;i++) SetEntityInteractionDisabled("SoundLever_"+i, true);
+			AddTimer("", 3.0f, "CorrectSoundTest");
+			AddEffectVoice("M1_S3_P4_01", "", "Voices", "01030401", false, "", 0, 0);
+		}
+		else{
+			AddTimer("", 3.0f, "PlaySoundTest");
+			for(int i=0;i<5;i++) SetEntityInteractionDisabled("SoundLever_"+i, true);
+		}
+	}
+}
+void CorrectSoundTest(string &in asTimer)
+	{StarTrekDoors("FDoor_3", -1);}
+	
+//TRIAL 3
+void Button_PressurePlate(string &in asParent, string &in asChild, int alState){
+	if(GetLocalVarInt("ZippyDoo")==1){
+		if(alState==1){
+			StarTrekDoors("FDoor_4", -1); 
+			SetEntityActive("BlockDoor_4", false);
+		}
+		else if(alState==-1){
+			StarTrekDoors("FDoor_4", 1); 
+			SetEntityActive("BlockDoor_4", true);
+		}
+	}
+	else{
+		if(alState==1){
+			SetLocalVarInt("Eila", 1);
+		}
+		else if(alState==-1){
+			SetLocalVarInt("Eila", 0);
+		}
+	}
+}
+void FiretruckBoxes(){
+	SetLocalVarInt("ZippyDoo", 1);
+	if(GetLocalVarInt("Eila")==1){
+		StarTrekDoors("FDoor_4", -1); 
+		SetEntityActive("BlockDoor_4", false);
+	}
+}
+
+//FLIPPY ROOM
+void HapperfordDone(){
+	SetPropActiveAndFade("FlippyButton", true, 1.0f);
+	SetEntityPlayerInteractCallback("FlippyButton", "FlipFlop", true);
+}
+void FlipFlop(string &in asEntity){
+	PlayMusic("lab_event_roomflip", false, 2, 0.5f, 10, false);
+	PlaySoundAtEntity("", "sub_room_flip.snt", "FlippyButton", 0.0f, false);
+	AddEffectVoice("ann4", "", "Voices", "010305announcer", false, "", 0,0);
+	AddTimer("", 1.0f, "Flippy");
+	AddTimer("", 0.25f, "FlippyF");
+}
+void Flippy(string &in asTimer){
+	if(Wall<12){
+		if(Wall==1) for(int i=0;i<4;i++) SetPropActiveAndFade("Del_"+i, false, 2);
+		if(Wall==11) for(int i=0;i<7;i++) SetPropActiveAndFade("Del2_"+i, true, 2);
+		SetEntityActive("MW_"+Wall, true);
+		SetMoveObjectStateExt("LabWall2_"+Wall, 1, 5, 5, 1, false);
+		SetMoveObjectStateExt("MW_"+Wall, -0.95, 5, 5, 1, false);
+		PlaySoundAtEntity("", "sub_wall_flip.snt", "LabWall2_"+Wall, 0.0f, false);
+		AddTimer(""+Wall, 3.0f, "FlippyDe");
+		Wall++;
+		AddTimer("", 0.5f, "Flippy");
+	}
+	else AddTimer("", 0.5f, "FadeObjects");
+}
+void FlippyDe(string &in asTimer){
+	SetEntityActive("LabWall2_"+asTimer, false);
+}
+void FlippyF(string &in asTimer){
+	if(Floor<76){
+		SetMoveObjectStateExt("FF_"+Floor, 1, 15, 15, 1, false);
+		Floor++;
+		AddTimer("", 0.075f, "FlippyF");
+	}
+}
+void FadeObjects(string &in asTimer){
+	if(Object==0){
+		SetPropActiveAndFade("Pedi", false, 1);
+		SetPropActiveAndFade("FlippyButton", false, 1);
+	}
+	else if(Object==1){
+		for(int i=100;i<120;i++) SetPropActiveAndFade("FFR_"+i, true, 1);
+		FadeLightTo("FFL_10", 0,0,0,0,-1, 3);
+		TurnLightsOn(3);
+	}
+	else if(Object==2){
+		for(int i=200;i<220;i++) SetPropActiveAndFade("FFR_"+i, true, 1); 
+	}
+	else if(Object==3){
+		for(int i=0;i<75;i++) SetPropActiveAndFade("FFR_"+i, true, 1);
+		AddEffectVoice("M1_S3_P5_05", "", "Voices", "01030505", false, "", 0,0);
+	}
+	Object++;
+	if (Object<4) AddTimer("", 1.0f, "FadeObjects");
+}
+
+void TurnLightsOn(float fadeTime){
+	FadeLightTo("FFL_1", 1.0f,0.621f,0.155f,1.0f,-1, fadeTime);
+	FadeLightTo("FFL_2", 0.534f,0.328f,0.138f,0,-1, fadeTime);
+	FadeLightTo("FFL_3", 0.638f,0.415f,0.224f,0,-1, fadeTime);
+	FadeLightTo("FFL_4", 0.345f,0.157f,0,0,-1, fadeTime);
+	FadeLightTo("FFL_5", 0.241f,0.138f,0,0,-1, fadeTime);
+	FadeLightTo("FFL_6", 0.345f,0.157f,0,0,-1, fadeTime);
+	FadeLightTo("FFL_7", 0.517f,0.327f,0.069f,0,-1, fadeTime);
+}
+
+void scene6dialogue(string &in asParent, string &in asChild, int alState){
+	AddEffectVoice("M1_S3_P6_01", "", "Voices", "01030601", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_02", "", "Voices", "01030602", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_03", "", "Voices", "01030603", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_04", "", "Voices", "01030604", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_05", "", "Voices", "01030605", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_06", "", "Voices", "01030606", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_07", "", "Voices", "01030607", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_08", "", "Voices", "01030608", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_09", "", "Voices", "01030609", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_10", "", "Voices", "01030610", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_11", "", "Voices", "01030611", false, "", 0,0);
+	AddEffectVoice("M1_S3_P6_12", "", "Voices", "01030612", false, "", 0,0);
+	SetEffectVoiceOverCallback("UnlockGate");
+}
+
+void UnlockGate()
+	{
+		SetLocalVarInt("DoneTalking",1);
+	}
+
+//TRIAL 4
+void ExamineBoards(string &in asEntity){
+	SetMessage("Examine", "Trial1_Boards", 0);
+}
+
+void BreakBoards(string &in asItem, string &in asEntity){
+	AddTimer(asEntity, 0.2, "TimerSwitchShovel");
+	PlaySoundAtEntity("pickupcrow","player_crouch.snt", "Player", 0.05, false);
+	AddEntityCollideCallback("Movebar", "BreakTheWindows", "WindowsBroken", true, 0);
+}
+void TimerSwitchShovel(string &in asTimer){
+	RemoveItem("Crowbar");
+	PlaySoundAtEntity("attachshovel","puzzle_place_jar.snt", asTimer, 0, false);	
+	SetEntityActive("Movebar", true);
+}
+void WindowsBroken(string &in asParent, string &in asChild, int alState){
+	//SetMessage("Debug", "DebugMessage1", 0);
+	PlaySoundAtEntity("break","break_wood", "BrokeBreak", 0, false);
+	CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "BrokeBreak", false);
+	SetEntityActive("WindowArea", false);
+	SetEntityActive("WoodBoards_1", false);
+	SetEntityActive("BoardArea", false);
+	SetEntityActive("WoodBoards_2", true);
+	AddPropForce("WoodBoards_2", 0, 0, -100, "world");
+	AddTimer("", 2.0f, "fadewindows");
+	GiveItemFromFile("Crowbar", "crowbar.ent");
+	SetEntityActive("Movebar", false);
+	//SetEntityActive("Brokebar", true);
+	//SetMessage("Interact", "Trial1_BrokeBoards", 0);
+}
+void fadewindows(string &in asTimer)
+	{for(int i=0;i<13;i++) SetPropActiveAndFade("WoodBoards_2", false, 2.0f);}
+
+//EXITING LEVEL
+void BestMusic(string &in asParent, string &in asChild, int alState){
+	PlayMusic("event_soft_1", false, 1.2f, 1, 10, false);
+}
+
+void EndLevel(string &in asEntity){
+	if (GetLocalVarInt("DoneTalking") == 1)
+	{
+		AddDebugMessage("u DID it GOOD JOB bud 8^)", false);
+		RemoveItem("Crowbar");
+		ChangeMap("Sub_Trial_2", "Trial2_TestRoom", "door_large_castle_open", "");
+	}
+	else
+	{
+		SetMessage("Interact","Trial1_Talkin",0);
+	}
+}
+
+void OnEnter(){
+	AutoSave();
+	PreloadSound("sub_phone_ringing.snt");
+}
+void OnLeave(){
+	StopMusic(0,0);
+}

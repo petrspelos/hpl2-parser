@@ -1,0 +1,77 @@
+void OnStart()
+{
+SetEntityCallbackFunc("light_box_1", "IgniteLamp");
+SetEntityPlayerInteractCallback("note_letter_1", "letter_pickup", true);
+FadeOut(0);
+SetPlayerActive(false);
+SetSanityDrainDisabled(true);
+SetLightVisible("PointLight_2", false);
+SetLightVisible("PointLight_1", false);
+SetLightVisible("PointLight_4", false);
+SetLightVisible("SpotLight_1", false);
+AddTimer("", 1, "logo");
+}
+
+void logo(string &in asTimer)
+{
+PlayGuiSound("theaterintromusic.ogg", 1.0f);
+FadeIn(3);
+FadeLightTo("PointLight_2", 1.000f, 1.000f, 1.000f, 1.000f, 1.00f, 5.0f);
+AddTimer("", 4.5, "logo_fade");
+}
+
+void logo_fade(string &in asTimer)
+{
+FadeOut(2);
+FadeLightTo("PointLight_2", 0.000f, 0.000f, 0.000f, 0.000f, 0.00f, 2.0f);
+AddTimer("", 3, "teleport");
+}
+
+void teleport(string &in asTimer)
+{
+PlayGuiSound("theaterintromusic2.ogg", 1.0f);
+TeleportPlayer("PlayerStartArea_2");
+FadeIn(2);
+AddTimer("", 2, "playeractive");
+}
+
+void playeractive(string &in asTimer)
+{
+SetPlayerActive(true);
+}
+
+void letter_pickup(string &in asEntity)
+{
+AddTimer("", 0.1, "after_pickup");
+}
+
+void after_pickup(string &in asTimer)
+{
+SetLampLit("candlestick02_1", false, true);
+CreateParticleSystemAtEntity("", "ps_dust_whirl.ps", "candlestick02_1", true);
+PlayGuiSound("27_wind4.ogg", 1.0f);
+PlaySoundAtEntity("","theaterclock.snt","area_clock", 0, true);
+}
+
+void IgniteLamp(string &in asEntityName, string &in asType)
+    {
+		if(asType=="OnIgnite")
+			{
+SetLightVisible("SpotLight_1", true);
+SetLightVisible("PointLight_1", true);
+SetLightVisible("PointLight_4", true);
+SetEntityPlayerInteractCallback("area_enter", "changemap", true);
+}				
+            }
+
+void changemap(string &in asEntity)
+{
+ChangeMap("theater.map", "PlayerStartArea_1", "", "");
+}
+	
+////////////////////////////
+// Run when leaving map
+void OnLeave()
+{
+StopMusic(0.0f, 1);
+}

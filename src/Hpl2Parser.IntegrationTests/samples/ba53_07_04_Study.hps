@@ -1,0 +1,115 @@
+void OnStart()
+	{
+		SetEntityPlayerInteractCallback("orbpiece_pickup_script", "orbpiece_pickup", false);
+		AddEntityCollideCallback("Player", "script_scarlet_introduce", "scarlet_introduce", true, 1);
+	}
+
+void OnEnter()
+	{
+		PlayMusic("25_amb.ogg", true, 1, 1, 1, true);
+	}
+
+/////Introduce Scarlet Orbpiece Scene/////
+
+void scarlet_introduce(string &in asParent, string &in asChild, int alState)
+	{
+		SetPlayerActive(false);
+		StartPlayerLookAt("orbpiece_scarlet_1", 5, 5, "");
+		AddTimer("trig1", 1.0f, "begin_scarlet_intro");
+	}
+
+void begin_scarlet_intro(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_introduce1", 5);
+		AddTimer("trig1", 7.0f, "continue_scarlet_intro1");
+	}
+
+void continue_scarlet_intro1(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_introduce2", 3);
+		AddTimer("trig1", 4.0f, "continue_scarlet_intro2");
+	}
+
+void continue_scarlet_intro2(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_introduce3", 4);
+		AddTimer("trig1", 5.0f, "continue_scarlet_intro3");
+	}
+
+void continue_scarlet_intro3(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_introduce4", 5);
+		AddTimer("trig1", 6.0f, "continue_scarlet_intro4");
+	}
+
+void continue_scarlet_intro4(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_introduce5", 4);
+		AddTimer("trig1", 4.0f, "end_scarlet_introduce");
+	}
+
+void end_scarlet_introduce(string &in asTimer)
+	{
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+		AddQuest("scarlet_light_quest", "scarletquest");
+	}
+
+/////End Scarlet Introduce Scene/////
+
+/////Scarlet Finishing Sequence/////
+
+void orbpiece_pickup(string &in asEntity)
+	{
+		if(GetLocalVarInt("light") == 5)
+			{
+				SetMessage("Messages", "scarlet_interact2", 4);
+				AddTimer("trig1", 5.0f, "continue_scarlet_interact1");
+				SetPlayerActive(false);
+				StartPlayerLookAt("orbpiece_scarlet_1", 5, 5, "");
+			}
+		else
+			{
+				SetMessage("Messages", "scarlet_interact1", 2);
+			}
+	}
+
+void continue_scarlet_interact1(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_interact3", 4);
+		AddTimer("trig1", 5.0f, "continue_scarlet_interact2");
+	}
+
+void continue_scarlet_interact2(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_interact4", 3);
+		AddTimer("trig1", 4.0f, "finish_interact");
+	}
+
+void finish_interact(string &in asTimer)
+	{
+		SetMessage("Messages", "obtain_ewkey", 4);
+		GiveItem("key_eastwing", "key_tower", "key_eastwing", "key_tower.tga", 1);
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+		SetEntityActive("orbpiece_pickup_script", false);
+		AddTimer("trig1", 15.0f, "scarlet_idle");
+		CompleteQuest("scarlet_light_quest", "scarletquest");
+	}
+
+void scarlet_idle(string &in asTimer)
+	{
+		SetMessage("Messages", "scarlet_idle1", 6);
+	}
+
+/////End Scarlet Finishing Sequence/////
+
+void add_light(string &in asEntity)
+	{
+		AddLocalVarInt("light", +1);
+	}
+
+void OnLeave()
+	{
+		StopMusic(1, 1);
+	}

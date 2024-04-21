@@ -1,0 +1,1263 @@
+     //===========================================
+     // Dec. 2019 - Jan. 2020
+     // Frictional Fan Jam
+	 // Winter Modding Event
+	 // The Woodpecker Project
+	 // by Yanka
+	 // Have fun!
+	 // Note: upgraded to DX edition in Dec. 2022
+     //===========================================
+ 
+     //========================================================================
+     // R Level first start
+     void OnStart()	
+	{
+		LetsBegin();
+		// collisions
+		AddEntityCollideCallback("Player", "BatteryElectroSpawner", "BatteryElectroSpawner", true, 1);
+		AddEntityCollideCallback("Player", "end_escape", "end_escape", true, 1);
+		AddEntityCollideCallback("Player", "screw_them_txt_bis", "screw_them_txt_bis", true, 1);
+		AddEntityCollideCallback("Player", "screw_them_txt", "screw_them_txt", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_Sacrifice", "CountDown00CheckSuccess", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_floor_1_elev_quest", "ScriptArea_floor_1_elev_quest", true, 1);
+		AddEntityCollideCallback("Player", "quest_starts", "quest_starts", true, 1);
+		AddEntityCollideCallback("Player", "ScriptArea_floor_1_txt", "ScriptArea_floor_1_txt", true, 1);
+		AddEntityCollideCallback("Player", "lantern_no", "lantern_no", false, 1);
+		AddEntityCollideCallback("Player", "lantern_ok", "lantern_ok", false, 1);
+		AddEntityCollideCallback("Player", "FlashbackArea_1", "WalkSlower", true, 1);
+		AddEntityCollideCallback("Player", "FlashbackArea_4", "RampageSFX", true, 1);
+		AddEntityCollideCallback("Player", "FlashbackArea_6", "WallStompStops", true, 1);
+		//
+		// interactions
+		SetEntityPlayerInteractCallback("ChestIsLocked", "ChestIsLocked", false);
+		SetEntityPlayerInteractCallback("Security_Panel_back_to_f1", "escape_ending_starts", true);
+		SetEntityPlayerInteractCallback("duga_switch_off", "duga_switch_off_txt", false);
+		SetEntityConnectionStateChangeCallback("duga_switch_on", "duga_switch_on_done");
+		SetEntityConnectionStateChangeCallback("amplifier_switch", "amplifier_switch_done");
+		SetEntityPlayerInteractCallback("human_skull_1", "skull_exam_event", true);
+		SetEntityPlayerInteractCallback("valve_iron_rusty02_3", "valve_stuck_event", false);
+		SetEntityPlayerInteractCallback("valve_iron_rusty02_2", "valve_broken_event", false);
+		SetEntityPlayerInteractCallback("door_garage", "door_garage_event", false);
+		SetEntityPlayerInteractCallback("hollow_needle_padlock", "hollow_needle_padlock_event", true);
+		SetEntityConnectionStateChangeCallback("generator_switch", "generator_switch_done");
+		SetEntityPlayerInteractCallback("elevator_f1_on", "enter_elevator_for_floor_4", true);
+		SetEntityPlayerInteractCallback("tech_door_panel_to_floor_7", "enter_elevator_for_floor_7", true);
+		//
+		// keys and items used
+		AddUseItemCallback("", "Knife", "chest_small_1", "chest_car_unlocked", false);
+		AddUseItemCallback("", "key_entry", "elevator_card_entrance_on", "door_entry_opened", true);
+		AddUseItemCallback("", "hollow_needle_padlock", "padlock_generator", "padlock_generator_opened", true);
+		AddUseItemCallback("", "key_elevator", "elevator_card_no_power", "elevator_power", false);
+		AddUseItemCallback("", "key_elevator", "elevator_card_power_active", "elevator_activated", true);
+		AddUseItemCallback("", "key_floor_7", "Security_Panel_3", "transition_to_f7", true);
+	}
+	
+	
+	void LetsBegin()
+	{
+		FadeOut(0);
+		FadeIn(9);
+		SetPlayerActive(false);
+		// Unconsciousness length
+		AddTimer("IntroEnds", 10.0f, "IntroEnds");
+		// vfx
+		FadeImageTrailTo(1, 2);
+		FadeSepiaColorTo(0.6, 4);
+		FadeRadialBlurTo(1, 5);
+		//
+		StartPlayerLookAt("door_entry", 0.5, 1.0, "");
+		PlaySoundAtEntity("wind", "wind.snt", "Player", 0, false);
+	}
+	
+	void IntroEnds(string &in asTimer)
+	{
+		GiveItem("lantern", "Lantern", "Lantern", "tw_torch_item.tga", 1);
+		SetLanternActive(true, true);
+		SetPlayerActive(true);
+		PlaySoundAtEntity("ui_pda_news", "ui_pda_news.snt", "Player", 0, false);
+		// vfx
+		FadeRadialBlurTo(0.0, 1);
+		FadeSepiaColorTo(0, 4);
+		FadeImageTrailTo(0,1);
+		PlaySoundAtEntity("wind_chime", "wind_chime.snt", "Player", 0, false);
+		//
+		StopPlayerLookAt();
+		SetEntityActive("SignArea_10", false);
+	}
+	
+	
+	////////////////////////////////////////
+	// collisions
+	// BatteryElectroSpawner
+	void BatteryElectroSpawner(string &in asParent, string &in asChild, int alState)
+	{
+		SetEntityActive("ArtifactBatteryElectro", true);
+		PlaySoundAtEntity("ArtifactBatteryElectroSFX", "amb_pigline_electrics.snt", "ArtifactBatteryElectro", 0, false);
+		CreateParticleSystemAtEntityExt("ArtifactBatteryElectroBall", "ps_orb_light_core.ps", "ArtifactBatteryElectroPS", true, 1,0.678,0,1, true, 0,2,20,30);
+		CreateParticleSystemAtEntityExt("ArtifactBatteryElectroHalo", "ps_orb_room_portal_open_cparty.ps", "ArtifactBatteryElectroPS", true, 1,0.68,0,0.098, true, 0,2,20,30);
+	}
+	void ArtifactBatteryElectroFound(string &in entity)
+ 	{
+		DestroyParticleSystem("ArtifactBatteryElectroBall");
+		DestroyParticleSystem("ArtifactBatteryElectroHalo");
+		StopSound("ArtifactBatteryElectroSFX", 1);
+		//
+		GiveItem("ArtBatteryE", "Puzzle", "ArtBatteryE", "tw_art_battery_e_item.tga", 1);
+		SetMessage("Messages", "BatteryElectroArtifactFound", 0);
+		//
+		SetEntityActive("block_box_elec", false);
+		SetEntityActive("SignArea_16", false);
+		SetEntityActive("LadderArea_2", true);
+	}
+	
+	// end	
+	void end_escape(string &in asParent, string &in asChild, int alState)
+	{
+		StopSound("alrm_base", 12.0);
+		StopSound("vent_fan_weld_ed", 6.0);
+		//
+		SetPlayerSanity(1.0);
+		SetPlayerHealth(1.0);
+		PlaySoundAtEntity("react_sigh", "react_sigh.snt", "Player", 0, false);
+		//
+		AddTimer("BadCredits", 10.4, "BadCredits");
+		CompleteQuest("08", "08");
+		//
+		SetPlayerActive(false);
+		SetPlayerCrouching(true);
+		StartPlayerLookAt("block_look_f7", 0.5, 1.0, "");
+		SetLanternActive(false, true);
+		SetLanternDisabled(true);
+		SetInventoryDisabled(true);
+		FadeOut(10.4);
+	}
+	
+	void BadCredits(string &in entity)
+	{
+		StartCredits("", true, "Ending", "CreditsBad", -1);
+	}
+	
+	void screw_them_txt_bis(string &in asParent, string &in asChild, int alState)
+	{
+		SetMessage("Messages", "Destiny2_5", 0);
+		SetPlayerSanity(10.0);
+		SetPlayerHealth(33.0);
+		PlaySoundAtEntity("react_breath_slow", "react_breath_slow.snt", "Player", 0, false);
+		// fire f7
+		CreateParticleSystemAtEntity("fire_f7_1", "ps_fire_smoke_stove_small.ps", "fire_f7_1", false);
+		CreateParticleSystemAtEntity("fire_f7_2", "ps_fire_smoke_stove_small.ps", "fire_f7_2", false);
+		CreateParticleSystemAtEntity("fire_f7_3", "ps_fire_smoke_stove_small.ps", "fire_f7_3", false);
+		CreateParticleSystemAtEntity("fire_f7_4", "ps_fire_smoke_stove_small.ps", "fire_f7_4", false);
+		CreateParticleSystemAtEntity("fire_f7_5", "ps_fire_smoke_stove_small.ps", "fire_f7_5", false);
+		CreateParticleSystemAtEntity("fire_f7_6", "ps_fire_smoke_stove_small.ps", "fire_f7_6", false);
+		CreateParticleSystemAtEntity("fire_f7_7", "ps_fire_smoke_stove_small.ps", "fire_f7_7", false);
+		CreateParticleSystemAtEntity("fire_f7_8", "ps_fire_smoke_stove_small.ps", "fire_f7_8", false);
+		CreateParticleSystemAtEntity("fire_f7_9", "ps_fire_smoke_stove_small.ps", "fire_f7_9", false);
+		CreateParticleSystemAtEntity("fire_f7_10", "ps_fire_smoke_stove_small.ps", "fire_f7_10", false);
+		CreateParticleSystemAtEntity("fire_f7_11", "ps_fire_smoke_stove_small.ps", "fire_f7_11", false);
+		CreateParticleSystemAtEntity("fire_f7_12", "ps_fire_smoke_stove_small.ps", "fire_f7_12", false);
+		CreateParticleSystemAtEntity("fire_f7_13", "ps_fire_smoke_stove_small.ps", "fire_f7_13", false);
+		// X
+		SetEntityActive("cross_1", true);
+		SetEntityActive("cross_2", true);
+	}
+	
+	void screw_them_txt(string &in asParent, string &in asChild, int alState)
+	{
+		SetMessage("Messages", "Destiny2", 0);
+		SetPlayerSanity(50.0);
+		SetPlayerHealth(66.0);
+		PlaySoundAtEntity("player_cough", "player_cough.snt", "Player", 0, false);
+	}
+
+	void ScriptArea_Sacrifice(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("Accepted to try saving Humanity", true);
+		CompleteQuest("06", "06");
+		CompleteQuest("07", "07");
+		// player
+		SetPlayerMoveSpeedMul(0.0);
+		// elevator updates
+		SetEntityActive("Security_Panel_4", true);
+		SetEntityActive("Security_Panel_back_to_f1", false);
+		SetLightVisible("PointLight_f7_elevator_to_f1", false);
+		SetLightVisible("PointLight_f1_elevator_creader", false);
+	}
+	
+	void ScriptArea_floor_1_elev_quest(string &in asParent, string &in asChild, int alState)
+	{
+		AddQuest("03", "03");
+	}
+	
+	void quest_starts(string &in asParent, string &in asChild, int alState)
+	{
+		AddQuest("00", "00");
+		AddQuest("01", "01");
+	}
+	
+	void ScriptArea_floor_1_txt(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("Idi ko mne", true);
+		SetMessage("Messages", "Floor_1", 0);
+		AddQuest("02", "02");
+		CompleteQuest("00", "00");
+		SetEntityActive("SignArea_1", false);
+	}
+	
+	void lantern_no(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("Torch battery dies", true);
+		AddDebugMessage("Crouch disabled", true);
+		SetPlayerLampOil(0);
+		// AddDebugMessage("No lantern", true);
+		// SetLanternActive(false, true);
+		// SetLanternDisabled(true);
+		//
+		SetPlayerCrouchDisabled(true);
+		SetPlayerCrouching(false);
+	}
+	
+	void lantern_ok(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("Crouch enabled", true);
+		// AddDebugMessage("Lantern ok", true);
+		// SetLanternDisabled(false);
+		SetPlayerCrouchDisabled(false);
+	}
+	
+	void WalkSlower(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("Walk slower", true);
+		//
+		PlaySoundAtEntity("pain_woodpecker_f4", "pain_woodpecker_f4.snt", "block_box_fire_1", 0, false);
+		//
+		PlaySoundAtEntity("15_event_elevator", "15_event_elevator.snt", "Player", 0, false);
+		PlaySoundAtEntity("walking_screws", "walking_screws.snt", "Player", 0, false);
+		SetPlayerMoveSpeedMul(0.42);
+		//
+		PlaySoundAtEntity("general_fire_burning01", "general_fire_burning.snt", "block_box_fire_1", 0, false);
+		PlaySoundAtEntity("general_fire_burning02", "general_fire_burning.snt", "block_box_fire_2", 0, false);
+		PlaySoundAtEntity("general_fire_burning03", "general_fire_burning.snt", "block_box_fire_3", 0, false);
+		PlaySoundAtEntity("general_fire_burning04", "general_fire_burning.snt", "block_box_fire_4", 0, false);
+		PlaySoundAtEntity("general_fire_burning05", "general_fire_burning.snt", "human_skull_2", 0, false);
+		PlaySoundAtEntity("general_fire_burning06", "general_fire_burning.snt", "block_box_fire_5", 0, false);
+		PlaySoundAtEntity("general_fire_burning07", "general_fire_burning.snt", "block_box_fire_6", 0, false);
+		// ps
+		CreateParticleSystemAtEntity("ps_fire_orb_room_01", "ps_fire_orb_room.ps", "block_box_fire_1", false);
+		CreateParticleSystemAtEntity("ps_fire_orb_room_02", "ps_fire_orb_room.ps", "block_box_fire_2", false);
+		CreateParticleSystemAtEntity("ps_fire_orb_room_03", "ps_fire_orb_room.ps", "block_box_fire_3", false);
+		CreateParticleSystemAtEntity("ps_fire_orb_room_04", "ps_fire_orb_room.ps", "block_box_fire_4", false);
+		CreateParticleSystemAtEntity("ps_fire_orb_room_05", "ps_fire_orb_room.ps", "human_skull_2", false);
+		CreateParticleSystemAtEntity("ps_fire_orb_room_06", "ps_fire_orb_room.ps", "block_box_fire_5", false);
+		CreateParticleSystemAtEntity("ps_fire_orb_room_07", "ps_fire_orb_room.ps", "block_box_fire_6", false);
+		// vfx
+		FadeImageTrailTo(1, 2);
+		FadeSepiaColorTo(0.6, 4);
+		FadeRadialBlurTo(1, 5);
+	}
+	
+	void RampageSFX(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("Rampage", true);
+		PlaySoundAtEntity("walking_screws", "walking_screws.snt", "Player", 0, false);
+		// StopMusic(4.0f, 1.0f);
+	}
+	
+	void WallStompStops(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("Flashbacks stop", true);
+		PlaySoundAtEntity("24_event_vision04", "24_event_vision04.snt", "Player", 0, false);
+		//
+		DestroyParticleSystem("ps_fire_orb_room_01");
+		DestroyParticleSystem("ps_fire_orb_room_02");
+		DestroyParticleSystem("ps_fire_orb_room_03");
+		DestroyParticleSystem("ps_fire_orb_room_04");
+		DestroyParticleSystem("ps_fire_orb_room_05");
+		DestroyParticleSystem("ps_fire_orb_room_06");
+		DestroyParticleSystem("ps_fire_orb_room_07");
+		//
+		SetPlayerMoveSpeedMul(1.0);
+		//
+		RemoveTimer("WallStomp");
+		RemoveTimer("WallStompLoop");
+		//
+		StopSound("general_fire_burning01", 1.0);
+		StopSound("general_fire_burning02", 1.0);
+		StopSound("general_fire_burning03", 1.8);
+		StopSound("general_fire_burning04", 2.1);
+		StopSound("general_fire_burning05", 1.9);
+		StopSound("general_fire_burning06", 2.0);
+		StopSound("general_fire_burning07", 1.75);
+		// vfx
+		FadeRadialBlurTo(0.0, 1);
+		FadeSepiaColorTo(0, 4);
+		FadeImageTrailTo(0,1);
+	}
+
+
+	////////////////////////////////////////
+	// interactions
+	// ChestIsLocked
+	void ChestIsLocked(string &in entity)
+	{
+		SetMessage("Messages", "BreakChest", 0);
+	}
+	
+	// f7 to f1
+	void escape_ending_starts(string &in entity)
+	{
+		AddDebugMessage("Screw those Humans...", true);
+		// bad end begins
+		// f7 stops
+		RemoveTimer("CountDown30");
+		RemoveTimer("CountDown20");
+		RemoveTimer("CountDown10");
+		RemoveTimer("CountDown00");
+		StopSound("cntdwn_bip_01", 1.0);
+		StopSound("cntdwn_bip_02", 1.0);
+		StopSound("cntdwn_bip_03_loop", 1.0);
+		// f1 updates
+		SetEntityActive("elevator_card_power_active", false);
+		SetEntityActive("elevator_card_inactive", true);
+		SetEntityActive("door_air_lock_1", false); // for testing
+		SetSwingDoorLocked("door_entry", false, true); // for testing
+		SetEntityActive("door_air_lock_f1_exit", true);
+		SetEntityActive("Security_Panel_2", false);
+		SetEntityActive("Security_Panel_f1_off", true);
+		SetEntityActive("elevator_f1_off", true);
+		SetEntityActive("elevator_f1_on", false);
+		SetEntityActive("screw_them_txt", true);
+		SetEntityActive("screw_them_txt_bis", true);
+		SetEntityActive("SignArea_10", false);
+		SetEntityActive("SignArea_3", false);
+		SetEntityActive("SignArea_4", false);
+		SetEntityActive("SignArea_7", false);
+		// exit
+		SetEntityActive("end_escape", true);
+		// elevator
+		SetMessage("Messages", "Take_Elev_Dwn1", 0);
+		//
+		AddDebugMessage("Moving to floor 1", true);
+		SetPlayerActive(false);
+		FadeOut(0.4);
+		PlaySoundAtEntity("14_elevator_clank", "14_elevator_clank.snt", "Player", 0, false);
+		PlaySoundAtEntity("elevator_moving", "elevator_move_normal.snt", "Player", 0, false);
+		// timer
+		AddTimer("elev_arrives_f1", 21.4, "elev_arrives_f1");
+		AddTimer("elev_opens_sfx", 20.4, "elev_opens_sfx");
+		AddTimer("elev_closing_sfx", 0.0, "elev_closing_sfx");
+		AddTimer("explosion_sfx", 17.4, "explosion_sfx");
+		//
+		AddDebugMessage("Lantern ok", true);
+		SetLanternDisabled(false);
+		SetPlayerCrouchDisabled(false);
+	}
+	
+	void explosion_sfx(string &in entity)
+	{
+		AddDebugMessage("Bye floor 7", true);
+		PlaySoundAtEntity("explosion_rock_large", "explosion_rock_large.snt", "Player", 0, false);
+		PlayMusic("end_home.ogg", false, 5.0f, 0.1f, 2, true);
+	}
+	
+	void elev_arrives_f1(string &in entity)
+	{
+		AutoSave();
+		PlaySoundAtEntity("wind_chime", "wind_chime.snt", "Player", 0, false);
+		//
+		SetMessage("Messages", "Floor_1", 0);
+		//
+		CompleteQuest("06", "06");
+		CompleteQuest("07", "07");
+		AddQuest("08", "08");
+		//
+		AddDebugMessage("Arrived on floor 1", true);
+		TeleportPlayer("PlayerStartArea_Elev_F1");
+		SetPlayerActive(true);
+		FadeIn(2.4);
+		//
+		PlaySoundAtEntity("alrm_base", "alrm_base.snt", "Player", 0, false);
+	}
+	
+	//
+	void duga_switch_off_txt(string &in entity)
+	{
+		AddDebugMessage("Amp is not ready", true);
+		SetMessage("Messages", "NoAmp", 0);
+	}
+	
+	void duga_switch_on_done(string &in asEntity, int alState)
+	{
+		if (alState == 0)
+		{
+			// lever
+			SetLeverStuckState(asEntity, -1, false); // stuck lever
+			// sfx
+			PlaySoundAtEntity("", "16_lever_max_min", asEntity, 0, false);
+			PlaySoundAtEntity("", "door_level_engine_open", asEntity, 0, false);
+			PlaySoundAtEntity("vent_fan_weld_ed", "vent_fan_weld_ed", "wallfan_2", 5, false);
+			// lamps
+			SetLampLit("torch_floor_ceruleanblue_1", true, true);		
+			SetLampLit("torch_floor_ceruleanblue_2", true, true);		
+			SetLampLit("torch_floor_ceruleanblue_3", true, true);		
+			SetLampLit("torch_floor_ceruleanblue_4", true, true);		
+			SetLampLit("torch_floor_ceruleanblue_5", true, true);		
+			SetLampLit("torch_floor_ceruleanblue_6", true, true);
+			//
+			StopMusic(4.0f, 1.0f);
+			// timer before lights are switched on
+			AddTimer("Duga_Lights", 2.51f, "Duga_Lights");
+			AddTimer("CountDown30", 4.0f, "CountDown30");
+			AddTimer("CountDown20", 14.0f, "CountDown20");
+			AddTimer("CountDown10", 24.0f, "CountDown10");
+			AddTimer("CountDown00", 34.0f, "CountDown00");
+			// time to choose
+			AddQuest("06", "06");
+			AddQuest("07", "07");
+			CompleteQuest("05_5", "05_5");
+			// player
+			SetPlayerActive(false);
+			StartPlayerLookAt("block_look_duga", 1.5, 2, "");
+			// timer cutscene stops
+			AddTimer("Cutscene_Duga", 4.0f, "restore_ctrl");
+				return;
+		}
+	}
+	
+	void Duga_Lights(string &in entity)
+	{
+		AddDebugMessage("Duga ready", true);
+		//
+		SetLightVisible("duga_light_1", true);
+		SetLightVisible("duga_light_2", true);
+		SetLightVisible("duga_light_3", true);
+		SetLightVisible("duga_light_4", true);
+		SetLightVisible("duga_light_5", true);
+		SetLightVisible("duga_light_6", true);
+		SetLightVisible("duga_light_7", true);
+		SetLightVisible("duga_light_8", true);
+		SetLightVisible("PointLight_doom", true);
+		SetLightVisible("PointLight_f7_elevator_to_f1", true);
+		//
+		PlaySoundAtEntity("", "bel_alarm", "wallfan_1", 5, true);
+		// leave the place if you want
+		SetEntityActive("Security_Panel_4", false);
+		SetEntityActive("Security_Panel_back_to_f1", true);
+	}
+	
+	void CountDown30(string &in entity)
+	{
+		AddDebugMessage("30 seconds left", true);
+		SetMessage("Messages", "CntDwn30", 0);
+		PlaySoundAtEntity("cntdwn_bip_01", "cntdwn_bip_01.snt", "big_red_light", 0, false);
+	}
+	
+	void CountDown20(string &in entity)
+	{
+		AddDebugMessage("20 seconds left", true);
+		SetMessage("Messages", "CntDwn20", 0);
+		PlaySoundAtEntity("cntdwn_bip_02", "cntdwn_bip_02.snt", "big_red_light", 0, false);
+	}
+	
+	void CountDown10(string &in entity)
+	{
+		AddDebugMessage("10 seconds left", true);
+		SetMessage("Messages", "CntDwn10", 0);
+		PlaySoundAtEntity("cntdwn_bip_03_loop", "cntdwn_bip_03_loop.snt", "big_red_light", 0, false);
+	}
+	
+	void CountDown00(string &in entity)
+	{
+		AddDebugMessage("00 second left, checking in progress", true);
+		SetMessage("Messages", "CntDwn00", 60);
+		SetEntityActive("ScriptArea_Sacrifice", true);
+	}
+	
+	//
+	void CountDown00CheckSuccess(string &in asParent, string &in asChild, int alState)
+	{
+		AddDebugMessage("00 second left, checking success", true);
+		//
+		CompleteQuest("06", "06");
+		CompleteQuest("07", "07");
+		//
+		StopSound("cntdwn_bip_03_loop", 1.0);
+		PlaySoundAtEntity("thunder_anomaly", "thunder_anomaly.snt", "Player", 0, false);
+		// no turning back now
+		SetEntityActive("Security_Panel_4", true);
+		SetEntityActive("Security_Panel_back_to_f1", false);
+		SetLightVisible("PointLight_f7_elevator_to_f1", false);
+		// good end begins
+		AddDebugMessage("Amplifier 100/100", true);
+		// player
+		SetPlayerMoveSpeedMul(0.12);
+		SetPlayerCrouching(false);
+		SetLanternActive(false, true);
+		SetLanternDisabled(true);
+		SetInventoryDisabled(true);
+		//
+		StartPlayerLookAt("block_look_duga", 1.5, 2, "");
+		SetMessage("Messages", "Destiny1", 0);
+		AddTimer("Destiny1_25", 5.0f, "Destiny1_25");
+		//
+		SetPlayerSanity(90.0);
+		SetPlayerHealth(90.0);
+		//
+		PlaySoundAtEntity("power_down", "power_down.snt", "Player", 0, false);
+		// vfx
+		FadeImageTrailTo(1, 1.1);
+		FadeRadialBlurTo(1, 1.1);
+		FadeSepiaColorTo(0.6, 4);
+		// ui
+		ShowPlayerCrossHairIcons(false);
+	}
+	
+	void Destiny1_25(string &in entity)
+	{
+		PlayMusic("amb_melting.ogg", false, 4.0f, 0.1f, 2, true);
+		//
+		SetPlayerActive(false);
+		StartPlayerLookAt("block_look_telos", 0.2, 2, "");
+		FadePlayerFOVMulTo(0.5, 15);
+		//
+		SetMessage("Messages", "Destiny1_25", 0);
+		AddTimer("Destiny1_5", 5.0f, "Destiny1_5");
+		//
+		SetPlayerSanity(60.0);
+		SetPlayerHealth(80.0);
+		// sfx
+		StopSound("vent_fan_weld_ed", 6.0);
+		PlaySoundAtEntity("alrm_base", "alrm_base.snt", "Player", 0, false);
+		PlaySoundAtEntity("player_cough", "player_cough.snt", "Player", 0, false);
+		//
+		CreateParticleSystemAtEntity("ps_electro_charge_1", "ps_electro_charge.ps", "big_red_light", false);
+		CreateParticleSystemAtEntity("ps_electro_charge_2", "ps_electro_charge.ps", "button_simple_10", false);
+		CreateParticleSystemAtEntity("ps_electro_charge_3", "ps_electro_charge.ps", "tech_electric_cabinet_2", false);
+		CreateParticleSystemAtEntity("ps_electro_charge_4", "ps_electro_charge.ps", "button_simple_26", false);
+		PlaySoundAtEntity("thunder_anomaly", "thunder_anomaly.snt", "torch_floor_ceruleanblue_6", 0, false);
+	}
+	
+	void Destiny1_5(string &in entity)
+	{
+		SetMessage("Messages", "Destiny1_5", 0);
+		AddTimer("Destiny1_75", 5.0f, "Destiny1_75");
+		//
+		FadeOut(10.0);
+		//
+		SetPlayerSanity(20.0);
+		SetPlayerHealth(40.0);
+		// sfx
+		StopSound("alrm_base", 12.0);
+		PlaySoundAtEntity("guardian_distant", "guardian_distant.snt", "Player", 0, false);
+		PlaySoundAtEntity("react_breath", "react_breath.snt", "Player", 0, false);
+	}
+	
+	void Destiny1_75(string &in entity)
+	{
+		StopMusic(5.0f, 1.0f);
+		StopSound("power_distrib_large_woodpecker_f7", 5.0);
+		SetMessage("Messages", "Destiny1_75", 0);
+		AddTimer("GoodCredits", 5.0f, "GoodCredits");
+		AddTimer("explosion_sfx", 4.5, "explosion_sfx");
+		//
+		SetPlayerSanity(1.0);
+		SetPlayerHealth(1.0);
+		SetPlayerCrouching(true);
+		PlaySoundAtEntity("react_scare", "react_scare.snt", "Player", 0, false);
+	}
+	
+	void GoodCredits(string &in entity)
+	{
+		PlaySoundAtEntity("react_sigh", "react_sigh.snt", "Player", 0, false);
+		StartCredits("end_home.ogg", true, "Ending", "CreditsGood", -1);
+	}
+	
+	//
+	void amplifier_switch_done(string &in asEntity, int alState)
+	{
+		if (alState == 0)
+		{
+			// lever
+			SetLeverStuckState(asEntity, -1, false); // stuck lever
+			// amplifier powered
+			RotatePropToSpeed("wallfan_1", 0.05, 4.0, 0.0, 1.0, 0.0, false, "");
+			RotatePropToSpeed("wallfan_2", 0.05, 4.0, 0.0, -1.0, 0.0, false, "");
+			// sfx
+			PlaySoundAtEntity("", "16_lever_max_min", asEntity, 0, false);
+			PlaySoundAtEntity("", "door_level_engine_open", asEntity, 0, false);
+			PlaySoundAtEntity("power_distrib_large_woodpecker_f7", "power_distrib_large_woodpecker_f7", "wallfan_1", 5, true);
+			// timer before lights are switched on
+			AddTimer("LightsOnF7_1", 5.1f, "LightsOnF7_1");
+			AddTimer("LightsOnF7_2", 5.6f, "LightsOnF7_2");
+			AddTimer("LightsOnF7_3", 6.1f, "LightsOnF7_3");
+			//
+			StartScreenShake(0.012f, 600.0f, 0.5f, 5.0f);
+			//
+			AddQuest("05_5", "05_5");
+			CompleteQuest("01", "01");
+			// timer cutscene
+			// AddTimer("Cutscene_Amp", 1.0f, "Cutscene_Amp");
+				return;
+		}
+	}
+	
+	void LightsOnF7_1(string &in entity)
+	{
+		AddDebugMessage("Amplifier 033/100", true);
+		PlaySoundAtEntity("big_switch_xl", "big_switch_xl.snt", "Player", 0, false);
+		// lights consoles
+		SetLightVisible("PointLight_25", true);
+		SetLightVisible("PointLight_26", true);
+		SetLightVisible("PointLight_27", true);
+		SetLightVisible("PointLight_28", true);
+		SetLightVisible("PointLight_29", true);
+		SetLightVisible("PointLight_30", true);
+		//
+		SetLightVisible("PointLight_f7_button_red_1", true);
+		SetLightVisible("PointLight_f7_button_red_2", true);
+		SetLightVisible("PointLight_f7_button_red_3", true);
+		SetLightVisible("PointLight_f7_button_blue_1", true);
+		SetLightVisible("PointLight_f7_button_blue_2", true);
+		SetLightVisible("PointLight_f7_button_blue_3", true);
+		SetLightVisible("PointLight_f7_button_blue_4", true);
+		SetLightVisible("PointLight_f7_button_blue_5", true);
+		SetLightVisible("PointLight_f7_button_blue_6", true);
+		SetLightVisible("PointLight_f7_button_blue_7", true);
+		SetLightVisible("PointLight_f7_button_blue_8", true);
+		SetLightVisible("PointLight_f7_button_blue_9", true);
+		SetLightVisible("PointLight_f7_button_blue_10", true);
+		SetLightVisible("PointLight_f7_button_blue_11", true);
+		SetLightVisible("PointLight_f7_button_blue_12", true);
+		SetLightVisible("PointLight_f7_button_blue_13", true);
+		// lights f7 televisions
+		SetLightVisible("SpotLight_tv_1", true);
+		SetLightVisible("SpotLight_tv_2", true);
+		SetLightVisible("SpotLight_tv_3", true);
+		SetLightVisible("f7_tv_grp_1", true);
+		SetLightVisible("SpotLight_1", true);
+		SetLightVisible("SpotLight_2", true);
+		SetLightVisible("SpotLight_3", true);
+	}
+	
+	void LightsOnF7_2(string &in entity)
+	{
+		AddDebugMessage("Amplifier 066/100", true);
+		PlaySoundAtEntity("big_switch_xl", "big_switch_xl.snt", "Player", 0, false);
+		// lights consoles
+		SetLightVisible("PointLight_31", true);
+		SetLightVisible("PointLight_32", true);
+		SetLightVisible("PointLight_33", true);
+		SetLightVisible("PointLight_34", true);
+		SetLightVisible("PointLight_35", true);
+		SetLightVisible("PointLight_36", true);
+		SetLightVisible("PointLight_37", true);
+		//
+		SetLightVisible("PointLight_f7_button_green_1", true);
+		SetLightVisible("PointLight_f7_button_green_2", true);
+		SetLightVisible("PointLight_f7_button_green_3", true);
+		SetLightVisible("PointLight_f7_button_green_4", true);
+		SetLightVisible("PointLight_f7_button_green_5", true);
+		SetLightVisible("PointLight_f7_button_green_6", true);
+		SetLightVisible("PointLight_f7_button_green_7", true);
+		// lights f7 televisions
+		SetLightVisible("SpotLight_tv_4", true);
+		SetLightVisible("SpotLight_tv_5", true);
+		SetLightVisible("SpotLight_tv_6", true);
+		SetLightVisible("f7_tv_grp_2", true);
+		SetLightVisible("SpotLight_4", true);
+		SetLightVisible("SpotLight_5", true);
+		SetLightVisible("SpotLight_6", true);
+		}
+	
+	void LightsOnF7_3(string &in entity)
+	{
+		AddDebugMessage("Amplifier 099/100", true);
+		PlaySoundAtEntity("big_switch_xl", "big_switch_xl.snt", "Player", 0, false);
+		// lights consoles
+		SetLightVisible("PointLight_37", true);
+		SetLightVisible("PointLight_38", true);
+		SetLightVisible("PointLight_39", true);
+		SetLightVisible("PointLight_40", true);
+		SetLightVisible("PointLight_41", true);
+		SetLightVisible("PointLight_42", true);
+		SetLightVisible("PointLight_43", true);
+		SetLightVisible("PointLight_44", true);
+		//
+		SetLightVisible("PointLight_f7_button_orange_1", true);
+		SetLightVisible("PointLight_f7_button_orange_2", true);
+		SetLightVisible("PointLight_f7_button_orange_3", true);
+		SetLightVisible("PointLight_f7_button_orange_4", true);
+		SetLightVisible("PointLight_f7_button_orange_5", true);
+		// lights f7 televisions
+		SetLightVisible("SpotLight_tv_7", true);
+		SetLightVisible("f7_tv_grp_3", true);
+		SetLightVisible("SpotLight_7", true);
+		SetLampLit("big_red_light", true, true);
+		//
+		StartEffectEmotionFlash("Messages", "AmpOn", "deep_breath.snt");
+		SetEntityActive("duga_switch_off", false);
+		SetEntityActive("duga_switch_on", true);
+	}
+	
+	// f4
+	void flashbacks_activated(string &in entity)
+	{
+		AddDebugMessage("Stomp starting...", true);
+		CompleteQuest("04", "04");
+		AddQuest("05", "05");
+		PlaySoundAtEntity("scare_wall_stomp", "scare_wall_stomp.snt", "cell_breakable_wall_broken_1", 0, false);
+		//
+		SetEntityActive("SignArea_13", false);
+		//
+		SetEntityActive("FlashbackArea_1", true);
+		SetEntityActive("FlashbackArea_2", true);
+		SetEntityActive("FlashbackArea_3", true);
+		SetEntityActive("FlashbackArea_4", true);
+		SetEntityActive("FlashbackArea_5", true);
+		SetEntityActive("FlashbackArea_6", true);
+		//
+		AddTimer("WallStomp", 4.4f, "WallStomp");
+	}
+
+	void WallStomp(string &in asTimer)
+	{
+		AddDebugMessage("Stomp done", true);
+		PlaySoundAtEntity("scare_wall_stomp", "scare_wall_stomp.snt", "cell_breakable_wall_broken_1", 0, false);
+		AddTimer("WallStompLoop", 4.4f, "WallStomp");
+	}
+	
+	//
+	void skull_exam_event(string &in entity)
+	{
+		SetMessage("Messages", "Stupid", 0);
+	}
+	
+	void valve_stuck_event(string &in entity)
+	{
+		SetMessage("Messages", "ValveStuck", 0);
+	}
+	
+	void valve_broken_event(string &in entity)
+	{
+		SetMessage("Messages", "Broken", 0);
+	}
+	
+	void door_garage_event(string &in entity)
+	{
+		SetMessage("Messages", "WontBudge", 0);
+	}
+	
+	void hollow_needle_padlock_event(string &in entity)
+	{
+		SetEntityActive("SignArea_9", false);
+	}
+	
+	void BlueKeyFound(string &in entity)
+	{
+		AddTimer("voice_00", 4.4, "voice_00");
+	}
+	
+	void voice_00(string &in asTimer)
+	{
+		PlaySoundAtEntity("voice_00_idi_ko_mne_3d", "voice_00_idi_ko_mne_3d.snt", "block_box_26", 0, false);
+	}
+	
+	void elevator_key_found(string &in entity)
+	{
+		SetEntityActive("SignArea_11", false);
+	}
+	
+	void generator_switch_done(string &in asEntity, int alState)
+	{
+		if (alState == 0)
+		{
+			// lever
+			SetLeverStuckState(asEntity, -1, false); // stuck lever
+			// generator powered
+			RotatePropToSpeed("modern_mine_generator_off_1", 1.0, 10.0, 0.0, 0.0, 1.0, false, "");
+			// sfx
+			PlaySoundAtEntity("", "16_lever_max_min", asEntity, 0, false);
+			PlaySoundAtEntity("", "door_level_engine_open", asEntity, 0, false);
+			PlaySoundAtEntity("", "power_distrib_large_woodpecker", asEntity, 5, true);
+			// lights
+			SetLightVisible("PointLight_f1_gen_on", true);
+			SetLightFlickerActive("PointLight_f1_gen_on", true);
+			SetLightVisible("PointLight_f1_gen_off", false);
+			SetLightFlickerActive("PointLight_f1_gen_off", false);
+			// timer before lights are switched on
+			AddTimer("LightsOnF1", 3.4f, "LightsOnF1");
+				return;
+		}
+	}
+	
+	void LightsOnF1(string &in entity)
+	{
+		AddDebugMessage("Power is back", true);
+		CompleteQuest("02", "02");
+		SetMessage("Messages", "GenOn", 0);
+		// fans
+		RotatePropToSpeed("ceiling_fan_long_3", 1.0, 1.0, 0.0, -1.0, 0.0, false, "");
+		RotatePropToSpeed("ceiling_fan_long_2", 1.0, 0.125, 0.0, -1.0, 0.0, false, "");
+		RotatePropToSpeed("ceiling_fan_long_1", 1.0, 1.5, 0.0, -1.0, 0.0, false, "");
+		// lamps
+		SetLampLit("lamp_wall_light01_3", true, true);
+		SetLampLit("lamp_wall_lamp_10", true, true);
+		SetLampLit("lamp_wall_lamp_9", true, true);
+		SetLampLit("lamp_wall_light01_2", true, true);
+		SetLampLit("lamp_wall_lamp_11", true, true);
+		SetLampLit("lamp_wall_light01_5", true, true);
+		SetLampLit("lamp_wall_light01_6", true, true);
+		SetLampLit("lamp_wall_light01_1", true, true);
+		SetLampLit("lamp_wall_lamp_7", true, true);
+		SetLampLit("lamp_wall_lamp_8", true, true);
+		SetLampLit("iron_mine_lamp_shadowH_2", true, true);
+		SetLampLit("iron_mine_lamp_shadowH_3", true, true);
+		SetLampLit("iron_mine_lamp_shadowH_4", true, true);
+		SetLampLit("lamp_flourescent01_shadowH_4", true, true);
+		SetLampLit("lamp_flourescent01_shadowH_2", true, true);
+		SetLampLit("lamp_flourescent01_shadowH_1", true, true);
+		SetLampLit("lamp_wall_lamp_13", true, true);
+		// lights
+		SetLightVisible("SpotLight_machine_north", true);
+		SetLightVisible("PointLight_11", true);
+		SetLightVisible("SpotLight_generator_f1", true);
+		SetLightFlickerActive("PointLight_f1_gen_on", true);
+		SetLightVisible("PointLight_f1_gen_on", true);
+		SetLightFlickerActive("PointLight_f1_gen_on", true);
+		SetLightVisible("SpotLight_generator_f1", true);
+		SetLightVisible("PointLight_4", true);
+		SetLightVisible("PointLight_5", true);
+		SetLightVisible("SpotLight_garage_f1", true);
+		SetLightVisible("SpotLight_stairs_front_f1", true);
+		SetLightVisible("PointLight_6", true);
+		SetLightVisible("SpotLight_corridor_waiting_f1", true);
+		SetLightVisible("PointLight_7", true);
+		SetLightVisible("PointLight_8", true);
+		SetLightVisible("SpotLight_waiting_f1", true);
+		SetLightVisible("PointLight_9", true);
+		SetLightVisible("SpotLight_exam_f1", true);
+		SetLightVisible("PointLight_10", true);
+		SetLightVisible("SpotLight_autopsy_f1", true);
+		SetLightVisible("SpotLight_pipes", true);
+		SetLightVisible("PointLight_2", true);
+		SetLightVisible("PointLight_3", true);
+		SetLightVisible("SpotLight_inside_elevator_f1", true);
+		SetLightVisible("SpotLight_pipes_2", true);
+		SetLightVisible("SpotLight_pipes_1", true);
+		SetLightVisible("SpotLight_stairs_mid_f1", true);
+		SetLightVisible("PointLight_1", true);
+		SetLightVisible("SpotLight_58", true);
+		SetLightVisible("PointLight_f1_elevator_creader", true);
+		// elevator
+		SetEntityActive("elevator_card_no_power", false);
+		SetEntityActive("elevator_card_power_active", true);
+		}
+		
+		
+	// 22 Entry door closed
+	void door_entry_status(string &in entity)
+ 	{
+    if(GetSwingDoorLocked("door_entry") == true)
+		{
+			PlaySoundAtEntity("doorlock", "doorlock.snt", "door_infected_corridor_3", 0, false);
+			SetMessage("Messages", "KeyNearby", 0);
+			//
+			AddDebugMessage("It's locked.", true);
+		}
+	}
+	
+	
+	////////////////////////////////////////
+	// keys and items used
+	void chest_car_unlocked(string &in asItem, string &in asEntity)
+	{
+		CreateParticleSystemAtEntity("", "ps_break_wood.ps", "chest_small_1", false);
+		PlaySoundAtEntity("", "joint_oven_open", "chest_small_1", 0, false);
+		//
+		SetEntityActive("chest_small_1", false);
+		SetEntityActive("chest_small_2", true);
+		SetEntityActive("key_entry", true);
+	}
+	
+	void door_entry_opened(string &in asItem, string &in asEntity)
+	{
+		SetSwingDoorLocked("door_entry", false, true);
+		PlaySoundAtEntity("", "lock_door", "door_entry", 0, false);
+		// rats
+		SetPropStaticPhysics("rag_plague_corpse_1", true);
+		SetPropStaticPhysics("rag_plague_corpse_2", true);
+		SetPropStaticPhysics("rag_plague_corpse_3", true);
+		SetPropStaticPhysics("rag_plague_corpse_4", true);
+		SetPropStaticPhysics("rag_plague_corpse_5", true);
+		SetPropStaticPhysics("rag_plague_corpse_6", true);
+		SetPropStaticPhysics("rag_plague_corpse_7", true);
+		SetPropStaticPhysics("rag_plague_corpse_8", true);
+		SetPropStaticPhysics("rag_plague_corpse_9", true);
+		SetPropStaticPhysics("rag_plague_corpse_10", true);
+		SetPropStaticPhysics("rag_plague_corpse_11", true);
+		//
+		SetEntityActive("elevator_card_entrance_on", false);
+		SetEntityActive("elevator_card_entrance_off", true);
+		// artifact spawns
+		SetEntityActive("ArtifactMoonlight", true);
+		PlaySoundAtEntity("ArtifactMoonlightSFX", "amb_pigline_electrics.snt", "ArtifactMoonlight", 0, false);
+		CreateParticleSystemAtEntityExt("ArtifactMoonlightBall", "ps_orb_light_core.ps", "ArtifactMoonlightPS", true, 1,1,1,1, true, 0,2,20,30);
+		CreateParticleSystemAtEntityExt("ArtifactMoonlightHalo", "ps_orb_room_portal_open_cparty.ps", "ArtifactMoonlightPS", true, 1,1,1,0.098, true, 0,2,20,30);
+	}
+	void ArtifactMoonlightFound(string &in entity)
+ 	{
+		DestroyParticleSystem("ArtifactMoonlightBall");
+		DestroyParticleSystem("ArtifactMoonlightHalo");
+		StopSound("ArtifactMoonlightSFX", 1);
+		//
+		GiveItem("ArtMoonlight", "Puzzle", "ArtMoonlight", "tw_art_moonlight_item.tga", 1);
+		SetMessage("Messages", "MoonlightArtifactFound", 0);
+		//
+		SetPlayerJumpDisabled(false);
+		SetPlayerRunSpeedMul(1);
+	}
+	
+	void padlock_generator_opened(string &in asItem, string &in asEntity) // GEN
+	{
+		SetEntityActive("padlock_generator", false);
+		SetEntityActive("padlock_generator_broken", true);
+		CreateParticleSystemAtEntity("padlock_breaks", "ps_hit_metal.ps", "padlock_generator_broken", false);
+	}
+	
+	void elevator_power(string &in asItem, string &in asEntity) // ELEVATOR
+	{
+		AddDebugMessage("Switch on the generator first", true);
+		SetMessage("Messages", "NoPower", 0);
+	}
+	
+	void elevator_activated(string &in asItem, string &in asEntity)
+	{
+		AddDebugMessage("Elevator activated", true);
+		CompleteQuest("03", "03");
+		SetEntityActive("elevator_f1_off", false);
+		SetEntityActive("elevator_f1_on", true);
+		PlaySoundAtEntity("", "big_switch_xl_duck", asEntity, 0, false);
+		SetMessage("Messages", "ElevatorActivated", 0);
+	}
+	
+	// f1 to f4
+	void enter_elevator_for_floor_4(string &in entity)
+	{
+		AddDebugMessage("Entering elevator at F1", true);
+		SetPlayerActive(false);
+		FadeOut(0.4);
+		// timers
+		AddTimer("elev_opens_sfx", 0.4, "elev_opens_sfx");
+		AddTimer("elev_closing_sfx", 4.4, "elev_closing_sfx");
+		AddTimer("elev_f1_to_f4", 6.0, "elev_f1_to_f4");
+	}
+		
+	void elev_f1_to_f4(string &in entity)
+	{
+		AddDebugMessage("I'm in", true);
+		TeleportPlayer("PlayerStartArea_Elev_F1");
+		AddTimer("restore_ctrl", 0.4, "restore_ctrl");
+		FadeIn(2.4);
+	}
+	
+	void transition_to_f4(string &in entity)
+	{
+		StartScreenShake(0.3f, 8.4f, 0.5f, 0.5f);
+		SetMessage("Messages", "Take_Elev_Up4", 0);
+		//
+		AddDebugMessage("Moving to floor 4", true);
+		SetPlayerActive(false);
+		FadeOut(0.4);
+		PlaySoundAtEntity("14_elevator_clank", "14_elevator_clank.snt", "Player", 0, false);
+		PlaySoundAtEntity("elevator_moving", "elevator_move_normal.snt", "Player", 0, false);
+		// timer
+		AddTimer("elev_arrives_f4", 9.4, "elev_arrives_f4");
+		AddTimer("elev_opens_sfx", 8.4, "elev_opens_sfx");
+		//
+		SetLanternActive(false, true);
+	}
+	
+	void elev_arrives_f4(string &in entity)
+	{
+		AutoSave();
+		PlaySoundAtEntity("wind_chime", "wind_chime.snt", "Player", 0, false);
+		//
+		SetMessage("Messages", "Floor_4", 0);
+		//
+		AddDebugMessage("Arrived on floor 4", true);
+		TeleportPlayer("PlayerStartArea_2");
+		PlaySoundAtEntity("voice_01_tvoya_tsel_zdes_3d", "voice_01_tvoya_tsel_zdes_3d.snt", "box_metal_barrel01_16", 0, false);
+		SetPlayerActive(true);
+		FadeIn(2.4);
+		//
+		AddQuest("04", "04");
+		//
+		PlayMusic("slowly.ogg", true, 5.0f, 0.1f, 2, true);
+	}
+	
+	// f4 to f7
+		void transition_to_f7(string &in asItem, string &in asEntity)
+	{
+		//
+		RemoveTimer("WallStomp");
+		RemoveTimer("WallStompLoop");
+		//
+		StartScreenShake(0.3f, 10.4f, 0.5f, 0.5f);
+		SetMessage("Messages", "Take_Elev_Up7", 0);
+		//
+		AddDebugMessage("Moving to floor 7", true);
+		SetPlayerActive(false);
+		FadeOut(0.4);
+		PlaySoundAtEntity("14_elevator_clank", "14_elevator_clank.snt", "Player", 0, false);
+		PlaySoundAtEntity("elevator_moving", "elevator_move_normal.snt", "Player", 0, false);
+		StopMusic(4.0f, 1.0f);
+		// timer
+		AddTimer("elev_arrives_f7", 11.4, "elev_arrives_f7");
+		AddTimer("elev_opens_sfx", 10.4, "elev_opens_sfx");
+		AddTimer("elev_closing_sfx", 0.0, "elev_closing_sfx");
+		//
+		StopSound("pain_woodpecker_f4", 10);
+		//
+		AddDebugMessage("No lantern", true);
+		// SetLanternActive(false, true);
+		// SetLanternDisabled(true);
+		//
+		SetPlayerCrouchDisabled(true);
+		SetPlayerCrouching(false);
+	}
+	
+	void elev_arrives_f7(string &in entity)
+	{
+		AutoSave();
+		PlaySoundAtEntity("wind_chime", "wind_chime.snt", "Player", 0, false);
+		//
+		SetMessage("Messages", "Floor_7", 0);
+		CompleteQuest("05", "05");
+		//
+		AddDebugMessage("Arrived on floor 7", true);
+		TeleportPlayer("PlayerStartArea_3");
+		PlaySoundAtEntity("voice_02_preeshlo_vremja_3d", "voice_02_preeshlo_vremja_3d.snt", "wallfan_1", 0, false);
+		SetPlayerActive(true);
+		FadeIn(2.4);
+		//
+		PlayMusic("caution.ogg", false, 5.0f, 0.1f, 2, true);
+	}
+	
+	//
+	void elev_opens_sfx(string &in entity)
+	{
+		AddDebugMessage("Elevator opening", true);
+		PlaySoundAtEntity("sas_door_opening", "sas_door_opening.snt", "Player", 0, false);
+		StopSound("elevator_moving", 0);
+	}
+	
+	void elev_closing_sfx(string &in entity)
+	{
+		AddDebugMessage("Elevator closing", true);
+		PlaySoundAtEntity("sas_door_closing", "sas_door_closing.snt", "Player", 0, false);
+	}
+	
+	void restore_ctrl(string &in entity)
+	{
+		AddDebugMessage("Go now", true);
+		SetPlayerActive(true);
+		StopPlayerLookAt();
+	}
+	
+	
+    //========================================================================
+    // R Level start
+    void OnEnter()
+	{
+		// game
+		// AutoSave(); // SWITCH OFF FOR TESTS
+		// music
+		StopMusic(1.0f, 1.0f);
+		// player
+		SetPlayerSanity(66.0);
+		SetPlayerJumpDisabled(true);
+		SetPlayerRunSpeedMul(.5); // SWITCH OFF FOR TESTS
+		ExitInventory();
+		FadeOut(0); // SWITCH OFF FOR TESTS
+		FadeIn(5); // SWITCH OFF FOR TESTS
+		// SetInDarknessEffectsActive(false); // FOR INTRO - SWITCH ON 
+		// SetInventoryDisabled(true); // FOR INTRO - SWITCH ON
+		// music
+		PlayMusic("urbex.ogg", true, 5.0f, 0.1f, 2, true);
+		// pda
+		AddDiary("MailComeToMe", "bg_pda");
+		// inventory
+		GiveItem("Jacket", "Puzzle", "Jacket", "tw_jacket_item.tga", 1);
+		GiveItem("PDA", "Puzzle", "PDA", "tw_pda_item.tga", 1);
+		GiveItem("Knife", "Puzzle", "Knife", "tw_knife_item.tga", 1);
+		GiveItem("Martha", "Puzzle", "Martha", "tw_martha_item.tga", 1);
+		GiveItem("Antirad", "Sanity", "Antirad", "tw_antirad_item.tga", 1);
+		// artifacts
+		GiveItem("ArtBatteryB", "Puzzle", "ArtBatteryB", "tw_art_battery_b_item.tga", 1);
+		// GiveItem("ArtBatteryE", "Puzzle", "ArtBatteryE", "tw_art_battery_e_item.tga", 1); // SWITCH ON FOR TESTS
+		GiveItem("ArtKolobok", "Puzzle", "ArtKolobok", "tw_art_kolobok_item.tga", 1);
+		// GiveItem("ArtMoonlight", "Puzzle", "ArtMoonlight", "tw_art_moonlight_item.tga", 1); // SWITCH ON FOR TESTS
+		// lights f1
+		SetLightVisible("PointLight_f1_gen_on", false);
+		SetLightFlickerActive("PointLight_f1_gen_on", false);
+		SetLightVisible("SpotLight_machine_north", false);
+		SetLightVisible("PointLight_11", false);
+		SetLightVisible("SpotLight_generator_f1", false);
+		SetLightVisible("PointLight_4", false);
+		SetLightVisible("PointLight_5", false);
+		SetLightVisible("SpotLight_garage_f1", false);
+		SetLightVisible("SpotLight_stairs_front_f1", false);
+		SetLightVisible("PointLight_6", false);
+		SetLightVisible("SpotLight_corridor_waiting_f1", false);
+		SetLightVisible("PointLight_7", false);
+		SetLightVisible("PointLight_8", false);
+		SetLightVisible("SpotLight_waiting_f1", false);
+		SetLightVisible("PointLight_9", false);
+		SetLightVisible("SpotLight_exam_f1", false);
+		SetLightVisible("PointLight_10", false);
+		SetLightVisible("SpotLight_autopsy_f1", false);
+		SetLightVisible("SpotLight_pipes", false);
+		SetLightVisible("PointLight_2", false);
+		SetLightVisible("PointLight_3", false);
+		SetLightVisible("SpotLight_inside_elevator_f1", false);
+		SetLightVisible("SpotLight_pipes_2", false);
+		SetLightVisible("SpotLight_pipes_1", false);
+		SetLightVisible("SpotLight_stairs_mid_f1", false);
+		SetLightVisible("PointLight_1", false);
+		SetLightVisible("SpotLight_58", false);
+		SetLightVisible("PointLight_f1_elevator_creader", false);
+		// lights f7
+		SetLightVisible("PointLight_f7_button_red_1", false);
+		SetLightVisible("PointLight_f7_button_red_2", false);
+		SetLightVisible("PointLight_f7_button_red_3", false);
+		SetLightVisible("PointLight_f7_button_orange_1", false);
+		SetLightVisible("PointLight_f7_button_orange_2", false);
+		SetLightVisible("PointLight_f7_button_orange_3", false);
+		SetLightVisible("PointLight_f7_button_orange_4", false);
+		SetLightVisible("PointLight_f7_button_orange_5", false);
+		SetLightVisible("PointLight_f7_button_green_1", false);
+		SetLightVisible("PointLight_f7_button_green_2", false);
+		SetLightVisible("PointLight_f7_button_green_3", false);
+		SetLightVisible("PointLight_f7_button_green_4", false);
+		SetLightVisible("PointLight_f7_button_green_5", false);
+		SetLightVisible("PointLight_f7_button_green_6", false);
+		SetLightVisible("PointLight_f7_button_green_7", false);
+		SetLightVisible("PointLight_f7_button_blue_1", false);
+		SetLightVisible("PointLight_f7_button_blue_2", false);
+		SetLightVisible("PointLight_f7_button_blue_3", false);
+		SetLightVisible("PointLight_f7_button_blue_4", false);
+		SetLightVisible("PointLight_f7_button_blue_5", false);
+		SetLightVisible("PointLight_f7_button_blue_6", false);
+		SetLightVisible("PointLight_f7_button_blue_7", false);
+		SetLightVisible("PointLight_f7_button_blue_8", false);
+		SetLightVisible("PointLight_f7_button_blue_9", false);
+		SetLightVisible("PointLight_f7_button_blue_10", false);
+		SetLightVisible("PointLight_f7_button_blue_11", false);
+		SetLightVisible("PointLight_f7_button_blue_12", false);
+		SetLightVisible("PointLight_f7_button_blue_13", false);
+		// lights f7 consoles
+		SetLightVisible("PointLight_25", false);
+		SetLightVisible("PointLight_26", false);
+		SetLightVisible("PointLight_27", false);
+		SetLightVisible("PointLight_28", false);
+		SetLightVisible("PointLight_29", false);
+		SetLightVisible("PointLight_30", false);
+		SetLightVisible("PointLight_31", false);
+		SetLightVisible("PointLight_32", false);
+		SetLightVisible("PointLight_33", false);
+		SetLightVisible("PointLight_34", false);
+		SetLightVisible("PointLight_35", false);
+		SetLightVisible("PointLight_36", false);
+		SetLightVisible("PointLight_37", false);
+		SetLightVisible("PointLight_38", false);
+		SetLightVisible("PointLight_39", false);
+		SetLightVisible("PointLight_40", false);
+		SetLightVisible("PointLight_41", false);
+		SetLightVisible("PointLight_42", false);
+		SetLightVisible("PointLight_43", false);
+		SetLightVisible("PointLight_44", false);
+		// lights f7 televisions
+		SetLightVisible("SpotLight_tv_1", false);
+		SetLightVisible("SpotLight_tv_2", false);
+		SetLightVisible("SpotLight_tv_3", false);
+		SetLightVisible("SpotLight_tv_4", false);
+		SetLightVisible("SpotLight_tv_5", false);
+		SetLightVisible("SpotLight_tv_6", false);
+		SetLightVisible("SpotLight_tv_7", false);
+		SetLightVisible("f7_tv_grp_1", false);
+		SetLightVisible("f7_tv_grp_2", false);
+		SetLightVisible("f7_tv_grp_3", false);
+		SetLightVisible("SpotLight_1", false);
+		SetLightVisible("SpotLight_2", false);
+		SetLightVisible("SpotLight_3", false);
+		SetLightVisible("SpotLight_4", false);
+		SetLightVisible("SpotLight_5", false);
+		SetLightVisible("SpotLight_6", false);
+		SetLightVisible("SpotLight_7", false);
+		SetLampLit("big_red_light", false, true);
+		// lights duga
+		SetLightVisible("duga_light_1", false);
+		SetLightVisible("duga_light_2", false);
+		SetLightVisible("duga_light_3", false);
+		SetLightVisible("duga_light_4", false);
+		SetLightVisible("duga_light_5", false);
+		SetLightVisible("duga_light_6", false);
+		SetLightVisible("duga_light_7", false);
+		SetLightVisible("duga_light_8", false);
+		SetLightVisible("PointLight_doom", false);
+		SetLightVisible("PointLight_f7_elevator_to_f1", false);
+		// preloads
+		PreloadSound("puzzle_boil_low.snt");
+		PreloadSound("amb_pigline_electrics.snt");
+		PreloadSound("joint_oven_open.snt");
+		PreloadSound("ui_pda_tip.snt");
+		PreloadSound("ui_pda_objective.snt");
+		PreloadSound("ui_pda_news.snt");
+		PreloadSound("voice_02_preeshlo_vremja_3d.snt");
+		PreloadSound("voice_01_tvoya_tsel_zdes_3d.snt");
+		PreloadSound("voice_00_idi_ko_mne_3d.snt");
+		PreloadSound("padlock_breaks.snt");
+		PreloadSound("unlock_door.snt");
+		PreloadSound("lock_door.snt");
+		PreloadSound("16_lever_max_min.snt");
+		PreloadSound("door_level_engine_open.snt");
+		PreloadSound("14_elevator_clank.snt");
+		PreloadSound("elevator_move_normal.snt");
+		PreloadSound("power_distrib_large_woodpecker.snt");
+		PreloadSound("power_distrib_large_woodpecker_f7.snt");
+		PreloadSound("big_switch_xl_duck.snt");
+		PreloadSound("big_switch_xl.snt");
+		PreloadSound("sas_door_closing.snt");
+		PreloadSound("sas_door_opening.snt");
+		PreloadSound("scare_wall_stomp.snt");
+		PreloadSound("cntdwn_bip_01.snt");
+		PreloadSound("cntdwn_bip_02.snt");
+		PreloadSound("cntdwn_bip_03.snt");
+		PreloadSound("cntdwn_bip_03_loop.snt");
+		PreloadSound("bel_alarm.snt");
+		PreloadSound("vent_fan_weld_ed.snt");
+		PreloadSound("alrm_base.snt");
+		PreloadSound("24_event_vision04.snt");
+		PreloadSound("general_fire_burning.snt");
+		PreloadSound("walking_screws.snt");
+		PreloadSound("15_event_elevator.snt");
+		PreloadSound("explosion_rock_large.snt");
+		PreloadSound("thunder_anomaly.snt");
+		PreloadSound("pain_woodpecker_f4.snt");
+		PreloadSound("deep_breath.snt");
+		PreloadSound("wind_chime.snt");
+		PreloadSound("power_down.snt");
+		PreloadSound("wind.snt");
+		// map
+		SetMapDisplayNameEntry("MapF1");
+    }
+
+	//========================================================================
+    // R Level end
+    void OnLeave()
+    {
+		// SetupLoadScreen("LoadingText", "cparty_loading_begin", 1, "loading_txt_only");
+		// StopMusic(4.0f, 1.0f);
+		DestroyDataCache();
+		ClearSavedMaps();
+    }

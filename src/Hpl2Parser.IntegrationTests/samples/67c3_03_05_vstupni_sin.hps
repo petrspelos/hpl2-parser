@@ -1,0 +1,343 @@
+void OnStart()
+{
+//SetMoveObjectState("castle_portcullis_1", 0);
+InteractConnectPropWithMoveObject("SecondGate","valve_iron_rusty02_1", "castle_portcullis_1",true, false, 0);
+AddEntityCollideCallback("Player", "area_zavrit_0", "area_zavrit_0_script",true, 1);
+AddEntityCollideCallback("Player", "area_iluze_0", "area_iluze_0_script",true, 1);
+AddEntityCollideCallback("Player", "area_infected_zmiz_0", "area_infected_zmiz_0_script",true, 1);
+AddEntityCollideCallback("Player", "area_1", "area_1_script",true, 1);
+AddUseItemCallback("sh", "stone_hammer_1", "zed_0", "pouzij_0", false);
+AddUseItemCallback("", "0305k1", "cellar_wood01_1", "unl_0", true);
+AddEntityCollideCallback("Player", "area_4", "area_4_script",false, 1);
+AddEntityCollideCallback("Player", "area_5", "area_5_script",true, 1);
+AddEntityCollideCallback("Player", "area_6", "area_6_script",true, 1);
+SetEntityCallbackFunc("potion_oil_3", "pick_0");
+SetupLoadScreen("LoadingText", "load_11", 0, "");
+SetPlayerRunSpeedMul(0.9);
+}
+
+void InteractWheel(string &in asEntity)
+{
+SetEntityPlayerInteractCallback("castle_portcullis_1", "", true);	
+}
+
+void CollideGateWithWater(string &in asParent, string &in asChild, int alState)
+{
+}
+
+void area_zavrit_0_script(string &in asParent, string &in asChild, int alState)
+{
+SetMoveObjectState("castle_portcullis_1", 1);
+AddTimer("", 1, "reaguj_0");
+}
+
+void stop_look(string &in asEntity)
+{
+StopPlayerLookAt();
+}
+
+void reaguj_0(string &in asEntity)
+{
+GiveSanityDamage(9.0f, true);
+AddTimer("", 1, "reaguj_1");
+}
+
+void reaguj_1(string &in asEntity)
+{
+SetMessage("TheVoice", "daniel_15", 5.0);
+}
+
+void area_iluze_0_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "eerie.snt", "Player", 0, true);
+SetEntityActive("infected_0", true);
+//AddEnemyPatrolNode("infected_0", "node_1", 0, "");
+//ShowEnemyPlayerPosition("infected_0");
+//StartPlayerLookAt("infected_0", 50, 50, ""); //citim u toho naznaky jumpscare .. jebat na to, toz jasne do pice? :D
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+GiveSanityDamage(9.0f, true);
+AddTimer("", 1, "stop_look");
+AddTimer("", 1, "odejdi_0");
+StopMusic(0, 1000);
+PlayMusic("penumbra_music_E1_D2.ogg", true, 0.7, 0.1, 1000, true);
+SetPlayerRunSpeedMul(0);
+if(GetLanternActive() == false)
+{
+SetLanternDisabled(false);
+SetLanternActive(true, true);
+}
+}
+
+void odejdi_0(string &in asEntity)
+{
+AddEnemyPatrolNode("infected_0", "node_0", 0, "");
+//SetPlayerRunSpeedMul(0.9);
+SetPlayerSanity(20);
+AddTimer("", 8, "zmiz_0");
+}
+
+void zmiz_0(string &in asEntity)
+{
+FadeEnemyToSmoke("infected_0", false);
+SetPlayerRunSpeedMul(0.9);
+PlaySoundAtEntity("", "react_pant.snt", "Player", 0, true);
+}
+
+//void area_infected_zmiz_0_script(string &in asParent, string &in asChild, int alState)
+//{
+//FadeEnemyToSmoke("infected_0", true);
+//SetPlayerRunSpeedMul(0.9);
+//}
+
+void interact_0(string &in asEntity)
+{
+SetMessage("TheVoice", "i_0", 2.0);
+}
+
+void interact_1(string &in asEntity)
+{
+SetEntityActive("insanity_0", true);
+}
+
+void interact_2(string &in asEntity)
+{
+SetMessage("TheVoice", "i_1", 2.0);
+}
+
+void interact_3(string &in asEntity)
+{
+SetMessage("TheVoice", "i_2", 3.0);
+AddQuest("", "q1");
+}
+
+void interact_4(string &in asEntity)
+{
+SetMessage("TheVoice", "i_1", 2.0);
+}
+
+void interact_5(string &in asEntity)
+{
+SetMessage("TheVoice", "i_1", 2.0);
+}
+
+void pouzij_0(string &in asItem, string &in asEntity)
+{
+if(asItem == "stone_hammer_1" && HasItem("stone_chipper_1")){ 
+BeingHoleBreak();
+		
+RemoveItem("stone_chipper_1");
+RemoveItem("stone_hammer_1");
+		
+GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);	
+}
+else if(asItem == "stone_chipper_1" && HasItem("stone_hammer_1")){ 
+BeingHoleBreak();
+		
+RemoveItem("stone_chipper_1");
+RemoveItem("stone_hammer_1");
+		
+GiveItem("stone_hammer_chipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);	
+}
+else if(asItem == "stone_hammer_chipper") BeingHoleBreak();
+else{ 
+SetMessage("Ch02Level15", "HoleNotEnoughItem", 0);
+AddQuest("qnaradi", "qnaradi");
+}
+}
+
+void BeingHoleBreak()
+{
+	
+SetEntityActive("stone_hammer_move_1", true);
+SetEntityActive("stone_chipper_move_1", true);
+//SetPlayerCrouching(true);
+StartPlayerLookAt("stone_hammer_move_1", 2.0f, 2.0f, "");
+if(GetLocalVarInt("HammerTime") == 0){
+SetLocalVarInt("HammerTime", 1);
+AddTimer("movehammer", 0.1f, "TimerMoveHammer");
+AddTimer("movechipper", 0.27f, "TimerMoveHammer");
+AddTimer("resethammer", 0.4f, "TimerMoveHammer");
+AddTimer("resetchipper", 0.6f, "TimerMoveHammer");
+}
+	
+PlaySoundAtEntity("cumble1", "15_rock_break", "Player", 0, false);
+PlaySoundAtEntity("begin", "15_make_hammer", "Player", 0.25f, false);
+PlaySoundAtEntity("crumble", "03_rock_move", "Player", 2.0f, false);
+}
+
+void TimerMoveHammer(string &in asTimer)
+{
+if(asTimer == "movehammer"){
+SetMoveObjectState("stone_hammer_move_1", 0.40);
+}
+else if(asTimer == "movechipper"){
+StopPlayerLookAt();
+SetMoveObjectState("stone_chipper_move_1", 1);
+PlaySoundAtEntity("bang", "impact_rock_high", "Player", 0, false);
+PlaySoundAtEntity("hammer", "15_hammer", "Player", 0, false);
+} 
+else if(asTimer == "resethammer"){
+SetMoveObjectState("stone_hammer_move_1", 0);
+} 
+else if(asTimer == "resetchipper"){
+SetMoveObjectState("stone_chipper_move_1", 0);	
+}
+	
+if(GetLocalVarInt("HammerTime") < 3 && asTimer == "resetchipper"){
+AddTimer("movehammer", 0.01f, "TimerMoveHammer");
+AddTimer("movechipper", 0.17f, "TimerMoveHammer");
+AddTimer("resethammer", 0.3f, "TimerMoveHammer");
+AddTimer("resetchipper", 0.5f, "TimerMoveHammer");
+AddLocalVarInt("HammerTime", 1);
+} 
+else if(GetLocalVarInt("HammerTime") == 3 && asTimer == "resetchipper"){
+AddTimer("movehammer", 0.2f, "TimerMoveHammer");
+AddTimer("movechipper", 0.37f, "TimerMoveHammer");
+AddTimer("break", 0.42f, "TimerMoveHammer");
+AddTimer("resethammer", 0.5f, "TimerMoveHammer");
+AddTimer("resetchipper", 0.8f, "TimerMoveHammer");
+AddLocalVarInt("HammerTime", 1);
+} 
+else if(GetLocalVarInt("HammerTime") == 4 && asTimer == "break"){
+BreakHole();
+} 
+else if(GetLocalVarInt("HammerTime") == 4 && asTimer == "resetchipper"){
+SetEntityActive("stone_hammer_move_1", false);
+SetEntityActive("stone_chipper_move_1", false);
+} 
+}
+
+void BreakHole()
+{
+SetEntityActive("zed_nerozbita", false);
+SetEntityActive("zed_rozbita", true);
+GiveSanityBoostSmall();
+CompleteQuest("", "q1");
+CompleteQuest("", "qnaradi");
+}
+
+void unl_0(string &in asItem, string &in asEntity)
+{
+SetSwingDoorLocked("cellar_wood01_1", false, false);
+PlaySoundAtEntity("", "unlock_door", "Dvere1", 0, false);
+RemoveItem("0305k1");
+PlaySoundAtEntity("", "unlock_door", "cellar_wood01_1", 0, false);
+}
+
+void area_1_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("", "19_creak.snt", "area_2", 0, false);
+SetEntityActive("area_3", false);
+}
+
+void area_4_script(string &in asParent, string &in asChild, int alState)
+{
+int x = RandInt(1, 7);
+switch(x)
+{
+case 1:
+PlaySoundAtEntity("","19_pour_blood.snt","z_0",0,false);
+    break;
+case 2:
+PlaySoundAtEntity("","19_breath.snt","z_1",0,false);
+    break;
+case 3:
+PlaySoundAtEntity("","20_rat.snt","z_0",0,false);
+    break;
+case 4:
+PlaySoundAtEntity("","19_breath.snt","z_2",0,false);
+    break;
+case 5:
+PlaySoundAtEntity("","04_big_feet.snt","area_2",0,false);
+    break;
+case 6:
+PlaySoundAtEntity("","04_hole_squeal.snt","z_3",0,false);
+    break;
+case 7:
+PlaySoundAtEntity("","05_event_bottles.snt","z_4",0,false);
+    break;
+}
+} 
+
+void area_5_script(string &in asParent, string &in asChild, int alState)
+{
+PlaySoundAtEntity("","05_event_bottles.snt","z_5",0,false);
+SetEntityActive("w0", true);
+SetEntityActive("w1", true);
+SetEntityActive("w2", true);
+SetEntityActive("w3", true);
+SetEntityActive("w4", true);
+SetEntityActive("w5", true);
+SetEntityActive("w6", true);
+SetEntityActive("w7", true);
+SetEntityActive("w8", true);
+}
+
+void pick_0(string &in entity, string &in type)
+{
+SetEntityActive("area_6", true);
+PlaySoundAtEntity("","scare_walk_ghost.snt","z6",0,false);
+AddTimer("", 0.5, "krok_0");
+AddTimer("", 1.0, "krok_1");
+AddTimer("", 1.5, "krok_2");
+AddTimer("", 2.0, "krok_3");
+}
+
+void krok_0(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_walk_ghost.snt","z7",0,false);
+}
+
+void krok_1(string &in asTimer)
+{
+PlaySoundAtEntity("","step_walk_rock.snt","z8",0,false);
+}
+
+void krok_2(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_walk_ghost.snt","z9",0,false);
+}
+
+void krok_3(string &in asTimer)
+{
+PlaySoundAtEntity("","scare_walk_ghost.snt","z10",0,false);
+}
+
+void area_6_script(string &in asParent, string &in asChild, int alState)
+{
+CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "cellar_wood01_2", false);
+PlaySoundAtEntity("","lurker_hit_wood.snt","cellar_wood01_2",0,false);
+AddTimer("", 0.5, "bouchani_0");
+AddTimer("", 1.0, "bouchani_1");
+AddTimer("", 1.5, "bouchani_2");
+}
+
+void bouchani_0(string &in asTimer)
+{
+CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "z11", false);
+PlaySoundAtEntity("","enemy_infected_bang.snt","z11",0,false);
+}
+
+void bouchani_1(string &in asTimer)
+{
+CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "z11", false);
+PlaySoundAtEntity("","enemy_infected_bang.snt","z11",0,false);
+}
+
+void bouchani_2(string &in asTimer)
+{
+CreateParticleSystemAtEntity("breakps", "ps_hit_wood", "z11", false);
+PlaySoundAtEntity("","enemy_infected_eminiss.snt","z11",0,false);
+GiveSanityDamage(5.5f,true);
+}
+
+void OnEnter()
+{
+AutoSave();
+PlayMusic("penumbra_BP_I.ogg", true, 0.7, 0.1, 1000, true);
+}
+
+void OnLeave()
+{
+StopMusic(3, 1000);
+}

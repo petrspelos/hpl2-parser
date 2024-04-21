@@ -1,0 +1,80 @@
+void OnStart()
+{
+	FadeOut(0);
+	FadeIn(4);
+	RemoveItem("lantern_*");
+	SetPlayerCrouching(true);
+	SetPlayerHealth(100);
+	SetPlayerSanity(100);
+	SetPlayerMoveSpeedMul(0.3f);
+	SetPlayerRunSpeedMul(0);
+	SetPlayerJumpDisabled(true);
+	FadeSepiaColorTo(0, 6);
+	FadeRadialBlurTo(0, 4);
+	PlayMusic("ending_agrippa", true, 1, 5, 0, true);
+	AddTimer("lookloop", RandFloat(2.0f,6.0f), "TimerRandomLook");
+}
+
+bool bRoll = true;
+void TimerRandomLook(string &in asTimer)
+{
+	int iLook = RandFloat(1,5);
+	
+	if(iLook > 4){
+		SetPlayerRunSpeedMul(0.5);
+		SetPlayerMoveSpeedMul(0.2);
+		FadePlayerRollTo(0, 0.5f, 1); 
+		FadePlayerFOVMulTo(1, 1);
+		FadeImageTrailTo(0,1.5f);
+		
+		AddTimer("lookloop", RandFloat(6.0f,8.0f), "TimerRandomLook");
+		return;
+	}
+	
+	if(iLook == 1 or iLook == 3)
+		PlaySoundAtEntity("sigh", "react_sigh.snt", "Player", 1.0 / 0.75f, false);
+	
+	FadePlayerFOVMulTo(RandFloat(0.7f,1.3f), RandFloat(0.05f,0.1f));
+	
+	SetPlayerMoveSpeedMul(RandFloat(0.1f,0.4f));
+	SetPlayerRunSpeedMul(RandFloat(0.2f,0.4f));
+	
+	FadeImageTrailTo(RandFloat(0.75f,1.0f),RandFloat(0.75f,1.25f));
+	
+	bRoll = bRoll == false ? true : false;
+	
+	if(bRoll)
+		FadePlayerRollTo(RandFloat(4,12), RandFloat(0.075f,0.35f), RandFloat(0.55f,1.15f)); 
+	else
+		FadePlayerRollTo(RandFloat(-4,-12), RandFloat(0.05f,0.25f), RandFloat(0.5f,1)); 
+		
+	AddTimer("lookloop", RandFloat(3.0f,6.0f), "TimerRandomLook");
+}
+void StopRandomLook()
+{
+	RemoveTimer("lookloop");
+	SetPlayerMoveSpeedMul(0.5);
+	FadePlayerFOVMulTo(1, 1);
+	FadeImageTrailTo(0,1.0f);
+	FadePlayerRollTo(0, 0.5f, 2); 
+}
+
+void EndDoor(string &in asEntity)
+{
+	StopRandomLook();
+	FadeSepiaColorTo(80, 3);
+	FadeRadialBlurTo(3, 4);
+	FadeOut(5);
+	AddTimer("stopPlayer", 2, "StopPlayer");
+	AddTimer("creditsroll", 7, "CreditsRoll");
+}
+
+void StopPlayer(string &in asTimer)
+{
+	SetPlayerActive(false);
+}
+
+void CreditsRoll(string &in asTimer)
+{
+	StartCredits("ending_daniel", false, "Ending", "CreditsZE", 3);
+}

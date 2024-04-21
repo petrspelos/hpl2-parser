@@ -1,0 +1,411 @@
+
+int mazeMonsterPreset;
+
+void OnStart()
+{
+	// Events
+	AddUseItemCallback("", "KeyMaze", "DoorMaze", "UseKeyOnDoor", false);
+	AddUseItemCallback("", "KeyMaze", "HouseDoor", "UseKeyOnDoor", false);
+	AddUseItemCallback("", "KeySteelLock", "PadlockSteel", "UseKeyOnLock", false);
+	AddUseItemCallback("", "Crowbar", "DoorCrowbar", "UseCrowbar", false);
+	AddUseItemCallback("", "Container", "EpoxyContainer", "UseEmptyMixture", false);
+	AddUseItemCallback("", "UnstableMixture", "AreaBoomLocation", "UseUnstableMixture", false);
+	
+	AddEntityCollideCallback("Player", "Warehouse", "OnCollideWarehouse", false, 1);
+	AddEntityCollideCallback("Player", "WoodenDeskArea", "EventCollideWoodenDesk", true, 1);
+	AddEntityCollideCallback("Player", "AreaOnGhostEnter", "OnCollideAtInside", true, 1);
+	AddEntityCollideCallback("Player", "AreaCabinet", "OnCollideCabinet", true, 1);
+	AddEntityCollideCallback("Player", "AreaOutside", "OnCollideOutside", false, 0);
+	
+	for(int i=0;i<=4;i++) AddEntityCollideCallback("Player", "AreaThorns_" + i, "OnCollideThornsCallback", true, 1);
+		
+	// Required Items
+	if(!HasItem("Lantern")) GiveItemFromFile("Lantern", "lantern.ent");
+	if(!HasItem("Container")) GiveItemFromFile("Container", "chemical_container.ent");
+	if(!HasItem("HammerChipper")) GiveItem("HammerChipper", "Puzzle", "stone_hammer_chipper", "stone_hammer_chipper.tga", 0);
+	
+	// Other
+	SetMessage("Hints", "Chapter_4", 5.0f);
+	SetSkyBoxColor(0.2f, 0.5f, 0.2f, 1.0f);
+}
+
+void OnEnter()
+{
+	SetMapDisplayNameEntry("Forest");
+	AutoSave();
+	PlayMusic("29_amb_end_soft.ogg", true, 0.8f, 5.0f, 0, true);
+	switch(GetGlobalVarInt("ForestSubChapterComplete")) 
+	{
+		case 1:
+		SetEntityActive("Silme_1", true);
+		SetEntityActive("Silme_2", true);
+		SetEntityActive("WarehouseDoor", false);
+		CheckPoint("29_amb_end_soft.ogg", "FromWarehouse", "OnDeathMusic", "", "");
+		break;
+		
+		case 2:
+		FadeOut(0.0f);
+		FadeIn(8.0f);
+		
+		SetLevelDoorLocked("HouseDoor", true);
+		SetLevelDoorLocked("TempleDoor", false);
+		SetLevelDoorLockedSound("HouseDoor", "");
+		SetLevelDoorLockedText("HouseDoor", "Hints", "BackDoor");
+		PlayMusic("00_event_hallway.ogg", false, 0.8f, 8.0f, 10, false);
+		CheckPoint("game_menu.ogg", "FromHouse", "OnDeathMusic", "Die", "RunToTheTemple");
+		
+		AddTimer("AngelVoice", 8, "TimerAngelInDangerous");	
+		AddTimer("" + RandInt(0, 5), RandInt(12, 20), "TimerMonsterSpawn");
+		
+		SetFogColor(0.5f, 0.0f, 0.0f, 0.5f);	
+		SetSkyBoxColor(0.8f, 0.2f, 0.2f, 1.0f);
+		break;
+	}
+}
+
+void OnLeave()
+{
+	StopMusic(0.0f, 5);
+	switch(GetGlobalVarInt("ForestSubChapterComplete")) 
+	{
+		case 0:
+		SetupLoadScreen("Loading", "Warehouse", 0, "warehouse.jpg");
+		break;
+		
+		case 1:
+		SetupLoadScreen("Loading", "House", 0, "house.jpg");
+		SetEntityActive("AreaOutside", false);
+		RemoveItem("KeyMaze");
+		CompleteQuest("KeyMaze", "KeyMaze");
+		break;
+		
+		case 2:
+		SetupLoadScreen("Loading", "Temple", 0, "temple.jpg");
+		CompleteQuest("AngelVoice", "AngelVoice");
+		break;
+	}
+}
+
+float Distance(string &in asEntity)
+{
+	return MathSqrt(
+	MathPow(GetEntityPosX(asEntity) - GetPlayerPosX(), 2) + 
+	MathPow(GetEntityPosY(asEntity) - GetPlayerPosY(), 2) + 
+	MathPow(GetEntityPosZ(asEntity) - GetPlayerPosZ(), 2));
+}
+
+void OnPickChefKey(string &in entityName, string &in type)
+{
+	AddQuest(entityName, entityName);
+}
+
+void UseKeyOnDoor(string &in asItem, string &in asEntity)
+{
+   	SetSwingDoorLocked(asEntity, false, true);
+	SetLevelDoorLocked(asEntity, false);
+    	PlaySoundAtEntity("DoorUnlock", "unlock_door.snt", asEntity, 0, false);
+	CompleteQuest(asEntity, asEntity);
+}
+
+void UseKeyOnLock(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	ReplaceEntity(asEntity, asEntity, asEntity + "_Broken", "padlock_broken.ent", false);
+	PlaySoundAtEntity("SoundUnlockPadLock", "unlock_door.snt", asEntity + "_Broken", 0, false);
+	CompleteQuest(asEntity, asEntity);
+}
+
+void UseCrowbar(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	PlaySoundAtEntity("","puzzle_place_jar.snt", asEntity, 0, false);
+	SetEntityActive(asItem + "_d", true);
+}
+
+void OnCollideWarehouse(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive(asChild, false);
+	FadeOut(2);
+	CompleteQuest("Warehouse", "Warehouse");
+   	AddTimer(asChild+".map", 2, "LoadMap");
+}
+
+void OnInteractTrapBarrel(string &in asEntity)
+{
+	SetMessage("Hints", asEntity, 5.0f);
+}
+
+void OnInteractSkull(string &in asEntity)
+{
+	CreateParticleSystemAtEntity("CursedSkullEffect", "blood.ps", asEntity, false);
+	GiveSanityDamage(15.0f, true);
+	StartScreenShake(0.1f, 0.5f, 0.1f, 0.1f);
+	PlaySoundAtEntity("SkullCry", "BansheeDeath.snt", asEntity, 1.0f, false);
+	AddTimer("react_pant.snt", 1.5f, "TimerScare");
+}
+
+void OnInteractDoor(string &in door)
+{
+	if(!QuestIsCompleted(door))
+	{
+		SetMessage("Hints", door, 5.0f);
+		AddQuest(door, door);
+	}
+}
+
+void OnChangeStateCrowbar(string &in asEntity, int alState)
+{
+	if(alState == -1)
+	{
+		SetSwingDoorLocked("DoorCrowbar", false, false);
+		SetSwingDoorClosed("DoorCrowbar", false, false);
+		SetSwingDoorDisableAutoClose("DoorCrowbar", true);
+		
+		AddPropImpulse("DoorCrowbar", 0, 0, 3, "world");
+		ReplaceEntity("Crowbar_d", "Crowbar_dToCrowbar_b", "Crowbar_b", "crowbar_broken.ent", false);
+		CreateParticleSystemAtEntity("", "ps_hit_wood.ps", "Crowbar_b", false);
+ 		PlaySoundAtEntity("", "break_wood_metal.snt", "Crowbar_b", 0, false);
+ 		
+		GiveSanityBoost();
+		CompleteQuest("DoorCrowbar", "DoorCrowbar");
+		
+		AddTimer("", 0.2f, "TimerPushDoor");
+	}
+}
+
+void TimerPushDoor(string &in asTimer)
+{
+        AddPropImpulse("DoorCrowbar", -0.5f, 0.1f, 0.2f, "world");
+        PlayMusic("10_puzzle01.ogg", false, 0.7f, 0.1f, 10, false);
+}
+
+void LookAtSlime(string &in asEntity, int alState)
+{
+	GiveSanityDamage(5.0f, true);
+	SetMessage("Hints", "SlimeAtDoor", 3.0f);
+}
+
+void LoadMap(string &in map)       
+{
+	ChangeMap(map, "StartArea", "", "");
+}
+
+void OnDeathMusic(string &in asName, int alCount)
+{
+	PlayMusic(asName, true, 0.8f, 5.0f, 0, true);
+	
+	if(GetGlobalVarInt("ForestSubChapterComplete") == 2)
+	{
+		FadeOut(0.0f);
+		FadeIn(8.0f);
+		AddTimer("MonsterSpawn", RandInt(12, 20), "TimerMonsterSpawn");
+	}
+}
+
+void OnPickNoteMaze(string &in entityName, string &in type)
+{
+	CheckPoint("PurgeMazeMonsters", "StartAreaMazeMonsters", "OnPlayerDie", "Die", "KilledByMazeMonsters");
+	PlaceEntityAtEntity("KeyMaze", "KeyMaze_" + RandInt(1, 7), "KeyMaze", true); 
+
+	for(int i=0;i<=7;i++) SetPropActiveAndFade("MazeKnight_" + i, false, 1.75f);
+	for(int i=8;i<=15;i++) SetPropActiveAndFade("MazeKnight_" + i, true, 1.75f);
+
+	MazeMonsters();
+}
+
+void EventCollideWoodenDesk(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics("WoodenDesk", false);
+}
+
+void OnCollideOutside(string &in asParent, string &in asChild, int alState)
+{
+	switch(alState)
+	{
+		case 1:
+		SetFogActive(true);
+		PlayMusic("29_amb_end_soft.ogg", true, 0.8f, 5.0f, 0, true);
+		break;
+		
+		case -1:
+		SetFogActive(false);
+		PlayMusic("01_amb_darkness.ogg", true, 0.8f, 5.0f, 0, true);
+		break;
+	}
+}
+
+void OnCollideCabinet(string &in asParent, string &in asChild, int alState)
+{	
+	SetLampLit("bonfire_1", true, true);
+	
+	StartPlayerLookAt("bonfire_1", 1.5f, 2.0f, "");
+	AddTimer("CompleteLook", 2.75f, "TimerLookComplete");
+	AddTimer("PutIntoTrap", 3.25f, "TimerPutIntoTrap");
+	
+	StartScreenShake(0.05f, 0.25f, 0.05f, 0.05f);
+	GiveSanityDamage(10.0f, true);
+}
+
+void OnCollideThornsCallback(string &in asParent, string &in asChild, int alState)
+{
+	GivePlayerDamage(10.0f, "BloodSplat", true, true);
+	PlayGuiSound("24_knife.snt", 1.5f);
+}
+
+void OnCollideAtInside(string &in asParent, string &in asChild, int alState)
+{
+	for(int i=1;i<=2;i++)
+	{
+		SetLampLit("LampGhost_" + i, true, true);
+		PlaySoundAtEntity("SoundOnTurnLamp", "ui_use_tinderbox.ogg", "LampGhost_" + i, 0.0f, false);
+	}
+	PlaySoundAtEntity("FirstScare", "00_laugh.snt", "DoorCrowbar", 0.0f, false);
+	GiveSanityDamage(10.0f, true);
+	AddTimer("hurt_pant.snt", 1.4f, "TimerScare");
+}
+
+void UseUnstableMixture(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive(asEntity, false);
+	SetEntityActive("UnstableMixture_s", true);
+	SetEntityActive("UnstableMixture_Fires", true);
+	PlaySoundAtEntity("FireSound", "general_fire_burning.snt", asItem + "_s", 0.05, false);
+	AddTimer("UnstableMixture_s", 4.0f, "TimerExplosionComplete");
+}
+
+void UseEmptyMixture(string &in asItem, string &in asEntity)
+{
+	RemoveItem(asItem);
+	SetEntityActive("UnstableMixture_static", true);
+	CreateParticleSystemAtEntityExt("EpoxyLiquid", "ps_liquid_epoxy.ps", "WaterStreamPosition", false, 0.8f, 0.0f, 0.0f, 1.0f, false, 0.0f, 0.0f, 0.0f, 0.0f);
+	PlaySoundAtEntity("WaterStream", "16_water_stream_med.snt", "UnstableMixture_static", 0.05f, false);
+	
+	AddTimer("FullTheGlass", 4.0f, "TimerFullTheGlass");
+}
+
+void OnLookAtWarehouse(string &in asEntity, int alState)
+{
+	if(alState == 1)
+	{
+		SetEntityActive(asEntity, false);
+		SetMessage("Hints", "LookAtWarehouse", 4.0f);
+		AddQuest("Warehouse", "Warehouse");
+	}
+}
+
+void OnPlayerDie(string &in asName, int alCount)
+{
+	MazeMonsters();
+	for(int i=1;i<=7;i++) ResetProp("ChestMaze_"+i);
+	PlaceEntityAtEntity("KeyMaze", "KeyMaze_" + RandInt(1, 7), "KeyMaze", true);
+}
+
+void TimerLookComplete(string &in asTimer)
+{
+	StopPlayerLookAt();
+}
+
+void TimerPutIntoTrap(string &in asTimer)
+{
+	SetPropHealth("TrapBarrel", 0.0f);
+	SetEntityActive("TrapChef", true);	
+	ShowEnemyPlayerPosition("TrapChef");
+	StartPlayerLookAt("TrapChef", 2.5f, 3.0f, "");
+	AddTimer("LookComplete", 3.5f, "TimerLookComplete");
+}
+
+void TimerScare(string &in soundFile)
+{
+	PlayGuiSound(soundFile, 1.0f);
+	ChangePlayerStateToNormal();
+}
+
+void TimerFullTheGlass(string &in asTimer)
+{
+	SetEntityActive("UnstableMixture_static", false);
+	SetEntityActive("UnstableMixture", true);
+	CreateParticleSystemAtEntityExt("WaterDrop", "ps_impact_water_high", "UnstableMixture", false, 0.8f, 0.0f, 0.0f, 0.8f, false, 0.0f, 0.0f, 0.0f, 0.0f);
+	PlaySoundAtEntity("splash", "impact_water_med", "UnstableMixture", 0, false);
+	DestroyParticleSystem("EpoxyLiquid");
+	StopSound("WaterStream", 0.05f);
+}
+
+void TimerExplosionComplete(string &in asBomb)
+{
+	float distance = Distance(asBomb);
+	if(distance < 6) GivePlayerDamage(100 - (10 * distance), "BloodSplat", true, false);
+
+	StartScreenShake(0.2f, 0.35f, 0.05f, 0.05f);
+	StopSound("FireSound", 0.05f);
+	PlaySoundAtEntity("BarricadeExplosionSound", "explosion_rock_large.snt", asBomb, 0.0f, false);
+	CreateParticleSystemAtEntity("BarricadeExplosionParticle", "ps_break_cavein.ps", "AreaBoomLocation", false);
+	for(int i=1;i<=4;i++)
+	{
+		int direct = 10;
+		if(i % 2 == 0) direct = -10;
+		SetPropStaticPhysics("HeavyBarricade_" + i, false);
+		AddPropImpulse("HeavyBarricade_" + i, direct, 0, -direct, "World");
+		SetEntityInteractionDisabled("HeavyBarricade_" + i, false);
+	}
+	SetEntityActive(asBomb, false);
+	CompleteQuest("AreaBoomLocation", "AreaBoomLocation");
+}
+
+void OnLookAtDeadBodyForest(string &in asEntity, int alState)
+{
+	if(Distance(asEntity) < 4 && alState == 1)
+	{
+		SetEntityActive(asEntity, false);
+		StartScreenShake(0.05f, 0.35f, 0.05f, 0.05f);
+		GiveSanityDamage(20, true);
+		SetMessage("Hints", "DeadBodyForestHint", 4.0f);
+	}
+}
+
+void TimerAngelInDangerous(string &in asTextEntry)
+{
+	SetMessage("Hints", asTextEntry, 4.0f);
+	AddQuest("AngelVoice", "AngelVoice");
+}
+
+void MazeMonsters()
+{
+	PlayGuiSound("00_laugh.snt", 1.0f);
+	mazeMonsterPreset = RandInt(0, 4);
+	AddTimer("MazeMonster_spawn", RandFloat(2.5f, 5.0f), "TimerMazeMonsterSpawn");
+}
+
+void TimerMazeMonsterSpawn(string &in asEntity)
+{
+	SetEnemyIsHallucination("GruntMaze_" + mazeMonsterPreset, true);
+	mazeMonsterPreset = (mazeMonsterPreset + 1) % 5;
+	SetEnemyIsHallucination("GruntMaze_" + mazeMonsterPreset, false);
+	SetEntityActive("GruntMaze_" + mazeMonsterPreset, true);
+	for(int i=(mazeMonsterPreset*5)+1;i<=(mazeMonsterPreset*5)+5;i++) AddEnemyPatrolNode("GruntMaze_" + mazeMonsterPreset, "PathMaze_"+i, 0.001f, "");
+	for(int i=(mazeMonsterPreset*5)+5+1;i>(mazeMonsterPreset*5)+1;i--) AddEnemyPatrolNode("GruntMaze_" + mazeMonsterPreset, "PathMaze_"+i, 0.001f, "");
+	
+	if(GetSwingDoorLocked("DoorMaze")) AddTimer(asEntity, 14.0f, "TimerMazeMonsterSpawn");
+	else CheckPoint("AfterMaze", "StartArea", "", "Die", "KilledAfterMaze");
+}
+
+void TimerFadeIn(string &in time)
+{
+	FadeIn(StringToFloat(time));
+}
+
+void TimerMonsterSpawn(string &in asSeed)
+{
+	int oldSeed = StringToInt(asSeed);
+	int newSeed = ((oldSeed + 1) % 6);
+	
+	FadeEnemyToSmoke("Brute_" + oldSeed, true);
+	SetEntityActive("Brute_" + newSeed, true);
+	CreateParticleSystemAtEntity("BruteEffect", "ps_ghost_release.ps", "Brute_" + newSeed, false);
+	ShowEnemyPlayerPosition("Brute_" + newSeed);
+	
+	for(int i=0;i<=9;i++) AddEnemyPatrolNode("Brute_" + newSeed, "BruteNode_" + ((newSeed * 10)) + i, 0.01f, "");
+	
+	StartScreenShake(0.1f, 1.75f, 0.25f, 0.25f);
+	AddTimer("" + newSeed, 45, "TimerMonsterSpawn");
+}

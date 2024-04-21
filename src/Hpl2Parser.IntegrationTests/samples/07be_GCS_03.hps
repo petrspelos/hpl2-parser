@@ -1,0 +1,882 @@
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\HPL2_AnimationSubSystem\HPL2_AnimationSubSystem.hps"
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\OS_LanternColor.hps"
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\Ass_Animations_Scripts\AssAnim_TomGrip.hps"
+#include "\custom_stories\TheGreatChristmasSpecial\scripts\OS_Lerp.hps"
+
+bool IsInGrippyArea = false;
+
+bool PlayerInsideWindArea = false;
+bool BruteInsideWindArea = false;
+
+int windDirectionHall = 0;
+int windDirectionHall_Brute = 0;
+
+float hallWindSpeed = 0.07f;
+
+bool canJumpOnBear = false;
+
+void OnStart()
+{
+
+	SetEntityPlayerInteractCallback("area_ColorSelect_red", "LanternColorSet_Red", false);
+	SetEntityPlayerInteractCallback("area_ColorSelect_orange", "LanternColorSet_Orange", false);	
+	SetEntityPlayerInteractCallback("area_ColorSelect_yellow", "LanternColorSet_Yellow", false);
+	SetEntityPlayerInteractCallback("area_ColorSelect_green", "LanternColorSet_Green", false);	
+	SetEntityPlayerInteractCallback("area_ColorSelect_blue", "LanternColorSet_Blue", false);
+	SetEntityPlayerInteractCallback("area_ColorSelect_pink", "LanternColorSet_Pink", false);	
+	SetEntityPlayerInteractCallback("area_ColorSelect_purple", "LanternColorSet_Purple", false);
+	SetEntityPlayerInteractCallback("area_ColorSelect_white", "LanternColorSet_White", false);	
+	
+	SetEntityPlayerInteractCallback("area_ColorSelect_christmas", "LanternColorSet_Christmas", false);
+	SetEntityPlayerInteractCallback("area_ColorSelect_rainbow", "LanternColorSet_Rainbow", false);	
+	
+	for(int i = 1; i < 18; i++){
+		SetLightVisible("PointLight_"+i, false);
+	}
+	
+	AddEntityCollideCallback("Player", "area_enterColorRoom", "area_enterColorRoom", true, 1);
+	
+	// located in external script:
+	
+	PlayPropAnimation("OS_Christmas_character_infected", "TomGripIdle", 0.0f, true, "");
+	
+	AddTimer("", 1.5f, "NL_Dungeon_RegMess");
+	
+	
+	PlayPropAnimation("Wild_Polar_Bear_Char_1", "Sleep", 0.0f, true, "");
+	
+	AddEntityCollideCallback("Player", "area_bearBeginAwake", "area_bearBeginAwake", true, 1);
+	
+	SetLocalVarFloat("InSlideArea", 0);
+	SetLocalVarInt("InSafeSlideArea", 0);
+	
+	SetLocalVarFloat("InSlideArea_Brute", 0);
+	SetLocalVarInt("InSafeSlideArea_Brute", 0);
+	
+	SetLocalVarInt("TickDelay", 2);
+	SetLocalVarInt("TickDelay_Brute", 2);
+	
+	SetPlayerFallDamageDisabled(true);
+
+	AddEntityCollideCallback("Player", "area_Slide_1", "area_Slide", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "area_Slide_1", "area_Slide_Brute", false, 0);
+	
+	AddEntityCollideCallback("Player", "areaSlideSAFE_1", "area_CancelSlide", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "areaSlideSAFE_1", "area_CancelSlide_Brute", false, 0);
+	AddEntityCollideCallback("Player", "areaSlideSAFE_2", "area_CancelSlide", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "areaSlideSAFE_2", "area_CancelSlide_Brute", false, 0);
+	AddEntityCollideCallback("Player", "areaSlideSAFE_3", "area_CancelSlide", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "areaSlideSAFE_3", "area_CancelSlide_Brute", false, 0);
+	AddEntityCollideCallback("Player", "areaSlideSAFE_4", "area_CancelSlide", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "areaSlideSAFE_4", "area_CancelSlide_Brute", false, 0);
+	
+	AddEntityCollideCallback("Player", "area_WindZone_1", "area_WindZone", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "area_WindZone_1", "area_WindZone_Brute", false, 0);
+	
+	AddEntityCollideCallback("Player", "area_WindZone_2", "area_WindZone_2", false, 0);
+	AddEntityCollideCallback("servant_brute_1", "area_WindZone_2", "area_WindZone_Brute_2", false, 0);
+	
+	AddEntityCollideCallback("Player", "area_WindZone_3", "area_WindZone_3", false, 0);
+	
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_1", "area_MeltIce_1", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_2", "area_MeltIce_2", true, 1);
+	AddEntityCollideCallback("red_torch_prop01_1", "area_MeltIce_3", "area_MeltIce_3", true, 1);
+	
+	
+	
+	AddEntityCollideCallback("cabinet_nice_1", "area_cabinet_JS", "area_cabinet_JS", true, 0);
+	
+	
+	
+	SetEntityPlayerInteractCallback("area_IntColdButton_1", "IntColdLantern_Increm", true);
+	SetEntityPlayerInteractCallback("area_IntColdButton_2", "IntColdLantern_Increm", true);
+	SetEntityPlayerInteractCallback("area_IntColdButton_3", "IntColdLantern_Increm", true);
+	
+	SetLocalVarInt("ColdButtonsAmount", 0);
+	
+	AddEntityCollideCallback("Player", "area_EscapedSuccessfully", "area_EscapedSuccessfully", true, 1);
+	SetMoveObjectStateExt("castle_portcullis_1", 1.0f, 20.0f, 65.0f, 0.0f, true);
+	
+	AddEntityCollideCallback("Player", "area_PolarBearBreakOut", "area_PolarBearBreakOut", true, 1);
+	
+	AddEntityCollideCallback("Wild_Polar_Bear_Char_Prop_1", "area_BearBreakBoards", "area_BearBreakBoards", true, 1);
+	
+	AddEntityCollideCallback("Player", "area_BearEnableHurt", "area_BearEnableHurt", false, 1);
+	AddEntityCollideCallback("Player", "area_BearHurtJump", "area_BearHurtJump", false, 1);
+	
+	AddEntityCollideCallback("Player", "area_PlayerEnterPortalRoom", "area_PlayerEnterPortalRoom", true, 1);
+	
+	AddEntityCollideCallback("Player", "area_PlayerEnterPortalFinale", "area_PlayerEnterPortalFinale", true, 1);
+	FadeLightTo("BoxLight_1", 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.1f);
+	
+	AddEntityCollideCallback("Player", "area_santaPictureScare", "area_santaPictureScare", true, 1);
+	
+AddUseItemCallback("", "key_tomb_rusty_1", "cellar_wood01_3", "UnlockPrisonDoorYay", true);
+
+
+	AddEntityCollideCallback("Player", "area_SpawnBruteEnd", "area_SpawnBruteEnd", true, 1);
+	AddEntityCollideCallback("Player", "area_EnterBruteArena", "area_EnterBruteArena", true, 1);
+	
+	PlaySoundAtEntity("grippySongInPrison", "grippySongInPrison.snt", "OS_Christmas_necr_character_infected_1", 0.0f, false);
+}
+
+void OnEnter()
+{
+	PlayMusic("23_amb", true, 1.0f, 1.0f, 0, false);
+}
+
+void OnLeave()
+{
+
+}
+
+void OnUpdate(float afStep)
+{
+	changeLanternColor();
+	ASS_AnimationSystem(afStep);
+	SlideAreaLogic();
+	
+	WindLogic();
+	
+	UpdateTickSystem(afStep);
+	LerpBearEscape();
+}
+
+void area_SpawnBruteEnd(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_brute_1",true);
+	CheckPoint ("FinaleCheckpoint", "PlayerStartArea_CP_Final", "CP_Final_Cb", "", "");
+	PlayMusic("NaughtyListDungeon_Music_Myuu", true, 1.0f, 1.0f, 0, false);
+	AutoSave();
+}
+
+void CP_Final_Cb(string &in asName, int alCount)
+{
+
+	ResetProp("servant_brute_1");
+	ResetProp("red_torch_prop01_1");
+	PlayMusic("NaughtyListDungeon_Music_Myuu", true, 1.0f, 1.0f, 0, false);
+	
+	SetEntityActive("servant_brute_1",true);
+	for(int i =1; i< 29;i++){
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_"+i, 0.001f, "");
+	}
+}
+
+void area_EnterBruteArena(string &in asParent, string &in asChild, int alState)
+{
+	for(int i =1; i< 29;i++){
+	AddEnemyPatrolNode("servant_brute_1", "PathNodeArea_"+i, 0.001f, "");
+	}
+	ShowEnemyPlayerPosition("servant_brute_1");
+}
+
+
+void UnlockPrisonDoorYay(string &in asItem, string &in asEntity)
+{
+	SetSwingDoorLocked("cellar_wood01_3", false, true);
+	PlayGuiSound("unlock_door.snt", 1.0f);
+	RemoveItem(asItem);
+}
+
+
+void area_santaPictureScare(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics("santapainting_dyn_1", false);
+	AddPropImpulse("santapainting_dyn_1", 20.0f, 0.0f, 0.0f, "world");
+	SetLampLit("hanging_lantern_ceiling_3", false, true);
+
+	PlaySoundAtEntity("", "scare_wind.snt", "hanging_lantern_ceiling_3", 0.0f, false);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ENTER THE PORTAL //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_PlayerEnterPortalFinale(string &in asParent, string &in asChild, int alState)
+{
+StartEffectFlash(1.0f, 1.0f, 3.0f);
+SetPlayerActive(false);
+AddTimer("", 3.0f, "BeginPortalSequence");
+SetLanternActive(false, true);
+StopMusic(2.5f, 0);
+PlaySoundAtEntity("", "scare_wind.snt", "area_PlayerEnterPortalFinale", 0.0f, false);
+}
+
+void BeginPortalSequence(string &in asTimer)
+{
+StopSound("LoudWindSFX", 3.5f);
+FadeOut(2.5f);
+TeleportPlayer("PlayerStartArea_2");
+AddTimer("", 4.0f, "GoToFinalLevelPortal");
+}
+
+void GoToFinalLevelPortal(string &in asTimer)
+{
+ChangeMap("GCS_04", "PlayerStartArea_1", "", "");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// JUMP ON BEAR BACK /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_BearEnableHurt(string &in asParent, string &in asChild, int alState)
+{
+if (canJumpOnBear == true){
+	SetEntityActive("area_BearHurtJump", true);
+}
+}
+
+void area_BearHurtJump(string &in asParent, string &in asChild, int alState)
+{
+SetEntityActive("area_BearHurtJump", false);
+PlayPropAnimation("Wild_Polar_Bear_Char_2", "Flinch", 0.2f, false, "BearRevertToIdle_ending");
+PlaySoundAtEntity("", "permabear_Flinch_Sfx.snt", "Wild_Polar_Bear_Char_2", 0.0f, false);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// BUTTONS AND ESCAPE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+void area_BearBreakBoards(string &in asParent, string &in asChild, int alState)
+{
+SetPropHealth("castle_1", 0.0f);
+SetPropHealth("wooden_boards_block_1", 0.0f);
+PlaySoundAtEntity("", "break_wood.snt", "area_BearBreakBoards", 0.0f, false);
+AddTimer("", 0.75f, "timer_SpawnNewBear");
+}
+
+void timer_SpawnNewBear(string &in asTimer){
+	SetEntityActive("Wild_Polar_Bear_Char_Prop_1", false);
+	PlayPropAnimation("Wild_Polar_Bear_Char_2", "Idle", 0.2f, true, "");
+}
+
+void area_PlayerEnterPortalRoom(string &in asParent, string &in asChild, int alState)
+{
+	PlayPropAnimation("Wild_Polar_Bear_Char_2", "Stand", 0.0f, false, "BearRevertToIdle_ending");
+	SetEntityActive("BearBlockBox_Finale_1", false);
+	SetEntityActive("BearBlockBox_Finale_2", true);
+	PlaySoundAtEntity("", "permabear_idle_extra.snt", "Wild_Polar_Bear_Char_2", 0.0f, false);
+}
+
+void BearRevertToIdle_ending(string &in asProp)
+{
+	PlayPropAnimation("Wild_Polar_Bear_Char_2", "Idle", 0.0f, true, "");
+	SetEntityActive("BearBlockBox_Finale_1", true);
+	SetEntityActive("BearBlockBox_Finale_2", false);
+	canJumpOnBear = true;
+}
+
+
+void LerpBearEscape()
+{
+
+	if(isInterpolating == true){
+	SetEntityPos("Wild_Polar_Bear_Char_Prop_1", GetEntityPosX("Wild_Polar_Bear_Char_Prop_1"), GetEntityPosY("Wild_Polar_Bear_Char_Prop_1"), current);
+	}
+
+}
+
+
+
+void area_PolarBearBreakOut(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("Wild_Polar_Bear_Char_Prop_1", true);
+	fInterpTo(-30.5f, -18.5f, 5.0f);
+	PlayPropAnimation("Wild_Polar_Bear_Char_Prop_1", "RunSpedUp", 0.2f, true, "");
+	AddTimer("", 1.0f, "BearGruntPreBreakDoor");
+	PlaySoundAtEntity("", "permabear_notice.snt", "Wild_Polar_Bear_Char_Prop_1", 0.0f, false);
+}
+
+void BearGruntPreBreakDoor(string &in asTimer)
+{
+PlaySoundAtEntity("", "permabear_attack_launch_Loud.snt", "Wild_Polar_Bear_Char_Prop_1", 0.0f, false);
+}
+
+
+void area_EscapedSuccessfully(string &in asParent, string &in asChild, int alState)
+{
+	SetMoveObjectStateExt("castle_portcullis_1", 0.0f, 20.0f, 25.0f, 0.0f, true);
+	FadeEnemyToSmoke("servant_brute_1", true);
+	PlaySoundAtEntity("", "permabear_notice.snt", "Wild_Polar_Bear_Char_Prop_1", 0.0f, false);
+	AutoSave();
+}
+
+
+void IntColdLantern_Increm(string &in asEntity)
+{
+	SetLocalVarInt("ColdButtonsAmount", GetLocalVarInt("ColdButtonsAmount")+1);
+	AddDebugMessage(""+GetLocalVarInt("ColdButtonsAmount"), false);
+	PlayGuiSound("puzzle_place_jar.snt", 1.0f);
+
+	if(GetLocalVarInt("ColdButtonsAmount") == 3){
+	unlockBearExit();
+	}
+
+}
+
+void unlockBearExit(){
+	SetEntityActive("area_EscapedSuccessfully", true);
+	SetEntityActive("area_PolarBearBreakOut", true);
+	SetMoveObjectStateExt("castle_portcullis_2", 1.0f, 20.0f, 65.0f, 0.0f, true);
+	SetEntityActive("Wild_Polar_Bear_Char_Prop_1", true);
+	SetEntityActive("Wild_Polar_Bear_Char_1", false);
+	PlayPropAnimation("Wild_Polar_Bear_Char_Prop_1", "Idle", 0.0f, true, "");
+	
+	SetPropActiveAndFade("red_torch_prop01_1", false, 1.0f);
+	PlayGuiSound("unlock_door.snt", 1.0f);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// CABINET JS SHIT ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_cabinet_JS(string &in asParent, string &in asChild, int alState)
+{
+	SetPropStaticPhysics("corpse_male_1", false);
+	AddPropImpulse("corpse_male_1", -100.0f, 0.0f, 0.0f, "world");
+	PlayGuiSound("24_iron_maiden.snt", 1.0f);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ICE MELT AREAS ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void area_MeltIce_1(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_1", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_1", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_1", 0.0f, false);
+}
+
+void area_MeltIce_2(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_2", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_2", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_2", 0.0f, false);
+}
+
+void area_MeltIce_3(string &in asParent, string &in asChild, int alState)
+{
+SetPropActiveAndFade("OS_iceBlock_3", false, 2.0f);
+CreateParticleSystemAtEntity("", "ps_melt_iceblock_dissolve.ps", "area_MeltIce_3", false);
+PlaySoundAtEntity("", "gameplay_acid_web.snt", "area_MeltIce_3", 0.0f, false);
+SetPropStaticPhysics("cabinet_nice_1", false);
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// WIND ZONES FUN ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void area_WindZone(string &in asParent, string &in asChild, int alState)
+{
+windDirectionHall = 0;
+WindSetup_Player(alState);
+}
+
+void area_WindZone_2(string &in asParent, string &in asChild, int alState)
+{
+windDirectionHall = 1;
+WindSetup_Player(alState);
+}
+
+void area_WindZone_3(string &in asParent, string &in asChild, int alState)
+{
+windDirectionHall = 2;
+WindSetup_Player(alState);
+}
+
+void area_WindZone_Brute(string &in asParent, string &in asChild, int alState)
+{
+windDirectionHall_Brute = 0;
+WindSetup_Brute(alState);
+}
+
+void area_WindZone_Brute_2(string &in asParent, string &in asChild, int alState)
+{
+windDirectionHall_Brute = 1;
+WindSetup_Brute(alState);
+}
+
+void WindSetup_Player(int alState){
+	if(alState == 1){
+		PlayerInsideWindArea=true;
+		PlaySoundAtEntity("LoudWindSFX", "29_WindyCliffsWind.snt", "Player", 0.5f, false);
+	}
+	if(alState == -1){
+		PlayerInsideWindArea=false;
+		StopSound("LoudWindSFX", 0.5f);
+	}
+}
+
+void WindSetup_Brute(int alState){
+	if(alState == 1){
+		BruteInsideWindArea=true;
+	}
+	if(alState == -1){
+		BruteInsideWindArea=false;
+	}
+}
+
+
+
+
+
+void WindLogic(){
+
+if(PlayerInsideWindArea == true){
+
+if(windDirectionHall == 0){
+SetPlayerPos(GetPlayerPosX()+hallWindSpeed, GetPlayerPosY(), GetPlayerPosZ());
+}
+if(windDirectionHall == 1){
+SetPlayerPos(GetPlayerPosX()-hallWindSpeed, GetPlayerPosY(), GetPlayerPosZ());
+}
+
+if(windDirectionHall == 2){
+SetPlayerPos(GetPlayerPosX(), GetPlayerPosY(), GetPlayerPosZ()+0.01f);
+}
+
+
+
+}
+
+
+if(BruteInsideWindArea == true){
+
+if(windDirectionHall_Brute == 0){
+SetEntityPos("servant_brute_1",GetEntityPosX("servant_brute_1")+hallWindSpeed/3, GetEntityPosY("servant_brute_1"), GetEntityPosZ("servant_brute_1"));
+}
+if(windDirectionHall_Brute == 1){
+SetEntityPos("servant_brute_1",GetEntityPosX("servant_brute_1")-hallWindSpeed/3, GetEntityPosY("servant_brute_1"), GetEntityPosZ("servant_brute_1"));
+}
+
+}
+
+
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// ICY SLIDE FLOOR FUN ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+void area_CancelSlide(string &in asParent, string &in asChild, int alState){
+
+
+if(alState == 1){
+	SetLocalVarInt("InSafeSlideArea", 1);
+	ShouldBeSliding_SAFE_SPOT(-1);
+}
+if(alState == -1){
+	SetLocalVarInt("InSafeSlideArea", 0);
+	ShouldBeSliding_SAFE_SPOT(1);
+}
+
+}
+
+void area_CancelSlide_Brute(string &in asParent, string &in asChild, int alState){
+
+
+if(alState == 1){
+	SetLocalVarInt("InSafeSlideArea_Brute", 1);
+	ShouldBeSliding_SAFE_SPOT_Brute(-1);
+}
+if(alState == -1){
+	SetLocalVarInt("InSafeSlideArea_Brute", 0);
+	ShouldBeSliding_SAFE_SPOT_Brute(1);
+}
+
+}
+
+////////////////////////////////////////////////
+/// Used for passive collision with slide area:
+////////////////////////////////////////////////
+
+void ShouldBeSliding(int alState){
+
+	if( GetLocalVarInt("InSafeSlideArea") == 0){
+
+	DecideToSlideLogic(alState);
+
+	}
+}
+
+void ShouldBeSliding_Brute(int alState){
+
+	if( GetLocalVarInt("InSafeSlideArea_Brute") == 0){
+
+	DecideToSlideLogic_Brute(alState);
+
+	}
+}
+
+////////////////////////////////////////////////
+/// Used for safe zone collision with slide area:
+////////////////////////////////////////////////
+
+void ShouldBeSliding_SAFE_SPOT(int alState){
+
+
+DecideToSlideLogic(alState);
+
+}
+
+void ShouldBeSliding_SAFE_SPOT_Brute(int alState){
+
+
+DecideToSlideLogic_Brute(alState);
+
+}
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+
+void DecideToSlideLogic(int alState){
+if(alState == 1){
+	SetLocalVarInt("InSlideArea", 1);
+	
+	PlayGuiSound("iceSkateSFX.snt", 1.0f);
+	
+SetLocalVarFloat("X_lastTick", GetPlayerPosX());
+SetLocalVarFloat("Y_lastTick", GetPlayerPosY());
+SetLocalVarFloat("Z_lastTick", GetPlayerPosZ());
+	SetLocalVarInt("TickDelay", 0);
+	
+	SetPlayerMoveSpeedMul(0.0f);
+	SetPlayerJumpDisabled(true);
+	SetPlayerCrouchDisabled(true);
+
+	
+}
+
+if(alState == -1){
+	SetLocalVarInt("InSlideArea", 0);
+	
+
+SetLocalVarFloat("X_lastTick", 0.0f);
+SetLocalVarFloat("Y_lastTick", 0.0f);
+SetLocalVarFloat("Z_lastTick", 0.0f);
+
+SetLocalVarFloat("Dx", 0.0f);
+SetLocalVarFloat("Dy", 0.0f);
+SetLocalVarFloat("Dz", 0.0f);
+
+
+SetLocalVarInt("TickDelay", 2);
+
+SetPlayerMoveSpeedMul(1.0f);
+SetPlayerJumpDisabled(false);
+SetPlayerCrouchDisabled(false);
+}
+}
+
+
+
+void DecideToSlideLogic_Brute(int alState){
+if(alState == 1){
+	SetLocalVarInt("InSlideArea_Brute", 1);
+	
+	PlaySoundAtEntity("", "iceSkateSFX.snt", "servant_brute_1", 0.0f, false);
+	
+SetLocalVarFloat("X_lastTick_Brute", GetEntityPosX("servant_brute_1"));
+SetLocalVarFloat("Y_lastTick_Brute", GetEntityPosY("servant_brute_1"));
+SetLocalVarFloat("Z_lastTick_Brute", GetEntityPosZ("servant_brute_1"));
+	SetLocalVarInt("TickDelay_Brute", 0);
+	
+	// WOULD PUT ENEMY MOVE SPEED EQUAL TO ZERO HERE IF POSSIBLE
+}
+
+if(alState == -1){
+	SetLocalVarInt("InSlideArea_Brute", 0);
+	
+
+SetLocalVarFloat("X_lastTick_Brute", 0.0f);
+SetLocalVarFloat("Y_lastTick_Brute", 0.0f);
+SetLocalVarFloat("Z_lastTick_Brute", 0.0f);
+
+SetLocalVarFloat("Dx_Brute", 0.0f);
+SetLocalVarFloat("Dy_Brute", 0.0f);
+SetLocalVarFloat("Dz_Brute", 0.0f);
+
+
+SetLocalVarInt("TickDelay_Brute", 2);
+
+	// WOULD PUT ENEMY MOVE SPEED EQUAL TO NORMAL HERE IF POSSIBLE
+}
+}
+
+
+
+
+////////////////////////////////////////////////
+////////////////////Passive collision with area:
+////////////////////////////////////////////////
+
+
+void area_Slide(string &in asParent, string &in asChild, int alState)
+{
+ShouldBeSliding(alState);
+}
+
+void area_Slide_Brute(string &in asParent, string &in asChild, int alState)
+{
+ShouldBeSliding_Brute(alState);
+}
+
+////////////////////////////////////////////////
+////Actual calculations for player's 'velocity':
+////////////////////////////////////////////////
+
+void SlideAreaLogic(){
+
+if(GetLocalVarInt("InSlideArea") == 1){
+
+
+
+	if(GetLocalVarInt("TickDelay") == 1){
+	
+	SetLocalVarFloat("Dx", GetPlayerPosX()-GetLocalVarFloat("X_lastTick"));
+	SetLocalVarFloat("Dy", GetPlayerPosY()-GetLocalVarFloat("Y_lastTick"));
+	SetLocalVarFloat("Dz", GetPlayerPosZ()-GetLocalVarFloat("Z_lastTick"));
+	
+	SetLocalVarInt("TickDelay", 2);
+	}
+
+
+	SetPlayerPos(GetPlayerPosX()+GetLocalVarFloat("Dx"), GetPlayerPosY(), GetPlayerPosZ()+GetLocalVarFloat("Dz"));
+	
+	if(GetLocalVarInt("TickDelay") == 0){
+	SetLocalVarInt("TickDelay", 1);
+	}
+
+}
+
+if(GetLocalVarInt("InSlideArea_Brute") == 1){
+
+
+
+	if(GetLocalVarInt("TickDelay_Brute") == 1){
+	
+	SetLocalVarFloat("Dx_Brute", GetEntityPosX("servant_brute_1")-GetLocalVarFloat("X_lastTick_Brute"));
+	SetLocalVarFloat("Dy_Brute", GetEntityPosY("servant_brute_1")-GetLocalVarFloat("Y_lastTick_Brute"));
+	SetLocalVarFloat("Dz_Brute", GetEntityPosZ("servant_brute_1")-GetLocalVarFloat("Z_lastTick_Brute"));
+	
+	SetLocalVarInt("TickDelay_Brute", 2);
+	}
+	
+
+
+	SetEntityPos("servant_brute_1", GetEntityPosX("servant_brute_1")+GetLocalVarFloat("Dx_Brute")*3.5f, GetEntityPosY("servant_brute_1"), GetEntityPosZ("servant_brute_1")+GetLocalVarFloat("Dz_Brute")*3.5f);
+	
+	if(GetLocalVarInt("TickDelay_Brute") == 0){
+	SetLocalVarInt("TickDelay_Brute", 1);
+	}
+
+}
+
+
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// BEAR IN CELL SCENE/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void area_bearBeginAwake(string &in asParent, string &in asChild, int alState)
+{
+	PlayPropAnimation("Wild_Polar_Bear_Char_1", "WakeUp", 0.0f, false, "");
+	AddTimer("", 2.0f, "TimerBearGetUp");
+	PlayMusic("02_puzzle", false, 1.0f, 0.0f, 1, false);
+	
+}
+
+void TimerBearGetUp(string &in asTimer)
+{
+	PlayPropAnimation("Wild_Polar_Bear_Char_1", "GetUp", 0.0f, false, "");
+	AddTimer("", 1.5f, "TimerBearGetUp2");
+}
+
+void TimerBearGetUp2(string &in asTimer)
+{
+	PlayPropAnimation("Wild_Polar_Bear_Char_1", "Stand", 0.0f, false, "BearRevertToIdle");
+	AddTimer("", 6.5f, "TimerBearGetUp3");
+}
+
+void TimerBearGetUp3(string &in asTimer)
+{
+	PlayPropAnimation("Wild_Polar_Bear_Char_1", "IdleExtra1", 0.25f, false, "BearRevertToIdle");
+}
+
+void BearRevertToIdle(string &in asProp)
+{
+	PlayPropAnimation("Wild_Polar_Bear_Char_1", "Idle", 0.0f, true, "");
+}
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// REGIONAL MESSAGES /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void NL_Dungeon_RegMess(string &in asTimer)
+{
+	ShowScreenImage("OS_RegionalMessage_NL_Dungeon.png", -250.0f, 200.0f, 500.0f, false, 5.0f, 1.0f, 1.0f);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void area_enterColorRoom(string &in asParent, string &in asChild, int alState)
+{
+
+SetLampLit("torch_static01_1", true, false);
+
+SetLampLit("candlestick_wall_1", true, false);
+SetLampLit("candlestick_wall_2", true, false);
+SetLampLit("candlestick_wall_3", true, false);
+
+SetLampLit("candlestick02_1", true, false);
+
+
+for(int i = 1; i < 18; i++){
+SetLightVisible("PointLight_"+i, true);
+}
+
+	FadeLightTo("BoxLight_1", 0.05f, 0.05f, 0.05f, 1.0f, 1.0f, 0.1f);
+}
+
+
+
+
+
+void LanternColorSet_Red(string &in asEntity)
+{
+	UpdateLanternColor(1);
+	SetMessage("Messages", "lanternColor_Red", 1.0f);
+}
+void LanternColorSet_Orange(string &in asEntity)
+{
+	UpdateLanternColor(2);
+	SetMessage("Messages", "lanternColor_Orange", 1.0f);
+}
+void LanternColorSet_Yellow(string &in asEntity)
+{
+	UpdateLanternColor(3);
+	SetMessage("Messages", "lanternColor_Yellow", 1.0f);
+}
+void LanternColorSet_Green(string &in asEntity)
+{
+	UpdateLanternColor(4);
+	SetMessage("Messages", "lanternColor_Green", 1.0f);
+}
+void LanternColorSet_Blue(string &in asEntity)
+{
+	UpdateLanternColor(5);
+	SetMessage("Messages", "lanternColor_Blue", 1.0f);
+}
+void LanternColorSet_Pink(string &in asEntity)
+{
+	UpdateLanternColor(6);
+	SetMessage("Messages", "lanternColor_Pink", 1.0f);
+}
+void LanternColorSet_Purple(string &in asEntity)
+{
+	UpdateLanternColor(7);
+	SetMessage("Messages", "lanternColor_Purple", 1.0f);
+}
+void LanternColorSet_White(string &in asEntity)
+{
+	UpdateLanternColor(8);
+	SetMessage("Messages", "lanternColor_White", 1.0f);
+}
+
+
+
+
+void LanternColorSet_Christmas(string &in asEntity)
+{
+setLanternColorChristmas();
+SetMessage("Messages", "lanternColor_Christmas", 1.0f);
+}
+
+void LanternColorSet_Rainbow(string &in asEntity)
+{
+setLanternColorRainbow();
+SetMessage("Messages", "lanternColor_Rainbow", 1.0f);
+}
+
+
+

@@ -1,0 +1,225 @@
+void OnStart()
+{
+	FadeOut(0);
+	FadeIn(5);
+	StartPlayerLookAt("orbpiece_obsidian_1", 0.5, 2, "");
+	FadeSepiaColorTo(80, 3);
+	FadeRadialBlurTo(3, 4);
+	SetPlayerCrouchDisabled(true);
+	SetPlayerJumpDisabled(true);
+	SetPlayerMoveSpeedMul(0.5);
+	SetPlayerRunSpeedMul(0.3);
+	SetPlayerLookSpeedMul(0.6);
+	SetPlayerHealth(30);
+	SetPlayerSanity(40);
+	
+	SetGlobalVarInt("orbpiece_obsidian", 0);
+	SetGlobalVarInt("orbpiece_crimson", 0);
+	SetGlobalVarInt("orbpiece_emerald", 0);
+	SetGlobalVarInt("orbpiece_scarlet", 0);
+	SetGlobalVarInt("orbpiece_turquoise", 0);
+	SetGlobalVarInt("orbpiece_indigo", 0);
+
+	SetPlayerLampOil(0);
+	SetPlayerActive(true);
+	SetPlayerCrouching(true);
+	
+	SetLocalVarInt("candleslit", 0);
+	for(int i=1; i<=100; i++)
+	{
+		SetEntityInteractionDisabled("lamp_"+i, true);
+	}
+	
+	// unused section, replaced by OnLit callbacks
+	//SetLocalVarInt("tinderboxeshave", 0);
+	/*for(int i=1; i<=9; i++)
+	{
+		SetEntityInteractionDisabled("ccandle_lit_"+i, true);
+	}*/
+	SetEntityCallbackFunc("ccandle_lit_*", "CandleLit");
+	
+	
+	AddEntityCollideCallback("Player", "ScriptArea_1", "GruntActivate", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_2", "BruteActivate", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_3", "Sound1", true, 1);
+	AddEntityCollideCallback("Player", "ScriptArea_4", "Sound4", true, 1);
+	SetEntityPlayerLookAtCallback("brutemusicarea", "BruteMusic", true);
+	AutoSave();
+}
+
+void OnEnter()
+{
+	PlayMusic("02_amb_safe", true, 1, 3, 0, true);
+}
+
+void QuestCandles(string &in asEntity)
+{
+	StartScreenShake(0.005f, 2.0f, 1.0f, 1.0f);
+	PlaySoundAtEntity("guardboo", "guardian_distant1", "level_hub_1", 3.0f, false);
+	CreateParticleSystemAtEntity("roomlock", "ps_orb_room_portal_start.ps", "AreaDoorPs", true);
+	AddQuest("candles", "Candles");
+}
+
+void GruntActivate(string &in asParent, string &in asChild, int alState)
+{
+	PlayMusic("04_amb", true, 1, 6, 0, true);
+	SetEntityActive("servant_grunt_silent_1", true);
+	AddEnemyPatrolNode("servant_grunt_silent_1", "PathNodeArea_22", 0, "");
+	AddEnemyPatrolNode("servant_grunt_silent_1", "PathNodeArea_18", 0, "");
+	AddEnemyPatrolNode("servant_grunt_silent_1", "PathNodeArea_17", 0, "");
+	AddEnemyPatrolNode("servant_grunt_silent_1", "PathNodeArea_15", 0, "");
+	AddEnemyPatrolNode("servant_grunt_silent_1", "PathNodeArea_14", 0, "");
+}
+
+void BruteActivate(string &in asParent, string &in asChild, int alState)
+{
+	SetEntityActive("servant_brute_silent_1", true);
+	SetEntityActive("brutemusicarea", true);
+	AddEnemyPatrolNode("servant_brute_silent_1", "PathNodeArea_39", 0, "");
+	AddEnemyPatrolNode("servant_brute_silent_1", "PathNodeArea_38", 0, "");
+	AddEnemyPatrolNode("servant_brute_silent_1", "PathNodeArea_26", 4, "");
+	AddEnemyPatrolNode("servant_brute_silent_1", "PathNodeArea_28", 0, "");
+	AddEnemyPatrolNode("servant_brute_silent_1", "PathNodeArea_37", 0, "");
+}
+void BruteMusic(string &in asEntity, int alState) 
+{
+	SetEntityActive("brutemusicarea", false);
+	PlayGuiSound("react_scare1", 1);
+	PlayMusic("01_event_dust", false, 1, 0, 1, true);
+	PlayMusic("04_amb", true, 1, 0, 0, true);
+}
+
+void Sound1(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "03_amb_idle", "Player", 0, false);
+	AddTimer("sound2", 7, "Sound2");
+	AddTimer("sound3", 19, "Sound3");
+}
+
+void Sound2(string &in asTimer)
+{
+	PlayGuiSound("scare_baby_cry.snt", 1.5);
+}
+
+void Sound3(string &in asTimer)
+{
+	PlaySoundAtEntity("", "scare_ghost.snt", "Player", 0, false);
+	GiveSanityDamage(10, true);
+	PlayMusic("05_event_steps", false, 1, 0, 1, true);
+}
+
+void Sound4(string &in asParent, string &in asChild, int alState)
+{
+	PlaySoundAtEntity("", "scare_tingeling.snt", "Player", 0, false);
+	AddTimer("sound5", 10, "Sound5");
+}
+
+void Sound5(string &in asTimer)
+{
+	PlayGuiSound("scare_animal_squeal.snt", 1.5);
+}
+
+// unused now
+void TinderboxPickUp(string &in asEntity)
+{
+	SetLocalVarInt("tinderboxeshave", (GetLocalVarInt("tinderboxeshave") + 1));
+	for(int i=1; i<=(GetLocalVarInt("tinderboxeshave")); i++)
+	{
+		SetEntityInteractionDisabled("ccandle_lit_"+i, false);
+	}
+}
+
+/* now unused
+void CandleLit(string &in asEntity)
+{
+	if (GetLocalVarInt("candleslit") == 8)
+	{
+		for(int i=1; i<=9; i++)
+		{
+			SetLampLit("ccandle_lit_"+i, false, true);
+		}
+		for(int i=1; i<=100; i++)
+		{
+			SetEntityInteractionDisabled("lamp_"+i, false);
+		}
+		DestroyParticleSystem("roomlock");
+		CreateParticleSystemAtEntity("lvldoor", "ps_orb_room_portal_open.ps", "AreaDoorPs", false);
+		PlaySoundAtEntity("", "29_hole_blue", "AreaDoorPs_1", 0, false);
+		SetEntityActive("level_hub_1", false);
+		SetEntityActive("level_hub_2", true);
+		AddTimer("destoryparticle", 1.5, "DestroyParticle");
+		AddTimer("leveldoorunlock", 4, "LevelDoorUnlock");
+	}
+	else
+	{
+		SetLocalVarInt("candleslit", (GetLocalVarInt("candleslit") + 1));
+	}
+}*/
+
+void CandleLit(string &in asEntity, string &in type) {
+	if (type == "OnIgnite") {
+		SetLocalVarInt("candleslit", (GetLocalVarInt("candleslit") + 1));
+		if (GetLocalVarInt("candleslit") == 9)
+		{
+			for(int i=1; i<=100; i++)
+			{
+				SetEntityInteractionDisabled("lamp_"+i, false);
+			}
+			DestroyParticleSystem("roomlock");
+			CreateParticleSystemAtEntity("lvldoor", "ps_orb_room_portal_open.ps", "AreaDoorPs", false);
+			PlaySoundAtEntity("", "29_hole_blue", "AreaDoorPs_1", 0, false);
+			AddTimer("destoryparticle", 1.5, "DestroyParticle");
+			AddTimer("leveldoorunlock", 4, "LevelDoorUnlock");
+		}
+	}
+}
+
+void DestroyParticle(string &in asTimer)
+{
+	DestroyParticleSystem("lvldoor");
+	for(int i=1; i<=10; i++)
+	{
+		SetLampLit("ccandle_lit_"+i, false, true);
+	}
+}
+
+void LevelDoorUnlock(string &in asTimer)
+{
+	GiveSanityBoostSmall();
+	SetEntityActive("level_hub_1", false);
+	SetEntityActive("level_hub_2", true);
+	PlaySoundAtEntity("", "unlock_door", "level_hub_2", 0, false);
+}
+
+void OnLeave()
+{
+	CompleteQuest("candles", "Candles");
+	for(int i=1; i<=9; i++)
+	{
+		SetEntityActive("ccandle_lit_"+i, false);
+	}
+	SetupLoadScreen("", "", 0, "cs_loadscreen3");
+}
+
+void OrbPieceObsidian(string &in asEntity)
+{
+	StopPlayerLookAt();
+	SetGlobalVarInt("orbpiece_obsidian", 1);
+	FadeIn(0);
+	FadeSepiaColorTo(0, 6);
+	FadeRadialBlurTo(0, 4);
+	SetPlayerCrouchDisabled(false);
+	SetPlayerJumpDisabled(false);
+}
+
+void OrbPieceCrimson(string &in asEntity)
+{
+	SetPlayerMoveSpeedMul(1.2);
+	SetGlobalVarInt("orbpiece_crimson", 1);
+}
+
+void OrbPieceEmerald(string &in asEntity)
+{
+	SetPlayerRunSpeedMul(1.1);
+	SetGlobalVarInt("orbpiece_emerald", 1);
+}
