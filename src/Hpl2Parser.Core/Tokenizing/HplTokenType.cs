@@ -28,5 +28,6 @@ public enum HplTokenType
     BooleanMoreThan,
     NotEqualSign,
     BooleanAndSign,
-    BooleanOrSign
+    BooleanOrSign,
+    Dot
 }

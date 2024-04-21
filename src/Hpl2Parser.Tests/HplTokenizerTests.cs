@@ -115,6 +115,13 @@ namespace Hpl2Parser.Tests
         public void GetToken_ShouldCaptureText(HplTokenType expectedType, string hplCode, string expectedText)
             => AssertTokenizedValue(expectedType, hplCode, expectedText);
 
+        [Fact]
+        public void GetToken_ShouldRecognizeDotAccess()
+        {
+            AssertTokenized(HplTokenType.Dot, ".prop", "prop");
+            AssertTokenized(HplTokenType.Dot, ".", "");
+        }
+
         private void AssertTokenizedValue(HplTokenType expectedType, string hplCode, string expectedText)
         {
             var spanWindow = new ReadOnlySpan<char>(hplCode.ToCharArray());

@@ -195,4 +195,37 @@ public class HplFunctionParsingTests
 
         _parser.Diagnostics.Should().BeEmpty();
     }
+
+    [Fact]
+    public void ValidFunctionWithFunctionCallMultipleParameters_ShouldRecognizeFunctionCall()
+    {
+        _parser.SetTokens(new TokenBuilder()
+            .FunctionDeclaration("void", "MyFunction", null, bodyBuilder =>
+            {
+                bodyBuilder.FunctionCall("MethodCall", argsBuilder =>
+                {
+                    argsBuilder.Identifier("someVar");
+                    argsBuilder.Comma();
+                    argsBuilder.Identifier("someOtherVar");
+                    argsBuilder.Comma();
+                    argsBuilder.NumberLiteral("1.3f");
+                });
+            })
+            .EndOfFile()
+            .Build()
+        );
+
+        HplSyntaxTree syntaxTree = _parser.Parse();
+
+        var functionNode = syntaxTree.AssertRoot<HplFunctionDeclarationNode>();
+        var functionCallNode = functionNode.AssertSingleFunctionCall();
+        functionCallNode.Identifier.Should().Be("MethodCall");
+        functionCallNode.AssertArguments(
+            new(HplFunctionCallArgumentType.VariableReference, "someVar"),
+            new(HplFunctionCallArgumentType.VariableReference, "someOtherVar"),
+            new(HplFunctionCallArgumentType.FloatLiteral, "1.3f")
+        );
+
+        _parser.Diagnostics.Should().BeEmpty();
+    }
 }

@@ -180,6 +180,11 @@ namespace Hpl2Parser.Core.Parsing
 
                     funcNode.BodyElements.Add(functionCall);
                 }
+                else
+                {
+                    // TODO: Infinite loop prevention, not implemented
+                    throw new NotImplementedException("Cannot be parsed - not implemented");
+                }
             }
 
             _tokenEnumerator.Next(1);
@@ -193,6 +198,19 @@ namespace Hpl2Parser.Core.Parsing
                 var arg = new HplFunctionArgumentNode
                 {
                     ArgumentType = HplFunctionCallArgumentType.StringLiteral,
+                    ArgumentValue = _tokenEnumerator.Peek().Text
+                };
+
+                _tokenEnumerator.Next();
+                return arg;
+            }
+
+            if (_tokenEnumerator.Peek().Type == HplTokenType.Number)
+            {
+                // TODO: Support more number types
+                var arg = new HplFunctionArgumentNode
+                {
+                    ArgumentType = HplFunctionCallArgumentType.FloatLiteral,
                     ArgumentValue = _tokenEnumerator.Peek().Text
                 };
 
@@ -219,7 +237,12 @@ namespace Hpl2Parser.Core.Parsing
                 };
             }
 
-            throw new NotImplementedException("Only boolean identifiers are currently supported for a function call identifier argument...");
+            _tokenEnumerator.Next();
+            return new HplFunctionArgumentNode
+            {
+                ArgumentType = HplFunctionCallArgumentType.VariableReference,
+                ArgumentValue = identifier
+            };
         }
     }
 }

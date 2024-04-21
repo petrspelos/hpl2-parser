@@ -3,5 +3,7 @@ namespace Hpl2Parser.Core.Parsing.Syntax;
 public enum HplFunctionCallArgumentType
 {
     StringLiteral,
-    BooleanLiteral
+    BooleanLiteral,
+    VariableReference,
+    FloatLiteral
 }

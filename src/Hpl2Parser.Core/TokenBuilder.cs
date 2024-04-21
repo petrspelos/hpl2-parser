@@ -88,6 +88,12 @@ public class TokenBuilder
         return this;
     }
 
+    public TokenBuilder NumberLiteral(string value)
+    {
+        _tokens.Add(new HplToken(HplTokenType.Number, value));
+        return this;
+    }
+
     public TokenBuilder FunctionCall(string functionName, Action<TokenBuilder> argsBuilder = null)
     {
         Identifier(functionName);

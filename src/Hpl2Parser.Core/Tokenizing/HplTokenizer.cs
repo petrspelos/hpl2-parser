@@ -210,10 +210,16 @@ public sealed class HplTokenizer : IHplTokenizer
             if (spanWindow[0] == '.')
             {
                 if (spanWindow.Length == 1)
-                    return new(HplTokenType.Unknown);
+                {
+                    spanWindow.MoveForwardBy(1);
+                    return new(HplTokenType.Dot);
+                }
 
                 if (!(spanWindow[1] == 'f') && !char.IsDigit(spanWindow[1]))
-                    return new(HplTokenType.Unknown);
+                {
+                    spanWindow.MoveForwardBy(1);
+                    return new(HplTokenType.Dot);
+                }
             }
 
             textBuilder.Append(spanWindow[0]);
