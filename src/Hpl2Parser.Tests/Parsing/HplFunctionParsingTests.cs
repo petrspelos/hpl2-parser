@@ -50,16 +50,11 @@ public class HplFunctionParsingTests
     [InlineData("float")]
     public void ValidFunctionDeclaration_ShouldRecognizeReturnType(string expectedReturnType)
     {
-        _parser.SetTokens(
-        [
-            new(HplTokenType.Identifier, expectedReturnType),
-            new(HplTokenType.Identifier, "MyFunction"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.OpenBracket),
-            new(HplTokenType.CloseBracket),
-            new(HplTokenType.EndOfFile)
-        ]);
+        _parser.SetTokens(new TokenBuilder()
+            .FunctionDeclaration(expectedReturnType, "MyFunction")
+            .EndOfFile()
+            .Build()
+        );
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -73,26 +68,18 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionDeclaration_ShouldRecognizeMultipleParametersWithParameterIntention()
     {
-        _parser.SetTokens(
-        [
-            new(HplTokenType.Identifier, "void"),
-            new(HplTokenType.Identifier, "MyFunction"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.Identifier, "string"),
-            new(HplTokenType.Identifier, "&in"),
-            new(HplTokenType.Identifier, "myArg"),
-            new(HplTokenType.Comma),
-            new(HplTokenType.Identifier, "int"),
-            new(HplTokenType.Identifier, "&out"),
-            new(HplTokenType.Identifier, "myOtherArg"),
-            new(HplTokenType.Comma),
-            new(HplTokenType.Identifier, "bool"),
-            new(HplTokenType.Identifier, "&referenceArgument"),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.OpenBracket),
-            new(HplTokenType.CloseBracket),
-            new(HplTokenType.EndOfFile)
-        ]);
+        _parser.SetTokens(new TokenBuilder()
+            .FunctionDeclaration("void", "MyFunction", paramBuilder =>
+            {
+                paramBuilder.Parameter("string", "myArg", HplFunctionParameterIntention.In);
+                paramBuilder.Comma();
+                paramBuilder.Parameter("int", "myOtherArg", HplFunctionParameterIntention.Out);
+                paramBuilder.Comma();
+                paramBuilder.Parameter("bool", "&referenceArgument");
+            })
+            .EndOfFile()
+            .Build()
+        );
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -122,23 +109,17 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionDeclaration_ShouldRecognizeFunctionCall()
     {
-        _parser.SetTokens(
-        [
-            new(HplTokenType.Identifier, "void"),
-            new(HplTokenType.Identifier, "MyFunction"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.Identifier, "string"),
-            new(HplTokenType.Identifier, "&in"),
-            new(HplTokenType.Identifier, "myArg"),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.OpenBracket),
-            new(HplTokenType.Identifier, "FunctionToCall"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.Semicolon),
-            new(HplTokenType.CloseBracket),
-            new(HplTokenType.EndOfFile)
-        ]);
+        _parser.SetTokens(new TokenBuilder()
+            .FunctionDeclaration("void", "MyFunction", paramBuilder =>
+            {
+                paramBuilder.Parameter("string", "myArg", HplFunctionParameterIntention.In);
+            }, bodyBuilder =>
+            {
+                bodyBuilder.FunctionCall("FunctionToCall");
+            })
+            .EndOfFile()
+            .Build()
+        );
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -157,21 +138,17 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionWithFunctionCallLiteralParameters_ShouldRecognizeFunctionCall()
     {
-        _parser.SetTokens(
-        [
-            new(HplTokenType.Identifier, "void"),
-            new(HplTokenType.Identifier, "MyFunction"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.OpenBracket),
-            new(HplTokenType.Identifier, "Print"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.StringLiteral, "Hello, World!"),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.Semicolon),
-            new(HplTokenType.CloseBracket),
-            new(HplTokenType.EndOfFile)
-        ]);
+        _parser.SetTokens(new TokenBuilder()
+            .FunctionDeclaration("void", "MyFunction", null, bodyBuilder =>
+            {
+                bodyBuilder.FunctionCall("Print", argsBuilder =>
+                {
+                    argsBuilder.StringLiteral("Hello, World!");
+                });
+            })
+            .EndOfFile()
+            .Build()
+        );
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 
@@ -186,27 +163,23 @@ public class HplFunctionParsingTests
     [Fact]
     public void ValidFunctionWithFunctionCallMultipleLiteralParameters_ShouldRecognizeFunctionCall()
     {
-        _parser.SetTokens(
-        [
-            new(HplTokenType.Identifier, "void"),
-            new(HplTokenType.Identifier, "MyFunction"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.OpenBracket),
-            new(HplTokenType.Identifier, "CreateParticleSystemAtEntity"),
-            new(HplTokenType.OpenParen),
-            new(HplTokenType.StringLiteral, "confetti"),
-            new(HplTokenType.Comma),
-            new(HplTokenType.StringLiteral, "confetti.ps"),
-            new(HplTokenType.Comma),
-            new(HplTokenType.StringLiteral, "CeilingArea"),
-            new(HplTokenType.Comma),
-            new(HplTokenType.Identifier, "true"),
-            new(HplTokenType.CloseParen),
-            new(HplTokenType.Semicolon),
-            new(HplTokenType.CloseBracket),
-            new(HplTokenType.EndOfFile)
-        ]);
+        _parser.SetTokens(new TokenBuilder()
+            .FunctionDeclaration("void", "MyFunction", null, bodyBuilder =>
+            {
+                bodyBuilder.FunctionCall("CreateParticleSystemAtEntity", argsBuilder =>
+                {
+                    argsBuilder.StringLiteral("confetti");
+                    argsBuilder.Comma();
+                    argsBuilder.StringLiteral("confetti.ps");
+                    argsBuilder.Comma();
+                    argsBuilder.StringLiteral("CeilingArea");
+                    argsBuilder.Comma();
+                    argsBuilder.Identifier("true");
+                });
+            })
+            .EndOfFile()
+            .Build()
+        );
 
         HplSyntaxTree syntaxTree = _parser.Parse();
 

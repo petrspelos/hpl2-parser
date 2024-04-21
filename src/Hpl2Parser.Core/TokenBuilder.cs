@@ -1,4 +1,5 @@
-﻿using Hpl2Parser.Core.Tokenizing;
+﻿using Hpl2Parser.Core.Parsing.Syntax;
+using Hpl2Parser.Core.Tokenizing;
 using System;
 using System.Collections.Generic;
 
@@ -62,9 +63,15 @@ public class TokenBuilder
         return this;
     }
 
-    public TokenBuilder Parameter(string type, string name)
+    public TokenBuilder Parameter(string type, string name, HplFunctionParameterIntention intention = HplFunctionParameterIntention.None)
     {
         Identifier(type);
+        if (intention != HplFunctionParameterIntention.None)
+        {
+            _tokens.Add(new HplToken(
+                    HplTokenType.Identifier,
+                    intention == HplFunctionParameterIntention.In ? "&in" : "&out"));
+        }
         Identifier(name);
         return this;
     }
@@ -72,6 +79,12 @@ public class TokenBuilder
     public TokenBuilder Comma()
     {
         _tokens.Add(new HplToken(HplTokenType.Comma));
+        return this;
+    }
+
+    public TokenBuilder StringLiteral(string value)
+    {
+        _tokens.Add(new HplToken(HplTokenType.StringLiteral, value));
         return this;
     }
 
