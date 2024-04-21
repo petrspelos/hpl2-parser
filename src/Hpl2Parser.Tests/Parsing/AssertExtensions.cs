@@ -27,4 +27,35 @@ internal static class AssertExtesions
         Assert.True(functionNode.ParameterList.All(n => n is HplFunctionParameterNode));
         return functionNode.ParameterList.Cast<HplFunctionParameterNode>();
     }
+
+    internal static HplFunctionCallNode AssertSingleFunctionCall(this HplFunctionDeclarationNode functionNode)
+    {
+        Assert.Single(functionNode.BodyElements);
+        return functionNode.BodyElements.Cast<HplFunctionCallNode>().First();
+    }
+
+    internal static void AssertArgumentCount(this HplFunctionCallNode functionCallNode, int expectedCount)
+    {
+        Assert.Equal(expectedCount, functionCallNode.Arguments.Count);
+    }
+
+    internal static void AssertSingleArgument(this HplFunctionCallNode functionCallNode, HplFunctionCallArgumentType argumentType, object argumentValue)
+    {
+        Assert.Single(functionCallNode.Arguments);
+        var argument = functionCallNode.Arguments.First();
+        Assert.Equal(argumentType, argument.ArgumentType);
+        Assert.Equal(argumentValue, argument.ArgumentValue);
+    }
+
+    internal static void AssertArguments(this HplFunctionCallNode functionCallNode, params (HplFunctionCallArgumentType ArgumentType, object ArgumentValue)[] expectedArguments)
+    {
+        AssertArgumentCount(functionCallNode, expectedArguments.Length);
+        for (int i = 0; i < expectedArguments.Length; i++)
+        {
+            var actual = functionCallNode.Arguments.ElementAt(i);
+            var expected = expectedArguments[i];
+            Assert.Equal(expected.ArgumentType, actual.ArgumentType);
+            Assert.Equal(expected.ArgumentValue, actual.ArgumentValue);
+        }
+    }
 }
