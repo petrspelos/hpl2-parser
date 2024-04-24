@@ -68,7 +68,7 @@ namespace Hpl2Parser.Core.Parsing
             if (MatchesFunctionDeclaration(token))
                 return ParseAsFunctionDeclaration();
 
-            throw new NotImplementedException();
+            throw new NotImplementedException("Encountered a token expression that was not a function declaraion - Not Implemented");
         }
 
         private bool MatchesFunctionDeclaration(HplToken token) => token.Type == HplTokenType.Identifier && token.Text.IsReturnType() && _tokenEnumerator.Peek(1).Type == HplTokenType.Identifier && _tokenEnumerator.Peek(2).Type == HplTokenType.OpenParen;
@@ -180,10 +180,14 @@ namespace Hpl2Parser.Core.Parsing
 
                     funcNode.BodyElements.Add(functionCall);
                 }
+                else if (_tokenEnumerator.Peek().Type == HplTokenType.InlineComment || _tokenEnumerator.Peek().Type == HplTokenType.MultilineComment)
+                {
+                    _tokenEnumerator.Next();
+                }
                 else
                 {
                     // TODO: Infinite loop prevention, not implemented
-                    throw new NotImplementedException("Cannot be parsed - not implemented");
+                    throw new NotImplementedException($"{_tokenEnumerator.Peek().Type} found inside body - but we expected a function call (not implemented)");
                 }
             }
 
@@ -222,7 +226,7 @@ namespace Hpl2Parser.Core.Parsing
                 return ParseFunctionCallIdentifierArgument();
             }
 
-            throw new NotImplementedException("Only string literals and certain identifiers are supported as function call arguments at this time...");
+            throw new NotImplementedException($"{_tokenEnumerator.Peek().Type} is not implemented as a function call argument at this time...");
         }
 
         private HplFunctionArgumentNode ParseFunctionCallIdentifierArgument()

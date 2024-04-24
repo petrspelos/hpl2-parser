@@ -1,6 +1,8 @@
 ﻿using System;
+using FluentAssertions;
 using Hpl2Parser.Core.Tokenizing;
 using Xunit;
+using FluentResults.Extensions.FluentAssertions;
 
 namespace Hpl2Parser.Tests
 {
@@ -11,6 +13,21 @@ namespace Hpl2Parser.Tests
         public HplTokenizerTests()
         {
             _tokenizer = new HplTokenizer();
+        }
+
+        [Fact]
+        public void GetToken_ShouldContainDiagnostics()
+        {
+            var result = _tokenizer.Tokenize("ůůů");
+            
+            result.Should().BeFailure();
+            result.Should().HaveReason<TokenizerError>(TokenizerError.InternalErrorType).That.Satisfy<TokenizerError>(
+                e => e.ErrorType.Should().Be(TokenizerErrorType.UnknownToken)
+            );
+
+            // TODO(Peter): This is not tested or implemented, the Tokenize method should be returning diagnostics
+            //              or the list of tokens, so just iterate over them and then collect diagnostics if needed
+            //              next up, do the same thing with Parser, it has some diagnostics, but we might use FluentResults
         }
 
         [Theory]
@@ -59,6 +76,7 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.LessThanSign, "< code", " code")]
         [InlineData(HplTokenType.MoreThanSign, "> code", " code")]
         [InlineData(HplTokenType.PercentageSign, "% code", " code")]
+        [InlineData(HplTokenType.PlusSign, "+ code", " code")]
         public void GetToken_ShouldRecognizeOneCharacterSymbols(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
             => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 

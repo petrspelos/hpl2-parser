@@ -29,5 +29,6 @@ public enum HplTokenType
     NotEqualSign,
     BooleanAndSign,
     BooleanOrSign,
-    Dot
+    Dot,
+    PlusSign
 }

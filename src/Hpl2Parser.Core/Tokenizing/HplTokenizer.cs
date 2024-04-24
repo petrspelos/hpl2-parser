@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
+using FluentResults;
 
 namespace Hpl2Parser.Core.Tokenizing;
 
@@ -204,6 +206,12 @@ public sealed class HplTokenizer : IHplTokenizer
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.Assignment);
         }
+
+        if (spanWindow[0] == '+')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.PlusSign);
+        }
         
         if (char.IsDigit(spanWindow[0]) || spanWindow[0] == '.' || spanWindow[0] == '-')
         {
@@ -250,7 +258,14 @@ public sealed class HplTokenizer : IHplTokenizer
 
         textBuilder.Append(spanWindow[0]);
         spanWindow.MoveForwardBy(1);
+
+        System.Diagnostics.Debug.Assert(false, $"'{spanWindow[0]}' was marked as Unknown while tokenizing");
         return new(HplTokenType.Unknown, textBuilder.ToString());
+    }
+
+    public Result<IReadOnlyCollection<HplToken>> Tokenize(string code)
+    {
+        throw new NotImplementedException();
     }
 
     private void EatAllWhiteSpace(ref ReadOnlySpan<char> spanWindow)
