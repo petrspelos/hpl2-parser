@@ -257,23 +257,22 @@ public sealed class HplTokenizer : IHplTokenizer
             return new(HplTokenType.Identifier, textBuilder.ToString());
         }
 
+        if (spanWindow.Length > 1 && spanWindow[0] == '/' && spanWindow[1] != '/')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.DivisionOperator);
+        }
+
+        Console.WriteLine($"⚠️ '{spanWindow[0]}' failed tokenization.");
+
         textBuilder.Append(spanWindow[0]);
         spanWindow.MoveForwardBy(1);
 
-        System.Diagnostics.Debug.Assert(false, $"'{spanWindow[0]}' was marked as Unknown while tokenizing");
         return new(HplTokenType.Unknown, textBuilder.ToString());
     }
 
     public Result<IReadOnlyCollection<HplToken>> Tokenize(string code)
     {
-        var spanWindow = new ReadOnlySpan<char>(code.ToCharArray());
-
-        Console.WriteLine(spanWindow.ToString());
-
-        var token = GetToken(ref spanWindow);
-
-        Console.WriteLine(spanWindow.ToString());
-
         throw new NotImplementedException();
     }
 
@@ -281,5 +280,18 @@ public sealed class HplTokenizer : IHplTokenizer
     {
         while (!spanWindow.IsEmpty && char.IsWhiteSpace(spanWindow[0]))
             spanWindow.MoveForwardBy(1);
+    }
+
+    private static char NextNonWhiteSpaceChar(ref ReadOnlySpan<char> spanWindow)
+    {
+        for (var i = 0; i < spanWindow.Length; i++)
+        {
+            if (!char.IsWhiteSpace(spanWindow[i]))
+            {
+                return spanWindow[i];
+            }
+        }
+
+        throw new NotImplementedException("Peeked for next non-whitespace char but reached end of file.");
     }
 }

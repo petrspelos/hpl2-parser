@@ -30,5 +30,6 @@ public enum HplTokenType
     BooleanAndSign,
     BooleanOrSign,
     Dot,
-    PlusSign
+    PlusSign,
+    DivisionOperator
 }

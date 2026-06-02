@@ -39,6 +39,16 @@ namespace Hpl2Parser.Core.Parsing
             while (!spanWindow.IsEmpty)
             {
                 var token = _hplTokenizer.GetToken(ref spanWindow);
+
+                if (token.Type == HplTokenType.Unknown)
+                {
+                    tokens.Reverse();
+                    Console.WriteLine($"🚩 Parser fell through.");
+                    Console.WriteLine($"👉 Last successfully parsed token types: {string.Join(", ", tokens.Take(5).Select(t => t.Type))}");
+                    Console.WriteLine($"📃 Following snippet: {string.Concat(spanWindow.ToString().Take(20))}");
+                    Debug.Assert(false, $"Debug won't continue. Please address the parsing issue.");
+                }
+
                 tokens.Add(token);
             }
 

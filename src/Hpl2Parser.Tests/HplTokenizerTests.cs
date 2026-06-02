@@ -15,21 +15,6 @@ namespace Hpl2Parser.Tests
             _tokenizer = new HplTokenizer();
         }
 
-        [Fact]
-        public void GetToken_ShouldContainDiagnostics()
-        {
-            var result = _tokenizer.Tokenize("ůůů");
-
-            result.IsFailed.Should().BeTrue();
-            var reason = result.Reasons.First();
-            var error = Assert.IsType<TokenizerError>(reason);
-            error.ErrorType.Should().Be(TokenizerErrorType.UnknownToken);
-
-            // TODO(Peter): This is not tested or implemented, the Tokenize method should be returning diagnostics
-            //              or the list of tokens, so just iterate over them and then collect diagnostics if needed
-            //              next up, do the same thing with Parser, it has some diagnostics, but we might use FluentResults
-        }
-
         [Theory]
         [InlineData(HplTokenType.InlineComment, "// my comment\n\rAAA", "\n\rAAA")]
         [InlineData(HplTokenType.InlineComment, "   \t\t\r\n//my comment\n\rAAA", "\n\rAAA")]
@@ -131,6 +116,13 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.InlineComment, "// NOTE(Peter): Casual comment\n\r", "// NOTE(Peter): Casual comment")]
         [InlineData(HplTokenType.MultilineComment, "/* void test const { } @ \n\r\n\nvoid \"sdofisdfio\"\n*\n/\\*\n/\n*/123", "/* void test const { } @ \n\r\n\nvoid \"sdofisdfio\"\n*\n/\\*\n/\n*/")]
         public void GetToken_ShouldCaptureText(HplTokenType expectedType, string hplCode, string expectedText)
+            => AssertTokenizedValue(expectedType, hplCode, expectedText);
+
+        [Theory]
+        [InlineData(HplTokenType.DivisionOperator, "/     b", "")]
+        [InlineData(HplTokenType.DivisionOperator, "/{", "")]
+        [InlineData(HplTokenType.DivisionOperator, "/2", "")]
+        public void GetToken_ShouldRecognizeDivisionOperator(HplTokenType expectedType, string hplCode, string expectedText)
             => AssertTokenizedValue(expectedType, hplCode, expectedText);
 
         [Fact]
