@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using FluentResults;
 
@@ -265,6 +266,14 @@ public sealed class HplTokenizer : IHplTokenizer
 
     public Result<IReadOnlyCollection<HplToken>> Tokenize(string code)
     {
+        var spanWindow = new ReadOnlySpan<char>(code.ToCharArray());
+
+        Console.WriteLine(spanWindow.ToString());
+
+        var token = GetToken(ref spanWindow);
+
+        Console.WriteLine(spanWindow.ToString());
+
         throw new NotImplementedException();
     }
 

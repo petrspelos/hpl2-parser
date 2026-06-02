@@ -65,13 +65,25 @@ namespace Hpl2Parser.Core.Parsing
 
             var token = _tokenEnumerator.Peek();
 
+            while (token.Type == HplTokenType.InlineComment ||
+                token.Type == HplTokenType.MultilineComment)
+            {
+                _tokenEnumerator.Next();
+                token = _tokenEnumerator.Peek();
+            }
+
             if (MatchesFunctionDeclaration(token))
                 return ParseAsFunctionDeclaration();
 
+            Console.WriteLine($"Actual token type was {token.Type}");
             throw new NotImplementedException("Encountered a token expression that was not a function declaraion - Not Implemented");
         }
 
-        private bool MatchesFunctionDeclaration(HplToken token) => token.Type == HplTokenType.Identifier && token.Text.IsReturnType() && _tokenEnumerator.Peek(1).Type == HplTokenType.Identifier && _tokenEnumerator.Peek(2).Type == HplTokenType.OpenParen;
+        private bool MatchesFunctionDeclaration(HplToken token)
+            => token.Type == HplTokenType.Identifier
+                && token.Text.IsReturnType()
+                && _tokenEnumerator.Peek(1).Type == HplTokenType.Identifier
+                && _tokenEnumerator.Peek(2).Type == HplTokenType.OpenParen;
 
         private HplSyntaxNode ParseAsFunctionDeclaration()
         {
