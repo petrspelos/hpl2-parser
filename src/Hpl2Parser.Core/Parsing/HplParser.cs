@@ -44,7 +44,7 @@ namespace Hpl2Parser.Core.Parsing
                 {
                     Console.WriteLine($"🚩 Parser fell through.");
                     Console.WriteLine($"👉 Last successfully parsed token types: {string.Join(", ", tokens.AsEnumerable().Reverse().Take(5).Select(t => t.Type).Reverse())}");
-                    Console.WriteLine($"📃 Following snippet: {string.Concat(spanWindow.ToString().Take(20))}");
+                    Console.WriteLine($"📃 Following snippet: {string.Concat(spanWindow.ToString().Take(20)).Replace("\n", "↩")}");
                     Debug.Assert(false, $"Debug won't continue. Please address the parsing issue.");
                 }
 
