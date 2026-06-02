@@ -214,6 +214,18 @@ public sealed class HplTokenizer : IHplTokenizer
             return new(HplTokenType.PlusSign);
         }
 
+        if (spanWindow[0] == '[')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.OpenSquareBracket);
+        }
+
+        if (spanWindow[0] == ']')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.CloseSquareBracket);
+        }
+
         if (char.IsDigit(spanWindow[0]) || spanWindow[0] == '.' || spanWindow[0] == '-')
         {
             if (spanWindow[0] == '.')
