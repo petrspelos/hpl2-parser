@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Linq;
 using FluentAssertions;
 using Hpl2Parser.Core.Tokenizing;
 using Xunit;
-using FluentResults.Extensions.FluentAssertions;
 
 namespace Hpl2Parser.Tests
 {
@@ -20,10 +20,10 @@ namespace Hpl2Parser.Tests
         {
             var result = _tokenizer.Tokenize("ůůů");
             
-            result.Should().BeFailure();
-            result.Should().HaveReason<TokenizerError>(TokenizerError.InternalErrorType).That.Satisfy<TokenizerError>(
-                e => e.ErrorType.Should().Be(TokenizerErrorType.UnknownToken)
-            );
+            result.IsFailed.Should().BeTrue();
+            var reason = result.Reasons.First();
+            var error = Assert.IsType<TokenizerError>(reason);
+            error.ErrorType.Should().Be(TokenizerErrorType.UnknownToken);
 
             // TODO(Peter): This is not tested or implemented, the Tokenize method should be returning diagnostics
             //              or the list of tokens, so just iterate over them and then collect diagnostics if needed
