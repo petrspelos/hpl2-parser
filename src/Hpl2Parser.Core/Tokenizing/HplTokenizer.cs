@@ -98,31 +98,31 @@ public sealed class HplTokenizer : IHplTokenizer
             spanWindow.MoveForwardBy(2);
             return new(HplTokenType.BooleanLessThan);
         }
-        
+
         if (spanWindow.Length >= 2 && spanWindow[0] == '>' && spanWindow[1] == '=')
         {
             spanWindow.MoveForwardBy(2);
             return new(HplTokenType.BooleanMoreThan);
         }
-        
+
         if (spanWindow.Length >= 2 && spanWindow[0] == '!' && spanWindow[1] == '=')
         {
             spanWindow.MoveForwardBy(2);
             return new(HplTokenType.NotEqualSign);
         }
-        
+
         if (spanWindow.Length >= 2 && spanWindow[0] == '|' && spanWindow[1] == '|')
         {
             spanWindow.MoveForwardBy(2);
             return new(HplTokenType.BooleanOrSign);
         }
-        
+
         if (spanWindow.Length >= 2 && spanWindow[0] == '&' && spanWindow[1] == '&')
         {
             spanWindow.MoveForwardBy(2);
             return new(HplTokenType.BooleanAndSign);
         }
-        
+
         if (spanWindow[0] == '(')
         {
             spanWindow.MoveForwardBy(1);
@@ -164,37 +164,37 @@ public sealed class HplTokenizer : IHplTokenizer
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.Semicolon);
         }
-        
+
         if (spanWindow[0] == ':')
         {
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.Colon);
         }
-        
+
         if (spanWindow[0] == '!')
         {
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.ExclamationPoint);
         }
-        
+
         if (spanWindow[0] == '<')
         {
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.LessThanSign);
         }
-        
+
         if (spanWindow[0] == '>')
         {
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.MoreThanSign);
         }
-        
+
         if (spanWindow[0] == '%')
         {
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.PercentageSign);
         }
-        
+
         if (spanWindow[0] == '=' && spanWindow[1] == '=')
         {
             spanWindow.MoveForwardBy(2);
@@ -212,7 +212,7 @@ public sealed class HplTokenizer : IHplTokenizer
             spanWindow.MoveForwardBy(1);
             return new(HplTokenType.PlusSign);
         }
-        
+
         if (char.IsDigit(spanWindow[0]) || spanWindow[0] == '.' || spanWindow[0] == '-')
         {
             if (spanWindow[0] == '.')
@@ -268,7 +268,7 @@ public sealed class HplTokenizer : IHplTokenizer
         throw new NotImplementedException();
     }
 
-    private void EatAllWhiteSpace(ref ReadOnlySpan<char> spanWindow)
+    private static void EatAllWhiteSpace(ref ReadOnlySpan<char> spanWindow)
     {
         while (!spanWindow.IsEmpty && char.IsWhiteSpace(spanWindow[0]))
             spanWindow.MoveForwardBy(1);

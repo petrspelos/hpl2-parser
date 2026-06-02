@@ -21,13 +21,13 @@ namespace Hpl2Parser.ConsoleApp
                 Console.WriteLine($"Could not find the following script file: {args[0]}");
                 return;
             }
-            
+
             var parser = new HplParser(new HplTokenizer());
             var fileText = File.ReadAllText(args[0]);
             parser.Tokenize(fileText);
             var syntaxTree = parser.Parse();
 
-            foreach(var node in syntaxTree.RootElements)
+            foreach (var node in syntaxTree.RootElements)
             {
                 PrintNode(node);
             }

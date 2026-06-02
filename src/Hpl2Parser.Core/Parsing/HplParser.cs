@@ -47,9 +47,9 @@ namespace Hpl2Parser.Core.Parsing
 
         public HplSyntaxTree Parse()
         {
-            var tree =  new HplSyntaxTree();
+            var tree = new HplSyntaxTree();
 
-            while(_tokenEnumerator.Peek().Type != HplTokenType.EndOfFile)
+            while (_tokenEnumerator.Peek().Type != HplTokenType.EndOfFile)
                 tree.RootElements.Add(ResolveTokenExpression());
 
             return tree;
@@ -113,7 +113,7 @@ namespace Hpl2Parser.Core.Parsing
                     paramNode.Type = _tokenEnumerator.Peek().Text;
                     paramNode.Intention = _tokenEnumerator.Peek(1).Text.ToIntention();
                     paramNode.Identifier = _tokenEnumerator.Peek(2).Text;
-                    
+
                     _tokenEnumerator.Next(3);
                 }
                 else
@@ -123,7 +123,7 @@ namespace Hpl2Parser.Core.Parsing
 
                     paramNode.Type = _tokenEnumerator.Peek().Text;
                     paramNode.Identifier = _tokenEnumerator.Peek(1).Text;
-                    
+
                     _tokenEnumerator.Next(2);
                 }
 
@@ -198,7 +198,8 @@ namespace Hpl2Parser.Core.Parsing
 
         private HplFunctionArgumentNode ParseFunctionCallArgument()
         {
-            if (_tokenEnumerator.Peek().Type == HplTokenType.StringLiteral) {
+            if (_tokenEnumerator.Peek().Type == HplTokenType.StringLiteral)
+            {
                 var arg = new HplFunctionArgumentNode
                 {
                     ArgumentType = HplFunctionCallArgumentType.StringLiteral,
@@ -222,7 +223,8 @@ namespace Hpl2Parser.Core.Parsing
                 return arg;
             }
 
-            if (_tokenEnumerator.Peek().Type == HplTokenType.Identifier) {
+            if (_tokenEnumerator.Peek().Type == HplTokenType.Identifier)
+            {
                 return ParseFunctionCallIdentifierArgument();
             }
 
@@ -232,7 +234,8 @@ namespace Hpl2Parser.Core.Parsing
         private HplFunctionArgumentNode ParseFunctionCallIdentifierArgument()
         {
             var identifier = _tokenEnumerator.Peek().Text;
-            if (identifier == "true" || identifier == "false") { // boolean literal
+            if (identifier == "true" || identifier == "false")
+            { // boolean literal
                 _tokenEnumerator.Next();
                 return new HplFunctionArgumentNode
                 {

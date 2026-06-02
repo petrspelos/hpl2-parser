@@ -19,7 +19,7 @@ namespace Hpl2Parser.Tests
         public void GetToken_ShouldContainDiagnostics()
         {
             var result = _tokenizer.Tokenize("ůůů");
-            
+
             result.IsFailed.Should().BeTrue();
             var reason = result.Reasons.First();
             var error = Assert.IsType<TokenizerError>(reason);
