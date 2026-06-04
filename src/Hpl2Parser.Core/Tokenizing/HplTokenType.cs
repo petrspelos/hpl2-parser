@@ -33,5 +33,10 @@ public enum HplTokenType
     PlusSign,
     DivisionOperator,
     OpenSquareBracket,
-    CloseSquareBracket
+    CloseSquareBracket,
+    QuestionMark,
+    Star,
+    Tilde,
+    Hashtag,
+    AtSymbol
 }

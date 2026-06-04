@@ -226,6 +226,36 @@ public sealed class HplTokenizer : IHplTokenizer
             return new(HplTokenType.CloseSquareBracket);
         }
 
+        if (spanWindow[0] == '?')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.QuestionMark);
+        }
+
+        if (spanWindow[0] == '*')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.Star);
+        }
+
+        if (spanWindow[0] == '~')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.Tilde);
+        }
+
+        if (spanWindow[0] == '#')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.Hashtag);
+        }
+
+        if (spanWindow[0] == '@')
+        {
+            spanWindow.MoveForwardBy(1);
+            return new(HplTokenType.AtSymbol);
+        }
+
         if (char.IsDigit(spanWindow[0]) || spanWindow[0] == '.' || spanWindow[0] == '-')
         {
             if (spanWindow[0] == '.')

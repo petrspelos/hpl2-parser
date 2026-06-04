@@ -64,6 +64,11 @@ namespace Hpl2Parser.Tests
         [InlineData(HplTokenType.PlusSign, "+ code", " code")]
         [InlineData(HplTokenType.OpenSquareBracket, "[ code", " code")]
         [InlineData(HplTokenType.CloseSquareBracket, "] code", " code")]
+        [InlineData(HplTokenType.QuestionMark, "? code", " code")]
+        [InlineData(HplTokenType.Star, "* code", " code")]
+        [InlineData(HplTokenType.Tilde, "~ code", " code")]
+        [InlineData(HplTokenType.Hashtag, "# code", " code")]
+        [InlineData(HplTokenType.AtSymbol, "@ code", " code")]
         public void GetToken_ShouldRecognizeOneCharacterSymbols(HplTokenType expectedType, string hplCode, string expectedCodeLeft)
             => AssertTokenized(expectedType, hplCode, expectedCodeLeft);
 
